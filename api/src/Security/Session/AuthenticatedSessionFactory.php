@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Security\Session;
+
+use App\Entity\User;
+use App\Security\RefreshToken\RefreshTokenCookieFactory;
+use App\Security\RefreshToken\RefreshTokenService;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+
+/**
+ * Issues a full session (access token + a brand new refresh-token family) for a user who has
+ * completed authentication — whether that took one step (a trusted device skipping 2FA) or two
+ * (password then a verified email code). Callers are responsible for their own audit logging, since
+ * what's worth recording differs (e.g. whether a trusted device was used).
+ */
+final readonly class AuthenticatedSessionFactory
+{
+    public function __construct(
+        private JWTTokenManagerInterface $jwtManager,
+        private RefreshTokenService $refreshTokenService,
+        private RefreshTokenCookieFactory $cookieFactory,
+    ) {
+    }
+
+    public function issueFor(User $user): IssuedSession
+    {
+        $accessToken = $this->jwtManager->create($user);
+        $refreshToken = $this->refreshTokenService->issueNewFamily($user);
+
+        return new IssuedSession($accessToken, $this->cookieFactory->create($refreshToken));
+    }
+}

@@ -1,0 +1,108 @@
+# Rate limiters for every auth endpoint that can be brute-forced or used to enumerate accounts.
+# Each action is limited both by IP and by identifier (email, or the mfa_pending token), per OWASP's
+# Authentication Cheat Sheet: an IP limit alone is defeated by a botnet or shared NAT, an identifier
+# limit alone is defeated by rotating IPs. Storage is the default "cache.rate_limiter" pool, which
+# resolves to the filesystem cache adapter here (no Redis in this project).
+framework:
+    rate_limiter:
+        login_ip:
+            policy: sliding_window
+            limit: 20
+            interval: '15 minutes'
+        login_identifier:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+        mfa_verify_ip:
+            policy: sliding_window
+            limit: 30
+            interval: '15 minutes'
+        mfa_verify_identifier:
+            policy: sliding_window
+            limit: 8
+            interval: '15 minutes'
+        # Wrong 2FA codes per account, across every login, resend and IP (App\Security\TwoFactor\MfaFailureLimiter).
+        mfa_failure_account:
+            policy: sliding_window
+            limit: 20
+            interval: '24 hours'
+        mfa_resend_ip:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        mfa_resend_identifier:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        register_ip:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        register_identifier:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        forgot_password_ip:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        forgot_password_identifier:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        verify_email_resend_ip:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        verify_email_resend_identifier:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        refresh_ip:
+            policy: sliding_window
+            limit: 60
+            interval: '15 minutes'
+        refresh_identifier:
+            policy: sliding_window
+            limit: 30
+            interval: '15 minutes'
+        # Changing the password requires the current one, so a stolen access token could otherwise
+        # be used to brute-force it. Identifier = the authenticated user's id.
+        password_change_ip:
+            policy: sliding_window
+            limit: 20
+            interval: '15 minutes'
+        password_change_identifier:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+        # The reset token itself (40 random chars, HMAC-verified) is not guessable; this only caps
+        # the cost of someone hammering the endpoint. Identifier = the token's selector.
+        reset_password_ip:
+            policy: sliding_window
+            limit: 20
+            interval: '15 minutes'
+        reset_password_identifier:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+        # Starting an OAuth flow writes a row (state + PKCE verifier); completing one calls the provider.
+        oauth_ip:
+            policy: sliding_window
+            limit: 30
+            interval: '15 minutes'
+        # Puzzles (identifier = user id). Generous for real play (a puzzle takes ~20 s at best), but
+        # caps scripted farming of puzzles or of rating points.
+        puzzle_attempt_start:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'
+        puzzle_attempt_submit:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'
+        # Each import calls the Lichess API.
+        puzzle_lichess_import:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'

@@ -1,0 +1,24 @@
+framework:
+    messenger:
+        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
+        # failure_transport: failed
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            sync: 'sync://'
+
+        routing:
+            # Every auth notification email is async EXCEPT the 2FA login code, which is sent
+            # synchronously (see App\Mailer\SyncMailer) since it sits on the critical path of an
+            # active login attempt and must not depend on a worker being alive.
+            'Symfony\Component\Mailer\Messenger\SendEmailMessage': async
+            # Forgot-password does all of its work (user lookup, token, email) in a worker, so the
+            # HTTP response costs exactly the same whether the email exists or not.
+            'App\Security\Password\Message\PasswordResetRequested': async
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                async: 'in-memory://'

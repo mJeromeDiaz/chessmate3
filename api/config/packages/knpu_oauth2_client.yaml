@@ -1,0 +1,35 @@
+# The bundle is used for provider configuration only: App\Security\OAuth drives the flow itself
+# (state + PKCE verifier kept in the database and bound to the browser by a cookie — see
+# App\Entity\OAuthFlow), because the bundle's OAuth2Client keeps state in the session and this API
+# is stateless.
+knpu_oauth2_client:
+    clients:
+        google:
+            # "generic" so the provider class can be ours: league/oauth2-google doesn't enable PKCE.
+            type: generic
+            provider_class: App\Security\OAuth\Provider\GooglePkceProvider
+            client_id: '%env(OAUTH_GOOGLE_CLIENT_ID)%'
+            client_secret: '%env(OAUTH_GOOGLE_CLIENT_SECRET)%'
+            # An absolute URL is used as-is (not generated from the route and the request host).
+            redirect_route: '%env(OAUTH_GOOGLE_REDIRECT_URI)%'
+            redirect_params: {}
+            use_state: false
+        lichess:
+            # Public client (PKCE, no secret): LichessProvider drops the secret, the bundle just
+            # requires the key. The client id is any name we choose, shown on Lichess's consent page.
+            type: generic
+            provider_class: App\Security\OAuth\Provider\LichessProvider
+            client_id: '%env(OAUTH_LICHESS_CLIENT_ID)%'
+            client_secret: ''
+            redirect_route: '%env(OAUTH_LICHESS_REDIRECT_URI)%'
+            redirect_params: {}
+            use_state: false
+
+when@test:
+    knpu_oauth2_client:
+        clients:
+            google:
+                # Simulates Google's token and userinfo endpoints; see the class.
+                provider_class: App\Tests\Double\FakeGoogleProvider
+            lichess:
+                provider_class: App\Tests\Double\FakeLichessProvider

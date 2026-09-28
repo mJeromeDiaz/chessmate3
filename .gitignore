@@ -1,0 +1,5 @@
+# Editors and OS (each app has its own .gitignore: api/.gitignore, front/.gitignore)
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

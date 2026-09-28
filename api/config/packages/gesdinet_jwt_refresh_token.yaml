@@ -1,0 +1,8 @@
+# This bundle is used purely as a storage/hashing/generation library for refresh tokens (see
+# App\Entity\RefreshToken and App\Security\RefreshToken\RefreshTokenService for why): its own
+# Security firewall authenticator and rotation listener are never wired up in security.yaml, since
+# they hard-delete the old token on rotation and give reuse detection nothing to detect.
+gesdinet_jwt_refresh_token:
+    refresh_token_class: App\Entity\RefreshToken
+    hash_tokens:
+        enabled: true

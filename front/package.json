@@ -1,0 +1,54 @@
+{
+  "name": "chessmate",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A Quasar Project",
+  "keywords": [
+    "quasar",
+    "quasar-app",
+    "quasar-app-vite",
+    "quasar-cli",
+    "vite",
+    "vue",
+    "vuejs"
+  ],
+  "author": "mJeromeDiaz <m.jerome.diaz@gmail.com>",
+  "type": "module",
+  "scripts": {
+    "lint": "oxfmt && oxlint --fix",
+    "lint:check": "oxfmt --check && oxlint",
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "postinstall": "quasar prepare --silent",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e:prepare": "cd ../api && export APP_ENV=e2e && php -d xdebug.mode=off bin/console doctrine:database:create --if-not-exists && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n && php -d xdebug.mode=off bin/console doctrine:fixtures:load -n",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@quasar/extras": "^2.0.4",
+    "axios": "^1.20.0",
+    "chess.js": "^1.4.0",
+    "cm-chessboard": "^8.14.2",
+    "pinia": "^4.0.2",
+    "quasar": "^2.29.0",
+    "vue": "^3.5.22",
+    "vue-i18n": "^11.3.0",
+    "vue-router": "^5.0.6"
+  },
+  "devDependencies": {
+    "@intlify/unplugin-vue-i18n": "^11.0.0",
+    "@playwright/test": "^1.63.0",
+    "@quasar/app-vite": "^3.8.1",
+    "autoprefixer": "^10.4.27",
+    "happy-dom": "^20.14.5",
+    "oxfmt": "^0.x",
+    "oxlint": "^1.x",
+    "postcss": "^8.5.8",
+    "vitest": "^5.0.2"
+  },
+  "engines": {
+    "node": ">= 26 || ^24 || ^22.12"
+  },
+  "productName": "chessmate4"
+}

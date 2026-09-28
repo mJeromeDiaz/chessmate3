@@ -1,0 +1,13 @@
+# One explicit origin, compared exactly (no regex): the SPA's. Credentials are allowed so the
+# browser sends the refresh cookie, which makes a loose origin match all the more dangerous.
+nelmio_cors:
+    defaults:
+        origin_regex: false
+        allow_origin: ['%env(CORS_ALLOWED_ORIGIN)%']
+        allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
+        allow_headers: ['Content-Type', 'Authorization', 'X-Refresh-Request']
+        expose_headers: ['Link']
+        allow_credentials: true
+        max_age: 3600
+    paths:
+        '^/': null
