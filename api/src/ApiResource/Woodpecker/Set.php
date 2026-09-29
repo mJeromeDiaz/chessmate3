@@ -47,6 +47,8 @@ final class Set
     #[ApiProperty(identifier: true)]
     public string $id;
     public string $name;
+    /** classic or light */
+    public string $mode;
     /** active, paused, completed or abandoned */
     public string $status;
     public bool $archived;
@@ -85,6 +87,7 @@ final class Set
         $view = new self();
         $view->id = $set->getId()->toRfc4122();
         $view->name = $set->getName();
+        $view->mode = $set->getMode()->value;
         $view->status = $set->getStatus()->value;
         $view->archived = $set->isArchived();
         $view->puzzleCount = $config->puzzleCount;

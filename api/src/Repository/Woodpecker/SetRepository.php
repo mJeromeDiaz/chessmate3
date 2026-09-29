@@ -6,6 +6,7 @@ namespace App\Repository\Woodpecker;
 
 use App\Entity\User;
 use App\Entity\Woodpecker\Set;
+use App\Enum\Woodpecker\SetMode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
@@ -44,16 +45,32 @@ class SetRepository extends ServiceEntityRepository
     }
 
     /**
-     * The active or paused set: at most one, by the unique index on the generated active_user_id.
+     * The active or paused set of this mode: at most one, by the unique index on the generated
+     * active_user_id and the mode.
      */
-    public function findOngoing(User $user): ?Set
+    public function findOngoing(User $user, SetMode $mode): ?Set
     {
         $id = $this->getEntityManager()->getConnection()->fetchOne(
-            'SELECT id FROM woodpecker_set WHERE active_user_id = :user',
-            ['user' => $user->getId()->toBinary()],
+            'SELECT id FROM woodpecker_set WHERE active_user_id = :user AND mode = :mode',
+            ['user' => $user->getId()->toBinary(), 'mode' => $mode->value],
         );
 
         return \is_string($id) ? $this->find(Uuid::fromBinary($id)) : null;
+    }
+
+    /**
+     * The active or paused sets: at most one per mode.
+     *
+     * @return list<Set>
+     */
+    public function findAllOngoing(User $user): array
+    {
+        /** @var list<Set> */
+        return $this->createQueryBuilder('s')
+            ->where('s.activeUserId = :user')
+            ->setParameter('user', $user->getId(), 'uuid')
+            ->getQuery()
+            ->getResult();
     }
 
     /**

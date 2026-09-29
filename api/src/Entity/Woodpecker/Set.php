@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Woodpecker;
 
 use App\Entity\User;
+use App\Enum\Woodpecker\SetMode;
 use App\Enum\Woodpecker\SetStatus;
 use App\Repository\Woodpecker\SetRepository;
 use App\Woodpecker\Set\SetConfig;
@@ -17,12 +18,16 @@ use Symfony\Component\Uid\Uuid;
  * cycles ({@see Cycle}), each faster than the previous one (docs/WOODPECKER.md).
  *
  * `activeUserId` is a generated column (user_id while active or paused, NULL otherwise) under a
- * unique index: the database itself enforces one ongoing set per user. VIRTUAL, not STORED: MySQL
- * refuses an ON DELETE CASCADE foreign key on the base column of a stored generated column.
+ * unique index with the mode: the database itself enforces one ongoing set per user and mode.
+ * VIRTUAL, not STORED: MySQL refuses an ON DELETE CASCADE foreign key on the base column of a
+ * stored generated column.
+ *
+ * The schedule columns (cycles, durations, rest) belong to the classic mode only: NULL in light
+ * mode, which the CHECK constraint chk_woodpecker_set_mode_config enforces (migration).
  */
 #[ORM\Entity(repositoryClass: SetRepository::class)]
 #[ORM\Table(name: 'woodpecker_set')]
-#[ORM\UniqueConstraint(name: 'uniq_woodpecker_set_active_user', columns: ['active_user_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_woodpecker_set_active_user_mode', columns: ['active_user_id', 'mode'])]
 #[ORM\Index(name: 'idx_woodpecker_set_user_created', columns: ['user_id', 'created_at'])]
 #[ORM\Index(name: 'idx_woodpecker_set_user', columns: ['user_id'])]
 class Set
@@ -37,6 +42,9 @@ class Set
 
     #[ORM\Column(length: 80)]
     private string $name;
+
+    #[ORM\Column(length: 8, enumType: SetMode::class)]
+    private SetMode $mode;
 
     #[ORM\Column(length: 16, enumType: SetStatus::class)]
     private SetStatus $status = SetStatus::Active;
@@ -64,20 +72,20 @@ class Set
     #[ORM\Column(type: Types::JSON)]
     private array $themes;
 
-    #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
-    private int $cycleCount;
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
+    private ?int $cycleCount;
 
-    #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
-    private int $firstCycleDays;
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
+    private ?int $firstCycleDays;
 
-    #[ORM\Column]
-    private float $reductionFactor;
+    #[ORM\Column(nullable: true)]
+    private ?float $reductionFactor;
 
-    #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
-    private int $minCycleDays;
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
+    private ?int $minCycleDays;
 
-    #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
-    private int $restDays;
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
+    private ?int $restDays;
 
     #[ORM\Column]
     private bool $shuffle;
@@ -102,6 +110,7 @@ class Set
         $this->id = Uuid::v7();
         $this->user = $user;
         $this->name = $name;
+        $this->mode = SetMode::Classic;
         $this->puzzleCount = $config->puzzleCount;
         $this->ratingMin = $config->ratingMin;
         $this->ratingMax = $config->ratingMax;
@@ -140,8 +149,23 @@ class Set
         return $this->activeUserId;
     }
 
+    public function getMode(): SetMode
+    {
+        return $this->mode;
+    }
+
+    /**
+     * The classic configuration, schedule included.
+     *
+     * @throws \LogicException for a set without a schedule (light mode)
+     */
     public function getConfig(): SetConfig
     {
+        if (SetMode::Classic !== $this->mode || null === $this->cycleCount || null === $this->firstCycleDays
+            || null === $this->reductionFactor || null === $this->minCycleDays || null === $this->restDays) {
+            throw new \LogicException(sprintf('A %s set has no cycle schedule.', $this->mode->value));
+        }
+
         return new SetConfig(
             $this->puzzleCount,
             $this->ratingMin,
@@ -156,14 +180,14 @@ class Set
         );
     }
 
+    public function isShuffled(): bool
+    {
+        return $this->shuffle;
+    }
+
     public function getPuzzleCount(): int
     {
         return $this->puzzleCount;
-    }
-
-    public function getCycleCount(): int
-    {
-        return $this->cycleCount;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

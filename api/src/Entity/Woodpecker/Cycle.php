@@ -11,9 +11,13 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * One run of one cycle of a set. A cycle whose deadline passes is lost, and a new run of the same
- * cycle number starts (validated rule): the set only moves on by completing a cycle in time.
- * Deadlines are UTC instants computed in the user's timezone ({@see \App\Woodpecker\Schedule\DeadlineCalculator}).
+ * One round of play through a set: in classic mode, one run of one cycle. A cycle whose deadline
+ * passes is lost, and a new run of the same cycle number starts (validated rule): the set only
+ * moves on by completing a cycle in time. Deadlines are UTC instants computed in the user's
+ * timezone ({@see \App\Woodpecker\Schedule\DeadlineCalculator}).
+ *
+ * Duration and deadline are NULL for a round without a schedule (light mode): classic code reads
+ * them through {@see self::requireDurationDays()} and {@see self::requireDeadlineAt()}.
  */
 #[ORM\Entity(repositoryClass: CycleRepository::class)]
 #[ORM\Table(name: 'woodpecker_cycle')]
@@ -41,8 +45,8 @@ class Cycle
     #[ORM\Column(length: 16, enumType: CycleStatus::class)]
     private CycleStatus $status;
 
-    #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
-    private int $durationDays;
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
+    private ?int $durationDays;
 
     /** Order of the puzzles in this run (identity when the set is not shuffled). */
     #[ORM\Column(options: ['unsigned' => true])]
@@ -52,8 +56,8 @@ class Cycle
     private \DateTimeImmutable $availableAt;
 
     /** Exclusive: the run must be completed before this instant (end of a local day). */
-    #[ORM\Column]
-    private \DateTimeImmutable $deadlineAt;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $deadlineAt;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $completedAt = null;
@@ -61,7 +65,7 @@ class Cycle
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $lostAt = null;
 
-    public function __construct(Set $set, int $number, int $run, int $durationDays, int $seed, \DateTimeImmutable $availableAt, \DateTimeImmutable $deadlineAt, \DateTimeImmutable $now)
+    public function __construct(Set $set, int $number, int $run, ?int $durationDays, int $seed, \DateTimeImmutable $availableAt, ?\DateTimeImmutable $deadlineAt, \DateTimeImmutable $now)
     {
         $this->id = Uuid::v7();
         $this->set = $set;
@@ -104,9 +108,17 @@ class Cycle
         return CycleStatus::Resting === $this->status || CycleStatus::Active === $this->status;
     }
 
-    public function getDurationDays(): int
+    public function getDurationDays(): ?int
     {
         return $this->durationDays;
+    }
+
+    /**
+     * @throws \LogicException for a round without a schedule
+     */
+    public function requireDurationDays(): int
+    {
+        return $this->durationDays ?? throw new \LogicException('This round has no duration.');
     }
 
     public function getSeed(): int
@@ -119,9 +131,17 @@ class Cycle
         return $this->availableAt;
     }
 
-    public function getDeadlineAt(): \DateTimeImmutable
+    public function getDeadlineAt(): ?\DateTimeImmutable
     {
         return $this->deadlineAt;
+    }
+
+    /**
+     * @throws \LogicException for a round without a schedule
+     */
+    public function requireDeadlineAt(): \DateTimeImmutable
+    {
+        return $this->deadlineAt ?? throw new \LogicException('This round has no deadline.');
     }
 
     public function getCompletedAt(): ?\DateTimeImmutable

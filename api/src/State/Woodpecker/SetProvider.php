@@ -40,8 +40,7 @@ final class SetProvider implements ProviderInterface
         if ($operation instanceof CollectionOperationInterface) {
             $filters = \is_array($context['filters'] ?? null) ? $context['filters'] : [];
             $archived = \in_array($filters['archived'] ?? null, ['1', 'true'], true);
-            $ongoing = $this->sets->findOngoing($user);
-            if (null !== $ongoing) {
+            foreach ($this->sets->findAllOngoing($user) as $ongoing) {
                 $this->manager->load($user, $ongoing->getId());
             }
 

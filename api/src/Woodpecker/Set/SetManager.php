@@ -6,17 +6,16 @@ namespace App\Woodpecker\Set;
 
 use App\Entity\User;
 use App\Entity\Woodpecker\Set;
-use App\Enum\Woodpecker\CycleStatus;
+use App\Enum\Woodpecker\SetMode;
 use App\Repository\Puzzle\RatingRepository;
 use App\Repository\Puzzle\ThemeRepository;
-use App\Repository\Woodpecker\CycleRepository;
 use App\Repository\Woodpecker\SetPuzzleRepository;
 use App\Repository\Woodpecker\SetRepository;
 use App\Woodpecker\Cycle\CycleRunner;
 use App\Woodpecker\Exception\NotEnoughPuzzlesException;
 use App\Woodpecker\Exception\OngoingSetExistsException;
 use App\Woodpecker\Exception\SetNotFoundException;
-use App\Woodpecker\Schedule\DeadlineCalculator;
+use App\Woodpecker\Mode\ProgressionRegistry;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -42,11 +41,11 @@ final class SetManager
         private readonly EntityManagerInterface $entityManager,
         private readonly SetRepository $sets,
         private readonly SetPuzzleRepository $setPuzzles,
-        private readonly CycleRepository $cycles,
         private readonly ThemeRepository $themes,
         private readonly RatingRepository $ratings,
         private readonly SetGenerator $generator,
         private readonly CycleRunner $runner,
+        private readonly ProgressionRegistry $progressions,
         private readonly ClockInterface $clock,
         #[AutowireIterator(CreationPolicyInterface::TAG)]
         private readonly iterable $policies = [],
@@ -77,7 +76,7 @@ final class SetManager
         foreach ($this->policies as $policy) {
             $policy->check($user, $config);
         }
-        if (null !== $this->sets->findOngoing($user)) {
+        if (null !== $this->sets->findOngoing($user, SetMode::Classic)) {
             throw new OngoingSetExistsException();
         }
 
@@ -96,7 +95,7 @@ final class SetManager
                 // The unique index on active_user_id rejects a concurrent second creation here.
                 $this->entityManager->flush();
                 $this->setPuzzles->insertList($set, $puzzleIds);
-                $this->runner->openRun($set, 1, 1, $now, $now);
+                $this->progressions->for($set)->start($set, $now);
 
                 return $set;
             });
@@ -115,23 +114,14 @@ final class SetManager
     }
 
     /**
-     * Resumes a paused set; the open run's dates move by the pause length (then to the end of a
-     * local day).
+     * Resumes a paused set; in classic mode, the open run's dates move by the pause length (then
+     * to the end of a local day).
      */
     public function resume(User $user, Uuid $setId): Set
     {
         return $this->transition($user, $setId, function (Set $set, \DateTimeImmutable $now): void {
             $pausedAt = $set->resume();
-            $cycle = $this->cycles->findOpen($set);
-            if (null === $cycle) {
-                return;
-            }
-            $seconds = max(0, $now->getTimestamp() - $pausedAt->getTimestamp());
-            $timezone = $set->getUser()->getDateTimeZone();
-            $availableAt = CycleStatus::Resting === $cycle->getStatus()
-                ? DeadlineCalculator::shift($cycle->getAvailableAt(), $seconds, $timezone)
-                : $cycle->getAvailableAt();
-            $cycle->reschedule($availableAt, DeadlineCalculator::shift($cycle->getDeadlineAt(), $seconds, $timezone));
+            $this->progressions->for($set)->resume($set, $pausedAt, $now);
             $this->runner->refresh($set, $now);
         });
     }

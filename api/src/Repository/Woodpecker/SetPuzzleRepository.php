@@ -54,23 +54,24 @@ class SetPuzzleRepository extends ServiceEntityRepository
     }
 
     /**
-     * Which of these puzzles belong to the given set (unique (set_id, puzzle_id) probes).
+     * Which of these puzzles belong to one of the given sets (unique (set_id, puzzle_id) probes).
      *
-     * @param list<int> $puzzleIds
+     * @param list<string> $setIdsBinary
+     * @param list<int>    $puzzleIds
      *
      * @return list<int>
      */
-    public function findPuzzleIdsInSet(string $setIdBinary, array $puzzleIds): array
+    public function findPuzzleIdsInSets(array $setIdsBinary, array $puzzleIds): array
     {
-        if ([] === $puzzleIds) {
+        if ([] === $setIdsBinary || [] === $puzzleIds) {
             return [];
         }
 
-        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $this->getEntityManager()->getConnection()->fetchFirstColumn(
-            'SELECT puzzle_id FROM woodpecker_set_puzzle WHERE set_id = :set AND puzzle_id IN (:ids)',
-            ['set' => $setIdBinary, 'ids' => $puzzleIds],
-            ['ids' => ArrayParameterType::INTEGER],
-        ));
+        return array_values(array_unique(array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            'SELECT puzzle_id FROM woodpecker_set_puzzle WHERE set_id IN (:sets) AND puzzle_id IN (:ids)',
+            ['sets' => $setIdsBinary, 'ids' => $puzzleIds],
+            ['sets' => ArrayParameterType::BINARY, 'ids' => ArrayParameterType::INTEGER],
+        ))));
     }
 
     public function isInAnySetOf(User $user, Puzzle $puzzle): bool

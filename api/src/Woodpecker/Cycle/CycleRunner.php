@@ -20,21 +20,20 @@ use App\Repository\Woodpecker\AttemptRepository;
 use App\Repository\Woodpecker\CycleRepository;
 use App\Repository\Woodpecker\SetPuzzleRepository;
 use App\Repository\Woodpecker\SetRepository;
-use App\Woodpecker\Event\CycleCompleted;
-use App\Woodpecker\Event\CycleLost;
-use App\Woodpecker\Event\SetCompleted;
 use App\Woodpecker\Exception\AttemptAlreadySubmittedException;
 use App\Woodpecker\Exception\AttemptNotFoundException;
 use App\Woodpecker\Exception\CycleClosedException;
 use App\Woodpecker\Exception\SetNotFoundException;
 use App\Woodpecker\Exception\SetNotPlayableException;
-use App\Woodpecker\Schedule\DeadlineCalculator;
+use App\Woodpecker\Mode\ProgressionRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Plays a set's cycles (docs/WOODPECKER.md, "Playing a cycle").
+ * Plays a set's rounds (docs/WOODPECKER.md, "Playing a cycle"): what every mode shares (locks,
+ * attempts, server-side validation, ExerciseCompleted). How a round ends and what follows belongs
+ * to the set's mode ({@see ProgressionRegistry}).
  *
  * Time-driven transitions (end of rest, lost run) are applied lazily by {@see self::refresh()} at
  * the start of every operation on the set, under its row lock: no scheduler is needed, and the
@@ -53,14 +52,14 @@ final class CycleRunner
         private readonly AttemptRepository $attempts,
         private readonly SolutionValidator $validator,
         private readonly EventPublisher $events,
+        private readonly ProgressionRegistry $progressions,
         private readonly ClockInterface $clock,
     ) {
     }
 
     /**
-     * Applies the transitions due at $now: a resting run whose rest is over becomes active; an
-     * active run past its deadline is lost and a new run of the same cycle starts now, with the
-     * same length. Paused and closed sets do not move. Call inside a transaction, set locked.
+     * Applies the transitions due at $now (see the set mode's progression). Paused and closed sets
+     * do not move. Call inside a transaction, set locked.
      */
     public function refresh(Set $set, \DateTimeImmutable $now): void
     {
@@ -72,26 +71,7 @@ final class CycleRunner
             return;
         }
 
-        if (CycleStatus::Resting === $cycle->getStatus() && $now >= $cycle->getAvailableAt()) {
-            $cycle->activate();
-        }
-
-        if (CycleStatus::Active === $cycle->getStatus() && $now >= $cycle->getDeadlineAt()) {
-            $played = $this->attempts->countResolved($cycle);
-            $cycle->lose($now);
-            $this->events->publish(new CycleLost(
-                userId: $set->getUser()->getId()->toRfc4122(),
-                setId: $set->getId()->toRfc4122(),
-                cycleNumber: $cycle->getNumber(),
-                run: $cycle->getRun(),
-                played: $played,
-                puzzleCount: $set->getPuzzleCount(),
-                deadlineAt: $cycle->getDeadlineAt(),
-                occurredAt: $now,
-            ));
-            $this->openRun($set, $cycle->getNumber(), $cycle->getRun() + 1, $now, $now);
-        }
-
+        $this->progressions->for($set)->refresh($set, $cycle, $now);
         $this->entityManager->flush();
     }
 
@@ -115,7 +95,7 @@ final class CycleRunner
             }
 
             $index = $this->attempts->countResolved($cycle);
-            $position = CycleOrder::positions($set->getPuzzleCount(), $cycle->getSeed(), $set->getConfig()->shuffle)[$index]
+            $position = $this->progressions->for($set)->positionAt($set, $cycle, $index)
                 ?? throw new \LogicException('Open cycle run with every puzzle played.');
             $setPuzzle = $this->setPuzzles->findAt($set, $position) ?? throw new \LogicException('Set list is incomplete.');
 
@@ -176,73 +156,11 @@ final class CycleRunner
                 ],
             ));
 
-            if ($this->attempts->countResolved($cycle) >= $set->getPuzzleCount()) {
-                $this->completeRun($set, $cycle, $now);
-            }
+            $this->progressions->for($set)->afterSubmission($set, $cycle, $now);
             $this->entityManager->flush();
 
             return $attempt;
         });
-    }
-
-    private function completeRun(Set $set, Cycle $cycle, \DateTimeImmutable $now): void
-    {
-        $cycle->complete($now);
-        $stats = $this->attempts->statsFor([$cycle])[$cycle->getId()->toRfc4122()] ?? null;
-        $config = $set->getConfig();
-        $this->events->publish(new CycleCompleted(
-            userId: $set->getUser()->getId()->toRfc4122(),
-            setId: $set->getId()->toRfc4122(),
-            cycleNumber: $cycle->getNumber(),
-            run: $cycle->getRun(),
-            cycleCount: $config->cycleCount,
-            puzzleCount: $set->getPuzzleCount(),
-            solved: $stats->solved ?? 0,
-            failed: $stats->failed ?? 0,
-            activeMs: $stats->activeMs ?? 0,
-            calendarMs: (int) round(((float) $now->format('U.u') - (float) $cycle->getAvailableAt()->format('U.u')) * 1000),
-            deadlineAt: $cycle->getDeadlineAt(),
-            occurredAt: $now,
-        ));
-
-        if ($cycle->getNumber() >= $config->cycleCount) {
-            $set->complete($now);
-            $lostRuns = \count(array_filter($this->cycles->findBySet($set), static fn (Cycle $c): bool => CycleStatus::Lost === $c->getStatus()));
-            $this->events->publish(new SetCompleted(
-                userId: $set->getUser()->getId()->toRfc4122(),
-                setId: $set->getId()->toRfc4122(),
-                cycleCount: $config->cycleCount,
-                puzzleCount: $set->getPuzzleCount(),
-                lostRuns: $lostRuns,
-                occurredAt: $now,
-            ));
-
-            return;
-        }
-
-        $timezone = $set->getUser()->getDateTimeZone();
-        $this->openRun($set, $cycle->getNumber() + 1, 1, DeadlineCalculator::restEnd($now, $config->restDays, $timezone), $now);
-    }
-
-    /**
-     * Starts a run: its deadline is counted from when it becomes available.
-     */
-    public function openRun(Set $set, int $number, int $run, \DateTimeImmutable $availableAt, \DateTimeImmutable $now): Cycle
-    {
-        $days = DeadlineCalculator::cycleDays($set->getConfig(), $number);
-        $cycle = new Cycle(
-            $set,
-            $number,
-            $run,
-            $days,
-            CycleOrder::newSeed(),
-            $availableAt,
-            DeadlineCalculator::deadline($availableAt, $days, $set->getUser()->getDateTimeZone()),
-            $now,
-        );
-        $this->entityManager->persist($cycle);
-
-        return $cycle;
     }
 
     /**
@@ -256,9 +174,7 @@ final class CycleRunner
             SetStatus::Active => null,
         };
         $cycle = $this->cycles->findOpen($set) ?? throw new SetNotPlayableException(SetNotPlayableException::CLOSED);
-        if (CycleStatus::Resting === $cycle->getStatus()) {
-            throw new SetNotPlayableException(SetNotPlayableException::RESTING, $cycle->getAvailableAt());
-        }
+        $this->progressions->for($set)->assertPlayable($set, $cycle);
 
         return $cycle;
     }

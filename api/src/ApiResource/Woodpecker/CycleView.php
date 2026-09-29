@@ -18,9 +18,10 @@ final class CycleView
     public int $run;
     /** resting, active, completed or lost */
     public string $status;
-    public int $durationDays;
+    /** Null for a round without a schedule (light mode). */
+    public ?int $durationDays;
     public \DateTimeImmutable $availableAt;
-    public \DateTimeImmutable $deadlineAt;
+    public ?\DateTimeImmutable $deadlineAt;
     public ?\DateTimeImmutable $completedAt;
     public ?\DateTimeImmutable $lostAt;
     public int $played;
@@ -33,7 +34,7 @@ final class CycleView
     public ?int $calendarMs;
     /** Completed before the deadline (a lost run is not; an open one is null). */
     public ?bool $onTime;
-    /** Local days left before the deadline, today included (open runs only). */
+    /** Local days left before the deadline, today included (open runs with a deadline only). */
     public ?int $daysLeft;
 
     public static function from(Cycle $cycle, ?CycleStats $stats, \DateTimeImmutable $now, \DateTimeZone $timezone): self
@@ -61,7 +62,8 @@ final class CycleView
             CycleStatus::Lost => false,
             default => null,
         };
-        $view->daysLeft = $cycle->isOpen() ? DeadlineCalculator::daysLeft($now, $cycle->getDeadlineAt(), $timezone) : null;
+        $deadline = $cycle->getDeadlineAt();
+        $view->daysLeft = $cycle->isOpen() && null !== $deadline ? DeadlineCalculator::daysLeft($now, $deadline, $timezone) : null;
 
         return $view;
     }
