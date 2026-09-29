@@ -32,7 +32,7 @@ final class CycleView
     public ?int $averageMs;
     /** From availableAt to completion (or loss), null while open. */
     public ?int $calendarMs;
-    /** Completed before the deadline (a lost run is not; an open one is null). */
+    /** Completed before the deadline (a lost run is not; an open one, or one without deadline, is null). */
     public ?bool $onTime;
     /** Local days left before the deadline, today included (open runs with a deadline only). */
     public ?int $daysLeft;
@@ -57,7 +57,7 @@ final class CycleView
         $view->averageMs = $stats->averageMs();
         $end = $cycle->getCompletedAt() ?? $cycle->getLostAt();
         $view->calendarMs = null === $end ? null : max(0, ($end->getTimestamp() - $cycle->getAvailableAt()->getTimestamp()) * 1000);
-        $view->onTime = match ($cycle->getStatus()) {
+        $view->onTime = null === $cycle->getDeadlineAt() ? null : match ($cycle->getStatus()) {
             CycleStatus::Completed => true,
             CycleStatus::Lost => false,
             default => null,

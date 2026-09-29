@@ -9,14 +9,29 @@
 parameters:
     # Smallest Woodpecker set (docs/WOODPECKER.md); lowered in tests to finish a cycle quickly.
     woodpecker.min_puzzles: 50
+    # Light sets (docs/WOODPECKER.md): initial size, then a batch added whenever fewer than
+    # "threshold" puzzles remain unseen in the round, up to a strict maximum.
+    woodpecker.light.initial_puzzles: 100
+    woodpecker.light.growth_batch: 20
+    woodpecker.light.growth_threshold: 5
+    woodpecker.light.max_puzzles: 1500
 
+# Tests and e2e run on ~50 sample puzzles.
 when@test:
     parameters:
         woodpecker.min_puzzles: 5
+        woodpecker.light.initial_puzzles: 10
+        woodpecker.light.growth_batch: 5
+        woodpecker.light.growth_threshold: 2
+        woodpecker.light.max_puzzles: 30
 
 when@e2e:
     parameters:
         woodpecker.min_puzzles: 5
+        woodpecker.light.initial_puzzles: 10
+        woodpecker.light.growth_batch: 5
+        woodpecker.light.growth_threshold: 2
+        woodpecker.light.max_puzzles: 30
 
 services:
     # default configuration for services in *this* file

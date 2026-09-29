@@ -87,7 +87,7 @@ final class CycleRunner
             $now = $this->now();
             $set = $this->sets->lockOwned($setId, $user) ?? throw new SetNotFoundException();
             $this->refresh($set, $now);
-            $cycle = $this->playableCycle($set);
+            $cycle = $this->playableCycle($set, $now);
 
             $pending = $this->attempts->findPending($cycle);
             if (null !== $pending) {
@@ -153,6 +153,7 @@ final class CycleRunner
                     'cycle' => $cycle->getNumber(),
                     'run' => $cycle->getRun(),
                     'puzzleId' => $attempt->getPuzzle()->getLichessId(),
+                    'mode' => $set->getMode()->value,
                 ],
             ));
 
@@ -166,15 +167,18 @@ final class CycleRunner
     /**
      * @throws SetNotPlayableException
      */
-    private function playableCycle(Set $set): Cycle
+    private function playableCycle(Set $set, \DateTimeImmutable $now): Cycle
     {
         match ($set->getStatus()) {
             SetStatus::Paused => throw new SetNotPlayableException(SetNotPlayableException::PAUSED),
             SetStatus::Completed, SetStatus::Abandoned => throw new SetNotPlayableException(SetNotPlayableException::CLOSED),
             SetStatus::Active => null,
         };
-        $cycle = $this->cycles->findOpen($set) ?? throw new SetNotPlayableException(SetNotPlayableException::CLOSED);
-        $this->progressions->for($set)->assertPlayable($set, $cycle);
+        $progression = $this->progressions->for($set);
+        $cycle = $this->cycles->findOpen($set)
+            ?? $progression->openRound($set, $now)
+            ?? throw new SetNotPlayableException(SetNotPlayableException::CLOSED);
+        $progression->assertPlayable($set, $cycle);
 
         return $cycle;
     }

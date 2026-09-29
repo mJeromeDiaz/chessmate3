@@ -8,14 +8,16 @@ use App\Entity\User;
 use App\Enum\Woodpecker\SetMode;
 use App\Enum\Woodpecker\SetStatus;
 use App\Repository\Woodpecker\SetRepository;
+use App\Woodpecker\Set\LightConfig;
 use App\Woodpecker\Set\SetConfig;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * A Woodpecker set: a frozen, ordered list of puzzles ({@see SetPuzzle}) solved in successive
- * cycles ({@see Cycle}), each faster than the previous one (docs/WOODPECKER.md).
+ * A Woodpecker set: an ordered list of puzzles ({@see SetPuzzle}) solved in successive rounds
+ * ({@see Cycle}) (docs/WOODPECKER.md). Classic mode: a frozen list, cycles each faster than the
+ * previous one. Light mode: timed runs from the first puzzle; the list only grows, by appending.
  *
  * `activeUserId` is a generated column (user_id while active or paused, NULL otherwise) under a
  * unique index with the mode: the database itself enforces one ongoing set per user and mode.
@@ -105,23 +107,28 @@ class Set
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $archivedAt = null;
 
-    public function __construct(User $user, string $name, SetConfig $config, \DateTimeImmutable $createdAt)
+    /**
+     * A classic set from a {@see SetConfig}, a light one from a {@see LightConfig}.
+     */
+    public function __construct(User $user, string $name, SetConfig|LightConfig $config, \DateTimeImmutable $createdAt)
     {
         $this->id = Uuid::v7();
         $this->user = $user;
         $this->name = $name;
-        $this->mode = SetMode::Classic;
         $this->puzzleCount = $config->puzzleCount;
         $this->ratingMin = $config->ratingMin;
         $this->ratingMax = $config->ratingMax;
         $this->themes = $config->themes;
-        $this->cycleCount = $config->cycleCount;
-        $this->firstCycleDays = $config->firstCycleDays;
-        $this->reductionFactor = $config->reductionFactor;
-        $this->minCycleDays = $config->minCycleDays;
-        $this->restDays = $config->restDays;
         $this->shuffle = $config->shuffle;
         $this->createdAt = $createdAt;
+
+        $classic = $config instanceof SetConfig ? $config : null;
+        $this->mode = null === $classic ? SetMode::Light : SetMode::Classic;
+        $this->cycleCount = $classic?->cycleCount;
+        $this->firstCycleDays = $classic?->firstCycleDays;
+        $this->reductionFactor = $classic?->reductionFactor;
+        $this->minCycleDays = $classic?->minCycleDays;
+        $this->restDays = $classic?->restDays;
     }
 
     public function getId(): Uuid
@@ -183,6 +190,35 @@ class Set
     public function isShuffled(): bool
     {
         return $this->shuffle;
+    }
+
+    public function getRatingMin(): int
+    {
+        return $this->ratingMin;
+    }
+
+    public function getRatingMax(): int
+    {
+        return $this->ratingMax;
+    }
+
+    /**
+     * @return list<string> theme keys (OR); empty = any theme
+     */
+    public function getThemes(): array
+    {
+        return $this->themes;
+    }
+
+    /**
+     * Light sets only: $added puzzles were appended to the list.
+     */
+    public function grow(int $added): void
+    {
+        if (SetMode::Light !== $this->mode) {
+            throw new \DomainException('Only a light set grows.');
+        }
+        $this->puzzleCount += $added;
     }
 
     public function getPuzzleCount(): int

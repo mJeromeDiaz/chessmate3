@@ -44,6 +44,11 @@ final class ClassicProgression implements ProgressionInterface
         $this->openRun($set, 1, 1, $now, $now);
     }
 
+    public function openRound(Set $set, \DateTimeImmutable $now): ?Cycle
+    {
+        return null;
+    }
+
     /**
      * A resting run whose rest is over becomes active; an active run past its deadline is lost
      * and a new run of the same cycle starts now, with the same length.

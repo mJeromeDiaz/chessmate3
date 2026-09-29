@@ -35,6 +35,18 @@ class CycleRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function maxNumber(Set $set): int
+    {
+        $max = $this->createQueryBuilder('c')
+            ->select('MAX(c.number)')
+            ->where('c.set = :set')
+            ->setParameter('set', $set->getId(), 'uuid')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return is_numeric($max) ? (int) $max : 0;
+    }
+
     /**
      * @return list<Cycle> by cycle number then run
      */

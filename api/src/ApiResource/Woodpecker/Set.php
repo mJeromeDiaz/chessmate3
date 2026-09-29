@@ -12,15 +12,18 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use ApiPlatform\OpenApi\Model\Parameter;
 use App\Entity\Woodpecker\Cycle;
+use App\Entity\Woodpecker\Growth;
 use App\Entity\Woodpecker\Set as SetEntity;
+use App\Enum\Woodpecker\SetMode;
 use App\State\Woodpecker\CreateSetProcessor;
 use App\State\Woodpecker\SetActionProcessor;
 use App\State\Woodpecker\SetProvider;
 use App\Woodpecker\Stats\CycleStats;
 
 /**
- * A Woodpecker set of the current user, with its cycle runs and their statistics. Every query
- * filters on the authenticated user: another user's set answers 404.
+ * A Woodpecker set of the current user, with its rounds (classic: cycle runs) and their
+ * statistics. Every query filters on the authenticated user: another user's set answers 404.
+ * The schedule fields are null for a light set.
  */
 #[ApiResource(
     shortName: 'WoodpeckerSet',
@@ -57,11 +60,11 @@ final class Set
     public int $ratingMax;
     /** @var list<string> */
     public array $themes;
-    public int $cycleCount;
-    public int $firstCycleDays;
-    public float $reductionFactor;
-    public int $minCycleDays;
-    public int $restDays;
+    public ?int $cycleCount;
+    public ?int $firstCycleDays;
+    public ?float $reductionFactor;
+    public ?int $minCycleDays;
+    public ?int $restDays;
     public bool $shuffle;
     public \DateTimeImmutable $createdAt;
     public ?\DateTimeImmutable $pausedAt;
@@ -75,14 +78,18 @@ final class Set
     /** @var list<CycleView> every run, by cycle number then run */
     #[ApiProperty(genId: false)]
     public array $cycles;
+    /** @var list<GrowthView> light sets: oldest first (always empty for a classic set) */
+    #[ApiProperty(genId: false)]
+    public array $growths;
 
     /**
      * @param list<Cycle>               $cycles
-     * @param array<string, CycleStats> $stats  by cycle id
+     * @param array<string, CycleStats> $stats   by cycle id
+     * @param list<Growth>              $growths
      */
-    public static function from(SetEntity $set, array $cycles, array $stats, \DateTimeImmutable $now): self
+    public static function from(SetEntity $set, array $cycles, array $stats, array $growths, \DateTimeImmutable $now): self
     {
-        $config = $set->getConfig();
+        $config = SetMode::Classic === $set->getMode() ? $set->getConfig() : null;
         $timezone = $set->getUser()->getDateTimeZone();
         $view = new self();
         $view->id = $set->getId()->toRfc4122();
@@ -90,16 +97,17 @@ final class Set
         $view->mode = $set->getMode()->value;
         $view->status = $set->getStatus()->value;
         $view->archived = $set->isArchived();
-        $view->puzzleCount = $config->puzzleCount;
-        $view->ratingMin = $config->ratingMin;
-        $view->ratingMax = $config->ratingMax;
-        $view->themes = $config->themes;
-        $view->cycleCount = $config->cycleCount;
-        $view->firstCycleDays = $config->firstCycleDays;
-        $view->reductionFactor = $config->reductionFactor;
-        $view->minCycleDays = $config->minCycleDays;
-        $view->restDays = $config->restDays;
-        $view->shuffle = $config->shuffle;
+        $view->puzzleCount = $set->getPuzzleCount();
+        $view->ratingMin = $set->getRatingMin();
+        $view->ratingMax = $set->getRatingMax();
+        $view->themes = $set->getThemes();
+        $view->cycleCount = $config?->cycleCount;
+        $view->firstCycleDays = $config?->firstCycleDays;
+        $view->reductionFactor = $config?->reductionFactor;
+        $view->minCycleDays = $config?->minCycleDays;
+        $view->restDays = $config?->restDays;
+        $view->shuffle = $set->isShuffled();
+        $view->growths = array_map(GrowthView::from(...), $growths);
         $view->createdAt = $set->getCreatedAt();
         $view->pausedAt = $set->getPausedAt();
         $view->completedAt = $set->getCompletedAt();

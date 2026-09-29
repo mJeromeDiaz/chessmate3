@@ -29,6 +29,12 @@ interface ProgressionInterface
     public function start(Set $set, \DateTimeImmutable $now): void;
 
     /**
+     * Opens a round for an active set that has none: classic sets always have one (null), a light
+     * set opens one per timed run.
+     */
+    public function openRound(Set $set, \DateTimeImmutable $now): ?Cycle;
+
+    /**
      * Applies the time-driven transitions due at $now to the open round of an active set.
      */
     public function refresh(Set $set, Cycle $open, \DateTimeImmutable $now): void;
@@ -39,7 +45,8 @@ interface ProgressionInterface
     public function assertPlayable(Set $set, Cycle $open): void;
 
     /**
-     * The set position of the $index-th puzzle (0-based) of the round, null past its end.
+     * The set position of the next puzzle of the round, $index (0-based) being the number of
+     * puzzles already resolved in it; null past its end.
      */
     public function positionAt(Set $set, Cycle $round, int $index): ?int;
 

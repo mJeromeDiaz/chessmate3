@@ -71,12 +71,13 @@ final class SetManager
      * @throws NotEnoughPuzzlesException
      * @throws \InvalidArgumentException  unknown theme key
      */
-    public function create(User $user, string $name, SetConfig $config): Set
+    public function create(User $user, string $name, SetConfig|LightConfig $config): Set
     {
         foreach ($this->policies as $policy) {
             $policy->check($user, $config);
         }
-        if (null !== $this->sets->findOngoing($user, SetMode::Classic)) {
+        $mode = $config instanceof LightConfig ? SetMode::Light : SetMode::Classic;
+        if (null !== $this->sets->findOngoing($user, $mode)) {
             throw new OngoingSetExistsException();
         }
 
@@ -85,7 +86,7 @@ final class SetManager
             throw new \InvalidArgumentException('Unknown theme.');
         }
         // Outside the transaction: read-only index scans, no lock held meanwhile.
-        $puzzleIds = $this->generator->generate($config, array_map(static fn ($theme): int => (int) $theme->getId(), $themes));
+        $puzzleIds = $this->generator->generate($config->puzzleCount, $config->ratingMin, $config->ratingMax, array_map(static fn ($theme): int => (int) $theme->getId(), $themes));
 
         try {
             return $this->entityManager->wrapInTransaction(function () use ($user, $name, $config, $puzzleIds): Set {

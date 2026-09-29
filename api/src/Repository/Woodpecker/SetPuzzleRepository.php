@@ -6,6 +6,7 @@ namespace App\Repository\Woodpecker;
 
 use App\Entity\Puzzle\Puzzle;
 use App\Entity\User;
+use App\Entity\Woodpecker\Cycle;
 use App\Entity\Woodpecker\Set;
 use App\Entity\Woodpecker\SetPuzzle;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -30,11 +31,12 @@ class SetPuzzleRepository extends ServiceEntityRepository
     }
 
     /**
-     * Writes a set's frozen list with multi-row INSERTs (up to 1,500 rows: no entity per row).
+     * Writes a set's list, or appends to it from $firstPosition, with multi-row INSERTs (up to
+     * 1,500 rows: no entity per row).
      *
      * @param list<int> $puzzleIds in the set's order
      */
-    public function insertList(Set $set, array $puzzleIds): void
+    public function insertList(Set $set, array $puzzleIds, int $firstPosition = 0): void
     {
         $connection = $this->getEntityManager()->getConnection();
         $setId = $set->getId()->toBinary();
@@ -44,13 +46,64 @@ class SetPuzzleRepository extends ServiceEntityRepository
             $params = [];
             foreach ($chunk as $position => $puzzleId) {
                 $values[] = '(?, ?, ?)';
-                array_push($params, $setId, $position, $puzzleId);
+                array_push($params, $setId, $firstPosition + $position, $puzzleId);
             }
             $connection->executeStatement(
                 'INSERT INTO woodpecker_set_puzzle (set_id, position, puzzle_id) VALUES '.implode(', ', $values),
                 $params,
             );
         }
+    }
+
+    /**
+     * @return list<int> the set's puzzle ids
+     */
+    public function findPuzzleIds(Set $set): array
+    {
+        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            'SELECT puzzle_id FROM woodpecker_set_puzzle WHERE set_id = :set',
+            ['set' => $set->getId()->toBinary()],
+        ));
+    }
+
+    /**
+     * How many of the set's puzzles have no attempt yet in this round (pending ones count as
+     * seen): one scan of the set's list, one unique (cycle_id, puzzle_id) probe per puzzle.
+     */
+    public function countUnseen(Set $set, Cycle $round): int
+    {
+        $count = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT COUNT(*) FROM woodpecker_set_puzzle sp
+             LEFT JOIN woodpecker_attempt a ON a.cycle_id = :round AND a.puzzle_id = sp.puzzle_id
+             WHERE sp.set_id = :set AND a.id IS NULL',
+            ['set' => $set->getId()->toBinary(), 'round' => $round->getId()->toBinary()],
+        );
+
+        return is_numeric($count) ? (int) $count : 0;
+    }
+
+    /**
+     * The position of the first puzzle of the round's order that has no attempt yet in it: the
+     * set's order, or, shuffled, an order keyed by the round's seed (CRC32 of seed and position,
+     * deterministic; puzzles appended later fall at random places among the remaining ones).
+     */
+    public function firstUnseenPosition(Set $set, Cycle $round): ?int
+    {
+        $params = ['set' => $set->getId()->toBinary(), 'round' => $round->getId()->toBinary()];
+        $order = 'sp.position';
+        if ($set->isShuffled()) {
+            $order = "CRC32(CONCAT(:seed, ':', sp.position)), sp.position";
+            $params['seed'] = $round->getSeed();
+        }
+        $position = $this->getEntityManager()->getConnection()->fetchOne(
+            "SELECT sp.position FROM woodpecker_set_puzzle sp
+             LEFT JOIN woodpecker_attempt a ON a.cycle_id = :round AND a.puzzle_id = sp.puzzle_id
+             WHERE sp.set_id = :set AND a.id IS NULL
+             ORDER BY {$order} LIMIT 1",
+            $params,
+        );
+
+        return is_numeric($position) ? (int) $position : null;
     }
 
     /**

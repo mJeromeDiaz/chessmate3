@@ -10,6 +10,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Defaults: docs/WOODPECKER.md, "Creating a set". Without ratingMin/ratingMax, the range is
  * derived from the user's puzzle rating (easy puzzles, as the method recommends). The lower
  * bound of puzzleCount comes from the woodpecker.min_puzzles parameter (checked by the processor).
+ * A light set ignores puzzleCount (fixed initial size, then growth) and the schedule fields.
  */
 #[Assert\Expression(
     'this.ratingMin === null and this.ratingMax === null or (this.ratingMin !== null and this.ratingMax !== null and this.ratingMax - this.ratingMin >= 100)',
@@ -20,6 +21,9 @@ final class CreateSetInput
     #[Assert\NotBlank]
     #[Assert\Length(max: 80)]
     public string $name = '';
+
+    #[Assert\Choice(choices: ['classic', 'light'])]
+    public string $mode = 'classic';
 
     #[Assert\Range(min: 1, max: 1500)]
     public int $puzzleCount = 300;

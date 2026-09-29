@@ -20,5 +20,5 @@ interface CreationPolicyInterface
     /**
      * @throws HttpExceptionInterface when the user may not create this set
      */
-    public function check(User $user, SetConfig $config): void;
+    public function check(User $user, SetConfig|LightConfig $config): void;
 }
