@@ -11,6 +11,8 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use ApiPlatform\OpenApi\Model\Parameter;
+use App\ApiResource\Training\RunRecord;
+use App\Entity\Training\Run;
 use App\Entity\Woodpecker\Cycle;
 use App\Entity\Woodpecker\Growth;
 use App\Entity\Woodpecker\Set as SetEntity;
@@ -81,13 +83,17 @@ final class Set
     /** @var list<GrowthView> light sets: oldest first (always empty for a classic set) */
     #[ApiProperty(genId: false)]
     public array $growths;
+    /** @var list<RunRecord> closed timed runs, newest first (at most 50) */
+    #[ApiProperty(genId: false)]
+    public array $runs;
 
     /**
      * @param list<Cycle>               $cycles
      * @param array<string, CycleStats> $stats   by cycle id
      * @param list<Growth>              $growths
+     * @param list<Run>                 $runs
      */
-    public static function from(SetEntity $set, array $cycles, array $stats, array $growths, \DateTimeImmutable $now): self
+    public static function from(SetEntity $set, array $cycles, array $stats, array $growths, array $runs, \DateTimeImmutable $now): self
     {
         $config = SetMode::Classic === $set->getMode() ? $set->getConfig() : null;
         $timezone = $set->getUser()->getDateTimeZone();
@@ -108,6 +114,7 @@ final class Set
         $view->restDays = $config?->restDays;
         $view->shuffle = $set->isShuffled();
         $view->growths = array_map(GrowthView::from(...), $growths);
+        $view->runs = array_map(RunRecord::from(...), $runs);
         $view->createdAt = $set->getCreatedAt();
         $view->pausedAt = $set->getPausedAt();
         $view->completedAt = $set->getCompletedAt();

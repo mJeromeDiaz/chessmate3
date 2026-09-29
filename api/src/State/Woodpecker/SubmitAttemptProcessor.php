@@ -12,10 +12,12 @@ use App\Puzzle\Attempt\Submission;
 use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
+use App\Training\Run\TimeboxRunner;
 use App\Woodpecker\Cycle\CycleRunner;
 use App\Woodpecker\Exception\AttemptAlreadySubmittedException;
 use App\Woodpecker\Exception\AttemptNotFoundException;
 use App\Woodpecker\Exception\CycleClosedException;
+use App\Woodpecker\Exception\SetNotPlayableException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -24,8 +26,8 @@ use Symfony\Component\Uid\Uuid;
 
 /**
  * POST /woodpecker/attempts/{id}/submission. 404 for another user's or an unknown attempt, 409
- * when already submitted or its run is over (lost, completed, set paused), 400 for an impossible
- * move log.
+ * when already submitted or its run is over (lost, completed, set paused) or it belongs to a
+ * timed run, 400 for an impossible move log.
  *
  * @implements ProcessorInterface<SubmitAttemptInput, Attempt>
  */
@@ -37,6 +39,7 @@ final class SubmitAttemptProcessor implements ProcessorInterface
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly RateLimiterFactory $woodpeckerAttemptSubmitLimiter,
+        private readonly TimeboxRunner $timebox,
     ) {
     }
 
@@ -44,6 +47,8 @@ final class SubmitAttemptProcessor implements ProcessorInterface
     {
         $user = $this->authenticatedUser->get();
         $this->rateLimitGuard->consume($this->woodpeckerAttemptSubmitLimiter, $user->getId()->toRfc4122());
+        // A timed run past its time must not keep holding the set.
+        $this->timebox->closeExpired($user);
         $id = $uriVariables['id'] ?? null;
         if (!\is_string($id) || !Uuid::isValid($id)) {
             throw new NotFoundHttpException();
@@ -57,6 +62,8 @@ final class SubmitAttemptProcessor implements ProcessorInterface
             throw new ConflictHttpException('Attempt already submitted.');
         } catch (CycleClosedException) {
             throw new ConflictHttpException('This cycle run is over.');
+        } catch (SetNotPlayableException $e) {
+            throw new ConflictHttpException($e->getMessage());
         } catch (InvalidSubmissionException $e) {
             throw new BadRequestHttpException($e->getMessage());
         }

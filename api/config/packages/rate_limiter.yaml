@@ -120,3 +120,17 @@ framework:
             policy: sliding_window
             limit: 120
             interval: '10 minutes'
+        # Timed runs (identifier = user id). Starting one writes a row and opens a round; items
+        # are capped higher than untimed play: light runs are about speed (a puzzle every ~2 s).
+        training_run_start:
+            policy: sliding_window
+            limit: 30
+            interval: '1 hour'
+        training_item_next:
+            policy: sliding_window
+            limit: 300
+            interval: '10 minutes'
+        training_item_submit:
+            policy: sliding_window
+            limit: 300
+            interval: '10 minutes'

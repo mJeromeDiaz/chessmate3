@@ -25,6 +25,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Index(name: 'idx_woodpecker_attempt_puzzle', columns: ['puzzle_id'])]
 #[ORM\Index(name: 'idx_woodpecker_attempt_cycle', columns: ['cycle_id'])]
 #[ORM\Index(name: 'idx_woodpecker_attempt_training_run_status', columns: ['training_run_id', 'status'])]
+#[ORM\Index(name: 'idx_woodpecker_attempt_training_run', columns: ['training_run_id'])]
 class Attempt
 {
     /** Longest duration counted as active time in the statistics (a tab left open overnight). */

@@ -16,6 +16,9 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @phpstan-type CycleJson array{number: int, run: int, status: string, durationDays: int, availableAt: string, deadlineAt: string, completedAt: string|null, lostAt: string|null, played: int, solved: int, failed: int, accuracy: float|int|null, activeMs: int, averageMs: int|null, calendarMs: int|null, onTime: bool|null, daysLeft: int|null}
  * @phpstan-type SetJson array{id: string, name: string, status: string, archived: bool, puzzleCount: int, ratingMin: int, ratingMax: int, themes: list<string>, cycleCount: int, timezone: string, current: CycleJson|null, cycles: list<CycleJson>}
+ * @phpstan-type RunJson array{id: string, module: string, subjectId: string, status: string, closeReason: string|null, budgetSeconds: int, startedAt: string, expiresAt: string, closedAt: string|null, serverNow: string, summary: array{durationMs: int, itemCount: int, successCount: int, failureCount: int, successRate: float|int|null, itemsPerMinute: float|int|null, metrics: array<string, mixed>, context: array<string, mixed>}|null}
+ * @phpstan-type ItemJson array{id: string, type: string, data: array{puzzle: array{id: string, fen: string, moves: list<string>, playerColor: string}, mode: string, round: int, index: int, puzzleCount: int, startedAt: string}}
+ * @phpstan-type StepJson array{id: string, run: RunJson, item: ItemJson|null, result: array{itemId: string, success: bool, data: array<string, mixed>}|null}
  * @phpstan-type WoodpeckerAttemptJson array{id: string, status: string, mistakes: int, puzzle: array{id: string, fen: string, moves: list<string>, playerColor: string, rating: int, themes: list<string>, gameUrl: string}, set: SetJson}
  */
 abstract class WoodpeckerWebTestCase extends PuzzleWebTestCase
@@ -136,6 +139,58 @@ abstract class WoodpeckerWebTestCase extends PuzzleWebTestCase
         self::assertNotNull($last);
 
         return $last;
+    }
+
+    /**
+     * @return RunJson
+     */
+    protected function startRun(User $user, string $setId, int $budgetSeconds = 1200): array
+    {
+        $response = $this->api('POST', '/api/training/runs', $user, ['module' => 'woodpecker', 'subjectId' => $setId, 'budgetSeconds' => $budgetSeconds]);
+        self::assertSame(201, $response->getStatusCode(), (string) $response->getContent());
+
+        /** @var RunJson */
+        return $this->json($response);
+    }
+
+    /**
+     * @return StepJson
+     */
+    protected function runNext(User $user, string $runId): array
+    {
+        $response = $this->api('POST', '/api/training/runs/'.$runId.'/next', $user);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+
+        /** @var StepJson */
+        return $this->json($response);
+    }
+
+    /**
+     * @param list<string> $moves
+     */
+    protected function runSubmit(User $user, string $runId, string $itemId, array $moves): Response
+    {
+        return $this->api('POST', '/api/training/runs/'.$runId.'/submission', $user, ['itemId' => $itemId, 'moves' => $moves]);
+    }
+
+    /**
+     * Plays the next item of a run (solved unless $moves are given).
+     *
+     * @param list<string>|null $moves
+     *
+     * @return array{item: ItemJson, step: StepJson}
+     */
+    protected function playInRun(User $user, string $runId, ?array $moves = null): array
+    {
+        $item = $this->runNext($user, $runId)['item'];
+        self::assertNotNull($item, 'The run served no item.');
+        $response = $this->runSubmit($user, $runId, $item['id'], $moves ?? self::solution($item['data']));
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+
+        /** @var StepJson $step */
+        $step = $this->json($response);
+
+        return ['item' => $item, 'step' => $step];
     }
 
     /**

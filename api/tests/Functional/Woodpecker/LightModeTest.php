@@ -6,17 +6,15 @@ namespace App\Tests\Functional\Woodpecker;
 
 use App\Entity\Puzzle\Puzzle;
 use App\Entity\User;
-use App\Repository\Woodpecker\SetRepository;
 use App\Woodpecker\Event\SetGrown;
 use App\Woodpecker\Integration\ActiveSetExclusion;
-use App\Woodpecker\Mode\LightProgression;
 use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Light sets (docs/WOODPECKER.md). Test parameters: 10 initial puzzles, growth by 5 when fewer
- * than 2 remain unseen in the round, 30 at most; 48 selectable sample puzzles.
+ * Light sets (docs/WOODPECKER.md), played in timed runs only. Test parameters: 10 initial
+ * puzzles, growth by 5 when fewer than 2 remain unseen in the round, 30 at most; 48 selectable
+ * sample puzzles.
  *
  * @phpstan-type RoundJson array{number: int, status: string, played: int, durationDays: int|null, deadlineAt: string|null, daysLeft: int|null, onTime: bool|null}
  * @phpstan-type GrowthJson array{occurredAt: string, round: int, added: int, puzzleCount: int}
@@ -44,16 +42,18 @@ final class LightModeTest extends WoodpeckerWebTestCase
         /** @var array{member: list<mixed>} $list */
         $list = $this->json($this->api('GET', '/api/woodpecker/sets', $alice));
         self::assertCount(2, $list['member']);
+        self::assertSame(409, $this->api('POST', '/api/woodpecker/sets/'.$light['id'].'/attempts', $alice)->getStatusCode(), 'Timed runs only.');
     }
 
     public function testARoundPlaysTheSetInOrderWithoutRepeatingAPuzzle(): void
     {
         $alice = $this->createUserIn('alice@example.com');
         $set = $this->createLightSet($alice);
+        $run = $this->startRun($alice, $set['id']);
 
         $played = [];
         for ($i = 0; $i < 8; ++$i) {
-            $played[] = $this->play($alice, $set['id'])['puzzle']['id'];
+            $played[] = $this->playInRun($alice, $run['id'])['item']['data']['puzzle']['id'];
         }
 
         self::assertSame(\array_slice($this->listOf($set['id']), 0, 8), $played);
@@ -69,8 +69,9 @@ final class LightModeTest extends WoodpeckerWebTestCase
         $alice = $this->createUserIn('alice@example.com');
         $set = $this->createLightSet($alice);
         $initial = $this->listOf($set['id']);
+        $run = $this->startRun($alice, $set['id']);
         for ($i = 0; $i < 9; ++$i) {
-            $this->play($alice, $set['id']);
+            $this->playInRun($alice, $run['id']);
         }
 
         $view = $this->lightView($alice, $set['id']);
@@ -84,8 +85,8 @@ final class LightModeTest extends WoodpeckerWebTestCase
         self::assertCount(15, array_unique($list));
 
         // The rest of the original list, then the new puzzles, in order.
-        self::assertSame($list[9], $this->play($alice, $set['id'])['puzzle']['id']);
-        self::assertSame($list[10], $this->play($alice, $set['id'])['puzzle']['id']);
+        self::assertSame($list[9], $this->playInRun($alice, $run['id'])['item']['data']['puzzle']['id']);
+        self::assertSame($list[10], $this->playInRun($alice, $run['id'])['item']['data']['puzzle']['id']);
 
         $grown = array_values(array_filter($this->drainOutbox(), static fn (object $m): bool => $m instanceof SetGrown));
         self::assertCount(1, $grown);
@@ -103,8 +104,9 @@ final class LightModeTest extends WoodpeckerWebTestCase
     {
         $alice = $this->createUserIn('alice@example.com');
         $set = $this->createLightSet($alice);
+        $run = $this->startRun($alice, $set['id']);
         for ($i = 0; $i < 30; ++$i) {
-            $this->play($alice, $set['id']);
+            $this->playInRun($alice, $run['id']);
         }
 
         $view = $this->lightView($alice, $set['id']);
@@ -114,7 +116,7 @@ final class LightModeTest extends WoodpeckerWebTestCase
             static fn (array $round): array => [$round['number'], $round['status'], $round['played'], $round['onTime']],
             $view['cycles'],
         ));
-        self::assertSame($this->listOf($set['id'])[0], $this->play($alice, $set['id'])['puzzle']['id']);
+        self::assertSame($this->listOf($set['id'])[0], $this->playInRun($alice, $run['id'])['item']['data']['puzzle']['id'], 'Same run, puzzles repeat.');
     }
 
     public function testGrowthStopsWhenThePoolIsExhausted(): void
@@ -122,8 +124,9 @@ final class LightModeTest extends WoodpeckerWebTestCase
         [$low, $high] = $this->ratingWindowOf(12);
         $alice = $this->createUserIn('alice@example.com');
         $set = $this->createLightSet($alice, ['ratingMin' => $low, 'ratingMax' => $high]);
+        $run = $this->startRun($alice, $set['id']);
         for ($i = 0; $i < 12; ++$i) {
-            $this->play($alice, $set['id']);
+            $this->playInRun($alice, $run['id']);
         }
 
         $view = $this->lightView($alice, $set['id']);
@@ -132,19 +135,21 @@ final class LightModeTest extends WoodpeckerWebTestCase
         self::assertSame([[1, 'completed'], [2, 'active']], array_map(static fn (array $r): array => [$r['number'], $r['status']], $view['cycles']));
     }
 
-    public function testEndingARoundDropsThePuzzleOnScreenAndTheNextOneRestartsFromTheFirstPuzzle(): void
+    public function testEachRunRestartsFromTheFirstPuzzleAndDropsThePuzzleOnScreen(): void
     {
         $alice = $this->createUserIn('alice@example.com');
         $set = $this->createLightSet($alice);
+        $run = $this->startRun($alice, $set['id']);
         for ($i = 0; $i < 3; ++$i) {
-            $this->play($alice, $set['id']);
+            $this->playInRun($alice, $run['id']);
         }
-        $this->next($alice, $set['id']);
+        $this->runNext($alice, $run['id']);
+        self::assertSame(200, $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice)->getStatusCode());
 
-        $this->endRound($alice, $set['id']);
-
-        $first = $this->next($alice, $set['id']);
-        self::assertSame($this->listOf($set['id'])[0], $first['puzzle']['id']);
+        $second = $this->startRun($alice, $set['id']);
+        $first = $this->runNext($alice, $second['id'])['item'];
+        self::assertNotNull($first);
+        self::assertSame($this->listOf($set['id'])[0], $first['data']['puzzle']['id']);
         $view = $this->lightView($alice, $set['id']);
         self::assertSame([[1, 'completed', 3], [2, 'active', 0]], array_map(
             static fn (array $round): array => [$round['number'], $round['status'], $round['played']],
@@ -159,9 +164,10 @@ final class LightModeTest extends WoodpeckerWebTestCase
     {
         $alice = $this->createUserIn('alice@example.com');
         $set = $this->createLightSet($alice);
-        $failed = $this->play($alice, $set['id'], []);
-        $this->endRound($alice, $set['id']);
-        $this->play($alice, $set['id'], []);
+        $run = $this->startRun($alice, $set['id']);
+        $failed = $this->playInRun($alice, $run['id'], [])['item']['data'];
+        $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice);
+        $this->playInRun($alice, $this->startRun($alice, $set['id'])['id'], []);
 
         /** @var array{member: list<array{puzzleId: string, failedCycles: int}>} $list */
         $list = $this->json($this->api('GET', '/api/woodpecker/sets/'.$set['id'].'/stubborn', $alice));
@@ -172,9 +178,10 @@ final class LightModeTest extends WoodpeckerWebTestCase
     {
         $alice = $this->createUserIn('alice@example.com');
         $set = $this->createLightSet($alice, ['shuffle' => true]);
+        $run = $this->startRun($alice, $set['id']);
         $played = [];
         for ($i = 0; $i < 8; ++$i) {
-            $played[] = $this->play($alice, $set['id'])['puzzle']['id'];
+            $played[] = $this->playInRun($alice, $run['id'])['item']['data']['puzzle']['id'];
         }
 
         self::assertCount(8, array_unique($played));
@@ -187,9 +194,9 @@ final class LightModeTest extends WoodpeckerWebTestCase
         $set = $this->createLightSet($alice);
         self::assertSame(200, $this->api('POST', '/api/woodpecker/sets/'.$set['id'].'/pause', $alice)->getStatusCode());
 
-        self::assertSame(409, $this->api('POST', '/api/woodpecker/sets/'.$set['id'].'/attempts', $alice)->getStatusCode());
+        self::assertSame(409, $this->api('POST', '/api/training/runs', $alice, ['module' => 'woodpecker', 'subjectId' => $set['id'], 'budgetSeconds' => 600])->getStatusCode());
         self::assertSame(200, $this->api('POST', '/api/woodpecker/sets/'.$set['id'].'/resume', $alice)->getStatusCode());
-        $this->next($alice, $set['id']);
+        $this->runNext($alice, $this->startRun($alice, $set['id'])['id']);
     }
 
     /**
@@ -236,21 +243,6 @@ final class LightModeTest extends WoodpeckerWebTestCase
             'SELECT puzzle_id FROM woodpecker_set_puzzle WHERE set_id = :set',
             ['set' => Uuid::fromString($setId)->toBinary()],
         ));
-    }
-
-    /**
-     * What a run's end will do (step 3): LightProgression::endRound() under the set's lock.
-     */
-    private function endRound(User $user, string $setId): void
-    {
-        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $entityManager->wrapInTransaction(function () use ($entityManager, $user, $setId): void {
-            $owner = $entityManager->find(User::class, $user->getId());
-            self::assertNotNull($owner);
-            $set = self::getContainer()->get(SetRepository::class)->lockOwned(Uuid::fromString($setId), $owner);
-            self::assertNotNull($set);
-            self::getContainer()->get(LightProgression::class)->endRound($set, $this->clock->now());
-        });
     }
 
     /**
