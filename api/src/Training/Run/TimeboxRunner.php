@@ -145,6 +145,7 @@ final class TimeboxRunner
      * @throws SubmissionTooLateException  (the run is closed)
      * @throws \App\Training\Exception\ItemNotFoundException
      * @throws \App\Training\Exception\ItemAlreadySubmittedException
+     * @throws \App\Training\Exception\ItemClosedException
      * @throws \App\Training\Exception\InvalidItemSubmissionException
      */
     public function submit(User $user, Uuid $runId, ItemSubmission $submission): Step

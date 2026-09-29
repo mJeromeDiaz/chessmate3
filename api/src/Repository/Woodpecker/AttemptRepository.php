@@ -53,9 +53,12 @@ class AttemptRepository extends ServiceEntityRepository
         return $this->findOneBy(['cycle' => $cycle, 'status' => AttemptStatus::Pending]);
     }
 
-    public function findPendingOfRun(Run $run): ?Attempt
+    /**
+     * @return list<Attempt>
+     */
+    public function findPendingOfRun(Run $run): array
     {
-        return $this->findOneBy(['run' => $run, 'status' => AttemptStatus::Pending]);
+        return $this->findBy(['run' => $run, 'status' => AttemptStatus::Pending]);
     }
 
     /**

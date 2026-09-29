@@ -12,6 +12,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Training\Exception\InvalidItemSubmissionException;
 use App\Training\Exception\ItemAlreadySubmittedException;
+use App\Training\Exception\ItemClosedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\RunClosedException;
 use App\Training\Exception\RunNotFoundException;
@@ -26,8 +27,9 @@ use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 /**
  * POST /training/runs/{id}/submission. 404 for an unknown run or item, 409 when the run is over
- * (closed, or time up when the submission arrived) or the item already submitted, 400 for an
- * impossible move log.
+ * (closed, or time up when the submission arrived), the item already submitted or no longer
+ * submittable (its classic cycle run was lost: ask for the next one), 400 for an impossible move
+ * log.
  *
  * @implements ProcessorInterface<SubmitItemInput, RunStep>
  */
@@ -61,6 +63,8 @@ final class SubmitItemProcessor implements ProcessorInterface
             throw new ConflictHttpException('Time was up.');
         } catch (ItemAlreadySubmittedException) {
             throw new ConflictHttpException('Item already submitted.');
+        } catch (ItemClosedException) {
+            throw new ConflictHttpException('This item can no longer be submitted; ask for the next one.');
         } catch (InvalidItemSubmissionException $e) {
             throw new BadRequestHttpException($e->getMessage());
         }

@@ -9,6 +9,7 @@ use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
 use App\Training\Exception\InvalidItemSubmissionException;
 use App\Training\Exception\ItemAlreadySubmittedException;
+use App\Training\Exception\ItemClosedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
@@ -51,6 +52,7 @@ interface TimeboxedModuleInterface
      *
      * @throws ItemNotFoundException          not an item of this run
      * @throws ItemAlreadySubmittedException
+     * @throws ItemClosedException            the item can no longer be submitted, the run goes on
      * @throws InvalidItemSubmissionException
      * @throws SubjectUnavailableException    the run must close
      */

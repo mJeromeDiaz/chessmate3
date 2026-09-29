@@ -22,6 +22,7 @@ use App\Repository\Woodpecker\GrowthRepository;
 use App\Repository\Woodpecker\SetRepository;
 use App\Training\Exception\InvalidItemSubmissionException;
 use App\Training\Exception\ItemAlreadySubmittedException;
+use App\Training\Exception\ItemClosedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
@@ -122,7 +123,7 @@ final class WoodpeckerModule implements TimeboxedModuleInterface
             throw new ItemAlreadySubmittedException();
         } catch (CycleClosedException) {
             // The round ended under it (a classic deadline passed): the run goes on with the new one.
-            throw new ItemNotFoundException();
+            throw new ItemClosedException();
         } catch (InvalidSubmissionException $e) {
             throw new InvalidItemSubmissionException($e->getMessage(), 0, $e);
         }
@@ -146,11 +147,11 @@ final class WoodpeckerModule implements TimeboxedModuleInterface
     public function close(Run $run, CloseReason $reason, \DateTimeImmutable $now): void
     {
         $set = $this->lockSet($run);
-        $pending = $this->attempts->findPendingOfRun($run);
-        if (null !== $pending) {
+        // The puzzle on screen, and one left in a classic cycle run lost during the run.
+        foreach ($this->attempts->findPendingOfRun($run) as $pending) {
             $this->entityManager->remove($pending);
-            $this->entityManager->flush();
         }
+        $this->entityManager->flush();
         if (null !== $set && SetMode::Light === $set->getMode()) {
             $this->light->endRound($set, $now);
         }
