@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository\Woodpecker;
 
+use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Entity\Woodpecker\Attempt;
 use App\Entity\Woodpecker\Cycle;
@@ -50,6 +51,40 @@ class AttemptRepository extends ServiceEntityRepository
     public function findPending(Cycle $cycle): ?Attempt
     {
         return $this->findOneBy(['cycle' => $cycle, 'status' => AttemptStatus::Pending]);
+    }
+
+    public function findPendingOfRun(Run $run): ?Attempt
+    {
+        return $this->findOneBy(['run' => $run, 'status' => AttemptStatus::Pending]);
+    }
+
+    /**
+     * What a timed run resolved: solved, failed, active time (each attempt capped) and the rounds
+     * it went through.
+     *
+     * @return array{solved: int, failed: int, activeMs: int, rounds: list<int>}
+     */
+    public function statsOfRun(Run $run): array
+    {
+        $connection = $this->getEntityManager()->getConnection();
+        $row = $connection->fetchAssociative(
+            "SELECT SUM(status = 'solved') AS solved, SUM(status = 'failed') AS failed,
+                    SUM(CASE WHEN status != 'pending' THEN LEAST(COALESCE(duration_ms, 0), :cap) ELSE 0 END) AS active_ms
+             FROM woodpecker_attempt WHERE training_run_id = :run",
+            ['run' => $run->getId()->toBinary(), 'cap' => Attempt::ACTIVE_TIME_CAP_MS],
+        ) ?: [];
+        $rounds = $connection->fetchFirstColumn(
+            "SELECT DISTINCT c.number FROM woodpecker_attempt a JOIN woodpecker_cycle c ON c.id = a.cycle_id
+             WHERE a.training_run_id = :run AND a.status != 'pending' ORDER BY c.number",
+            ['run' => $run->getId()->toBinary()],
+        );
+
+        return [
+            'solved' => self::int($row['solved'] ?? 0),
+            'failed' => self::int($row['failed'] ?? 0),
+            'activeMs' => self::int($row['active_ms'] ?? 0),
+            'rounds' => array_map(self::int(...), $rounds),
+        ];
     }
 
     public function countResolved(Cycle $cycle): int

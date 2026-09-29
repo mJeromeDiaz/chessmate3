@@ -20,6 +20,22 @@ class GrowthRepository extends ServiceEntityRepository
     }
 
     /**
+     * Puzzles added to the set from $since on (e.g. during a run).
+     */
+    public function sumAddedSince(Set $set, \DateTimeImmutable $since): int
+    {
+        $sum = $this->createQueryBuilder('g')
+            ->select('SUM(g.added)')
+            ->where('g.set = :set AND g.occurredAt >= :since')
+            ->setParameter('set', $set->getId(), 'uuid')
+            ->setParameter('since', $since)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return is_numeric($sum) ? (int) $sum : 0;
+    }
+
+    /**
      * @return list<Growth> oldest first
      */
     public function findBySet(Set $set): array
