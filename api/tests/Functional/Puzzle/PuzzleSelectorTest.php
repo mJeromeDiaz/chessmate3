@@ -25,7 +25,7 @@ final class PuzzleSelectorTest extends PuzzleWebTestCase
         $this->selector = new PuzzleSelector(
             $container->get(Connection::class),
             $container->get(AttemptRepository::class),
-            new Randomizer(new Mt19937(42)),
+            randomizer: new Randomizer(new Mt19937(42)),
         );
     }
 

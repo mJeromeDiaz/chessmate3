@@ -53,6 +53,7 @@ final class RegisterController extends AbstractController
         $candidate = new User();
         $candidate->setEmail($email);
         $candidate->setPassword($this->passwordHasher->hashPassword($candidate, $payload->password));
+        $candidate->setTimezone($payload->timezone);
 
         if (null === $this->userRepository->findOneByEmail($email)) {
             $this->userRepository->save($candidate);

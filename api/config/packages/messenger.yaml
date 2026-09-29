@@ -1,12 +1,22 @@
 framework:
     messenger:
-        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
-        # failure_transport: failed
+        failure_transport: failed
 
         transports:
             # https://symfony.com/doc/current/messenger.html#transport-configuration
             async: '%env(MESSENGER_TRANSPORT_DSN)%'
             sync: 'sync://'
+            # Transactional outbox of the domain events (docs/ACTIVITY.md): a Doctrine transport on the
+            # application's own connection, so dispatching a message is an INSERT into
+            # messenger_messages inside the transaction of the exercise. Rolled back with it, visible
+            # to the worker only once committed. Never switch it to a non-transactional transport.
+            activity:
+                dsn: 'doctrine://default?queue_name=activity&auto_setup=0'
+                retry_strategy:
+                    max_retries: 5
+                    delay: 2000
+                    multiplier: 3
+            failed: 'doctrine://default?queue_name=failed&auto_setup=0'
 
         routing:
             # Every auth notification email is async EXCEPT the 2FA login code, which is sent
@@ -16,9 +26,13 @@ framework:
             # Forgot-password does all of its work (user lookup, token, email) in a worker, so the
             # HTTP response costs exactly the same whether the email exists or not.
             'App\Security\Password\Message\PasswordResetRequested': async
+            # Domain events of every exercise and milestone (docs/ACTIVITY.md).
+            'App\Activity\Event\DomainEventInterface': activity
 
 when@test:
     framework:
         messenger:
             transports:
                 async: 'in-memory://'
+                # "activity" stays a real Doctrine transport in tests: its transactional behaviour
+                # (nothing emitted on rollback) is what is being tested. DAMA rolls its rows back.

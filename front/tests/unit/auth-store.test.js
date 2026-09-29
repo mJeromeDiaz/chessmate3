@@ -14,14 +14,20 @@ vi.mock('@/services/api', () => ({
     get: vi.fn(),
     addPassword: vi.fn(),
     unlinkIdentity: vi.fn(),
-    startLink: vi.fn()
+    startLink: vi.fn(),
+    setTimezone: vi.fn()
   }
 }))
 
 const { authApi, profileApi } = await import('@/services/api')
 const { useAuthStore } = await import('@/stores/auth')
 
-const PROFILE = { id: 'u1', email: 'alice@example.com', identities: [] }
+const PROFILE = {
+  id: 'u1',
+  email: 'alice@example.com',
+  identities: [],
+  timezone: 'Europe/Paris'
+}
 
 describe('auth store', () => {
   beforeEach(() => {
@@ -189,5 +195,28 @@ describe('auth store', () => {
       'passphrase',
       'magnus@example.com'
     )
+  })
+
+  it('reports the browser timezone once, when the profile has none', async () => {
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone
+    profileApi.get.mockResolvedValue({ ...PROFILE, timezone: null })
+    profileApi.setTimezone.mockResolvedValue({ ...PROFILE, timezone: detected })
+    const auth = useAuthStore()
+
+    await auth.fetchProfile()
+    await vi.waitFor(() => expect(auth.profile.timezone).toBe(detected))
+    expect(profileApi.setTimezone).toHaveBeenCalledExactlyOnceWith(detected)
+
+    profileApi.get.mockResolvedValue({ ...PROFILE, timezone: 'Asia/Tokyo' })
+    await auth.fetchProfile()
+    expect(profileApi.setTimezone).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the session when reporting the timezone fails', async () => {
+    profileApi.get.mockResolvedValue({ ...PROFILE, timezone: null })
+    profileApi.setTimezone.mockRejectedValue(new Error('offline'))
+    const auth = useAuthStore()
+
+    await expect(auth.fetchProfile()).resolves.toMatchObject({ id: 'u1' })
   })
 })

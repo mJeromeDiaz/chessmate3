@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\Profile;
 
 use App\Dto\Profile\AddPasswordRequest;
+use App\Dto\Profile\TimezoneRequest;
 use App\Entity\AuthIdentity;
 use App\Entity\User;
 use App\Enum\AuthProvider;
@@ -12,6 +13,7 @@ use App\Security\Password\PasswordAdder;
 use App\Security\Profile\IdentityUnlinker;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Security\Session\AuthenticatedSessionFactory;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -37,6 +39,7 @@ final class ProfileController extends AbstractController
         private readonly IdentityUnlinker $identityUnlinker,
         private readonly AuthenticatedSessionFactory $sessionFactory,
         private readonly RateLimitGuard $rateLimitGuard,
+        private readonly EntityManagerInterface $entityManager,
         #[Autowire(service: 'limiter.password_change_ip')]
         private readonly RateLimiterFactory $passwordIpLimiter,
         #[Autowire(service: 'limiter.password_change_identifier')]
@@ -73,6 +76,19 @@ final class ProfileController extends AbstractController
             'status' => $result,
             'message' => 'If this address can be used, a verification link has been sent to it. Your password will work once it is confirmed.',
         ], Response::HTTP_ACCEPTED);
+    }
+
+    /**
+     * Sets the IANA timezone used for local dates (sent by the SPA after sign-in when the profile
+     * has none, or chosen on the profile page). Past activity keeps its local dates.
+     */
+    #[Route('/timezone', name: 'app_profile_timezone', methods: ['PUT'])]
+    public function setTimezone(#[MapRequestPayload] TimezoneRequest $payload, #[CurrentUser] User $user): JsonResponse
+    {
+        $user->setTimezone($payload->timezone);
+        $this->entityManager->flush();
+
+        return $this->json($this->describe($user));
     }
 
     #[Route('/identities/{id}', name: 'app_profile_identity_unlink', methods: ['DELETE'])]
@@ -112,6 +128,7 @@ final class ProfileController extends AbstractController
             'pendingEmail' => $user->getPendingEmail(),
             'hasPassword' => $user->canSignInWithPassword(),
             'createdAt' => $user->getCreatedAt()->format(\DATE_ATOM),
+            'timezone' => $user->getTimezone(),
             'linkableProviders' => array_values(array_map(
                 static fn (AuthProvider $provider): string => $provider->value,
                 array_filter(AuthProvider::cases(), static fn (AuthProvider $provider): bool => !$user->getAuthIdentities()->exists(

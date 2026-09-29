@@ -60,6 +60,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => 0])]
     private int $tokenVersion = 0;
 
+    /**
+     * IANA timezone (e.g. "Europe/Paris"), used only to compute local dates (activity days,
+     * Woodpecker deadlines); every timestamp stays UTC. Null until the SPA reports it.
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $timezone = null;
+
     /** @var Collection<int, AuthIdentity> */
     #[ORM\OneToMany(targetEntity: AuthIdentity::class, mappedBy: 'user', cascade: ['persist'], orphanRemoval: true)]
     private Collection $authIdentities;
@@ -181,6 +188,32 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getTimezone(): ?string
+    {
+        return $this->timezone;
+    }
+
+    /**
+     * The timezone to compute local dates with: UTC while none is known.
+     */
+    public function getDateTimeZone(): \DateTimeZone
+    {
+        return new \DateTimeZone($this->timezone ?? 'UTC');
+    }
+
+    /**
+     * @throws \InvalidArgumentException if not an IANA identifier
+     */
+    public function setTimezone(?string $timezone): static
+    {
+        if (null !== $timezone && !\in_array($timezone, \DateTimeZone::listIdentifiers(\DateTimeZone::ALL_WITH_BC), true)) {
+            throw new \InvalidArgumentException(sprintf('Unknown timezone "%s".', $timezone));
+        }
+        $this->timezone = $timezone;
+
+        return $this;
     }
 
     public function getTokenVersion(): int

@@ -18,4 +18,8 @@ final class RegisterRequest
     #[Assert\PasswordStrength(minScore: Assert\PasswordStrength::STRENGTH_MEDIUM)]
     #[Assert\NotCompromisedPassword]
     public string $password = '';
+
+    /** IANA timezone detected by the browser (optional). */
+    #[Assert\Timezone]
+    public ?string $timezone = null;
 }

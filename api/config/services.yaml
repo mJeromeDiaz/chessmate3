@@ -7,6 +7,16 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Smallest Woodpecker set (docs/WOODPECKER.md); lowered in tests to finish a cycle quickly.
+    woodpecker.min_puzzles: 50
+
+when@test:
+    parameters:
+        woodpecker.min_puzzles: 5
+
+when@e2e:
+    parameters:
+        woodpecker.min_puzzles: 5
 
 services:
     # default configuration for services in *this* file

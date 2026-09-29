@@ -236,7 +236,10 @@ SELECT * FROM puzzle WHERE lichess_id = '00sHx';
 ## 7. Mise à jour avec un export plus récent
 
 Lichess met à jour chaque mois classements, parties et popularité, et ajoute des puzzles. **Ne jamais
-vider `puzzle`** : les tentatives référencent `puzzle.id`. Charger le nouveau fichier dans une
+vider `puzzle`** : les tentatives référencent `puzzle.id`, ainsi que les sets Woodpecker
+(`woodpecker_set_puzzle`, `woodpecker_attempt`) par des FK **sans cascade** : un `DELETE` d'un
+puzzle référencé échoue (voulu : un set est un instantané figé, voir
+[WOODPECKER.md § 3](WOODPECKER.md#3-modèle-de-données)). Charger le nouveau fichier dans une
 nouvelle table de staging (4.2–4.3), garder les index, et faire un upsert par tranches ; les puzzles
 existants gardent leur `id` et leur `random_key` :
 

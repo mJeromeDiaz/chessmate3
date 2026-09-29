@@ -62,9 +62,9 @@ export const authApi = {
       })
       .then(r => r.data),
   logout: () => http.post('/api/auth/logout', null, PUBLIC).then(r => r.data),
-  register: (email, password) =>
+  register: (email, password, timezone = null) =>
     http
-      .post('/api/auth/register', { email, password }, PUBLIC)
+      .post('/api/auth/register', { email, password, timezone }, PUBLIC)
       .then(r => r.data),
   resendVerification: email =>
     http
@@ -87,6 +87,9 @@ export const authApi = {
 
 export const profileApi = {
   get: () => http.get('/api/profile').then(r => r.data),
+  /** @param {string} timezone IANA identifier */
+  setTimezone: timezone =>
+    http.put('/api/profile/timezone', { timezone }).then(r => r.data),
   addPassword: (password, email) =>
     http
       .post('/api/profile/password', email ? { password, email } : { password })
@@ -153,4 +156,62 @@ export const puzzleApi = {
     http
       .post('/api/puzzles/rating/lichess-import', null, JSON_LD)
       .then(r => r.data)
+}
+
+export const woodpeckerApi = {
+  /** @param {{archived?: boolean}} params */
+  sets: (params = {}) =>
+    http
+      .get('/api/woodpecker/sets', {
+        ...JSON_LD,
+        params: params.archived ? { archived: 'true' } : {}
+      })
+      .then(r => r.data.member),
+  set: id =>
+    http
+      .get(`/api/woodpecker/sets/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /** @param {object} payload see docs/WOODPECKER.md, "Creating a set" */
+  create: payload =>
+    http.post('/api/woodpecker/sets', payload, JSON_LD).then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {'pause'|'resume'|'abandon'|'archive'} action
+   */
+  act: (id, action) =>
+    http
+      .post(
+        `/api/woodpecker/sets/${encodeURIComponent(id)}/${action}`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** The next puzzle of the current cycle (or the pending one). */
+  next: setId =>
+    http
+      .post(
+        `/api/woodpecker/sets/${encodeURIComponent(setId)}/attempts`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * @param {string} attemptId
+   * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
+   */
+  submit: (attemptId, report) =>
+    http
+      .post(
+        `/api/woodpecker/attempts/${encodeURIComponent(attemptId)}/submission`,
+        report,
+        JSON_LD
+      )
+      .then(r => r.data),
+  stubborn: setId =>
+    http
+      .get(
+        `/api/woodpecker/sets/${encodeURIComponent(setId)}/stubborn`,
+        JSON_LD
+      )
+      .then(r => r.data.member)
 }

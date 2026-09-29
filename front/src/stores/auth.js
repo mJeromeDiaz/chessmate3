@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { authApi, profileApi } from '@/services/api'
+import { browserTimezone } from '@/utils/timezone'
 
 /**
  * Runs `task` while holding a lock shared by every tab of this origin (Web Locks API), when the
@@ -163,6 +164,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchProfile() {
     profile.value = await profileApi.get()
+    // Local dates (activity days, Woodpecker deadlines) need the user's timezone: report the
+    // browser's once, at the first sign-in without one. Never blocks the session.
+    if (profile.value && !profile.value.timezone) {
+      const detected = browserTimezone()
+      if (detected) setTimezone(detected).catch(() => {})
+    }
+    return profile.value
+  }
+
+  /** @param {string} timezone IANA identifier */
+  async function setTimezone(timezone) {
+    profile.value = await profileApi.setTimezone(timezone)
     return profile.value
   }
 
@@ -243,6 +256,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     clearSession,
     fetchProfile,
+    setTimezone,
     startSession,
     changePassword,
     addPassword,

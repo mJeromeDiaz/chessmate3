@@ -8,6 +8,12 @@ doctrine:
         # either here or in the DATABASE_URL env var (see .env file)
         #server_version: '16'
 
+        # UTC session: SQL date functions (NOW(), CURDATE()...) agree with PHP. DATETIME columns
+        # are not converted by MySQL, the application always writes UTC values.
+        # 1002 = PDO::MYSQL_ATTR_INIT_COMMAND (Pdo\Mysql::ATTR_INIT_COMMAND in PHP 8.4+).
+        options:
+            1002: "SET time_zone = '+00:00'"
+
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
         # Transient tables of the puzzle import (docs/PUZZLE_IMPORT.md) and of the selection

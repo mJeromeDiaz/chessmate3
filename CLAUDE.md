@@ -7,8 +7,9 @@ Chess training app (Duolingo-style). One git repository (monorepo) at the root:
 - `front/`: Vue 3 + Quasar 2 + Pinia, **JavaScript** (Composition API, `<script setup>`, JSDoc on
   non-trivial functions and stores), file-based routing under `src/pages/`, hash router mode.
 - `docs/` (root): general documentation — `AUTH.md`, `SECURITY.md`, `PUZZLES.md`,
-  `PUZZLE_IMPORT.md`. Code paths quoted in them (`src/...`, `config/...`, `bin/console`) are
-  relative to `api/` unless they name `front/`.
+  `PUZZLE_IMPORT.md`, `ACTIVITY.md` (timezone, domain events, activity log), `WOODPECKER.md`. Code
+  paths quoted in them (`src/...`, `config/...`, `bin/console`) are relative to `api/` unless they
+  name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
 editor and OS files.
@@ -24,7 +25,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle today; Woodpecker, Repertoire... later) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker today; Repertoire... later) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
 
 | Layer | Location |
@@ -64,6 +65,8 @@ bin/console doctrine:migrations:migrate [--env=test]
 bin/console doctrine:fixtures:load                   # dev data (themes, sample puzzles)
 bin/console app:puzzle:sync-themes                   # load/update the Lichess puzzle themes
 bin/console app:puzzle:rebuild-selection             # after a puzzle import or a quality-threshold change
+bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
+bin/console messenger:consume activity async         # worker: domain events (outbox) and emails
 ```
 
 Front (`cd front`):
@@ -74,7 +77,7 @@ npm test                  # Vitest
 npm run lint:check        # oxfmt + oxlint
 npm run build
 npm run e2e:prepare       # once: ChessMateGo_e2e database, migrations, fixtures (APP_ENV=e2e)
-npm run test:e2e          # Playwright (starts the API with APP_ENV=e2e and quasar dev)
+npm run test:e2e          # Playwright (API with APP_ENV=e2e on :8100, quasar dev on :9100)
 ```
 
 End-to-end environment: `APP_ENV=e2e` (`api/.env.e2e`) uses its own database (`dbname_suffix:
@@ -87,5 +90,13 @@ no other environment. PHP's built-in server needs `-d variables_order=EGPCS` to 
   entity manager (and reload) before reading those entities in the same process.
 - API Platform drops `null` fields by default: resources set `skip_null_values: false`.
 - MySQL `SET @a = 1, @b = @a + 1` evaluates `@b` with the old `@a`: use separate statements.
+- Time: every instant is UTC (forced in `Kernel::boot()` and on each MySQL connection); a local day
+  (activity date, Woodpecker deadline) is computed explicitly with `User::getDateTimeZone()`.
+- Domain events go through `App\Activity\EventPublisher`, **inside** the transaction of the change
+  (Messenger `activity` transport = transactional outbox). Delivery is at-least-once: every handler
+  is idempotent. Events carry scalars only; add fields, never rename or remove them.
+- Cross-domain hooks are tagged interfaces owned by the domain being extended
+  (`Puzzle\Selection\ExclusionProviderInterface`, `Puzzle\Attempt\ReplayAuthorizerInterface`): the
+  Puzzle domain never depends on Woodpecker.
 - Lichess rate-limits the anonymous `puzzle/next` and `puzzle/batch` endpoints hard (429 for many
   minutes); never script them in a loop.

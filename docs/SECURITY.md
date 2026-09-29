@@ -360,7 +360,8 @@ classement** (Glicko-2) et le cloisonnement des tentatives entre utilisateurs.
 - Toutes les lectures et la soumission filtrent sur l'utilisateur authentifié **dans la requête SQL**
   (providers API Platform et `AttemptRepository::findOwnedForUpdate`). La tentative d'un autre
   utilisateur répond **404**, jamais 403 : son existence n'est pas révélée (testé).
-- Le rejeu (non classé) n'est permis que pour un puzzle de son propre historique.
+- Le rejeu (non classé) n'est permis que pour un puzzle de son propre historique (ou, depuis la
+  phase 4, d'un de ses propres sets Woodpecker : § 7.2).
 - `GET /puzzles/{id}` ne renvoie pas la solution : elle ne voyage qu'avec une tentative.
 
 ### 6.3 Rate limiting
@@ -416,3 +417,54 @@ le CSV d'exemple, sélection mesurée sur 5 M lignes, parcours réels dans Chrom
 | Appel HTTP à Lichess sous verrou de ligne. | Faible (disponibilité) | **Évité** : appel avant la transaction, revérification sous verrou. |
 | Commande `app:e2e:seed-user` (émet une session sans 2FA). | Élevée si exposée | **Évité** : `#[When('e2e')]`, absente des environnements dev et prod (vérifié). Le `APP_SECRET` de `.env.e2e` ne sert qu'aux tests. |
 | Solution envoyée au client. | Moyenne | **Accepté** (§ 6.4, R11). |
+
+## 7. Phase 4 : activité et Woodpecker
+
+Modèle et règles : [ACTIVITY.md](ACTIVITY.md), [WOODPECKER.md](WOODPECKER.md). Les tentatives
+Woodpecker ne sont pas classées : l'enjeu est surtout le cloisonnement, la fiabilité des événements
+(futurs XP et séries) et l'étanchéité avec le classement de la phase 2.
+
+### 7.1 Le serveur ne croit jamais le client (inchangé)
+
+- Soumission Woodpecker : même `SolutionValidator`, même durée serveur, même refus d'une liste
+  impossible (400, tentative toujours en attente) qu'en § 6.1.
+- **Un seul essai par puzzle et par run**, garanti par la base (`uniq_woodpecker_attempt_cycle_puzzle`) ;
+  seconde soumission ⇒ 409. Verrous toujours dans l'ordre set puis tentative.
+- **Un seul set en cours** par utilisateur, garanti par la base (colonne virtuelle `active_user_id`
+  + index unique) : deux créations concurrentes ⇒ une seule réussit (409).
+- Les échéances et le passage d'un run à l'état perdu sont calculés **par le serveur**, sous le verrou
+  du set, à partir de l'horloge serveur ; le front ne fait qu'afficher.
+
+### 7.2 Cloisonnement
+
+- Chaque requête Woodpecker filtre sur l'utilisateur authentifié dans le SQL (`lockOwned`,
+  `findOwned`) : set ou tentative d'un autre ⇒ **404** (testé).
+- Le rejeu non classé d'un puzzle récalcitrant n'est ouvert que pour un puzzle de **ses propres**
+  sets (`SetReplayAuthorizer`).
+- `PUT /api/profile/timezone` : identifiant IANA validé (`Assert\Timezone`), jamais interprété
+  autrement que par `DateTimeZone`.
+
+### 7.3 Événements et journal
+
+- Événements publiés **dans la transaction** (outbox) : jamais d'événement pour un exercice annulé,
+  jamais d'exercice validé sans événement. `EventPublisher` refuse d'être appelé hors transaction.
+- Livraison au moins une fois : le journal est idempotent (clé unique `source_type, source_id`) ;
+  tout futur handler (XP, séries) doit l'être aussi, sans quoi une relivraison doublerait des points.
+- Les événements ne transportent que des scalaires (pas d'entité ni de donnée personnelle au-delà de
+  l'id utilisateur) ; le journal est supprimé avec le compte (`ON DELETE CASCADE`).
+
+### 7.4 Rate limiting
+
+Par utilisateur : `woodpecker_set_create` (10 / h : une création parcourt l'index et écrit jusqu'à
+1 500 lignes), `woodpecker_attempt_start` et `woodpecker_attempt_submit` (120 / 10 min chacun, comme
+en phase 2). Tailles bornées côté serveur (1 500 puzzles, 10 thèmes, 10 cycles, 90 jours).
+
+### 7.5 Risques résiduels (phase 4)
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R15 | Même compromis qu'en § 6.4 : la solution part avec la tentative, un utilisateur peut « réussir » ses cycles sans jouer. | Aucun classement en jeu ; ne triche que sur ses propres statistiques. Durées serveur conservées. |
+| R16 | Une fois un set **terminé ou abandonné**, ses puzzles (résolus jusqu'à 7 fois) reviennent dans la sélection **classée** : un joueur peut gonfler son classement sur des puzzles mémorisés. | Règle validée (exclusion des sets actifs ou en pause seulement). Atténuation possible : exclure aussi les sets terminés (une sonde indexée de plus). |
+| R17 | La pause n'est pas limitée : elle repousse l'échéance d'autant. | Voulu (vacances, maladie) ; sans effet hors de ses propres cycles. À limiter si une récompense (XP, badge) dépend un jour du respect des échéances. |
+| R18 | Changer de fuseau avant l'ouverture d'un run peut le rallonger d'environ un jour. | Les dates déjà calculées ne bougent pas ; gain borné, sans effet sur les autres. |
+| R19 | Worker `activity` arrêté : les événements s'accumulent dans `messenger_messages`. | Aucune perte (outbox durable), traitement au redémarrage ; à superviser en production. |

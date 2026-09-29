@@ -191,4 +191,23 @@ describe('usePuzzle', () => {
     await loading
     expect(puzzle.lastMove.value).toEqual({ from: 'c6', to: 'd4' })
   })
+
+  it('can play the solution right after a mistake (one try, Woodpecker)', async () => {
+    const { puzzle, onResolve, onComplete } = await started(MATE_IN_2, {
+      afterMistake: 'showSolution'
+    })
+
+    expect(puzzle.play('e1e2')).toBe('wrong')
+    expect(onResolve).toHaveBeenCalledExactlyOnceWith('failed', {
+      moves: ['e1e2'],
+      hintLevel: 0,
+      solutionShown: false
+    })
+    expect(puzzle.movableColor.value).toBeNull()
+
+    await vi.advanceTimersByTimeAsync(DELAYS.solutionStep * 3)
+    expect(puzzle.phase.value).toBe('complete')
+    expect(puzzle.lastMove.value).toEqual({ from: 'e7', to: 'f6' })
+    expect(onComplete).toHaveBeenCalledOnce()
+  })
 })

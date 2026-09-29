@@ -59,6 +59,7 @@
 </template>
 
 <script setup>
+import { browserTimezone } from '@/utils/timezone'
 import { ref } from 'vue'
 import { authApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -78,7 +79,7 @@ async function submit() {
   error.value = ''
 
   try {
-    await authApi.register(email.value, password.value)
+    await authApi.register(email.value, password.value, browserTimezone())
     done.value = true
   } catch (e) {
     error.value = apiErrorMessage(e)

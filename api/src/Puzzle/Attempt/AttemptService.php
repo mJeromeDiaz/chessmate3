@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Puzzle\Attempt;
 
+use App\Activity\EventPublisher;
 use App\Entity\Puzzle\Attempt;
 use App\Entity\Puzzle\Puzzle;
 use App\Entity\Puzzle\RatingChange;
@@ -35,7 +36,8 @@ use Symfony\Component\Uid\Uuid;
 final class AttemptService
 {
     /**
-     * @param iterable<StartPolicyInterface> $startPolicies
+     * @param iterable<StartPolicyInterface>      $startPolicies
+     * @param iterable<ReplayAuthorizerInterface> $replayAuthorizers
      */
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -45,8 +47,11 @@ final class AttemptService
         private readonly PuzzleSelector $selector,
         private readonly SolutionValidator $validator,
         private readonly RatingCalculator $calculator,
+        private readonly EventPublisher $events,
         #[AutowireIterator(StartPolicyInterface::TAG)]
         private readonly iterable $startPolicies,
+        #[AutowireIterator(ReplayAuthorizerInterface::TAG)]
+        private readonly iterable $replayAuthorizers = [],
     ) {
     }
 
@@ -82,7 +87,8 @@ final class AttemptService
     }
 
     /**
-     * Starts an unrated attempt on a puzzle from the user's history.
+     * Starts an unrated attempt on a puzzle from the user's history (or one another domain
+     * authorizes, {@see ReplayAuthorizerInterface}).
      *
      * @throws ReplayNotAllowedException
      */
@@ -91,7 +97,7 @@ final class AttemptService
         return $this->entityManager->wrapInTransaction(function () use ($user, $puzzle): Attempt {
             $this->ratings->lockForUser($user);
 
-            if (!$this->attempts->hasAttempted($user, $puzzle)) {
+            if (!$this->attempts->hasAttempted($user, $puzzle) && !$this->authorizedElsewhere($user, $puzzle)) {
                 throw new ReplayNotAllowedException();
             }
 
@@ -147,9 +153,22 @@ final class AttemptService
             }
 
             $attempt->resolve($solved, $submission->moves, $replay->mistakes, $submission->hintLevel, $submission->solutionShown, $now, $change);
+            // Same transaction: the event exists if and only if the result is committed.
+            $this->events->publish(AttemptEvents::completed($attempt));
 
             return $attempt;
         });
+    }
+
+    private function authorizedElsewhere(User $user, Puzzle $puzzle): bool
+    {
+        foreach ($this->replayAuthorizers as $authorizer) {
+            if ($authorizer->canReplay($user, $puzzle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function checkPolicies(User $user, bool $rated): void

@@ -1,34 +1,6 @@
-import { execFileSync } from 'node:child_process'
 import { expect, test } from '@playwright/test'
 import { Chess } from 'chess.js'
-
-const API_DIR = new URL('../../../api/', import.meta.url).pathname
-
-/**
- * A fresh signed-in user: the API's e2e-only seed command creates it and returns a refresh token,
- * set as the HttpOnly cookie the SPA uses to restore its session on load (the email 2FA login
- * itself is covered by the Phase 1 tests).
- *
- * @param {import('@playwright/test').BrowserContext} context
- */
-async function signIn(context) {
-  const output = execFileSync(
-    'php',
-    ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user'],
-    { cwd: API_DIR, env: { ...process.env, APP_ENV: 'e2e' } }
-  )
-  const { refreshToken } = JSON.parse(output.toString().trim())
-  await context.addCookies([
-    {
-      name: 'refresh_token',
-      value: refreshToken,
-      domain: 'localhost',
-      path: '/api/auth',
-      httpOnly: true,
-      sameSite: 'Strict'
-    }
-  ])
-}
+import { fenAfter, playMove, signIn } from './helpers.js'
 
 /**
  * Opens the puzzle page and returns the attempt the API handed out (solution included).
@@ -48,30 +20,6 @@ async function openPuzzle(page) {
     'Trouvez le meilleur coup'
   )
   return attempt
-}
-
-/**
- * Plays a UCI move by clicking the origin then the destination square.
- *
- * @param {import('@playwright/test').Page} page
- * @param {string} uci
- */
-async function playMove(page, uci) {
-  const board = page.getByTestId('chess-board')
-  await board
-    .locator(`[data-square="${uci.slice(0, 2)}"]`)
-    .first()
-    .click()
-  await board
-    .locator(`[data-square="${uci.slice(2, 4)}"]`)
-    .first()
-    .click()
-  if (uci.length === 5) {
-    await board
-      .getByRole('dialog', { name: 'Choose promotion piece' })
-      .locator(`[role="button"][data-piece$="${uci[4]}"]`)
-      .click()
-  }
 }
 
 test('solves a puzzle', async ({ page, context }) => {
@@ -144,21 +92,3 @@ test('fails a puzzle, then sees the solution', async ({ page, context }) => {
     fenAfter(attempt.puzzle, attempt.puzzle.moves.length)
   )
 })
-
-/**
- * FEN after the first `count` moves of the puzzle line.
- *
- * @param {{fen: string, moves: string[]}} puzzle
- * @param {number} count
- */
-function fenAfter(puzzle, count) {
-  const chess = new Chess(puzzle.fen)
-  for (const uci of puzzle.moves.slice(0, count)) {
-    chess.move({
-      from: uci.slice(0, 2),
-      to: uci.slice(2, 4),
-      promotion: uci[4]
-    })
-  }
-  return chess.fen()
-}

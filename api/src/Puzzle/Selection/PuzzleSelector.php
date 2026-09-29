@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\Puzzle\AttemptRepository;
 use Doctrine\DBAL\Connection;
 use Random\Randomizer;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Picks a puzzle near the user's level (docs/PUZZLES.md, "Adaptive selection").
@@ -31,16 +32,22 @@ final class PuzzleSelector
     public const WIDENING_FACTORS = [1, 2, 4, 8];
     public const TARGET_OFFSET = -100;
     public const BASE_HALF_WIDTH = 75;
-    private const MAX_RANDOM_KEY = 0xFFFFFFFF;
 
     private readonly Randomizer $randomizer;
+    private readonly RandomSeeker $seeker;
 
+    /**
+     * @param iterable<ExclusionProviderInterface> $exclusions
+     */
     public function __construct(
-        private readonly Connection $connection,
+        Connection $connection,
         private readonly AttemptRepository $attempts,
+        #[AutowireIterator(ExclusionProviderInterface::TAG)]
+        private readonly iterable $exclusions = [],
         ?Randomizer $randomizer = null,
     ) {
         $this->randomizer = $randomizer ?? new Randomizer();
+        $this->seeker = new RandomSeeker($connection, $this->randomizer);
     }
 
     /**
@@ -66,12 +73,12 @@ final class PuzzleSelector
             $high = max($low, $centre + $halfWidth * $factor);
 
             for ($draw = 0; $draw < self::DRAWS_PER_WINDOW; ++$draw) {
-                $candidates = $this->candidates($criteria->themeIds, $low, $high);
+                $candidates = $this->seeker->draw($criteria->themeIds, $low, $high, self::CANDIDATES);
                 if ([] === $candidates) {
                     break; // nothing at all in this window: widen
                 }
 
-                $fresh = array_values(array_diff($candidates, $this->attempts->findRatedPuzzleIds($user, $candidates)));
+                $fresh = array_values(array_diff($candidates, $this->excluded($user, $candidates)));
                 if ([] !== $fresh) {
                     return $fresh[$this->randomizer->getInt(0, \count($fresh) - 1)];
                 }
@@ -82,54 +89,19 @@ final class PuzzleSelector
     }
 
     /**
-     * @param list<int> $themeIds
+     * Candidates the user played rated, plus those other domains exclude.
+     *
+     * @param list<int> $candidates
      *
      * @return list<int>
      */
-    private function candidates(array $themeIds, int $low, int $high): array
+    private function excluded(User $user, array $candidates): array
     {
-        $rating = $this->randomizer->getInt($low, $high);
-        $key = $this->randomizer->getInt(0, self::MAX_RANDOM_KEY);
-
-        if ([] === $themeIds) {
-            return $this->seek('puzzle', 'id', 'selectable = 1', [], $low, $high, $rating, $key);
+        $excluded = $this->attempts->findRatedPuzzleIds($user, $candidates);
+        foreach ($this->exclusions as $provider) {
+            $excluded = [...$excluded, ...$provider->excludedAmong($user, $candidates)];
         }
 
-        $ids = [];
-        foreach ($themeIds as $themeId) {
-            $ids[] = $this->seek('puzzle_theme_membership', 'puzzle_id', 'theme_id = :theme', ['theme' => $themeId], $low, $high, $rating, $key);
-        }
-
-        return array_values(array_unique(array_merge(...$ids)));
-    }
-
-    /**
-     * Reads up to CANDIDATES ids after (rating, key) within [low, high], wrapping around.
-     *
-     * @param array<string, int> $params
-     *
-     * @return list<int>
-     */
-    private function seek(string $table, string $idColumn, string $filter, array $params, int $low, int $high, int $rating, int $key): array
-    {
-        $params += ['low' => $low, 'high' => $high, 'rating' => $rating, 'key' => $key];
-
-        $ids = $this->connection->fetchFirstColumn(
-            "SELECT $idColumn FROM $table WHERE $filter
-             AND ((rating = :rating AND random_key >= :key) OR (rating > :rating AND rating <= :high))
-             ORDER BY rating, random_key LIMIT ".self::CANDIDATES,
-            $params,
-        );
-
-        if (\count($ids) < self::CANDIDATES) {
-            $ids = array_merge($ids, $this->connection->fetchFirstColumn(
-                "SELECT $idColumn FROM $table WHERE $filter
-                 AND ((rating >= :low AND rating < :rating) OR (rating = :rating AND random_key < :key))
-                 ORDER BY rating, random_key LIMIT ".(self::CANDIDATES - \count($ids)),
-                $params,
-            ));
-        }
-
-        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $ids);
+        return $excluded;
     }
 }

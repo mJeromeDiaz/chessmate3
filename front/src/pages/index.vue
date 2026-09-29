@@ -11,6 +11,7 @@
         <template v-if="auth.isAuthenticated">
           <RatingBadge class="gt-xs" />
           <q-btn flat no-caps to="/puzzle" label="Puzzles" />
+          <q-btn flat no-caps to="/woodpecker" label="Woodpecker" />
           <q-btn flat no-caps to="/profile" label="Profil" />
           <q-btn
             flat

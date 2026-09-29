@@ -15,6 +15,8 @@ import { Chess } from 'chess.js'
  *   display (failed), or when the solution is completed cleanly (solved)
  * @property {() => void} [onComplete] called when the final position is reached
  * @property {{opponent?: number, reply?: number, solutionStep?: number}} [delays] in ms
+ * @property {'continue'|'showSolution'} [afterMistake] after a wrong move: let the player keep
+ *   searching (puzzles, default) or play the solution at once (Woodpecker: one try per cycle)
  */
 
 /**
@@ -139,6 +141,7 @@ export function usePuzzle(options = {}) {
     if (uci !== expectedMove.value && !mates) {
       feedback.value = { square: move.to, type: 'error' }
       fail()
+      if (options.afterMistake === 'showSolution') showSolution()
       return 'wrong'
     }
 

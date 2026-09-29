@@ -118,7 +118,13 @@ jusqu'à `(t, k)` exclu). `random_key` départage les ~2 000 puzzles d'une même
 
 **Exclusions.** Les candidats déjà joués en classé sont retirés par une sonde dans l'index unique
 `(user_id, rated_puzzle_id)` (`rated_puzzle_id IN (…30 ids…)`) : **30 lectures d'index, quel que soit
-l'historique de l'utilisateur**. Si tous sont exclus, nouveau tirage (3 au plus par fenêtre).
+l'historique de l'utilisateur**. D'autres domaines retirent aussi leurs puzzles via
+`ExclusionProviderInterface` (tag autoconfiguré, sonde indexée sur les mêmes 30 ids ; aujourd'hui :
+les puzzles du set Woodpecker en cours, voir [WOODPECKER.md](WOODPECKER.md)). Si tous sont exclus,
+nouveau tirage (3 au plus par fenêtre).
+
+Le tirage d'une plage aléatoire d'index est isolé dans `RandomSeeker`, partagé avec la génération
+des sets Woodpecker.
 
 **Élargissement.** Fenêtre ×2, ×4, ×8 ; au-delà, 404 « aucun puzzle ». Les puzzles hors seuils de
 qualité ne sont jamais servis (absents de l'index de sélection, `selectable = 0`).
@@ -164,7 +170,7 @@ Toutes les routes exigent un JWT. Formats JSON-LD (`application/ld+json`).
 | Méthode et URI | Ressource | Réponse |
 |---|---|---|
 | `POST /api/puzzles/attempts` `{themes?: string[], difficulty?: "easier"\|"normal"\|"harder"}` | `PuzzleAttempt` | 201 : tentative en attente + puzzle (FEN, coups, couleur du joueur). La tentative classée en attente si elle existe. 404 aucun puzzle, 422 thème inconnu, 429. |
-| `POST /api/puzzles/attempts` `{replayOf: "K69di"}` | `PuzzleAttempt` | 201 : rejeu non classé ; 404 si le puzzle n'est pas dans l'historique. |
+| `POST /api/puzzles/attempts` `{replayOf: "K69di"}` | `PuzzleAttempt` | 201 : rejeu non classé ; 404 si le puzzle n'est ni dans l'historique ni autorisé par un `ReplayAuthorizerInterface` (puzzle d'un de mes sets Woodpecker). |
 | `POST /api/puzzles/attempts/{id}/submission` `{moves: string[], hintLevel: 0-2, solutionShown: bool}` | `PuzzleAttempt` | 200 : résultat calculé par le serveur, `ratingBefore/After/Delta`. 400 liste impossible, 404 tentative inconnue ou d'un autre, 409 déjà soumise, 422, 429. |
 | `GET /api/puzzles/attempts?page=&itemsPerPage=&result=solved\|failed&theme=` | `PuzzleAttempt` | Historique paginé (20 par page, 50 max), du plus récent au plus ancien. |
 | `GET /api/puzzles/attempts/{id}` | `PuzzleAttempt` | 404 si elle appartient à un autre. |

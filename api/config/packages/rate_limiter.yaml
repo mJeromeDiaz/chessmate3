@@ -106,3 +106,17 @@ framework:
             policy: sliding_window
             limit: 5
             interval: '1 hour'
+        # Woodpecker (identifier = user id). Creating a set scans the puzzle index and writes up to
+        # 1,500 rows; playing is capped like rated puzzles.
+        woodpecker_set_create:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        woodpecker_attempt_start:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'
+        woodpecker_attempt_submit:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'
