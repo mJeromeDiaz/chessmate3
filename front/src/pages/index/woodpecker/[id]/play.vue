@@ -110,6 +110,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import CycleRecap from '@/components/woodpecker/CycleRecap.vue'
+import { useTrainingStore } from '@/stores/training'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
@@ -119,6 +120,7 @@ definePage({ meta: { auth: 'required' } })
 
 const route = useRoute()
 const store = useWoodpeckerStore()
+const training = useTrainingStore()
 const id = computed(() => String(route.params.id))
 const set = computed(() => (store.set?.id === id.value ? store.set : null))
 const loading = ref(false)
@@ -160,6 +162,7 @@ async function next() {
   } catch (e) {
     if (e?.response?.status === 409) {
       await store.fetchSet(id.value).catch(() => {})
+      await training.fetchCurrent().catch(() => {})
       blocked.value = blockedReason()
     } else {
       error.value = apiErrorMessage(e, { 404: 'Set introuvable.' })
@@ -172,6 +175,9 @@ async function next() {
 function blockedReason() {
   const s = set.value
   if (!s) return 'Ce set ne peut pas être joué.'
+  if (training.current?.subjectId === s.id)
+    return 'Une séance chronométrée est en cours sur ce set.'
+  if (s.mode === 'light') return 'Ce set se joue en séances chronométrées.'
   if (s.status === 'paused') return 'Ce set est en pause.'
   if (s.status === 'completed') return 'Set terminé, bravo !'
   if (s.status === 'abandoned') return 'Ce set a été abandonné.'

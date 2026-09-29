@@ -8,9 +8,9 @@ import { useAuthStore } from '@/stores/auth'
  * @property {number} number
  * @property {number} run
  * @property {'resting'|'active'|'completed'|'lost'} status
- * @property {number} durationDays
+ * @property {number|null} durationDays null for a light round
  * @property {string} availableAt
- * @property {string} deadlineAt
+ * @property {string|null} deadlineAt null for a light round
  * @property {string|null} completedAt
  * @property {number} played
  * @property {number} solved
@@ -25,13 +25,16 @@ import { useAuthStore } from '@/stores/auth'
  * @typedef {object} WoodpeckerSet
  * @property {string} id
  * @property {string} name
+ * @property {'classic'|'light'} mode
  * @property {'active'|'paused'|'completed'|'abandoned'} status
  * @property {boolean} archived
- * @property {number} puzzleCount
- * @property {number} cycleCount
+ * @property {number} puzzleCount grows in light mode
+ * @property {number|null} cycleCount null in light mode
  * @property {string} timezone
  * @property {CycleView|null} current
- * @property {CycleView[]} cycles
+ * @property {CycleView[]} cycles rounds, in light mode
+ * @property {{occurredAt: string, round: number, added: number, puzzleCount: number}[]} growths light mode, oldest first
+ * @property {{id: string, budgetSeconds: number, startedAt: string, closedAt: string|null, closeReason: string|null, summary: import('@/composables/training/useTimeboxedRun').RunSummary|null}[]} runs closed timed runs, newest first
  *
  * @typedef {object} WoodpeckerAttempt
  * @property {string} id
@@ -163,4 +166,18 @@ export function cycleRecap(set, before) {
       .filter(c => c.number === before.number - 1 && c.status === 'completed')
       .at(-1) ?? null
   return { completed, previous, setCompleted: set.status === 'completed' }
+}
+
+/**
+ * The modes that already have an ongoing (active or paused) set: one per mode at most.
+ *
+ * @param {WoodpeckerSet[]} sets
+ * @returns {Set<string>}
+ */
+export function ongoingModes(sets) {
+  return new Set(
+    sets
+      .filter(s => s.status === 'active' || s.status === 'paused')
+      .map(s => s.mode ?? 'classic')
+  )
 }

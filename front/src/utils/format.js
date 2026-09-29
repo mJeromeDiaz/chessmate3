@@ -42,3 +42,23 @@ export function formatRatingDelta(delta) {
   const rounded = Math.round(delta)
   return rounded >= 0 ? `+${rounded}` : `−${Math.abs(rounded)}`
 }
+
+/**
+ * @param {number|null|undefined} ratio 0..1
+ * @returns {string} e.g. "83 %", or "—"
+ */
+export function formatPercent(ratio) {
+  return ratio === null || ratio === undefined
+    ? '—'
+    : `${Math.round(ratio * 100)} %`
+}
+
+/**
+ * Time left on a countdown as "m:ss", rounded up: "0:00" only once it is really over.
+ *
+ * @param {number} ms
+ * @returns {string}
+ */
+export function formatCountdown(ms) {
+  return formatDuration(Math.ceil(Math.max(0, ms) / 1000) * 1000)
+}

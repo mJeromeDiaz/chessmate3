@@ -15,7 +15,8 @@ vi.mock('@/services/api', () => ({
 }))
 
 const { woodpeckerApi } = await import('@/services/api')
-const { useWoodpeckerStore, cycleRecap } = await import('@/stores/woodpecker')
+const { useWoodpeckerStore, cycleRecap, ongoingModes } =
+  await import('@/stores/woodpecker')
 const { useAuthStore } = await import('@/stores/auth')
 
 const cycle = (number, run, status, extra = {}) => ({
@@ -122,5 +123,20 @@ describe('woodpecker store', () => {
 
     expect(store.sets).toEqual([])
     expect(store.set).toBeNull()
+  })
+})
+
+describe('ongoingModes', () => {
+  it('lists the modes that already have an active or paused set', () => {
+    const modes = ongoingModes([
+      { id: 'a', mode: 'classic', status: 'completed' },
+      { id: 'b', mode: 'light', status: 'paused' },
+      { id: 'c', status: 'abandoned' }
+    ])
+
+    expect([...modes]).toEqual(['light'])
+    expect([...ongoingModes([{ id: 'd', status: 'active' }])]).toEqual([
+      'classic'
+    ])
   })
 })

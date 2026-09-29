@@ -3,6 +3,25 @@
     <q-form class="woodpecker-form q-gutter-md" @submit="submit">
       <div class="text-h5">Nouveau set Woodpecker</div>
 
+      <div>
+        <q-btn-toggle
+          v-model="mode"
+          no-caps
+          unelevated
+          toggle-color="primary"
+          :options="[
+            { label: 'Classique', value: 'classic' },
+            { label: 'Light', value: 'light' }
+          ]"
+          data-testid="set-mode"
+        />
+        <div class="text-caption text-grey q-mt-xs">{{
+          mode === 'light'
+            ? 'Séances chronométrées, sans échéances : chaque séance repart du premier puzzle et le set grandit quand vous en venez à bout. Il commence à 100 puzzles.'
+            : 'Des cycles de plus en plus courts, avec une échéance chacun.'
+        }}</div>
+      </div>
+
       <q-input
         v-model="form.name"
         label="Nom"
@@ -12,6 +31,7 @@
       />
 
       <q-input
+        v-if="mode === 'classic'"
         v-model.number="form.puzzleCount"
         type="number"
         label="Nombre de puzzles"
@@ -54,7 +74,7 @@
         :max-values="10"
       />
 
-      <div class="row q-col-gutter-md">
+      <div v-if="mode === 'classic'" class="row q-col-gutter-md">
         <q-input
           v-model.number="form.cycleCount"
           class="col-6 col-sm-4"
@@ -91,10 +111,16 @@
       </div>
       <q-toggle
         v-model="form.shuffle"
-        label="Mélanger les puzzles à chaque cycle"
+        :label="
+          mode === 'light'
+            ? 'Mélanger les puzzles à chaque séance'
+            : 'Mélanger les puzzles à chaque cycle'
+        "
       />
 
-      <div class="text-caption text-grey">Durées prévues : {{ schedule }}</div>
+      <div v-if="mode === 'classic'" class="text-caption text-grey"
+        >Durées prévues : {{ schedule }}</div
+      >
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
         error
@@ -117,7 +143,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -128,11 +154,14 @@ definePage({ meta: { auth: 'required' } })
 const MIN_PUZZLES = 50
 
 const router = useRouter()
+const route = useRoute()
 const store = useWoodpeckerStore()
 const puzzles = usePuzzleStore()
 const saving = ref(false)
 const error = ref('')
 const ratingMode = ref('auto')
+/** @type {import('vue').Ref<'classic'|'light'>} */
+const mode = ref(route.query.mode === 'light' ? 'light' : 'classic')
 const range = ref({ min: 1000, max: 1400 })
 const form = ref({
   name: 'Mon set',
@@ -170,17 +199,31 @@ async function submit() {
   saving.value = true
   error.value = ''
   try {
-    const payload = { ...form.value, name: form.value.name.trim() }
+    const f = form.value
+    const payload =
+      mode.value === 'light'
+        ? {
+            mode: 'light',
+            name: f.name.trim(),
+            themes: f.themes,
+            shuffle: f.shuffle
+          }
+        : { ...f, mode: 'classic', name: f.name.trim() }
     if (ratingMode.value === 'manual')
       Object.assign(payload, {
         ratingMin: range.value.min,
         ratingMax: range.value.max
       })
     const created = await store.create(payload)
-    router.push(`/woodpecker/${created.id}/play`)
+    // A light set is played in timed runs: launch one from its page.
+    router.push(
+      mode.value === 'light'
+        ? `/woodpecker/${created.id}`
+        : `/woodpecker/${created.id}/play`
+    )
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Vous avez déjà un set actif ou en pause : terminez-le ou abandonnez-le d’abord.',
+      409: `Vous avez déjà un set ${mode.value === 'light' ? 'light' : 'classique'} actif ou en pause : terminez-le ou abandonnez-le d’abord.`,
       422: 'Paramètres invalides, ou pas assez de puzzles pour ces critères : élargissez la fourchette ou les thèmes.'
     })
   } finally {

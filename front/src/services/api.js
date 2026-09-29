@@ -215,3 +215,44 @@ export const woodpeckerApi = {
       )
       .then(r => r.data.member)
 }
+
+/** Timed runs of any module (docs/TRAINING.md). */
+export const trainingApi = {
+  /** @param {{module: string, subjectId: string, budgetSeconds: number}} payload */
+  start: payload =>
+    http.post('/api/training/runs', payload, JSON_LD).then(r => r.data),
+  /** The active run, or null. */
+  current: () =>
+    http
+      .get('/api/training/runs/current', JSON_LD)
+      .then(r => r.data)
+      .catch(e => {
+        if (e?.response?.status === 404) return null
+        throw e
+      }),
+  get: id =>
+    http
+      .get(`/api/training/runs/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /** The item to play; none once the run is closed. */
+  next: id =>
+    http
+      .post(`/api/training/runs/${encodeURIComponent(id)}/next`, null, JSON_LD)
+      .then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {{itemId: string, moves: string[], hintLevel: number, solutionShown: boolean}} report
+   */
+  submit: (id, report) =>
+    http
+      .post(
+        `/api/training/runs/${encodeURIComponent(id)}/submission`,
+        report,
+        JSON_LD
+      )
+      .then(r => r.data),
+  stop: id =>
+    http
+      .post(`/api/training/runs/${encodeURIComponent(id)}/stop`, null, JSON_LD)
+      .then(r => r.data)
+}

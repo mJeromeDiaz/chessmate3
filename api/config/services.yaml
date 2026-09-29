@@ -28,7 +28,8 @@ when@test:
 when@e2e:
     parameters:
         woodpecker.min_puzzles: 5
-        woodpecker.light.initial_puzzles: 10
+        # As many as the default rating range holds among the sample puzzles (like a classic e2e set).
+        woodpecker.light.initial_puzzles: 5
         woodpecker.light.growth_batch: 5
         woodpecker.light.growth_threshold: 2
         woodpecker.light.max_puzzles: 30
