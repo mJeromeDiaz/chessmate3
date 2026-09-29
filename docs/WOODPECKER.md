@@ -1,4 +1,4 @@
-# Woodpecker — ChessMate (phase 4)
+# Woodpecker — ChessMate (phases 4 et 4b)
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
@@ -7,36 +7,53 @@ cycles successifs, chacun dans un temps réduit par rapport au précédent, pour
 tactiques par la répétition. Socle commun (fuseau, événements, journal) : [ACTIVITY.md](ACTIVITY.md).
 Sélection des puzzles réutilisée : [PUZZLES.md § 4](PUZZLES.md#4-sélection-adaptative).
 
+Deux **modes** (`SetMode`), un set en cours au plus pour chacun :
+
+- **classique** : cycles à échéance en jours, joués librement ou en séances chronométrées ;
+- **light** : pas d'échéance ni de fin, uniquement des séances chronométrées de quelques minutes
+  ([TRAINING.md](TRAINING.md)) ; le set grandit à mesure qu'on en vient à bout (§ 6 bis).
+
 ## 1. Organisation du code
 
 | Couche | Emplacement |
 |---|---|
-| Entités | `App\Entity\Woodpecker\{Set, SetPuzzle, Cycle, Attempt}` |
-| Enums | `App\Enum\Woodpecker\{SetStatus, CycleStatus}` |
-| Logique métier | `App\Woodpecker\Set\` (création, cycle de vie, génération), `App\Woodpecker\Cycle\` (déroulé, ordre), `App\Woodpecker\Schedule\DeadlineCalculator`, `App\Woodpecker\Stats\`, `App\Woodpecker\Event\` |
+| Entités | `App\Entity\Woodpecker\{Set, SetPuzzle, Cycle, Attempt, Growth}` |
+| Enums | `App\Enum\Woodpecker\{SetMode, SetStatus, CycleStatus}` |
+| Logique métier | `App\Woodpecker\Set\` (création, cycle de vie, génération), `App\Woodpecker\Cycle\` (déroulé, ordre), `App\Woodpecker\Mode\` (`ProgressionInterface`, `ClassicProgression`, `LightProgression`), `App\Woodpecker\Light\{GrowthPolicy, SetGrower}`, `App\Woodpecker\Schedule\DeadlineCalculator`, `App\Woodpecker\Stats\`, `App\Woodpecker\Event\` |
+| Séances chronométrées | `App\Woodpecker\Training\WoodpeckerModule` ([TRAINING.md](TRAINING.md)) |
 | Intégration phase 2 | `App\Woodpecker\Integration\{ActiveSetExclusion, SetReplayAuthorizer}` |
 | API | `App\ApiResource\Woodpecker\*`, `App\State\Woodpecker\*` |
+| Fixtures | `DataFixtures\Woodpecker\WoodpeckerFixtures` (§ 10) |
 | Front | `stores/woodpecker.js`, `utils/woodpeckerPace.js`, `components/woodpecker/{CycleTable, CycleRecap}.vue`, `components/puzzle/PuzzlePlayer.vue`, `pages/index/woodpecker/` |
 
 ## 2. Règles validées
 
-- **Un seul set en cours** (actif ou en pause) par utilisateur, garanti par la base.
+- **Un seul set en cours** (actif ou en pause) **par mode** et par utilisateur, garanti par la base :
+  un set classique et un set light peuvent coexister.
 - **Cycle en retard = perdu, et le même cycle recommence** (nouveau *run*, même durée) : un set
   n'avance qu'en terminant un cycle dans les temps.
 - Les tentatives Woodpecker **ne sont pas classées** (Glicko-2 inchangé).
-- **Exclusion** : les puzzles du set actif ou en pause sont retirés de la sélection classée ; ceux des
-  sets terminés ou abandonnés y reviennent.
+- **Exclusion** : les puzzles des sets actifs ou en pause (des deux modes) sont retirés de la
+  sélection classée ; ceux des sets terminés ou abandonnés y reviennent.
 - **Un seul essai par puzzle et par run** : à la première erreur, la solution se déroule et on passe
   au puzzle suivant.
+- **Light** : chaque séance **repart du premier puzzle** du set (ou d'un nouveau mélange), sans
+  reprise d'une séance à l'autre ; un puzzle n'est **jamais montré deux fois dans la même séance** ;
+  pas de fin naturelle ni d'ajout manuel de puzzles (la croissance ne vient que du besoin) ;
+  statistiques par séance, historique de croissance et puzzles récalcitrants, pas de statistiques par
+  passage.
+- Un set light ne se joue qu'en séance chronométrée ; un set classique se joue librement, sauf
+  pendant qu'une séance le tient (409).
 
 ## 3. Modèle de données
 
 | Table | Rôle | Clés et index |
 |---|---|---|
-| `woodpecker_set` | Nom, statut (`active`, `paused`, `completed`, `abandoned`), dates (`paused_at`, `completed_at`, `abandoned_at`, `archived_at`), **configuration figée** (nombre de puzzles, fourchette de classement, thèmes JSON, cycles, durée du 1er cycle, facteur, durée minimale, repos, mélange) | colonne générée `active_user_id = IF(status IN ('active','paused'), user_id, NULL)` **VIRTUAL** + `uniq_woodpecker_set_active_user` (un seul set en cours) ; `idx_woodpecker_set_user_created` |
+| `woodpecker_set` | Mode (`classic`, `light`), nom, statut (`active`, `paused`, `completed`, `abandoned`), dates (`paused_at`, `completed_at`, `abandoned_at`, `archived_at`), **configuration figée** (nombre de puzzles, fourchette de classement, thèmes JSON, cycles, durée du 1er cycle, facteur, durée minimale, repos, mélange ; les 5 colonnes d'échéancier sont `NULL` en light, `CHECK chk_woodpecker_set_mode_config`) | colonne générée `active_user_id = IF(status IN ('active','paused'), user_id, NULL)` **VIRTUAL** + `uniq_woodpecker_set_active_user_mode (active_user_id, mode)` (un set en cours par mode) ; `idx_woodpecker_set_user_created` |
 | `woodpecker_set_puzzle` | Liste figée et ordonnée des puzzles | PK `(set_id, position)` ; `uniq_woodpecker_set_puzzle_set_puzzle (set_id, puzzle_id)` ; FK `puzzle` **sans cascade** |
-| `woodpecker_cycle` | Un **run** d'un cycle : `number`, `run` (1, puis 2… après un run perdu), statut (`resting`, `active`, `completed`, `lost`), `duration_days`, `seed`, `available_at`, `deadline_at`, `completed_at`, `lost_at` | `uniq_woodpecker_cycle_set_number_run` ; `idx_woodpecker_cycle_set_status` |
-| `woodpecker_attempt` | Tentative d'un puzzle dans un run : statut, coups, erreurs, indices, solution affichée, durée serveur, `order_index` | `uniq_woodpecker_attempt_cycle_puzzle (cycle_id, puzzle_id)` : **un seul essai par puzzle et par run, garanti par la base** ; `idx_woodpecker_attempt_cycle_status` |
+| `woodpecker_cycle` | Un **run** d'un cycle classique, ou une **manche** light (une par séance, sans échéance) : `number`, `run` (1, puis 2… après un run perdu), statut (`resting`, `active`, `completed`, `lost`), `duration_days`, `seed`, `available_at`, `deadline_at`, `completed_at`, `lost_at` | `uniq_woodpecker_cycle_set_number_run` ; `idx_woodpecker_cycle_set_status` |
+| `woodpecker_attempt` | Tentative d'un puzzle dans un run : statut, coups, erreurs, indices, solution affichée, durée serveur, `order_index`, `training_run_id` (séance, nullable) | `uniq_woodpecker_attempt_cycle_puzzle (cycle_id, puzzle_id)` : **un seul essai par puzzle et par run, garanti par la base** ; `idx_woodpecker_attempt_cycle_status` ; `idx_woodpecker_attempt_training_run_status` |
+| `woodpecker_set_growth` | Historique de croissance d'un set light : manche, puzzles ajoutés, taille atteinte, date | `idx_woodpecker_set_growth_set_occurred` |
 
 Choix :
 
@@ -50,11 +67,15 @@ Choix :
   en dérive une permutation déterministe (`Mt19937`).
 - **FK `puzzle` sans cascade** depuis `woodpecker_set_puzzle` et `woodpecker_attempt` : un puzzle
   référencé ne peut pas être supprimé (voir [PUZZLE_IMPORT.md § 7](PUZZLE_IMPORT.md#7-mise-à-jour-avec-un-export-plus-récent)).
-- Suppression d'un compte : cascade `user → set → cycle → attempt` et `set → set_puzzle`.
+- **`CHECK` plutôt que deux tables** : les deux modes partagent liste, runs, tentatives et
+  statistiques ; seule la présence de l'échéancier dépend du mode, et la base le garantit.
+- Suppression d'un compte : cascade `user → set → cycle → attempt`, `set → set_puzzle` et
+  `set → set_growth`.
 
 ## 4. Création d'un set
 
-`POST /api/woodpecker/sets`. Valeurs par défaut et limites (`CreateSetInput`) :
+`POST /api/woodpecker/sets`, avec `mode` (`classic` par défaut ou `light`). Valeurs par défaut et
+limites (`CreateSetInput`) :
 
 | Paramètre | Défaut | Limites |
 |---|---|---|
@@ -68,6 +89,9 @@ Choix :
 | `minCycleDays` | 1 | 1 à 90, ≤ `firstCycleDays` |
 | `restDays` | 0 | 0 à 14 |
 | `shuffle` | `false` (même ordre à chaque cycle) | — |
+
+En **light**, seuls `name`, `ratingMin` / `ratingMax`, `themes` et `shuffle` s'appliquent : pas de
+taille (le set démarre à `woodpecker.light.initial_puzzles`, 100) ni d'échéancier.
 
 Fourchette par défaut (`SetManager::defaultRatingRange`) : à partir du classement puzzle de
 l'utilisateur (1500 sans classement), bornée à [400, 3 200] et d'au moins 100 points de large. La
@@ -156,6 +180,33 @@ puzzle ; calculées par une seule requête agrégée pour tous les runs d'un set
 `ReplayAuthorizerInterface`) autorise le rejeu d'un puzzle de n'importe lequel de mes sets. C'est un
 rejeu non classé ordinaire (`puzzle_unrated`), hors statistiques du set.
 
+## 6 bis. Mode light
+
+`LightProgression` : aucune échéance. Chaque séance ouvre une **manche** (un `woodpecker_cycle`
+numéroté 1, 2…, sans échéance) qui repart de la position 0 (ou d'un nouveau mélange, nouveau `seed`) ;
+la fin de la séance clôt la manche et **abandonne le puzzle à l'écran** (tentative en attente
+supprimée, non comptée).
+
+**Croissance** (`GrowthPolicy`, `SetGrower`), dans la transaction de la soumission, set verrouillé :
+
+| Paramètre | Défaut | `test` / `e2e` |
+|---|---|---|
+| `woodpecker.light.initial_puzzles` | 100 | 10 / 5 |
+| `woodpecker.light.growth_threshold` | 5 | 2 / 2 |
+| `woodpecker.light.growth_batch` | 20 | 5 / 5 |
+| `woodpecker.light.max_puzzles` | 1 500 | 30 / 30 |
+
+- Quand il reste **moins de 5 puzzles non vus** dans la manche et que la séance continue, 20 puzzles
+  de même profil (fourchette, thèmes), sans doublon, sont ajoutés **à la fin** de la liste : ce sont
+  naturellement les suivants. Les positions existantes ne bougent jamais.
+- Un ajout = une ligne `woodpecker_set_growth` et un événement `SetGrown`.
+- Au plafond (1 500) ou vivier épuisé : plus de croissance ; quand la manche n'a plus de puzzle, elle
+  se clôt et la suivante démarre aussitôt, dans la même séance. Des thèmes disparus depuis la
+  création ne sont jamais remplacés par « tous thèmes ».
+
+Récalcitrants : même règle qu'en classique, les manches tenant lieu de cycles (échoué dans au moins
+2 manches).
+
 ### Exclusion de la sélection classée
 
 `ActiveSetExclusion` implémente `Puzzle\Selection\ExclusionProviderInterface` : la phase 2 ne dépend
@@ -181,12 +232,14 @@ répond **404**. Préfixe `/api`.
 | Endpoint | Rôle | Erreurs |
 |---|---|---|
 | `GET /woodpecker/sets[?archived=true]` | Mes sets | — |
-| `POST /woodpecker/sets` | Crée un set (10 par heure) | 409 set déjà en cours, 422 critères invalides ou puzzles insuffisants |
-| `GET /woodpecker/sets/{id}` | Détail : configuration, runs et statistiques, run en cours, jours restants | 404 |
+| `POST /woodpecker/sets` | Crée un set (10 par heure) | 409 set de ce mode déjà en cours, 422 critères invalides ou puzzles insuffisants |
+| `GET /woodpecker/sets/{id}` | Détail : mode, configuration, runs et statistiques, run en cours, jours restants, séances (`runs`), croissances (`growths`, light) | 404 |
 | `POST /woodpecker/sets/{id}/{pause,resume,abandon,archive}` | Cycle de vie | 404, 409 |
 | `GET /woodpecker/sets/{id}/stubborn` | Puzzles récalcitrants | 404 |
-| `POST /woodpecker/sets/{id}/attempts` | Puzzle suivant du run (120 par 10 min) | 404, 409 set en pause, terminé ou au repos |
-| `POST /woodpecker/attempts/{id}/submission` | Soumission (120 par 10 min) | 400 coups impossibles, 404, 409 déjà soumise ou run terminé |
+| `POST /woodpecker/sets/{id}/attempts` | Puzzle suivant du run, jeu libre (120 par 10 min) | 404, 409 set en pause, terminé, au repos, light, ou tenu par une séance |
+| `POST /woodpecker/attempts/{id}/submission` | Soumission (120 par 10 min) | 400 coups impossibles, 404, 409 déjà soumise, run terminé ou tentative d'une séance |
+
+Séances chronométrées (les deux modes) : `/training/runs…`, voir [TRAINING.md § 6](TRAINING.md#6-api).
 
 `shortName` : `WoodpeckerSet`, `WoodpeckerAttempt`, `WoodpeckerStubbornPuzzle`. Les routes d'item
 ont un `requirements` UUID ; `tests/Functional/Woodpecker/RoutingTest.php` couvre chaque route sœur.
@@ -199,18 +252,40 @@ ont un `requirements` UUID ; `tests/Functional/Woodpecker/RoutingTest.php` couvr
   `puzzle/(play).vue`, partagée par les deux pages.
 - `utils/woodpeckerPace.js` : jours restants (miroir de `DeadlineCalculator::daysLeft()`) et rythme
   conseillé (puzzles par jour) dans le fuseau de l'utilisateur, pas celui du navigateur.
-- Pages `pages/index/woodpecker/` : liste (`index.vue`), création (`new.vue`), détail avec tableau
-  des cycles et puzzles récalcitrants (`[id]/index.vue`), jeu avec progression (`124 / 300`),
-  rythme et récapitulatif de fin de cycle (`[id]/play.vue`).
+- Pages `pages/index/woodpecker/` : liste par mode (`index.vue`), création avec choix du mode
+  (`new.vue`, `?mode=light`), détail (`[id]/index.vue`) : lancement d'une séance, tableau des
+  cycles (classique) ou taille, séances et croissance (light), puzzles récalcitrants ; jeu libre
+  classique avec progression (`124 / 300`), rythme et récapitulatif de fin de cycle
+  (`[id]/play.vue`). Les séances se jouent sur `pages/index/training/[id].vue`.
 
 ## 9. Tests
 
-- PHPUnit : `tests/Unit/Woodpecker/DeadlineCalculatorTest.php`,
+- PHPUnit : `tests/Unit/Woodpecker/{DeadlineCalculatorTest, GrowthPolicyTest, ProgressionRegistryTest}.php`,
   `tests/Functional/Woodpecker/WoodpeckerApiTest.php` (création, cloisonnement, un seul set en cours,
   run complet, run perdu et relancé, pause et reprise, repos, changement d'heure, exclusion,
-  récalcitrants et rejeu, archivage, journal d'activité) et `RoutingTest.php` (routes sœurs).
+  récalcitrants et rejeu, archivage, journal d'activité, temps actif plafonné), `SetModeTest.php`
+  (contrainte `CHECK`, un set en cours par mode, exclusion), `LightModeTest.php` (manche dans
+  l'ordre sans répétition, croissance, plafond, vivier épuisé, reprise au premier puzzle, mélange,
+  récalcitrants) et `RoutingTest.php` (routes sœurs). Séances : [TRAINING.md § 8](TRAINING.md#8-tests).
 - Vitest : `woodpecker-pace.test.js` (fuseaux, changement d'heure, dernier jour, échéance dépassée),
   `woodpecker-store.test.js`, `use-puzzle.test.js` (`afterMistake`).
 - Playwright : `tests/e2e/woodpecker.spec.js` crée un set de 5 puzzles, termine un cycle et voit le
   récapitulatif. Les serveurs E2E utilisent les ports 8100 et 9100 pour ne pas gêner les serveurs de
-  développement (8000, 9000).
+  développement (8000, 9000). `training.spec.js` : voir [TRAINING.md § 8](TRAINING.md#8-tests).
+
+## 10. Données de démonstration
+
+`bin/console doctrine:fixtures:load` (**purge la base**, dev ou `e2e` uniquement) crée, en plus des
+thèmes et des 50 puzzles d'exemple, un compte de démo :
+
+- `demo@chessmate.test` / `chessmate-demo` (`DemoUserFixtures`), fuseau Europe/Paris. La connexion
+  demande quand même le code 2FA : en dev (`MAILER_DSN=null://null`), il se lit dans le panneau
+  *Mailer* du profiler Symfony (`/_profiler`).
+- `WoodpeckerFixtures` : un set classique « Tactiques de base » (20 puzzles, cycle 1 entamé) et un set
+  light « Séances express » (démarré à 20 puzzles, le vivier d'exemple n'en ayant qu'une
+  cinquantaine, puis grandi une fois à 40), avec trois séances passées (deux light, une classique).
+  Elles sont jouées par les vrais services sur une horloge reculée de trois jours (`MockClock`) :
+  runs, croissance, statistiques et événements (`messenger_messages`) sont cohérents.
+
+Identifiants publics : ces fixtures ne doivent **jamais** être chargées en production
+([SECURITY.md § 4.4](SECURITY.md#44-checklist-de-déploiement)).

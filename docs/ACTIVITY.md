@@ -12,7 +12,7 @@ branchent sans modifier le code des exercices. Premier consommateur : [WOODPECKE
 |---|---|
 | Événements | `App\Activity\Event\{DomainEventInterface, ExerciseCompleted}`, `App\Woodpecker\Event\*` |
 | Publication | `App\Activity\EventPublisher` (seul point d'entrée) |
-| Journal | `App\Entity\Activity\LogEntry`, `App\Activity\Log\{ActivityLogger, LocalDate}`, `App\Activity\Handler\LogExerciseCompleted` |
+| Journal | `App\Entity\Activity\LogEntry`, `App\Activity\Log\{ActivityLogger, LocalDate}`, `App\Activity\Handler\{LogExerciseCompleted, AcknowledgeDomainEvent}` |
 | Reprise | `App\Activity\Backfill\SourceInterface`, `App\Command\Activity\BackfillCommand` (`app:activity:backfill`), `App\Puzzle\Attempt\AttemptBackfillSource` |
 | Enum | `App\Enum\Activity\ExerciseType` |
 | Front | `utils/timezone.js`, `components/profile/TimezoneSection.vue`, `stores/auth.js` (détection du fuseau) |
@@ -55,6 +55,8 @@ n'en supprime jamais.
 | `Woodpecker\Event\CycleCompleted` | fin d'un cycle dans les temps | set, numéro de cycle et de run, réussis/échoués, temps actif, durée calendaire, échéance |
 | `Woodpecker\Event\CycleLost` | échéance dépassée | set, cycle, run, puzzles joués, échéance |
 | `Woodpecker\Event\SetCompleted` | dernier cycle terminé | set, nombre de cycles et de puzzles, runs perdus |
+| `Woodpecker\Event\SetGrown` | croissance d'un set light | set, manche, puzzles ajoutés, nouvelle taille |
+| `Training\Event\RunCompleted` | clôture d'une séance chronométrée ([TRAINING.md](TRAINING.md)) | séance, module, sujet (`subjectType` + `subjectId`), `parentId`, motif, budget, durée réelle, éléments et réussites, `startedAt` |
 
 `ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle` (extensible).
 
@@ -62,7 +64,15 @@ n'en supprime jamais.
 |---|---|---|
 | Puzzle classé (phase 2) | `puzzle_rated` | `puzzle_attempt` |
 | Rejeu non classé (historique, puzzle récalcitrant) | `puzzle_unrated` | `puzzle_attempt` |
-| Puzzle d'un cycle Woodpecker | `woodpecker_puzzle` | `woodpecker_attempt` |
+| Puzzle Woodpecker (cycle classique ou manche light) | `woodpecker_puzzle` | `woodpecker_attempt` |
+
+`metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
+(`classic`, `light`) et, joué en séance, `trainingRunId`.
+
+`RunCompleted` peut arriver **en retard, voire jamais** : une séance abandonnée n'est close qu'à la
+prochaine requête d'entraînement de l'utilisateur (clôture paresseuse, [TRAINING.md § 2](TRAINING.md#2-règles-validées)).
+Un futur handler (XP, séries) ne doit donc pas supposer qu'une séance commencée produit un
+`RunCompleted` ; `occurredAt` vaut l'instant de clôture (l'expiration pour `time_up`).
 
 ### Publication « après le commit » : outbox transactionnelle
 
@@ -82,6 +92,12 @@ La table `messenger_messages` est créée par une migration (`Version20260928161
 
 **Livraison « au moins une fois »** : tout handler doit être **idempotent**, par exemple avec une clé
 unique sur `(sourceType, sourceId)`.
+
+**Tout événement a au moins un handler** : Messenger rejette un message sans handler
+(`NoHandlerForMessageException`), et le worker le relancerait 5 fois avant de le ranger dans
+`failed`. `AcknowledgeDomainEvent`, handler vide typé `DomainEventInterface`, consomme donc les
+événements auxquels rien ne réagit encore (`RunCompleted`, `SetGrown`, `Cycle*`, `SetCompleted`) ;
+`EventHandlingTest` vérifie chaque événement du code, les futurs compris.
 
 Worker (production : sous superviseur, redémarré à chaque déploiement) :
 

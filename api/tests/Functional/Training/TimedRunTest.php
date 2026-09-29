@@ -68,6 +68,24 @@ final class TimedRunTest extends WoodpeckerWebTestCase
         self::assertSame(0, $this->pendingAttempts());
     }
 
+    public function testTheRunSummaryCountsCappedActiveTime(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $run = $this->startRun($alice, $this->lightSet($alice));
+
+        foreach (['+40 seconds', '+7 minutes'] as $spent) {
+            $item = $this->runNext($alice, $run['id'])['item'];
+            self::assertNotNull($item);
+            $this->travel($spent);
+            self::assertSame(200, $this->runSubmit($alice, $run['id'], $item['id'], self::solution($item['data']))->getStatusCode());
+        }
+        $response = $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+
+        $metrics = $this->getRun($alice, $run['id'])['summary']['metrics'] ?? [];
+        self::assertSame([340_000, 170_000], [$metrics['activeMs'] ?? null, $metrics['averageMs'] ?? null]);
+    }
+
     public function testReloadingGetsTheSameItemWithItsTimerRunning(): void
     {
         $alice = $this->createUserIn('alice@example.com');

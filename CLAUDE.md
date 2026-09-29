@@ -7,7 +7,8 @@ Chess training app (Duolingo-style). One git repository (monorepo) at the root:
 - `front/`: Vue 3 + Quasar 2 + Pinia, **JavaScript** (Composition API, `<script setup>`, JSDoc on
   non-trivial functions and stores), file-based routing under `src/pages/`, hash router mode.
 - `docs/` (root): general documentation — `AUTH.md`, `SECURITY.md`, `PUZZLES.md`,
-  `PUZZLE_IMPORT.md`, `ACTIVITY.md` (timezone, domain events, activity log), `WOODPECKER.md`. Code
+  `PUZZLE_IMPORT.md`, `ACTIVITY.md` (timezone, domain events, activity log), `WOODPECKER.md`
+  (classic and light modes), `TRAINING.md` (timed runs, module contract). Code
   paths quoted in them (`src/...`, `config/...`, `bin/console`) are relative to `api/` unless they
   name `front/`.
 
@@ -25,7 +26,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker today; Repertoire... later) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training today; Repertoire... later) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
 
 | Layer | Location |
@@ -62,7 +63,7 @@ API (`cd api`; prefix with `php -d xdebug.mode=off` if Xdebug reports a false in
 vendor/bin/phpunit                                   # all tests (unit + functional, test DB)
 vendor/bin/phpstan analyse --memory-limit=1G         # level max
 bin/console doctrine:migrations:migrate [--env=test]
-bin/console doctrine:fixtures:load                   # dev data (themes, sample puzzles)
+bin/console doctrine:fixtures:load                   # PURGES the DB: themes, sample puzzles, demo user + Woodpecker data
 bin/console app:puzzle:sync-themes                   # load/update the Lichess puzzle themes
 bin/console app:puzzle:rebuild-selection             # after a puzzle import or a quality-threshold change
 bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
@@ -98,5 +99,11 @@ no other environment. PHP's built-in server needs `-d variables_order=EGPCS` to 
 - Cross-domain hooks are tagged interfaces owned by the domain being extended
   (`Puzzle\Selection\ExclusionProviderInterface`, `Puzzle\Attempt\ReplayAuthorizerInterface`): the
   Puzzle domain never depends on Woodpecker.
+- Timed runs: time belongs to the server (`Training\Run\TimeboxRunner`), no grace (2 s network
+  tolerance only), one active run per user, lazy closing (no cron). A module implements
+  `Training\Module\TimeboxedModuleInterface` and locks its subject after the run, never before.
+- Raw DBAL parameters used as numbers in SQL expressions (`LEAST`, `GREATEST`, arithmetic) must be
+  typed `ParameterType::INTEGER`: untyped ones are bound as strings and `LEAST()` then compares as
+  strings.
 - Lichess rate-limits the anonymous `puzzle/next` and `puzzle/batch` endpoints hard (429 for many
   minutes); never script them in a loop.

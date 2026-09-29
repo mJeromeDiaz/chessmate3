@@ -309,6 +309,9 @@ d'email non encore utilisés (ils peuvent en redemander un). Aucune session n'es
   et le traitement de « mot de passe oublié ».
 - En-têtes de sécurité du serveur qui sert le SPA (§ 2.10).
 - `composer audit` et `npm audit` dans la CI.
+- **Jamais de `doctrine:fixtures:load` en production** : il purge la base et crée le compte de démo
+  `demo@chessmate.test` au mot de passe public ([WOODPECKER.md § 10](WOODPECKER.md#10-données-de-démonstration)).
+  Les fixtures ne sont chargées qu'en dev et en `e2e`.
 - Purge périodique des lignes expirées (`refresh_token`, `mfa_challenge`, `oauth_flow`,
   `reset_password_request`) et politique de rétention du journal d'audit (données personnelles :
   IP, user-agent, email tenté).
@@ -468,3 +471,41 @@ en phase 2). Tailles bornées côté serveur (1 500 puzzles, 10 thèmes, 10 cycl
 | R17 | La pause n'est pas limitée : elle repousse l'échéance d'autant. | Voulu (vacances, maladie) ; sans effet hors de ses propres cycles. À limiter si une récompense (XP, badge) dépend un jour du respect des échéances. |
 | R18 | Changer de fuseau avant l'ouverture d'un run peut le rallonger d'environ un jour. | Les dates déjà calculées ne bougent pas ; gain borné, sans effet sur les autres. |
 | R19 | Worker `activity` arrêté : les événements s'accumulent dans `messenger_messages`. | Aucune perte (outbox durable), traitement au redémarrage ; à superviser en production. |
+
+## 8. Phase 4b : Woodpecker light et séances chronométrées
+
+Modèle et règles : [TRAINING.md](TRAINING.md), [WOODPECKER.md § 6 bis](WOODPECKER.md#6-bis-mode-light).
+
+### 8.1 Le temps appartient au serveur
+
+- Expiration, durées, verdicts et récapitulatif sont calculés par l'API, sur son horloge. Le client
+  n'envoie que les coups tentés et l'aide utilisée (`ItemSubmission`), jamais un résultat ni une
+  durée.
+- Aucun élément n'est servi après l'expiration ; une soumission arrivée plus de 2 s après est refusée
+  (409) et la séance close. Les 2 s couvrent la latence réseau, pas une grâce.
+- **Une seule séance active par utilisateur**, garanti par la base (colonne virtuelle
+  `active_user_id` + index unique) ; **un set en cours par mode**, idem.
+- Verrous toujours dans l'ordre séance puis sujet (set), puis tentative : pas d'interblocage.
+- Un élément appartient à sa séance : le soumettre depuis une autre séance, ou par la route de jeu
+  libre, est refusé (404 / 409, testé). Un set light ne se joue qu'en séance ; un set classique tenu
+  par une séance ne se joue pas en libre.
+
+### 8.2 Cloisonnement
+
+Chaque requête filtre sur l'utilisateur authentifié dans le SQL (`lockOwned`, `findOwned`) : séance,
+élément ou sujet d'un autre ⇒ **404** (testé). Le sujet d'une séance est vérifié par le module au
+démarrage (un set d'un autre ⇒ 404).
+
+### 8.3 Rate limiting
+
+Par utilisateur : `training_run_start` (30 / h), `training_item_next` et `training_item_submit`
+(300 / 10 min chacun : une séance light peut enchaîner un puzzle toutes les 2 s). Budget borné à
+[60 s, 3 600 s], options de module ≤ 10 clés. Croissance d'un set light bornée à 1 500 puzzles.
+
+### 8.4 Risques résiduels (phase 4b)
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R20 | Comme R15, la solution part avec l'élément : un script peut « réussir » une séance light très vite et gonfler ses puzzles par minute. | Aucun classement en jeu ; ne triche que sur ses propres statistiques. Débit borné par les limiteurs (300 / 10 min). |
+| R21 | Clôture paresseuse : une séance abandonnée n'émet `RunCompleted` qu'au retour de l'utilisateur, voire jamais. | Choix validé (pas de cron). Un futur handler de récompense ne doit pas dépendre de la réception de tous les `RunCompleted`. |
+| R22 | Compte de démo au mot de passe public dans les fixtures. | Fixtures chargées en dev et `e2e` seulement ; interdites en production (§ 4.4). La connexion exige quand même le code 2FA par email. |

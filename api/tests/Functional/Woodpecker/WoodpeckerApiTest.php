@@ -112,6 +112,24 @@ final class WoodpeckerApiTest extends WoodpeckerWebTestCase
         self::assertCount(1, array_filter($events, static fn (object $e): bool => $e instanceof SetCompleted));
     }
 
+    public function testActiveTimeIsCappedPerAttemptAndSummedAsNumbers(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $set = $this->createSet($alice);
+
+        // 40 s then 7 min (capped at 5 min): as strings, LEAST('40000', '300000') would give '300000'.
+        foreach (['+40 seconds', '+7 minutes'] as $spent) {
+            $attempt = $this->next($alice, $set['id']);
+            $this->travel($spent);
+            $response = $this->api('POST', '/api/woodpecker/attempts/'.$attempt['id'].'/submission', $alice, ['moves' => self::solution($attempt)]);
+            self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+        }
+
+        $current = $this->getSet($alice, $set['id'])['current'];
+        self::assertNotNull($current);
+        self::assertSame([2, 340_000, 170_000], [$current['played'], $current['activeMs'], $current['averageMs']]);
+    }
+
     public function testShuffledCyclesUseADifferentOrder(): void
     {
         $user = $this->createUserIn('alice@example.com');

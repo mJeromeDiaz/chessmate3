@@ -14,6 +14,7 @@ use App\Woodpecker\Stats\CycleStats;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\LockMode;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 
@@ -75,6 +76,8 @@ class AttemptRepository extends ServiceEntityRepository
                     SUM(CASE WHEN status != 'pending' THEN LEAST(COALESCE(duration_ms, 0), :cap) ELSE 0 END) AS active_ms
              FROM woodpecker_attempt WHERE training_run_id = :run",
             ['run' => $run->getId()->toBinary(), 'cap' => Attempt::ACTIVE_TIME_CAP_MS],
+            // An untyped :cap is bound as a string: LEAST() would then compare as strings.
+            ['cap' => ParameterType::INTEGER],
         ) ?: [];
         $rounds = $connection->fetchFirstColumn(
             "SELECT DISTINCT c.number FROM woodpecker_attempt a JOIN woodpecker_cycle c ON c.id = a.cycle_id
@@ -121,7 +124,7 @@ class AttemptRepository extends ServiceEntityRepository
                     SUM(CASE WHEN status != 'pending' THEN LEAST(COALESCE(duration_ms, 0), :cap) ELSE 0 END) AS active_ms
              FROM woodpecker_attempt WHERE cycle_id IN (:ids) GROUP BY cycle_id",
             ['ids' => array_map(static fn (Cycle $c): string => $c->getId()->toBinary(), $cycles), 'cap' => Attempt::ACTIVE_TIME_CAP_MS],
-            ['ids' => ArrayParameterType::BINARY],
+            ['ids' => ArrayParameterType::BINARY, 'cap' => ParameterType::INTEGER],
         );
 
         $stats = [];
