@@ -8,6 +8,7 @@ use App\Entity\Training\Run;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
 use App\Training\Exception\InvalidItemSubmissionException;
+use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemClosedException;
 use App\Training\Exception\ItemNotFoundException;
@@ -34,6 +35,7 @@ interface TimeboxedModuleInterface
     /**
      * Checks the subject can be played and prepares it for the run (already persisted).
      *
+     * @throws InvalidRunConfigException   invalid options in the run's config
      * @throws SubjectNotFoundException    unknown subject, or another user's
      * @throws SubjectUnavailableException not playable now (the run is not created)
      */

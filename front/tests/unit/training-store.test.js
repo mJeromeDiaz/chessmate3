@@ -42,6 +42,26 @@ describe('training store', () => {
     expect(store.current.id).toBe('r1')
   })
 
+  it('passes the module options (a repertoire test scope)', async () => {
+    trainingApi.start.mockResolvedValue({ id: 'r2', status: 'active' })
+    const store = useTrainingStore()
+    const config = { repertoireIds: ['a'], unit: 'line' }
+
+    await store.start({
+      module: 'repertoire',
+      subjectId: 'u1',
+      minutes: 5,
+      config
+    })
+
+    expect(trainingApi.start).toHaveBeenCalledWith({
+      module: 'repertoire',
+      subjectId: 'u1',
+      budgetSeconds: 300,
+      config
+    })
+  })
+
   it('on a conflict, finds the run already in progress', async () => {
     trainingApi.start.mockRejectedValue(conflict())
     trainingApi.current.mockResolvedValue({

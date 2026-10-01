@@ -26,6 +26,10 @@ use Symfony\Component\Uid\Uuid;
  * outlive it.
  */
 #[ORM\Entity(repositoryClass: RefreshTokenRepository::class)]
+// Stored as a prefixed SHA-256 hex digest (gesdinet's HashedRefreshTokenManager): binary ASCII.
+#[ORM\AttributeOverrides([
+    new ORM\AttributeOverride(name: 'refreshToken', column: new ORM\Column(name: 'refresh_token', length: 128, unique: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])),
+])]
 class RefreshToken extends BaseRefreshToken
 {
     #[ORM\Column(type: 'uuid')]

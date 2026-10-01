@@ -18,6 +18,10 @@ use SymfonyCasts\Bundle\ResetPassword\Model\ResetPasswordRequestTrait;
  */
 #[ORM\Entity(repositoryClass: ResetPasswordRequestRepository::class)]
 #[ORM\UniqueConstraint(name: 'uniq_reset_password_selector', fields: ['selector'])]
+// The selector is random mixed-case alphanumerics: looked up byte for byte, not case-insensitively.
+#[ORM\AttributeOverrides([
+    new ORM\AttributeOverride(name: 'selector', column: new ORM\Column(length: 20, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])),
+])]
 class ResetPasswordRequest implements ResetPasswordRequestInterface
 {
     use ResetPasswordRequestTrait;

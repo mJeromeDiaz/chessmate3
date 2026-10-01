@@ -146,6 +146,8 @@ final class ProfileController extends AbstractController
                         'username' => \is_string($metadata['username'] ?? null) ? $metadata['username'] : null,
                         'name' => \is_string($metadata['name'] ?? null) ? $metadata['name'] : null,
                         'ratings' => \is_array($metadata['ratings'] ?? null) ? $metadata['ratings'] : null,
+                        // Extra scopes granted (Lichess study:read for the repertoire import).
+                        'scopes' => \is_array($metadata['scopes'] ?? null) ? array_values(array_filter($metadata['scopes'], 'is_string')) : [],
                         'linkedAt' => $identity->getCreatedAt()->format(\DATE_ATOM),
                         'removable' => $canRemoveOne,
                     ];

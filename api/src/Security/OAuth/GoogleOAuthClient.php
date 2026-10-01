@@ -28,8 +28,11 @@ final readonly class GoogleOAuthClient implements OAuthProviderClientInterface
     }
 
     #[\Override]
-    public function buildAuthorizationRequest(string $state): AuthorizationRequest
+    public function buildAuthorizationRequest(string $state, array $scopes = []): AuthorizationRequest
     {
+        if ([] !== $scopes) {
+            throw new \LogicException('No extra Google scope is ever asked.');
+        }
         $provider = $this->provider();
         $url = $provider->getAuthorizationUrl(['state' => $state]);
 

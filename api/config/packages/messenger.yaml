@@ -26,6 +26,9 @@ framework:
             # Forgot-password does all of its work (user lookup, token, email) in a worker, so the
             # HTTP response costs exactly the same whether the email exists or not.
             'App\Security\Password\Message\PasswordResetRequested': async
+            # Big repertoire imports: analysis and application (docs/REPERTOIRE.md, "Import").
+            'App\Repertoire\Import\Message\AnalyzeImport': async
+            'App\Repertoire\Import\Message\ApplyImport': async
             # Domain events of every exercise and milestone (docs/ACTIVITY.md).
             'App\Activity\Event\DomainEventInterface': activity
 

@@ -30,12 +30,14 @@ Conventions :
 | GET | `/api/profile` | AT | Profil : email, email en attente, mot de passe utilisable, identités liées, fournisseurs liables. | 200 |
 | POST | `/api/profile/password` | AT | Ajoute un mot de passe `{password, email?}` (email requis si le compte n'en a pas de vérifié). | 200 `{status: added, profile}` ; 202 `{status: verification_sent}` ; 409 ; 422 |
 | POST | `/api/profile/identities/{google\|lichess}/link` | AT | Démarre une liaison. | 200 `{authorizationUrl}` + cookie `oauth_flow` |
+| POST | `/api/profile/identities/lichess/grant` | AT | Demande le scope `study:read` au compte Lichess lié (import d'études privées, [REPERTOIRE.md](REPERTOIRE.md)). | 200 `{authorizationUrl}` + cookie `oauth_flow` |
 | DELETE | `/api/profile/identities/{id}` | AT | Retire une identité liée ; ferme toutes les sessions. | 200 `{accessToken, profile}` + nouveau RT ; 404 ; 409 `last_auth_method` |
 | GET | `/api/profile/trusted-devices` | AT | Appareils de confiance actifs. | 200 `{devices}` |
 | DELETE | `/api/profile/trusted-devices/{id}` | AT | Révoque un appareil. | 200 ; 404 |
 
 Codes `reason` du callback OAuth : `cancelled`, `invalid_state`, `provider_error`, `account_exists`,
-`identity_in_use`, `provider_already_linked`, `conflict`.
+`identity_in_use`, `provider_already_linked`, `conflict`, et pour un `grant` : `not_linked`,
+`identity_mismatch`.
 
 Pages du SPA : `/login`, `/register`, `/mfa`, `/forgot-password`, `/reset-password`, `/profile`,
 `/oauth/callback`. Accès par page via `definePage({ meta: { auth } })` et le guard global
@@ -249,6 +251,24 @@ sequenceDiagram
         A-->>S: 302 /#/oauth/callback?status=success&mode=link
     end
 ```
+
+## Scope supplémentaire (`grant`, Lichess `study:read`)
+
+La liaison Lichess ne demande aucun scope. Pour importer une étude privée ou non répertoriée, le SPA
+demande `study:read` au compte déjà lié : flux `OAuthFlowPurpose::Grant`, même mécanique que la
+liaison (state, PKCE, cookie `oauth_flow` lié au navigateur, usage unique), avec
+`scope=study:read` dans l'URL d'autorisation.
+
+- Le nouveau jeton n'est gardé que si Lichess renvoie **le même compte** que celui lié
+  (`providerUserId`). Sinon il est révoqué et le callback répond `identity_mismatch` ; sans compte
+  Lichess lié, `not_linked`.
+- Gardé, il remplace l'ancien, qui est révoqué chez Lichess ; `AuthIdentity.metadata.scopes` note
+  `study:read` (Lichess ne renvoie pas les scopes accordés) ; audit `oauth_scopes_granted`. Le profil
+  expose ces `scopes`.
+- Le jeton n'est utilisé pour les études que s'il porte ce scope ; le jeton applicatif ne l'est
+  jamais. Une nouvelle connexion Lichess (jeton sans scope) efface la mention.
+- Retour : `/#/oauth/callback?status=…&mode=grant` ; le SPA revient à la page d'import (chemin gardé
+  en `sessionStorage`, limité à `/repertoire/import`).
 
 ## Ajout d'un mot de passe à un compte OAuth
 

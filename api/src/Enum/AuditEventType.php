@@ -22,6 +22,7 @@ enum AuditEventType: string
     case PasswordResetCompleted = 'password_reset_completed';
     case AccountLinked = 'account_linked';
     case AccountUnlinked = 'account_unlinked';
+    case OauthScopesGranted = 'oauth_scopes_granted';
     case TrustedDeviceAdded = 'trusted_device_added';
     case TrustedDeviceRevoked = 'trusted_device_revoked';
     case RefreshTokenReuseDetected = 'refresh_token_reuse_detected';

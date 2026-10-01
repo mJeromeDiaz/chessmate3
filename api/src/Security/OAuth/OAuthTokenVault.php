@@ -52,6 +52,31 @@ final readonly class OAuthTokenVault
     }
 
     /**
+     * The stored token in clear, to call the provider on the user's behalf (e.g. the Lichess
+     * opening explorer). Never log nor return it to a client. Null when none is stored or it can no
+     * longer be decrypted (key rotated without re-encryption).
+     */
+    public function reveal(AuthIdentity $identity): ?string
+    {
+        $encrypted = $identity->getAccessTokenEncrypted();
+        if (null === $encrypted) {
+            return null;
+        }
+
+        try {
+            return $this->secretBox->decrypt($encrypted);
+        } catch (\Throwable $exception) {
+            $this->logger->warning('Could not decrypt a stored OAuth access token.', [
+                'provider' => $identity->getProvider()->value,
+                'identity' => $identity->getId()->toRfc4122(),
+                'exception' => $exception::class,
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
      * Revokes the stored token at the provider (best effort) and forgets it.
      */
     public function revoke(AuthIdentity $identity): void

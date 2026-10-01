@@ -22,7 +22,7 @@ final class StartRunInput
     #[Assert\Range(min: TimeboxRunner::MIN_BUDGET_SECONDS, max: TimeboxRunner::MAX_BUDGET_SECONDS)]
     public int $budgetSeconds = 1200;
 
-    /** @var array<string, mixed> module-specific options (none today) */
+    /** @var array<string, mixed> module-specific options (the repertoire test's scope, docs/REPERTOIRE.md) */
     #[Assert\Count(max: 10)]
     public array $config = [];
 }

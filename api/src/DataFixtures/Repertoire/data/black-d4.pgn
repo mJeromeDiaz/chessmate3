@@ -1,0 +1,9 @@
+[Event "Noirs contre 1.d4"]
+[Site "ChessMate"]
+[Orientation "black"]
+[Result "*"]
+
+1. d4 Nf6 2. c4 (2. Nf3 e6 3. c4 d5 {Transpose dans la ligne principale :
+1.d4 Cf6 2.c4 e6 3.Cf3 d5.}) (2. Bf4 e6 3. e3 c5 $1) 2... e6 3. Nf3 (3. Nc3 d5
+4. cxd5 exd5 5. Bg5 Be7) (3. g3 d5 4. Bg2 Be7) 3... d5 {Le Gambit dame
+refusé.} 4. Nc3 Be7 5. Bg5 O-O *

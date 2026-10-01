@@ -244,14 +244,44 @@ nouvelle table de staging (4.2–4.3), garder les index, et faire un upsert par 
 existants gardent leur `id` et leur `random_key` :
 
 ```sql
+SET @from = 1;
+SET @to = @from + 499999;
+
 INSERT INTO puzzle (lichess_id, fen, moves, rating, rating_deviation, popularity, nb_plays,
                     themes, opening_tags, game_url, daily_date, random_key, selectable)
-SELECT ... /* même SELECT qu'en 4.4 */
+SELECT * FROM (
+    SELECT
+        s.puzzle_id AS lichess_id,
+        s.fen AS fen,
+        s.moves AS moves,
+        CAST(s.rating AS UNSIGNED) AS rating,
+        CAST(s.rating_deviation AS UNSIGNED) AS rating_deviation,
+        CAST(s.popularity AS SIGNED) AS popularity,
+        CAST(s.nb_plays AS UNSIGNED) AS nb_plays,
+        IF(TRIM(s.themes) = '', JSON_ARRAY(),
+           CAST(CONCAT('["', REPLACE(TRIM(s.themes), ' ', '","'), '"]') AS JSON)) AS themes,
+        IF(TRIM(s.opening_tags) = '', NULL,
+           CAST(CONCAT('["', REPLACE(TRIM(s.opening_tags), ' ', '","'), '"]') AS JSON)) AS opening_tags,
+        s.game_url AS game_url,
+        CAST(NULLIF(TRIM(s.daily_date), '') AS DATE) AS daily_date,
+        FLOOR(RAND() * 4294967296) AS random_key,
+        CAST(s.popularity AS SIGNED) >= 50 AND CAST(s.nb_plays AS UNSIGNED) >= 100 AS selectable
+    FROM puzzle_import_staging s
+    WHERE s.seq BETWEEN @from AND @to
+      AND s.puzzle_id <> 'PuzzleId'
+    ORDER BY s.seq
+) AS new
 ON DUPLICATE KEY UPDATE
-    rating = VALUES(rating), rating_deviation = VALUES(rating_deviation),
-    popularity = VALUES(popularity), nb_plays = VALUES(nb_plays),
-    themes = VALUES(themes), opening_tags = VALUES(opening_tags), daily_date = VALUES(daily_date);
+    rating = new.rating, rating_deviation = new.rating_deviation,
+    popularity = new.popularity, nb_plays = new.nb_plays,
+    themes = new.themes, opening_tags = new.opening_tags, daily_date = new.daily_date;
 ```
+
+La table dérivée `new` remplace `VALUES(col)`, déprécié depuis MySQL 8.0.20 (l'alias de ligne
+`INSERT … VALUES … AS new` ne s'applique pas à un `INSERT … SELECT`). `random_key` et `id` ne sont pas
+dans la clause `UPDATE` : un puzzle existant les garde. `selectable` n'y est pas non plus : 5.3 le
+recalcule. La correspondance sur `lichess_id` est exacte grâce à sa collation `ascii_bin` (`0009B` et
+`0009b` sont deux puzzles).
 
 puis refaire 5.3 et 5.4. Les puzzles retirés de l'export restent en base (l'historique fonctionne
 toujours) ; ils ne sont simplement plus mis à jour.

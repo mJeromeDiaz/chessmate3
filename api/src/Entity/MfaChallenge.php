@@ -36,10 +36,10 @@ class MfaChallenge
     #[ORM\Column(length: 32)]
     private string $method;
 
-    #[ORM\Column(length: 64)]
+    #[ORM\Column(length: 64, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private string $pendingTokenHash;
 
-    #[ORM\Column(length: 64, nullable: true)]
+    #[ORM\Column(length: 64, nullable: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private ?string $codeHash = null;
 
     #[ORM\Column]

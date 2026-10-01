@@ -2,15 +2,19 @@
 
 Chess training app (Duolingo-style). One git repository (monorepo) at the root:
 
-- `api/`: Symfony 7.4 + API Platform 5, Doctrine ORM 3, **MySQL 8** (not PostgreSQL), Messenger on
-  the Doctrine transport. **No Redis**: rate limiters use the filesystem cache pool.
+- `api/`: Symfony 7.4 + API Platform 5, Doctrine ORM 3, **MySQL 8.0** (8.0.46 in dev, local
+  server, no Docker), Messenger on the Doctrine transport. **No PostgreSQL**: never use a
+  PostgreSQL-only feature (arrays, GIN, `RETURNING`, partial indexes, `ON CONFLICT`...); MySQL
+  equivalents are generated columns + unique indexes, JSON, `ON DUPLICATE KEY UPDATE`. **No Redis**:
+  rate limiters use the filesystem cache pool (local to one server).
 - `front/`: Vue 3 + Quasar 2 + Pinia, **JavaScript** (Composition API, `<script setup>`, JSDoc on
   non-trivial functions and stores), file-based routing under `src/pages/`, hash router mode.
 - `docs/` (root): general documentation — `AUTH.md`, `SECURITY.md`, `PUZZLES.md`,
   `PUZZLE_IMPORT.md`, `ACTIVITY.md` (timezone, domain events, activity log), `WOODPECKER.md`
-  (classic and light modes), `TRAINING.md` (timed runs, module contract). Code
-  paths quoted in them (`src/...`, `config/...`, `bin/console`) are relative to `api/` unless they
-  name `front/`.
+  (classic and light modes), `TRAINING.md` (timed runs, module contract), `REPERTOIRE.md`
+  (opening repertoires: normalized FEN, graph, one prepared move per position, trash, segments,
+  editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics). Code paths quoted in them (`src/...`, `config/...`,
+  `bin/console`) are relative to `api/` unless they name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
 editor and OS files.
@@ -26,7 +30,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker, Training today; Repertoire... later) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire today) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
 
 | Layer | Location |
@@ -41,6 +45,7 @@ layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never 
 | Tests | `tests/{Unit,Functional}/<Domain>/` |
 | Front | `src/components/<domain>/`, `src/composables/<domain>/`, `src/stores/<domain>.js`, `src/pages/index/<domain>/` (pages live under the `index` layout) |
 | Front, cross-domain | `src/components/chess/` (the chessboard, reused by every training mode) |
+| Server, cross-domain | `src/Chess/` → `App\Chess\Rules` (legal moves, UCI, lenient SAN, normalized FEN), `App\Chess\Position\{FenNormalizer, PositionKey}`, `App\Chess\Pgn\{Parser, Writer}`; front twin of the normalizer: `src/utils/chess/normalizeFen.js` |
 
 Directories and namespaces are PascalCase and singular (PSR-4). Transverse entities stay at the root:
 `App\Entity\User` and the Phase 1 auth entities are not moved.
@@ -63,11 +68,13 @@ API (`cd api`; prefix with `php -d xdebug.mode=off` if Xdebug reports a false in
 vendor/bin/phpunit                                   # all tests (unit + functional, test DB)
 vendor/bin/phpstan analyse --memory-limit=1G         # level max
 bin/console doctrine:migrations:migrate [--env=test]
-bin/console doctrine:fixtures:load                   # PURGES the DB: themes, sample puzzles, demo user + Woodpecker data
+bin/console doctrine:fixtures:load                   # PURGES the DB: themes, sample puzzles, demo user + Woodpecker data, openings + demo repertoires
 bin/console app:puzzle:sync-themes                   # load/update the Lichess puzzle themes
 bin/console app:puzzle:rebuild-selection             # after a puzzle import or a quality-threshold change
 bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
-bin/console messenger:consume activity async         # worker: domain events (outbox) and emails
+bin/console app:repertoire:sync-openings             # load/update the opening names (data/chess-openings, ~9 s; fixtures do it too)
+bin/console cache:pool:prune                         # daily cron: expired Lichess explorer/cloud-eval answers
+bin/console messenger:consume activity async         # worker: domain events (outbox), emails, big repertoire imports
 ```
 
 Front (`cd front`):
@@ -87,10 +94,19 @@ no other environment. PHP's built-in server needs `-d variables_order=EGPCS` to 
 
 ## Gotchas
 
-- A raw SQL write (bulk UPDATE, `SelectionRebuilder`) bypasses Doctrine's identity map: clear the
+- A raw SQL write (bulk UPDATE, `SelectionRebuilder`, the repertoire's derived data written by
+  `Repertoire\Graph\{IndexWriter, SegmentReconciler}`) bypasses Doctrine's identity map: clear the
   entity manager (and reload) before reading those entities in the same process.
+- `EntityManager::wrapInTransaction()` closes the entity manager on any exception, a business refusal
+  included: services that refuse inside a transaction either return the refusal and throw it outside
+  (`TimeboxRunner`) or use `App\Repertoire\Transaction` and validate before their first write.
+- Services only used by one other service are inlined, and unused ones removed, from the test
+  container: tests that fetch them directly need them public under `when@test` (`config/services.yaml`).
 - API Platform drops `null` fields by default: resources set `skip_null_values: false`.
 - MySQL `SET @a = 1, @b = @a + 1` evaluates `@b` with the old `@a`: use separate statements.
+- MySQL collations ignore case (and accents) by default: a column holding a FEN, moves, a Lichess id
+  or any case-sensitive identifier or digest uses `ascii_bin` (or `utf8mb4_bin`), e.g.
+  `options: ['charset' => 'ascii', 'collation' => 'ascii_bin']`; `CaseSensitiveColumnsTest` lists them.
 - Time: every instant is UTC (forced in `Kernel::boot()` and on each MySQL connection); a local day
   (activity date, Woodpecker deadline) is computed explicitly with `User::getDateTimeZone()`.
 - Domain events go through `App\Activity\EventPublisher`, **inside** the transaction of the change
@@ -106,4 +122,8 @@ no other environment. PHP's built-in server needs `-d variables_order=EGPCS` to 
   typed `ParameterType::INTEGER`: untyped ones are bound as strings and `LEAST()` then compares as
   strings.
 - Lichess rate-limits the anonymous `puzzle/next` and `puzzle/batch` endpoints hard (429 for many
-  minutes); never script them in a loop.
+  minutes); never script them in a loop. Repertoire calls to Lichess (explorer, cloud eval, studies)
+  all go through `Repertoire\Lichess\LichessGateway` (one request at a time, pause after a 429);
+  tests never reach Lichess (`MockHttpClient` in PHPUnit, `page.route` in Playwright).
+- API Platform hides the detail of any 5xx outside debug: a reason the SPA needs travels in a
+  header exposed by CORS (`X-Lichess-Unavailable` on the Lichess proxy's 503).

@@ -28,6 +28,7 @@
  */
 import { computed } from 'vue'
 import { formatDuration, formatPercent } from '@/utils/format'
+import { unitWord } from '@/utils/repertoireTest'
 import { closeReasonText } from '@/utils/training'
 
 const props = defineProps({
@@ -69,10 +70,31 @@ const stats = computed(() => {
   ]
 })
 
-/** Module-specific lines (Woodpecker today). */
+/** Module-specific lines (Woodpecker, the repertoire test). */
 const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
+  if (props.run.module === 'repertoire') {
+    const units = count =>
+      unitWord(m.unit === 'line' ? 'line' : 'segment', count)
+    const e = m.unit === 'line' ? 'e' : ''
+    const s = count => e + (count > 1 ? 's' : '')
+    lines.push(`Positions notées : ${m.positionsGraded ?? 0}.`)
+    if (m.recovered > 0)
+      lines.push(
+        `${units(m.recovered)} raté${s(m.recovered)} puis réussi${s(m.recovered)}.`
+      )
+    if (m.interrupted > 0)
+      lines.push(
+        `${units(m.interrupted)} interrompu${s(m.interrupted)} par la fin, sans erreur : non compté${s(m.interrupted)}.`
+      )
+    if (m.dropped > 0)
+      lines.push(
+        `${units(m.dropped)} ignoré${s(m.dropped)} : le répertoire a changé pendant la séance.`
+      )
+    if (m.rounds > 1) lines.push(`${m.rounds} tours.`)
+    return lines
+  }
   if (m.averageMs)
     lines.push(`Temps moyen par puzzle : ${formatDuration(m.averageMs)}`)
   if (m.added > 0)

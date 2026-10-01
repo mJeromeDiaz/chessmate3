@@ -56,6 +56,7 @@ final class TimeboxRunner
      * @param array<string, mixed> $config module-specific options
      *
      * @throws RunInProgressException
+     * @throws \App\Training\Exception\InvalidRunConfigException
      * @throws \App\Training\Exception\SubjectNotFoundException
      * @throws SubjectUnavailableException
      */

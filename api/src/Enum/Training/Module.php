@@ -11,6 +11,7 @@ namespace App\Enum\Training;
 enum Module: string
 {
     case Woodpecker = 'woodpecker';
+    case Repertoire = 'repertoire';
 
     /**
      * @return list<string>

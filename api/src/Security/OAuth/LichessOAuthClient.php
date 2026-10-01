@@ -12,13 +12,16 @@ use League\OAuth2\Client\Token\AccessToken;
 
 /**
  * Lichess through knpu's configured provider ({@see LichessProvider}): PKCE, no client secret, no
- * scope. Lichess gives no email without the email:read scope, so the identity never carries one —
+ * scope (a grant flow asks for {@see self::STUDY_READ}). Lichess gives no email without the email:read scope, so the identity never carries one —
  * such an account has no email until its owner adds one along with a password.
  *
  * The access token is handed over to be kept, encrypted, for future game imports.
  */
 final readonly class LichessOAuthClient implements OAuthProviderClientInterface
 {
+    /** Reads the user's private and unlisted studies (repertoire import). */
+    public const STUDY_READ = 'study:read';
+
     /** Perfs worth showing on the profile; Lichess returns many more (variants, puzzles...). */
     private const RATED_PERFS = ['bullet', 'blitz', 'rapid', 'classical', 'correspondence'];
 
@@ -33,10 +36,10 @@ final readonly class LichessOAuthClient implements OAuthProviderClientInterface
     }
 
     #[\Override]
-    public function buildAuthorizationRequest(string $state): AuthorizationRequest
+    public function buildAuthorizationRequest(string $state, array $scopes = []): AuthorizationRequest
     {
         $provider = $this->provider();
-        $url = $provider->getAuthorizationUrl(['state' => $state]);
+        $url = $provider->getAuthorizationUrl(['state' => $state] + ([] === $scopes ? [] : ['scope' => $scopes]));
 
         return new AuthorizationRequest($url, (string) $provider->getPkceCode());
     }

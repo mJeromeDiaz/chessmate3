@@ -16,6 +16,28 @@ framework:
                 timeout: 5
                 headers:
                     Accept: 'application/json'
+                    User-Agent: '%app.lichess.user_agent%'
+            # Lichess opening explorer (bearer token required, no scope): repertoire proxy
+            # (App\Repertoire\Lichess). Its host is explorer.lichess.org, not lichess.org.
+            lichess_explorer.client:
+                base_uri: 'https://explorer.lichess.org'
+                timeout: 5
+                headers:
+                    Accept: 'application/json'
+                    User-Agent: '%app.lichess.user_agent%'
+
+    # Expected third-party outages: warning, not the critical level of a 5xx.
+    exceptions:
+        App\State\Repertoire\LichessUnavailableHttpException:
+            log_level: warning
+
+    cache:
+        pools:
+            # Lichess explorer and cloud eval answers, shared by all users (public data), in MySQL
+            # (no Redis): table repertoire_explorer_cache, expired rows purged by
+            # `bin/console cache:pool:prune` (daily cron, docs/REPERTOIRE.md).
+            repertoire.explorer_cache:
+                adapter: app.cache.adapter.repertoire_explorer
 
 when@test:
     framework:

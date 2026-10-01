@@ -48,19 +48,19 @@ class OAuthFlow
         private AuthProvider $provider,
         #[ORM\Column(length: 10, enumType: OAuthFlowPurpose::class)]
         private OAuthFlowPurpose $purpose,
-        #[ORM\Column(length: 64)]
+        #[ORM\Column(length: 64, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
         private string $bindingHash,
-        #[ORM\Column(length: 64)]
+        #[ORM\Column(length: 64, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
         private string $stateHash,
-        #[ORM\Column(length: 128)]
+        #[ORM\Column(length: 128, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
         private string $codeVerifier,
         /** The user linking an account; null for a login. */
         #[ORM\ManyToOne]
         #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
         private ?User $user = null,
     ) {
-        if (OAuthFlowPurpose::Link === $purpose && null === $user) {
-            throw new \InvalidArgumentException('A link flow needs the user it links to.');
+        if ($purpose->needsUser() && null === $user) {
+            throw new \InvalidArgumentException('A link or grant flow needs the user it acts for.');
         }
 
         $this->id = Uuid::v7();

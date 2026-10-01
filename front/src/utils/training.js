@@ -17,7 +17,9 @@ export function closeReasonText(run) {
     case 'subject_resting':
       return `Cycle terminé. Repos : prochain cycle le ${formatDate(run.summary?.context?.availableAt)}.`
     case 'subject_unavailable':
-      return 'Le set a été mis en pause ou abandonné : séance close.'
+      return run.module === 'repertoire'
+        ? 'Plus rien à tester dans cette sélection : séance close.'
+        : 'Le set a été mis en pause ou abandonné : séance close.'
     default:
       return ''
   }
@@ -30,9 +32,10 @@ export function closeReasonText(run) {
  * @returns {string}
  */
 export function subjectPath(run) {
-  return run.subjectType === 'woodpecker_set'
-    ? `/woodpecker/${run.subjectId}`
-    : '/'
+  if (run.subjectType === 'woodpecker_set')
+    return `/woodpecker/${run.subjectId}`
+  if (run.subjectType === 'repertoire_owner') return '/repertoire'
+  return '/'
 }
 
 /**

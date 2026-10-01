@@ -18,7 +18,10 @@ interface OAuthProviderClientInterface
 {
     public function getProvider(): AuthProvider;
 
-    public function buildAuthorizationRequest(string $state): AuthorizationRequest;
+    /**
+     * @param list<string> $scopes more scopes than the provider's defaults (a grant flow)
+     */
+    public function buildAuthorizationRequest(string $state, array $scopes = []): AuthorizationRequest;
 
     /**
      * @throws OAuthFlowException on any provider-side failure (reason "provider_error")

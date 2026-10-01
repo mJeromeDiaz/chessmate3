@@ -128,9 +128,31 @@ framework:
             interval: '1 hour'
         training_item_next:
             policy: sliding_window
-            limit: 300
+            limit: 600
             interval: '10 minutes'
         training_item_submit:
             policy: sliding_window
-            limit: 300
+            limit: 600
             interval: '10 minutes'
+        # Repertoires (identifier = user id). Building one move by move is a request per move:
+        # generous, but caps scripted writes (every change rewrites derived data of the graph).
+        repertoire_create:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
+        repertoire_edit:
+            policy: sliding_window
+            limit: 600
+            interval: '10 minutes'
+        # Repertoire imports (PGN analysed and stored for a day; studies read from Lichess).
+        repertoire_import:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        # Lichess proxy (explorer and cloud eval together). The front waits 300 ms of stillness
+        # before asking and caches per position; answers are cached server-side for everyone.
+        repertoire_explorer:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'
+

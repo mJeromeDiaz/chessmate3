@@ -98,6 +98,15 @@ export const profileApi = {
     http
       .delete(`/api/profile/identities/${encodeURIComponent(id)}`)
       .then(r => r.data),
+  /**
+   * Asks the linked Lichess account for study:read (private study import).
+   *
+   * @returns {Promise<{authorizationUrl: string}>}
+   */
+  startGrant: provider =>
+    http
+      .post(`/api/profile/identities/${encodeURIComponent(provider)}/grant`)
+      .then(r => r.data),
   /** @returns {Promise<{authorizationUrl: string}>} */
   startLink: provider =>
     http
@@ -218,7 +227,7 @@ export const woodpeckerApi = {
 
 /** Timed runs of any module (docs/TRAINING.md). */
 export const trainingApi = {
-  /** @param {{module: string, subjectId: string, budgetSeconds: number}} payload */
+  /** @param {{module: string, subjectId: string, budgetSeconds: number, config?: Record<string, any>}} payload */
   start: payload =>
     http.post('/api/training/runs', payload, JSON_LD).then(r => r.data),
   /** The active run, or null. */
@@ -241,7 +250,7 @@ export const trainingApi = {
       .then(r => r.data),
   /**
    * @param {string} id
-   * @param {{itemId: string, moves: string[], hintLevel: number, solutionShown: boolean}} report
+   * @param {{itemId: string, moves: string[], hintLevel: number, solutionShown: boolean, thinkMs?: number}} report
    */
   submit: (id, report) =>
     http
@@ -254,5 +263,249 @@ export const trainingApi = {
   stop: id =>
     http
       .post(`/api/training/runs/${encodeURIComponent(id)}/stop`, null, JSON_LD)
+      .then(r => r.data)
+}
+
+/** Opening repertoires (docs/REPERTOIRE.md). Changes answer a delta (RepertoireChange). */
+export const repertoireApi = {
+  list: () => http.get('/api/repertoires', JSON_LD).then(r => r.data.member),
+  /** @param {{name: string, color: 'white'|'black'}} payload */
+  create: payload =>
+    http.post('/api/repertoires', payload, JSON_LD).then(r => r.data),
+  rename: (id, name) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/rename`,
+        { name },
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** Deletes the repertoire for good, with its statistics. */
+  remove: id =>
+    http
+      .delete(`/api/repertoires/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  graph: id =>
+    http
+      .get(`/api/repertoires/${encodeURIComponent(id)}/graph`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {{fromPositionId: string, uci: string, baseVersion?: number}} payload
+   */
+  addMove: (id, payload) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/moves`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Another prepared move in place of the user's move (the former one goes to the trash).
+   *
+   * @param {string} id
+   * @param {string} moveId
+   * @param {{uci: string, baseVersion?: number}} payload
+   */
+  replaceMove: (id, moveId, payload) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/moves/${encodeURIComponent(moveId)}/replace`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * promote or delete a move.
+   *
+   * @param {string} id
+   * @param {string} moveId
+   * @param {'promote'|'delete'} action
+   * @param {{baseVersion?: number}} payload
+   */
+  moveAction: (id, moveId, action, payload = {}) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/moves/${encodeURIComponent(moveId)}/${action}`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {string} moveId
+   * @param {{comment: string|null, nags: number[], baseVersion?: number}} payload
+   */
+  annotate: (id, moveId, payload) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/moves/${encodeURIComponent(moveId)}/annotation`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** @param {string} id @param {{baseVersion?: number}} payload */
+  undo: (id, payload = {}) =>
+    http
+      .post(`/api/repertoires/${encodeURIComponent(id)}/undo`, payload, JSON_LD)
+      .then(r => r.data),
+  /** @param {string} id suites of the trash, newest first */
+  trash: id =>
+    http
+      .get(`/api/repertoires/${encodeURIComponent(id)}/trash`, JSON_LD)
+      .then(r => r.data.suites),
+  /**
+   * What restoring a suite would do with these choices.
+   *
+   * @param {string} id
+   * @param {string} trashId
+   * @param {Record<string, 'restored'|'current'>} choices normalized FEN => choice
+   */
+  trashPreview: (id, trashId, choices = {}) =>
+    http
+      .get(
+        `/api/repertoires/${encodeURIComponent(id)}/trash/${encodeURIComponent(trashId)}`,
+        { ...JSON_LD, params: { choices } }
+      )
+      .then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {string} trashId
+   * @param {{choices: Record<string, 'restored'|'current'>, baseVersion?: number}} payload
+   */
+  restore: (id, trashId, payload) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/trash/${encodeURIComponent(trashId)}/restore`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** Removes a suite from the trash for good. */
+  discard: (id, trashId) =>
+    http
+      .delete(
+        `/api/repertoires/${encodeURIComponent(id)}/trash/${encodeURIComponent(trashId)}`,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * The repertoire as a file: PGN, or an OpenBook backup (JSON). Its text and the file name the
+   * API gives.
+   *
+   * @param {string} id
+   * @param {'pgn'|'openbook'} [format]
+   * @returns {Promise<{text: string, fileName: string}>}
+   */
+  exportFile: (id, format = 'pgn') =>
+    http
+      .get(`/api/repertoires/${encodeURIComponent(id)}/export`, {
+        responseType: 'text',
+        // The text as sent: a JSON body is not parsed.
+        transformResponse: [data => data],
+        params: format === 'pgn' ? {} : { format },
+        headers: {
+          Accept:
+            format === 'pgn' ? 'application/x-chess-pgn' : 'application/json'
+        }
+      })
+      .then(r => ({
+        text: r.data,
+        fileName:
+          /filename="?([^";]+)"?/.exec(
+            r.headers?.['content-disposition'] ?? ''
+          )?.[1] ?? (format === 'pgn' ? 'repertoire.pgn' : 'repertoire.json')
+      })),
+  /**
+   * Starts an import: a PGN text (with its file name) or a Lichess study URL.
+   *
+   * @param {{pgn?: string, fileName?: string|null, studyUrl?: string}} payload
+   */
+  createImport: payload =>
+    http.post('/api/repertoires/imports', payload, JSON_LD).then(r => r.data),
+  /**
+   * The import, with its preview against a destination once analysed.
+   *
+   * @param {string} id
+   * @param {{repertoireId?: string, color?: 'white'|'black', choices?: Record<string, string>}} destination
+   */
+  getImport: (id, destination = {}) =>
+    http
+      .get(`/api/repertoires/imports/${encodeURIComponent(id)}`, {
+        ...JSON_LD,
+        params: destination
+      })
+      .then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {{repertoireId?: string, baseVersion?: number, name?: string, color?: string, choices: Record<string, string>}} payload
+   */
+  applyImport: (id, payload) =>
+    http
+      .post(
+        `/api/repertoires/imports/${encodeURIComponent(id)}/apply`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Lichess opening explorer, through the API (which holds the token and caches the answers).
+   *
+   * @param {'masters'|'lichess'} source
+   * @param {string} fen
+   * @param {{speeds?: string[], ratings?: number[]}} filters lichess only
+   * @param {AbortSignal} [signal]
+   */
+  explorer: (source, fen, filters = {}, signal) =>
+    http
+      .get(`/api/repertoires/explorer/${encodeURIComponent(source)}`, {
+        ...JSON_LD,
+        signal,
+        params: {
+          fen,
+          ...(source === 'lichess' && filters.speeds?.length
+            ? { speeds: filters.speeds.join(',') }
+            : {}),
+          ...(source === 'lichess' && filters.ratings?.length
+            ? { ratings: filters.ratings.join(',') }
+            : {})
+        }
+      })
+      .then(r => r.data),
+  /**
+   * Lichess cloud evaluation (found: false when Lichess has none).
+   *
+   * @param {string} fen
+   * @param {number} lines 1 to 5
+   * @param {AbortSignal} [signal]
+   */
+  cloudEval: (fen, lines = 3, signal) =>
+    http
+      .get('/api/repertoires/cloud-eval', {
+        ...JSON_LD,
+        signal,
+        params: { fen, lines }
+      })
+      .then(r => r.data),
+  /** The user's repertoires at a glance: cards, tests, 7-day forecast (docs/REPERTOIRE.md § 15). */
+  overview: () => http.get('/api/repertoires/stats', JSON_LD).then(r => r.data),
+  /** Statistics of one repertoire: cards, tests, segments, fragile segments. */
+  stats: id =>
+    http
+      .get(`/api/repertoires/${encodeURIComponent(id)}/stats`, JSON_LD)
+      .then(r => r.data),
+  /** A segment's last presentations (retries and merged segments included). */
+  segmentHistory: (id, segmentId) =>
+    http
+      .get(
+        `/api/repertoires/${encodeURIComponent(id)}/segments/${encodeURIComponent(segmentId)}`,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** What a timed repertoire test presented, unit by unit. */
+  runReport: runId =>
+    http
+      .get(`/api/repertoires/runs/${encodeURIComponent(runId)}`, JSON_LD)
       .then(r => r.data)
 }

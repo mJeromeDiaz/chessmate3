@@ -41,7 +41,33 @@ const REASONS = {
   identity_in_use: 'Ce compte est déjà lié à un autre compte ChessMate.',
   provider_already_linked:
     'Un compte de ce fournisseur est déjà lié à votre profil. Retirez-le d’abord.',
-  conflict: 'La connexion a échoué. Réessayez.'
+  conflict: 'La connexion a échoué. Réessayez.',
+  not_linked:
+    'Liez d’abord votre compte Lichess depuis votre profil, puis autorisez l’accès à vos études.',
+  identity_mismatch:
+    'Ce n’est pas le compte Lichess lié à votre profil : reconnectez-vous à Lichess avec ce compte-là.'
+}
+
+/** Set by the page that started a grant (repertoire import): where to come back. */
+const RETURN_KEY = 'chessmate.oauthReturn'
+
+/**
+ * The page to come back to after a grant: a path of the repertoire pages only (never another
+ * site).
+ *
+ * @returns {string}
+ */
+function grantReturn() {
+  let saved = null
+  try {
+    saved = sessionStorage.getItem(RETURN_KEY)
+    sessionStorage.removeItem(RETURN_KEY)
+  } catch {
+    // Storage unavailable: the import page, empty.
+  }
+  return typeof saved === 'string' && /^\/repertoire\/import(\?|$)/.test(saved)
+    ? saved
+    : '/repertoire/import'
 }
 
 const auth = useAuthStore()
@@ -50,13 +76,23 @@ const router = useRouter()
 const error = ref('')
 
 const isLink = computed(() => route.query.mode === 'link')
-const backTo = computed(() => (isLink.value ? '/profile' : '/login'))
+const isGrant = computed(() => route.query.mode === 'grant')
+const backTo = computed(() =>
+  isGrant.value ? '/repertoire/import' : isLink.value ? '/profile' : '/login'
+)
 
 onMounted(async () => {
   const { status, reason, provider } = route.query
 
   if (status !== 'success') {
+    if (isGrant.value) grantReturn()
     error.value = REASONS[reason] ?? 'La connexion a échoué.'
+    return
+  }
+
+  if (isGrant.value) {
+    await auth.fetchProfile().catch(() => {})
+    router.replace(grantReturn())
     return
   }
 

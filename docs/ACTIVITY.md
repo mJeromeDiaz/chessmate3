@@ -58,13 +58,14 @@ n'en supprime jamais.
 | `Woodpecker\Event\SetGrown` | croissance d'un set light | set, manche, puzzles ajoutés, nouvelle taille |
 | `Training\Event\RunCompleted` | clôture d'une séance chronométrée ([TRAINING.md](TRAINING.md)) | séance, module, sujet (`subjectType` + `subjectId`), `parentId`, motif, budget, durée réelle, éléments et réussites, `startedAt` |
 
-`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle` (extensible).
+`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment` (extensible).
 
 | Source | `type` | `sourceType` |
 |---|---|---|
 | Puzzle classé (phase 2) | `puzzle_rated` | `puzzle_attempt` |
 | Rejeu non classé (historique, puzzle récalcitrant) | `puzzle_unrated` | `puzzle_attempt` |
 | Puzzle Woodpecker (cycle classique ou manche light) | `woodpecker_puzzle` | `woodpecker_attempt` |
+| Tronçon présenté dans un test de répertoire (une ligne : un par tronçon traversé) | `repertoire_segment` | `repertoire_presentation` |
 
 `metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
 (`classic`, `light`) et, joué en séance, `trainingRunId`.

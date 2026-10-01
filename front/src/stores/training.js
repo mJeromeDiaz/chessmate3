@@ -32,14 +32,16 @@ export const useTrainingStore = defineStore('training', () => {
    * Starts a run. On a 409, `current` tells whether another run is in progress (the caller offers
    * to resume or end it) or the subject cannot be played now.
    *
-   * @param {{module: string, subjectId: string, minutes: number}} options
+   * @param {{module: string, subjectId: string, minutes: number, config?: Record<string, any>}} options
+   *   config: the module's options (the scope of a repertoire test)
    */
-  async function start({ module, subjectId, minutes }) {
+  async function start({ module, subjectId, minutes, config }) {
     try {
       current.value = await trainingApi.start({
         module,
         subjectId,
-        budgetSeconds: Math.round(minutes * 60)
+        budgetSeconds: Math.round(minutes * 60),
+        ...(config ? { config } : {})
       })
       return current.value
     } catch (e) {

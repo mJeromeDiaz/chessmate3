@@ -27,7 +27,7 @@ class TrustedDevice
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
-    #[ORM\Column(length: 64)]
+    #[ORM\Column(length: 64, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private string $tokenHash;
 
     #[ORM\Column(length: 255)]

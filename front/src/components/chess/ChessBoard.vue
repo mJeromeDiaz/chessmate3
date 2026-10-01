@@ -5,19 +5,37 @@
     data-testid="chess-board"
     :data-fen="currentFen"
   >
-    <div ref="container" class="chess-board__surface" />
+    <div class="chess-board__frame">
+      <div ref="container" class="chess-board__surface" />
+      <span
+        v-for="glyph in placedGlyphs"
+        :key="glyph.square"
+        class="chess-board__glyph"
+        :class="`chess-board__glyph--${glyph.tone}`"
+        :style="glyph.style"
+        :data-testid="`glyph-${glyph.square}`"
+        >{{ glyph.text }}</span
+      >
+    </div>
   </div>
 </template>
 
 <script setup>
 /**
- * Generic, reusable chessboard (puzzles today; Woodpecker and repertoire review later).
+ * Generic, reusable chessboard (puzzles, Woodpecker, the repertoire editor).
  *
  * Display and interaction only: it knows the rules (chess.js) to offer legal moves and the
  * promotion dialog, but nothing about puzzles. The parent owns the position (`fen` prop) and
  * decides what a move means; see docs/PUZZLES.md, "Front components", for the full API.
  */
-import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch
+} from 'vue'
 import { Chess } from 'chess.js'
 import {
   BORDER_TYPE,
@@ -40,7 +58,8 @@ import 'cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css'
  * @typedef {'white'|'black'} Color
  * @typedef {{from: string, to: string, promotion?: string}} MoveInput
  * @typedef {{square: string, type: 'lastMove'|'hint'|'error'|'success'}} Highlight
- * @typedef {{from: string, to: string, type?: 'hint'|'solution'}} Arrow
+ * @typedef {{from: string, to: string, type?: 'hint'|'solution'|'explorer'|'error'}} Arrow
+ * @typedef {{square: string, text: string}} Glyph an annotation shown on a square ("!", "?!"...)
  */
 
 // Marker and arrow types are matched by reference: module-level constants only.
@@ -53,7 +72,18 @@ const MARKERS = {
 }
 const ARROWS = {
   hint: { class: 'arrow-info' },
-  solution: { class: 'arrow-success' }
+  solution: { class: 'arrow-success' },
+  explorer: { class: 'arrow-explorer' },
+  error: { class: 'arrow-danger' }
+}
+/** Colour of an annotation glyph, by its meaning (good, bad, dubious). */
+const GLYPH_TONES = {
+  '!': 'good',
+  '!!': 'good',
+  '?': 'bad',
+  '??': 'bad',
+  '!?': 'dubious',
+  '?!': 'dubious'
 }
 const SHAKE_MS = 400
 
@@ -62,12 +92,14 @@ const props = defineProps({
   fen: { type: String, required: true },
   /** Side shown at the bottom. */
   orientation: { type: String, default: 'white' },
-  /** Side the user may move, or null to disable input. */
+  /** Side the user may move ('white', 'black', 'both' in an editor), or null to disable input. */
   movableColor: { type: String, default: null },
   /** @type {import('vue').PropType<Highlight[]>} Coloured squares (last move, hint, error...). */
   highlights: { type: Array, default: () => [] },
   /** @type {import('vue').PropType<Arrow[]>} */
   arrows: { type: Array, default: () => [] },
+  /** @type {import('vue').PropType<Glyph[]>} Annotations drawn in a corner of their square. */
+  glyphs: { type: Array, default: () => [] },
   /** Piece animation duration in ms (0 disables animations). */
   animationDuration: { type: Number, default: 250 },
   /** Show dots on the legal destinations of the picked piece. */
@@ -85,9 +117,29 @@ const board = shallowRef(null)
 const shaking = ref(false)
 const currentFen = ref(props.fen)
 let rules = new Chess(props.fen)
+/** Number of setPosition calls, so that only the latest one sets data-fen. */
+let positionCalls = 0
 
 /** @param {string} color */
 const toBoardColor = color => (color === 'black' ? COLOR.black : COLOR.white)
+
+/** Glyphs placed in the top right corner of their square, as seen from `orientation`. */
+const placedGlyphs = computed(() =>
+  props.glyphs
+    .filter(g => /^[a-h][1-8]$/.test(g.square))
+    .map(({ square, text }) => {
+      const file = square.charCodeAt(0) - 97
+      const rank = Number(square[1]) - 1
+      const column = props.orientation === 'black' ? 7 - file : file
+      const row = props.orientation === 'black' ? rank : 7 - rank
+      return {
+        square,
+        text,
+        tone: GLYPH_TONES[text] ?? 'neutral',
+        style: { left: `${(column + 1) * 12.5}%`, top: `${row * 12.5}%` }
+      }
+    })
+)
 
 onMounted(() => {
   board.value = new Chessboard(container.value, {
@@ -137,11 +189,13 @@ watch(() => [props.highlights, props.arrows], renderDecorations, { deep: true })
  */
 async function setPosition(fen, animated = true) {
   rules = new Chess(fen)
+  const call = ++positionCalls
   if (board.value) {
     await board.value.setPosition(fen, animated && props.animationDuration > 0)
   }
-  // Exposed as data-fen once the animation is over: the position the user can act on.
-  currentFen.value = fen
+  // Exposed as data-fen once the animation is over: the position the user can act on. Calls may
+  // overlap (a move taken back, then the next unit) and end out of order: the last one wins.
+  if (call === positionCalls) currentFen.value = fen
 }
 
 /**
@@ -178,7 +232,10 @@ function updateInput() {
   const b = board.value
   if (!b) return
   b.disableMoveInput()
-  if (props.movableColor) {
+  if (props.movableColor === 'both') {
+    // cm-chessboard: no colour means both sides may move.
+    b.enableMoveInput(onInput)
+  } else if (props.movableColor) {
     b.enableMoveInput(onInput, toBoardColor(props.movableColor))
   }
 }
@@ -261,9 +318,38 @@ defineExpose({ setPosition, shake })
   max-width: min(92vw, 70vh, 560px);
   margin: 0 auto;
 }
+.chess-board__frame {
+  position: relative;
+}
 .chess-board__surface {
   width: 100%;
   aspect-ratio: 1;
+}
+.chess-board__glyph {
+  position: absolute;
+  transform: translate(-60%, -40%);
+  min-width: 1.4em;
+  padding: 0 0.25em;
+  border-radius: 0.7em;
+  font-size: clamp(10px, 2.2vw, 14px);
+  font-weight: 700;
+  line-height: 1.4em;
+  text-align: center;
+  color: #fff;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.chess-board__glyph--good {
+  background: #2e7d32;
+}
+.chess-board__glyph--bad {
+  background: #c62828;
+}
+.chess-board__glyph--dubious {
+  background: #ef6c00;
+}
+.chess-board__glyph--neutral {
+  background: #546e7a;
 }
 .chess-board--shake {
   animation: chess-board-shake 0.4s ease-in-out;
@@ -298,6 +384,16 @@ defineExpose({ setPosition, shake })
 .cm-chessboard .markers .marker.cb-marker-error {
   fill: #e53935;
   opacity: 0.6;
+}
+/* Extra arrow types, on the model of cm-chessboard's arrows.css. */
+.cm-chessboard .arrow-explorer .arrow-head {
+  fill: #42a5f5;
+  fill-rule: nonzero;
+}
+.cm-chessboard .arrow-explorer .arrow-line {
+  stroke: #42a5f5;
+  stroke-linecap: round;
+  opacity: 0.45;
 }
 .cm-chessboard .markers .marker.cb-marker-success {
   fill: #43a047;

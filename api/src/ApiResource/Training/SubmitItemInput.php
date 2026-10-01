@@ -26,4 +26,8 @@ final class SubmitItemInput
     public int $hintLevel = 0;
 
     public bool $solutionShown = false;
+
+    /** Think time measured by the client, ms: lowers the server's own measure, never raises it. */
+    #[Assert\Range(min: 0, max: 3_600_000)]
+    public ?int $thinkMs = null;
 }

@@ -88,6 +88,40 @@ final readonly class OAuthAccountService
      *
      * @throws OAuthFlowException IDENTITY_IN_USE or PROVIDER_ALREADY_LINKED
      */
+    /**
+     * Keeps a token with more scopes for the user's linked account: only when the provider
+     * account is the linked one (else the fresh token is revoked and the grant refused). The old
+     * token is revoked; the granted scopes are noted in the identity's metadata.
+     *
+     * @param list<string> $scopes the scopes asked (Lichess returns no list of granted scopes)
+     *
+     * @throws OAuthFlowException not_linked, identity_mismatch
+     */
+    public function grant(User $user, ExternalIdentity $identity, array $scopes): void
+    {
+        $linked = null;
+        foreach ($user->getAuthIdentities() as $authIdentity) {
+            if ($authIdentity->getProvider() === $identity->provider) {
+                $linked = $authIdentity;
+            }
+        }
+        if (null === $linked) {
+            $this->tokenVault->discard($identity);
+
+            throw new OAuthFlowException(OAuthFlowException::NOT_LINKED);
+        }
+        if ($linked->getProviderUserId() !== $identity->providerUserId) {
+            $this->tokenVault->discard($identity);
+
+            throw new OAuthFlowException(OAuthFlowException::IDENTITY_MISMATCH);
+        }
+
+        $this->refreshIdentity($linked, $identity);
+        $linked->setMetadata(['scopes' => array_values(array_unique($scopes))] + $linked->getMetadata());
+        $this->authIdentityRepository->save($linked);
+        $this->auditLogger->log(AuditEventType::OauthScopesGranted, $user, ['provider' => $identity->provider->value, 'scopes' => $scopes]);
+    }
+
     public function link(User $user, ExternalIdentity $identity): bool
     {
         $existing = $this->authIdentityRepository->findOneByProviderAndUserId($identity->provider, $identity->providerUserId);

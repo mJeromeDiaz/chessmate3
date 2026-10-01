@@ -9,13 +9,36 @@
           <q-btn
             color="primary"
             no-caps
-            label="Retour au set"
+            :label="isRepertoire ? 'Retour aux répertoires' : 'Retour au set'"
             :to="subjectPath(runner.run.value)"
             data-testid="run-back"
           />
         </template>
       </RunRecap>
+      <RepertoireRunUnits
+        v-if="isRepertoire"
+        :run-id="runner.run.value.id"
+        class="q-mt-md"
+      />
     </div>
+
+    <RepertoireDrillPlayer
+      v-else-if="
+        runner.phase.value === 'running' && isRepertoire && runner.item.value
+      "
+      :runner="runner"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        />
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </RepertoireDrillPlayer>
 
     <PuzzlePlayer
       v-else-if="runner.phase.value === 'running' && puzzle"
@@ -25,25 +48,16 @@
       @resolve="onResolve"
     >
       <template #header>
-        <div class="row items-center q-gutter-sm">
-          <div class="text-h4 text-weight-medium" data-testid="run-timer">{{
-            formatCountdown(runner.remainingMs.value)
-          }}</div>
-          <q-space />
-          <q-btn
-            flat
-            no-caps
-            color="negative"
-            icon="stop"
-            label="Terminer"
-            data-testid="run-stop"
-            @click="confirmStop"
-          />
-        </div>
-        <q-linear-progress :value="elapsedRatio" class="q-my-xs" />
-        <div class="text-subtitle2" data-testid="run-progress">
-          {{ runner.played.value }} puzzles · {{ runner.solved.value }} réussis
-        </div>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">
+            {{ runner.played.value }} puzzles ·
+            {{ runner.solved.value }} réussis
+          </div>
+        </RunHeader>
         <q-banner v-if="error" rounded class="bg-negative text-white">{{
           error
         }}</q-banner>
@@ -98,17 +112,20 @@
 <script setup>
 /**
  * A timed run (docs/TRAINING.md): countdown on the server's clock, items one after the other,
- * recap at the end. Reloading or coming back before the end resumes the same run and item.
+ * recap at the end. Reloading or coming back before the end resumes the same run and item. The
+ * module decides the player: Woodpecker puzzles, or the repertoire test (docs/REPERTOIRE.md § 15).
  */
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
+import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
+import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
+import RunHeader from '@/components/training/RunHeader.vue'
 import RunRecap from '@/components/training/RunRecap.vue'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
-import { formatCountdown } from '@/utils/format'
 import { subjectPath } from '@/utils/training'
 
 definePage({ meta: { auth: 'required' } })
@@ -130,11 +147,7 @@ const puzzle = computed(() =>
     : null
 )
 
-const elapsedRatio = computed(() => {
-  const run = runner.run.value
-  if (!run) return 0
-  return 1 - runner.remainingMs.value / (run.budgetSeconds * 1000)
-})
+const isRepertoire = computed(() => runner.run.value?.module === 'repertoire')
 
 /**
  * @param {string} _outcome
@@ -165,7 +178,9 @@ async function next() {
 function confirmStop() {
   $q.dialog({
     title: 'Terminer la séance ?',
-    message: 'Le puzzle en cours ne sera pas compté.',
+    message: isRepertoire.value
+      ? 'L’unité en cours ne sera pas comptée, sauf si vous y avez déjà fait une erreur.'
+      : 'Le puzzle en cours ne sera pas compté.',
     cancel: true
   }).onOk(() => runner.stop().catch(e => (error.value = apiErrorMessage(e))))
 }

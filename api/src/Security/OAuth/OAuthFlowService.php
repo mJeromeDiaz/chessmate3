@@ -45,13 +45,16 @@ final readonly class OAuthFlowService
         return isset($this->clients[$provider->value]);
     }
 
-    public function start(AuthProvider $provider, OAuthFlowPurpose $purpose, ?User $user = null): StartedOAuthFlow
+    /**
+     * @param list<string> $scopes more scopes than the provider's defaults (grant flows only)
+     */
+    public function start(AuthProvider $provider, OAuthFlowPurpose $purpose, ?User $user = null, array $scopes = []): StartedOAuthFlow
     {
         $this->repository->deleteExpired();
 
         $state = bin2hex(random_bytes(32));
         $binding = bin2hex(random_bytes(32));
-        $authorization = $this->client($provider)->buildAuthorizationRequest($state);
+        $authorization = $this->client($provider)->buildAuthorizationRequest($state, $scopes);
 
         $flow = new OAuthFlow($provider, $purpose, $this->hash($binding), $this->hash($state), $authorization->codeVerifier, $user);
         $this->repository->save($flow);

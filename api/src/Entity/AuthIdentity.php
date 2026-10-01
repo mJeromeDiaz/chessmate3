@@ -32,7 +32,8 @@ class AuthIdentity
     #[ORM\Column(length: 20, enumType: AuthProvider::class)]
     private AuthProvider $provider;
 
-    #[ORM\Column(length: 255)]
+    /** Opaque identifier from the provider: compared byte for byte (case and accents). */
+    #[ORM\Column(length: 255, options: ['collation' => 'utf8mb4_bin'])]
     private string $providerUserId;
 
     #[ORM\Column(length: 180, nullable: true)]

@@ -72,6 +72,13 @@ final class OAuthController extends AbstractController
             $completed = $this->flowService->complete($provider, $request);
             $purpose = $completed->flow->getPurpose();
 
+            if (OAuthFlowPurpose::Grant === $purpose) {
+                $user = $completed->flow->getUser() ?? throw new OAuthFlowException(OAuthFlowException::INVALID_STATE);
+                $this->accountService->grant($user, $completed->identity, OAuthFlowPurpose::grantScopes($provider));
+
+                return $this->toSpa(['status' => 'success', 'mode' => 'grant', 'provider' => $provider->value]);
+            }
+
             if (OAuthFlowPurpose::Link === $purpose) {
                 $user = $completed->flow->getUser() ?? throw new OAuthFlowException(OAuthFlowException::INVALID_STATE);
                 $this->accountService->link($user, $completed->identity);

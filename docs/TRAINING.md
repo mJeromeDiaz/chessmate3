@@ -4,7 +4,8 @@
 
 Une **séance** (*run*) est un temps d'entraînement fixé à l'avance (5 à 30 minutes, ou libre de 1 à
 60) pendant lequel on enchaîne les éléments d'un **module** : aujourd'hui Woodpecker, dans ses deux
-modes ([WOODPECKER.md](WOODPECKER.md)). Le socle est générique : un futur module (répertoire, calcul…)
+modes ([WOODPECKER.md](WOODPECKER.md)), et le test des répertoires d'ouvertures
+([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)). Le socle est générique : un module
 implémente un contrat et hérite du chronomètre, des règles de fin et du récapitulatif. Événements et
 journal : [ACTIVITY.md](ACTIVITY.md).
 
@@ -18,8 +19,9 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Contrat des modules | `App\Training\Module\{TimeboxedModuleInterface, ModuleRegistry, Item, ItemSubmission, ItemResult, Summary}` |
 | Événement | `App\Training\Event\RunCompleted` |
 | Module Woodpecker | `App\Woodpecker\Training\WoodpeckerModule` |
+| Module Répertoire | `App\Repertoire\Training\RepertoireModule` |
 | API | `App\ApiResource\Training\*`, `App\State\Training\*` |
-| Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunRecap, RunTable}.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
+| Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable}.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
 
 ## 2. Règles validées
 
@@ -43,7 +45,7 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 ## 3. Modèle de données
 
 `training_run` : `module`, `subject_type` + `subject_id` (ex. `woodpecker_set` + id du set),
-`config` (JSON, options du module, aucune aujourd'hui), `budget_seconds`, `status` (`active`,
+`config` (JSON, options du module : la portée d'un test de répertoire ; aucune pour Woodpecker), `budget_seconds`, `status` (`active`,
 `closed`), `started_at`, `expires_at`, `closed_at`, `close_reason`, `summary` (JSON, figé à la
 clôture) et `parent_id` (future séance multi-modules, phase 6 ; toujours `NULL`).
 
@@ -64,7 +66,7 @@ jamais) :
 | `stopped` | bouton « Terminer » | l'instant de l'arrêt |
 | `subject_finished` | le sujet est terminé (dernier cycle d'un set classique) | l'instant de la soumission |
 | `subject_resting` | cycle classique terminé, le suivant est au repos (`context.availableAt`) | idem |
-| `subject_unavailable` | set mis en pause ou abandonné pendant la séance | la requête qui le constate |
+| `subject_unavailable` | set mis en pause ou abandonné pendant la séance ; plus rien à tester dans la portée d'un test de répertoire | la requête qui le constate |
 
 ## 4. Chronomètre (`TimeboxRunner`)
 
@@ -97,7 +99,9 @@ Service tagué `app.training.module` (autoconfiguré) et cas dans l'enum `Module
 | `summarize(Run, closedAt)` | le `Summary` figé dans la séance |
 
 `ItemSubmission` rapporte ce que le client a fait (coups UCI tentés, niveau d'indice, solution
-affichée), **jamais un résultat**.
+affichée, et `thinkMs`, le temps de réflexion qu'il a mesuré, animations exclues), **jamais un résultat**.
+Un module qui utilise `thinkMs` le plafonne par le temps écoulé côté serveur depuis que l'élément a
+été servi : le client peut minorer son temps, jamais l'augmenter.
 
 **Récapitulatif normalisé** (`Summary`, identique pour tous les modules) : `durationMs` (réelle),
 `itemCount`, `successCount`, `failureCount`, `successRate`, `itemsPerMinute`, plus `metrics`
@@ -114,11 +118,11 @@ Préfixe `/api`, utilisateur authentifié ; une séance d'un autre utilisateur r
 
 | Endpoint | Rôle | Erreurs |
 |---|---|---|
-| `POST /training/runs` | `{module, subjectId, budgetSeconds}` : démarre (30 par heure) | 404 sujet, 409 séance déjà en cours ou sujet non jouable, 422 |
+| `POST /training/runs` | `{module, subjectId, budgetSeconds, config}` : démarre (30 par heure) | 404 sujet, 409 séance déjà en cours ou sujet non jouable, 422 (dont `config` invalide) |
 | `GET /training/runs/current` | La séance active, sinon `null` | — |
 | `GET /training/runs/{id}` | Une séance, avec `serverNow` | 404 |
-| `POST /training/runs/{id}/next` | `{run, item}` : élément à jouer, `item: null` une fois close (300 par 10 min) | 404 |
-| `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown}` → `{run, result}` (300 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis ou séance close |
+| `POST /training/runs/{id}/next` | `{run, item}` : élément à jouer, `item: null` une fois close (600 par 10 min) | 404 |
+| `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown, thinkMs?}` → `{run, result}` (600 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis ou séance close |
 | `POST /training/runs/{id}/stop` | Termine la séance | 404 |
 
 L'identifiant de l'élément est dans le corps, pas dans l'URL : une seule route de soumission quel que
@@ -132,10 +136,15 @@ Woodpecker liste ses séances (`runs`).
   partir de `serverNow` sur l'échange **au plus court aller-retour** ; le compte à rebours affiche
   l'horloge serveur. À zéro, plus rien n'est joué : le composable demande l'état au serveur, qui
   clôt la séance. Pas de grâce côté client non plus.
-- Après un puzzle réussi, le suivant arrive seul (500 ms) ; après une erreur, la solution se déroule,
-  puis « Suivant ».
-- `RunLauncher` (page du set) : durées 5, 10, 15, 20, 30 min ou « Autre » (1 à 60) ; si une séance
-  est déjà en cours, propose de la reprendre ou de la terminer.
+- `training/[id]` choisit le lecteur selon le module : `PuzzlePlayer` (Woodpecker) ou
+  `RepertoireDrillPlayer` ([REPERTOIRE.md § 15](REPERTOIRE.md#front)) ; `RunHeader` (compte à
+  rebours, « Terminer », barre du temps écoulé) leur est commun.
+- Woodpecker : après un puzzle réussi, le suivant arrive seul (500 ms) ; après une erreur, la
+  solution se déroule, puis « Suivant ». Répertoire : unité réussie, la suivante seule (600 ms) ;
+  ratée, « Suivant ».
+- `RunLauncher` (page du set, dialogue de test d'un répertoire) : durées 5, 10, 15, 20, 30 min ou
+  « Autre » (1 à 60), `config` du module envoyée telle quelle (`show-unit` ajoute le choix tronçons
+  ou lignes) ; si une séance est déjà en cours, propose de la reprendre ou de la terminer.
 - `RunRecap` : récapitulatif normalisé et lignes du module ; `RunTable` : historique avec l'évolution
   des puzzles par minute d'une séance à l'autre.
 
@@ -150,3 +159,4 @@ Woodpecker liste ses séances (`runs`).
 - Playwright : `tests/e2e/training.spec.js` : une séance light d'1 min terminée avec « Terminer »
   (1 réussi, 1 échoué, récapitulatif, historique) et une séance classique d'1 min menée **jusqu'à son
   expiration réelle** (puzzle à l'écran non compté, cycle avancé d'un seul puzzle). Environ 75 s.
+  Le test des répertoires a le sien : `tests/e2e/repertoire-test.spec.js` ([REPERTOIRE.md § 16](REPERTOIRE.md#16-tests)).

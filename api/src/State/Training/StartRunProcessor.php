@@ -11,6 +11,7 @@ use App\ApiResource\Training\StartRunInput;
 use App\Enum\Training\Module;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
+use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\RunInProgressException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
@@ -18,6 +19,7 @@ use App\Training\Run\TimeboxRunner;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Uid\Uuid;
 
@@ -47,6 +49,8 @@ final class StartRunProcessor implements ProcessorInterface
             $run = $this->runner->start($user, Module::from($data->module), Uuid::fromString($data->subjectId), $data->budgetSeconds, $data->config);
         } catch (RunInProgressException) {
             throw new ConflictHttpException('Another training run is in progress.');
+        } catch (InvalidRunConfigException $e) {
+            throw new UnprocessableEntityHttpException($e->getMessage());
         } catch (SubjectNotFoundException) {
             throw new NotFoundHttpException('Subject not found.');
         } catch (SubjectUnavailableException $e) {

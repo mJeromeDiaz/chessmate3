@@ -48,4 +48,21 @@ final class IdentityLinkController extends AbstractController
 
         return $response;
     }
+
+    /**
+     * Asks the linked Lichess account for study:read (docs/REPERTOIRE.md, "Import"): the callback
+     * keeps the new token only for the same Lichess account.
+     */
+    #[Route('/{provider}/grant', name: 'app_profile_identity_grant', requirements: ['provider' => 'lichess'], methods: ['POST'])]
+    public function grant(AuthProvider $provider, #[CurrentUser] User $user, Request $request): JsonResponse
+    {
+        $this->rateLimitGuard->consume($this->oauthIpLimiter, $request->getClientIp() ?? 'unknown');
+
+        $flow = $this->flowService->start($provider, OAuthFlowPurpose::Grant, $user, OAuthFlowPurpose::grantScopes($provider));
+
+        $response = $this->json(['authorizationUrl' => $flow->authorizationUrl]);
+        $response->headers->setCookie($flow->bindingCookie);
+
+        return $response;
+    }
 }

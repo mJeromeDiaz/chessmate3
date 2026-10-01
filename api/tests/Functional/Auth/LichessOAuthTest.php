@@ -191,6 +191,59 @@ final class LichessOAuthTest extends OAuthWebTestCase
         self::assertNull($this->identity('magnus')->getUser()->getEmail());
     }
 
+    public function testAGrantKeepsANewTokenWithStudyReadForTheSameLichessAccount(): void
+    {
+        $this->createVerifiedUser('alice@example.com', self::PASSWORD);
+        $accessToken = $this->loginAndGetAccessToken('alice@example.com', self::PASSWORD);
+        $this->linkWithLichess($accessToken, self::ACCOUNT);
+
+        $authorizationUrl = $this->startGrant($accessToken);
+        parse_str((string) parse_url($authorizationUrl, \PHP_URL_QUERY), $query);
+        self::assertSame('study:read', $query['scope'] ?? null);
+        [$state, $challenge] = $this->stateAndChallenge($authorizationUrl);
+        $response = $this->oauthCallback(AuthProvider::Lichess, ['state' => $state, 'code' => FakeLichessProvider::consent($challenge, self::ACCOUNT)]);
+
+        self::assertSame(['status' => 'success', 'mode' => 'grant', 'provider' => 'lichess'], $this->spaOutcome($response));
+        $this->assertNoRefreshCookie($response);
+        [$linkToken, $grantToken] = FakeLichessProvider::$issuedTokens;
+        self::assertSame([$linkToken], FakeLichessProvider::$revokedTokens, 'the scopeless token is revoked');
+        $identity = $this->identity('magnus');
+        self::assertSame($grantToken, $this->secretBox()->decrypt((string) $identity->getAccessTokenEncrypted()));
+        self::assertSame(['study:read'], $identity->getMetadata()['scopes'] ?? null);
+        self::assertSame(1, $this->auditCount(AuditEventType::OauthScopesGranted));
+    }
+
+    public function testAGrantFromAnotherLichessAccountIsRefusedAndItsTokenRevoked(): void
+    {
+        $this->createVerifiedUser('alice@example.com', self::PASSWORD);
+        $accessToken = $this->loginAndGetAccessToken('alice@example.com', self::PASSWORD);
+        $this->linkWithLichess($accessToken, self::ACCOUNT);
+
+        [$state, $challenge] = $this->stateAndChallenge($this->startGrant($accessToken));
+        $response = $this->oauthCallback(AuthProvider::Lichess, ['state' => $state, 'code' => FakeLichessProvider::consent($challenge, ['id' => 'hikaru', 'username' => 'Hikaru'] + self::ACCOUNT)]);
+
+        self::assertSame('identity_mismatch', $this->spaOutcome($response)['reason'] ?? null);
+        [$linkToken, $otherToken] = FakeLichessProvider::$issuedTokens;
+        self::assertSame([$otherToken], FakeLichessProvider::$revokedTokens);
+        $identity = $this->identity('magnus');
+        self::assertSame($linkToken, $this->secretBox()->decrypt((string) $identity->getAccessTokenEncrypted()));
+        self::assertArrayNotHasKey('scopes', $identity->getMetadata());
+    }
+
+    public function testAGrantNeedsALinkedLichessAccount(): void
+    {
+        $this->createVerifiedUser('alice@example.com', self::PASSWORD);
+        $accessToken = $this->loginAndGetAccessToken('alice@example.com', self::PASSWORD);
+
+        [$state, $challenge] = $this->stateAndChallenge($this->startGrant($accessToken));
+        $response = $this->oauthCallback(AuthProvider::Lichess, ['state' => $state, 'code' => FakeLichessProvider::consent($challenge, self::ACCOUNT)]);
+
+        self::assertSame('not_linked', $this->spaOutcome($response)['reason'] ?? null);
+        self::assertSame(FakeLichessProvider::$issuedTokens, FakeLichessProvider::$revokedTokens);
+        $this->client->request('POST', '/api/profile/identities/google/grant', server: ['HTTP_AUTHORIZATION' => 'Bearer '.$accessToken]);
+        self::assertSame(404, $this->client->getResponse()->getStatusCode());
+    }
+
     public function testNoTokenOrSecretEverReachesTheAuditLog(): void
     {
         $this->loginWithLichess(self::ACCOUNT);
@@ -218,6 +271,20 @@ final class LichessOAuthTest extends OAuthWebTestCase
         [$state, $challenge] = $this->stateAndChallenge($this->startLink(AuthProvider::Lichess, $accessToken));
 
         return $this->oauthCallback(AuthProvider::Lichess, ['state' => $state, 'code' => FakeLichessProvider::consent($challenge, $account)]);
+    }
+
+    private function startGrant(string $accessToken): string
+    {
+        $this->client->request('POST', '/api/profile/identities/lichess/grant', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$accessToken,
+            'HTTP_ACCEPT' => 'application/json',
+        ]);
+        $response = $this->client->getResponse();
+        self::assertSame(200, $response->getStatusCode());
+        $authorizationUrl = $this->decodeJson($response)['authorizationUrl'] ?? null;
+        self::assertIsString($authorizationUrl);
+
+        return $authorizationUrl;
     }
 
     private function identity(string $lichessId): AuthIdentity
