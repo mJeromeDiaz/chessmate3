@@ -16,7 +16,7 @@ vi.mock('@/services/api', () => ({
 const { trainingApi } = await import('@/services/api')
 const { useTrainingStore } = await import('@/stores/training')
 const { useAuthStore } = await import('@/stores/auth')
-const { runTrends, closeReasonText, subjectPath } =
+const { runTrends, closeReasonText, subjectPath, backLabel } =
   await import('@/utils/training')
 
 const conflict = () =>
@@ -140,5 +140,23 @@ describe('training utils', () => {
     )
     expect(closeReasonText({ closeReason: 'time_up' })).toBe('Temps écoulé.')
     expect(subjectPath(run)).toBe('/woodpecker/s1')
+  })
+
+  it('knows the puzzles and free study modules', () => {
+    expect(
+      closeReasonText({ closeReason: 'subject_unavailable', module: 'puzzles' })
+    ).toContain('Plus aucun puzzle')
+    expect(
+      closeReasonText({
+        closeReason: 'subject_unavailable',
+        module: 'woodpecker'
+      })
+    ).toContain('Le set')
+    expect(subjectPath({ subjectType: 'puzzle_player', subjectId: 'u' })).toBe(
+      '/puzzle'
+    )
+    expect(subjectPath({ subjectType: 'free_owner', subjectId: 'u' })).toBe('/')
+    expect(backLabel({ module: 'puzzles' })).toBe('Retour aux puzzles')
+    expect(backLabel({ module: 'free' })).toBe('Retour à l’accueil')
   })
 })

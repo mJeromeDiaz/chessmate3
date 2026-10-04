@@ -9,6 +9,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Puzzle\Attempt;
 use App\ApiResource\Puzzle\StartAttemptInput;
 use App\Puzzle\Attempt\AttemptService;
+use App\Puzzle\Attempt\Exception\AttemptHeldByRunException;
 use App\Puzzle\Attempt\Exception\NoPuzzleAvailableException;
 use App\Puzzle\Attempt\Exception\ReplayNotAllowedException;
 use App\Puzzle\Selection\SelectionCriteria;
@@ -16,6 +17,8 @@ use App\Repository\Puzzle\PuzzleRepository;
 use App\Repository\Puzzle\ThemeRepository;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
+use App\Training\Run\TimeboxRunner;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
@@ -34,6 +37,7 @@ final class StartAttemptProcessor implements ProcessorInterface
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly RateLimiterFactory $puzzleAttemptStartLimiter,
+        private readonly TimeboxRunner $timebox,
     ) {
     }
 
@@ -41,6 +45,8 @@ final class StartAttemptProcessor implements ProcessorInterface
     {
         $user = $this->authenticatedUser->get();
         $this->rateLimitGuard->consume($this->puzzleAttemptStartLimiter, $user->getId()->toRfc4122());
+        // A timed run past its time must not keep holding the pending puzzle.
+        $this->timebox->closeExpired($user);
 
         if (null !== $data->replayOf) {
             $puzzle = $this->puzzles->findOneByLichessId($data->replayOf);
@@ -68,6 +74,8 @@ final class StartAttemptProcessor implements ProcessorInterface
             ));
         } catch (NoPuzzleAvailableException) {
             throw new NotFoundHttpException('No puzzle available for these criteria.');
+        } catch (AttemptHeldByRunException) {
+            throw new ConflictHttpException('Your pending puzzle is being played in a timed run.');
         }
 
         return Attempt::from($attempt);

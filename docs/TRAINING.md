@@ -3,9 +3,10 @@
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
 Une **séance** (*run*) est un temps d'entraînement fixé à l'avance (5 à 30 minutes, ou libre de 1 à
-60) pendant lequel on enchaîne les éléments d'un **module** : aujourd'hui Woodpecker, dans ses deux
-modes ([WOODPECKER.md](WOODPECKER.md)), et le test des répertoires d'ouvertures
-([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)). Le socle est générique : un module
+60) pendant lequel on enchaîne les éléments d'un **module** : Woodpecker, dans ses deux
+modes ([WOODPECKER.md](WOODPECKER.md)), le test des répertoires d'ouvertures
+([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)), les puzzles
+classés (§ 5 bis) et le temps libre (§ 5 ter). Le socle est générique : un module
 implémente un contrat et hérite du chronomètre, des règles de fin et du récapitulatif. Événements et
 journal : [ACTIVITY.md](ACTIVITY.md).
 
@@ -20,8 +21,10 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Événement | `App\Training\Event\RunCompleted` |
 | Module Woodpecker | `App\Woodpecker\Training\WoodpeckerModule` |
 | Module Répertoire | `App\Repertoire\Training\RepertoireModule` |
+| Module Puzzles | `App\Puzzle\Training\PuzzleModule` |
+| Module Libre | `App\Training\Free\FreeModule` |
 | API | `App\ApiResource\Training\*`, `App\State\Training\*` |
-| Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable}.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
+| Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable, FreeRunPanel}.vue`, `components/puzzle/PuzzleRunDialog.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
 
 ## 2. Règles validées
 
@@ -45,7 +48,7 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 ## 3. Modèle de données
 
 `training_run` : `module`, `subject_type` + `subject_id` (ex. `woodpecker_set` + id du set),
-`config` (JSON, options du module : la portée d'un test de répertoire ; aucune pour Woodpecker), `budget_seconds`, `status` (`active`,
+`config` (JSON, options du module : la portée d'un test de répertoire, les thèmes des puzzles, le format et les notes du temps libre ; aucune pour Woodpecker), `budget_seconds`, `status` (`active`,
 `closed`), `started_at`, `expires_at`, `closed_at`, `close_reason`, `summary` (JSON, figé à la
 clôture) et `parent_id` (future séance multi-modules, phase 6 ; toujours `NULL`).
 
@@ -109,6 +112,37 @@ Un module qui utilise `thinkMs` le plafonne par le temps écoulé côté serveur
 `activeMs` et `averageMs` (temps plafonné à 5 min par puzzle), `rounds`, `added` (croissance du set
 pendant la séance), `puzzleCount` et, en classique, `cycle` (numéro, run, joués, échéance).
 
+### 5 bis. Module Puzzles (`puzzles`)
+
+Sujet : l'utilisateur (`subjectType = puzzle_player`, `subjectId` = son id). `config` :
+`{themes?: string[]}`, 10 clés connues au plus, combinées en OU (422 sinon). Élément `puzzle` : une
+tentative **classée**, choisie comme en jeu libre autour du classement ; le résultat
+(`ratingAfter`, `ratingDelta`) suit le Glicko-2 habituel ([PUZZLES.md](PUZZLES.md)). Le premier
+puzzle est servi au démarrage : sans puzzle disponible, 409 et pas de séance.
+
+Règles validées (2026-10-04), pour qu'aucun puzzle classé ne puisse être esquivé :
+
+- la tentative classée **en attente** (jeu libre, ou laissée par une séance précédente) est le
+  premier puzzle de la séance, même hors des thèmes choisis ;
+- le puzzle à l'écran à la fin (temps écoulé, « Terminer ») n'est **pas compté** mais **reste en
+  attente**, détaché de la séance : il revient au prochain « puzzle suivant » ;
+- pendant la séance, le jeu libre refuse ce puzzle (409, `Rejoindre la séance` côté front).
+
+Récapitulatif : `solved`, `failed`, `activeMs` / `averageMs` (5 min au plus par puzzle), `themes`,
+`ratingBefore`, `ratingAfter`, `ratingDelta`. Lancement : page Puzzles, « Séance chronométrée »
+(thèmes du filtre).
+
+### 5 ter. Module Libre (`free`)
+
+Temps d'étude libre (livre, vidéo, cours, podcast, autre). Sujet : l'utilisateur
+(`subjectType = free_owner`). `config` : `{format: book|video|course|podcast|other, notes?: string}`
+(500 caractères au plus ; 422 sinon). Un seul élément, `free_timer` (id = la séance, données
+`format` et `notes`), rien à soumettre (400) : la séance finit par « Terminer » ou à l'expiration.
+À la clôture, sa **durée serveur** (jusqu'à l'expiration au plus, même constatée plus tard) est
+journalisée en `ExerciseCompleted` de type `free_study` ([ACTIVITY.md](ACTIVITY.md)) ; rien si elle
+est nulle. Récapitulatif : la durée, `metrics.format` et `metrics.notes`. Pas de point d'entrée
+seul : il se lance depuis une session (Session Builder).
+
 Ajouter un module : un cas à `Module`, une implémentation du contrat, un `subjectPath` côté front
 (`utils/training.js`) et le rendu de son type d'élément dans `pages/index/training/[id].vue`.
 
@@ -160,3 +194,7 @@ Woodpecker liste ses séances (`runs`).
   (1 réussi, 1 échoué, récapitulatif, historique) et une séance classique d'1 min menée **jusqu'à son
   expiration réelle** (puzzle à l'écran non compté, cycle avancé d'un seul puzzle). Environ 75 s.
   Le test des répertoires a le sien : `tests/e2e/repertoire-test.spec.js` ([REPERTOIRE.md § 16](REPERTOIRE.md#16-tests)).
+- Puzzles et Libre : `tests/Functional/Training/{PuzzleRunTest, FreeRunTest}.php` (puzzles classés
+  et thèmes, puzzle en attente qui ouvre la séance, puzzle à l'écran qui reste en attente, jeu libre
+  refusé pendant la séance, aucun puzzle ; durée réelle journalisée, séance abandonnée comptée
+  jusqu'à l'expiration, options validées) et `tests/e2e/training-modules.spec.js`.

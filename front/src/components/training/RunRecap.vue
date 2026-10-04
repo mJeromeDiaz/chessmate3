@@ -27,9 +27,13 @@
  * in `summary.metrics`.
  */
 import { computed } from 'vue'
-import { formatDuration, formatPercent } from '@/utils/format'
+import {
+  formatDuration,
+  formatPercent,
+  formatRatingDelta
+} from '@/utils/format'
 import { unitWord } from '@/utils/repertoireTest'
-import { closeReasonText } from '@/utils/training'
+import { FREE_FORMATS, closeReasonText } from '@/utils/training'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/composables/training/useTimeboxedRun').TrainingRun>} */
@@ -41,12 +45,15 @@ const summary = computed(() => props.run.summary)
 const stats = computed(() => {
   const s = summary.value
   if (!s) return []
+  const duration = {
+    label: 'Durée',
+    value: formatDuration(s.durationMs),
+    testid: 'run-duration'
+  }
+  // Free study has nothing to count but its time.
+  if (props.run.module === 'free') return [duration]
   return [
-    {
-      label: 'Durée',
-      value: formatDuration(s.durationMs),
-      testid: 'run-duration'
-    },
+    duration,
     { label: 'Terminés', value: String(s.itemCount), testid: 'run-items' },
     {
       label: 'Réussis',
@@ -70,7 +77,7 @@ const stats = computed(() => {
   ]
 })
 
-/** Module-specific lines (Woodpecker, the repertoire test). */
+/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study). */
 const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
@@ -94,6 +101,16 @@ const details = computed(() => {
       )
     if (m.rounds > 1) lines.push(`${m.rounds} tours.`)
     return lines
+  }
+  if (props.run.module === 'free') {
+    lines.push(`Format : ${FREE_FORMATS[m.format] ?? m.format}.`)
+    if (m.notes) lines.push(`Notes : ${m.notes}`)
+    return lines
+  }
+  if (props.run.module === 'puzzles' && m.ratingBefore != null) {
+    lines.push(
+      `Classement : ${m.ratingBefore} → ${m.ratingAfter} (${formatRatingDelta(m.ratingDelta)}).`
+    )
   }
   if (m.averageMs)
     lines.push(`Temps moyen par puzzle : ${formatDuration(m.averageMs)}`)

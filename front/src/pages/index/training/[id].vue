@@ -9,7 +9,7 @@
           <q-btn
             color="primary"
             no-caps
-            :label="isRepertoire ? 'Retour aux répertoires' : 'Retour au set'"
+            :label="backLabel(runner.run.value)"
             :to="subjectPath(runner.run.value)"
             data-testid="run-back"
           />
@@ -39,6 +39,25 @@
         }}</q-banner>
       </template>
     </RepertoireDrillPlayer>
+
+    <FreeRunPanel
+      v-else-if="
+        runner.phase.value === 'running' &&
+        runner.item.value?.type === 'free_timer'
+      "
+      :item="runner.item.value"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        />
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </FreeRunPanel>
 
     <PuzzlePlayer
       v-else-if="runner.phase.value === 'running' && puzzle"
@@ -81,7 +100,14 @@
           :class="
             runner.result.value.success ? 'text-positive' : 'text-negative'
           "
-          >{{ runner.result.value.success ? 'Réussi !' : 'Échoué' }}</div
+          >{{ runner.result.value.success ? 'Réussi !' : 'Échoué' }}
+          <span
+            v-if="runner.result.value.data?.ratingDelta != null"
+            data-testid="run-rating-delta"
+            >({{
+              formatRatingDelta(runner.result.value.data.ratingDelta)
+            }})</span
+          ></div
         >
         <q-btn
           color="primary"
@@ -113,12 +139,14 @@
 /**
  * A timed run (docs/TRAINING.md): countdown on the server's clock, items one after the other,
  * recap at the end. Reloading or coming back before the end resumes the same run and item. The
- * module decides the player: Woodpecker puzzles, or the repertoire test (docs/REPERTOIRE.md § 15).
+ * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
+ * (docs/REPERTOIRE.md § 15) or free study (a timer).
  */
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
+import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
 import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
 import RunHeader from '@/components/training/RunHeader.vue'
@@ -126,13 +154,25 @@ import RunRecap from '@/components/training/RunRecap.vue'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
-import { subjectPath } from '@/utils/training'
+import { formatRatingDelta } from '@/utils/format'
+import { backLabel, subjectPath } from '@/utils/training'
 
 definePage({ meta: { auth: 'required' } })
 
 /** After a solved puzzle, the next one comes by itself (speed matters); after a miss, the solution first. */
 const AUTO_NEXT_MS = 500
 
+/** Item types played on the puzzle board. */
+const PUZZLE_ITEMS = ['woodpecker_puzzle', 'puzzle']
+
+/** What "Terminer" leaves behind, by module. */
+const STOP_MESSAGES = {
+  repertoire:
+    'L’unité en cours ne sera pas comptée, sauf si vous y avez déjà fait une erreur.',
+  puzzles:
+    'Le puzzle en cours ne sera pas compté : il vous attendra au prochain puzzle.',
+  free: 'Le temps passé jusqu’ici sera compté.'
+}
 const route = useRoute()
 const $q = useQuasar()
 const store = useTrainingStore()
@@ -142,8 +182,8 @@ const error = ref('')
 
 /** A new object for each item: the player starts a new game. */
 const puzzle = computed(() =>
-  runner.item.value?.type === 'woodpecker_puzzle'
-    ? runner.item.value.data.puzzle
+  PUZZLE_ITEMS.includes(runner.item.value?.type ?? '')
+    ? runner.item.value?.data.puzzle
     : null
 )
 
@@ -178,9 +218,9 @@ async function next() {
 function confirmStop() {
   $q.dialog({
     title: 'Terminer la séance ?',
-    message: isRepertoire.value
-      ? 'L’unité en cours ne sera pas comptée, sauf si vous y avez déjà fait une erreur.'
-      : 'Le puzzle en cours ne sera pas compté.',
+    message:
+      STOP_MESSAGES[runner.run.value?.module ?? ''] ??
+      'Le puzzle en cours ne sera pas compté.',
     cancel: true
   }).onOk(() => runner.stop().catch(e => (error.value = apiErrorMessage(e))))
 }

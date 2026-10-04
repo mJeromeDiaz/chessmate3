@@ -41,6 +41,8 @@ final class AttemptEvents
                 'mistakes' => $attempt->getMistakes(),
                 'hintLevel' => $attempt->getHintLevel(),
                 'solutionShown' => $attempt->isSolutionShown(),
+                // Played in a timed run (docs/TRAINING.md).
+                'trainingRunId' => $attempt->getTrainingRun()?->getId()->toRfc4122(),
             ],
         );
     }

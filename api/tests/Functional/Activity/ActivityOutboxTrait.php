@@ -38,4 +38,21 @@ trait ActivityOutboxTrait
 
         return $handled;
     }
+
+    /**
+     * @return list<object> the messages of the outbox, which is emptied without handling them
+     */
+    protected function takeOutboxMessages(): array
+    {
+        $messages = [];
+        do {
+            $batch = [...$this->outbox()->get()];
+            foreach ($batch as $envelope) {
+                $messages[] = $envelope->getMessage();
+                $this->outbox()->ack($envelope);
+            }
+        } while ([] !== $batch);
+
+        return $messages;
+    }
 }

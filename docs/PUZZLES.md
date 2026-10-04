@@ -27,7 +27,7 @@ technique, comme `App\Security\` en phase 1.
 | `puzzle` | ~5 M puzzles Lichess (import massif) | PK `id INT UNSIGNED` (4 octets, recopiée dans chaque index secondaire) ; `uniq_puzzle_lichess_id` (`CHAR(5) ascii_bin` : les id Lichess sont sensibles à la casse) ; `idx_puzzle_selection (selectable, rating, random_key)` |
 | `puzzle_theme` | Référentiel des 73 thèmes Lichess (clé, libellés et descriptions FR/EN, catégorie, ordre, **nombre de puzzles précalculé**) | `uniq_puzzle_theme_key` |
 | `puzzle_theme_membership` | Index de sélection « le puzzle P a le thème T », puzzles sélectionnables seulement (~16–20 M lignes) | PK clusterisée `(theme_id, rating, random_key, puzzle_id)` ; pas de FK (données dérivées, reconstruites) |
-| `puzzle_attempt` | Tentatives (en attente / réussie / échouée), coups soumis, indices, durée serveur | colonne générée `rated_puzzle_id = IF(rated, puzzle_id, NULL)` + `uniq_puzzle_attempt_user_rated_puzzle (user_id, rated_puzzle_id)` ; `idx_puzzle_attempt_user_started`, `idx_puzzle_attempt_user_status` |
+| `puzzle_attempt` | Tentatives (en attente / réussie / échouée), coups soumis, indices, durée serveur, séance chronométrée éventuelle (`training_run_id`) | colonne générée `rated_puzzle_id = IF(rated, puzzle_id, NULL)` + `uniq_puzzle_attempt_user_rated_puzzle (user_id, rated_puzzle_id)` ; `idx_puzzle_attempt_user_started`, `idx_puzzle_attempt_user_status` |
 | `puzzle_rating` | Classement courant (1 ligne par utilisateur) : rating, RD, volatilité, nombre de parties classées, source | PK `user_id` ; ligne verrouillée à chaque écriture |
 | `puzzle_rating_change` | Historique avant/après de chaque tentative classée (et de l'import Lichess), pour le futur dashboard | `idx_puzzle_rating_change_user_date (user_id, created_at)` |
 
@@ -169,9 +169,9 @@ Toutes les routes exigent un JWT. Formats JSON-LD (`application/ld+json`).
 
 | Méthode et URI | Ressource | Réponse |
 |---|---|---|
-| `POST /api/puzzles/attempts` `{themes?: string[], difficulty?: "easier"\|"normal"\|"harder"}` | `PuzzleAttempt` | 201 : tentative en attente + puzzle (FEN, coups, couleur du joueur). La tentative classée en attente si elle existe. 404 aucun puzzle, 422 thème inconnu, 429. |
+| `POST /api/puzzles/attempts` `{themes?: string[], difficulty?: "easier"\|"normal"\|"harder"}` | `PuzzleAttempt` | 201 : tentative en attente + puzzle (FEN, coups, couleur du joueur). La tentative classée en attente si elle existe. 404 aucun puzzle, 409 si une séance chronométrée active la tient, 422 thème inconnu, 429. |
 | `POST /api/puzzles/attempts` `{replayOf: "K69di"}` | `PuzzleAttempt` | 201 : rejeu non classé ; 404 si le puzzle n'est ni dans l'historique ni autorisé par un `ReplayAuthorizerInterface` (puzzle d'un de mes sets Woodpecker). |
-| `POST /api/puzzles/attempts/{id}/submission` `{moves: string[], hintLevel: 0-2, solutionShown: bool}` | `PuzzleAttempt` | 200 : résultat calculé par le serveur, `ratingBefore/After/Delta`. 400 liste impossible, 404 tentative inconnue ou d'un autre, 409 déjà soumise, 422, 429. |
+| `POST /api/puzzles/attempts/{id}/submission` `{moves: string[], hintLevel: 0-2, solutionShown: bool}` | `PuzzleAttempt` | 200 : résultat calculé par le serveur, `ratingBefore/After/Delta`. 400 liste impossible, 404 tentative inconnue ou d'un autre, 409 déjà soumise ou tenue par une séance active, 422, 429. |
 | `GET /api/puzzles/attempts?page=&itemsPerPage=&result=solved\|failed&theme=` | `PuzzleAttempt` | Historique paginé (20 par page, 50 max), du plus récent au plus ancien. |
 | `GET /api/puzzles/attempts/{id}` | `PuzzleAttempt` | 404 si elle appartient à un autre. |
 | `GET /api/puzzles/themes` | `PuzzleTheme` | Thèmes dans l'ordre d'affichage, avec catégorie et `puzzleCount` précalculé. |
@@ -182,6 +182,16 @@ Toutes les routes exigent un JWT. Formats JSON-LD (`application/ld+json`).
 Les routes des sous-ressources ont une priorité supérieure et `{id}` est contraint à 5 caractères
 alphanumériques : `/puzzles/themes`, `/puzzles/rating`, `/puzzles/attempts` ne peuvent jamais être
 capturées par `/puzzles/{id}` (`RoutingTest`).
+
+### Séances chronométrées (module `puzzles`)
+
+Les puzzles classés se jouent aussi en séance ([TRAINING.md](TRAINING.md)) :
+`App\Puzzle\Training\PuzzleModule`, mêmes tentatives (`puzzle_attempt.training_run_id` les
+rattache à leur séance), même sélecteur et même Glicko-2 (`AttemptService::startInRun()` /
+`submitInRun()`, dans la transaction du chronomètre). La tentative en attente du jeu libre ouvre la
+séance ; celle à l'écran à la fin reste en attente, détachée (`detachFromRun()`) : aucun puzzle
+n'est esquivé. Page Puzzles : bouton « Séance chronométrée » (`PuzzleRunDialog`, thèmes du filtre) ;
+un 409 du jeu libre propose de rejoindre la séance.
 
 ## 6. Composants front (réutilisables)
 

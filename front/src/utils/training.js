@@ -1,5 +1,14 @@
 import { formatDate } from '@/utils/format'
 
+/** Free study formats (module `free`), as the API names them. */
+export const FREE_FORMATS = {
+  book: 'Livre',
+  video: 'Vidéo',
+  course: 'Cours',
+  podcast: 'Podcast',
+  other: 'Autre'
+}
+
 /**
  * Why a timed run closed, for the user.
  *
@@ -17,9 +26,11 @@ export function closeReasonText(run) {
     case 'subject_resting':
       return `Cycle terminé. Repos : prochain cycle le ${formatDate(run.summary?.context?.availableAt)}.`
     case 'subject_unavailable':
-      return run.module === 'repertoire'
-        ? 'Plus rien à tester dans cette sélection : séance close.'
-        : 'Le set a été mis en pause ou abandonné : séance close.'
+      if (run.module === 'repertoire')
+        return 'Plus rien à tester dans cette sélection : séance close.'
+      if (run.module === 'puzzles')
+        return 'Plus aucun puzzle disponible pour ces thèmes : séance close.'
+      return 'Le set a été mis en pause ou abandonné : séance close.'
     default:
       return ''
   }
@@ -35,7 +46,27 @@ export function subjectPath(run) {
   if (run.subjectType === 'woodpecker_set')
     return `/woodpecker/${run.subjectId}`
   if (run.subjectType === 'repertoire_owner') return '/repertoire'
+  if (run.subjectType === 'puzzle_player') return '/puzzle'
   return '/'
+}
+
+/**
+ * The label of the "back" button after a run.
+ *
+ * @param {{module: string}} run
+ * @returns {string}
+ */
+export function backLabel(run) {
+  switch (run.module) {
+    case 'woodpecker':
+      return 'Retour au set'
+    case 'repertoire':
+      return 'Retour aux répertoires'
+    case 'puzzles':
+      return 'Retour aux puzzles'
+    default:
+      return 'Retour à l’accueil'
+  }
 }
 
 /**

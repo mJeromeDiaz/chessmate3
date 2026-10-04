@@ -26,7 +26,17 @@
             label="Historique"
             to="/puzzle/history"
           />
+          <q-btn
+            flat
+            dense
+            no-caps
+            icon="timer"
+            label="Séance chronométrée"
+            data-testid="puzzle-run-open"
+            @click="runDialog = true"
+          />
         </div>
+        <PuzzleRunDialog v-model="runDialog" />
 
         <q-banner
           v-if="store.rating?.lichessImportAvailable"
@@ -76,6 +86,16 @@
           data-testid="puzzle-error"
         >
           {{ error }}
+          <template v-if="heldBy" #action>
+            <q-btn
+              flat
+              no-caps
+              color="white"
+              label="Rejoindre la séance"
+              :to="`/training/${heldBy}`"
+              data-testid="puzzle-join-run"
+            />
+          </template>
         </q-banner>
       </template>
 
@@ -142,8 +162,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
+import PuzzleRunDialog from '@/components/puzzle/PuzzleRunDialog.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
 import { usePuzzleStore } from '@/stores/puzzle'
+import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatRatingDelta } from '@/utils/format'
 
@@ -161,6 +183,35 @@ const router = useRouter()
 const loading = ref(false)
 const importing = ref(false)
 const error = ref('')
+const runDialog = ref(false)
+/** The timed run holding the pending puzzle (free play answered 409), to join it. */
+const heldBy = ref(/** @type {string|null} */ (null))
+const training = useTrainingStore()
+
+/** Free play refused: the pending puzzle is being played in a timed run. */
+const HELD_BY_RUN =
+  'Votre puzzle en cours est joué dans une séance chronométrée.'
+
+/**
+ * A 409 of free play means a timed run holds the pending puzzle: point to it.
+ *
+ * @param {unknown} e
+ * @returns {Promise<boolean>} whether it was that
+ */
+async function heldByRun(e) {
+  const response = /** @type {any} */ (e)?.response
+  // The API's 409 detail tells it apart from "already submitted".
+  if (
+    response?.status !== 409 ||
+    !/timed run/.test(response.data?.detail ?? '')
+  )
+    return false
+  const run = await training.fetchCurrent().catch(() => null)
+  if (!run) return false
+  heldBy.value = run.id
+  error.value = HELD_BY_RUN
+  return true
+}
 
 const attempt = computed(() => store.attempt)
 const replayId = computed(() =>
@@ -174,7 +225,8 @@ const replayId = computed(() =>
  * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
  */
 function onResolve(_outcome, report) {
-  store.submit(report).catch(e => {
+  store.submit(report).catch(async e => {
+    if (await heldByRun(e)) return
     error.value = apiErrorMessage(e, {
       409: 'Ce puzzle a déjà été soumis.',
       404: 'Cette tentative est introuvable.'
@@ -186,9 +238,11 @@ function onResolve(_outcome, report) {
 async function begin(request) {
   loading.value = true
   error.value = ''
+  heldBy.value = null
   try {
     await request()
   } catch (e) {
+    if (await heldByRun(e)) return
     error.value = apiErrorMessage(e, {
       404: replayId.value
         ? 'Ce puzzle ne fait pas partie de votre historique.'

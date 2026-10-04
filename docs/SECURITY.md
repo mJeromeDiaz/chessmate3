@@ -511,3 +511,24 @@ Par utilisateur : `training_run_start` (30 / h), `training_item_next` et `traini
 | R20 | Comme R15, la solution part avec l'élément : un script peut « réussir » une séance light très vite et gonfler ses puzzles par minute. | Aucun classement en jeu ; ne triche que sur ses propres statistiques. Débit borné par les limiteurs (300 / 10 min). |
 | R21 | Clôture paresseuse : une séance abandonnée n'émet `RunCompleted` qu'au retour de l'utilisateur, voire jamais. | Choix validé (pas de cron). Un futur handler de récompense ne doit pas dépendre de la réception de tous les `RunCompleted`. |
 | R22 | Compte de démo au mot de passe public dans les fixtures. | Fixtures chargées en dev et `e2e` seulement ; interdites en production (§ 4.4). La connexion exige quand même le code 2FA par email. |
+
+### 8.5 Modules Puzzles et Libre (séances)
+
+- **Puzzles** : sujet = l'utilisateur lui-même (un autre id ⇒ 404). `config.themes` : liste blanche
+  de 10 clés au plus, chacune connue (sinon 422). Mêmes tentatives classées que le jeu libre, même
+  calcul Glicko-2 et même verrou (ligne de classement de l'utilisateur) : verrous dans l'ordre
+  séance puis classement.
+- **Intégrité du classement** : aucun moyen d'esquiver un puzzle classé. La tentative en attente du
+  jeu libre devient le premier puzzle de la séance ; celle à l'écran à la fin (temps écoulé,
+  « Terminer ») n'est pas comptée mais **reste en attente**, détachée de la séance, et revient au
+  prochain « puzzle suivant ». Tant qu'une séance active la tient, le jeu libre la refuse (409,
+  après clôture paresseuse d'une séance expirée) : on ne la résout pas hors chronomètre (testé).
+- **Libre** : sujet = l'utilisateur ; `config.format` dans une liste blanche, `notes` ≤ 500
+  caractères, aucune autre option (422). Rien à soumettre (400). La durée journalisée est celle du
+  serveur (démarrage → arrêt, ou l'expiration au plus), jamais une durée déclarée ; les notes restent
+  dans la séance, hors de l'événement `ExerciseCompleted`.
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R23 | Une séance libre ne prouve pas que l'utilisateur étudie : il peut lancer le chrono et partir. | Validé : seul son propre temps d'étude est gonflé, borné à la durée choisie (60 min au plus) et à 30 lancements par heure. |
+| R24 | Comme R15, la solution part avec le puzzle d'une séance Puzzles. | Identique au jeu libre (§ 6.4) : le classement d'un tricheur n'affecte que lui. |

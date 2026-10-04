@@ -58,7 +58,7 @@ n'en supprime jamais.
 | `Woodpecker\Event\SetGrown` | croissance d'un set light | set, manche, puzzles ajoutés, nouvelle taille |
 | `Training\Event\RunCompleted` | clôture d'une séance chronométrée ([TRAINING.md](TRAINING.md)) | séance, module, sujet (`subjectType` + `subjectId`), `parentId`, motif, budget, durée réelle, éléments et réussites, `startedAt` |
 
-`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment` (extensible).
+`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study` (extensible).
 
 | Source | `type` | `sourceType` |
 |---|---|---|
@@ -66,9 +66,12 @@ n'en supprime jamais.
 | Rejeu non classé (historique, puzzle récalcitrant) | `puzzle_unrated` | `puzzle_attempt` |
 | Puzzle Woodpecker (cycle classique ou manche light) | `woodpecker_puzzle` | `woodpecker_attempt` |
 | Tronçon présenté dans un test de répertoire (une ligne : un par tronçon traversé) | `repertoire_segment` | `repertoire_presentation` |
+| Séance libre (livre, vidéo…) close, durée serveur > 0 | `free_study` | `training_run` |
 
 `metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
-(`classic`, `light`) et, joué en séance, `trainingRunId`.
+(`classic`, `light`) et, joué en séance, `trainingRunId`. Un puzzle classé ou rejoué porte aussi
+`trainingRunId` (`null` hors séance). Une séance libre : `format` et `trainingRunId` (les notes de
+l'utilisateur restent dans la séance).
 
 `RunCompleted` peut arriver **en retard, voire jamais** : une séance abandonnée n'est close qu'à la
 prochaine requête d'entraînement de l'utilisateur (clôture paresseuse, [TRAINING.md § 2](TRAINING.md#2-règles-validées)).

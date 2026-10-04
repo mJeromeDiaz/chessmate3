@@ -8,9 +8,11 @@ use App\Activity\EventPublisher;
 use App\Entity\Puzzle\Attempt;
 use App\Entity\Puzzle\Puzzle;
 use App\Entity\Puzzle\RatingChange;
+use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Puzzle\RatingChangeReason;
 use App\Puzzle\Attempt\Exception\AttemptAlreadySubmittedException;
+use App\Puzzle\Attempt\Exception\AttemptHeldByRunException;
 use App\Puzzle\Attempt\Exception\AttemptNotFoundException;
 use App\Puzzle\Attempt\Exception\NoPuzzleAvailableException;
 use App\Puzzle\Attempt\Exception\ReplayNotAllowedException;
@@ -60,30 +62,23 @@ final class AttemptService
      * puzzle: validated rule), otherwise selects a new puzzle and starts a rated attempt.
      *
      * @throws NoPuzzleAvailableException
+     * @throws AttemptHeldByRunException the pending attempt is being played in a timed run
      */
     public function start(User $user, SelectionCriteria $criteria): Attempt
     {
-        return $this->entityManager->wrapInTransaction(function () use ($user, $criteria): Attempt {
-            $rating = $this->ratings->lockForUser($user);
+        return $this->entityManager->wrapInTransaction(fn (): Attempt => $this->serve($user, $criteria, null, new \DateTimeImmutable()));
+    }
 
-            $pending = $this->attempts->findPendingRated($user);
-            if (null !== $pending) {
-                return $pending;
-            }
-
-            $this->checkPolicies($user, true);
-
-            $puzzleId = $this->selector->select($user, $rating->getRating(), $rating->getDeviation(), $criteria);
-            $puzzle = null === $puzzleId ? null : $this->puzzles->find($puzzleId);
-            if (null === $puzzle) {
-                throw new NoPuzzleAvailableException();
-            }
-
-            $attempt = new Attempt($user, $puzzle, true, new \DateTimeImmutable());
-            $this->entityManager->persist($attempt);
-
-            return $attempt;
-        });
+    /**
+     * Same as {@see start()} for a timed run, inside the caller's transaction (the run locked
+     * first): the user's pending rated attempt, whether started in free play or left by an earlier
+     * run, joins this run and comes first; then new puzzles matching the run's criteria.
+     *
+     * @throws NoPuzzleAvailableException
+     */
+    public function startInRun(User $user, SelectionCriteria $criteria, Run $run, \DateTimeImmutable $now): Attempt
+    {
+        return $this->serve($user, $criteria, $run, $now);
     }
 
     /**
@@ -116,48 +111,123 @@ final class AttemptService
      *
      * @throws AttemptNotFoundException
      * @throws AttemptAlreadySubmittedException
+     * @throws AttemptHeldByRunException the attempt is being played in a timed run
      * @throws InvalidSubmissionException
      */
     public function submit(User $user, Uuid $attemptId, Submission $submission): Attempt
     {
-        return $this->entityManager->wrapInTransaction(function () use ($user, $attemptId, $submission): Attempt {
-            $rating = $this->ratings->lockForUser($user);
+        return $this->entityManager->wrapInTransaction(fn (): Attempt => $this->resolve($user, $attemptId, $submission, null, new \DateTimeImmutable()));
+    }
 
-            $attempt = $this->attempts->findOwnedForUpdate($attemptId, $user);
-            if (null === $attempt) {
-                throw new AttemptNotFoundException();
+    /**
+     * Same as {@see submit()} for an attempt of this timed run, inside the caller's transaction.
+     *
+     * @throws AttemptNotFoundException not an attempt of this run
+     * @throws AttemptAlreadySubmittedException
+     * @throws InvalidSubmissionException
+     */
+    public function submitInRun(User $user, Uuid $attemptId, Submission $submission, Run $run, \DateTimeImmutable $now): Attempt
+    {
+        return $this->resolve($user, $attemptId, $submission, $run, $now);
+    }
+
+    /**
+     * The run is closing: its pending attempt (the puzzle on screen) is not counted in the run but
+     * stays the user's pending puzzle, so letting the time run out never skips a hard puzzle.
+     */
+    public function detachFromRun(Run $run): void
+    {
+        foreach ($this->attempts->findPendingOfRun($run) as $pending) {
+            $pending->setTrainingRun(null);
+        }
+    }
+
+    /**
+     * @throws NoPuzzleAvailableException
+     * @throws AttemptHeldByRunException
+     */
+    private function serve(User $user, SelectionCriteria $criteria, ?Run $run, \DateTimeImmutable $now): Attempt
+    {
+        $rating = $this->ratings->lockForUser($user);
+
+        $pending = $this->attempts->findPendingRated($user);
+        if (null !== $pending) {
+            if (null === $run) {
+                if (null !== $pending->getTrainingRun()) {
+                    throw new AttemptHeldByRunException();
+                }
+            } else {
+                $pending->setTrainingRun($run);
             }
-            if (!$attempt->isPending()) {
-                throw new AttemptAlreadySubmittedException();
-            }
 
-            $puzzle = $attempt->getPuzzle();
-            $replay = $this->validator->replay($puzzle, $submission->moves);
-            $solved = $replay->isClean() && 0 === $submission->hintLevel && !$submission->solutionShown;
-            $now = new \DateTimeImmutable();
+            return $pending;
+        }
 
-            $change = null;
-            if ($attempt->isRated()) {
-                $before = $rating->getState();
-                $after = $this->calculator->afterAttempt(
-                    $before,
-                    $rating->getLastRatedAt(),
-                    $now,
-                    $puzzle->getRating(),
-                    $puzzle->getRatingDeviation(),
-                    $solved,
-                );
-                $rating->recordAttempt($after, $now);
-                $change = new RatingChange($user, RatingChangeReason::Attempt, $before, $after, $now);
-                $this->entityManager->persist($change);
-            }
+        $this->checkPolicies($user, true);
 
-            $attempt->resolve($solved, $submission->moves, $replay->mistakes, $submission->hintLevel, $submission->solutionShown, $now, $change);
-            // Same transaction: the event exists if and only if the result is committed.
-            $this->events->publish(AttemptEvents::completed($attempt));
+        $puzzleId = $this->selector->select($user, $rating->getRating(), $rating->getDeviation(), $criteria);
+        $puzzle = null === $puzzleId ? null : $this->puzzles->find($puzzleId);
+        if (null === $puzzle) {
+            throw new NoPuzzleAvailableException();
+        }
 
-            return $attempt;
-        });
+        $attempt = new Attempt($user, $puzzle, true, $now);
+        $attempt->setTrainingRun($run);
+        $this->entityManager->persist($attempt);
+
+        return $attempt;
+    }
+
+    /**
+     * @throws AttemptNotFoundException
+     * @throws AttemptAlreadySubmittedException
+     * @throws AttemptHeldByRunException
+     * @throws InvalidSubmissionException
+     */
+    private function resolve(User $user, Uuid $attemptId, Submission $submission, ?Run $run, \DateTimeImmutable $now): Attempt
+    {
+        $rating = $this->ratings->lockForUser($user);
+
+        $attempt = $this->attempts->findOwnedForUpdate($attemptId, $user);
+        if (null === $attempt) {
+            throw new AttemptNotFoundException();
+        }
+        $heldBy = $attempt->getTrainingRun();
+        if (null !== $run && (null === $heldBy || !$heldBy->getId()->equals($run->getId()))) {
+            throw new AttemptNotFoundException();
+        }
+        if (!$attempt->isPending()) {
+            throw new AttemptAlreadySubmittedException();
+        }
+        if (null === $run && null !== $heldBy) {
+            throw new AttemptHeldByRunException();
+        }
+
+        $puzzle = $attempt->getPuzzle();
+        $replay = $this->validator->replay($puzzle, $submission->moves);
+        $solved = $replay->isClean() && 0 === $submission->hintLevel && !$submission->solutionShown;
+
+        $change = null;
+        if ($attempt->isRated()) {
+            $before = $rating->getState();
+            $after = $this->calculator->afterAttempt(
+                $before,
+                $rating->getLastRatedAt(),
+                $now,
+                $puzzle->getRating(),
+                $puzzle->getRatingDeviation(),
+                $solved,
+            );
+            $rating->recordAttempt($after, $now);
+            $change = new RatingChange($user, RatingChangeReason::Attempt, $before, $after, $now);
+            $this->entityManager->persist($change);
+        }
+
+        $attempt->resolve($solved, $submission->moves, $replay->mistakes, $submission->hintLevel, $submission->solutionShown, $now, $change);
+        // Same transaction: the event exists if and only if the result is committed.
+        $this->events->publish(AttemptEvents::completed($attempt));
+
+        return $attempt;
     }
 
     private function authorizedElsewhere(User $user, Puzzle $puzzle): bool

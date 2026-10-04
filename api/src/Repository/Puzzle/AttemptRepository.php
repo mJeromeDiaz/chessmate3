@@ -6,11 +6,13 @@ namespace App\Repository\Puzzle;
 
 use App\Entity\Puzzle\Attempt;
 use App\Entity\Puzzle\Puzzle;
+use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Puzzle\AttemptStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\LockMode;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
@@ -35,6 +37,57 @@ class AttemptRepository extends ServiceEntityRepository
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * @return list<Attempt>
+     */
+    public function findPendingOfRun(Run $run): array
+    {
+        return $this->findBy(['trainingRun' => $run, 'status' => AttemptStatus::Pending]);
+    }
+
+    /**
+     * What a timed run resolved: solved, failed, active time (each attempt capped) and the rating
+     * before its first rated attempt and after its last.
+     *
+     * @return array{solved: int, failed: int, activeMs: int, ratingBefore: float|null, ratingAfter: float|null}
+     */
+    public function statsOfRun(Run $run): array
+    {
+        $connection = $this->getEntityManager()->getConnection();
+        $row = $connection->fetchAssociative(
+            "SELECT SUM(status = 'solved') AS solved, SUM(status = 'failed') AS failed,
+                    SUM(CASE WHEN status != 'pending' THEN LEAST(COALESCE(duration_ms, 0), :cap) ELSE 0 END) AS active_ms
+             FROM puzzle_attempt WHERE training_run_id = :run",
+            ['run' => $run->getId()->toBinary(), 'cap' => Attempt::ACTIVE_TIME_CAP_MS],
+            // An untyped :cap is bound as a string: LEAST() would then compare as strings.
+            ['cap' => ParameterType::INTEGER],
+        ) ?: [];
+        // Rating changes have UUID v7 ids: their binary order is their order of creation.
+        $first = $connection->fetchOne(
+            'SELECT rc.rating_before FROM puzzle_attempt a JOIN puzzle_rating_change rc ON rc.id = a.rating_change_id
+             WHERE a.training_run_id = :run ORDER BY rc.id LIMIT 1',
+            ['run' => $run->getId()->toBinary()],
+        );
+        $last = $connection->fetchOne(
+            'SELECT rc.rating_after FROM puzzle_attempt a JOIN puzzle_rating_change rc ON rc.id = a.rating_change_id
+             WHERE a.training_run_id = :run ORDER BY rc.id DESC LIMIT 1',
+            ['run' => $run->getId()->toBinary()],
+        );
+
+        return [
+            'solved' => self::int($row['solved'] ?? 0),
+            'failed' => self::int($row['failed'] ?? 0),
+            'activeMs' => self::int($row['active_ms'] ?? 0),
+            'ratingBefore' => is_numeric($first) ? (float) $first : null,
+            'ratingAfter' => is_numeric($last) ? (float) $last : null,
+        ];
+    }
+
+    private static function int(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 
     /**

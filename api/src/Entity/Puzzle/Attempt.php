@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Puzzle;
 
+use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Puzzle\AttemptStatus;
 use App\Repository\Puzzle\AttemptRepository;
@@ -28,9 +29,14 @@ use Symfony\Component\Uid\Uuid;
 // Foreign-key indexes Doctrine would otherwise add under generated names.
 #[ORM\Index(name: 'idx_puzzle_attempt_user', columns: ['user_id'])]
 #[ORM\Index(name: 'idx_puzzle_attempt_puzzle', columns: ['puzzle_id'])]
+#[ORM\Index(name: 'idx_puzzle_attempt_training_run_status', columns: ['training_run_id', 'status'])]
+#[ORM\Index(name: 'idx_puzzle_attempt_training_run', columns: ['training_run_id'])]
 class Attempt
 {
     public const MAX_HINT_LEVEL = 2;
+
+    /** Active time of a run counts at most this much per puzzle (a puzzle left open meanwhile). */
+    public const ACTIVE_TIME_CAP_MS = 300_000;
 
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
@@ -46,6 +52,15 @@ class Attempt
 
     #[ORM\Column]
     private bool $rated;
+
+    /**
+     * The timed run holding this attempt while it is pending (docs/TRAINING.md); kept once resolved
+     * in the run. A pending attempt is detached when its run closes: it stays the user's pending
+     * puzzle, served first next time.
+     */
+    #[ORM\ManyToOne(targetEntity: Run::class)]
+    #[ORM\JoinColumn(name: 'training_run_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Run $trainingRun = null;
 
     #[ORM\Column(
         options: ['unsigned' => true],
@@ -134,6 +149,22 @@ class Attempt
     public function getPuzzle(): Puzzle
     {
         return $this->puzzle;
+    }
+
+    public function getTrainingRun(): ?Run
+    {
+        return $this->trainingRun;
+    }
+
+    /**
+     * Attaches a pending attempt to a run, or detaches it (null) when the run closes.
+     */
+    public function setTrainingRun(?Run $run): void
+    {
+        if (null !== $run && !$this->isPending()) {
+            throw new \LogicException('Only a pending attempt joins a run.');
+        }
+        $this->trainingRun = $run;
     }
 
     public function isRated(): bool

@@ -99,6 +99,13 @@ const MESSAGES = {
     409: 'Ce set ne peut pas être joué maintenant (pause, repos ou terminé).',
     404: 'Set introuvable.'
   },
+  puzzles: {
+    409: 'Aucun puzzle disponible pour ces thèmes.',
+    422: 'Thème inconnu.'
+  },
+  free: {
+    422: 'Réglages invalides.'
+  },
   repertoire: {
     409: 'Rien à tester dans cette sélection : ajoutez vos coups au répertoire.',
     404: 'Répertoire introuvable.',
