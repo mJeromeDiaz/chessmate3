@@ -1,1 +1,139 @@
-// app global css
+// ChessMate look (design "Session Builder"): DM Sans text, Bricolage Grotesque headings, ink on a
+// pale lavender page. Components read the tokens below, redefined for Quasar's dark mode.
+
+:root {
+  --cm-ink: #1b1530;
+  --cm-ink-soft: #4c475e;
+  --cm-muted: #6e6a80;
+  --cm-faint: #b4afc6;
+  --cm-page: #faf9fe;
+  --cm-surface: #ffffff;
+  --cm-subtle: #f0eef6;
+  --cm-line: #eceaf3;
+  --cm-dash: #dcd8e8;
+  --cm-brand: #6a4cff;
+  --cm-brand-deep: #4a2fe0;
+  --cm-brand-soft: #eee9ff;
+  --cm-lime: #c6f432;
+  --cm-lime-soft: #f0fbcf;
+  --cm-lime-ink: #3d5200;
+  --cm-danger-soft: #ffe6e3;
+  --cm-danger: #b4231a;
+  --cm-heading:
+    'Bricolage Grotesque Variable', 'DM Sans Variable', system-ui, sans-serif;
+  // Activity heatmap, none to most (design "Dashboard").
+  --cm-heat-0: #eceaf3;
+  --cm-heat-1: #e0d8ff;
+  --cm-heat-2: #b9a6ff;
+  --cm-heat-3: #8b6bff;
+  --cm-heat-4: #5a3be0;
+  --cm-hero: #8b6bff;
+  --cm-hero-deep: #5a3be0;
+  --cm-orange-soft: #ffebdd;
+  --cm-orange-line: #ffd8be;
+  --cm-orange-ink: #b84a0e;
+}
+
+.body--dark {
+  --cm-ink: #f3f1fa;
+  --cm-ink-soft: #cfcae0;
+  --cm-muted: #9d98b3;
+  --cm-faint: #6e6a80;
+  --cm-page: #120e22;
+  --cm-surface: #1e1836;
+  --cm-subtle: #2a2347;
+  --cm-line: #2f2850;
+  --cm-dash: #3c3462;
+  --cm-brand: #8b6bff;
+  --cm-brand-deep: #b3a1ff;
+  --cm-brand-soft: #2d2459;
+  --cm-lime-soft: #2c3a08;
+  --cm-lime-ink: #d8f77a;
+  --cm-danger-soft: #4a1c1a;
+  --cm-danger: #ff8a80;
+  --cm-heat-0: #2a2347;
+  --cm-heat-1: #3b2f78;
+  --cm-heat-2: #5641b8;
+  --cm-heat-3: #7f63ff;
+  --cm-heat-4: #b3a1ff;
+  --cm-hero: #5a3be0;
+  --cm-hero-deep: #3a2398;
+  --cm-orange-soft: #4a2a14;
+  --cm-orange-line: #6b3a1a;
+  --cm-orange-ink: #ffb27d;
+}
+
+body {
+  background: var(--cm-page);
+  color: var(--cm-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.text-h1,
+.text-h2,
+.text-h3,
+.text-h4,
+.text-h5,
+.text-h6,
+.cm-heading {
+  font-family: var(--cm-heading);
+  font-weight: 800;
+  letter-spacing: normal;
+}
+
+.q-btn {
+  font-weight: 700;
+}
+
+.cm-brand-name {
+  font-family: var(--cm-heading);
+  font-weight: 800;
+  color: var(--cm-ink);
+  text-decoration: none;
+
+  span {
+    color: var(--cm-brand);
+  }
+}
+
+a {
+  color: var(--cm-brand);
+
+  &:hover {
+    color: var(--cm-brand-deep);
+  }
+}
+
+// A white rounded card on the page (design "Dashboard").
+.cm-card {
+  background: var(--cm-surface);
+  border-radius: 22px;
+  padding: 16px;
+
+  @media (min-width: $breakpoint-md-min) {
+    border-radius: 24px;
+    padding: 20px;
+  }
+}
+
+.cm-card__title {
+  margin: 0;
+  font-family: var(--cm-heading);
+  font-weight: 800;
+  font-size: 17px;
+  line-height: 1.2;
+
+  @media (min-width: $breakpoint-md-min) {
+    font-size: 19px;
+  }
+}
+
+.cm-muted {
+  color: var(--cm-muted);
+}

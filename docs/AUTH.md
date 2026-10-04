@@ -28,6 +28,7 @@ Conventions :
 | GET | `/api/auth/oauth/{google\|lichess}/redirect` | public (navigation) | Démarre une connexion OAuth. | 302 vers le fournisseur + cookie `oauth_flow` |
 | GET | `/api/auth/oauth/{google\|lichess}/callback` | cookie `oauth_flow` | Retour du fournisseur. | 302 vers `/#/oauth/callback?status=…&mode=…&provider=…[&reason=…]` (+ RT si connexion) |
 | GET | `/api/profile` | AT | Profil : email, email en attente, mot de passe utilisable, identités liées, fournisseurs liables. | 200 |
+| PUT | `/api/profile/theme` | AT | Thème de l'interface `{theme: auto\|light\|dark}` (`null` dans le profil tant qu'aucun choix). Le front en garde aussi une copie dans le navigateur (`chessmate.theme`, appliquée au démarrage, visiteurs compris) ; au chargement du profil, le thème du compte l'emporte, et un compte sans thème reçoit celui du navigateur (`stores/theme.js`, `boot/theme.js`). | 200 profil ; 422 |
 | POST | `/api/profile/password` | AT | Ajoute un mot de passe `{password, email?}` (email requis si le compte n'en a pas de vérifié). | 200 `{status: added, profile}` ; 202 `{status: verification_sent}` ; 409 ; 422 |
 | POST | `/api/profile/identities/{google\|lichess}/link` | AT | Démarre une liaison. | 200 `{authorizationUrl}` + cookie `oauth_flow` |
 | POST | `/api/profile/identities/lichess/grant` | AT | Demande le scope `study:read` au compte Lichess lié (import d'études privées, [REPERTOIRE.md](REPERTOIRE.md)). | 200 `{authorizationUrl}` + cookie `oauth_flow` |

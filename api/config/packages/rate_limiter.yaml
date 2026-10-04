@@ -156,3 +156,8 @@ framework:
             limit: 120
             interval: '10 minutes'
 
+        # Dashboard reads (identifier = user id): the page asks for 2 or 3 of them per display.
+        dashboard_read:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'

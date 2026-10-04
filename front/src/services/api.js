@@ -90,6 +90,9 @@ export const profileApi = {
   /** @param {string} timezone IANA identifier */
   setTimezone: timezone =>
     http.put('/api/profile/timezone', { timezone }).then(r => r.data),
+  /** @param {'auto'|'light'|'dark'} theme */
+  setTheme: theme =>
+    http.put('/api/profile/theme', { theme }).then(r => r.data),
   addPassword: (password, email) =>
     http
       .post('/api/profile/password', email ? { password, email } : { password })
@@ -507,5 +510,27 @@ export const repertoireApi = {
   runReport: runId =>
     http
       .get(`/api/repertoires/runs/${encodeURIComponent(runId)}`, JSON_LD)
+      .then(r => r.data)
+}
+
+/** Dashboard reads (docs/DASHBOARD.md): the signed-in user's data only. */
+export const dashboardApi = {
+  /** Exercises per local day over the last `days` days, all-time totals per exercise type. */
+  activity: (days = 84) =>
+    http
+      .get('/api/dashboard/activity', { ...JSON_LD, params: { days } })
+      .then(r => r.data),
+  /** Puzzle rating, one point per local day with a change. */
+  ratingHistory: (days = 90) =>
+    http
+      .get('/api/dashboard/rating-history', { ...JSON_LD, params: { days } })
+      .then(r => r.data),
+  /** Blitz / rapid / classical ratings of the linked Lichess account (503 when Lichess cannot answer). */
+  lichessRatingHistory: (days = 90) =>
+    http
+      .get('/api/dashboard/lichess-rating-history', {
+        ...JSON_LD,
+        params: { days }
+      })
       .then(r => r.data)
 }

@@ -446,6 +446,8 @@ Woodpecker ne sont pas classées : l'enjeu est surtout le cloisonnement, la fiab
   sets (`SetReplayAuthorizer`).
 - `PUT /api/profile/timezone` : identifiant IANA validé (`Assert\Timezone`), jamais interprété
   autrement que par `DateTimeZone`.
+- `PUT /api/profile/theme` : valeur limitée à l'enum `Theme` (`auto`, `light`, `dark`) ; la copie
+  locale (`localStorage`) est relue avec la même liste blanche.
 
 ### 7.3 Événements et journal
 

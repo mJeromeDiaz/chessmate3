@@ -13,7 +13,8 @@ Chess training app (Duolingo-style). One git repository (monorepo) at the root:
   `PUZZLE_IMPORT.md`, `ACTIVITY.md` (timezone, domain events, activity log), `WOODPECKER.md`
   (classic and light modes), `TRAINING.md` (timed runs, module contract), `REPERTOIRE.md`
   (opening repertoires: normalized FEN, graph, one prepared move per position, trash, segments,
-  editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics). Code paths quoted in them (`src/...`, `config/...`,
+  editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics), `DASHBOARD.md`
+  (home dashboard: endpoints, local days, Lichess rating history, showcase values). Code paths quoted in them (`src/...`, `config/...`,
   `bin/console`) are relative to `api/` unless they name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
@@ -30,7 +31,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire today) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard today) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
 
 | Layer | Location |
@@ -68,7 +69,7 @@ API (`cd api`; prefix with `php -d xdebug.mode=off` if Xdebug reports a false in
 vendor/bin/phpunit                                   # all tests (unit + functional, test DB)
 vendor/bin/phpstan analyse --memory-limit=1G         # level max
 bin/console doctrine:migrations:migrate [--env=test]
-bin/console doctrine:fixtures:load                   # PURGES the DB: themes, sample puzzles, demo user + Woodpecker data, openings + demo repertoires
+bin/console doctrine:fixtures:load                   # PURGES the DB: themes, sample puzzles, demo user + Woodpecker data + 12 weeks of activity, openings + demo repertoires
 bin/console app:puzzle:sync-themes                   # load/update the Lichess puzzle themes
 bin/console app:puzzle:rebuild-selection             # after a puzzle import or a quality-threshold change
 bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
@@ -122,8 +123,8 @@ no other environment. PHP's built-in server needs `-d variables_order=EGPCS` to 
   typed `ParameterType::INTEGER`: untyped ones are bound as strings and `LEAST()` then compares as
   strings.
 - Lichess rate-limits the anonymous `puzzle/next` and `puzzle/batch` endpoints hard (429 for many
-  minutes); never script them in a loop. Repertoire calls to Lichess (explorer, cloud eval, studies)
-  all go through `Repertoire\Lichess\LichessGateway` (one request at a time, pause after a 429);
+  minutes); never script them in a loop. Calls to Lichess (repertoire explorer, cloud eval, studies;
+  dashboard rating history) all go through `Repertoire\Lichess\LichessGateway` (one request at a time, pause after a 429);
   tests never reach Lichess (`MockHttpClient` in PHPUnit, `page.route` in Playwright).
 - API Platform hides the detail of any 5xx outside debug: a reason the SPA needs travels in a
   header exposed by CORS (`X-Lichess-Unavailable` on the Lichess proxy's 503).

@@ -19,10 +19,17 @@ export default defineConfig(ctx => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['i18n', 'axios'],
+    boot: ['i18n', 'axios', 'theme'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
-    css: ['app.scss'],
+    // Self-hosted fonts (the CSP only allows font-src 'self'): DM Sans for text, Bricolage
+    // Grotesque for headings.
+    css: [
+      '~@fontsource-variable/dm-sans/opsz.css',
+      '~@fontsource-variable/dm-sans/opsz-italic.css',
+      '~@fontsource-variable/bricolage-grotesque/opsz.css',
+      'app.scss'
+    ],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
@@ -34,7 +41,6 @@ export default defineConfig(ctx => {
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
-      'roboto-font', // optional, you are not bound to it
       'material-icons' // optional, you are not bound to it
     ],
 
@@ -100,7 +106,7 @@ export default defineConfig(ctx => {
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
       config: {
-        // Light or dark following the OS setting.
+        // Light or dark following the OS setting, until the user's choice is applied (boot/theme).
         dark: 'auto'
       },
 

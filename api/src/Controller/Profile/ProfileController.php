@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Controller\Profile;
 
 use App\Dto\Profile\AddPasswordRequest;
+use App\Dto\Profile\ThemeRequest;
 use App\Dto\Profile\TimezoneRequest;
 use App\Entity\AuthIdentity;
 use App\Entity\User;
 use App\Enum\AuthProvider;
+use App\Enum\Theme;
 use App\Security\Password\PasswordAdder;
 use App\Security\Profile\IdentityUnlinker;
 use App\Security\RateLimit\RateLimitGuard;
@@ -91,6 +93,19 @@ final class ProfileController extends AbstractController
         return $this->json($this->describe($user));
     }
 
+    /**
+     * Sets the colour theme, so the SPA finds it again on another device (the browser keeps its
+     * own copy to apply it before the profile is loaded).
+     */
+    #[Route('/theme', name: 'app_profile_theme', methods: ['PUT'])]
+    public function setTheme(#[MapRequestPayload] ThemeRequest $payload, #[CurrentUser] User $user): JsonResponse
+    {
+        $user->setTheme(Theme::from($payload->theme));
+        $this->entityManager->flush();
+
+        return $this->json($this->describe($user));
+    }
+
     #[Route('/identities/{id}', name: 'app_profile_identity_unlink', methods: ['DELETE'])]
     public function unlink(string $id, #[CurrentUser] User $user): JsonResponse
     {
@@ -129,6 +144,7 @@ final class ProfileController extends AbstractController
             'hasPassword' => $user->canSignInWithPassword(),
             'createdAt' => $user->getCreatedAt()->format(\DATE_ATOM),
             'timezone' => $user->getTimezone(),
+            'theme' => $user->getTheme()?->value,
             'linkableProviders' => array_values(array_map(
                 static fn (AuthProvider $provider): string => $provider->value,
                 array_filter(AuthProvider::cases(), static fn (AuthProvider $provider): bool => !$user->getAuthIdentities()->exists(

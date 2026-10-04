@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "date": "2026-09-29T14:11:24.577Z",
+  "user": "shoooryuken",
+  "repertoire": {
+    "white": {
+      "r1bqkb1r/ppp1pppp/2n2n2/3p4/3P1B2/2N5/PPP1PPPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "e3"
+        ],
+        "notes": ""
+      },
+      "r2qkb1r/ppp1pppp/2n2n2/3p1b2/3P1B2/2N1P3/PPP2PPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "f3"
+        ],
+        "notes": ""
+      },
+      "r2qkb1r/ppp2pp1/2n1pnbp/3p4/3P1BPP/2N1PP2/PPP5/R2QKBNR w KQkq -": {
+        "moves": [
+          "Bd3"
+        ],
+        "notes": ""
+      },
+      "r2qkb1r/ppp2ppp/2n1pn2/3p1b2/3P1B2/2N1PP2/PPP3PP/R2QKBNR w KQkq -": {
+        "moves": [
+          "g4"
+        ],
+        "notes": ""
+      },
+      "r2qkb1r/ppp2ppp/2n1pnb1/3p4/3P1BP1/2N1PP2/PPP4P/R2QKBNR w KQkq -": {
+        "moves": [
+          "h4"
+        ],
+        "notes": ""
+      },
+      "rnb1k2r/p1B2ppp/1p1bpn2/q1pp4/3P4/2P1P3/P4PPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "Bxd6"
+        ],
+        "notes": ""
+      },
+      "rnb1kb1r/p1B2ppp/1p2pn2/qNpp4/3P4/2P1P3/P4PPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "Nd6+"
+        ],
+        "notes": ""
+      },
+      "rnb1kb1r/pp3ppp/4pn2/1Npp4/1q1P1B2/4P3/P1P2PPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "c3"
+        ],
+        "notes": ""
+      },
+      "rnb1kb1r/pp3ppp/4pn2/qNpp4/3P1B2/2P1P3/P4PPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "Bc7"
+        ],
+        "notes": ""
+      },
+      "rnb1kb1r/pp3ppp/4pn2/qNpp4/3P1B2/4P3/PPP2PPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "b4"
+        ],
+        "notes": ""
+      },
+      "rnbqkb1r/pp3ppp/4pn2/2pp4/3P1B2/2N1P3/PPP2PPP/R2QKBNR w KQkq c6": {
+        "moves": [
+          "Nb5"
+        ],
+        "notes": ""
+      },
+      "rnbqkb1r/ppp1pppp/5n2/3p4/3P4/2N5/PPP1PPPP/R1BQKBNR w KQkq -": {
+        "moves": [
+          "Bf4"
+        ],
+        "notes": ""
+      },
+      "rnbqkb1r/ppp2ppp/4pn2/3p4/3P1B2/2N5/PPP1PPPP/R2QKBNR w KQkq -": {
+        "moves": [
+          "e3"
+        ],
+        "notes": ""
+      },
+      "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq d6": {
+        "moves": [
+          "Nc3"
+        ],
+        "notes": ""
+      },
+      "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -": {
+        "moves": [
+          "d4"
+        ],
+        "notes": ""
+      }
+    },
+    "black": {}
+  },
+  "srs": {
+    "white": {},
+    "black": {}
+  },
+  "sets": []
+}
