@@ -5,6 +5,7 @@ import { nextTick } from 'vue'
 const api = vi.hoisted(() => ({
   repertoireApi: { list: vi.fn() },
   woodpeckerApi: { sets: vi.fn() },
+  sessionApi: { create: vi.fn() },
   puzzleApi: { themes: vi.fn() }
 }))
 
@@ -180,6 +181,37 @@ describe('session store', () => {
 
     expect(store.context.loaded).toBe(false)
     expect(store.subjectsError).not.toBe('')
+  })
+
+  it('launches the program once every module can be played', async () => {
+    api.repertoireApi.list.mockResolvedValue([])
+    api.woodpeckerApi.sets.mockResolvedValue([])
+    api.puzzleApi.themes.mockResolvedValue([])
+    api.sessionApi.create.mockResolvedValue({ id: 's1' })
+    const store = useSessionStore()
+    store.title = ' Mardi '
+    store.add('libre', { duree: 10, type: 'Livre', notes: '' })
+    expect(store.canLaunch).toBe(false)
+
+    await store.fetchSubjects()
+    expect(store.canLaunch).toBe(true)
+    store.add('woodpecker')
+    expect(store.canLaunch).toBe(false)
+    store.remove(store.items[1].uid)
+
+    expect(await store.launch()).toEqual({ id: 's1' })
+    expect(api.sessionApi.create).toHaveBeenCalledWith({
+      title: 'Mardi',
+      description: '',
+      steps: [
+        {
+          module: 'free',
+          minutes: 10,
+          notes: '',
+          settings: { format: 'book' }
+        }
+      ]
+    })
   })
 
   it('survives a corrupt draft', () => {

@@ -269,6 +269,56 @@ export const trainingApi = {
       .then(r => r.data)
 }
 
+/** Training sessions: a program of modules played step by step (docs/TRAINING.md). */
+export const sessionApi = {
+  /**
+   * @param {{title: string, description: string, steps: {module: string, minutes: number, notes: string, settings: Record<string, any>}[]}} payload
+   */
+  create: payload =>
+    http.post('/api/training/sessions', payload, JSON_LD).then(r => r.data),
+  /** The latest sessions, newest first. */
+  list: () =>
+    http.get('/api/training/sessions', JSON_LD).then(r => r.data.member),
+  /** The active session, or null. */
+  current: () =>
+    http
+      .get('/api/training/sessions/current', JSON_LD)
+      .then(r => r.data)
+      .catch(e => {
+        if (e?.response?.status === 404) return null
+        throw e
+      }),
+  get: id =>
+    http
+      .get(`/api/training/sessions/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /** Starts the current step: `{session, run}`. */
+  next: id =>
+    http
+      .post(
+        `/api/training/sessions/${encodeURIComponent(id)}/next`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  skip: id =>
+    http
+      .post(
+        `/api/training/sessions/${encodeURIComponent(id)}/skip`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  abandon: id =>
+    http
+      .post(
+        `/api/training/sessions/${encodeURIComponent(id)}/abandon`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data)
+}
+
 /** Opening repertoires (docs/REPERTOIRE.md). Changes answer a delta (RepertoireChange). */
 export const repertoireApi = {
   list: () => http.get('/api/repertoires', JSON_LD).then(r => r.data.member),

@@ -7,6 +7,7 @@ namespace App\Training\Free;
 use App\Activity\Event\ExerciseCompleted;
 use App\Activity\EventPublisher;
 use App\Entity\Training\Run;
+use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
@@ -16,6 +17,7 @@ use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
+use App\Training\Module\PreparedStep;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 
@@ -46,6 +48,17 @@ final class FreeModule implements TimeboxedModuleInterface
     public function subjectType(): string
     {
         return self::SUBJECT_TYPE;
+    }
+
+    public function prepare(User $user, array $settings, string $notes): PreparedStep
+    {
+        $config = ['format' => $settings['format'] ?? null, 'notes' => $notes];
+        if ([] !== array_diff(array_keys($settings), ['format'])) {
+            throw new InvalidRunConfigException('Unknown setting: only format is accepted.');
+        }
+        self::check($config);
+
+        return new PreparedStep($user->getId(), $config);
     }
 
     public function start(Run $run, \DateTimeImmutable $now): void
@@ -115,7 +128,18 @@ final class FreeModule implements TimeboxedModuleInterface
      */
     private static function options(Run $run): array
     {
-        $config = $run->getConfig();
+        return self::check($run->getConfig());
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @return array{string, string}
+     *
+     * @throws InvalidRunConfigException
+     */
+    private static function check(array $config): array
+    {
         if ([] !== array_diff(array_keys($config), ['format', 'notes'])) {
             throw new InvalidRunConfigException('Unknown option: only format and notes are accepted.');
         }

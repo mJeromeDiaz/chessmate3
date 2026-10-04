@@ -6,6 +6,7 @@ namespace App\Woodpecker\Training;
 
 use App\ApiResource\Puzzle\PuzzleView;
 use App\Entity\Training\Run;
+use App\Entity\User;
 use App\Entity\Woodpecker\Attempt;
 use App\Entity\Woodpecker\Set;
 use App\Enum\Puzzle\AttemptStatus;
@@ -21,6 +22,7 @@ use App\Repository\Woodpecker\CycleRepository;
 use App\Repository\Woodpecker\GrowthRepository;
 use App\Repository\Woodpecker\SetRepository;
 use App\Training\Exception\InvalidItemSubmissionException;
+use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemClosedException;
 use App\Training\Exception\ItemNotFoundException;
@@ -29,6 +31,7 @@ use App\Training\Exception\SubjectUnavailableException;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
+use App\Training\Module\PreparedStep;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use App\Woodpecker\Cycle\CycleRunner;
@@ -73,6 +76,24 @@ final class WoodpeckerModule implements TimeboxedModuleInterface
     public function subjectType(): string
     {
         return self::SUBJECT_TYPE;
+    }
+
+    /**
+     * A session step plays the user's ongoing light set (no settings): the one ongoing when the
+     * step starts.
+     */
+    public function prepare(User $user, array $settings, string $notes): PreparedStep
+    {
+        if ([] !== $settings) {
+            throw new InvalidRunConfigException('A Woodpecker step has no settings.');
+        }
+        $set = $this->sets->findOngoing($user, SetMode::Light)
+            ?? throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_light_set'], 'No light set in progress.');
+        if (SetStatus::Active !== $set->getStatus()) {
+            throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'light_set_paused', 'setStatus' => $set->getStatus()->value], 'The light set is paused.');
+        }
+
+        return new PreparedStep($set->getId(), []);
     }
 
     public function start(Run $run, \DateTimeImmutable $now): void

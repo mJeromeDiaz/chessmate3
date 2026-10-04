@@ -532,3 +532,14 @@ Par utilisateur : `training_run_start` (30 / h), `training_item_next` et `traini
 |---|---|---|
 | R23 | Une séance libre ne prouve pas que l'utilisateur étudie : il peut lancer le chrono et partir. | Validé : seul son propre temps d'étude est gonflé, borné à la durée choisie (60 min au plus) et à 30 lancements par heure. |
 | R24 | Comme R15, la solution part avec le puzzle d'une séance Puzzles. | Identique au jeu libre (§ 6.4) : le classement d'un tricheur n'affecte que lui. |
+
+### 8.6 Sessions
+
+- Une session et ses étapes appartiennent à l'utilisateur : session d'un autre ⇒ **404** (testé) ;
+  chaque étape est validée par son module au lancement (répertoire d'un autre, thème inconnu,
+  format hors liste ⇒ 422) **et** revalidée au démarrage de l'étape.
+- Programme borné : 10 étapes au plus, 1 à 60 minutes chacune, notes ≤ 500 caractères, réglages
+  ≤ 10 clés ; lancement limité à 20 par heure (`training_session_start`), démarrage d'étape sous la
+  limite des séances (`training_run_start`).
+- Une seule session active par utilisateur (index unique sur colonne générée) ; une étape ne contourne
+  aucune règle des séances (une seule séance active, temps serveur, intégrité du classement).

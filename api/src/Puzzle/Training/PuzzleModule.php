@@ -7,6 +7,7 @@ namespace App\Puzzle\Training;
 use App\ApiResource\Puzzle\PuzzleView;
 use App\Entity\Puzzle\Attempt;
 use App\Entity\Training\Run;
+use App\Entity\User;
 use App\Enum\Puzzle\AttemptStatus;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
@@ -28,6 +29,7 @@ use App\Training\Exception\SubjectUnavailableException;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
+use App\Training\Module\PreparedStep;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use Symfony\Component\Uid\Uuid;
@@ -63,6 +65,14 @@ final class PuzzleModule implements TimeboxedModuleInterface
     public function subjectType(): string
     {
         return self::SUBJECT_TYPE;
+    }
+
+    public function prepare(User $user, array $settings, string $notes): PreparedStep
+    {
+        $keys = self::keysFrom($settings);
+        $this->themeIds($keys);
+
+        return new PreparedStep($user->getId(), ['themes' => $keys]);
     }
 
     public function start(Run $run, \DateTimeImmutable $now): void
@@ -160,13 +170,24 @@ final class PuzzleModule implements TimeboxedModuleInterface
      */
     private function criteria(Run $run): SelectionCriteria
     {
-        $keys = $this->themeKeys($run);
+        return new SelectionCriteria($this->themeIds($this->themeKeys($run)));
+    }
+
+    /**
+     * @param list<string> $keys
+     *
+     * @return list<int>
+     *
+     * @throws InvalidRunConfigException
+     */
+    private function themeIds(array $keys): array
+    {
         $themes = $this->themes->findByKeys($keys);
         if (\count($themes) !== \count($keys)) {
             throw new InvalidRunConfigException('Unknown theme.');
         }
 
-        return new SelectionCriteria(array_map(static fn ($theme): int => (int) $theme->getId(), $themes));
+        return array_map(static fn ($theme): int => (int) $theme->getId(), $themes);
     }
 
     /**
@@ -176,7 +197,18 @@ final class PuzzleModule implements TimeboxedModuleInterface
      */
     private function themeKeys(Run $run): array
     {
-        $config = $run->getConfig();
+        return self::keysFrom($run->getConfig());
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @return list<string>
+     *
+     * @throws InvalidRunConfigException
+     */
+    private static function keysFrom(array $config): array
+    {
         if ([] !== array_diff(array_keys($config), ['themes'])) {
             throw new InvalidRunConfigException('Unknown option: only themes is accepted.');
         }

@@ -25,6 +25,7 @@ import { trainingApi } from '@/services/api'
  * @property {string|null} closedAt
  * @property {string} serverNow the server's clock when it answered
  * @property {RunSummary|null} summary
+ * @property {string|null} [parentId] the training session it is a step of
  *
  * @typedef {object} RunItem
  * @property {string} id

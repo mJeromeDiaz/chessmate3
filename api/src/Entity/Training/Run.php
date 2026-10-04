@@ -27,6 +27,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Index(name: 'idx_training_run_user_started', columns: ['user_id', 'started_at'])]
 #[ORM\Index(name: 'idx_training_run_subject', columns: ['subject_type', 'subject_id', 'started_at'])]
 #[ORM\Index(name: 'idx_training_run_user', columns: ['user_id'])]
+#[ORM\Index(name: 'idx_training_run_parent', columns: ['parent_id', 'started_at'])]
 class Run
 {
     #[ORM\Id]
@@ -84,7 +85,7 @@ class Run
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $summary = null;
 
-    /** The multi-module session this run belongs to (Phase 6; no such table yet). */
+    /** The training session this run is a step of ({@see Session}), if any. */
     #[ORM\Column(type: 'uuid', nullable: true)]
     private ?Uuid $parentId = null;
 

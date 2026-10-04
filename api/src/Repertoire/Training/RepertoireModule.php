@@ -11,6 +11,7 @@ use App\Entity\Repertoire\Repertoire;
 use App\Entity\Repertoire\RunState;
 use App\Entity\Repertoire\Segment;
 use App\Entity\Training\Run;
+use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Repertoire\PresentationStatus;
 use App\Enum\Repertoire\TestUnit;
@@ -35,6 +36,7 @@ use App\Training\Exception\SubjectUnavailableException;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
+use App\Training\Module\PreparedStep;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use Doctrine\DBAL\Connection;
@@ -80,6 +82,22 @@ final class RepertoireModule implements TimeboxedModuleInterface
     public function subjectType(): string
     {
         return self::SUBJECT_TYPE;
+    }
+
+    /**
+     * A session step tests whole repertoires (settings `repertoireIds`), by segments.
+     */
+    public function prepare(User $user, array $settings, string $notes): PreparedStep
+    {
+        if ([] !== array_diff(array_keys($settings), ['repertoireIds'])) {
+            throw new InvalidRunConfigException('Unknown setting: only repertoireIds is accepted.');
+        }
+        $scope = Scope::fromConfig($settings);
+        foreach ($scope->repertoireIds as $id) {
+            $this->repertoires->findOwned(Uuid::fromString($id), $user) ?? throw new SubjectNotFoundException();
+        }
+
+        return new PreparedStep($user->getId(), ['repertoireIds' => $scope->repertoireIds]);
     }
 
     public function start(Run $run, \DateTimeImmutable $now): void

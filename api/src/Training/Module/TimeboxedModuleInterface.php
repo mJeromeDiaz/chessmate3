@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Training\Module;
 
 use App\Entity\Training\Run;
+use App\Entity\User;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
 use App\Training\Exception\InvalidItemSubmissionException;
@@ -31,6 +32,19 @@ interface TimeboxedModuleInterface
 
     /** What {@see Run::getSubjectId()} refers to (e.g. woodpecker_set). */
     public function subjectType(): string;
+
+    /**
+     * Turns the settings of a session step (docs/TRAINING.md, sessions) into this module's run
+     * subject and config, checking them: at the session's launch, and again when the step starts
+     * (the subject may have changed meanwhile, e.g. the light set paused).
+     *
+     * @param array<string, mixed> $settings
+     *
+     * @throws InvalidRunConfigException   invalid settings
+     * @throws SubjectNotFoundException    unknown subject, or another user's
+     * @throws SubjectUnavailableException no subject to play now
+     */
+    public function prepare(User $user, array $settings, string $notes): PreparedStep;
 
     /**
      * Checks the subject can be played and prepares it for the run (already persisted).

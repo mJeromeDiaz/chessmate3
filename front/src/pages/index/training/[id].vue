@@ -6,7 +6,34 @@
     >
       <RunRecap :run="runner.run.value">
         <template #actions>
+          <template v-if="runner.run.value.parentId">
+            <q-btn
+              v-if="nextStep"
+              color="primary"
+              no-caps
+              unelevated
+              icon="skip_next"
+              :label="`Module suivant : ${stepModule(nextStep)?.title ?? nextStep.module}`"
+              :loading="sessionStep.starting.value"
+              data-testid="session-next"
+              @click="sessionStep.start(runner.run.value.parentId)"
+            />
+            <q-btn
+              :color="nextStep ? undefined : 'primary'"
+              :flat="!!nextStep"
+              no-caps
+              :label="
+                nextStep ? 'Voir la session' : 'Voir le bilan de la session'
+              "
+              :to="`/session/${runner.run.value.parentId}`"
+              data-testid="session-open"
+            />
+            <div v-if="sessionStep.error.value" class="text-negative q-ml-sm">{{
+              sessionStep.error.value
+            }}</div>
+          </template>
           <q-btn
+            v-else
             color="primary"
             no-caps
             :label="backLabel(runner.run.value)"
@@ -142,7 +169,7 @@
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
  * (docs/REPERTOIRE.md § 15) or free study (a timer).
  */
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
@@ -151,10 +178,13 @@ import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer
 import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
 import RunHeader from '@/components/training/RunHeader.vue'
 import RunRecap from '@/components/training/RunRecap.vue'
+import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
+import { sessionApi } from '@/services/api'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatRatingDelta } from '@/utils/format'
+import { stepModule } from '@/utils/session/steps'
 import { backLabel, subjectPath } from '@/utils/training'
 
 definePage({ meta: { auth: 'required' } })
@@ -225,25 +255,55 @@ function confirmStop() {
   }).onOk(() => runner.stop().catch(e => (error.value = apiErrorMessage(e))))
 }
 
-// The run is over: nothing in progress any more for the rest of the app.
+/** The session this run is a step of, once the run is over. */
+/** @type {import('vue').Ref<import('@/utils/session/steps').TrainingSession|null>} */
+const session = ref(null)
+const sessionStep = useSessionStep()
+
+/** The session's next module to play, if it goes on. */
+const nextStep = computed(() => {
+  const s = session.value
+  if (!s || s.status !== 'active') return null
+  const step = s.steps[s.currentIndex]
+  return step && step.status === 'pending' ? step : null
+})
+
+// The run is over: nothing in progress any more for the rest of the app; a session step offers
+// the next module (the session follows its runs on the server).
 watch(
   () => runner.phase.value,
   phase => {
-    if (phase === 'ended' && store.current?.id === runner.run.value?.id)
-      store.current = null
-  }
+    if (phase !== 'ended') return
+    if (store.current?.id === runner.run.value?.id) store.current = null
+    const parentId = runner.run.value?.parentId
+    if (parentId) {
+      sessionApi
+        .get(parentId)
+        .then(s => (session.value = s))
+        .catch(() => {})
+    }
+  },
+  { immediate: true }
 )
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    await runner.resume(String(route.params.id))
-  } catch (e) {
-    error.value = apiErrorMessage(e, { 404: 'Séance introuvable.' })
-  } finally {
-    loading.value = false
-  }
-})
+// Also when a session's next module replaces this run: the page stays, the run changes.
+watch(
+  () => route.params.id,
+  async id => {
+    if (!id) return
+    loading.value = true
+    error.value = ''
+    session.value = null
+    try {
+      await runner.resume(String(id))
+    } catch (e) {
+      error.value = apiErrorMessage(e, { 404: 'Séance introuvable.' })
+    } finally {
+      loading.value = false
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>

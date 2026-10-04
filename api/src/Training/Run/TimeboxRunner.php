@@ -53,14 +53,15 @@ final class TimeboxRunner
     }
 
     /**
-     * @param array<string, mixed> $config module-specific options
+     * @param array<string, mixed> $config   module-specific options
+     * @param Uuid|null            $parentId the session the run is a step of
      *
      * @throws RunInProgressException
      * @throws \App\Training\Exception\InvalidRunConfigException
      * @throws \App\Training\Exception\SubjectNotFoundException
      * @throws SubjectUnavailableException
      */
-    public function start(User $user, Module $module, Uuid $subjectId, int $budgetSeconds, array $config = []): Run
+    public function start(User $user, Module $module, Uuid $subjectId, int $budgetSeconds, array $config = [], ?Uuid $parentId = null): Run
     {
         if ($budgetSeconds < self::MIN_BUDGET_SECONDS || $budgetSeconds > self::MAX_BUDGET_SECONDS) {
             throw new \InvalidArgumentException('Budget out of range.');
@@ -69,12 +70,12 @@ final class TimeboxRunner
         $implementation = $this->modules->for($module);
 
         try {
-            return $this->entityManager->wrapInTransaction(function () use ($user, $module, $implementation, $subjectId, $budgetSeconds, $config): Run {
+            return $this->entityManager->wrapInTransaction(function () use ($user, $module, $implementation, $subjectId, $budgetSeconds, $config, $parentId): Run {
                 $now = $this->now();
                 if (null !== $this->runs->findActiveOf($user)) {
                     throw new RunInProgressException();
                 }
-                $run = new Run($user, $module, $implementation->subjectType(), $subjectId, $budgetSeconds, $config, $now);
+                $run = new Run($user, $module, $implementation->subjectType(), $subjectId, $budgetSeconds, $config, $now, $parentId);
                 $this->entityManager->persist($run);
                 // The unique index on active_user_id rejects a concurrent second start here.
                 $this->entityManager->flush();

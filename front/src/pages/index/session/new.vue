@@ -147,17 +147,37 @@
 
     <div class="session-builder__launch">
       <div class="session-builder__launch-inner">
+        <div
+          v-if="inProgress"
+          class="session-builder__notice"
+          data-testid="session-in-progress"
+        >
+          <span>Une session est déjà en cours aujourd’hui.</span>
+          <router-link :to="`/session/${inProgress.id}`"
+            >La reprendre</router-link
+          >
+          <button type="button" @click="abandonAndLaunch">
+            L’abandonner et lancer celle-ci
+          </button>
+        </div>
+        <div
+          v-else-if="launchError"
+          class="session-builder__notice session-builder__notice--error"
+          data-testid="session-launch-error"
+          >{{ launchError }}</div
+        >
         <button
           type="button"
           class="session-builder__launch-btn"
-          disabled
+          :disabled="!session.canLaunch || launching"
           data-testid="session-launch"
+          @click="launch"
         >
-          Lancer la session
+          {{ launching ? 'Lancement…' : 'Lancer la session' }}
           <span class="session-builder__launch-total">{{ totalLabel }}</span>
         </button>
-        <q-tooltip
-          >Bientôt : l’enchaînement des modules d’une session.</q-tooltip
+        <q-tooltip v-if="!session.canLaunch && session.items.length"
+          >Un module du programme n’est pas jouable (⚠).</q-tooltip
         >
       </div>
     </div>
@@ -169,7 +189,10 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import Sortable from 'sortablejs'
+import { sessionApi } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
+import { useSessionStep } from '@/composables/session/useSessionStep'
+import { apiErrorMessage } from '@/utils/apiError'
 import { MODULES, MODULES_BY_ID, formatMinutes } from '@/utils/session/catalog'
 import ModuleCard from '@/components/session/ModuleCard.vue'
 import ModuleSettings from '@/components/session/ModuleSettings.vue'
@@ -206,6 +229,47 @@ const countLabel = computed(() => {
 const hasDraft = computed(
   () => !!(session.title || session.description || session.items.length)
 )
+
+const step = useSessionStep()
+const launching = ref(false)
+const launchError = ref('')
+/** @type {import('vue').Ref<import('@/utils/session/steps').TrainingSession|null>} */
+const inProgress = ref(null)
+
+/**
+ * Launches the program as a session and starts its first module. When that module cannot start,
+ * the session page tells why.
+ */
+async function launch() {
+  launching.value = true
+  launchError.value = ''
+  inProgress.value = null
+  try {
+    const created = await session.launch()
+    if (!(await step.start(created.id))) {
+      await router.push(`/session/${created.id}`)
+    }
+  } catch (e) {
+    const status = /** @type {any} */ (e)?.response?.status
+    if (status === 409) {
+      inProgress.value = await sessionApi.current().catch(() => null)
+    }
+    if (!inProgress.value) {
+      launchError.value = apiErrorMessage(e, {
+        409: 'Une session est déjà en cours.',
+        422: 'Un module n’est plus valide : vérifie ses réglages.'
+      })
+    }
+  } finally {
+    launching.value = false
+  }
+}
+
+async function abandonAndLaunch() {
+  if (!inProgress.value) return
+  await sessionApi.abandon(inProgress.value.id).catch(() => {})
+  await launch()
+}
 
 /** @param {string} moduleId */
 function openAdd(moduleId) {
@@ -545,6 +609,36 @@ onBeforeUnmount(() => sortable?.destroy())
   pointer-events: auto;
 }
 
+.session-builder__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--cm-orange-soft);
+  color: var(--cm-orange-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+
+  a,
+  button {
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  &--error {
+    background: var(--cm-danger-soft);
+    color: var(--cm-danger);
+  }
+}
+
 .session-builder__launch-btn {
   display: flex;
   align-items: center;
@@ -559,6 +653,7 @@ onBeforeUnmount(() => sortable?.destroy())
   font: inherit;
   font-size: 16px;
   font-weight: 700;
+  cursor: pointer;
 
   &:disabled {
     cursor: not-allowed;
@@ -566,7 +661,37 @@ onBeforeUnmount(() => sortable?.destroy())
   }
 }
 
-.body--dark .session-builder__launch-btn {
+.body--dark .session-builder__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--cm-orange-soft);
+  color: var(--cm-orange-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+
+  a,
+  button {
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  &--error {
+    background: var(--cm-danger-soft);
+    color: var(--cm-danger);
+  }
+}
+
+.session-builder__launch-btn {
   background: var(--cm-brand);
 }
 

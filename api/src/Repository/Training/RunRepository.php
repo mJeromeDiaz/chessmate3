@@ -86,4 +86,14 @@ class RunRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * The runs of a training session, oldest first.
+     *
+     * @return list<Run>
+     */
+    public function findByParent(Uuid $sessionId): array
+    {
+        return $this->findBy(['parentId' => $sessionId], ['startedAt' => 'ASC']);
+    }
 }

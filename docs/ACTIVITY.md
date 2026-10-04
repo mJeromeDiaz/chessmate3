@@ -57,6 +57,7 @@ n'en supprime jamais.
 | `Woodpecker\Event\SetCompleted` | dernier cycle terminé | set, nombre de cycles et de puzzles, runs perdus |
 | `Woodpecker\Event\SetGrown` | croissance d'un set light | set, manche, puzzles ajoutés, nouvelle taille |
 | `Training\Event\RunCompleted` | clôture d'une séance chronométrée ([TRAINING.md](TRAINING.md)) | séance, module, sujet (`subjectType` + `subjectId`), `parentId`, motif, budget, durée réelle, éléments et réussites, `startedAt` |
+| `Training\Event\SessionClosed` | clôture d'une session ([TRAINING.md § 9](TRAINING.md#9-sessions)) : terminée, abandonnée ou expirée (paresseusement) | session, statut, étapes, faites, passées, temps joué, `startedAt` |
 
 `ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study` (extensible).
 

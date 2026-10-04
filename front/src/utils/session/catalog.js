@@ -557,6 +557,53 @@ export function itemIssue(module, values, context = NO_CONTEXT) {
   return null
 }
 
+/** The API's module of each playable catalogue module. */
+export const API_MODULES = {
+  libre: 'free',
+  puzzles: 'puzzles',
+  woodpecker: 'woodpecker',
+  repertoire: 'repertoire'
+}
+
+/** Free study formats: the catalogue's labels, as the API names them. */
+const FREE_FORMATS = {
+  Livre: 'book',
+  Vidéo: 'video',
+  Cours: 'course',
+  Podcast: 'podcast',
+  Autre: 'other'
+}
+
+/**
+ * A program item as a step of the API's session (docs/TRAINING.md): module, length, notes and the
+ * settings the module checks.
+ *
+ * @param {SessionItem} item
+ * @returns {{module: string, minutes: number, notes: string, settings: Record<string, any>}}
+ */
+export function toStep(item) {
+  const v = item.values
+  const module = API_MODULES[item.moduleId]
+  if (!module) throw new Error(`Module ${item.moduleId} cannot be played yet.`)
+  /** @type {Record<string, any>} */
+  let settings = {}
+  if (module === 'free') settings = { format: FREE_FORMATS[v.type] ?? 'other' }
+  if (module === 'puzzles') settings = { themes: [...(v.themes ?? [])] }
+  if (module === 'repertoire')
+    settings = { repertoireIds: [...(v.repertoires ?? [])] }
+  return {
+    module,
+    minutes: v.duree,
+    notes: String(v.notes ?? '').trim(),
+    settings
+  }
+}
+
+/** The catalogue module of an API module (the reverse of API_MODULES). */
+export const CATALOG_MODULES = Object.fromEntries(
+  Object.entries(API_MODULES).map(([catalog, api]) => [api, catalog])
+)
+
 /**
  * A copy of `list` with the element at `from` moved to `to`.
  *

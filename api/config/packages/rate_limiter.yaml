@@ -126,6 +126,10 @@ framework:
             policy: sliding_window
             limit: 30
             interval: '1 hour'
+        training_session_start:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
         training_item_next:
             policy: sliding_window
             limit: 600

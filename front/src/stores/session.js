@@ -1,14 +1,16 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { repertoireApi, woodpeckerApi } from '@/services/api'
+import { repertoireApi, sessionApi, woodpeckerApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { apiErrorMessage } from '@/utils/apiError'
 import {
   MODULES_BY_ID,
   defaultValues,
+  itemIssue,
   move as moveItem,
-  sessionMinutes
+  sessionMinutes,
+  toStep
 } from '@/utils/session/catalog'
 
 /** Where the draft is kept between visits (this browser only; wiped on sign-out). */
@@ -92,8 +94,9 @@ function readDraft() {
 
 /**
  * The training session being composed (design "Session Builder"): a title, a goal and an ordered
- * program of configured modules. Kept as a draft in localStorage; a session cannot be launched yet.
- * The modules' subjects are the user's real data: repertoires, ongoing light set, puzzle themes.
+ * program of configured modules, kept as a draft in localStorage (it stays after a launch, to play
+ * it again). The modules' subjects are the user's real data: repertoires, ongoing light set, puzzle
+ * themes. Launching sends the program to the API, which freezes it (docs/TRAINING.md).
  */
 export const useSessionStore = defineStore('session', () => {
   const draft = readDraft()
@@ -193,6 +196,30 @@ export const useSessionStore = defineStore('session', () => {
     }
   )
 
+  /** Every module can be played, as far as the user's data tells. */
+  const canLaunch = computed(
+    () =>
+      items.value.length > 0 &&
+      context.value.loaded &&
+      items.value.every(
+        item =>
+          !itemIssue(MODULES_BY_ID[item.moduleId], item.values, context.value)
+      )
+  )
+
+  /**
+   * Launches the program as a session (its first step is started apart).
+   *
+   * @returns {Promise<import('@/utils/session/steps').TrainingSession>}
+   */
+  function launch() {
+    return sessionApi.create({
+      title: title.value.trim(),
+      description: description.value.trim(),
+      steps: items.value.map(toStep)
+    })
+  }
+
   /**
    * Adds a configured module at the end of the program.
    *
@@ -260,6 +287,8 @@ export const useSessionStore = defineStore('session', () => {
     subjectsLoading,
     subjectsError,
     fetchSubjects,
+    canLaunch,
+    launch,
     add,
     update,
     remove,

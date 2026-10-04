@@ -50,7 +50,8 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 `training_run` : `module`, `subject_type` + `subject_id` (ex. `woodpecker_set` + id du set),
 `config` (JSON, options du module : la portée d'un test de répertoire, les thèmes des puzzles, le format et les notes du temps libre ; aucune pour Woodpecker), `budget_seconds`, `status` (`active`,
 `closed`), `started_at`, `expires_at`, `closed_at`, `close_reason`, `summary` (JSON, figé à la
-clôture) et `parent_id` (future séance multi-modules, phase 6 ; toujours `NULL`).
+clôture) et `parent_id` (la session dont la séance est une étape, § 9 ; `NULL` pour une séance
+lancée seule ; index `idx_training_run_parent`).
 
 | Index | Rôle |
 |---|---|
@@ -198,3 +199,78 @@ Woodpecker liste ses séances (`runs`).
   et thèmes, puzzle en attente qui ouvre la séance, puzzle à l'écran qui reste en attente, jeu libre
   refusé pendant la séance, aucun puzzle ; durée réelle journalisée, séance abandonnée comptée
   jusqu'à l'expiration, options validées) et `tests/e2e/training-modules.spec.js`.
+
+## 9. Sessions
+
+Une **session** est un programme de modules composé dans le Session Builder (`front/src/pages/index/session/new.vue`),
+**figé au lancement** et joué étape par étape : chaque étape est une séance chronométrée ordinaire
+(toutes les règles ci-dessus s'appliquent) dont `parent_id` est la session.
+
+| Couche | Emplacement |
+|---|---|
+| Entité | `App\Entity\Training\Session` (table `training_session`) |
+| Enums | `App\Enum\Training\{SessionStatus, StepStatus}` |
+| Service | `App\Training\Session\SessionManager` ; `TimeboxedModuleInterface::prepare()` (réglages d'une étape → sujet et `config` de la séance) |
+| Événement | `App\Training\Event\SessionClosed` |
+| API | `App\ApiResource\Training\{Session, SessionLaunch, CreateSessionInput, SessionStepInput, SessionStepView}`, `App\State\Training\{CreateSessionProcessor, SessionNextProcessor, SessionActionProcessor, SessionProvider, SessionViewFactory}` |
+| Front | `services/api.js` (`sessionApi`), `stores/session.js` (`launch`, `canLaunch`), `utils/session/{catalog, steps}.js` (`toStep`), `composables/session/useSessionStep.js`, `pages/index/session/[id].vue`, récap de `training/[id].vue`, `components/dashboard/RecentSessions.vue` |
+
+### Règles validées (2026-10-04)
+
+- **Pas de modèles réutilisables** : une session lancée est une instance jouée ; le brouillon reste
+  dans le navigateur pour la relancer.
+- **Enchaînement manuel** : après chaque module, son récapitulatif, puis « Module suivant » (le
+  chrono du suivant ne part qu'au clic).
+- **La session appartient à son jour local** (fuseau de l'utilisateur) : `expiresAt` = minuit
+  suivant. On peut la reprendre ce jour-là ; au-delà, elle est close paresseusement (`expired`), les
+  étapes restantes « non jouées ». Une séance d'une étape commencée avant minuit va à son terme.
+- **Étape injouable** (set light en pause ou absent, rien à réviser, plus de puzzle, répertoire
+  supprimé) : `next` répond 409 et l'étape reste courante avec sa raison (`blocked`) ; l'utilisateur
+  réessaie, la passe (`skip`) ou abandonne.
+- **Une seule session active par utilisateur** (colonne générée `active_user_id` + index unique) ;
+  en lancer une autre propose de reprendre ou d'abandonner l'actuelle.
+
+### Modèle
+
+`training_session` : `title` (≤ 120), `description` (≤ 500), `steps` (JSON : `module`, `minutes`,
+`notes`, `settings`, `status`, `runId`, `blocked`), `current_index`, `status` (`active`,
+`completed`, `abandoned`, `expired`), `started_at`, `expires_at`, `closed_at`. Statuts d'étape :
+`pending`, `running`, `done`, `skipped`, `unplayed`.
+
+Réglages d'une étape, vérifiés par le module au lancement **et** au démarrage de l'étape :
+
+| Module | `settings` | Sujet de la séance |
+|---|---|---|
+| `puzzles` | `{themes?: string[]}` | l'utilisateur |
+| `woodpecker` | `{}` | son set light en cours **au démarrage de l'étape** (actif, sinon bloquée) |
+| `repertoire` | `{repertoireIds: string[]}` (tronçons) | l'utilisateur |
+| `free` | `{format}` ; les `notes` de l'étape deviennent celles de la séance | l'utilisateur |
+
+### Déroulé (`SessionManager`)
+
+- **Synchronisation paresseuse** : chaque requête clôt d'abord la séance expirée de l'utilisateur,
+  puis réconcilie la session (verrouillée) : une séance close termine son étape ; plus d'étape ⇒
+  `completed` ; jour passé sans séance en cours ⇒ `expired`. Pas de cron.
+- `next` : prépare l'étape (module), démarre la séance (`TimeboxRunner::start(..., parentId)`), puis
+  la rattache à l'étape. Les transactions du chronomètre ne sont jamais imbriquées dans celle de la
+  session (un refus y fermerait l'entity manager). Une étape déjà en cours renvoie sa séance.
+- `skip` : refusé pendant la séance de l'étape (409). `abandon` : arrête d'abord la séance en cours
+  (elle compte comme jouée), idempotent.
+- À la clôture, `SessionClosed` (même transaction) : `status`, étapes, faites, passées, temps joué
+  (somme des `durationMs` de ses séances).
+
+### API
+
+| Endpoint | Rôle | Erreurs |
+|---|---|---|
+| `POST /training/sessions` | `{title, description, steps: [{module, minutes (1–60), notes, settings}]}` (1 à 10 étapes ; 20 par heure) | 409 session en cours, 422 (étape invalide, son numéro dans le message) |
+| `GET /training/sessions` | Les 10 dernières, de la plus récente | — |
+| `GET /training/sessions/current` | La session active (404 sinon) | — |
+| `GET /training/sessions/{id}` | Une session : programme, étapes et récap de leurs séances, `durationMs` | 404 |
+| `POST /training/sessions/{id}/next` | Démarre l'étape courante : `{session, run}` (limite des démarrages de séance) | 404, 409 (étape bloquée, autre séance en cours, session finie) |
+| `POST /training/sessions/{id}/skip` | Passe l'étape courante | 404, 409 |
+| `POST /training/sessions/{id}/abandon` | Termine la session | 404 |
+
+`shortName` : `TrainingSession`, `TrainingSessionLaunch` ; `requirements` UUID ; routes sœurs dans
+`RoutingTest`. Tests : `tests/Functional/Training/SessionTest.php`, `tests/unit/session-steps.test.js`,
+`tests/e2e/session-play.spec.js`.

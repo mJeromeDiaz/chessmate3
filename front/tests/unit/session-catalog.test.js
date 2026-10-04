@@ -11,7 +11,8 @@ import {
   moduleMinutes,
   move,
   sessionMinutes,
-  settingChips
+  settingChips,
+  toStep
 } from '@/utils/session/catalog'
 import { PROFS, PROF_SLUGS } from '@/utils/prof/profs'
 
@@ -170,5 +171,49 @@ describe('session catalogue', () => {
     expect(move(['a', 'b', 'c'], 0, 2)).toEqual(['b', 'c', 'a'])
     expect(move(['a', 'b', 'c'], 2, 0)).toEqual(['c', 'a', 'b'])
     expect(move(['a', 'b'], 0, 5)).toEqual(['a', 'b'])
+  })
+
+  it("turns program items into the API's session steps", () => {
+    expect(
+      toStep({
+        uid: 1,
+        moduleId: 'libre',
+        values: { duree: 30, type: 'Vidéo', notes: ' Cours de finales ' }
+      })
+    ).toEqual({
+      module: 'free',
+      minutes: 30,
+      notes: 'Cours de finales',
+      settings: { format: 'video' }
+    })
+    expect(
+      toStep({
+        uid: 2,
+        moduleId: 'puzzles',
+        values: { duree: 20, themes: ['fork'], notes: '' }
+      })
+    ).toEqual({
+      module: 'puzzles',
+      minutes: 20,
+      notes: '',
+      settings: { themes: ['fork'] }
+    })
+    expect(
+      toStep({
+        uid: 3,
+        moduleId: 'repertoire',
+        values: { duree: 15, repertoires: ['r1'], notes: '' }
+      }).settings
+    ).toEqual({ repertoireIds: ['r1'] })
+    expect(
+      toStep({
+        uid: 4,
+        moduleId: 'woodpecker',
+        values: { duree: 15, set: null, notes: '' }
+      })
+    ).toEqual({ module: 'woodpecker', minutes: 15, notes: '', settings: {} })
+    expect(() =>
+      toStep({ uid: 5, moduleId: 'finales', values: { duree: 5 } })
+    ).toThrow()
   })
 })

@@ -35,6 +35,8 @@
 
       <template v-else-if="store.isNewUser">
         <WelcomeCard />
+        <!-- A first session launched but no exercise logged yet: it can still be resumed. -->
+        <RecentSessions hide-empty class="q-mt-md" />
         <ModuleProgress :rows="moduleRows" class="q-mt-md" />
       </template>
 
