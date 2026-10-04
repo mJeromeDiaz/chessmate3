@@ -192,6 +192,7 @@ import Sortable from 'sortablejs'
 import { sessionApi } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
 import { useSessionStep } from '@/composables/session/useSessionStep'
+import { requestNotifications } from '@/utils/alerts'
 import { apiErrorMessage } from '@/utils/apiError'
 import { MODULES, MODULES_BY_ID, formatMinutes } from '@/utils/session/catalog'
 import ModuleCard from '@/components/session/ModuleCard.vue'
@@ -241,6 +242,8 @@ const inProgress = ref(null)
  * the session page tells why.
  */
 async function launch() {
+  // Still in the click: browsers only ask for the permission from a user gesture.
+  requestNotifications().catch(() => {})
   launching.value = true
   launchError.value = ''
   inProgress.value = null

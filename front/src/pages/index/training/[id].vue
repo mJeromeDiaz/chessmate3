@@ -179,6 +179,7 @@ import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
 import RunHeader from '@/components/training/RunHeader.vue'
 import RunRecap from '@/components/training/RunRecap.vue'
 import { useSessionStep } from '@/composables/session/useSessionStep'
+import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
 import { sessionApi } from '@/services/api'
 import { useTrainingStore } from '@/stores/training'
@@ -207,6 +208,7 @@ const route = useRoute()
 const $q = useQuasar()
 const store = useTrainingStore()
 const runner = useTimeboxedRun()
+useRunAlerts(runner)
 const loading = ref(false)
 const error = ref('')
 

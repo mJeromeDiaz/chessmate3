@@ -10,9 +10,11 @@
   >
     <span class="module-card__shade" :style="{ background: module.deep }" />
     <span class="module-card__glow" />
-    <span class="module-card__title cm-heading">{{ module.title }}</span>
+    <span class="module-card__head">
+      <span class="module-card__title cm-heading">{{ module.title }}</span>
+      <span v-if="!module.available" class="module-card__soon">Bientôt</span>
+    </span>
     <span class="module-card__desc">{{ module.desc }}</span>
-    <span v-if="!module.available" class="module-card__soon">Bientôt</span>
     <ProfAvatar
       class="module-card__avatar"
       :image="module.image"
@@ -93,8 +95,15 @@ const emit = defineEmits(['select'])
   pointer-events: none;
 }
 
-.module-card__title {
+.module-card__head {
   position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.module-card__title {
   font-size: 18px;
   line-height: 1.15;
 }
@@ -107,9 +116,7 @@ const emit = defineEmits(['select'])
 }
 
 .module-card__soon {
-  position: relative;
-  align-self: flex-start;
-  margin-top: 4px;
+  flex: none;
   padding: 2px 9px;
   border-radius: 999px;
   background: #fff;

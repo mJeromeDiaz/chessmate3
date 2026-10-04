@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { sessionApi } from '@/services/api'
+import { requestNotifications } from '@/utils/alerts'
 import { apiErrorMessage } from '@/utils/apiError'
 import { nextErrorText } from '@/utils/session/steps'
 
@@ -23,6 +24,8 @@ export function useSessionStep(options = {}) {
   async function start(sessionId) {
     starting.value = true
     error.value = ''
+    // From the click: the end of a free module can then be notified.
+    requestNotifications().catch(() => {})
     try {
       const { run } = await sessionApi.next(sessionId)
       await router.push(`/training/${run.id}`)

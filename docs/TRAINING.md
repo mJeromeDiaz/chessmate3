@@ -180,6 +180,10 @@ Woodpecker liste ses séances (`runs`).
 - `RunLauncher` (page du set, dialogue de test d'un répertoire) : durées 5, 10, 15, 20, 30 min ou
   « Autre » (1 à 60), `config` du module envoyée telle quelle (`show-unit` ajoute le choix tronçons
   ou lignes) ; si une séance est déjà en cours, propose de la reprendre ou de la terminer.
+- Alertes (`composables/training/useRunAlerts.js`, `utils/alerts.js`) : un module de session joue
+  `front/public/media/son/alert.mp3` 5 s avant sa fin ; un module libre le joue à l'expiration avec
+  une notification navigateur « Temps libre terminé » (permission demandée au clic de lancement).
+  Chaque alerte une fois par séance, seulement pour une séance vue en cours sur la page.
 - `RunRecap` : récapitulatif normalisé et lignes du module ; `RunTable` : historique avec l'évolution
   des puzzles par minute d'une séance à l'autre.
 
