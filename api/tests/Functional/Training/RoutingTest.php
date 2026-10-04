@@ -34,6 +34,16 @@ final class RoutingTest extends WoodpeckerWebTestCase
         yield ['POST', '/api/training/sessions/'.self::UUID.'/next', 'training_session_next'];
         yield ['POST', '/api/training/sessions/'.self::UUID.'/skip', 'training_session_skip'];
         yield ['POST', '/api/training/sessions/'.self::UUID.'/abandon', 'training_session_abandon'];
+        yield ['GET', '/api/training/plans', '_api_/training/plans_get_collection'];
+        yield ['POST', '/api/training/plans', '_api_/training/plans_post'];
+        yield ['GET', '/api/training/plans/'.self::UUID, '_api_/training/plans/{id}_get'];
+        yield ['PUT', '/api/training/plans/'.self::UUID, '_api_/training/plans/{id}_put'];
+        yield ['DELETE', '/api/training/plans/'.self::UUID, '_api_/training/plans/{id}_delete'];
+        yield ['POST', '/api/training/plans/'.self::UUID.'/launch', 'training_plan_launch'];
+        yield ['GET', '/api/notifications/push', 'notification_push_config'];
+        yield ['POST', '/api/notifications/push/subscriptions', 'notification_push_subscribe'];
+        yield ['POST', '/api/notifications/push/subscription-status', 'notification_push_status'];
+        yield ['POST', '/api/notifications/push/unsubscribe', 'notification_push_unsubscribe'];
     }
 
     #[DataProvider('routes')]

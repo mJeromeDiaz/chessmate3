@@ -605,6 +605,33 @@ export const CATALOG_MODULES = Object.fromEntries(
 )
 
 /**
+ * A step of a saved session back as a program item's module and settings (the reverse of
+ * `toStep`), or null for a module the catalogue cannot play.
+ *
+ * @param {{module: string, minutes: number, notes: string, settings: Record<string, any>}} step
+ * @returns {{moduleId: string, values: Record<string, any>}|null}
+ */
+export function fromStep(step) {
+  const moduleId = CATALOG_MODULES[step.module]
+  const module = MODULES_BY_ID[moduleId]
+  if (!module) return null
+  const values = defaultValues(module)
+  values.duree = step.minutes
+  values.notes = step.notes ?? ''
+  const settings = step.settings ?? {}
+  if (step.module === 'free') {
+    values.type =
+      Object.entries(FREE_FORMATS).find(
+        ([, f]) => f === settings.format
+      )?.[0] ?? 'Autre'
+  }
+  if (step.module === 'puzzles') values.themes = [...(settings.themes ?? [])]
+  if (step.module === 'repertoire')
+    values.repertoires = [...(settings.repertoireIds ?? [])]
+  return { moduleId, values }
+}
+
+/**
  * A copy of `list` with the element at `from` moved to `to`.
  *
  * @template T

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository\Training;
 
+use App\Entity\Training\Plan;
 use App\Entity\Training\Session;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -54,5 +55,21 @@ class SessionRepository extends ServiceEntityRepository
     public function findRecentOf(User $user, int $limit): array
     {
         return $this->findBy(['user' => $user], ['startedAt' => 'DESC'], $limit);
+    }
+
+    /**
+     * Whether a session was launched from this plan within [$from, $to).
+     */
+    public function launchedFrom(Plan $plan, \DateTimeImmutable $from, \DateTimeImmutable $to): bool
+    {
+        return null !== $this->createQueryBuilder('s')
+            ->select('1')
+            ->where('s.plan = :plan AND s.startedAt >= :from AND s.startedAt < :to')
+            ->setParameter('plan', $plan->getId(), 'uuid')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

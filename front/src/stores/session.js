@@ -1,17 +1,23 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { repertoireApi, sessionApi, woodpeckerApi } from '@/services/api'
+import { planApi, repertoireApi, woodpeckerApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { apiErrorMessage } from '@/utils/apiError'
 import {
   MODULES_BY_ID,
   defaultValues,
+  fromStep,
   itemIssue,
   move as moveItem,
   sessionMinutes,
   toStep
 } from '@/utils/session/catalog'
+import {
+  normalizeSettings,
+  settingsIssue,
+  settingsPayload
+} from '@/utils/session/plans'
 
 /** Where the draft is kept between visits (this browser only; wiped on sign-out). */
 export const DRAFT_KEY = 'chessmate.session.draft'
@@ -24,6 +30,7 @@ export const DRAFT_KEY = 'chessmate.session.draft'
  * @property {string} title
  * @property {string} description
  * @property {SessionItem[]} items
+ * @property {import('@/utils/session/plans').SessionSettings} settings
  */
 
 /**
@@ -59,7 +66,12 @@ function normalize(module, values) {
 
 /** @returns {Draft} */
 function emptyDraft() {
-  return { title: '', description: '', items: [] }
+  return {
+    title: '',
+    description: '',
+    items: [],
+    settings: normalizeSettings(null)
+  }
 }
 
 /**
@@ -74,6 +86,7 @@ function readDraft() {
     return {
       title: String(saved.title ?? ''),
       description: String(saved.description ?? ''),
+      settings: normalizeSettings(saved.settings),
       items: saved.items
         .filter(
           (/** @type {any} */ item) =>
@@ -93,10 +106,11 @@ function readDraft() {
 }
 
 /**
- * The training session being composed (design "Session Builder"): a title, a goal and an ordered
- * program of configured modules, kept as a draft in localStorage (it stays after a launch, to play
- * it again). The modules' subjects are the user's real data: repertoires, ongoing light set, puzzle
- * themes. Launching sends the program to the API, which freezes it (docs/TRAINING.md).
+ * The training session being composed (design "Session Builder"): a title, a goal, an ordered
+ * program of configured modules and its settings (repetition, reminder...). A new session is a
+ * draft in localStorage until saved; a saved one (`planId`) is edited here without touching that
+ * draft. The modules' subjects are the user's real data: repertoires, ongoing light set, puzzle
+ * themes (docs/TRAINING.md, saved sessions).
  */
 export const useSessionStore = defineStore('session', () => {
   const draft = readDraft()
@@ -104,6 +118,9 @@ export const useSessionStore = defineStore('session', () => {
   const description = ref(draft.description)
   /** @type {import('vue').Ref<SessionItem[]>} */
   const items = ref(draft.items)
+  const settings = ref(draft.settings)
+  /** The saved session being edited; null for a new one (the draft). */
+  const planId = ref(/** @type {string|null} */ (null))
   let lastUid = Math.max(0, ...draft.items.map(i => i.uid))
 
   const totalMinutes = computed(() => sessionMinutes(items.value))
@@ -167,8 +184,10 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   watch(
-    [title, description, items],
+    [title, description, items, settings],
     () => {
+      // A saved session is edited in memory: the draft of a new one stays as it was.
+      if (planId.value) return
       try {
         if (!title.value && !description.value && !items.value.length) {
           localStorage.removeItem(DRAFT_KEY)
@@ -179,7 +198,8 @@ export const useSessionStore = defineStore('session', () => {
           JSON.stringify({
             title: title.value,
             description: description.value,
-            items: items.value
+            items: items.value,
+            settings: settings.value
           })
         )
       } catch {
@@ -192,15 +212,23 @@ export const useSessionStore = defineStore('session', () => {
   watch(
     () => useAuthStore().isAuthenticated,
     signedIn => {
-      if (!signedIn) reset()
+      if (!signedIn) {
+        reset()
+        repertoires.value = []
+        lightSet.value = null
+        subjectsLoaded.value = false
+      }
     }
   )
 
-  /** Every module can be played, as far as the user's data tells. */
-  const canLaunch = computed(
+  const settingsError = computed(() => settingsIssue(settings.value))
+
+  /** Every module can be played, as far as the user's data tells, and the settings hold. */
+  const canSave = computed(
     () =>
       items.value.length > 0 &&
       context.value.loaded &&
+      !settingsError.value &&
       items.value.every(
         item =>
           !itemIssue(MODULES_BY_ID[item.moduleId], item.values, context.value)
@@ -208,16 +236,55 @@ export const useSessionStore = defineStore('session', () => {
   )
 
   /**
-   * Launches the program as a session (its first step is started apart).
+   * Saves the session (creates it, or updates the one being edited). A new one empties the draft
+   * (it now lives in the list of saved sessions) and is then edited as a saved one.
    *
-   * @returns {Promise<import('@/utils/session/steps').TrainingSession>}
+   * @returns {Promise<import('@/utils/session/plans').Plan>}
    */
-  function launch() {
-    return sessionApi.create({
+  async function save() {
+    const payload = {
       title: title.value.trim(),
       description: description.value.trim(),
-      steps: items.value.map(toStep)
+      steps: items.value.map(toStep),
+      ...settingsPayload(settings.value)
+    }
+    if (planId.value) return planApi.update(planId.value, payload)
+    const plan = await planApi.create(payload)
+    reset()
+    edit(plan)
+    return plan
+  }
+
+  /**
+   * Edits a saved session (the draft of a new one is left aside).
+   *
+   * @param {import('@/utils/session/plans').Plan} plan
+   */
+  function edit(plan) {
+    planId.value = plan.id
+    title.value = plan.title
+    description.value = plan.description
+    settings.value = normalizeSettings({
+      ...plan,
+      time: plan.time ?? undefined,
+      weekdays: plan.weekdays.length ? plan.weekdays : undefined
     })
+    items.value = plan.steps.flatMap(step => {
+      const item = fromStep(step)
+      return item ? [{ uid: ++lastUid, ...item }] : []
+    })
+  }
+
+  /** Back to the draft of a new session (after editing a saved one). */
+  function startNew() {
+    if (!planId.value) return
+    planId.value = null
+    const stored = readDraft()
+    title.value = stored.title
+    description.value = stored.description
+    items.value = stored.items
+    settings.value = stored.settings
+    lastUid = Math.max(lastUid, ...stored.items.map(i => i.uid))
   }
 
   /**
@@ -264,13 +331,12 @@ export const useSessionStore = defineStore('session', () => {
 
   /** Empties the draft (and its stored copy). */
   function reset() {
-    repertoires.value = []
-    lightSet.value = null
-    subjectsLoaded.value = false
+    planId.value = null
     const empty = emptyDraft()
     title.value = empty.title
     description.value = empty.description
     items.value = empty.items
+    settings.value = empty.settings
     try {
       localStorage.removeItem(DRAFT_KEY)
     } catch {
@@ -287,8 +353,13 @@ export const useSessionStore = defineStore('session', () => {
     subjectsLoading,
     subjectsError,
     fetchSubjects,
-    canLaunch,
-    launch,
+    settings,
+    settingsError,
+    planId,
+    canSave,
+    save,
+    edit,
+    startNew,
     add,
     update,
     remove,

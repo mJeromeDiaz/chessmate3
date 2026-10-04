@@ -17,10 +17,23 @@ parameters:
     woodpecker.light.growth_batch: 20
     woodpecker.light.growth_threshold: 5
     woodpecker.light.max_puzzles: 1500
+    # Web Push (docs/NOTIFICATIONS.md): the only hosts the server POSTs notifications to (the
+    # browsers' push services). A leading dot allows the subdomains.
+    notification.push.allowed_hosts:
+        - 'fcm.googleapis.com'
+        - 'android.googleapis.com'
+        - 'updates.push.services.mozilla.com'
+        - '.push.apple.com'
+        - '.notify.windows.com'
 
 # Tests and e2e run on ~50 sample puzzles.
 when@test:
     services:
+        # No test ever reaches a push service: a mock by default (answers 200), replaced by tests
+        # that check what is sent (tests/Functional/Notification/PushTestTrait.php).
+        push.client:
+            class: Symfony\Component\HttpClient\MockHttpClient
+            public: true
         # Built by hand in tests (other limits), or used by one service only and inlined otherwise.
         App\Repertoire\RepertoireManager: { autowire: true, public: true }
         App\Repertoire\Graph\GraphEditor: { autowire: true, public: true }
@@ -66,6 +79,13 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+
+    # Web Push requests to the browsers' push services: short timeout, no redirect followed (the
+    # allowed hosts are checked before, App\Notification\Push\EndpointPolicy).
+    push.client:
+        class: Symfony\Contracts\HttpClient\HttpClientInterface
+        factory: ['@http_client', 'withOptions']
+        arguments: [{ timeout: 10, max_redirects: 0 }]
 
     # MySQL cache adapter of the repertoire.explorer_cache pool (config/packages/framework.yaml).
     app.cache.adapter.repertoire_explorer:

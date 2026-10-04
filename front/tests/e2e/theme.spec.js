@@ -32,6 +32,8 @@ test('signed in: the choice is kept on the account and found again on another br
   await signIn(context)
   await page.goto('/#/profile')
   await expect(page.getByTestId('profile-theme')).toBeVisible()
+  // The browser notifications of this device are listed too (state checked with the server).
+  await expect(page.getByTestId('push-state')).not.toHaveText('Vérification…')
 
   const saved = page.waitForResponse(
     r => r.url().endsWith('/api/profile/theme') && r.ok()

@@ -36,6 +36,7 @@
       <template v-else-if="store.isNewUser">
         <WelcomeCard />
         <!-- A first session launched but no exercise logged yet: it can still be resumed. -->
+        <MyPlans hide-empty class="q-mt-md" />
         <RecentSessions hide-empty class="q-mt-md" />
         <ModuleProgress :rows="moduleRows" class="q-mt-md" />
       </template>
@@ -63,6 +64,7 @@
             }}</p>
           </div>
           <WeeklyQuest class="dashboard__quest" />
+          <MyPlans class="dashboard__sessions" />
           <RecentSessions class="dashboard__sessions" />
           <TrophyGrid class="dashboard__trophies" />
         </div>
@@ -101,6 +103,7 @@ import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap.vue'
 import LevelBanner from '@/components/dashboard/LevelBanner.vue'
 import ModuleProgress from '@/components/dashboard/ModuleProgress.vue'
 import RatingCard from '@/components/dashboard/RatingCard.vue'
+import MyPlans from '@/components/dashboard/MyPlans.vue'
 import RecentSessions from '@/components/dashboard/RecentSessions.vue'
 import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
 import TrophyGrid from '@/components/dashboard/TrophyGrid.vue'

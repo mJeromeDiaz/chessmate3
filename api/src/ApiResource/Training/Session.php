@@ -45,6 +45,16 @@ use App\State\Training\SessionProvider;
         ),
         new Get(uriTemplate: '/training/sessions/{id}', requirements: ['id' => Set::UUID_PATTERN], provider: SessionProvider::class),
         new Post(
+            uriTemplate: '/training/plans/{id}/launch',
+            requirements: ['id' => Set::UUID_PATTERN],
+            status: 201,
+            openapi: new Operation(summary: 'Launches a session from a saved one (its first step is started by /training/sessions/{id}/next).'),
+            input: false,
+            read: false,
+            processor: CreateSessionProcessor::class,
+            name: 'training_plan_launch',
+        ),
+        new Post(
             uriTemplate: '/training/sessions/{id}/skip',
             requirements: ['id' => Set::UUID_PATTERN],
             status: 200,
@@ -84,6 +94,8 @@ final class Session
     public ?\DateTimeImmutable $closedAt;
     /** Time played in its runs. */
     public int $durationMs;
+    /** The saved session it was launched from, if any. */
+    public ?string $planId;
     /** @var list<SessionStepView> */
     #[ApiProperty(genId: false)]
     public array $steps;
@@ -106,6 +118,7 @@ final class Session
         $view->startedAt = $session->getStartedAt();
         $view->expiresAt = $session->getExpiresAt();
         $view->closedAt = $session->getClosedAt();
+        $view->planId = $session->getPlan()?->getId()->toRfc4122();
         $view->steps = [];
         $view->durationMs = 0;
         foreach ($session->getSteps() as $i => $step) {

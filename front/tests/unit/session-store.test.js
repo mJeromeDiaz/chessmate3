@@ -5,7 +5,7 @@ import { nextTick } from 'vue'
 const api = vi.hoisted(() => ({
   repertoireApi: { list: vi.fn() },
   woodpeckerApi: { sets: vi.fn() },
-  sessionApi: { create: vi.fn() },
+  planApi: { create: vi.fn(), update: vi.fn() },
   puzzleApi: { themes: vi.fn() }
 }))
 
@@ -183,35 +183,123 @@ describe('session store', () => {
     expect(store.subjectsError).not.toBe('')
   })
 
-  it('launches the program once every module can be played', async () => {
+  it('saves the session once every module and setting is valid', async () => {
     api.repertoireApi.list.mockResolvedValue([])
     api.woodpeckerApi.sets.mockResolvedValue([])
     api.puzzleApi.themes.mockResolvedValue([])
-    api.sessionApi.create.mockResolvedValue({ id: 's1' })
     const store = useSessionStore()
     store.title = ' Mardi '
     store.add('libre', { duree: 10, type: 'Livre', notes: '' })
-    expect(store.canLaunch).toBe(false)
+    expect(store.canSave).toBe(false)
 
     await store.fetchSubjects()
-    expect(store.canLaunch).toBe(true)
+    expect(store.canSave).toBe(true)
     store.add('woodpecker')
-    expect(store.canLaunch).toBe(false)
+    expect(store.canSave).toBe(false)
     store.remove(store.items[1].uid)
+    store.settings.repetition = 'daily'
+    store.settings.weekdays = []
+    expect(store.settingsError).toBe('Choisis au moins un jour.')
+    expect(store.canSave).toBe(false)
+    store.settings.weekdays = [2, 4]
+    store.settings.reminderEnabled = true
 
-    expect(await store.launch()).toEqual({ id: 's1' })
-    expect(api.sessionApi.create).toHaveBeenCalledWith({
+    const saved = {
+      id: 'p1',
       title: 'Mardi',
       description: '',
       steps: [
-        {
-          module: 'free',
-          minutes: 10,
-          notes: '',
-          settings: { format: 'book' }
-        }
-      ]
+        { module: 'free', minutes: 10, notes: '', settings: { format: 'book' } }
+      ],
+      repetition: 'daily',
+      time: '18:30',
+      weekdays: [2, 4],
+      public: false,
+      reminderEnabled: true,
+      reminderChannels: ['email'],
+      reminderMinutes: 30,
+      calendarEnabled: false
+    }
+    api.planApi.create.mockResolvedValue(saved)
+    expect(await store.save()).toEqual(saved)
+    expect(api.planApi.create).toHaveBeenCalledWith({
+      title: 'Mardi',
+      description: '',
+      steps: [
+        { module: 'free', minutes: 10, notes: '', settings: { format: 'book' } }
+      ],
+      repetition: 'daily',
+      time: '18:30',
+      weekdays: [2, 4],
+      public: false,
+      reminderEnabled: true,
+      reminderChannels: ['email'],
+      reminderMinutes: 30,
+      calendarEnabled: false
     })
+    // Saved: the draft is emptied, the session is now edited as a saved one.
+    await nextTick()
+    expect(stored()).toBeNull()
+    expect(store.planId).toBe('p1')
+    expect(store.items.map(i => i.moduleId)).toEqual(['libre'])
+
+    api.planApi.update.mockResolvedValue(saved)
+    store.title = 'Mardi soir'
+    await store.save()
+    expect(api.planApi.update).toHaveBeenCalledWith(
+      'p1',
+      expect.objectContaining({ title: 'Mardi soir' })
+    )
+  })
+
+  it('edits a saved session without touching the draft of a new one', async () => {
+    const store = useSessionStore()
+    store.title = 'Brouillon'
+    store.add('libre')
+    await nextTick()
+
+    store.edit({
+      id: 'p2',
+      title: 'Enregistrée',
+      description: 'But',
+      steps: [
+        {
+          module: 'puzzles',
+          minutes: 15,
+          notes: 'n',
+          settings: { themes: ['fork'] }
+        },
+        { module: 'chess960', minutes: 5, notes: '', settings: {} }
+      ],
+      repetition: 'weekly',
+      time: '07:00',
+      weekdays: [2],
+      public: true,
+      reminderEnabled: false,
+      reminderChannels: [],
+      reminderMinutes: 60,
+      calendarEnabled: true
+    })
+    await nextTick()
+
+    expect(store.items).toHaveLength(1)
+    expect(store.items[0]).toMatchObject({
+      moduleId: 'puzzles',
+      values: { duree: 15, themes: ['fork'], notes: 'n' }
+    })
+    expect(store.settings).toMatchObject({
+      repetition: 'weekly',
+      time: '07:00',
+      weekdays: [2],
+      public: true,
+      calendarEnabled: true
+    })
+    expect(stored().title).toBe('Brouillon')
+
+    store.startNew()
+    expect(store.planId).toBeNull()
+    expect(store.title).toBe('Brouillon')
+    expect(store.items.map(i => i.moduleId)).toEqual(['libre'])
   })
 
   it('survives a corrupt draft', () => {

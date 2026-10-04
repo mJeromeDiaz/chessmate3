@@ -241,7 +241,8 @@ Aucun secret dans le dépôt. `.env` ne contient que des valeurs par défaut non
 emplacements vides ; les vraies valeurs vont dans `.env.local` (non versionné) ou dans Symfony Secrets
 (`bin/console secrets:set`) en production. Voir `.env.example`. Secrets : `APP_SECRET` (signatures,
 HMAC des codes 2FA), `JWT_PASSPHRASE` + paire de clés RSA (`config/jwt/*.pem`, ignorés par git),
-`OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_TOKEN_ENCRYPTION_KEY`, identifiants SMTP et base de données.
+`OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_TOKEN_ENCRYPTION_KEY`, `VAPID_PRIVATE_KEY` (Web Push),
+identifiants SMTP et base de données.
 
 ## 3. Risques résiduels acceptés
 
@@ -543,3 +544,28 @@ Par utilisateur : `training_run_start` (30 / h), `training_item_next` et `traini
   limite des séances (`training_run_start`).
 - Une seule session active par utilisateur (index unique sur colonne générée) ; une étape ne contourne
   aucune règle des séances (une seule séance active, temps serveur, intégrité du classement).
+- Sessions enregistrées : propriétaire seul (404 sinon, testé) ; 50 par utilisateur, 120 écritures par
+  heure (`training_plan_write`) ; réglages en liste blanche (`PlanSettings` : répétition, heure
+  `HH:MM`, jours 1–7 distincts, canaux `email` / `push`, délais 10 / 30 / 60 / 1 440 min). Le drapeau
+  `public` n'expose encore rien.
+
+### 8.7 Notifications (Web Push, rappels)
+
+Détail : [NOTIFICATIONS.md](NOTIFICATIONS.md).
+
+- **SSRF** : le serveur n'envoie de requêtes qu'aux services push des navigateurs (liste blanche
+  d'hôtes, HTTPS 443, sans identifiants dans l'URL), client sans redirection et à délai court ;
+  vérifié à l'abonnement **et** à l'envoi (testé, dont `169.254.169.254`, `localhost`, suffixes
+  trompeurs).
+- Clé privée VAPID : un secret (Symfony Secrets en production) ; la clé publique est exposée.
+- Un abonnement appartient au compte connecté sur ce navigateur ; un autre compte ne peut ni le
+  lire ni le retirer ; notifications envoyées aux seuls navigateurs du propriétaire du plan (testé).
+- Contenu chiffré de bout en bout pour le navigateur (le service push ne le lit pas) ; il ne
+  contient que le titre de la session et l'heure.
+- Rappels : un envoi par occurrence (unicité en base), emails seulement vers une adresse vérifiée.
+- Limites : 60 opérations d'abonnement par heure (`notification_push`), 10 navigateurs par compte.
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R25 | Le titre de la session part chez le service push du navigateur (chiffré) et dans l'email. | Choisi par l'utilisateur, sans donnée sensible ; le push est chiffré pour le seul navigateur. |
+| R26 | Cron arrêté : pas de rappel (au-delà de 15 min de retard, il est abandonné). | Choix validé ; à superviser en production comme le worker. |

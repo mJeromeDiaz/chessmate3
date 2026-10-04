@@ -14,7 +14,8 @@ Chess training app (Duolingo-style). One git repository (monorepo) at the root:
   (classic and light modes), `TRAINING.md` (timed runs, module contract), `REPERTOIRE.md`
   (opening repertoires: normalized FEN, graph, one prepared move per position, trash, segments,
   editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics), `DASHBOARD.md`
-  (home dashboard: endpoints, local days, Lichess rating history, showcase values). Code paths quoted in them (`src/...`, `config/...`,
+  (home dashboard: endpoints, local days, Lichess rating history, showcase values), `NOTIFICATIONS.md`
+  (Web Push, VAPID keys, session reminders and their cron). Code paths quoted in them (`src/...`, `config/...`,
   `bin/console`) are relative to `api/` unless they name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
@@ -31,7 +32,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard today) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification today) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
 
 | Layer | Location |
@@ -75,6 +76,8 @@ bin/console app:puzzle:rebuild-selection             # after a puzzle import or 
 bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
 bin/console app:repertoire:sync-openings             # load/update the opening names (data/chess-openings, ~9 s; fixtures do it too)
 bin/console cache:pool:prune                         # daily cron: expired Lichess explorer/cloud-eval answers
+bin/console app:training:send-reminders              # cron every minute: reminders of saved sessions (docs/NOTIFICATIONS.md)
+bin/console app:notification:vapid-keys              # once per environment: Web Push key pair (private key = secret)
 bin/console messenger:consume activity async         # worker: domain events (outbox), emails, big repertoire imports
 ```
 
@@ -104,6 +107,10 @@ no other environment. PHP's built-in server needs `-d variables_order=EGPCS` to 
 - Services only used by one other service are inlined, and unused ones removed, from the test
   container: tests that fetch them directly need them public under `when@test` (`config/services.yaml`).
 - API Platform drops `null` fields by default: resources set `skip_null_values: false`.
+- API Platform's resource metadata is cached in `test` and `e2e`: after adding a property or an
+  operation, `bin/console cache:clear --env=test` (and `--env=e2e`), or the field is missing.
+- Tests never reach a push service (`push.client` is a `MockHttpClient` under `when@test`); a test
+  that replaces it calls `$client->disableReboot()` first (a kernel reboot brings the original back).
 - MySQL `SET @a = 1, @b = @a + 1` evaluates `@b` with the old `@a`: use separate statements.
 - MySQL collations ignore case (and accents) by default: a column holding a FEN, moves, a Lichess id
   or any case-sensitive identifier or digest uses `ascii_bin` (or `utf8mb4_bin`), e.g.

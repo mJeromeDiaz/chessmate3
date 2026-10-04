@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Training\Session;
 
 use App\Activity\EventPublisher;
+use App\Entity\Training\Plan;
 use App\Entity\Training\Run;
 use App\Entity\Training\Session;
 use App\Entity\User;
@@ -24,8 +25,6 @@ use App\Training\Exception\StepBlockedException;
 use App\Training\Exception\StepRunningException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
-use App\Training\Module\ModuleRegistry;
-use App\Training\Module\PreparedStep;
 use App\Training\Run\TimeboxRunner;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -50,7 +49,7 @@ final class SessionManager
         private readonly EntityManagerInterface $entityManager,
         private readonly SessionRepository $sessions,
         private readonly RunRepository $runs,
-        private readonly ModuleRegistry $modules,
+        private readonly StepChecker $checker,
         private readonly TimeboxRunner $runner,
         private readonly EventPublisher $events,
         private readonly ClockInterface $clock,
@@ -65,18 +64,9 @@ final class SessionManager
      * @throws InvalidSessionException    a step is invalid (its number in the message)
      * @throws SessionInProgressException
      */
-    public function create(User $user, string $title, string $description, array $steps): Session
+    public function create(User $user, string $title, string $description, array $steps, ?Plan $plan = null): Session
     {
-        foreach ($steps as $i => $step) {
-            if ($step['minutes'] < 1 || $step['minutes'] * 60 > TimeboxRunner::MAX_BUDGET_SECONDS) {
-                throw new InvalidSessionException(sprintf('Step %d: 1 to %d minutes.', $i + 1, intdiv(TimeboxRunner::MAX_BUDGET_SECONDS, 60)));
-            }
-            try {
-                $this->prepare($user, $step['module'], $step['settings'], $step['notes']);
-            } catch (InvalidRunConfigException|SubjectNotFoundException|SubjectUnavailableException $e) {
-                throw new InvalidSessionException(sprintf('Step %d: %s', $i + 1, $e->getMessage() ?: 'subject not found.'), 0, $e);
-            }
-        }
+        $this->checker->check($user, $steps, true);
         $this->closeStale($user);
 
         $now = $this->now();
@@ -84,11 +74,11 @@ final class SessionManager
         $endOfDay = $now->setTimezone($timezone)->modify('tomorrow')->setTimezone(new \DateTimeZone('UTC'));
 
         try {
-            $created = $this->entityManager->wrapInTransaction(function () use ($user, $title, $description, $steps, $now, $endOfDay): ?Session {
+            $created = $this->entityManager->wrapInTransaction(function () use ($user, $title, $description, $steps, $now, $endOfDay, $plan): ?Session {
                 if (null !== $this->sessions->findActiveOf($user)) {
                     return null;
                 }
-                $session = new Session($user, $title, $description, $steps, $now, $endOfDay);
+                $session = new Session($user, $title, $description, $steps, $now, $endOfDay, $plan);
                 $this->entityManager->persist($session);
                 // The unique index on active_user_id rejects a concurrent second launch here.
                 $this->entityManager->flush();
@@ -156,7 +146,7 @@ final class SessionManager
         $module = Module::from($step['module']);
 
         try {
-            $prepared = $this->prepare($user, $module, $step['settings'], $step['notes']);
+            $prepared = $this->checker->prepare($user, $module, $step['settings'], $step['notes']);
             $run = $this->runner->start($user, $module, $prepared->subjectId, $step['minutes'] * 60, $prepared->config, $session->getId());
         } catch (SubjectUnavailableException $e) {
             $reason = \is_string($e->context['reason'] ?? null) ? $e->context['reason'] : $e->reason->value;
@@ -334,18 +324,6 @@ final class SessionManager
             startedAt: $session->getStartedAt(),
             occurredAt: $now,
         ));
-    }
-
-    /**
-     * @param array<string, mixed> $settings
-     *
-     * @throws InvalidRunConfigException
-     * @throws SubjectNotFoundException
-     * @throws SubjectUnavailableException
-     */
-    private function prepare(User $user, Module $module, array $settings, string $notes): PreparedStep
-    {
-        return $this->modules->for($module)->prepare($user, $settings, $notes);
     }
 
     private function now(): \DateTimeImmutable

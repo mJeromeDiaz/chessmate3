@@ -1,0 +1,10 @@
+Bonjour,
+
+Rappel : « {{ title }} » commence {{ when }} ({{ totalMinutes }} min).
+
+{% for step in steps %}- {{ step.label }} · {{ step.minutes }} min
+{% endfor %}
+Lance-la depuis Mes sessions :
+{{ url }}
+
+Pour ne plus recevoir ce rappel, désactive-le dans les paramètres de la session.

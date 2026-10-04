@@ -28,6 +28,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\UniqueConstraint(name: 'uniq_training_session_active_user', columns: ['active_user_id'])]
 #[ORM\Index(name: 'idx_training_session_user_started', columns: ['user_id', 'started_at'])]
 #[ORM\Index(name: 'idx_training_session_user', columns: ['user_id'])]
+#[ORM\Index(name: 'idx_training_session_plan', columns: ['plan_id'])]
 class Session
 {
     public const MAX_STEPS = 10;
@@ -77,10 +78,15 @@ class Session
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $closedAt = null;
 
+    /** The saved session it was launched from, if any (set to NULL when that plan is deleted). */
+    #[ORM\ManyToOne(targetEntity: Plan::class)]
+    #[ORM\JoinColumn(name: 'plan_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Plan $plan = null;
+
     /**
      * @param list<array{module: Module, minutes: int, notes: string, settings: array<string, mixed>}> $steps
      */
-    public function __construct(User $user, string $title, string $description, array $steps, \DateTimeImmutable $startedAt, \DateTimeImmutable $expiresAt)
+    public function __construct(User $user, string $title, string $description, array $steps, \DateTimeImmutable $startedAt, \DateTimeImmutable $expiresAt, ?Plan $plan = null)
     {
         if ([] === $steps || \count($steps) > self::MAX_STEPS) {
             throw new \InvalidArgumentException(sprintf('A session has 1 to %d steps.', self::MAX_STEPS));
@@ -100,6 +106,12 @@ class Session
         ], $steps);
         $this->startedAt = $startedAt;
         $this->expiresAt = $expiresAt;
+        $this->plan = $plan;
+    }
+
+    public function getPlan(): ?Plan
+    {
+        return $this->plan;
     }
 
     public function getId(): Uuid

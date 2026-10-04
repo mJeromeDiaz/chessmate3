@@ -130,6 +130,14 @@ framework:
             policy: sliding_window
             limit: 20
             interval: '1 hour'
+        training_plan_write:
+            policy: sliding_window
+            limit: 120
+            interval: '1 hour'
+        notification_push:
+            policy: sliding_window
+            limit: 60
+            interval: '1 hour'
         training_item_next:
             policy: sliding_window
             limit: 600

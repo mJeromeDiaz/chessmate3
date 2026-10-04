@@ -278,3 +278,48 @@ Réglages d'une étape, vérifiés par le module au lancement **et** au démarra
 `shortName` : `TrainingSession`, `TrainingSessionLaunch` ; `requirements` UUID ; routes sœurs dans
 `RoutingTest`. Tests : `tests/Functional/Training/SessionTest.php`, `tests/unit/session-steps.test.js`,
 `tests/e2e/session-play.spec.js`.
+
+## 10. Sessions enregistrées (plans)
+
+Une session se **compose et s'enregistre** (`App\Entity\Training\Plan`, table
+`training_session_plan`) : programme et réglages. On la lance depuis « Mes sessions » (`/session`),
+le bloc « Mes sessions » du tableau de bord ou le constructeur (« Enregistrer et lancer ») ; chaque
+lancement crée une **session jouée** (§ 9) avec une copie figée du programme et `plan_id`.
+
+Règles validées (2026-10-04) :
+
+- Répétition : **À la demande** (aucun horaire : lancée depuis la liste), **Quotidienne** (une heure,
+  les jours cochés, tous par défaut), **Hebdomadaire** (un jour, une heure). L'heure est locale (fuseau
+  de l'utilisateur) ; `App\Training\Plan\Schedule` calcule la prochaine occurrence (`nextAt`, UTC),
+  changements d'heure compris (une heure sautée au printemps tombe juste après le saut).
+- **Publique / privée** : un simple drapeau pour l'instant (future fonction communautaire).
+- **Rappel** (email et/ou navigateur, 10 min, 30 min, 1 h ou 1 jour avant), envoyé par
+  `app:training:send-reminders` (cron chaque minute) : voir [NOTIFICATIONS.md](NOTIFICATIONS.md).
+  **Calendrier** : réglage enregistré, flux iCal au lot suivant. Sans horaire (à la demande), ni
+  rappel ni calendrier.
+- Modifier ou supprimer une session enregistrée ne change que l'avenir : les sessions jouées gardent
+  leur programme, et leur `plan_id` passe à `NULL` (clé `ON DELETE SET NULL`).
+- À l'enregistrement, chaque étape est vérifiée par son module (réglages, sujet existant) **sans**
+  exiger qu'elle soit jouable maintenant (un set light en pause est accepté) ; au lancement, oui
+  (`StepChecker`, 422 avec le numéro de l'étape).
+- 50 sessions enregistrées par utilisateur au plus (409 au-delà).
+
+| Couche | Emplacement |
+|---|---|
+| Entité, enum | `App\Entity\Training\Plan`, `App\Enum\Training\Repetition` |
+| Service | `App\Training\Plan\{PlanManager, PlanSettings, Schedule}`, `App\Training\Session\StepChecker` |
+| API | `App\ApiResource\Training\{Plan, PlanInput}`, `App\State\Training\{PlanProvider, PlanProcessor}`, lancement dans `CreateSessionProcessor` |
+| Front | `services/api.js` (`planApi`), `stores/session.js` (`settings`, `planId`, `save`, `edit`, `startNew`), `utils/session/plans.js`, `components/session/{SessionBuilder, SessionSettings}.vue`, `composables/session/usePlanLaunch.js`, `pages/index/session/{index, new}.vue`, `pages/index/session/plans/[id].vue`, `components/dashboard/MyPlans.vue` |
+
+| Endpoint | Rôle | Erreurs |
+|---|---|---|
+| `GET /training/plans` | Les sessions enregistrées, dernière modifiée d'abord, avec `nextAt` | — |
+| `POST /training/plans` | `{title, description, steps, repetition, time, weekdays, public, reminderEnabled, reminderChannels, reminderMinutes, calendarEnabled}` (120 écritures par heure) | 409 trop de sessions, 422 |
+| `GET` / `PUT` / `DELETE /training/plans/{id}` | Lire, remplacer, supprimer | 404, 422 |
+| `POST /training/plans/{id}/launch` | Lance une session jouée (201, vue `TrainingSession`) ; son premier module démarre par `/training/sessions/{id}/next` | 404, 409 session en cours, 422 module injouable |
+
+Constructeur : un nouveau brouillon reste dans le navigateur jusqu'à « Enregistrer » ; une fois
+enregistré, il est vidé et la session se modifie sur `/session/plans/:id` (le brouillon d'une
+nouvelle session n'est pas touché). Tests : `tests/Unit/Training/ScheduleTest.php`,
+`tests/Functional/Training/PlanTest.php`, `tests/unit/session-plans.test.js`,
+`tests/e2e/session-play.spec.js`.

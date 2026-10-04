@@ -101,12 +101,13 @@ test('a session can be resumed, a module passed and the session abandoned', asyn
     'Passé'
   )
 
-  // A second launch while this one is on: resume it or abandon it.
-  await page.goto('/#/session/new')
-  await page.getByTestId('session-launch').click()
-  await expect(page.getByTestId('session-in-progress')).toBeVisible()
+  // Launched again from the saved sessions while it is on: resume it or abandon it.
+  await page.goto('/#/session')
+  await expect(page.getByTestId('plans-current')).toBeVisible()
+  await page.getByTestId('plan-launch').click()
+  await expect(page.getByTestId('plans-in-progress')).toBeVisible()
   await page
-    .getByTestId('session-in-progress')
+    .getByTestId('plans-in-progress')
     .getByRole('link', { name: 'La reprendre' })
     .click()
 
@@ -115,5 +116,80 @@ test('a session can be resumed, a module passed and the session abandoned', asyn
   await expect(page.getByTestId('session-status')).toHaveText('Abandonnée')
   await expect(page.getByTestId('session-step-status').nth(2)).toHaveText(
     'Non joué'
+  )
+})
+
+test('saved sessions: settings kept, listed, edited, launched from the dashboard, deleted', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/session/new')
+  await page.getByTestId('session-title').fill('Soirs de semaine')
+  await addModule(page, 'libre', 10)
+
+  const settings = page.getByTestId('session-settings')
+  await settings.getByTestId('repetition-daily').click()
+  await settings.getByTestId('session-time').fill('18:30')
+  for (const day of [6, 7]) await settings.getByTestId(`weekday-${day}`).click()
+  await settings.getByTestId('visibility-public').click()
+  await settings.getByTestId('reminder-toggle').click()
+  await settings.getByTestId('reminder-push').click()
+  // Browser reminders need this device subscribed: offered right there.
+  await expect(settings.getByTestId('push-toggle')).toBeVisible()
+  await expect(settings.getByTestId('push-state')).not.toHaveText(
+    'Vérification…'
+  )
+  await settings.getByTestId('reminder-delay-10').click()
+  await settings.getByTestId('calendar-toggle').click()
+
+  await page.getByTestId('session-save').click()
+  await expect(page).toHaveURL(/#\/session$/)
+  const card = page.getByTestId('plan-card')
+  await expect(card).toHaveCount(1)
+  await expect(card).toContainText('Soirs de semaine')
+  await expect(card).toContainText('Publique')
+  await expect(card.getByTestId('plan-repetition')).toHaveText(
+    'En semaine à 18:30'
+  )
+  await expect(card).toContainText('10 min avant · email, navigateur')
+  await expect(card).toContainText('Calendrier')
+  await expect(card).toContainText('Prochaine : ')
+
+  // The draft of a new session is empty again; the saved one is edited in the builder.
+  await page.goto('/#/session/new')
+  await expect(page.getByTestId('session-empty')).toBeVisible()
+  await page.goto('/#/session')
+  await card.getByTestId('plan-edit').click()
+  await expect(page).toHaveURL(/#\/session\/plans\/[^/]+$/)
+  await expect(page.getByTestId('session-title')).toHaveValue(
+    'Soirs de semaine'
+  )
+  await expect(page.getByTestId('weekday-6')).toHaveAttribute(
+    'aria-pressed',
+    'false'
+  )
+  await page.getByTestId('repetition-on_demand').click()
+  await page.getByTestId('session-save').click()
+  await expect(card.getByTestId('plan-repetition')).toHaveText('À la demande')
+  await expect(card).not.toContainText('Prochaine')
+
+  // Launched from the dashboard block.
+  await page.goto('/#/')
+  const row = page.getByTestId('my-plan').first()
+  await expect(row).toContainText('Soirs de semaine')
+  await row.getByTestId('my-plan-launch').click()
+  await expect(page.getByTestId('free-run')).toBeVisible()
+  await stopRun(page)
+  await page.getByTestId('session-open').click()
+  await expect(page.getByTestId('session-status')).toHaveText('Terminée')
+
+  // Deleted: the played session stays in the history.
+  await page.goto('/#/session')
+  await card.getByTestId('plan-delete').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(page.getByTestId('plans-empty')).toBeVisible()
+  await expect(page.getByTestId('recent-session').first()).toContainText(
+    'Soirs de semaine'
   )
 })

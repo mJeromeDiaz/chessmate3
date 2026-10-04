@@ -29,6 +29,8 @@ framework:
             # Big repertoire imports: analysis and application (docs/REPERTOIRE.md, "Import").
             'App\Repertoire\Import\Message\AnalyzeImport': async
             'App\Repertoire\Import\Message\ApplyImport': async
+            # Reminders of saved sessions: email and Web Push (docs/TRAINING.md).
+            'App\Training\Plan\Reminder\SessionReminderDue': async
             # Domain events of every exercise and milestone (docs/ACTIVITY.md).
             'App\Activity\Event\DomainEventInterface': activity
 

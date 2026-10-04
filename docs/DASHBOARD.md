@@ -61,6 +61,7 @@ d'agrégats (et leur commande de recalcul) arriveront au lot B si une mesure les
 | Heatmap « Régularité », 12 semaines | Réelle : une colonne par semaine, lundi en haut, aujourd'hui cerclé, jours futurs vides ; teintes à 1, 5, 10 et 20 exercices |
 | Défi de la semaine (Lizy) | **Aperçu** |
 | Progression par module | Ligne réelle (puzzles résolus et classement ; cycle Woodpecker en cours ; coups de répertoire, dus, réussite sur 30 j) et barre réelle (taux de réussite, avancement du cycle, réussite sur 30 j) ; « Niv. » en **aperçu** ; Finales, Évaluation, Analyse : « Bientôt » |
+| Mes sessions | Réelles (`GET /api/training/plans`) : les 3 prochaines (puis celles à la demande) avec « Lancer » ; « Toutes → » mène à `/session` ([TRAINING.md § 10](TRAINING.md#10-sessions-enregistrées-plans)) |
 | Dernières sessions | Réelles (`GET /api/training/sessions`, 5 dernières) : titre, jour, modules faits / programme, temps joué, statut ; « Reprendre → » sur la session du jour. Un nouvel utilisateur la voit sous la carte d'accueil dès sa première session ([TRAINING.md § 9](TRAINING.md#9-sessions)) |
 | Trophées | **Aperçu** |
 

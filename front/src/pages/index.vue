@@ -10,7 +10,7 @@
 
         <template v-if="auth.isAuthenticated">
           <RatingBadge class="gt-xs" />
-          <q-btn flat no-caps to="/session/new" label="Session" />
+          <q-btn flat no-caps to="/session" label="Sessions" />
           <q-btn flat no-caps to="/puzzle" label="Puzzles" />
           <q-btn flat no-caps to="/woodpecker" label="Woodpecker" />
           <q-btn flat no-caps to="/repertoire" label="Répertoires" />

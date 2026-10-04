@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+    <body style="font-family: sans-serif;">
+        <p>Bonjour,</p>
+        <p>Rappel : <strong>« {{ title }} »</strong> commence {{ when }} ({{ totalMinutes }} min).</p>
+        <ul>
+            {% for step in steps %}<li>{{ step.label }} · {{ step.minutes }} min</li>{% endfor %}
+        </ul>
+        <p><a href="{{ url }}">Lance-la depuis Mes sessions</a></p>
+        <p style="color: #6e6a80; font-size: 13px;">Pour ne plus recevoir ce rappel, désactive-le dans les paramètres de la session.</p>
+    </body>
+</html>

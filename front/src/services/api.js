@@ -319,6 +319,59 @@ export const sessionApi = {
       .then(r => r.data)
 }
 
+/** Web Push for this browser (docs/NOTIFICATIONS.md). */
+export const notificationApi = {
+  /** `{enabled, publicKey}`: whether the server sends browser notifications. */
+  pushConfig: () =>
+    http.get('/api/notifications/push', JSON_LD).then(r => r.data),
+  /** @param {{endpoint: string, keys: {p256dh: string, auth: string}}} subscription */
+  subscribe: subscription =>
+    http
+      .post('/api/notifications/push/subscriptions', subscription, JSON_LD)
+      .then(r => r.data),
+  /** @param {string} endpoint */
+  status: endpoint =>
+    http
+      .post(
+        '/api/notifications/push/subscription-status',
+        { endpoint },
+        JSON_LD
+      )
+      .then(r => r.data.subscribed === true),
+  /** @param {string} endpoint */
+  unsubscribe: endpoint =>
+    http
+      .post('/api/notifications/push/unsubscribe', { endpoint }, JSON_LD)
+      .then(r => r.data)
+}
+
+/** Saved training sessions: program and settings, launched on demand (docs/TRAINING.md). */
+export const planApi = {
+  list: () => http.get('/api/training/plans', JSON_LD).then(r => r.data.member),
+  get: id =>
+    http
+      .get(`/api/training/plans/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /** @param {Record<string, any>} payload see docs/TRAINING.md, saved sessions */
+  create: payload =>
+    http.post('/api/training/plans', payload, JSON_LD).then(r => r.data),
+  update: (id, payload) =>
+    http
+      .put(`/api/training/plans/${encodeURIComponent(id)}`, payload, JSON_LD)
+      .then(r => r.data),
+  remove: id =>
+    http.delete(`/api/training/plans/${encodeURIComponent(id)}`, JSON_LD),
+  /** Launches a played session from it (its first step is started by sessionApi.next). */
+  launch: id =>
+    http
+      .post(
+        `/api/training/plans/${encodeURIComponent(id)}/launch`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data)
+}
+
 /** Opening repertoires (docs/REPERTOIRE.md). Changes answer a delta (RepertoireChange). */
 export const repertoireApi = {
   list: () => http.get('/api/repertoires', JSON_LD).then(r => r.data.member),
