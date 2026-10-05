@@ -34,4 +34,28 @@ final class UserAgentSummarizerTest extends TestCase
     {
         self::assertSame($expected, (new UserAgentSummarizer())->summarize($userAgent));
     }
+
+    /**
+     * @return iterable<string, array{?string, array{browser: ?string, os: ?string, form: ?string}}>
+     */
+    public static function descriptions(): iterable
+    {
+        yield 'no header' => [null, ['browser' => null, 'os' => null, 'form' => null]];
+        yield 'chrome macos' => ['Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36', ['browser' => 'Chrome', 'os' => 'macOS', 'form' => 'desktop']];
+        yield 'safari iphone' => ['Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1', ['browser' => 'Safari', 'os' => 'iOS', 'form' => 'phone']];
+        // iPad UAs say "Mobile" too: still a tablet.
+        yield 'chrome ipad' => ['Mozilla/5.0 (iPad; CPU OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/128.0.6613.98 Mobile/15E148 Safari/604.1', ['browser' => 'Chrome', 'os' => 'iOS', 'form' => 'tablet']];
+        yield 'android phone' => ['Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36', ['browser' => 'Chrome', 'os' => 'Android', 'form' => 'phone']];
+        yield 'android tablet' => ['Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36', ['browser' => 'Chrome', 'os' => 'Android', 'form' => 'tablet']];
+        yield 'unknown client' => ['curl/8.5.0', ['browser' => null, 'os' => null, 'form' => 'desktop']];
+    }
+
+    /**
+     * @param array{browser: ?string, os: ?string, form: ?string} $expected
+     */
+    #[DataProvider('descriptions')]
+    public function testDescribe(?string $userAgent, array $expected): void
+    {
+        self::assertSame($expected, (new UserAgentSummarizer())->describe($userAgent));
+    }
 }

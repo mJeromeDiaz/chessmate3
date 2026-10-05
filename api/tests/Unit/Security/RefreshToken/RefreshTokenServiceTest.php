@@ -62,6 +62,7 @@ final class RefreshTokenServiceTest extends TestCase
             $this->repository,
             $this->userRepository,
             new AuditLogger($this->createStub(AuditLogEntryRepository::class), new RequestStack(), new NullLogger()),
+            new RequestStack(),
             self::IDLE_TTL,
             self::ABSOLUTE_TTL,
         );

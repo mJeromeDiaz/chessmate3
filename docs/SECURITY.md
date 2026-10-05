@@ -57,6 +57,10 @@ compromission du compte Google/Lichess lui-même.
 - **Ajout d'un mot de passe avec une adresse déjà prise** (compte Lichess) : réponse identique ;
   rien ne change sur le compte ; le propriétaire de l'adresse reçoit un email d'information.
 - Le rate limiter renvoie un 429 identique quel que soit le limiteur (IP ou identifiant) qui a sauté.
+- **Pseudo du profil** (`@handle`) : `GET /api/profile/handle-availability` dit si un pseudo est
+  pris. C'est voulu : le pseudo est un identifiant public, jamais un moyen de connexion, et il ne
+  révèle ni l'email ni l'existence d'un compte pour une adresse. Réservé aux utilisateurs connectés,
+  120 vérifications / 10 min par compte.
 
 ### 2.3 2FA par code email
 
@@ -458,6 +462,22 @@ Woodpecker ne sont pas classées : l'enjeu est surtout le cloisonnement, la fiab
   autrement que par `DateTimeZone`.
 - `PUT /api/profile/theme` : valeur limitée à l'enum `Theme` (`auto`, `light`, `dark`) ; la copie
   locale (`localStorage`) est relue avec la même liste blanche.
+- `PUT /api/profile/info` : nom affiché ≤ 40 caractères sans caractère de contrôle (affiché par Vue,
+  donc échappé) ; pseudo `^[a-z0-9_]{3,20}$` après mise en minuscules, hors liste de noms réservés
+  (`admin`, `support`, `chessmate`…, `HandleChecker`), unique (index `uniq_user_handle`, colonne
+  `ascii_bin` : deux demandes simultanées ⇒ la seconde reçoit 409) ; avatar limité à l'enum
+  `Avatar`. 30 écritures / heure par compte.
+- **Sessions actives** (`/api/auth/sessions`) : chaque refresh token garde le User-Agent et l'IP de
+  la requête qui l'a émis (connexion ou refresh) ainsi que l'heure de connexion de sa famille.
+  L'API ne renvoie que l'IP **anonymisée** (`IpUtils::anonymize` : dernier octet IPv4, 80 derniers
+  bits IPv6 à zéro) et un résumé du navigateur, jamais le User-Agent brut. Ces données disparaissent
+  avec la ligne (purge des tokens expirés, § 4). Fermer une session est limité à son propre compte
+  (filtre `username` dans l'UPDATE : une famille d'un autre ⇒ 404, sans dire qu'elle existe) et
+  refusé pour la session courante. Un refresh présenté ensuite par l'appareil fermé est traité comme
+  un rejeu (famille déjà révoquée), comme après une déconnexion.
+- `PUT /api/profile/preferences` : couleur d'échiquier limitée à l'enum `BoardTheme`, booléens
+  stricts ; même limite d'écriture. Le profil est **privé par défaut** (`publicProfile = false`) et
+  ce drapeau n'ouvre encore rien : toute future page publique devra le vérifier côté serveur.
 
 ### 7.3 Événements et journal
 

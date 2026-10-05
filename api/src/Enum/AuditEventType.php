@@ -29,4 +29,5 @@ enum AuditEventType: string
     case OauthLoginSuccess = 'oauth_login_success';
     case OauthLoginFailure = 'oauth_login_failure';
     case Logout = 'logout';
+    case SessionRevoked = 'session_revoked';
 }

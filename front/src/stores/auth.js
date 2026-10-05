@@ -173,6 +173,40 @@ export const useAuthStore = defineStore('auth', () => {
     return profile.value
   }
 
+  /**
+   * Saves the display name, handle and avatar shown on the profile.
+   *
+   * @param {{displayName: string|null, handle: string|null, avatar: string|null}} info
+   */
+  async function setInfo(info) {
+    profile.value = await profileApi.setInfo(info)
+    return profile.value
+  }
+
+  /**
+   * Changes some of the profile's preferences. Applied at once (boards follow the profile), put
+   * back if the API refuses.
+   *
+   * @param {Partial<{boardTheme: string, moveSound: boolean, publicProfile: boolean}>} changes
+   */
+  async function setPreferences(changes) {
+    const before = profile.value
+    const next = {
+      boardTheme: before.boardTheme,
+      moveSound: before.moveSound,
+      publicProfile: before.publicProfile,
+      ...changes
+    }
+    profile.value = { ...before, ...next }
+    try {
+      profile.value = await profileApi.setPreferences(next)
+    } catch (e) {
+      profile.value = before
+      throw e
+    }
+    return profile.value
+  }
+
   /** @param {string} timezone IANA identifier */
   async function setTimezone(timezone) {
     profile.value = await profileApi.setTimezone(timezone)
@@ -257,6 +291,8 @@ export const useAuthStore = defineStore('auth', () => {
     clearSession,
     fetchProfile,
     setTimezone,
+    setInfo,
+    setPreferences,
     startSession,
     changePassword,
     addPassword,

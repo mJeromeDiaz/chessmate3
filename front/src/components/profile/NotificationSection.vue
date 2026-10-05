@@ -1,14 +1,12 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="text-subtitle1">Notifications du navigateur</div>
-      <p class="text-caption text-grey q-mb-sm">
-        Pour recevoir les rappels de tes sessions sur cet appareil, même quand
-        ChessMate est fermé. À activer sur chaque appareil.
-      </p>
-      <PushToggle />
-    </q-card-section>
-  </q-card>
+  <div class="profile-block">
+    <div class="profile-row__title">Notifications du navigateur</div>
+    <div class="profile-row__sub">
+      Pour recevoir les rappels de tes sessions sur cet appareil, même quand
+      ChessMate est fermé. À activer sur chaque appareil.
+    </div>
+    <PushToggle />
+  </div>
 </template>
 
 <script setup>

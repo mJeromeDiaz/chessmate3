@@ -1,87 +1,85 @@
 <template>
-  <q-card flat bordered data-testid="calendar-section">
-    <q-card-section>
-      <div class="text-subtitle1">Calendrier</div>
-      <p class="text-caption text-grey q-mb-sm">
-        Une adresse privée à ajouter à ton agenda (Google Agenda, Apple
-        Calendrier, Outlook…) : il affiche tes sessions marquées « Intégrer à
-        mon calendrier » et suit leurs changements. Garde-la pour toi : qui la
-        connaît voit tes sessions.
+  <div class="profile-block" data-testid="calendar-section">
+    <div class="profile-row__title">Calendrier</div>
+    <p class="profile-row__sub q-mb-sm">
+      Une adresse privée à ajouter à ton agenda (Google Agenda, Apple
+      Calendrier, Outlook…) : il affiche tes sessions marquées « Intégrer à mon
+      calendrier » et suit leurs changements. Garde-la pour toi : qui la connaît
+      voit tes sessions.
+    </p>
+
+    <q-spinner v-if="loading" />
+    <template v-else-if="address.url">
+      <q-input
+        :model-value="address.url"
+        readonly
+        dense
+        outlined
+        label="Adresse de ton calendrier"
+        data-testid="calendar-url"
+        @focus="$event.target.select()"
+      >
+        <template #append>
+          <q-btn
+            flat
+            round
+            dense
+            icon="content_copy"
+            aria-label="Copier l'adresse"
+            data-testid="calendar-copy"
+            @click="copy"
+          />
+        </template>
+      </q-input>
+      <p class="profile-row__sub q-mt-xs q-mb-sm">
+        Google Agenda : « Autres agendas » → « À partir de l'URL ». Sur Apple ou
+        Outlook, le bouton « S'abonner » ouvre l'application.
       </p>
+      <div class="row q-gutter-sm">
+        <q-btn
+          color="primary"
+          unelevated
+          no-caps
+          icon="event"
+          label="S'abonner"
+          :href="address.webcalUrl"
+          data-testid="calendar-subscribe"
+        />
+        <q-btn
+          flat
+          no-caps
+          label="Nouvelle adresse"
+          :loading="busy === 'regenerate'"
+          data-testid="calendar-regenerate"
+          @click="confirmRegenerate"
+        />
+        <q-btn
+          flat
+          no-caps
+          color="negative"
+          label="Désactiver"
+          :loading="busy === 'revoke'"
+          data-testid="calendar-revoke"
+          @click="confirmRevoke"
+        />
+      </div>
+    </template>
+    <q-btn
+      v-else
+      color="primary"
+      unelevated
+      no-caps
+      icon="event"
+      label="Créer mon adresse de calendrier"
+      :loading="busy === 'regenerate'"
+      data-testid="calendar-create"
+      @click="regenerate"
+    />
 
-      <q-spinner v-if="loading" />
-      <template v-else-if="address.url">
-        <q-input
-          :model-value="address.url"
-          readonly
-          dense
-          outlined
-          label="Adresse de ton calendrier"
-          data-testid="calendar-url"
-          @focus="$event.target.select()"
-        >
-          <template #append>
-            <q-btn
-              flat
-              round
-              dense
-              icon="content_copy"
-              aria-label="Copier l'adresse"
-              data-testid="calendar-copy"
-              @click="copy"
-            />
-          </template>
-        </q-input>
-        <p class="text-caption text-grey q-mt-xs q-mb-sm">
-          Google Agenda : « Autres agendas » → « À partir de l'URL ». Sur Apple
-          ou Outlook, le bouton « S'abonner » ouvre l'application.
-        </p>
-        <div class="row q-gutter-sm">
-          <q-btn
-            color="primary"
-            unelevated
-            no-caps
-            icon="event"
-            label="S'abonner"
-            :href="address.webcalUrl"
-            data-testid="calendar-subscribe"
-          />
-          <q-btn
-            flat
-            no-caps
-            label="Nouvelle adresse"
-            :loading="busy === 'regenerate'"
-            data-testid="calendar-regenerate"
-            @click="confirmRegenerate"
-          />
-          <q-btn
-            flat
-            no-caps
-            color="negative"
-            label="Désactiver"
-            :loading="busy === 'revoke'"
-            data-testid="calendar-revoke"
-            @click="confirmRevoke"
-          />
-        </div>
-      </template>
-      <q-btn
-        v-else
-        color="primary"
-        unelevated
-        no-caps
-        icon="event"
-        label="Créer mon adresse de calendrier"
-        :loading="busy === 'regenerate'"
-        data-testid="calendar-create"
-        @click="regenerate"
-      />
-
-      <q-banner v-if="error" class="bg-red-1 q-mt-md" rounded>{{
-        error
-      }}</q-banner>
-    </q-card-section>
-  </q-card>
+    <q-banner v-if="error" class="profile-error q-mt-md" rounded>{{
+      error
+    }}</q-banner>
+  </div>
 </template>
 
 <script setup>

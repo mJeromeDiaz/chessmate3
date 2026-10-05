@@ -5,22 +5,29 @@ declare(strict_types=1);
 namespace App\Controller\Profile;
 
 use App\Dto\Profile\AddPasswordRequest;
+use App\Dto\Profile\InfoRequest;
+use App\Dto\Profile\PreferencesRequest;
 use App\Dto\Profile\ThemeRequest;
 use App\Dto\Profile\TimezoneRequest;
 use App\Entity\AuthIdentity;
 use App\Entity\User;
 use App\Enum\AuthProvider;
+use App\Enum\Avatar;
+use App\Enum\BoardTheme;
 use App\Enum\Theme;
 use App\Security\Password\PasswordAdder;
+use App\Security\Profile\HandleChecker;
 use App\Security\Profile\IdentityUnlinker;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Security\Session\AuthenticatedSessionFactory;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
@@ -42,10 +49,15 @@ final class ProfileController extends AbstractController
         private readonly AuthenticatedSessionFactory $sessionFactory,
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly EntityManagerInterface $entityManager,
+        private readonly HandleChecker $handleChecker,
         #[Autowire(service: 'limiter.password_change_ip')]
         private readonly RateLimiterFactory $passwordIpLimiter,
         #[Autowire(service: 'limiter.password_change_identifier')]
         private readonly RateLimiterFactory $passwordIdentifierLimiter,
+        #[Autowire(service: 'limiter.profile_write')]
+        private readonly RateLimiterFactory $profileWriteLimiter,
+        #[Autowire(service: 'limiter.profile_handle_check')]
+        private readonly RateLimiterFactory $handleCheckLimiter,
     ) {
     }
 
@@ -106,6 +118,65 @@ final class ProfileController extends AbstractController
         return $this->json($this->describe($user));
     }
 
+    /**
+     * Sets what the profile shows: display name, handle and avatar (each replaced, empty clears).
+     * 422 `invalid_handle`/`reserved_handle`, 409 `handle_taken` (also when another account took it
+     * between the check and the write: the unique index decides).
+     */
+    #[Route('/info', name: 'app_profile_info', methods: ['PUT'])]
+    public function setInfo(#[MapRequestPayload] InfoRequest $payload, #[CurrentUser] User $user): JsonResponse
+    {
+        $this->rateLimitGuard->consume($this->profileWriteLimiter, $user->getUserIdentifier());
+
+        $displayName = trim($payload->displayName ?? '');
+        $handle = $this->handleChecker->normalize($payload->handle ?? '');
+        $refusal = '' === $handle ? null : $this->handleChecker->refusal($handle, $user);
+        if (null !== $refusal) {
+            return $this->handleRefusal($refusal);
+        }
+
+        $user->setDisplayName('' === $displayName ? null : $displayName)
+            ->setHandle('' === $handle ? null : $handle)
+            ->setAvatar(null === $payload->avatar ? null : Avatar::from($payload->avatar));
+
+        try {
+            $this->entityManager->flush();
+        } catch (UniqueConstraintViolationException) {
+            return $this->handleRefusal(HandleChecker::TAKEN);
+        }
+
+        return $this->json($this->describe($user));
+    }
+
+    /** Board colours, move sounds and the public profile flag, all replaced at once. */
+    #[Route('/preferences', name: 'app_profile_preferences', methods: ['PUT'])]
+    public function setPreferences(#[MapRequestPayload] PreferencesRequest $payload, #[CurrentUser] User $user): JsonResponse
+    {
+        $this->rateLimitGuard->consume($this->profileWriteLimiter, $user->getUserIdentifier());
+
+        $user->setBoardTheme(BoardTheme::from($payload->boardTheme))
+            ->setMoveSound((bool) $payload->moveSound)
+            ->setPublicProfile((bool) $payload->publicProfile);
+        $this->entityManager->flush();
+
+        return $this->json($this->describe($user));
+    }
+
+    /**
+     * Whether the signed-in user can take a handle, asked while typing: `{handle, available,
+     * reason}` with the handle normalized and reason `invalid`, `reserved`, `taken` or null.
+     */
+    #[Route('/handle-availability', name: 'app_profile_handle_availability', methods: ['GET'])]
+    public function handleAvailability(#[CurrentUser] User $user, #[MapQueryParameter] string $handle = ''): JsonResponse
+    {
+        $this->rateLimitGuard->consume($this->handleCheckLimiter, $user->getUserIdentifier());
+
+        $handle = $this->handleChecker->normalize($handle);
+        $refusal = $this->handleChecker->refusal($handle, $user);
+
+        return $this->json(['handle' => $handle, 'available' => null === $refusal, 'reason' => $refusal]);
+    }
+
     #[Route('/identities/{id}', name: 'app_profile_identity_unlink', methods: ['DELETE'])]
     public function unlink(string $id, #[CurrentUser] User $user): JsonResponse
     {
@@ -129,6 +200,13 @@ final class ProfileController extends AbstractController
         return $response;
     }
 
+    private function handleRefusal(string $refusal): JsonResponse
+    {
+        return HandleChecker::TAKEN === $refusal
+            ? $this->json(['error' => 'handle_taken', 'message' => 'This username is already used.'], Response::HTTP_CONFLICT)
+            : $this->json(['error' => $refusal.'_handle', 'message' => 'This username cannot be used.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -145,6 +223,12 @@ final class ProfileController extends AbstractController
             'createdAt' => $user->getCreatedAt()->format(\DATE_ATOM),
             'timezone' => $user->getTimezone(),
             'theme' => $user->getTheme()?->value,
+            'displayName' => $user->getDisplayName(),
+            'handle' => $user->getHandle(),
+            'avatar' => $user->getAvatar()?->value,
+            'boardTheme' => $user->getBoardTheme()->value,
+            'moveSound' => $user->hasMoveSound(),
+            'publicProfile' => $user->isPublicProfile(),
             'linkableProviders' => array_values(array_map(
                 static fn (AuthProvider $provider): string => $provider->value,
                 array_filter(AuthProvider::cases(), static fn (AuthProvider $provider): bool => !$user->getAuthIdentities()->exists(

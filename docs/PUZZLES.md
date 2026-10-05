@@ -222,6 +222,17 @@ légaux et la promotion, mais rien des puzzles. **Le parent possède la position
 Responsive (largeur disponible, max `min(92vw, 70vh, 560px)`), thème clair/sombre suivi par Quasar
 (`dark: 'auto'`). Les sprites (pièces, marqueurs, flèches) sont servis depuis `public/chessboard/`.
 
+Préférences du profil (`composables/chess/useBoardPreferences.js`, lues dans `auth.profile`) :
+
+- **Couleurs des cases** : thème cm-chessboard maison `chessmate`, dont les cases prennent les
+  variables CSS `--cm-board-light` / `--cm-board-dark` posées sur l'échiquier
+  (`utils/chess/boardThemes.js` : Bois, Verre, Pastel, Tournoi, Ardoise ; Bois par défaut et pour
+  les visiteurs). Un changement sur le profil s'applique aussitôt à tous les échiquiers.
+- **Sons des coups** : quand la nouvelle position est à **un coup légal** de celle affichée
+  (`utils/chess/moveSounds.js`, `moveKind`), l'échiquier joue `public/media/son/Move.mp3` ou
+  `Capture.mp3` (un échec joue `Move.mp3` : pas de son dédié). Un saut (nouveau puzzle, navigation
+  dans l'arbre, retour arrière) reste muet. Jamais de son pour un visiteur.
+
 ### `composables/puzzle/usePuzzle.js` — logique d'un puzzle
 
 Indépendant de l'échiquier et de l'API (testé seul avec Vitest).

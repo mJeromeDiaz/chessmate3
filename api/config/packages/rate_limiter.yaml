@@ -183,3 +183,14 @@ framework:
             policy: sliding_window
             limit: 120
             interval: '10 minutes'
+
+        # Profile (identifier = user id): saving the name/handle/avatar or the preferences, and checking a handle while
+        # typing (debounced by the SPA). The check only tells whether a public handle is taken.
+        profile_write:
+            policy: sliding_window
+            limit: 30
+            interval: '1 hour'
+        profile_handle_check:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'

@@ -16,6 +16,7 @@ use App\Security\RefreshToken\Exception\RefreshTokenReuseDetectedException;
 use Gesdinet\JWTRefreshTokenBundle\Generator\RefreshTokenGeneratorInterface;
 use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -31,6 +32,7 @@ final readonly class RefreshTokenService
         private RefreshTokenRepository $repository,
         private UserRepository $userRepository,
         private AuditLogger $auditLogger,
+        private RequestStack $requestStack,
         #[Autowire('%env(int:REFRESH_TOKEN_IDLE_TTL)%')]
         private int $idleTtl,
         #[Autowire('%env(int:REFRESH_TOKEN_ABSOLUTE_TTL)%')]
@@ -46,7 +48,7 @@ final readonly class RefreshTokenService
     {
         $familyExpiresAt = new \DateTimeImmutable(sprintf('+%d seconds', $this->absoluteTtl));
 
-        return $this->issue($user, Uuid::v7(), $familyExpiresAt) ?? throw new \LogicException('A new family cannot already be expired.');
+        return $this->issue($user, Uuid::v7(), $familyExpiresAt, new \DateTimeImmutable()) ?? throw new \LogicException('A new family cannot already be expired.');
     }
 
     /**
@@ -89,7 +91,7 @@ final readonly class RefreshTokenService
             throw new RefreshTokenNotFoundException();
         }
 
-        $replacement = $this->issue($user, $refreshToken->getFamilyId(), $refreshToken->getFamilyExpiresAt());
+        $replacement = $this->issue($user, $refreshToken->getFamilyId(), $refreshToken->getFamilyExpiresAt(), $refreshToken->getSignedInAt());
 
         if (null === $replacement) {
             throw new RefreshTokenExpiredException();
@@ -116,6 +118,40 @@ final readonly class RefreshTokenService
     }
 
     /**
+     * The family (session) of a presented token, if it is still active: tells the profile which of
+     * the listed sessions is the one asking.
+     */
+    public function activeFamilyOf(string $presentedPlainToken): ?Uuid
+    {
+        $refreshToken = $this->manager->get($presentedPlainToken);
+
+        return $refreshToken instanceof RefreshToken && !$refreshToken->isRevoked() && $refreshToken->isValid()
+            ? $refreshToken->getFamilyId()
+            : null;
+    }
+
+    /**
+     * Closes one of the user's sessions from another one (profile). Its access tokens die at once:
+     * the token version is bumped, the user's other sessions just refresh transparently.
+     *
+     * @return bool false if no active session of this user has this family
+     */
+    public function revokeFamilyOf(User $user, Uuid $familyId): bool
+    {
+        if (0 === $this->repository->revokeFamilyOfUser($familyId, $user->getUserIdentifier())) {
+            return false;
+        }
+
+        $user = $this->userRepository->findOneByUuid($user->getId());
+        if (null !== $user) {
+            $this->userRepository->save($user->bumpTokenVersion());
+        }
+        $this->auditLogger->log(AuditEventType::SessionRevoked, $user, ['family' => $familyId->toRfc4122()]);
+
+        return true;
+    }
+
+    /**
      * Revokes every session of a user, on every device — e.g. after a password change.
      */
     public function revokeAllSessions(User $user): void
@@ -126,7 +162,7 @@ final readonly class RefreshTokenService
     /**
      * @return IssuedRefreshToken|null null if the family has already reached its absolute expiry
      */
-    private function issue(User $user, Uuid $familyId, \DateTimeImmutable $familyExpiresAt): ?IssuedRefreshToken
+    private function issue(User $user, Uuid $familyId, \DateTimeImmutable $familyExpiresAt, ?\DateTimeImmutable $signedInAt): ?IssuedRefreshToken
     {
         // Idle timeout, but never past the family's absolute expiry.
         $ttl = min($this->idleTtl, $familyExpiresAt->getTimestamp() - time());
@@ -145,6 +181,9 @@ final readonly class RefreshTokenService
         $plainToken = (string) $refreshToken->getRefreshToken();
         $refreshToken->setFamilyId($familyId);
         $refreshToken->setFamilyExpiresAt($familyExpiresAt);
+        // Null outside an HTTP request (console commands such as the e2e seed).
+        $request = $this->requestStack->getCurrentRequest();
+        $refreshToken->setOrigin($signedInAt, new \DateTimeImmutable(), $request?->headers->get('User-Agent'), $request?->getClientIp());
 
         $this->manager->save($refreshToken);
 

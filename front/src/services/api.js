@@ -93,6 +93,38 @@ export const profileApi = {
   /** @param {'auto'|'light'|'dark'} theme */
   setTheme: theme =>
     http.put('/api/profile/theme', { theme }).then(r => r.data),
+  /**
+   * Display name, handle and avatar (each replaced; null or empty clears it).
+   *
+   * @param {{displayName: string|null, handle: string|null, avatar: string|null}} info
+   */
+  setInfo: info => http.put('/api/profile/info', info).then(r => r.data),
+  /**
+   * The active sessions, the asking one first (under /api/auth: the refresh cookie tells which).
+   *
+   * @returns {Promise<Array<{id: string, current: boolean, browser: string|null, os: string|null, form: 'phone'|'tablet'|'desktop'|null, ip: string|null, signedInAt: string|null, lastActiveAt: string|null}>>}
+   */
+  sessions: () => http.get('/api/auth/sessions').then(r => r.data.sessions),
+  /** Closes another session (409 for the asking one). */
+  closeSession: id =>
+    http
+      .delete(`/api/auth/sessions/${encodeURIComponent(id)}`)
+      .then(r => r.data),
+  /**
+   * Board colours, move sounds and public profile flag (all three required).
+   *
+   * @param {{boardTheme: string, moveSound: boolean, publicProfile: boolean}} preferences
+   */
+  setPreferences: preferences =>
+    http.put('/api/profile/preferences', preferences).then(r => r.data),
+  /**
+   * @param {string} handle
+   * @returns {Promise<{handle: string, available: boolean, reason: null|'invalid'|'reserved'|'taken'}>}
+   */
+  handleAvailability: handle =>
+    http
+      .get('/api/profile/handle-availability', { params: { handle } })
+      .then(r => r.data),
   addPassword: (password, email) =>
     http
       .post('/api/profile/password', email ? { password, email } : { password })

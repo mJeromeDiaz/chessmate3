@@ -47,6 +47,7 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['mfa_challenge', 'code_hash'],
             ['trusted_device', 'token_hash'],
             ['refresh_token', 'refresh_token'],
+            ['app_user', 'handle'],
             ['repertoire_position', 'fen'],
             ['repertoire_move', 'uci'],
             ['repertoire_move', 'san'],

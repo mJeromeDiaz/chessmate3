@@ -1,10 +1,16 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
+import { readFileSync } from 'node:fs'
 import { defineConfig } from '#q-app'
 
 /** Symfony API base URL, baked in at build time (API_URL=https://api.example.com quasar build). */
 const API_URL = process.env.API_URL || 'http://localhost:8000'
+
+/** The app version shown in the profile footer. */
+const APP_VERSION = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8')
+).version
 
 export default defineConfig(ctx => {
   return {
@@ -63,7 +69,8 @@ export default defineConfig(ctx => {
       // Exposed to the client as import.meta.env.API_URL (app-vite v3 has no process.env in the
       // browser; build.env only configures the .env files).
       defineEnv: {
-        API_URL
+        API_URL,
+        APP_VERSION
       },
       // ignorePublicFolder: true,
       // minify: false,

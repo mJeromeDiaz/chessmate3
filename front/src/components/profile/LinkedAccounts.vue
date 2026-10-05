@@ -1,91 +1,103 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="text-subtitle1">Comptes liés</div>
-      <p v-if="profile.identities.length === 0" class="text-grey-7"
-        >Aucun compte lié.</p
+  <section class="cm-card" data-testid="profile-connections">
+    <h2 class="cm-card__title q-mb-xs">Connexions</h2>
+
+    <div
+      v-for="row in rows"
+      :key="row.provider"
+      class="profile-row"
+      :data-testid="`connection-${row.provider}`"
+    >
+      <div
+        class="connection__tile"
+        :class="`connection__tile--${row.provider}`"
+        aria-hidden="true"
+        >{{ TILES[row.provider] }}</div
       >
-
-      <q-list separator>
-        <q-item v-for="identity in profile.identities" :key="identity.id">
-          <q-item-section>
-            <q-item-label>{{ providerLabel(identity.provider) }}</q-item-label>
-            <q-item-label caption>
-              {{
-                identity.username ??
-                identity.name ??
-                identity.providerEmail ??
-                ''
-              }}
-              <span v-if="ratingsText(identity)">
-                — {{ ratingsText(identity) }}</span
-              >
-            </q-item-label>
-            <q-item-label caption
-              >Lié le {{ formatDate(identity.linkedAt) }}</q-item-label
-            >
-          </q-item-section>
-          <q-item-section side>
-            <q-btn
-              flat
-              no-caps
-              color="negative"
-              label="Retirer"
-              :disable="!identity.removable"
-              :loading="busy === identity.id"
-              @click="unlink(identity)"
-            >
-              <q-tooltip v-if="!identity.removable"
-                >C'est votre seul moyen de connexion.</q-tooltip
-              >
-            </q-btn>
-          </q-item-section>
-        </q-item>
-      </q-list>
-
-      <div class="q-mt-md q-gutter-sm">
-        <q-btn
-          v-for="provider in profile.linkableProviders"
-          :key="provider"
-          outline
-          no-caps
-          :label="`Lier un compte ${providerLabel(provider)}`"
-          :loading="busy === provider"
-          @click="link(provider)"
-        />
+      <div class="profile-row__text">
+        <div class="connection__name">
+          {{ providerLabel(row.provider) }}
+          <span
+            class="connection__dot"
+            :class="{ 'connection__dot--on': row.identity }"
+          />
+        </div>
+        <template v-if="row.identity">
+          <div class="profile-row__sub connection__detail">{{
+            identityDetail(row.identity)
+          }}</div>
+          <div class="profile-row__sub"
+            >Lié le {{ formatDay(row.identity.linkedAt) }}</div
+          >
+        </template>
+        <div v-else class="profile-row__sub">Non lié</div>
       </div>
+      <q-btn
+        v-if="row.identity"
+        unelevated
+        no-caps
+        class="profile-btn"
+        label="Déconnecter"
+        :disable="!row.identity.removable"
+        :loading="busy === row.identity.id"
+        :data-testid="`connection-${row.provider}-unlink`"
+        @click="unlink(row.identity)"
+      />
+      <q-btn
+        v-else-if="row.linkable"
+        unelevated
+        no-caps
+        class="profile-btn profile-btn--strong"
+        label="Lier"
+        :loading="busy === row.provider"
+        :data-testid="`connection-${row.provider}-link`"
+        @click="link(row.provider)"
+      />
+    </div>
 
-      <q-banner v-if="error" class="bg-red-1 q-mt-md" rounded>{{
-        error
-      }}</q-banner>
-    </q-card-section>
-  </q-card>
+    <div v-if="locked" class="profile-note" data-testid="connection-lock-note">
+      Garde au moins une méthode de connexion active.
+    </div>
+
+    <q-banner v-if="error" class="profile-error q-mt-sm" rounded>{{
+      error
+    }}</q-banner>
+  </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+/**
+ * Profile: the Google and Lichess accounts (design "Profil", card "Connexions"). Removing the last
+ * sign-in method is refused by the API (`last_auth_method`); the button is then disabled.
+ */
+import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
-import { formatDate, providerLabel } from '@/utils/format'
+import { providerLabel } from '@/utils/format'
 import { apiErrorMessage } from '@/utils/apiError'
+import { connectionRows, identityDetail } from '@/utils/profile'
 
-defineProps({
+const props = defineProps({
   /** The /api/profile payload. */
   profile: { type: Object, required: true }
 })
+
+/** The tile letter of each provider (♞ in text presentation). */
+const TILES = { google: 'G', lichess: '♞︎' }
 
 const $q = useQuasar()
 const auth = useAuthStore()
 const busy = ref(null)
 const error = ref('')
 
-/** Lichess ratings as "blitz 2250, rapid 1900?" ("?" = provisional). */
-function ratingsText(identity) {
-  if (!identity.ratings) return ''
+const rows = computed(() => connectionRows(props.profile))
+const locked = computed(() => props.profile.identities.some(i => !i.removable))
 
-  return Object.entries(identity.ratings)
-    .map(([perf, r]) => `${perf} ${r.rating}${r.provisional ? '?' : ''}`)
-    .join(', ')
+/** @param {string} iso */
+function formatDay(iso) {
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
+    new Date(iso)
+  )
 }
 
 /** Leaves the SPA for the provider; it comes back through /oauth/callback. */
@@ -103,9 +115,9 @@ async function link(provider) {
 
 function unlink(identity) {
   $q.dialog({
-    title: `Retirer ${providerLabel(identity.provider)} ?`,
+    title: `Déconnecter ${providerLabel(identity.provider)} ?`,
     message:
-      'Vous ne pourrez plus vous connecter avec ce compte. Vos autres sessions seront fermées.',
+      'Tu ne pourras plus te connecter avec ce compte. Tes autres sessions seront fermées. Tes données ChessMate restent sauvegardées.',
     cancel: true
   }).onOk(async () => {
     busy.value = identity.id
@@ -115,7 +127,7 @@ function unlink(identity) {
       await auth.unlinkIdentity(identity.id)
     } catch (e) {
       error.value = apiErrorMessage(e, {
-        409: "C'est votre seul moyen de connexion : il ne peut pas être retiré."
+        409: "C'est ton seul moyen de connexion : il ne peut pas être retiré."
       })
     } finally {
       busy.value = null
@@ -123,3 +135,64 @@ function unlink(identity) {
   })
 }
 </script>
+
+<style scoped lang="scss">
+.connection__tile {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  font-family: var(--cm-heading);
+  font-weight: 800;
+  font-size: 21px;
+
+  &--google {
+    background: var(--cm-orange-soft);
+    color: var(--cm-orange-ink);
+  }
+
+  &--lichess {
+    background: var(--cm-ink);
+    color: var(--cm-surface);
+  }
+
+  @media (min-width: $breakpoint-md-min) {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 23px;
+  }
+}
+
+.connection__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 14.5px;
+
+  @media (min-width: $breakpoint-md-min) {
+    font-size: 15px;
+  }
+}
+
+.connection__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cm-dash);
+
+  &--on {
+    background: #8dba0a;
+  }
+}
+
+.connection__detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>

@@ -4,6 +4,11 @@
     :class="{ 'chess-board--shake': shaking }"
     data-testid="chess-board"
     :data-fen="currentFen"
+    :data-board-theme="theme.value"
+    :style="{
+      '--cm-board-light': theme.light,
+      '--cm-board-dark': theme.dark
+    }"
   >
     <div class="chess-board__frame">
       <div ref="container" class="chess-board__surface" />
@@ -53,6 +58,8 @@ import 'cm-chessboard/assets/chessboard.css'
 import 'cm-chessboard/assets/extensions/markers/markers.css'
 import 'cm-chessboard/assets/extensions/arrows/arrows.css'
 import 'cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css'
+import { useBoardPreferences } from '@/composables/chess/useBoardPreferences'
+import { moveKind, playMoveSound } from '@/utils/chess/moveSounds'
 
 /**
  * @typedef {'white'|'black'} Color
@@ -111,6 +118,9 @@ const emit = defineEmits({
   move: payload => typeof payload?.uci === 'string'
 })
 
+/** Square colours and move sounds of the signed-in user (profile preferences). */
+const { theme, soundOn } = useBoardPreferences()
+
 const container = ref(null)
 /** @type {import('vue').ShallowRef<any>} */
 const board = shallowRef(null)
@@ -148,6 +158,8 @@ onMounted(() => {
     responsive: true,
     assetsUrl: `${import.meta.env.BASE_URL || '/'}chessboard/`,
     style: {
+      // Our own theme: square colours come from CSS variables (the user's board theme).
+      cssClass: 'chessmate',
       borderType: BORDER_TYPE.none,
       showCoordinates: true,
       animationDuration: props.animationDuration
@@ -188,6 +200,11 @@ watch(() => [props.highlights, props.arrows], renderDecorations, { deep: true })
  * @returns {Promise<void>}
  */
 async function setPosition(fen, animated = true) {
+  // A position one legal move away from the shown one sounds like that move.
+  if (soundOn.value) {
+    const kind = moveKind(rules.fen(), fen)
+    if (kind) playMoveSound(kind)
+  }
   rules = new Chess(fen)
   const call = ++positionCalls
   if (board.value) {
@@ -313,6 +330,31 @@ defineExpose({ setPosition, shake })
 </script>
 
 <style lang="scss">
+// The "chessmate" cm-chessboard theme: the squares take the user's board colours.
+.cm-chessboard.chessmate .board .square.white {
+  fill: var(--cm-board-light);
+}
+.cm-chessboard.chessmate .board .square.black {
+  fill: var(--cm-board-dark);
+}
+.cm-chessboard.chessmate .board .border {
+  stroke-width: 0;
+  fill: var(--cm-board-dark);
+}
+.cm-chessboard.chessmate .coordinates {
+  pointer-events: none;
+  user-select: none;
+}
+.cm-chessboard.chessmate .coordinates .coordinate {
+  font-size: 7px;
+  cursor: default;
+}
+.cm-chessboard.chessmate .coordinates .coordinate.white {
+  fill: var(--cm-board-dark);
+}
+.cm-chessboard.chessmate .coordinates .coordinate.black {
+  fill: var(--cm-board-light);
+}
 .chess-board {
   width: 100%;
   max-width: min(92vw, 70vh, 560px);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\Avatar;
+use App\Enum\BoardTheme;
 use App\Enum\Theme;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -23,6 +25,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'app_user')]
 #[ORM\UniqueConstraint(name: 'uniq_user_email', fields: ['email'])]
+#[ORM\UniqueConstraint(name: 'uniq_user_handle', fields: ['handle'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -71,6 +74,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /** The colour theme chosen in the SPA; null until the user picks one. */
     #[ORM\Column(length: 8, nullable: true, enumType: Theme::class)]
     private ?Theme $theme = null;
+
+    /** The name shown on the profile; null until chosen (the SPA then shows the email's local part). */
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $displayName = null;
+
+    /**
+     * The public username ("@lea_echecs"): 3 to 20 of [a-z0-9_], unique, null until chosen
+     * ({@see \App\Security\Profile\HandleChecker}). Lower case only, stored binary.
+     */
+    #[ORM\Column(length: 20, nullable: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    private ?string $handle = null;
+
+    /** The chess piece shown as avatar; null until chosen (the SPA then shows an initial). */
+    #[ORM\Column(length: 8, nullable: true, enumType: Avatar::class)]
+    private ?Avatar $avatar = null;
+
+    /** The colours of the chessboard squares, on every board of the SPA. */
+    #[ORM\Column(length: 12, enumType: BoardTheme::class, options: ['default' => 'wood'])]
+    private BoardTheme $boardTheme = BoardTheme::Wood;
+
+    /** Sounds of the moves played on the boards (move, capture, check). */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $moveSound = true;
+
+    /**
+     * Whether other players may see the level and stats. Stored only: no page shows a profile to
+     * other users yet. Private by default.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $publicProfile = false;
 
     /** @var Collection<int, AuthIdentity> */
     #[ORM\OneToMany(targetEntity: AuthIdentity::class, mappedBy: 'user', cascade: ['persist'], orphanRemoval: true)]
@@ -193,6 +226,78 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function getDisplayName(): ?string
+    {
+        return $this->displayName;
+    }
+
+    public function setDisplayName(?string $displayName): static
+    {
+        $this->displayName = $displayName;
+
+        return $this;
+    }
+
+    public function getHandle(): ?string
+    {
+        return $this->handle;
+    }
+
+    public function setHandle(?string $handle): static
+    {
+        $this->handle = $handle;
+
+        return $this;
+    }
+
+    public function getAvatar(): ?Avatar
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?Avatar $avatar): static
+    {
+        $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    public function getBoardTheme(): BoardTheme
+    {
+        return $this->boardTheme;
+    }
+
+    public function setBoardTheme(BoardTheme $boardTheme): static
+    {
+        $this->boardTheme = $boardTheme;
+
+        return $this;
+    }
+
+    public function hasMoveSound(): bool
+    {
+        return $this->moveSound;
+    }
+
+    public function setMoveSound(bool $moveSound): static
+    {
+        $this->moveSound = $moveSound;
+
+        return $this;
+    }
+
+    public function isPublicProfile(): bool
+    {
+        return $this->publicProfile;
+    }
+
+    public function setPublicProfile(bool $publicProfile): static
+    {
+        $this->publicProfile = $publicProfile;
+
+        return $this;
     }
 
     public function getTheme(): ?Theme

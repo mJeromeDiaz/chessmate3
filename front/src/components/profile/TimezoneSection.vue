@@ -1,48 +1,46 @@
 <template>
-  <q-card flat bordered>
-    <q-card-section>
-      <div class="text-subtitle1">Fuseau horaire</div>
-      <p class="text-caption text-grey q-mb-sm">
-        Sert à calculer vos journées d’activité et les échéances Woodpecker. Les
-        journées déjà enregistrées ne changent pas.
-      </p>
-      <div class="row items-center q-gutter-sm">
-        <q-select
-          v-model="selected"
-          :options="options"
-          use-input
-          input-debounce="0"
-          dense
-          outlined
-          style="min-width: 260px"
-          data-testid="timezone-select"
-          @filter="filter"
-        />
-        <q-btn
-          color="primary"
-          no-caps
-          label="Enregistrer"
-          :loading="saving"
-          :disable="!selected || selected === profile.timezone"
-          @click="save"
-        />
-        <q-btn
-          v-if="detected && detected !== selected"
-          flat
-          no-caps
-          :label="`Utiliser ${detected}`"
-          @click="selected = detected"
-        />
-      </div>
-      <div
-        v-if="message"
-        class="q-mt-sm"
-        :class="error ? 'text-negative' : 'text-positive'"
-      >
-        {{ message }}
-      </div>
-    </q-card-section>
-  </q-card>
+  <div class="profile-block">
+    <div class="profile-row__title">Fuseau horaire</div>
+    <p class="profile-row__sub q-mb-sm">
+      Sert à calculer vos journées d’activité et les échéances Woodpecker. Les
+      journées déjà enregistrées ne changent pas.
+    </p>
+    <div class="row items-center q-gutter-sm">
+      <q-select
+        v-model="selected"
+        :options="options"
+        use-input
+        input-debounce="0"
+        dense
+        outlined
+        style="min-width: 260px"
+        data-testid="timezone-select"
+        @filter="filter"
+      />
+      <q-btn
+        color="primary"
+        no-caps
+        label="Enregistrer"
+        :loading="saving"
+        :disable="!selected || selected === profile.timezone"
+        @click="save"
+      />
+      <q-btn
+        v-if="detected && detected !== selected"
+        flat
+        no-caps
+        :label="`Utiliser ${detected}`"
+        @click="selected = detected"
+      />
+    </div>
+    <div
+      v-if="message"
+      class="q-mt-sm"
+      :class="error ? 'text-negative' : 'text-positive'"
+    >
+      {{ message }}
+    </div>
+  </div>
 </template>
 
 <script setup>

@@ -41,6 +41,27 @@ class RefreshToken extends BaseRefreshToken
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $revokedAt = null;
 
+    /**
+     * When the family started (the sign-in), carried forward by every rotation like
+     * {@see self::$familyExpiresAt}. Null for tokens issued before it was recorded.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $signedInAt = null;
+
+    /** When this very token was issued: the session's last activity while it is the active one. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $issuedAt = null;
+
+    /**
+     * User-Agent and IP of the request that issued this token (sign-in or refresh), shown in the
+     * profile's active sessions. Personal data: gone with the token (purge of expired rows).
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $userAgent = null;
+
+    #[ORM\Column(length: 45, nullable: true)]
+    private ?string $ip = null;
+
     public function getFamilyId(): Uuid
     {
         return $this->familyId;
@@ -73,5 +94,36 @@ class RefreshToken extends BaseRefreshToken
     public function isRevoked(): bool
     {
         return null !== $this->revokedAt;
+    }
+
+    public function getSignedInAt(): ?\DateTimeImmutable
+    {
+        return $this->signedInAt;
+    }
+
+    public function getIssuedAt(): ?\DateTimeImmutable
+    {
+        return $this->issuedAt;
+    }
+
+    public function getUserAgent(): ?string
+    {
+        return $this->userAgent;
+    }
+
+    public function getIp(): ?string
+    {
+        return $this->ip;
+    }
+
+    /** Records who asked for this token and when (see {@see self::$userAgent}). */
+    public function setOrigin(?\DateTimeImmutable $signedInAt, \DateTimeImmutable $issuedAt, ?string $userAgent, ?string $ip): static
+    {
+        $this->signedInAt = $signedInAt;
+        $this->issuedAt = $issuedAt;
+        $this->userAgent = null === $userAgent ? null : mb_substr($userAgent, 0, 255);
+        $this->ip = $ip;
+
+        return $this;
     }
 }

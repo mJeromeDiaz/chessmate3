@@ -81,6 +81,55 @@ class RefreshTokenRepository extends ServiceEntityRepository implements RefreshT
     }
 
     /**
+     * Revokes the active tokens of a family, only if it belongs to this user (a session closed
+     * from the profile). Clears the entity manager like {@see self::revokeIfActive()}.
+     *
+     * @return int how many tokens were revoked (0: unknown, finished or someone else's family)
+     */
+    public function revokeFamilyOfUser(Uuid $familyId, string $userIdentifier): int
+    {
+        /** @var int $affected */
+        $affected = $this->createQueryBuilder('rt')
+            ->update()
+            ->set('rt.revokedAt', ':now')
+            ->where('rt.familyId = :familyId')
+            ->andWhere('rt.username = :identifier')
+            ->andWhere('rt.revokedAt IS NULL')
+            ->setParameter('now', new \DateTimeImmutable())
+            ->setParameter('familyId', $familyId, 'uuid')
+            ->setParameter('identifier', $userIdentifier)
+            ->getQuery()
+            ->execute();
+
+        $this->getEntityManager()->clear();
+
+        return $affected;
+    }
+
+    /**
+     * The active token of each of the user's sessions (one per family: rotation revokes the
+     * previous one), most recently used first.
+     *
+     * @return list<RefreshToken>
+     */
+    public function findActiveForUser(string $userIdentifier): array
+    {
+        /** @var list<RefreshToken> $tokens */
+        $tokens = $this->createQueryBuilder('rt')
+            ->where('rt.username = :identifier')
+            ->andWhere('rt.revokedAt IS NULL')
+            ->andWhere('rt.valid > :now')
+            ->setParameter('identifier', $userIdentifier)
+            ->setParameter('now', new \DateTime())
+            ->orderBy('rt.issuedAt', 'DESC')
+            ->addOrderBy('rt.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $tokens;
+    }
+
+    /**
      * Revokes every active token of every family of a user — all their sessions, on every device.
      * Clears the entity manager for the same reason as {@see self::revokeIfActive()}.
      */
