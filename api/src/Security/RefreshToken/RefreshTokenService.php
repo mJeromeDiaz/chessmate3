@@ -131,6 +131,20 @@ final readonly class RefreshTokenService
     }
 
     /**
+     * When the presented session signed in, if it is still active and belongs to $user: proves a
+     * recent sign-in (account deletion without an email, docs/AUTH.md).
+     */
+    public function signedInAtOf(User $user, string $presentedPlainToken): ?\DateTimeImmutable
+    {
+        $refreshToken = $this->manager->get($presentedPlainToken);
+
+        return $refreshToken instanceof RefreshToken && !$refreshToken->isRevoked() && $refreshToken->isValid()
+            && $refreshToken->getUsername() === $user->getUserIdentifier()
+            ? $refreshToken->getSignedInAt()
+            : null;
+    }
+
+    /**
      * Closes one of the user's sessions from another one (profile). Its access tokens die at once:
      * the token version is bumped, the user's other sessions just refresh transparently.
      *

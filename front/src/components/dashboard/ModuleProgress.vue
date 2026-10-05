@@ -2,7 +2,6 @@
   <section class="cm-card modules" data-testid="module-progress">
     <div class="modules__head">
       <h2 class="cm-card__title">Progression par module</h2>
-      <span class="modules__note">Niveaux <ShowcaseTag /></span>
     </div>
     <div class="modules__grid">
       <component
@@ -27,8 +26,10 @@
           <div class="modules__line">
             <span class="modules__title">{{ row.module.title }}</span>
             <span
+              v-if="row.level !== null"
               class="modules__level"
               :style="{ color: row.module.accentInk }"
+              data-testid="module-level"
               >Niv. {{ row.level }}</span
             >
           </div>
@@ -55,7 +56,6 @@
 
 <script setup>
 import ProfAvatar from '@/components/session/ProfAvatar.vue'
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
 
 defineProps({
   /** @type {import('vue').PropType<import('@/utils/dashboard/modules').ModuleRow[]>} */

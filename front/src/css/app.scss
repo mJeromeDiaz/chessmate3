@@ -37,10 +37,17 @@
   --cm-success: #1f6b2c;
   --cm-info-soft: #e5efff;
   --cm-info: #1d4f9c;
+  // Training-time chart (statistics page), one colour per module, stacked in this order: checked
+  // with the dataviz palette validator (lightness band, colour-blind separation) on each surface.
+  --cm-chart-puzzles: #e03c86;
+  --cm-chart-repertoire: #1c86e0;
+  --cm-chart-woodpecker: #8dba0a;
+  --cm-chart-free: #8b6bff;
 }
 
 .body--dark {
   --cm-ink: #f3f1fa;
+  --cm-chart-woodpecker: #77a100;
   --cm-ink-soft: #cfcae0;
   --cm-muted: #9d98b3;
   --cm-faint: #6e6a80;

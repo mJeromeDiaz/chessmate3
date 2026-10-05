@@ -20,7 +20,7 @@ maquette ne montre pas encore viendront avec le lot B (§ 6).
 | Santé du répertoire (lot B) | `App\Dashboard\Repertoire\RepertoireHealth` |
 | API | `App\ApiResource\Dashboard\{Activity, RatingHistory, LichessRatingHistory, Training, Themes, Repertoire}`, `App\State\Dashboard\DashboardProvider` |
 | Fixtures | `App\DataFixtures\Dashboard\ActivityHistoryFixtures` (12 semaines pour l'utilisateur de démo) |
-| Front | `services/api.js` (`dashboardApi`), `stores/dashboard.js`, `utils/dashboard/{heatmap, curve, modules, showcase}.js`, `components/dashboard/*` |
+| Front | `services/api.js` (`dashboardApi`), `stores/dashboard.js`, `utils/dashboard/{heatmap, curve, modules, stats}.js`, `components/dashboard/*`, pages `(home).vue` et `stats.vue` |
 
 ## 2. Endpoints
 
@@ -73,7 +73,7 @@ Règles des statistiques (lot B, choix validés le 2026-10-05) :
   parmi les 10 derniers), sur toute l'histoire et non sur la période, tronçons actifs seulement (ni
   archivés, ni fusionnés), libellés comme à leur dernier test.
 
-Performances : pas de table d'agrégats pour l'instant. Une année d'activité donne au plus 371 lignes
+Performances : pas de table d'agrégats, la mesure du lot B2 (§ 6) ne l'exige pas. Une année d'activité donne au plus 371 lignes
 groupées sur un index ; les totaux par type parcourent les entrées de l'utilisateur. Les tables
 d'agrégats (et leur commande de recalcul) arriveront au lot B si une mesure les justifie.
 
@@ -81,19 +81,21 @@ d'agrégats (et leur commande de recalcul) arriveront au lot B si une mesure les
 
 | Bloc de la maquette | Données |
 |---|---|
-| Bannière niveau / XP avec Aaron | **Aperçu** (valeurs statiques) |
-| Série 🔥, record de série | **Aperçu** |
+| Bannière niveau / XP avec Aaron | Réelle (`GET /api/gamification/summary`) : niveau, grade, XP dans le niveau, ce qui reste avant le niveau suivant et le prochain grade ([GAMIFICATION.md](GAMIFICATION.md)) |
+| Série 🔥, record de série | Réels (même résumé) ; la série est grisée tant qu'on n'a pas joué aujourd'hui |
 | Courbe 90 jours, onglets Puzzles · Blitz · Rapide · Classique | Réelles. La maquette montrait un « Elo Lichess » seul ; l'onglet Puzzles (Glicko-2 interne) est ajouté et ouvert par défaut |
 | Heatmap « Régularité », 12 semaines | Réelle : une colonne par semaine, lundi en haut, aujourd'hui cerclé, jours futurs vides ; teintes à 1, 5, 10 et 20 exercices |
-| Défi de la semaine (Lizy) | **Aperçu** |
-| Progression par module | Ligne réelle (puzzles résolus et classement ; cycle Woodpecker en cours ; coups de répertoire, dus, réussite sur 30 j) et barre réelle (taux de réussite, avancement du cycle, réussite sur 30 j) ; « Niv. » en **aperçu** ; Finales, Évaluation, Analyse : « Bientôt » |
+| Défi de la semaine | Réel (`GET /api/gamification/quest`), donné par le prof du module du défi (Lizy pour un défi sur plusieurs modules) ; masqué si la lecture échoue |
+| Progression par module | Ligne réelle (puzzles résolus et classement ; cycle Woodpecker en cours ; coups de répertoire, dus, réussite sur 30 j) et barre réelle (taux de réussite, avancement du cycle, réussite sur 30 j) ; « Niv. » réel (niveau du module, gamification) ; Finales, Évaluation, Analyse : « Bientôt » |
 | Mes sessions | Réelles (`GET /api/training/plans`) : les 3 prochaines (puis celles à la demande) avec « Lancer » ; « Toutes → » mène à `/session` ([TRAINING.md § 10](TRAINING.md#10-sessions-enregistrées-plans)) |
 | Dernières sessions | Réelles (`GET /api/training/sessions`, 5 dernières) : titre, jour, modules faits / programme, temps joué, statut ; « Reprendre → » sur la session du jour. Un nouvel utilisateur la voit sous la carte d'accueil dès sa première session ([TRAINING.md § 9](TRAINING.md#9-sessions)) |
-| Trophées | **Aperçu** |
+| Trophées | Réels (`GET /api/gamification/trophies`) : date de l'exploit pour un trophée gagné, progression pour un trophée verrouillé |
+| Lien « Mes statistiques → » (sous le titre) | Mène à `/stats` (§ 3 bis) |
+| « À travailler » (`WeakThemeTip`) | Réel : le thème le plus faible sur 30 jours (`/dashboard/themes?days=30`) et « S'entraîner », qui ouvre `/puzzle` filtré sur ce thème ; masqué s'il n'y en a pas ou si la lecture échoue |
 
-Les valeurs d'aperçu sont toutes dans `front/src/utils/dashboard/showcase.js`. Chaque bloc concerné
-porte l'étiquette « Aperçu », pour qu'on ne les prenne pas pour de vraies données. La phase de
-gamification remplacera ce fichier.
+Les blocs de gamification viennent de `stores/gamification.js` (chargé avec le dashboard, chaque
+partie échoue seule) et `utils/gamification.js` (noms, icônes et couleurs des trophées, phrase du
+défi). Les anciennes valeurs d'« Aperçu » (`utils/dashboard/showcase.js`) ont disparu.
 
 États : squelettes au premier chargement ; chaque section échoue seule (message dans sa carte ou
 bandeau « Réessayer ») ; un **nouvel utilisateur** (aucune activité, aucun classement, set ou
@@ -104,13 +106,33 @@ Disposition : une colonne dans l'ordre de la maquette mobile ; à partir de `md`
 (1,55 / 1) comme la tablette. La barre de navigation de la maquette (onglets, barre du bas sur mobile)
 n'est **pas** reprise : l'en-tête actuel reste, en attendant la passe dédiée à la navigation.
 
+## 3 bis. Page Statistiques (`/stats`, lot B)
+
+Atteinte depuis l'accueil seulement (le menu du haut ne change pas, en attendant la passe navigation).
+Sélecteur de période (`PeriodPicker` : 7 j, 30 j par défaut, 90 j, 1 an), retenu dans ce navigateur
+(`localStorage` `cm.stats.days`, valeur inconnue = 30) ; les réponses d'une période choisie entre-temps
+sont ignorées. Chaque bloc charge et échoue seul (`SectionError` avec « Réessayer »), avec un état vide.
+
+| Bloc | Contenu |
+|---|---|
+| `TrainingTimeChart` | Barres empilées par semaine locale, modules dans un ordre fixe (Puzzles, Répertoire, Woodpecker, Libre) ; légende avec le total de chaque module ; info-bulle par barre (survol, focus ou toucher) ; vue tableau des mêmes chiffres ; échelle arrondie (15 min, 30 min, 1 h, puis heures pleines), une date sous six barres environ |
+| `SessionSummary` | Terminées, abandonnées, expirées, temps moyen ; sessions jouées et temps total |
+| `ThemeStrengthsCard` | Points forts et « À travailler » (taux, réussis / essais) ; un thème à travailler ouvre `/puzzle` filtré sur lui |
+| `RepertoireHealthCard` | Positions dues, jamais vues, réussite aux tests de la période ; tronçons fragiles, chacun vers les statistiques de son répertoire |
+
+Couleurs du graphique : jetons `--cm-chart-{puzzles, repertoire, woodpecker, free}` (`css/app.scss`),
+version foncée des couleurs des modules, vérifiés avec le validateur de palette de la compétence
+dataviz dans cet ordre d'empilement (bande de luminosité, séparation pour les daltonismes) ; en mode
+sombre, le vert Woodpecker passe à `#77a100`. Le vert reste sous 3:1 de contraste sur fond clair : la
+légende chiffrée, l'info-bulle et la vue tableau portent l'information.
+
 ## 4. Écarts avec la maquette
 
 - « Bonjour Léa » : l'application ne connaît pas de prénom (seulement l'adresse e-mail) ; la page dit
   « Bonjour ».
 - Onglet Puzzles ajouté (voir § 3) ; « min » et « record » affichés sur mobile, mois sur tablette.
 - Les modules « Niv. » et la barre : la maquette en fait une progression de niveau, la page montre un
-  ratio réel (le niveau reste en aperçu).
+  ratio réel, et le niveau du module à côté du titre.
 
 ## 5. Tests
 
@@ -121,9 +143,14 @@ n'est **pas** reprise : l'en-tête actuel reste, en attendant la passe dédiée 
   `RepertoireHealthTest.php` (tests de la période, tronçon fragile hors période),
   `tests/Unit/Dashboard/PeriodTest.php` (minuit local, heure d'été), `ThemeStrengthsTest.php`
   (partage forts / faibles).
-- Vitest : `tests/unit/dashboard.test.js` (grille de la heatmap, courbe, lignes des modules, store).
+- Vitest : `tests/unit/dashboard.test.js` (grille de la heatmap, courbe, lignes des modules, store),
+  `dashboard-stats.test.js` (périodes, durées, barres empilées, échelle, dates, sessions, thème
+  faible ; store : période retenue, bloc en échec seul, réponse périmée ignorée, astuce de l'accueil).
 - Playwright : `tests/e2e/dashboard.spec.js` (accueil d'un nouvel utilisateur ; heatmap, courbe,
-  modules et onglet Lichess d'un compte non lié, API du dashboard simulée).
+  modules et onglet Lichess d'un compte non lié, API du dashboard simulée), `stats.spec.js`
+  (astuce de l'accueil, page Statistiques : graphique, info-bulle, tableau, sessions, thèmes,
+  répertoire, période retenue après rechargement, thème faible vers les puzzles filtrés ; nouvel
+  utilisateur : blocs vides).
 
 ## 6. Lot B (en cours)
 
@@ -133,6 +160,23 @@ un mini-bloc « ton thème le plus faible ». « Lancer la session du jour » es
 dans Mes sessions, « Reprendre → » dans Dernières sessions).
 
 - **B1, API** : fait (`/dashboard/training`, `/dashboard/themes`, `/dashboard/repertoire`, § 2).
-- **B2, performances** : historique lourd d'un an dans la base de bench, mesure des trois endpoints
-  (objectif 300 ms) ; agrégats précalculés et commande de recalcul seulement si la mesure les exige.
-- **B3, front** : page `/stats`, mini-bloc de l'accueil, Vitest, Playwright.
+- **B2, performances** : fait. test `tests/Functional/Dashboard/PerformanceTest.php` (groupe `perf`, exclu
+  des lancements normaux : `vendor/bin/phpunit --group perf`). Il écrit en SQL de masse un an d'un
+  joueur très assidu (36 500 tentatives classées, 65 000 entrées d'activité, 365 sessions de 3 séances,
+  3 répertoires de 500 tronçons et 18 000 présentations), plus un second utilisateur aussi chargé, puis
+  lit chaque endpoint sur un an (médiane de 5 lectures après un échauffement, au plus 300 ms) ; tout
+  est annulé à la fin. Mesure du 2026-10-05 (MySQL 8.0.46 local, environnement `test`, requête HTTP
+  complète, données écrites en 2,9 s) :
+
+  | Endpoint (`days=371`) | Médiane | Max |
+  |---|---|---|
+  | `/dashboard/training` | 74,8 ms | 79,2 ms |
+  | `/dashboard/themes` | 124,4 ms | 125,6 ms |
+  | `/dashboard/repertoire` | 44,6 ms | 44,8 ms |
+  | `/dashboard/activity` | 103,5 ms | 103,7 ms |
+  | `/dashboard/rating-history` (aucun classement) | 1,6 ms | 1,9 ms |
+
+  Tout est sous 300 ms : **pas de table d'agrégats** ni de commande de recalcul. Le test reste là pour
+  refaire la mesure si les volumes ou les requêtes changent.
+- **B3, front** : page `/stats` (§ 3 bis), lien et astuce « À travailler » sur l'accueil (§ 3), Vitest,
+  Playwright.

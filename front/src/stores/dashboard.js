@@ -8,6 +8,7 @@ import {
 } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { describeFailure } from '@/composables/repertoire/useExplorer'
+import { DEFAULT_PERIOD, validPeriod } from '@/utils/dashboard/stats'
 
 /**
  * @typedef {import('@/utils/dashboard/heatmap').ActivityDay} ActivityDay
@@ -30,12 +31,65 @@ import { describeFailure } from '@/composables/repertoire/useExplorer'
  * @property {{blitz: RatingPoint[], rapid: RatingPoint[], classical: RatingPoint[]}} perfs
  *
  * @typedef {'activity'|'rating'|'puzzle'|'woodpecker'|'repertoire'} Section
+ *
+ * @typedef {object} ThemeRow
+ * @property {string} key
+ * @property {number} attempts
+ * @property {number} successCount
+ * @property {number} successRate 0..1
+ *
+ * @typedef {object} Themes
+ * @property {string} from
+ * @property {string} today
+ * @property {number} attempts rated puzzles of the period
+ * @property {number} successCount solved without help
+ * @property {number} minAttempts
+ * @property {ThemeRow[]} themes
+ * @property {ThemeRow[]} strong
+ * @property {ThemeRow[]} weak
+ *
+ * @typedef {object} Training
+ * @property {string} from
+ * @property {string} today
+ * @property {import('@/utils/dashboard/stats').TrainingWeek[]} weeks
+ * @property {Record<string, {count: number, durationMs: number}>} totals by module
+ * @property {{closed: number, completed: number, abandoned: number, expired: number, playedMs: number, averageMs: number|null}} sessions
+ *
+ * @typedef {object} Fragile
+ * @property {string} repertoireId
+ * @property {string} repertoireName
+ * @property {'white'|'black'} color
+ * @property {string} segmentId
+ * @property {{opening: {eco: string, name: string}|null, move: string|null}|null} label
+ * @property {number} tests
+ * @property {number} recentFailureRate
+ *
+ * @typedef {object} RepertoireHealth
+ * @property {number} repertoires
+ * @property {{total: number, new: number, due: number}} cards
+ * @property {{total: number, succeeded: number, successRate: number|null}} tests
+ * @property {Fragile[]} fragile
+ *
+ * @typedef {'training'|'themes'|'repertoire'} StatsSection
  */
 
 /** Heatmap: 12 weeks. */
 export const ACTIVITY_DAYS = 84
 /** Rating curves. */
 export const CURVE_DAYS = 90
+/** The home page's weak-theme tip. */
+export const TIP_DAYS = 30
+/** The statistics page's period, remembered in this browser. */
+const PERIOD_KEY = 'cm.stats.days'
+
+/** @returns {number} */
+function storedPeriod() {
+  try {
+    return validPeriod(localStorage.getItem(PERIOD_KEY))
+  } catch {
+    return DEFAULT_PERIOD
+  }
+}
 
 /**
  * The dashboard's data (docs/DASHBOARD.md). Each section loads and fails on its own, so one
@@ -62,6 +116,22 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const lichessLoading = ref(false)
   /** @type {import('vue').Ref<string|null>} */
   const lichessError = ref(null)
+
+  /** Statistics page (lot B): the period in local days and its three blocks. */
+  const period = ref(storedPeriod())
+  /** @type {import('vue').Ref<Training|null>} */
+  const training = ref(null)
+  /** @type {import('vue').Ref<Themes|null>} */
+  const themes = ref(null)
+  /** @type {import('vue').Ref<RepertoireHealth|null>} */
+  const health = ref(null)
+  const statsLoading = ref(false)
+  /** @type {import('vue').Ref<Partial<Record<StatsSection, string>>>} */
+  const statsErrors = ref({})
+  /** Only the answers of the latest period are kept. */
+  let statsRequest = 0
+  /** @type {import('vue').Ref<Themes|null>} the home page's tip, over {@link TIP_DAYS} days */
+  const tipThemes = ref(null)
 
   /** Nothing played yet: the page welcomes the user instead of drawing empty charts. */
   const isNewUser = computed(
@@ -93,6 +163,13 @@ export const useDashboardStore = defineStore('dashboard', () => {
     errors.value = {}
     lichessLoading.value = false
     lichessError.value = null
+    training.value = null
+    themes.value = null
+    health.value = null
+    statsLoading.value = false
+    statsErrors.value = {}
+    statsRequest++
+    tipThemes.value = null
   }
 
   /**
@@ -149,7 +226,75 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
   }
 
+  /**
+   * Loads the statistics page's blocks for a period (remembered in this browser); a failed block
+   * keeps its error message. A period chosen meanwhile wins over this one.
+   *
+   * @param {number} [days]
+   * @returns {Promise<void>}
+   */
+  async function loadStats(days = period.value) {
+    period.value = validPeriod(days)
+    try {
+      localStorage.setItem(PERIOD_KEY, String(period.value))
+    } catch {
+      // Storage unavailable (private window): the period is not remembered.
+    }
+    const turn = ++statsRequest
+    statsLoading.value = true
+    statsErrors.value = {}
+    const message = 'Impossible de charger ces données. Réessayez.'
+    /** @type {[StatsSection, Promise<any>, (value: any) => void][]} */
+    const sections = [
+      [
+        'training',
+        dashboardApi.training(period.value),
+        v => (training.value = v)
+      ],
+      ['themes', dashboardApi.themes(period.value), v => (themes.value = v)],
+      [
+        'repertoire',
+        dashboardApi.repertoire(period.value),
+        v => (health.value = v)
+      ]
+    ]
+    const results = await Promise.allSettled(sections.map(([, p]) => p))
+    if (turn !== statsRequest) return
+    results.forEach((result, i) => {
+      const [section, , assign] = sections[i]
+      if (result.status === 'fulfilled') assign(result.value)
+      else {
+        assign(null)
+        statsErrors.value = { ...statsErrors.value, [section]: message }
+      }
+    })
+    statsLoading.value = false
+  }
+
+  /**
+   * The home page's tip: the weakest theme of the last {@link TIP_DAYS} days. A failure only hides
+   * the tip.
+   *
+   * @returns {Promise<void>}
+   */
+  async function loadTip() {
+    try {
+      tipThemes.value = await dashboardApi.themes(TIP_DAYS)
+    } catch {
+      tipThemes.value = null
+    }
+  }
+
   return {
+    period,
+    training,
+    themes,
+    health,
+    statsLoading,
+    statsErrors,
+    tipThemes,
+    loadStats,
+    loadTip,
     activity,
     rating,
     puzzleRating,

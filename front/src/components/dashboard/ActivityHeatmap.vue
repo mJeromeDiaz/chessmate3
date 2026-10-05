@@ -2,9 +2,12 @@
   <section class="cm-card heatmap" data-testid="activity-heatmap">
     <div class="heatmap__head">
       <h2 class="cm-card__title">Régularité</h2>
-      <span class="heatmap__record"
-        >Record {{ SHOWCASE.bestStreak }} jours <ShowcaseTag
-      /></span>
+      <span
+        v-if="bestStreak !== null"
+        class="heatmap__record"
+        data-testid="best-streak"
+        >Record {{ bestStreak }} jour{{ bestStreak > 1 ? 's' : '' }}</span
+      >
     </div>
     <div class="heatmap__grid" role="img" :aria-label="summary">
       <div
@@ -41,8 +44,6 @@
 
 <script setup>
 import { computed } from 'vue'
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
-import { SHOWCASE } from '@/utils/dashboard/showcase'
 import { buildHeatmap } from '@/utils/dashboard/heatmap'
 
 const props = defineProps({
@@ -50,7 +51,9 @@ const props = defineProps({
   today: { type: String, required: true },
   /** @type {import('vue').PropType<import('@/utils/dashboard/heatmap').ActivityDay[]>} */
   days: { type: Array, required: true },
-  weeks: { type: Number, default: 12 }
+  weeks: { type: Number, default: 12 },
+  /** The longest streak of active days (docs/GAMIFICATION.md), null while unknown. */
+  bestStreak: { type: Number, default: null }
 })
 
 const SHADES = [0, 1, 2, 3, 4].map(level => `var(--cm-heat-${level})`)

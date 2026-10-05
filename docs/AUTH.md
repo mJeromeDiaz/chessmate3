@@ -28,6 +28,9 @@ Conventions :
 | GET | `/api/auth/oauth/{google\|lichess}/redirect` | public (navigation) | Démarre une connexion OAuth. | 302 vers le fournisseur + cookie `oauth_flow` |
 | GET | `/api/auth/oauth/{google\|lichess}/callback` | cookie `oauth_flow` | Retour du fournisseur. | 302 vers `/#/oauth/callback?status=…&mode=…&provider=…[&reason=…]` (+ RT si connexion) |
 | GET | `/api/auth/sessions` | AT (+ cookie RT pour reconnaître la session courante) | Sessions actives (une par famille de RT), la courante en tête : `{id, current, browser, os, form: phone\|tablet\|desktop, ip (anonymisée), signedInAt, lastActiveAt}`. | 200 `{sessions}` |
+| POST | `/api/auth/account-deletion` | AT (+ cookie RT) | Demande la suppression du compte : avec un email vérifié, envoie un code à 6 chiffres (10 min, 5 essais) ; sans, dit si la connexion de la session a moins de 10 min. | 202 `{method: email, expiresAt}` ; 200 `{method: recent_sign_in, recentSignIn}` ; 409 `deletion_scheduled` ; 429 `resend_too_soon` (30 s) |
+| POST | `/api/auth/account-deletion/confirm` | AT (+ cookie RT) | `{code}` (ou `{}` sans email) : le compte est **gelé** 30 jours, toutes les sessions fermées. | 200 `{deletionScheduledAt}` (+ cookie RT effacé) ; 422 `invalid_code` ; 410 `code_expired` ; 403 `recent_sign_in_required` ; 409 |
+| POST | `/api/auth/account-deletion/cancel` | AT | Annule la suppression programmée (idempotent). | 204 |
 | DELETE | `/api/auth/sessions/{familyId}` | AT (+ cookie RT) | Ferme une **autre** session : sa famille de RT est révoquée et `tokenVersion` incrémenté (ses AT meurent aussitôt ; les autres sessions se rafraîchissent sans rien voir). Journal `session_revoked`. | 200 ; 404 (inconnue, finie ou d'un autre compte) ; 409 `current_session` (c'est une déconnexion) |
 | GET | `/api/profile` | AT | Profil : email, email en attente, mot de passe utilisable, nom affiché, pseudo, avatar, préférences (échiquier, sons, profil public), identités liées, fournisseurs liables. | 200 |
 | PUT | `/api/profile/theme` | AT | Thème de l'interface `{theme: auto\|light\|dark}` (`null` dans le profil tant qu'aucun choix). Le front en garde aussi une copie dans le navigateur (`chessmate.theme`, appliquée au démarrage, visiteurs compris) ; au chargement du profil, le thème du compte l'emporte, et un compte sans thème reçoit celui du navigateur (`stores/theme.js`, `boot/theme.js`). | 200 profil ; 422 |
@@ -38,6 +41,7 @@ Conventions :
 | POST | `/api/profile/identities/{google\|lichess}/link` | AT | Démarre une liaison. | 200 `{authorizationUrl}` + cookie `oauth_flow` |
 | POST | `/api/profile/identities/lichess/grant` | AT | Demande le scope `study:read` au compte Lichess lié (import d'études privées, [REPERTOIRE.md](REPERTOIRE.md)). | 200 `{authorizationUrl}` + cookie `oauth_flow` |
 | DELETE | `/api/profile/identities/{id}` | AT | Retire une identité liée ; ferme toutes les sessions. | 200 `{accessToken, profile}` + nouveau RT ; 404 ; 409 `last_auth_method` |
+| GET | `/api/profile/export` | AT (permis à un compte gelé) | Toutes les données du compte en ZIP (§ Export des données). 3 par jour. | 200 `application/zip` ; 429 |
 | GET | `/api/profile/trusted-devices` | AT | Appareils de confiance actifs. | 200 `{devices}` |
 | DELETE | `/api/profile/trusted-devices/{id}` | AT | Révoque un appareil. | 200 ; 404 |
 
@@ -46,7 +50,7 @@ Codes `reason` du callback OAuth : `cancelled`, `invalid_state`, `provider_error
 `identity_mismatch`.
 
 Pages du SPA : `/login`, `/register`, `/mfa`, `/forgot-password`, `/reset-password`, `/profile`,
-`/oauth/callback`. Accès par page via `definePage({ meta: { auth } })` et le guard global
+`/oauth/callback`, `/account-deletion` (compte gelé). Accès par page via `definePage({ meta: { auth } })` et le guard global
 (`src/router/guards.js`) : `public` (défaut), `guest` (déconnecté uniquement), `required` (connecté
 uniquement ⇒ sinon `/login?redirect=…`), `mfa` (uniquement pendant une connexion en attente de code).
 Après une connexion (mot de passe, code 2FA ou OAuth) sans `redirect`, et pour un utilisateur connecté
@@ -336,3 +340,74 @@ sequenceDiagram
     A->>A: révoque (audit trusted_device_revoked), le cookie de cet appareil ne dispense plus du code
     A-->>S: 200
 ```
+
+## Suppression du compte
+
+Choix validés le 2026-10-05. La demande se confirme par une **preuve fraîche** : un code à
+6 chiffres envoyé par email (HMAC avec le secret de l'application, 10 minutes, 5 essais, un code
+par compte ; table `account_deletion_code`), ou, pour un compte **sans email vérifié** (Lichess
+seul), une connexion de moins de 10 minutes (`signed_in_at` de la famille de RT de la session, d'où
+les routes sous `/api/auth`, chemin du cookie RT). Une connexion plus ancienne demande de se
+reconnecter.
+
+Une fois confirmée (`App\Security\Account\AccountDeletion`) :
+
+- `app_user.deletion_scheduled_at` = maintenant + 30 jours ; `tokenVersion` incrémenté et toutes les
+  familles de RT révoquées : déconnecté partout. Email de confirmation (avec la date) ; journal
+  `account_deletion_scheduled`.
+- Le compte est **gelé** : la connexion reste possible, mais `FrozenAccountListener` répond 403
+  `account_frozen` (avec `deletionScheduledAt`) à toute route hors `/api/auth/*`, le profil (`GET
+  /api/profile`, thème, fuseau) et l'export des données. Pas de rappel de session, flux iCal en 404.
+- Annuler (`/cancel`) rend le compte tel quel ; email et journal `account_deletion_cancelled`.
+
+**Purge** (`App\Security\Account\AccountPurger`, cron quotidien `bin/console app:account:purge`,
+idempotent) des comptes dont la date est passée, une transaction chacun : jetons OAuth conservés
+révoqués chez le fournisseur (comme au retrait d'une identité), RT supprimés (clés par identifiant,
+sans clé étrangère), lignes du journal d'audit gardées mais **détachées et anonymisées** (IP,
+navigateur et détails effacés), puis suppression de `app_user` : toutes les tables du compte suivent
+par `ON DELETE CASCADE`. Une ligne `account_deleted`, liée à personne et sans donnée personnelle, en
+garde la trace.
+
+Front : carte « Données » du profil (`DataCard`, `composables/profile/useDataExport.js`) ; dialogue
+`AccountDeletionDialog` (ce qui sera effacé, case « Je comprends », puis le code reçu, ou la connexion
+récente, ou « Me reconnecter ») ; page `/account-deletion` : juste après la confirmation (déconnecté,
+date dans `?at=`), puis seule page d'un compte gelé reconnecté (le guard du routeur l'y ramène,
+`FROZEN_PAGE`) avec « Annuler la suppression », « Exporter mes données » et « Me déconnecter ».
+
+```mermaid
+sequenceDiagram
+    participant S as SPA
+    participant A as API
+    participant M as Email
+
+    S->>A: POST /api/auth/account-deletion (Bearer AT)
+    A->>M: code à 6 chiffres
+    A-->>S: 202 {method: email, expiresAt}
+    S->>A: POST /api/auth/account-deletion/confirm {code}
+    A->>A: deletion_scheduled_at = +30 j, tokenVersion++, RT révoqués
+    A-->>S: 200 {deletionScheduledAt} + cookie RT effacé
+    Note over S,A: reconnexion : 403 account_frozen partout sauf profil, export, auth
+    S->>A: POST /api/auth/account-deletion/cancel
+    A-->>S: 204
+```
+
+## Export des données
+
+`GET /api/profile/export` (`App\Security\Account\DataExport`, choix validé : téléchargement direct)
+construit à la demande un ZIP dans un fichier temporaire, envoyé puis supprimé (aucun fichier gardé sur
+le serveur ; extension PHP `zip` requise) :
+
+| Fichier | Contenu |
+|---|---|
+| `LISEZMOI.txt` | Description des fichiers |
+| `profil.json` | Compte, préférences, comptes liés (fournisseur, identifiant, email du fournisseur), appareils de confiance (libellé, dates) |
+| `puzzles.json` | Classement, historique du classement, tentatives (puzzle désigné par son identifiant Lichess) |
+| `woodpecker.json` | Sets, puzzles des sets, cycles, tentatives, agrandissements |
+| `repertoires.json` + `repertoires/NN-nom.pgn` | Répertoires, cartes FSRS, réponses, tests (présentations) ; chaque répertoire en PGN |
+| `entrainement.json` | Séances chronométrées, sessions, sessions enregistrées |
+| `activite.json` | Journal d'activité |
+
+Colonnes choisies une à une : jamais d'empreinte de mot de passe, de jeton, d'empreinte de jeton ni de
+secret chiffré (testé). Identifiants en UUID, instants en UTC (ISO 8601). Permis à un compte gelé (on
+récupère ses données avant la purge) ; 3 exports par jour (`profile_export`) ; journal `data_exported`.
+

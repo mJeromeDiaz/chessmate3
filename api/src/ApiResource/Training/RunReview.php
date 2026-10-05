@@ -41,6 +41,8 @@ final class RunReview
      *   in the order played; status ok, hint (no wrong move, help asked) or fail
      */
     public array $items;
+    /** XP gained in the run so far (docs/GAMIFICATION.md; written by the worker, possibly a moment later). */
+    public int $xp = 0;
 
     /**
      * @param list<ReviewItem> $items

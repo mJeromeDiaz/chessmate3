@@ -61,7 +61,7 @@
           >
             <div class="run-end__stat-value">{{ stat.value }}</div>
             <div class="run-end__stat-label">
-              {{ stat.label }} <ShowcaseTag v-if="stat.showcase" />
+              {{ stat.label }}
             </div>
             <div
               class="run-end__stat-sub"
@@ -214,15 +214,15 @@
  * end was seen on the page and not failed. An item to review is played again in the side column
  * (`RunEndReplay`, the whole sheet on a phone), client side only.
  */
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
 import ProfAvatar from '@/components/session/ProfAvatar.vue'
 import ConfettiBurst from '@/components/training/ConfettiBurst.vue'
 import RunEndReplay from '@/components/training/RunEndReplay.vue'
 import { trainingApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { usePuzzleStore } from '@/stores/puzzle'
+import { useGamificationStore } from '@/stores/gamification'
 import { apiErrorMessage } from '@/utils/apiError'
 import { profileName } from '@/utils/profile'
 import {
@@ -260,6 +260,7 @@ const emit = defineEmits({
 const $q = useQuasar()
 const auth = useAuthStore()
 const puzzles = usePuzzleStore()
+const gamification = useGamificationStore()
 
 const wide = computed(() => $q.screen.gt.sm)
 
@@ -268,6 +269,12 @@ const items = ref([])
 const loading = ref(false)
 const error = ref('')
 const burst = ref(0)
+/** Waiting for the worker before asking the run's XP again. */
+const XP_RETRY_MS = 3000
+/** @type {import('vue').Ref<number|null>} XP gained in the run, null while not counted */
+const xp = ref(null)
+/** @type {ReturnType<typeof setTimeout>|undefined} */
+let xpRetry
 /** Runs already celebrated: reopening the dialog does not throw confetti again. */
 const celebrated = new Set()
 
@@ -282,7 +289,12 @@ const themeLabel = (/** @type {string} */ key) => puzzles.themeLabel(key)
 const message = computed(() =>
   endMessage(props.run, items.value, name.value, themeLabel)
 )
-const stats = computed(() => endStats(props.run, items.value))
+const stats = computed(() =>
+  endStats(props.run, items.value, {
+    xp: xp.value,
+    summary: gamification.summary
+  })
+)
 const missed = computed(() => missedItems(items.value, themeLabel))
 /**
  * The missed item being played again (client side only), null on the review.
@@ -310,22 +322,52 @@ async function load() {
   items.value = []
   current.value = null
   reviewed.clear()
-  if (props.run.module === 'free') return
+  xp.value = null
+  clearTimeout(xpRetry)
   loading.value = true
   error.value = ''
   try {
     const [review] = await Promise.all([
       trainingApi.review(props.run.id),
-      props.run.module === 'repertoire'
+      props.run.module === 'repertoire' || props.run.module === 'free'
         ? null
         : puzzles.fetchThemes().catch(() => null)
     ])
     items.value = review.items
+    settleXp(review.xp)
   } catch (e) {
     error.value = apiErrorMessage(e)
   } finally {
     loading.value = false
   }
+}
+
+/**
+ * The XP of the run is written by the worker, a moment after the run: when the review comes too
+ * early (nothing counted yet for a run that played something), it is asked once more a little
+ * later. The level follows.
+ *
+ * @param {number} gained
+ */
+function settleXp(gained) {
+  const played =
+    (props.run.summary?.itemCount ?? 0) > 0 ||
+    (props.run.module === 'free' && (props.run.summary?.durationMs ?? 0) >= 60_000)
+  if (gained > 0 || !played) {
+    xp.value = gained
+    gamification.load(['summary'])
+    return
+  }
+  const runId = props.run.id
+  xpRetry = setTimeout(async () => {
+    try {
+      const review = await trainingApi.review(runId)
+      if (props.run.id === runId) xp.value = review.xp
+    } catch {
+      if (props.run.id === runId) xp.value = 0
+    }
+    gamification.load(['summary'])
+  }, XP_RETRY_MS)
 }
 
 watch(
@@ -343,6 +385,8 @@ watch(
   },
   { immediate: true }
 )
+
+onBeforeUnmount(() => clearTimeout(xpRetry))
 </script>
 
 <style scoped lang="scss">

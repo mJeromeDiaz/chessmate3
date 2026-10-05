@@ -8,7 +8,9 @@ import {
   sessionLine,
   formatMonth,
   identityDetail,
-  profileName
+  profileName,
+  deletionDay,
+  deletionRefusal
 } from '@/utils/profile'
 
 describe('profileName', () => {
@@ -202,5 +204,30 @@ describe('relativeDay', () => {
     expect(relativeDay(new Date(2025, 11, 31, 8, 5), now)).toBe(
       '31 déc. 2025, 08:05'
     )
+  })
+})
+
+describe('account deletion', () => {
+  it('writes the purge day in full', () => {
+    expect(deletionDay('2026-11-04T12:00:00+00:00')).toBe('4 novembre 2026')
+    expect(deletionDay(null)).toBe('')
+  })
+
+  it('explains each refusal of the API', () => {
+    const refusal = (
+      /** @type {number} */ status,
+      /** @type {string} */ error
+    ) => deletionRefusal({ response: { status, data: { error } } })
+    expect(refusal(422, 'invalid_code')).toEqual({
+      message: 'Code incorrect.',
+      signInAgain: false
+    })
+    expect(refusal(410, 'code_expired').message).toContain('nouveau')
+    expect(refusal(403, 'recent_sign_in_required').signInAgain).toBe(true)
+    expect(refusal(429, 'resend_too_soon').message).toContain(
+      'quelques secondes'
+    )
+    expect(refusal(429, 'unknown').message).toContain('Trop de tentatives')
+    expect(deletionRefusal(new Error('network')).message).toContain('erreur')
   })
 })

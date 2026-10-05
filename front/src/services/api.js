@@ -87,6 +87,41 @@ export const authApi = {
 
 export const profileApi = {
   get: () => http.get('/api/profile').then(r => r.data),
+  /**
+   * Every data of the account as a ZIP (JSON + PGN), 3 a day; allowed to a frozen account.
+   *
+   * @returns {Promise<{blob: Blob, fileName: string}>}
+   */
+  export: () =>
+    http.get('/api/profile/export', { responseType: 'blob' }).then(r => ({
+      blob: r.data,
+      fileName:
+        /filename="?([^";]+)"?/.exec(
+          r.headers['content-disposition'] ?? ''
+        )?.[1] ?? 'chessmate-export.zip'
+    })),
+  /**
+   * Starts an account deletion: a code emailed (`email`), or, without a verified email, whether
+   * this session signed in recently enough (`recent_sign_in`). Under /api/auth: the refresh
+   * cookie tells when this session signed in.
+   *
+   * @returns {Promise<{method: 'email', expiresAt: string}|{method: 'recent_sign_in', recentSignIn: boolean}>}
+   */
+  startDeletion: () =>
+    http.post('/api/auth/account-deletion').then(r => r.data),
+  /**
+   * Confirms it with the emailed code (null without an email): every session is closed.
+   *
+   * @param {string|null} code
+   * @returns {Promise<{deletionScheduledAt: string}>}
+   */
+  confirmDeletion: code =>
+    http
+      .post('/api/auth/account-deletion/confirm', code ? { code } : {})
+      .then(r => r.data),
+  /** Cancels a scheduled deletion (idempotent). */
+  cancelDeletion: () =>
+    http.post('/api/auth/account-deletion/cancel').then(() => undefined),
   /** @param {string} timezone IANA identifier */
   setTimezone: timezone =>
     http.put('/api/profile/timezone', { timezone }).then(r => r.data),
@@ -690,5 +725,35 @@ export const dashboardApi = {
         ...JSON_LD,
         params: { days }
       })
+      .then(r => r.data),
+  /** Training time by local week and module, totals by module, sessions of the period. */
+  training: (days = 30) =>
+    http
+      .get('/api/dashboard/training', { ...JSON_LD, params: { days } })
+      .then(r => r.data),
+  /** Strong and weak themes of the rated puzzles of the period. */
+  themes: (days = 30) =>
+    http
+      .get('/api/dashboard/themes', { ...JSON_LD, params: { days } })
+      .then(r => r.data),
+  /** Cards due, tests of the period and fragile segments of every repertoire. */
+  repertoire: (days = 30) =>
+    http
+      .get('/api/dashboard/repertoire', { ...JSON_LD, params: { days } })
       .then(r => r.data)
 }
+
+/** Gamification (docs/GAMIFICATION.md): XP, level, streaks, trophies, the weekly quest. */
+export const gamificationApi = {
+  /** XP, level, rank, module levels, streaks, today's exercise XP. */
+  summary: () =>
+    http.get('/api/gamification/summary', JSON_LD).then(r => r.data),
+  /** Every trophy, won (with the date of the feat) or not (with its progress). */
+  trophies: () =>
+    http
+      .get('/api/gamification/trophies', JSON_LD)
+      .then(r => r.data.trophies),
+  /** The quest of the week (drawn on its first read). */
+  quest: () => http.get('/api/gamification/quest', JSON_LD).then(r => r.data)
+}
+

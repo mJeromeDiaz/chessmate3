@@ -34,8 +34,8 @@
 
 <script setup>
 /**
- * Profile (design "Profil"): one column on a phone, two from md. Level and XP are showcase
- * values; data export and account deletion are not built yet.
+ * Profile (design "Profil"): one column on a phone, two from md. Level and XP are real
+ * values.
  */
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'

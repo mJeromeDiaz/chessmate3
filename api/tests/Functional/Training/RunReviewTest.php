@@ -11,7 +11,7 @@ use App\Tests\Functional\Woodpecker\WoodpeckerWebTestCase;
  * GET /training/runs/{id}/review (docs/TRAINING.md, run review): the items of a closed run in the
  * order played, with their outcome and what a replay needs.
  *
- * @phpstan-type ReviewJson array{id: string, module: string, items: list<array{index: int, type: string, status: string, durationMs: int|null, data: array<string, mixed>}>}
+ * @phpstan-type ReviewJson array{id: string, module: string, items: list<array{index: int, type: string, status: string, durationMs: int|null, data: array<string, mixed>}>, xp: int}
  */
 final class RunReviewTest extends WoodpeckerWebTestCase
 {
@@ -51,6 +51,11 @@ final class RunReviewTest extends WoodpeckerWebTestCase
         self::assertSame($solved['data']['puzzle']['moves'], $puzzles[0]['moves'], 'the solution, to replay it');
         self::assertSame([1, false], [$review['items'][1]['data']['hintLevel'] ?? null, $review['items'][1]['data']['solutionShown'] ?? null]);
         self::assertNotNull($review['items'][0]['durationMs']);
+
+        // The XP of the run: written by the worker, so counted once the outbox has run.
+        self::assertSame(0, $review['xp']);
+        $this->runOutbox();
+        self::assertGreaterThanOrEqual(10 + 3 + 3, $this->review($alice, $run['id'])['xp'], 'solved 10, failed 3 or more');
     }
 
     public function testAWoodpeckerRunGivesThePlaceOfEachPuzzleInTheCycle(): void

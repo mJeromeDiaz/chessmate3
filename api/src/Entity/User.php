@@ -105,6 +105,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => false])]
     private bool $publicProfile = false;
 
+    /**
+     * When the account will be purged (docs/AUTH.md, account deletion): set once the deletion is
+     * confirmed by an email code, 30 days ahead. Until then the account is frozen: every session is
+     * closed and, once signed in again, only the profile, the export and the cancellation answer.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $deletionScheduledAt = null;
+
     /** @var Collection<int, AuthIdentity> */
     #[ORM\OneToMany(targetEntity: AuthIdentity::class, mappedBy: 'user', cascade: ['persist'], orphanRemoval: true)]
     private Collection $authIdentities;
@@ -334,6 +342,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             throw new \InvalidArgumentException(sprintf('Unknown timezone "%s".', $timezone));
         }
         $this->timezone = $timezone;
+
+        return $this;
+    }
+
+    public function getDeletionScheduledAt(): ?\DateTimeImmutable
+    {
+        return $this->deletionScheduledAt;
+    }
+
+    /** A deletion is scheduled: the account is frozen until it is cancelled or purged. */
+    public function isFrozen(): bool
+    {
+        return null !== $this->deletionScheduledAt;
+    }
+
+    public function scheduleDeletion(\DateTimeImmutable $at): static
+    {
+        $this->deletionScheduledAt = $at;
+
+        return $this;
+    }
+
+    public function cancelDeletion(): static
+    {
+        $this->deletionScheduledAt = null;
 
         return $this;
     }

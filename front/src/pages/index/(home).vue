@@ -5,11 +5,32 @@
         <div>
           <div class="dashboard__hello lt-md">Bonjour 👋&#xFE0E;</div>
           <h1 class="dashboard__title">Ta progression</h1>
+          <router-link
+            v-if="!store.isNewUser"
+            to="/stats"
+            class="dashboard__stats-link"
+            data-testid="dashboard-stats"
+            >Mes statistiques →</router-link
+          >
         </div>
         <div class="dashboard__head-actions">
-          <span v-if="!store.isNewUser" class="dashboard__streak"
-            >🔥&#xFE0E; {{ SHOWCASE.streak }} jours <ShowcaseTag
-          /></span>
+          <span
+            v-if="!store.isNewUser && gamification.summary"
+            class="dashboard__streak"
+            :class="{
+              'dashboard__streak--waiting':
+                !gamification.summary.streak.playedToday
+            }"
+            :title="
+              gamification.summary.streak.playedToday
+                ? 'Série en cours'
+                : 'Joue aujourd’hui pour garder ta série'
+            "
+            data-testid="streak"
+            >🔥&#xFE0E; {{ gamification.summary.streak.current }} jour{{
+              gamification.summary.streak.current > 1 ? 's' : ''
+            }}</span
+          >
           <q-btn
             unelevated
             no-caps
@@ -52,6 +73,7 @@
             v-if="store.activity"
             :today="store.activity.today"
             :days="store.activity.days"
+            :best-streak="gamification.summary?.streak.best ?? null"
             class="dashboard__heat"
           />
           <div
@@ -63,6 +85,7 @@
               store.errors.activity
             }}</p>
           </div>
+          <WeakThemeTip class="dashboard__tip" />
           <WeeklyQuest class="dashboard__quest" />
           <MyPlans class="dashboard__sessions" />
           <RecentSessions class="dashboard__sessions" />
@@ -98,15 +121,15 @@ import { computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
 import { buildModuleRows } from '@/utils/dashboard/modules'
-import { SHOWCASE } from '@/utils/dashboard/showcase'
+import { useGamificationStore } from '@/stores/gamification'
 import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap.vue'
 import LevelBanner from '@/components/dashboard/LevelBanner.vue'
 import ModuleProgress from '@/components/dashboard/ModuleProgress.vue'
 import RatingCard from '@/components/dashboard/RatingCard.vue'
 import MyPlans from '@/components/dashboard/MyPlans.vue'
 import RecentSessions from '@/components/dashboard/RecentSessions.vue'
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
 import TrophyGrid from '@/components/dashboard/TrophyGrid.vue'
+import WeakThemeTip from '@/components/dashboard/WeakThemeTip.vue'
 import WeeklyQuest from '@/components/dashboard/WeeklyQuest.vue'
 import WelcomeCard from '@/components/dashboard/WelcomeCard.vue'
 import LandingPage from '@/components/landing/LandingPage.vue'
@@ -119,13 +142,15 @@ definePage({ meta: { landing: true } })
 
 const auth = useAuthStore()
 const store = useDashboardStore()
+const gamification = useGamificationStore()
 
 const moduleRows = computed(() =>
   buildModuleRows({
     totals: store.activity?.totals ?? {},
     puzzleRating: store.puzzleRating,
     sets: store.sets,
-    repertoires: store.repertoires
+    repertoires: store.repertoires,
+    gamification: gamification.summary
   })
 )
 
@@ -137,13 +162,19 @@ const sectionError = computed(() =>
 )
 
 onMounted(() => {
-  if (auth.isAuthenticated) store.load()
+  if (auth.isAuthenticated) {
+    store.load()
+    gamification.load()
+  }
 })
 
 watch(
   () => auth.isAuthenticated,
   signedIn => {
-    if (signedIn) store.load()
+    if (signedIn) {
+      store.load()
+      gamification.load()
+    }
   }
 )
 </script>
@@ -186,6 +217,15 @@ watch(
   }
 }
 
+.dashboard__stats-link {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--cm-brand);
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+}
+
 .dashboard__head-actions {
   display: flex;
   align-items: center;
@@ -203,6 +243,12 @@ watch(
   color: var(--cm-orange-ink);
   font-weight: 800;
   font-size: 15px;
+}
+
+// Not played yet today: the streak is still alive, but waits for today's exercise.
+.dashboard__streak--waiting {
+  background: var(--cm-subtle);
+  color: var(--cm-muted);
 }
 
 .dashboard__new {
@@ -248,6 +294,7 @@ watch(
 .dashboard__heat {
   order: 3;
 }
+.dashboard__tip,
 .dashboard__quest {
   order: 4;
 }

@@ -15,7 +15,8 @@ Chess training app (Duolingo-style). One git repository (monorepo) at the root:
   (opening repertoires: normalized FEN, graph, one prepared move per position, trash, segments,
   editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics), `DASHBOARD.md`
   (home dashboard: endpoints, local days, Lichess rating history, showcase values), `NOTIFICATIONS.md`
-  (Web Push, VAPID keys, session reminders and their cron). Code paths quoted in them (`src/...`, `config/...`,
+  (Web Push, VAPID keys, session reminders and their cron), `GAMIFICATION.md` (XP rules and ledger,
+  levels, ranks, streaks, rebuild). Code paths quoted in them (`src/...`, `config/...`,
   `bin/console`) are relative to `api/` unless they name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
@@ -32,7 +33,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification today) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification today) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
 
 | Layer | Location |
@@ -68,6 +69,7 @@ API (`cd api`; prefix with `php -d xdebug.mode=off` if Xdebug reports a false in
 
 ```bash
 vendor/bin/phpunit                                   # all tests (unit + functional, test DB)
+vendor/bin/phpunit --group perf                      # performance measures, excluded by default (dashboard stats, docs/DASHBOARD.md)
 vendor/bin/phpstan analyse --memory-limit=1G         # level max
 bin/console doctrine:migrations:migrate [--env=test]
 bin/console doctrine:fixtures:load                   # PURGES the DB: themes, sample puzzles, demo user + Woodpecker data + 12 weeks of activity, openings + demo repertoires
@@ -77,6 +79,8 @@ bin/console app:activity:backfill                    # log past exercises in the
 bin/console app:repertoire:sync-openings             # load/update the opening names (data/chess-openings, ~9 s; fixtures do it too)
 bin/console cache:pool:prune                         # daily cron: expired Lichess explorer/cloud-eval answers
 bin/console app:training:send-reminders              # cron every minute: reminders of saved sessions (docs/NOTIFICATIONS.md)
+bin/console app:account:purge                        # daily cron: purge the accounts whose deletion is due (docs/AUTH.md)
+bin/console app:gamification:rebuild [--user=<uuid>] # recompute the XP from what was played (after deploying, or after changing XpRules)
 bin/console app:notification:vapid-keys              # once per environment: Web Push key pair (private key = secret)
 bin/console messenger:consume activity async         # worker: domain events (outbox), emails, big repertoire imports
 ```

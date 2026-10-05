@@ -438,6 +438,7 @@ le CSV d'exemple, sélection mesurée sur 5 M lignes, parcours réels dans Chrom
 | Deux transactions (démarrage, soumission) verrouillant les mêmes lignes dans un ordre différent risquaient l'interblocage. | Moyenne | **Évité par conception** : toujours `puzzle_rating` puis `puzzle_attempt`. |
 | Appel HTTP à Lichess sous verrou de ligne. | Faible (disponibilité) | **Évité** : appel avant la transaction, revérification sous verrou. |
 | Commande `app:e2e:seed-user` (émet une session sans 2FA). | Élevée si exposée | **Évité** : `#[When('e2e')]`, absente des environnements dev et prod (vérifié). Le `APP_SECRET` de `.env.e2e` ne sert qu'aux tests. |
+| Limite `refresh_ip` relevée (100 000 / 15 min) sous `when@e2e` : toute la suite Playwright rafraîchit sa session depuis 127.0.0.1. | Nulle hors `e2e` | **Accepté** : production et dev gardent 60 / 15 min ; `refresh_identifier` reste inchangé. |
 | Solution envoyée au client. | Moyenne | **Accepté** (§ 6.4, R11). |
 
 ## 7. Phase 4 : activité et Woodpecker
@@ -624,3 +625,30 @@ Détail : [NOTIFICATIONS.md](NOTIFICATIONS.md).
 |---|---|---|
 | R27 | Le jeton est dans l'URL : il peut figurer dans les journaux du serveur web, et l'agenda tiers (Google...) le connaît. | Inhérent aux abonnements iCal ; ne révèle que le programme des sessions ; révocable et régénérable à tout moment. |
 | R28 | Une copie chiffrée du jeton est gardée (au lieu d'une empreinte seule) pour réafficher l'adresse. | Choix validé (confort) ; clé dédiée, hors base, rotation § 4.2 bis. |
+
+## 9. Suppression du compte (profil, lot E)
+
+- **Preuve fraîche** : code à 6 chiffres par email (HMAC `kernel.secret`, comme le code 2FA : 10^6
+  valeurs seraient réversibles avec une simple empreinte), 10 minutes, 5 essais réservés avant
+  comparaison (mise à jour atomique), un code par compte, pas de renvoi avant 30 s ; sans email
+  vérifié, connexion de moins de 10 minutes. Une session volée ancienne ne suffit donc pas.
+- Limites (par utilisateur) : 5 envois de code par heure (`account_deletion_code`), 15 confirmations
+  par heure (`account_deletion_confirm`).
+- Confirmée : déconnexion partout (`tokenVersion`, RT révoqués), compte gelé 30 jours
+  (`FrozenAccountListener` : 403 `account_frozen` hors authentification, profil et export), emails de
+  programmation et d'annulation au titulaire.
+- Purge quotidienne : jetons OAuth révoqués, RT supprimés, journal d'audit détaché et anonymisé (IP,
+  navigateur, détails), données du compte supprimées en cascade (testé : rien ne reste du compte).
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R29 | Pendant les 30 jours, quelqu'un qui reprend la main sur le compte (mot de passe ou boîte mail) peut annuler la suppression. | Le titulaire reçoit un email à chaque annulation ; c'est le prix du délai de grâce choisi. |
+| R30 | Les sauvegardes de la base gardent le compte jusqu'à leur rotation. | Hors application : durée de rétention des sauvegardes à documenter avec l'hébergement. |
+
+Export (`GET /api/profile/export`) : données du seul utilisateur connecté, colonnes explicites sans
+aucun secret (testé), fichier temporaire supprimé après l'envoi, `Cache-Control: private, no-store`,
+3 par jour, journal `data_exported`.
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R31 | Une session volée suffit à télécharger toutes les données du compte. | Comme toute lecture de l'API ; trace `data_exported` dans le journal d'audit ; limité à 3 par jour. |

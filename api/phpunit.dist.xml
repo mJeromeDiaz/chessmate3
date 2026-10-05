@@ -21,6 +21,13 @@
         </testsuite>
     </testsuites>
 
+    <!-- Performance measures (tests/Functional/Dashboard/PerformanceTest.php), run only on demand with the perf group option -->
+    <groups>
+        <exclude>
+            <group>perf</group>
+        </exclude>
+    </groups>
+
     <extensions>
         <bootstrap class="Symfony\Bridge\PhpUnit\SymfonyExtension">
             <parameter name="clock-mock-namespaces" value="App" />

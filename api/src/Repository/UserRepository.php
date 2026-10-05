@@ -43,6 +43,22 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
+    /**
+     * Accounts whose scheduled deletion is due (docs/AUTH.md).
+     *
+     * @return list<User>
+     */
+    public function findDeletionDue(\DateTimeImmutable $now): array
+    {
+        /** @var list<User> */
+        return $this->createQueryBuilder('u')
+            ->where('u.deletionScheduledAt IS NOT NULL')
+            ->andWhere('u.deletionScheduledAt <= :now')
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function save(User $user, bool $flush = true): void
     {
         $this->getEntityManager()->persist($user);

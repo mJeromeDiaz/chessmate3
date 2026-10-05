@@ -5,6 +5,8 @@
  * - 'required': signed-in users only: others go to the login page, which brings them back after;
  * - 'mfa': only while a password login waits for its emailed code.
  *
+ * A frozen account (deletion scheduled) is kept on the deletion page, whatever the level.
+ *
  * @typedef {'public'|'guest'|'required'|'mfa'} AuthLevel
  */
 
@@ -29,6 +31,9 @@ export function safeRedirect(value, fallback = '/') {
   return value
 }
 
+/** Where a frozen account (deletion scheduled) stays: cancel, export or sign out. */
+export const FROZEN_PAGE = '/account-deletion'
+
 /**
  * Creates the global navigation guard.
  *
@@ -44,6 +49,10 @@ export function createAuthGuard(getAuth) {
 
     /** @type {AuthLevel} */
     const level = to.meta?.auth ?? 'public'
+
+    if (auth.isAuthenticated && auth.isFrozen && to.path !== FROZEN_PAGE) {
+      return { path: FROZEN_PAGE }
+    }
 
     if (level === 'required' && !auth.isAuthenticated) {
       return { path: '/login', query: { redirect: to.fullPath } }

@@ -30,4 +30,11 @@ enum AuditEventType: string
     case OauthLoginFailure = 'oauth_login_failure';
     case Logout = 'logout';
     case SessionRevoked = 'session_revoked';
+    case AccountDeletionCodeSent = 'account_deletion_code_sent';
+    case AccountDeletionCodeFailed = 'account_deletion_code_failed';
+    case AccountDeletionScheduled = 'account_deletion_scheduled';
+    case AccountDeletionCancelled = 'account_deletion_cancelled';
+    /** Written after the purge, linked to no account and without any personal data. */
+    case AccountDeleted = 'account_deleted';
+    case DataExported = 'data_exported';
 }

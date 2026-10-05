@@ -37,6 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
   const initialized = ref(false)
 
   const isAuthenticated = computed(() => accessToken.value !== null)
+  /** A deletion is scheduled: the account is frozen until it is cancelled (docs/AUTH.md). */
+  const isFrozen = computed(() => !!profile.value?.deletionScheduledAt)
 
   /** @type {Promise<void>|null} */
   let initPromise = null
@@ -275,12 +277,34 @@ export const useAuthStore = defineStore('auth', () => {
     return data.authorizationUrl
   }
 
+  /**
+   * Confirms the account deletion. The API closes every session, this one included: it is
+   * forgotten here too.
+   *
+   * @param {string|null} code the emailed code, null for an account without a verified email
+   * @returns {Promise<string>} when the account will be purged
+   */
+  async function confirmDeletion(code) {
+    const data = await profileApi.confirmDeletion(code)
+    clearSession()
+    return data.deletionScheduledAt
+  }
+
+  /** Cancels the scheduled deletion: the account is usable again. */
+  async function cancelDeletion() {
+    await profileApi.cancelDeletion()
+    await fetchProfile()
+  }
+
   return {
     accessToken,
     profile,
     mfa,
     initialized,
     isAuthenticated,
+    isFrozen,
+    confirmDeletion,
+    cancelDeletion,
     init,
     refresh,
     login,

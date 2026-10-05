@@ -229,6 +229,8 @@ final class ProfileController extends AbstractController
             'boardTheme' => $user->getBoardTheme()->value,
             'moveSound' => $user->hasMoveSound(),
             'publicProfile' => $user->isPublicProfile(),
+            // Account deletion scheduled (frozen account): when it will be purged.
+            'deletionScheduledAt' => $user->getDeletionScheduledAt()?->format(\DATE_ATOM),
             'linkableProviders' => array_values(array_map(
                 static fn (AuthProvider $provider): string => $provider->value,
                 array_filter(AuthProvider::cases(), static fn (AuthProvider $provider): bool => !$user->getAuthIdentities()->exists(

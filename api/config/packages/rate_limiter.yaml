@@ -190,7 +190,33 @@ framework:
             policy: sliding_window
             limit: 30
             interval: '1 hour'
+        # Account deletion (identifier = user id): codes sent by email, and confirmations tried (each code
+        # also allows 5 attempts; this caps the guesses across codes).
+        # Data export (identifier = user id): a ZIP of every exercise, built on each request.
+        profile_export:
+            policy: sliding_window
+            limit: 3
+            interval: '24 hours'
+        account_deletion_code:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        account_deletion_confirm:
+            policy: sliding_window
+            limit: 15
+            interval: '1 hour'
         profile_handle_check:
             policy: sliding_window
             limit: 120
             interval: '10 minutes'
+
+# End-to-end tests (front/tests/e2e): every test signs in from 127.0.0.1 and each page load
+# refreshes the session, so a full run (and a rerun) exceeds the per-IP refresh budget. The
+# per-identifier limit (one token family per seeded user) stays as in production.
+when@e2e:
+    framework:
+        rate_limiter:
+            refresh_ip:
+                policy: sliding_window
+                limit: 100000
+                interval: '15 minutes'

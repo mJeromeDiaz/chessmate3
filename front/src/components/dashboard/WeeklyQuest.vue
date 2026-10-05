@@ -1,16 +1,19 @@
 <template>
-  <div class="quest" data-testid="weekly-quest">
-    <img v-if="quest.image" :src="quest.image" alt="" class="quest__prof" />
+  <div v-if="quest" class="quest" data-testid="weekly-quest">
+    <img v-if="prof.image" :src="prof.image" alt="" class="quest__prof" />
     <div class="quest__bubble">
       <div class="quest__kicker">
-        {{ quest.prof.toUpperCase() }} · DÉFI DE LA SEMAINE <ShowcaseTag />
+        {{ prof.name.toUpperCase() }} · DÉFI DE LA SEMAINE
+        <span v-if="quest.completed" class="quest__done" data-testid="quest-done"
+          >✓ RÉUSSI</span
+        >
       </div>
-      <div class="quest__text">{{ quest.text }}</div>
+      <div class="quest__text" data-testid="quest-text">{{ text }}</div>
       <div class="quest__progress">
         <div class="quest__bar">
-          <div :style="{ width: `${(quest.done / quest.goal) * 100}%` }" />
+          <div :style="{ width: `${percent}%` }" />
         </div>
-        <span>{{ quest.done }}/{{ quest.goal }}</span>
+        <span data-testid="quest-progress">{{ quest.current }}/{{ quest.goal }}</span>
         <span class="quest__reward">+{{ quest.reward }} XP</span>
       </div>
     </div>
@@ -18,10 +21,32 @@
 </template>
 
 <script setup>
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
-import { SHOWCASE } from '@/utils/dashboard/showcase'
+/**
+ * The weekly quest (docs/GAMIFICATION.md): drawn by the API each Monday, given by the professor
+ * of its module, its reward gained once it is completed. Hidden when it cannot be loaded.
+ */
+import { computed, onMounted } from 'vue'
+import { useGamificationStore } from '@/stores/gamification'
+import { usePuzzleStore } from '@/stores/puzzle'
+import { questProf, questText } from '@/utils/gamification'
 
-const quest = SHOWCASE.quest
+const gamification = useGamificationStore()
+const puzzles = usePuzzleStore()
+
+const quest = computed(() => gamification.quest)
+const prof = computed(() =>
+  quest.value ? questProf(quest.value) : { name: '', image: '' }
+)
+const text = computed(() =>
+  quest.value ? questText(quest.value, key => puzzles.themeLabel(key)) : ''
+)
+const percent = computed(() =>
+  quest.value && quest.value.goal > 0
+    ? Math.min(100, (quest.value.current / quest.value.goal) * 100)
+    : 0
+)
+
+onMounted(() => puzzles.fetchThemes().catch(() => null))
 </script>
 
 <style scoped lang="scss">
@@ -88,5 +113,8 @@ const quest = SHOWCASE.quest
 
 .quest__reward {
   color: var(--cm-brand-deep);
+}
+.quest__done {
+  color: var(--cm-lime-ink);
 }
 </style>

@@ -7,6 +7,7 @@ namespace App\State\Training;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Training\RunReview;
+use App\Repository\Gamification\XpEntryRepository;
 use App\Security\AuthenticatedUser;
 use App\Training\Exception\RunNotFoundException;
 use App\Training\Module\ModuleRegistry;
@@ -27,6 +28,7 @@ final class RunReviewProvider implements ProviderInterface
         private readonly TimeboxRunner $runner,
         private readonly ModuleRegistry $modules,
         private readonly AuthenticatedUser $authenticatedUser,
+        private readonly XpEntryRepository $xp,
     ) {
     }
 
@@ -41,6 +43,9 @@ final class RunReviewProvider implements ProviderInterface
             throw new ConflictHttpException('The run is still in progress.');
         }
 
-        return RunReview::from($run, $this->modules->reviewer($run->getModule())?->review($run) ?? []);
+        $review = RunReview::from($run, $this->modules->reviewer($run->getModule())?->review($run) ?? []);
+        $review->xp = $this->xp->sumForRun($run->getId());
+
+        return $review;
     }
 }

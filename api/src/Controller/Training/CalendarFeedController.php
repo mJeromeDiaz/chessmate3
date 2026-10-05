@@ -35,6 +35,10 @@ final class CalendarFeedController extends AbstractController
     {
         $this->rateLimitGuard->consume($this->trainingCalendarFeedLimiter, FeedTokens::hash($token));
         $user = $this->tokens->owner($token) ?? throw $this->createNotFoundException();
+        // A frozen account (deletion scheduled) publishes nothing.
+        if ($user->isFrozen()) {
+            throw $this->createNotFoundException();
+        }
 
         return new Response($this->writer->calendar($user, $this->plans->findInCalendar($user), 'ChessMate — sessions'), Response::HTTP_OK, [
             'Content-Type' => 'text/calendar; charset=UTF-8',

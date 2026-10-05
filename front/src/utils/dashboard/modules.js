@@ -1,18 +1,18 @@
 import { MODULES_BY_ID } from '@/utils/session/catalog'
-import { SHOWCASE } from '@/utils/dashboard/showcase'
+import { moduleLevel } from '@/utils/gamification'
 
 /**
  * The dashboard's "Progression par module" rows (design "Dashboard"): the catalogue's look, the
  * real figures of the modules that exist, "Bientôt" for the others. The bar shows a real ratio
- * (puzzle success rate, Woodpecker cycle progress, repertoire 30-day success rate); only the
- * level is a showcase value.
+ * (puzzle success rate, Woodpecker cycle progress, repertoire 30-day success rate) and the level
+ * is the module's (docs/GAMIFICATION.md).
  *
  * @typedef {object} ModuleRow
  * @property {import('@/utils/session/catalog').Module} module
  * @property {string} stat
  * @property {number} ratio 0..1, the bar
  * @property {string} ratioLabel what the bar measures
- * @property {number} level showcase
+ * @property {number|null} level the module's level, null for a module that does not exist yet
  * @property {string|null} to link, null when the module does not exist yet
  *
  * @typedef {object} ModuleSources
@@ -20,6 +20,7 @@ import { SHOWCASE } from '@/utils/dashboard/showcase'
  * @property {{rating: number, provisional: boolean}|null} puzzleRating
  * @property {import('@/stores/woodpecker').WoodpeckerSet[]} sets
  * @property {{cards: {total: number, due: number}, repertoires: {successRate30: number|null}[]}|null} repertoires
+ * @property {import('@/utils/gamification').Summary|null} [gamification] module levels
  */
 
 /** The design's order. */
@@ -52,7 +53,7 @@ export function buildModuleRows(sources) {
       stat: 'Bientôt',
       ratio: 0,
       ratioLabel: '',
-      level: SHOWCASE.moduleLevels[id] ?? 1,
+      level: moduleLevel(sources.gamification ?? null, id),
       to: null
     }
     if (id === 'puzzles') Object.assign(row, puzzles(sources))

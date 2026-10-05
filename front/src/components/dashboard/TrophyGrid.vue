@@ -2,35 +2,51 @@
   <section class="cm-card trophies" data-testid="trophies">
     <div class="trophies__head">
       <h2 class="cm-card__title">Trophées</h2>
-      <span class="trophies__count"
-        >{{ unlocked }} / {{ SHOWCASE.badges.length }} débloqués <ShowcaseTag
-      /></span>
+      <span v-if="cards.length" class="trophies__count" data-testid="trophies-count"
+        >{{ unlocked }} / {{ cards.length }} débloqués</span
+      >
     </div>
-    <div class="trophies__grid">
+    <p v-if="error" class="cm-muted q-my-none">{{ error }}</p>
+    <div v-else class="trophies__grid">
       <div
-        v-for="badge in SHOWCASE.badges"
-        :key="badge.name"
+        v-for="card in cards"
+        :key="card.key"
         class="trophies__badge"
-        :class="{ 'trophies__badge--locked': !badge.unlocked }"
+        :class="{ 'trophies__badge--locked': !card.unlocked }"
+        :data-testid="`trophy-${card.key}`"
+        :data-unlocked="card.unlocked || undefined"
+        :title="card.desc"
       >
         <div
           class="trophies__icon"
-          :style="{ background: badge.bg, color: badge.ink }"
+          :style="{ background: card.bg, color: card.ink }"
         >
-          {{ badge.icon }}
+          {{ card.icon }}
         </div>
-        <div class="trophies__name">{{ badge.name }}</div>
-        <div class="trophies__desc">{{ badge.desc }}</div>
+        <div class="trophies__name">{{ card.name }}</div>
+        <div class="trophies__desc">{{ card.desc }}</div>
+        <div v-if="!card.unlocked" class="trophies__track" aria-hidden="true">
+          <div :style="{ width: `${card.percent}%`, background: card.ink }" />
+        </div>
+        <div class="trophies__progress">{{ card.progress }}</div>
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
-import { SHOWCASE } from '@/utils/dashboard/showcase'
+/**
+ * The trophies (docs/GAMIFICATION.md): won ones with the date of the feat, locked ones dimmed with
+ * their progress.
+ */
+import { computed } from 'vue'
+import { useGamificationStore } from '@/stores/gamification'
+import { trophyCards } from '@/utils/gamification'
 
-const unlocked = SHOWCASE.badges.filter(b => b.unlocked).length
+const gamification = useGamificationStore()
+const cards = computed(() => trophyCards(gamification.trophies))
+const unlocked = computed(() => cards.value.filter(c => c.unlocked).length)
+const error = computed(() => gamification.errors.trophies ?? '')
 </script>
 
 <style scoped lang="scss">
@@ -58,7 +74,11 @@ const unlocked = SHOWCASE.badges.filter(b => b.unlocked).length
 
 .trophies__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  @media (min-width: $breakpoint-sm-min) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   gap: 8px;
 }
 
@@ -72,7 +92,8 @@ const unlocked = SHOWCASE.badges.filter(b => b.unlocked).length
   background: var(--cm-page);
   text-align: center;
 
-  &--locked {
+  &--locked .trophies__icon,
+  &--locked .trophies__name {
     opacity: 0.45;
   }
 }
@@ -97,5 +118,24 @@ const unlocked = SHOWCASE.badges.filter(b => b.unlocked).length
   font-size: 10.5px;
   line-height: 1.2;
   color: var(--cm-muted);
+}
+.trophies__track {
+  width: 70%;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--cm-subtle);
+  overflow: hidden;
+
+  > div {
+    height: 100%;
+    opacity: 0.6;
+  }
+}
+
+.trophies__progress {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--cm-ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 </style>

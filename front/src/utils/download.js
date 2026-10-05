@@ -7,7 +7,17 @@
  * @param {string} [type]
  */
 export function downloadText(text, fileName, type = 'application/x-chess-pgn') {
-  const url = URL.createObjectURL(new Blob([text], { type }))
+  downloadBlob(new Blob([text], { type }), fileName)
+}
+
+/**
+ * Hands a binary file (a ZIP...) to the browser as a file to save.
+ *
+ * @param {Blob} blob
+ * @param {string} fileName
+ */
+export function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = fileName

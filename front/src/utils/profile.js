@@ -212,3 +212,58 @@ export function relativeDay(date, now) {
 
   return `${dayLabel}, ${time}`
 }
+
+/**
+ * The day an account will be purged, e.g. "4 novembre 2026" (in the browser's timezone).
+ *
+ * @param {string|null|undefined} iso
+ * @returns {string}
+ */
+export function deletionDay(iso) {
+  if (!iso) return ''
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
+    new Date(iso)
+  )
+}
+
+/**
+ * What to tell after a refused step of the account deletion (the API's `error` code).
+ *
+ * @param {any} error an Axios error
+ * @returns {{message: string, signInAgain: boolean}} signInAgain: a recent sign-in is needed
+ */
+export function deletionRefusal(error) {
+  const code = error?.response?.data?.error
+  switch (code) {
+    case 'invalid_code':
+      return { message: 'Code incorrect.', signInAgain: false }
+    case 'code_expired':
+      return {
+        message: 'Ce code n’est plus valable : demande-en un nouveau.',
+        signInAgain: false
+      }
+    case 'resend_too_soon':
+      return {
+        message: 'Patiente quelques secondes avant de redemander un code.',
+        signInAgain: false
+      }
+    case 'recent_sign_in_required':
+      return {
+        message: 'Reconnecte-toi pour confirmer la suppression.',
+        signInAgain: true
+      }
+    case 'deletion_scheduled':
+      return {
+        message: 'La suppression est déjà programmée.',
+        signInAgain: false
+      }
+    default:
+      return {
+        message:
+          error?.response?.status === 429
+            ? 'Trop de tentatives. Patiente un peu avant de réessayer.'
+            : 'Une erreur est survenue. Réessaie.',
+        signInAgain: false
+      }
+  }
+}

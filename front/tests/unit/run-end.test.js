@@ -170,22 +170,32 @@ describe('endMessage', () => {
 })
 
 describe('endStats', () => {
-  it('shows the rating after a puzzles run, then the showcase XP', () => {
+  it('shows the rating after a puzzles run, then the XP gained and the level', () => {
+    const summary = /** @type {any} */ ({
+      level: 12,
+      xpInLevel: 2340,
+      xpForNext: 3000,
+      rank: 'Tacticien',
+      nextRank: null
+    })
     const stats = endStats(
       run('puzzles', 4, 3, {
         averageMs: 20_000,
         ratingAfter: 1512,
         ratingDelta: 12.4
       }),
-      []
+      [],
+      { xp: 36, summary }
     )
     expect(stats.map(s => [s.label, s.value, s.sub])).toEqual([
       ['Réussite', '75 %', '3 sur 4'],
       ['Moyenne / puzzle', '0:20', '2:05 au total'],
       ['Classement', '1512', '+12 pts'],
-      ['XP gagnés', '+20', expect.stringMatching(/^Niveau \d+ · \d+ %$/)]
+      ['XP gagnés', '+36', 'Niveau 12 · 78 %']
     ])
-    expect(stats[3].showcase).toBe(true)
+    expect(
+      endStats(run('puzzles', 4, 3), [])[3]
+    ).toMatchObject({ value: '…', sub: '' })
   })
 
   it('shows the cycle progress of a Woodpecker run and the graded positions of a repertoire run', () => {

@@ -260,17 +260,27 @@ final class WoodpeckerApiTest extends WoodpeckerWebTestCase
             ['id' => $set['id']],
         ));
 
-        for ($i = 0; $i < 3; ++$i) {
-            $rated = $this->startAttempt($user);
+        // The selector draws a few random slices of each window (PuzzleSelector), so with only 3
+        // puzzles outside the set it may give up before using all of them: every rated attempt is
+        // outside the set, until the selector has nothing (more) to give.
+        $served = 0;
+        while (201 === ($response = $this->api('POST', '/api/puzzles/attempts', $user, []))->getStatusCode()) {
+            $rated = $this->attemptJson($response);
             self::assertNotContains((int) $this->puzzles[$rated['puzzle']['id']]->getId(), $inSet);
             $this->api('POST', '/api/puzzles/attempts/'.$rated['id'].'/submission', $user, ['moves' => []]);
+            self::assertLessThanOrEqual(3, ++$served, 'only 3 puzzles are outside the set');
         }
-        // Every selectable puzzle outside the set is used: nothing left while the set is active.
-        self::assertSame(404, $this->api('POST', '/api/puzzles/attempts', $user, [])->getStatusCode());
+        self::assertSame(404, $response->getStatusCode());
 
+        // Once the set ends, its puzzles come back: at most the 3 - $served outside it are left first.
         $this->api('POST', '/api/woodpecker/sets/'.$set['id'].'/abandon', $user);
-        $rated = $this->startAttempt($user);
-        self::assertContains((int) $this->puzzles[$rated['puzzle']['id']]->getId(), $inSet);
+        $back = false;
+        for ($i = 0; $i <= 3 - $served && !$back; ++$i) {
+            $rated = $this->startAttempt($user);
+            $back = \in_array((int) $this->puzzles[$rated['puzzle']['id']]->getId(), $inSet, true);
+            $this->api('POST', '/api/puzzles/attempts/'.$rated['id'].'/submission', $user, ['moves' => []]);
+        }
+        self::assertTrue($back, 'a puzzle of the ended set is served again');
     }
 
     public function testStubbornPuzzlesAreListedAndReplayableUnrated(): void

@@ -220,7 +220,8 @@ Woodpecker liste ses séances (`runs`).
     `moduleEndSound`), avec des confettis (`ConfettiBurst`) seulement pour une fin vécue sur la page
     et réussie ;
   - le message du prof, composé côté client : taux de réussite, thème ou ouverture le plus raté ;
-  - quatre chiffres selon le module, dont l'XP en « Aperçu » factice ;
+  - quatre chiffres selon le module, dont l'XP gagnée dans la séance (`xp` de la revue, écrit par
+    le worker : redemandée une fois 3 s plus tard si elle arrive trop tôt) et le niveau atteint ;
   - la grille des éléments (Réussi / Avec aide / Raté) et la liste « À revoir », dont chaque élément
     se rejoue dans le bilan (`RunEndReplay`, colonne de droite ; toute la feuille sur un téléphone),
     **côté client seul** : rien n'est envoyé (ni classement, ni cycle, ni carte FSRS, ni activité, ni

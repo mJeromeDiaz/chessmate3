@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createAuthGuard, safeRedirect } from '@/router/guards'
+import { createAuthGuard, FROZEN_PAGE, safeRedirect } from '@/router/guards'
 
-function fakeAuth({ authenticated = false, mfa = null } = {}) {
+function fakeAuth({ authenticated = false, mfa = null, frozen = false } = {}) {
   return {
     isAuthenticated: authenticated,
+    isFrozen: frozen,
     mfa,
     init: vi.fn(async () => {})
   }
@@ -58,6 +59,26 @@ describe('createAuthGuard', () => {
       )
     ).toEqual({ path: '/' })
     expect(await createAuthGuard(() => fakeAuth())(route('guest'))).toBe(true)
+  })
+
+  it('keeps a frozen account on the deletion page', async () => {
+    const frozen = () => fakeAuth({ authenticated: true, frozen: true })
+    expect(
+      await createAuthGuard(frozen)({ ...route('required'), path: '/puzzle' })
+    ).toEqual({ path: FROZEN_PAGE })
+    expect(
+      await createAuthGuard(frozen)({ ...route('public'), path: '/' })
+    ).toEqual({ path: FROZEN_PAGE })
+    expect(
+      await createAuthGuard(frozen)({ ...route('public'), path: FROZEN_PAGE })
+    ).toBe(true)
+    // Signed out right after the confirmation: the page says when, nothing else is blocked.
+    expect(
+      await createAuthGuard(() => fakeAuth({ frozen: true }))({
+        ...route('public'),
+        path: '/'
+      })
+    ).toBe(true)
   })
 
   it('opens the code page only while a login waits for its code', async () => {

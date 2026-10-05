@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html>
+    <body style="font-family: sans-serif;">
+        <p>Bonjour,</p>
+        <p>La suppression de votre compte ChessMate est programmée : il sera effacé définitivement le <strong>{{ scheduledAt|date('d/m/Y') }}</strong>, avec toutes vos données (puzzles, répertoires, sessions, statistiques).</p>
+        <p>Toutes vos sessions ont été fermées. Jusqu'à cette date, vous pouvez annuler la suppression ou exporter vos données en vous reconnectant :</p>
+        <p><a href="{{ loginUrl }}">Me reconnecter</a></p>
+    </body>
+</html>

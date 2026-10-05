@@ -1,4 +1,4 @@
-import { SHOWCASE } from '@/utils/dashboard/showcase'
+import { levelBar } from '@/utils/gamification'
 import { formatDuration, formatRatingDelta } from '@/utils/format'
 import { profImage } from '@/utils/prof/images'
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
@@ -29,7 +29,6 @@ import { MODULE_FAIL_MIN_ITEMS, MODULE_FAIL_RATE } from '@/utils/sounds'
  * @property {string} label
  * @property {string} sub
  * @property {'good'|'bad'|'muted'|'brand'} tone colour of `sub`
- * @property {boolean} [showcase] an example value (gamification preview)
  */
 
 /** Colours and labels of an item's status (grid, legend, list). */
@@ -228,21 +227,25 @@ export function endMessage(run, items, name, themeLabel) {
 }
 
 /**
- * The four figures under the message, by module (the last one, XP, is a showcase value).
+ * The four figures under the message, by module; the last one is the XP gained in the run
+ * (docs/GAMIFICATION.md) and the level reached.
  *
  * @param {import('@/composables/training/useTimeboxedRun').TrainingRun} run
  * @param {ReviewItem[]} items
+ * @param {{xp: number|null, summary: import('@/utils/gamification').Summary|null}} [gain] null
+ *   xp: not counted yet
  * @returns {Stat[]}
  */
-export function endStats(run, items) {
+export function endStats(run, items, gain = { xp: null, summary: null }) {
   const s = run.summary
   const m = s?.metrics ?? {}
   const xp = {
-    value: `+${(s?.itemCount ?? 0) * 5 || 10}`,
+    value: gain.xp === null ? '…' : `+${gain.xp}`,
     label: 'XP gagnés',
-    sub: `Niveau ${SHOWCASE.level} · ${Math.round((SHOWCASE.xp / SHOWCASE.xpMax) * 100)} %`,
-    tone: /** @type {const} */ ('brand'),
-    showcase: true
+    sub: gain.summary
+      ? `Niveau ${gain.summary.level} · ${Math.round(levelBar(gain.summary).percent)} %`
+      : '',
+    tone: /** @type {const} */ ('brand')
   }
   if (run.module === 'free') {
     return [

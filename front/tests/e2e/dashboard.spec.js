@@ -29,7 +29,7 @@ test('a new user is welcomed and pointed to a first session', async ({
   await expect(page).toHaveURL(/#\/session\/new$/)
 })
 
-test('with history: heatmap, rating curve, modules, and the Lichess tab of an unlinked account', async ({
+test('with history: heatmap, rating curve, modules, gamification, and the Lichess tab of an unlinked account', async ({
   page,
   context
 }) => {
@@ -65,6 +65,65 @@ test('with history: heatmap, rating curve, modules, and the Lichess tab of an un
     })
   )
 
+  await page.route('**/api/gamification/summary', route =>
+    route.fulfill({
+      json: {
+        xp: 30_340,
+        level: 12,
+        xpInLevel: 2340,
+        xpForNext: 3000,
+        rank: 'Tacticien',
+        nextRank: { rank: 'Stratège', level: 15 },
+        modules: {
+          puzzles: { xp: 2100, level: 6, xpInLevel: 0, xpForNext: 600 }
+        },
+        streak: { current: 3, best: 21, playedToday: true },
+        today: { exerciseXp: 40, cap: 500 }
+      }
+    })
+  )
+  await page.route('**/api/gamification/trophies', route =>
+    route.fulfill({
+      json: {
+        trophies: [
+          {
+            key: 'first_step',
+            goal: 1,
+            current: 1,
+            unlocked: true,
+            unlockedAt: `${day(-2)}T08:00:00+00:00`,
+            ratio: null
+          },
+          {
+            key: 'centurion',
+            goal: 1000,
+            current: 22,
+            unlocked: false,
+            unlockedAt: null,
+            ratio: null
+          }
+        ]
+      }
+    })
+  )
+  await page.route('**/api/gamification/quest', route =>
+    route.fulfill({
+      json: {
+        id: 'quest-1',
+        template: 'rated_puzzles',
+        theme: null,
+        module: 'puzzles',
+        goal: 40,
+        current: 22,
+        reward: 150,
+        completed: false,
+        completedAt: null,
+        weekStart: day(-1),
+        weekEnd: day(5)
+      }
+    })
+  )
+
   await page.goto('/#/')
   await expect(page.getByTestId('dashboard')).toBeVisible()
   await expect(page.getByTestId('dashboard-welcome')).toHaveCount(0)
@@ -85,7 +144,29 @@ test('with history: heatmap, rating curve, modules, and the Lichess tab of an un
   await expect(page.getByTestId('module-row-puzzles')).toContainText(
     '22 résolus'
   )
-  await expect(page.getByTestId('showcase-tag').first()).toBeVisible()
+  await expect(page.getByTestId('showcase-tag')).toHaveCount(0)
+
+  // Gamification (docs/GAMIFICATION.md): level, streak, module level, trophies, weekly quest.
+  await expect(page.getByTestId('level-title')).toHaveText('Niveau 12')
+  await expect(page.getByTestId('level-xp')).toHaveText('2\u202f340 / 3\u202f000 XP')
+  await expect(page.getByTestId('streak')).toContainText('3 jours')
+  await expect(page.getByTestId('best-streak')).toHaveText('Record 21 jours')
+  await expect(
+    page.getByTestId('module-row-puzzles').getByTestId('module-level')
+  ).toHaveText('Niv. 6')
+  await expect(
+    page.getByTestId('module-row-finales').getByTestId('module-level')
+  ).toHaveCount(0)
+  await expect(page.getByTestId('trophies-count')).toHaveText('1 / 2 débloqués')
+  await expect(page.getByTestId('trophy-first_step')).toHaveAttribute(
+    'data-unlocked',
+    'true'
+  )
+  await expect(page.getByTestId('trophy-centurion')).toContainText('22/1\u202f000')
+  await expect(page.getByTestId('quest-text')).toHaveText(
+    'Résous 40 puzzles classés cette semaine.'
+  )
+  await expect(page.getByTestId('quest-progress')).toHaveText('22/40')
 
   if (SCREENSHOTS) {
     await page.screenshot({

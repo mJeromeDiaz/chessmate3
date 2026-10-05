@@ -2,36 +2,40 @@
   <div class="level-banner" data-testid="level-banner">
     <div class="level-banner__shade" />
     <div class="level-banner__hello gt-sm"> Bonjour 👋&#xFE0E; </div>
-    <div class="level-banner__level">
-      <span class="level-banner__title">Niveau {{ SHOWCASE.level }}</span>
-      <span class="level-banner__rank">{{ SHOWCASE.rank }}</span>
-      <ShowcaseTag />
+    <template v-if="bar">
+      <div class="level-banner__level">
+        <span class="level-banner__title" data-testid="level-title"
+          >Niveau {{ bar.level }}</span
+        >
+        <span class="level-banner__rank">{{ bar.rank }}</span>
+      </div>
+      <div class="level-banner__bar">
+        <div :style="{ width: `${bar.percent}%` }" />
+      </div>
+      <div class="level-banner__foot">
+        <span data-testid="level-xp">{{ bar.xpLabel }}</span>
+        <span>{{ bar.next }}</span>
+      </div>
+    </template>
+    <div v-else class="level-banner__level">
+      <span class="level-banner__title">Niveau…</span>
     </div>
-    <div class="level-banner__bar">
-      <div :style="{ width: `${(SHOWCASE.xp / SHOWCASE.xpMax) * 100}%` }" />
-    </div>
-    <div class="level-banner__foot">
-      <span>{{ xpLabel }}</span>
-      <span
-        >Encore {{ SHOWCASE.xpMax - SHOWCASE.xp }} XP avant «
-        {{ SHOWCASE.nextRank }} »</span
-      >
-    </div>
-    <img
-      v-if="SHOWCASE.mascot"
-      :src="SHOWCASE.mascot"
-      alt=""
-      class="level-banner__mascot"
-    />
+    <img :src="mascot" alt="" class="level-banner__mascot" />
   </div>
 </template>
 
 <script setup>
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
-import { SHOWCASE } from '@/utils/dashboard/showcase'
+/** The dashboard's banner: level, rank and XP towards the next level (docs/GAMIFICATION.md). */
+import { computed } from 'vue'
+import { useGamificationStore } from '@/stores/gamification'
+import { levelBar } from '@/utils/gamification'
+import { profImage } from '@/utils/prof/images'
 
-const number = new Intl.NumberFormat('fr-FR')
-const xpLabel = `${number.format(SHOWCASE.xp)} / ${number.format(SHOWCASE.xpMax)} XP`
+const gamification = useGamificationStore()
+const bar = computed(() =>
+  gamification.summary ? levelBar(gamification.summary) : null
+)
+const mascot = profImage('aaron-laugh')
 </script>
 
 <style scoped lang="scss">

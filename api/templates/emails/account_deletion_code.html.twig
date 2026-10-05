@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+    <body style="font-family: sans-serif;">
+        <p>Bonjour,</p>
+        <p>Vous avez demandé la suppression de votre compte ChessMate. Pour la confirmer, saisissez ce code :</p>
+        <p style="font-size: 28px; font-weight: bold; letter-spacing: 6px;">{{ code }}</p>
+        <p>Il est valable 10 minutes. Demande faite le {{ requestedAt|date('d/m/Y à H:i') }} depuis {{ device }} (adresse IP {{ ip }}).</p>
+        <p>Une fois confirmée, votre compte sera gelé puis supprimé définitivement après {{ graceDays }} jours ; vous pourrez annuler d'ici là en vous reconnectant.</p>
+        <p><strong>Si vous n'êtes pas à l'origine de cette demande, ne communiquez ce code à personne et changez votre mot de passe.</strong></p>
+    </body>
+</html>

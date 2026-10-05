@@ -71,6 +71,7 @@
             :key="key"
             dense
             removable
+            data-testid="puzzle-theme-filter"
             @remove="
               store.setThemes(store.filters.themes.filter(k => k !== key))
             "

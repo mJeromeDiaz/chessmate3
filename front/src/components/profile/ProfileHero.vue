@@ -28,21 +28,20 @@
         @click="editing = true"
       />
     </div>
-    <div class="profile-hero__level">
-      <span class="profile-hero__title">Niveau {{ SHOWCASE.level }}</span>
-      <span class="profile-hero__rank">{{ SHOWCASE.rank }}</span>
-      <ShowcaseTag />
-      <span class="profile-hero__xp"
-        >{{ xpLabel
-        }}<span class="gt-sm">
-          · encore {{ SHOWCASE.xpMax - SHOWCASE.xp }} avant «
-          {{ SHOWCASE.nextRank }} »</span
-        ></span
-      >
-    </div>
-    <div class="profile-hero__bar">
-      <div :style="{ width: `${(SHOWCASE.xp / SHOWCASE.xpMax) * 100}%` }" />
-    </div>
+    <template v-if="bar">
+      <div class="profile-hero__level">
+        <span class="profile-hero__title" data-testid="profile-level"
+          >Niveau {{ bar.level }}</span
+        >
+        <span class="profile-hero__rank">{{ bar.rank }}</span>
+        <span class="profile-hero__xp"
+          >{{ bar.xpLabel }}<span class="gt-sm"> · {{ bar.next }}</span></span
+        >
+      </div>
+      <div class="profile-hero__bar">
+        <div :style="{ width: `${bar.percent}%` }" />
+      </div>
+    </template>
     <q-btn
       unelevated
       no-caps
@@ -61,13 +60,13 @@
 
 <script setup>
 /**
- * Profile: the design's banner and its "Modifier" button. Avatar, name, handle and member date
- * are real; the level and XP are the dashboard's showcase values (tagged "Aperçu").
+ * Profile: the design's banner and its "Modifier" button: avatar, name, handle, member date,
+ * level and XP (docs/GAMIFICATION.md).
  */
-import { computed, ref } from 'vue'
-import ShowcaseTag from '@/components/dashboard/ShowcaseTag.vue'
+import { computed, onMounted, ref } from 'vue'
 import ProfileEditDialog from '@/components/profile/ProfileEditDialog.vue'
-import { SHOWCASE } from '@/utils/dashboard/showcase'
+import { useGamificationStore } from '@/stores/gamification'
+import { levelBar } from '@/utils/gamification'
 import { avatarTile, formatMonth, profileName } from '@/utils/profile'
 
 const props = defineProps({
@@ -75,8 +74,11 @@ const props = defineProps({
   profile: { type: Object, required: true }
 })
 
-const number = new Intl.NumberFormat('fr-FR')
-const xpLabel = `${number.format(SHOWCASE.xp)} / ${number.format(SHOWCASE.xpMax)} XP`
+const gamification = useGamificationStore()
+const bar = computed(() =>
+  gamification.summary ? levelBar(gamification.summary) : null
+)
+onMounted(() => gamification.load(['summary']))
 
 const editing = ref(false)
 const name = computed(() => profileName(props.profile))
