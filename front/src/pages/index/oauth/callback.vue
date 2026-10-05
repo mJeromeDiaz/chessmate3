@@ -6,7 +6,7 @@
         <span>Connexion en cours…</span>
       </div>
       <template v-else>
-        <q-banner class="bg-red-1" rounded>{{ error }}</q-banner>
+        <q-banner class="cm-banner--danger" rounded>{{ error }}</q-banner>
         <q-btn
           class="q-mt-md"
           color="primary"
@@ -108,7 +108,7 @@ onMounted(async () => {
     if (!auth.isAuthenticated) {
       await auth.startSession(await auth.refresh())
     }
-    router.replace('/profile')
+    router.replace('/')
   } catch {
     error.value = 'La session n’a pas pu être ouverte. Réessayez.'
   }

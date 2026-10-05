@@ -36,7 +36,7 @@
         v-if="drill.stale.value"
         dense
         rounded
-        class="bg-grey-3"
+        class="cm-banner--neutral"
         data-testid="drill-stale"
         >Le répertoire a changé : l’unité précédente est ignorée.</q-banner
       >
@@ -44,7 +44,7 @@
         v-if="drill.start.value?.retry"
         dense
         rounded
-        class="bg-orange-1"
+        class="cm-banner--warning"
         data-testid="drill-retry"
         >Nouvelle tentative : {{ unitName }} raté{{
           unit === 'line' ? 'e' : ''
@@ -55,7 +55,7 @@
         v-else-if="drill.start.value?.newRound"
         dense
         rounded
-        class="bg-blue-1"
+        class="cm-banner--info"
         data-testid="drill-new-round"
         >Nouveau tour ({{ drill.start.value.round }}).</q-banner
       >
@@ -63,7 +63,7 @@
         v-if="drill.deviation.value"
         dense
         rounded
-        class="bg-amber-2"
+        class="cm-banner--warning"
         data-testid="drill-deviation"
         >Déviation :
         {{
@@ -97,7 +97,7 @@
       <div class="text-subtitle1" data-testid="drill-status">{{ status }}</div>
       <div
         v-if="drill.comment.value"
-        class="text-body2 text-grey-8"
+        class="text-body2 cm-muted"
         data-testid="drill-comment"
         >{{ drill.comment.value }}</div
       >
@@ -140,6 +140,7 @@ import ChessBoard from '@/components/chess/ChessBoard.vue'
 import { useRepertoireDrill } from '@/composables/repertoire/useRepertoireDrill'
 import { apiErrorMessage } from '@/utils/apiError'
 import { labelText, unitWord } from '@/utils/repertoireTest'
+import { playOutcomeSound } from '@/utils/sounds'
 
 /** After a unit succeeded, the next one comes by itself. */
 const AUTO_NEXT_MS = 600
@@ -228,8 +229,10 @@ async function onMove(move) {
 /** @param {import('@/composables/repertoire/useRepertoireDrill').Verdict} verdict */
 async function follow(verdict) {
   if (verdict === 'next') await next()
-  else if (verdict === 'unitSucceeded')
+  else if (verdict === 'unitSucceeded') {
+    playOutcomeSound('puzzleDone')
     autoNext = setTimeout(next, AUTO_NEXT_MS)
+  } else if (verdict === 'unitFailed') playOutcomeSound('unitFailed')
 }
 
 async function next() {

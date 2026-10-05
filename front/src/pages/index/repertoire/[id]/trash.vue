@@ -17,7 +17,7 @@
         </div>
       </div>
 
-      <div class="text-body2 text-grey-8">
+      <div class="text-body2 cm-muted">
         Un coup remplacé ou supprimé arrive ici avec tout ce qui n’était atteint
         que par lui. Restauré, il revient avec sa progression.
       </div>

@@ -6,7 +6,9 @@
       <q-banner
         v-if="notice"
         class="q-mb-md"
-        :class="notice.type === 'error' ? 'bg-red-1' : 'bg-green-1'"
+        :class="
+          notice.type === 'error' ? 'cm-banner--danger' : 'cm-banner--success'
+        "
         rounded
       >
         {{ notice.text }}
@@ -30,7 +32,7 @@
           :rules="[required]"
         />
 
-        <q-banner v-if="error" class="bg-red-1" rounded>
+        <q-banner v-if="error" class="cm-banner--danger" rounded>
           {{ error }}
           <template v-if="unverified" #action>
             <q-btn

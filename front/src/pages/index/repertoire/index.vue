@@ -43,7 +43,7 @@
       <q-banner
         v-if="overview && overview.cards.total > 0"
         rounded
-        class="bg-blue-1"
+        class="cm-banner--info"
         data-testid="repertoire-due"
       >
         <template #avatar><q-icon name="timer" color="primary" /></template>
@@ -86,7 +86,7 @@
 
       <div
         v-else-if="store.repertoires.length === 0 && !error"
-        class="text-center q-pa-xl text-grey-8"
+        class="text-center q-pa-xl cm-muted"
         data-testid="repertoire-empty"
       >
         <q-icon name="menu_book" size="48px" color="grey-5" />

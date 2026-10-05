@@ -56,7 +56,7 @@ describe('createAuthGuard', () => {
       await createAuthGuard(() => fakeAuth({ authenticated: true }))(
         route('guest')
       )
-    ).toEqual({ path: '/profile' })
+    ).toEqual({ path: '/' })
     expect(await createAuthGuard(() => fakeAuth())(route('guest'))).toBe(true)
   })
 
@@ -89,6 +89,6 @@ describe('safeRedirect', () => {
     undefined,
     ['/profile']
   ])('rejects %s (open redirect)', value => {
-    expect(safeRedirect(value)).toBe('/profile')
+    expect(safeRedirect(value)).toBe('/')
   })
 })

@@ -111,7 +111,7 @@
           />
           <q-btn flat no-caps label="Annuler" to="/repertoire" />
         </div>
-        <div class="text-caption text-grey-8">
+        <div class="text-caption cm-muted">
           Chaque coup est vérifié. Vos coups (ceux de la couleur du répertoire)
           deviennent les coups testés, un seul par position ; ceux de
           l’adversaire, ses réponses.
@@ -139,7 +139,7 @@
           rounded
           color="primary"
         />
-        <div class="text-caption text-grey-8 q-mt-sm">
+        <div class="text-caption cm-muted q-mt-sm">
           Un gros fichier prend un moment : vous pouvez laisser cette page
           ouverte.
         </div>
@@ -147,7 +147,7 @@
 
       <!-- 3. The preview -->
       <template v-else-if="imp.phase.value === 'preview' && imp.current.value">
-        <div class="text-body2 text-grey-8">
+        <div class="text-body2 cm-muted">
           {{ sourceLabel
           }}<template v-if="imp.current.value.source !== 'openbook'">
             · {{ imp.current.value.games }} partie{{
@@ -241,7 +241,7 @@
             @click="imp.apply()"
           />
           <q-btn flat no-caps label="Recommencer" @click="restart" />
-          <div class="text-caption text-grey-8">
+          <div class="text-caption cm-muted">
             L’import compte comme une seule modification : le bouton Annuler de
             l’éditeur le défait.
           </div>

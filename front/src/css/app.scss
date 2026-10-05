@@ -32,6 +32,11 @@
   --cm-orange-soft: #ffebdd;
   --cm-orange-line: #ffd8be;
   --cm-orange-ink: #b84a0e;
+  // Banner backgrounds: success and info (danger and warning reuse the tokens above).
+  --cm-success-soft: #e3f6e6;
+  --cm-success: #1f6b2c;
+  --cm-info-soft: #e5efff;
+  --cm-info: #1d4f9c;
 }
 
 .body--dark {
@@ -61,6 +66,10 @@
   --cm-orange-soft: #4a2a14;
   --cm-orange-line: #6b3a1a;
   --cm-orange-ink: #ffb27d;
+  --cm-success-soft: #173a20;
+  --cm-success: #8fe3a0;
+  --cm-info-soft: #182b4d;
+  --cm-info: #9cc2ff;
 }
 
 body {
@@ -136,4 +145,35 @@ a {
 
 .cm-muted {
   color: var(--cm-muted);
+}
+
+// Message banners on a soft tinted background, readable in both themes (Quasar's bg-red-1 and the
+// like stay pale in dark mode, under its white text).
+.cm-banner--danger {
+  background: var(--cm-danger-soft);
+  color: var(--cm-ink);
+}
+
+.cm-banner--success {
+  background: var(--cm-success-soft);
+  color: var(--cm-ink);
+}
+
+.cm-banner--info {
+  background: var(--cm-info-soft);
+  color: var(--cm-ink);
+}
+
+.cm-banner--warning {
+  background: var(--cm-orange-soft);
+  color: var(--cm-ink);
+}
+
+.cm-banner--neutral {
+  background: var(--cm-subtle);
+  color: var(--cm-ink-soft);
+}
+
+.cm-text-warning {
+  color: var(--cm-orange-ink);
 }

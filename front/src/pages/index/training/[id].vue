@@ -208,7 +208,6 @@ const route = useRoute()
 const $q = useQuasar()
 const store = useTrainingStore()
 const runner = useTimeboxedRun()
-useRunAlerts(runner)
 const loading = ref(false)
 const error = ref('')
 
@@ -261,6 +260,7 @@ function confirmStop() {
 /** @type {import('vue').Ref<import('@/utils/session/steps').TrainingSession|null>} */
 const session = ref(null)
 const sessionStep = useSessionStep()
+useRunAlerts(runner, { session })
 
 /** The session's next module to play, if it goes on. */
 const nextStep = computed(() => {

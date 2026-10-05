@@ -65,6 +65,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import { usePuzzle } from '@/composables/puzzle/usePuzzle'
+import { playOutcomeSound } from '@/utils/sounds'
 
 const props = defineProps({
   /** @type {import('vue').PropType<{fen: string, moves: string[], playerColor: 'white'|'black'}|null>} A new object starts a new game. */
@@ -86,7 +87,12 @@ const board = ref(null)
 const game = usePuzzle({
   afterMistake: props.afterMistake,
   onResolve: (outcome, report) => emit('resolve', outcome, report),
-  onComplete: () => emit('complete')
+  onComplete: () => {
+    playOutcomeSound(
+      game.outcome.value === 'solved' ? 'puzzleDone' : 'puzzleMissed'
+    )
+    emit('complete')
+  }
 })
 
 const statusText = computed(() => {

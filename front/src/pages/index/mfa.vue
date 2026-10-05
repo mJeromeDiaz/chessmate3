@@ -24,8 +24,12 @@
           label="Faire confiance à cet appareil pendant 30 jours"
         />
 
-        <q-banner v-if="error" class="bg-red-1" rounded>{{ error }}</q-banner>
-        <q-banner v-if="info" class="bg-green-1" rounded>{{ info }}</q-banner>
+        <q-banner v-if="error" class="cm-banner--danger" rounded>{{
+          error
+        }}</q-banner>
+        <q-banner v-if="info" class="cm-banner--success" rounded>{{
+          info
+        }}</q-banner>
 
         <div class="row q-gutter-sm">
           <q-btn

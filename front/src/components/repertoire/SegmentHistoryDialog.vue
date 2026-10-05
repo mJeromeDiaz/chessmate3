@@ -6,10 +6,10 @@
     <q-card style="min-width: min(92vw, 560px)" data-testid="segment-history">
       <q-card-section>
         <div class="text-h6">{{ title }}</div>
-        <div v-if="history?.path.length" class="text-caption text-grey-8">{{
+        <div v-if="history?.path.length" class="text-caption cm-muted">{{
           numberedMoves(history.path)
         }}</div>
-        <div v-if="history?.archived" class="text-caption text-grey-8"
+        <div v-if="history?.archived" class="text-caption cm-muted"
           >Ce tronçon n’est plus présenté (le répertoire a changé).</div
         >
       </q-card-section>

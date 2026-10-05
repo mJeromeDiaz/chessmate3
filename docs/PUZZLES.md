@@ -232,6 +232,10 @@ Préférences du profil (`composables/chess/useBoardPreferences.js`, lues dans `
   (`utils/chess/moveSounds.js`, `moveKind`), l'échiquier joue `public/media/son/Move.mp3` ou
   `Capture.mp3` (un échec joue `Move.mp3` : pas de son dédié). Un saut (nouveau puzzle, navigation
   dans l'arbre, retour arrière) reste muet. Jamais de son pour un visiteur.
+- **Son de fin de puzzle** (`PuzzlePlayer`, donc puzzles notés, Woodpecker et séances) : à la
+  position finale, `puzzleIsDone.mp3` si le puzzle est réussi, `puzzleIsMissed.mp3` sinon (erreur,
+  indice ou solution). Même réglage « Sons » du profil (`moveSound`) que les coups
+  (`utils/sounds.js`).
 
 ### `composables/puzzle/usePuzzle.js` — logique d'un puzzle
 

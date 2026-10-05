@@ -63,7 +63,7 @@
       <q-banner
         v-if="runHere"
         rounded
-        class="bg-blue-1"
+        class="cm-banner--info"
         data-testid="run-in-progress"
       >
         Une séance chronométrée est en cours sur ce set.

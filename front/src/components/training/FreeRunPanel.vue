@@ -12,7 +12,7 @@
           >{{ notes }}</div
         >
       </q-card-section>
-      <q-card-section class="text-body2 text-grey-8">
+      <q-card-section class="text-body2 cm-muted">
         Lis, regarde, écoute à ton rythme : le temps est compté jusqu’à la fin
         du chrono ou jusqu’à « Terminer ».
       </q-card-section>

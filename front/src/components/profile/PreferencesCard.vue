@@ -34,13 +34,15 @@
 
     <div class="profile-row">
       <div class="profile-row__text">
-        <div class="profile-row__title">Son des coups</div>
-        <div class="profile-row__sub">Déplacement, prise, échec</div>
+        <div class="profile-row__title">Sons</div>
+        <div class="profile-row__sub"
+          >Coups, fin de puzzle, de module et de session</div
+        >
       </div>
       <q-toggle
         :model-value="profile.moveSound"
         color="primary"
-        aria-label="Son des coups"
+        aria-label="Sons"
         data-testid="move-sound-toggle"
         @update:model-value="choose({ moveSound: $event })"
       />

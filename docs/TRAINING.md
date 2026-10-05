@@ -184,6 +184,12 @@ Woodpecker liste ses séances (`runs`).
   `front/public/media/son/alert.mp3` 5 s avant sa fin ; un module libre le joue à l'expiration avec
   une notification navigateur « Temps libre terminé » (permission demandée au clic de lancement).
   Chaque alerte une fois par séance, seulement pour une séance vue en cours sur la page.
+- Sons de fin (`utils/sounds.js`, `moduleEndSound`), joués par `useRunAlerts` à la clôture de toute
+  séance (de session ou non), une fois, seulement pour une séance vue en cours sur la page :
+  `bigFail.mp3` si le module est en échec (au moins 3 éléments terminés et moins de 80 % réussis ;
+  le temps libre n'échoue jamais), `success3.mp3` sinon ; pour une étape de session, la page recharge
+  la session et, si elle est désormais `completed`, joue `success.mp3` à la place. Ces sons, comme
+  ceux des puzzles et des unités de répertoire, suivent le réglage « Sons » du profil (`moveSound`).
 - `RunRecap` : récapitulatif normalisé et lignes du module ; `RunTable` : historique avec l'évolution
   des puzzles par minute d'une séance à l'autre.
 

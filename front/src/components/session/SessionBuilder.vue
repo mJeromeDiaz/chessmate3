@@ -49,6 +49,16 @@
 
       <section class="session-builder__section">
         <div class="session-builder__section-head">
+          <h2 class="session-builder__h2">Paramètres de la session</h2>
+        </div>
+        <SessionSettings
+          v-model="session.settings"
+          :issue="session.settingsError ?? ''"
+        />
+      </section>
+
+      <section class="session-builder__section">
+        <div class="session-builder__section-head">
           <h2 class="session-builder__h2">Programme</h2>
           <span class="session-builder__help">{{
             wide
@@ -76,16 +86,6 @@
             @edit="openEdit(item)"
           />
         </div>
-      </section>
-
-      <section class="session-builder__section">
-        <div class="session-builder__section-head">
-          <h2 class="session-builder__h2">Paramètres de la session</h2>
-        </div>
-        <SessionSettings
-          v-model="session.settings"
-          :issue="session.settingsError ?? ''"
-        />
       </section>
 
       <section v-if="!wide" class="session-builder__section">

@@ -169,7 +169,7 @@
           <div class="row items-center q-mb-xs no-wrap">
             <div class="text-subtitle2 ellipsis" data-testid="editor-opening">
               <template v-if="editor.opening.value">
-                <span class="text-grey-7">{{ editor.opening.value.eco }}</span>
+                <span class="cm-muted">{{ editor.opening.value.eco }}</span>
                 {{ editor.opening.value.name }}
               </template>
               <span v-else-if="editor.path.value.length === 0" class="text-grey"
@@ -223,7 +223,7 @@
             <div class="col ellipsis">
               <span class="text-weight-medium">Hors répertoire :</span>
               {{ offBookText }}
-              <span class="text-grey-8">(non enregistré)</span>
+              <span class="cm-muted">(non enregistré)</span>
             </div>
             <q-btn
               flat

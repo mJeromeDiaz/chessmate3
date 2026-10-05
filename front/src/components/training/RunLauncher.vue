@@ -41,7 +41,7 @@
         @click="launch"
       />
     </div>
-    <q-banner v-if="inProgress" rounded class="bg-orange-1">
+    <q-banner v-if="inProgress" rounded class="cm-banner--warning">
       Une séance est déjà en cours.
       <template #action>
         <q-btn

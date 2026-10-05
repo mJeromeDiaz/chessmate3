@@ -9,7 +9,7 @@
             :data-testid="`import-figure-${figure.key}`"
             >{{ figure.value }}</div
           >
-          <div class="text-caption text-grey-8">{{ figure.label }}</div>
+          <div class="text-caption cm-muted">{{ figure.label }}</div>
         </q-card>
       </div>
     </div>
@@ -27,7 +27,7 @@
     <q-banner
       v-if="preview.replaced > 0"
       rounded
-      class="bg-orange-1 q-mb-md"
+      class="cm-banner--warning q-mb-md"
       data-testid="import-replaced"
     >
       <template #avatar><q-icon name="restore_from_trash" /></template>
@@ -46,7 +46,7 @@
       v-if="preview.warnings.length"
       dense
       icon="warning"
-      header-class="text-orange-9"
+      header-class="cm-text-warning"
       :label="`${preview.warnings.length} élément${preview.warnings.length > 1 ? 's' : ''} ignoré${preview.warnings.length > 1 ? 's' : ''}`"
       :default-opened="preview.warnings.length <= 5"
       data-testid="import-warnings"
@@ -87,7 +87,7 @@
           @click="emit('choose-all', 'file')"
         />
       </div>
-      <div class="text-caption text-grey-8 q-mb-sm">
+      <div class="text-caption cm-muted q-mb-sm">
         Un seul coup vous est préparé par position : le coup choisi est gardé,
         les autres coups du fichier ne sont pas importés (ni leur suite). Un
         coup du répertoire remplacé part à la corbeille. Choisir un coup du

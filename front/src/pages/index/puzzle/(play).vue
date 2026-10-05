@@ -41,7 +41,7 @@
         <q-banner
           v-if="store.rating?.lichessImportAvailable"
           rounded
-          class="bg-blue-1 text-dark"
+          class="cm-banner--info"
         >
           Vous avez lié votre compte Lichess : démarrer avec votre classement
           puzzle Lichess ?

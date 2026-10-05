@@ -4,7 +4,7 @@
       <div class="text-h5 q-mb-md">Nouveau mot de passe</div>
 
       <template v-if="done">
-        <q-banner class="bg-green-1" rounded>
+        <q-banner class="cm-banner--success" rounded>
           Votre mot de passe a été réinitialisé. Toutes vos sessions et vos
           appareils de confiance ont été révoqués.
         </q-banner>
@@ -17,7 +17,7 @@
         />
       </template>
 
-      <q-banner v-else-if="!token" class="bg-red-1" rounded>
+      <q-banner v-else-if="!token" class="cm-banner--danger" rounded>
         Lien de réinitialisation incomplet.
         <router-link to="/forgot-password">Demandez-en un nouveau.</router-link>
       </q-banner>
@@ -40,7 +40,9 @@
           outlined
           :rules="[v => v === password || 'Les mots de passe diffèrent']"
         />
-        <q-banner v-if="error" class="bg-red-1" rounded>{{ error }}</q-banner>
+        <q-banner v-if="error" class="cm-banner--danger" rounded>{{
+          error
+        }}</q-banner>
         <q-btn
           type="submit"
           color="primary"

@@ -4,7 +4,7 @@
       v-if="failure"
       dense
       rounded
-      class="bg-grey-2 text-grey-9"
+      class="cm-banner--neutral"
       data-testid="cloud-eval-failure"
     >
       {{ failure.message }}
@@ -34,7 +34,7 @@
     </div>
 
     <template v-else-if="data">
-      <div class="text-caption text-grey-8 q-mb-xs">
+      <div class="text-caption cm-muted q-mb-xs">
         Profondeur {{ data.depth ?? '?' }}
         <template v-if="data.knodes">
           · {{ millions(data.knodes) }} de positions</template

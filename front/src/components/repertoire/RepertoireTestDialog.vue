@@ -6,7 +6,7 @@
     <q-card style="min-width: min(92vw, 460px)" data-testid="test-dialog">
       <q-card-section>
         <div class="text-h6">{{ title }}</div>
-        <div v-if="caption" class="text-caption text-grey-8">{{ caption }}</div>
+        <div v-if="caption" class="text-caption cm-muted">{{ caption }}</div>
       </q-card-section>
       <q-card-section>
         <RunLauncher

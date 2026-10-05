@@ -622,6 +622,8 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
   - Unité réussie : la suivante arrive seule (600 ms). Unité ratée : « Suivant », avec « il
     reviendra plus tard dans la séance ». Bandeaux « Nouvelle tentative », « Nouveau tour », « Le
     répertoire a changé ».
+  - Sons (réglage « Sons » du profil, `utils/sounds.js`) : `puzzleIsDone.mp3` pour une unité
+    réussie, `funnyFail.mp3` pour une unité ratée.
   - Un refus (séance close, élément fermé) laisse jouer l'élément que le serveur donne ensuite ;
     une erreur réseau redemande l'élément courant au serveur (la réponse a pu être enregistrée).
 - **Récapitulatif** : `RunRecap` (unités du mode, positions notées, rattrapées, interrompues,

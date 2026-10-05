@@ -1,7 +1,7 @@
 /**
  * Route access levels, set per page with `definePage({ meta: { auth: ... } })`:
  * - 'public' (default): anyone;
- * - 'guest': signed-out users only (login, register...): a signed-in user goes to the profile;
+ * - 'guest': signed-out users only (login, register...): a signed-in user goes to the dashboard;
  * - 'required': signed-in users only: others go to the login page, which brings them back after;
  * - 'mfa': only while a password login waits for its emailed code.
  *
@@ -16,7 +16,7 @@
  * @param {string} [fallback]
  * @returns {string}
  */
-export function safeRedirect(value, fallback = '/profile') {
+export function safeRedirect(value, fallback = '/') {
   if (
     typeof value !== 'string' ||
     !value.startsWith('/') ||
@@ -50,11 +50,11 @@ export function createAuthGuard(getAuth) {
     }
 
     if (level === 'guest' && auth.isAuthenticated) {
-      return { path: '/profile' }
+      return { path: '/' }
     }
 
     if (level === 'mfa' && !auth.mfa) {
-      return { path: auth.isAuthenticated ? '/profile' : '/login' }
+      return { path: auth.isAuthenticated ? '/' : '/login' }
     }
 
     return true

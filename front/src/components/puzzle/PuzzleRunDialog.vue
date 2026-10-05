@@ -6,7 +6,7 @@
     <q-card style="min-width: min(92vw, 460px)" data-testid="puzzle-run-dialog">
       <q-card-section>
         <div class="text-h6">Séance chronométrée</div>
-        <div class="text-caption text-grey-8">
+        <div class="text-caption cm-muted">
           Des puzzles classés à ton niveau, tant qu’il reste du temps.
           {{
             themes.length

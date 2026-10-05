@@ -61,7 +61,7 @@
 
     <div
       v-if="data?.opening"
-      class="text-caption text-grey-8 q-mb-xs"
+      class="text-caption cm-muted q-mb-xs"
       data-testid="explorer-opening"
     >
       {{ data.opening.eco }} · {{ data.opening.name }}
@@ -71,7 +71,7 @@
       v-if="failure"
       dense
       rounded
-      class="bg-grey-2 text-grey-9"
+      class="cm-banner--neutral"
       data-testid="explorer-failure"
     >
       {{ failure.message }}
@@ -141,11 +141,11 @@
             </q-icon>
           </td>
           <td class="text-right">
-            <span class="text-grey-7 q-mr-xs">{{ share(move.total) }}</span>
+            <span class="cm-muted q-mr-xs">{{ share(move.total) }}</span>
             {{ formatGames(move.total) }}
           </td>
           <td><ResultBar :counts="move" /></td>
-          <td class="text-right text-grey-8 gt-xs">
+          <td class="text-right cm-muted gt-xs">
             {{ move.averageRating ?? '' }}
           </td>
         </tr>

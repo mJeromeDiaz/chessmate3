@@ -49,6 +49,9 @@ Pages du SPA : `/login`, `/register`, `/mfa`, `/forgot-password`, `/reset-passwo
 `/oauth/callback`. Accès par page via `definePage({ meta: { auth } })` et le guard global
 (`src/router/guards.js`) : `public` (défaut), `guest` (déconnecté uniquement), `required` (connecté
 uniquement ⇒ sinon `/login?redirect=…`), `mfa` (uniquement pendant une connexion en attente de code).
+Après une connexion (mot de passe, code 2FA ou OAuth) sans `redirect`, et pour un utilisateur connecté
+qui ouvre une page `guest`, le SPA va au tableau de bord (`/`) ; seule une liaison de compte OAuth
+revient sur `/profile`.
 
 ## Inscription et vérification de l'email
 

@@ -3,7 +3,7 @@
     <div class="col-12 col-sm-8 col-md-5">
       <div class="text-h5 q-mb-md">Créer un compte</div>
 
-      <q-banner v-if="done" class="bg-green-1" rounded>
+      <q-banner v-if="done" class="cm-banner--success" rounded>
         Si cette adresse peut être utilisée, un email de vérification vient de
         lui être envoyé. Ouvrez le lien qu'il contient pour activer votre
         compte.
@@ -28,7 +28,9 @@
           :rules="[required, v => v.length >= 12 || '12 caractères minimum']"
         />
 
-        <q-banner v-if="error" class="bg-red-1" rounded>{{ error }}</q-banner>
+        <q-banner v-if="error" class="cm-banner--danger" rounded>{{
+          error
+        }}</q-banner>
 
         <q-btn
           type="submit"

@@ -3,7 +3,7 @@
     <div class="col-12 col-sm-8 col-md-5">
       <div class="text-h5 q-mb-md">Mot de passe oublié</div>
 
-      <q-banner v-if="done" class="bg-green-1" rounded>
+      <q-banner v-if="done" class="cm-banner--success" rounded>
         Si un compte correspond à cette adresse, un email avec un lien de
         réinitialisation (valable 30 minutes) vient de lui être envoyé.
       </q-banner>
@@ -17,7 +17,9 @@
           outlined
           :rules="[v => !!v || 'Champ requis']"
         />
-        <q-banner v-if="error" class="bg-red-1" rounded>{{ error }}</q-banner>
+        <q-banner v-if="error" class="cm-banner--danger" rounded>{{
+          error
+        }}</q-banner>
         <q-btn
           type="submit"
           color="primary"
