@@ -242,6 +242,7 @@ emplacements vides ; les vraies valeurs vont dans `.env.local` (non versionné) 
 (`bin/console secrets:set`) en production. Voir `.env.example`. Secrets : `APP_SECRET` (signatures,
 HMAC des codes 2FA), `JWT_PASSPHRASE` + paire de clés RSA (`config/jwt/*.pem`, ignorés par git),
 `OAUTH_GOOGLE_CLIENT_SECRET`, `OAUTH_TOKEN_ENCRYPTION_KEY`, `VAPID_PRIVATE_KEY` (Web Push),
+`CALENDAR_TOKEN_KEY` (adresses de calendrier),
 identifiants SMTP et base de données.
 
 ## 3. Risques résiduels acceptés
@@ -293,6 +294,14 @@ rafraîchir.
 3. `bin/console app:oauth-tokens:reencrypt` : rechiffre tous les tokens restants avec la nouvelle clé.
    Le code de sortie est non nul si certains ne sont déchiffrables par aucune des deux clés.
 4. Retirer `OAUTH_TOKEN_ENCRYPTION_KEY_PREVIOUS`.
+
+### 4.2 bis Rotation de la clé des adresses de calendrier
+
+Même principe, avec `CALENDAR_TOKEN_KEY` / `CALENDAR_TOKEN_KEY_PREVIOUS` : un jeton chiffré avec
+l'ancienne clé reste lisible et il est rechiffré avec la nouvelle à son prochain affichage dans le
+profil (pas de commande de masse : quelques lignes, une par utilisateur). Retirer `_PREVIOUS` quand
+les adresses encore actives ont été affichées, ou accepter que celles qui ne l'ont pas été doivent
+être régénérées (le flux lui-même n'en dépend pas : il est trouvé par l'empreinte du jeton).
 
 ### 4.3 Rotation d'`APP_SECRET`
 
@@ -569,3 +578,24 @@ Détail : [NOTIFICATIONS.md](NOTIFICATIONS.md).
 |---|---|---|
 | R25 | Le titre de la session part chez le service push du navigateur (chiffré) et dans l'email. | Choisi par l'utilisateur, sans donnée sensible ; le push est chiffré pour le seul navigateur. |
 | R26 | Cron arrêté : pas de rappel (au-delà de 15 min de retard, il est abandonné). | Choix validé ; à superviser en production comme le worker. |
+
+### 8.8 Calendrier (flux iCal)
+
+- L'adresse `GET /api/calendar/{jeton}.ics` est **publique** : les applications d'agenda n'envoient
+  aucun identifiant, le jeton (32 octets aléatoires, base64url) en tient lieu. Il est introuvable
+  par force brute ; jeton inconnu ou révoqué : 404.
+- En base : l'empreinte sha256 (recherche, index unique, `ascii_bin`) et une copie chiffrée
+  (`SecretBox`, clé dédiée `CALENDAR_TOKEN_KEY`) pour réafficher l'adresse dans le profil ; jamais le
+  jeton en clair (testé).
+- L'utilisateur régénère l'adresse (l'ancienne cesse de fonctionner) ou la désactive (testé) ; elle
+  est supprimée avec le compte.
+- Le flux ne contient que les sessions cochées « Intégrer à mon calendrier » de son propriétaire :
+  titre, description, programme, horaire, rappel.
+- Limites : 120 lectures par heure **par jeton** (`training_calendar_feed` ; pas par IP : Google et
+  Apple lisent tous les flux depuis les mêmes serveurs), 20 régénérations ou révocations par heure
+  (`training_calendar_write`). L'export `.ics` d'une session exige la connexion et la propriété (404).
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R27 | Le jeton est dans l'URL : il peut figurer dans les journaux du serveur web, et l'agenda tiers (Google...) le connaît. | Inhérent aux abonnements iCal ; ne révèle que le programme des sessions ; révocable et régénérable à tout moment. |
+| R28 | Une copie chiffrée du jeton est gardée (au lieu d'une empreinte seule) pour réafficher l'adresse. | Choix validé (confort) ; clé dédiée, hors base, rotation § 4.2 bis. |

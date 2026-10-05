@@ -295,8 +295,7 @@ Règles validées (2026-10-04) :
 - **Publique / privée** : un simple drapeau pour l'instant (future fonction communautaire).
 - **Rappel** (email et/ou navigateur, 10 min, 30 min, 1 h ou 1 jour avant), envoyé par
   `app:training:send-reminders` (cron chaque minute) : voir [NOTIFICATIONS.md](NOTIFICATIONS.md).
-  **Calendrier** : réglage enregistré, flux iCal au lot suivant. Sans horaire (à la demande), ni
-  rappel ni calendrier.
+  **Calendrier** : voir ci-dessous. Sans horaire (à la demande), ni rappel ni calendrier.
 - Modifier ou supprimer une session enregistrée ne change que l'avenir : les sessions jouées gardent
   leur programme, et leur `plan_id` passe à `NULL` (clé `ON DELETE SET NULL`).
 - À l'enregistrement, chaque étape est vérifiée par son module (réglages, sujet existant) **sans**
@@ -317,6 +316,45 @@ Règles validées (2026-10-04) :
 | `POST /training/plans` | `{title, description, steps, repetition, time, weekdays, public, reminderEnabled, reminderChannels, reminderMinutes, calendarEnabled}` (120 écritures par heure) | 409 trop de sessions, 422 |
 | `GET` / `PUT` / `DELETE /training/plans/{id}` | Lire, remplacer, supprimer | 404, 422 |
 | `POST /training/plans/{id}/launch` | Lance une session jouée (201, vue `TrainingSession`) ; son premier module démarre par `/training/sessions/{id}/next` | 404, 409 session en cours, 422 module injouable |
+
+### Calendrier (iCal)
+
+Règles validées (2026-10-04) :
+
+- Chaque utilisateur peut créer une **adresse privée** de calendrier (profil, section
+  « Calendrier ») : `GET /api/calendar/{jeton}.ics`, à ajouter à Google Agenda (« À partir de
+  l'URL »), Apple Calendrier ou Outlook (lien `webcal://`). L'agenda s'y abonne et suit les
+  changements. Le flux liste les sessions répétées cochées « Intégrer à mon calendrier ».
+- Le jeton est gardé **chiffré** (clé dédiée `CALENDAR_TOKEN_KEY`, `SecretBox`) pour réafficher
+  l'adresse, et trouvé par son empreinte sha256 ; « Nouvelle adresse » invalide l'ancienne,
+  « Désactiver » supprime le flux. Sécurité : [SECURITY.md § 8.8](SECURITY.md).
+- Une session = un événement récurrent (`RRULE:FREQ=WEEKLY;BYDAY=...`) à l'heure locale
+  (`DTSTART;TZID=<fuseau de l'utilisateur>`, `VTIMEZONE` dérivé des transitions de PHP ; heures UTC
+  pour un utilisateur sans fuseau), durée = somme des modules, première occurrence = la prochaine
+  après la dernière modification (l'agenda ne réécrit pas le passé). `VALARM` seulement si la
+  session a un rappel (même délai). UID stable `<id du plan>@chessmate`.
+- Une session répétée se télécharge aussi en `.ics` (« Mes sessions », icône agenda) : import
+  ponctuel, qui ne suit pas les changements.
+- Écrivain maison (`IcsWriter`) : les bibliothèques disponibles n'écrivent pas de `RRULE`. Lignes
+  pliées à 75 octets sans couper un caractère UTF-8, texte échappé (RFC 5545).
+
+| Couche | Emplacement |
+|---|---|
+| Entité | `App\Entity\Training\CalendarFeed` (table `training_calendar_feed`, une ligne par utilisateur) |
+| Service | `App\Training\Calendar\{FeedTokens, IcsWriter, TimezoneComponent}` |
+| API | `App\Controller\Training\{CalendarController, CalendarFeedController}` (contrôleurs simples : une adresse et des fichiers) |
+| Front | `services/api.js` (`calendarApi`), `components/profile/CalendarSection.vue`, bouton `.ics` de `pages/index/session/index.vue`, indication dans `SessionSettings.vue` |
+
+| Endpoint | Rôle | Erreurs |
+|---|---|---|
+| `GET /training/calendar` | `{url, webcalUrl}` de l'adresse, `null` sans adresse | — |
+| `POST /training/calendar` | Crée ou remplace l'adresse (20 par heure avec la révocation) | 429 |
+| `DELETE /training/calendar` | Supprime l'adresse (204) | 429 |
+| `GET /calendar/{jeton}.ics` | **Public** : le flux (`text/calendar`), 120 lectures par heure par jeton | 404, 429 |
+| `GET /training/plans/{id}/calendar.ics` | Une session répétée en pièce jointe | 404 (autre utilisateur, à la demande) |
+
+Tests : `tests/Unit/Training/IcsWriterTest.php`, `tests/Functional/Training/CalendarTest.php`,
+`tests/e2e/session-play.spec.js` (« calendar: ... »).
 
 Constructeur : un nouveau brouillon reste dans le navigateur jusqu'à « Enregistrer » ; une fois
 enregistré, il est vidé et la session se modifie sur `/session/plans/:id` (le brouillon d'une

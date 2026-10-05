@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   defaultSettings,
+  icsFileName,
   nextText,
   normalizeSettings,
   repetitionText,
@@ -115,5 +116,14 @@ describe('saved session settings', () => {
     expect(
       fromStep({ module: 'chess960', minutes: 5, notes: '', settings: {} })
     ).toBeNull()
+  })
+})
+
+describe('session .ics file name', () => {
+  it('comes from the title', () => {
+    expect(icsFileName('Matin échecs')).toBe('matin-echecs.ics')
+    expect(icsFileName('  Soir, tactique !  ')).toBe('soir-tactique.ics')
+    expect(icsFileName('!!')).toBe('session.ics')
+    expect(icsFileName('')).toBe('session.ics')
   })
 })

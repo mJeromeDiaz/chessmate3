@@ -193,3 +193,59 @@ test('saved sessions: settings kept, listed, edited, launched from the dashboard
     'Soirs de semaine'
   )
 })
+
+test('calendar: a session downloads as .ics, the private address is created, renewed and revoked', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/session/new')
+  await page.getByTestId('session-title').fill('Matin échecs')
+  await addModule(page, 'libre', 10)
+  const settings = page.getByTestId('session-settings')
+  await settings.getByTestId('repetition-daily').click()
+  await settings.getByTestId('session-time').fill('07:15')
+  await settings.getByTestId('calendar-toggle').click()
+  await expect(settings.getByTestId('calendar-hint')).toBeVisible()
+  await page.getByTestId('session-save').click()
+  await expect(page).toHaveURL(/#\/session$/)
+
+  const card = page.getByTestId('plan-card')
+  const downloading = page.waitForEvent('download')
+  await card.getByTestId('plan-ics').click()
+  const download = await downloading
+  expect(download.suggestedFilename()).toBe('matin-echecs.ics')
+  const { readFile } = await import('node:fs/promises')
+  const file = await readFile(await download.path(), 'utf8')
+  expect(file).toContain('BEGIN:VCALENDAR')
+  expect(file).toContain('RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU')
+
+  await page.goto('/#/profile')
+  const section = page.getByTestId('calendar-section')
+  await section.getByTestId('calendar-create').click()
+  const url = section.getByTestId('calendar-url')
+  await expect(url).toHaveValue(/\/api\/calendar\/[A-Za-z0-9_-]{43}\.ics$/)
+  const first = await url.inputValue()
+  const feed = await page.request.get(first)
+  expect(feed.status()).toBe(200)
+  expect(await feed.text()).toContain('SUMMARY:Matin échecs')
+  await expect(section.getByTestId('calendar-subscribe')).toHaveAttribute(
+    'href',
+    first.replace(/^https?:/, 'webcal:')
+  )
+
+  // A new address closes the previous one.
+  await section.getByTestId('calendar-regenerate').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(url).not.toHaveValue(first)
+  expect((await page.request.get(first)).status()).toBe(404)
+  const second = await url.inputValue()
+
+  // Shown again on the next visit, until revoked.
+  await page.reload()
+  await expect(url).toHaveValue(second)
+  await section.getByTestId('calendar-revoke').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(section.getByTestId('calendar-create')).toBeVisible()
+  expect((await page.request.get(second)).status()).toBe(404)
+})

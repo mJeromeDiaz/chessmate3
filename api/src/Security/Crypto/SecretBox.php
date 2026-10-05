@@ -33,10 +33,12 @@ final readonly class SecretBox
         #[Autowire('%env(default::OAUTH_TOKEN_ENCRYPTION_KEY_PREVIOUS)%')]
         #[\SensitiveParameter]
         ?string $base64PreviousKey = null,
+        /** The key's variable, named in errors (another instance encrypts calendar tokens). */
+        string $keyName = 'OAUTH_TOKEN_ENCRYPTION_KEY',
     ) {
-        $this->key = self::decodeKey($base64Key, 'OAUTH_TOKEN_ENCRYPTION_KEY');
+        $this->key = self::decodeKey($base64Key, $keyName);
         $this->previousKey = null !== $base64PreviousKey && '' !== $base64PreviousKey
-            ? self::decodeKey($base64PreviousKey, 'OAUTH_TOKEN_ENCRYPTION_KEY_PREVIOUS')
+            ? self::decodeKey($base64PreviousKey, $keyName.'_PREVIOUS')
             : null;
     }
 

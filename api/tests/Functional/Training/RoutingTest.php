@@ -40,6 +40,11 @@ final class RoutingTest extends WoodpeckerWebTestCase
         yield ['PUT', '/api/training/plans/'.self::UUID, '_api_/training/plans/{id}_put'];
         yield ['DELETE', '/api/training/plans/'.self::UUID, '_api_/training/plans/{id}_delete'];
         yield ['POST', '/api/training/plans/'.self::UUID.'/launch', 'training_plan_launch'];
+        yield ['GET', '/api/training/plans/'.self::UUID.'/calendar.ics', 'training_plan_ics'];
+        yield ['GET', '/api/training/calendar', 'training_calendar'];
+        yield ['POST', '/api/training/calendar', 'training_calendar_regenerate'];
+        yield ['DELETE', '/api/training/calendar', 'training_calendar_revoke'];
+        yield ['GET', '/api/calendar/'.str_repeat('a', 43).'.ics', 'training_calendar_feed'];
         yield ['GET', '/api/notifications/push', 'notification_push_config'];
         yield ['POST', '/api/notifications/push/subscriptions', 'notification_push_subscribe'];
         yield ['POST', '/api/notifications/push/subscription-status', 'notification_push_status'];

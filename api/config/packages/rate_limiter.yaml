@@ -134,6 +134,16 @@ framework:
             policy: sliding_window
             limit: 120
             interval: '1 hour'
+        # Calendar address (identifier = user id): regenerating or revoking it.
+        training_calendar_write:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
+        # Calendar feed (identifier = the token's hash): apps poll it every few minutes to hours.
+        training_calendar_feed:
+            policy: sliding_window
+            limit: 120
+            interval: '1 hour'
         notification_push:
             policy: sliding_window
             limit: 60

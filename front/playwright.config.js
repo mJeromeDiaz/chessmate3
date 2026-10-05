@@ -22,7 +22,9 @@ export default defineConfig({
   webServer: [
     {
       // EGPCS: the built-in server must expose APP_ENV to Symfony ($_ENV), or it boots in dev.
-      command: `APP_ENV=e2e php -d xdebug.mode=off -d variables_order=EGPCS -S localhost:${API_PORT} -t ${API_DIR}/public`,
+      // index.php as the router script: without one, the built-in server answers a 404 of its own
+      // to any missing path with an extension (the calendar's `.ics` routes) instead of Symfony.
+      command: `APP_ENV=e2e php -d xdebug.mode=off -d variables_order=EGPCS -S localhost:${API_PORT} -t ${API_DIR}/public ${API_DIR}/public/index.php`,
       url: `http://localhost:${API_PORT}/api/puzzles/themes`,
       // 401 without a token: the API is up.
       ignoreHTTPSErrors: true,

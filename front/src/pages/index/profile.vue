@@ -21,6 +21,7 @@
 
       <ThemeSection v-if="profile" />
       <NotificationSection v-if="profile" />
+      <CalendarSection v-if="profile" />
       <TimezoneSection v-if="profile" :profile="profile" />
       <LinkedAccounts v-if="profile" :profile="profile" />
       <PasswordSection v-if="profile" :profile="profile" />
@@ -36,6 +37,7 @@ import { useAuthStore } from '@/stores/auth'
 import { formatDate, providerLabel } from '@/utils/format'
 import LinkedAccounts from '@/components/profile/LinkedAccounts.vue'
 import NotificationSection from '@/components/profile/NotificationSection.vue'
+import CalendarSection from '@/components/profile/CalendarSection.vue'
 import ThemeSection from '@/components/profile/ThemeSection.vue'
 import TimezoneSection from '@/components/profile/TimezoneSection.vue'
 import PasswordSection from '@/components/profile/PasswordSection.vue'

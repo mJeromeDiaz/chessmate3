@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Training\Plan\Reminder;
 
+use App\Enum\Training\Module;
 use App\Notification\Push\PushMessage;
 use App\Notification\Push\PushSender;
 use App\Repository\Training\PlanRepository;
@@ -23,8 +24,6 @@ use Symfony\Component\Uid\Uuid;
 #[AsMessageHandler]
 final readonly class SessionReminderHandler
 {
-    private const MODULE_LABELS = ['free' => 'Libre', 'puzzles' => 'Puzzles', 'woodpecker' => 'Woodpecker', 'repertoire' => 'Répertoire'];
-
     public function __construct(
         private PlanRepository $plans,
         private MailerInterface $mailer,
@@ -65,7 +64,7 @@ final readonly class SessionReminderHandler
                     'title' => $title,
                     'when' => $when,
                     'steps' => array_map(static fn (array $step): array => [
-                        'label' => self::MODULE_LABELS[$step['module']] ?? $step['module'],
+                        'label' => Module::tryFrom($step['module'])?->label() ?? $step['module'],
                         'minutes' => $step['minutes'],
                     ], $plan->getSteps()),
                     'totalMinutes' => array_sum(array_column($plan->getSteps(), 'minutes')),

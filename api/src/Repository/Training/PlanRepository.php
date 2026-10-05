@@ -39,6 +39,16 @@ class PlanRepository extends ServiceEntityRepository
     }
 
     /**
+     * The user's saved sessions shown in their calendar feed (on demand ones never are).
+     *
+     * @return list<Plan>
+     */
+    public function findInCalendar(User $user): array
+    {
+        return $this->findBy(['user' => $user, 'calendarEnabled' => true], ['createdAt' => 'ASC'], Plan::MAX_PER_USER);
+    }
+
+    /**
      * Saved sessions with a reminder (on demand ones never have one).
      *
      * @return list<Plan>

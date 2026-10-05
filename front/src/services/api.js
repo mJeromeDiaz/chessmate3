@@ -372,6 +372,24 @@ export const planApi = {
       .then(r => r.data)
 }
 
+/** The calendar of saved sessions (docs/TRAINING.md, calendar). */
+export const calendarApi = {
+  /** `{url, webcalUrl}` of the private feed, both null without one. */
+  address: () => http.get('/api/training/calendar').then(r => r.data),
+  /** A new address: the previous one stops working. */
+  regenerate: () => http.post('/api/training/calendar').then(r => r.data),
+  revoke: () => http.delete('/api/training/calendar'),
+  /** One repeated session as an .ics text. */
+  planIcs: id =>
+    http
+      .get(`/api/training/plans/${encodeURIComponent(id)}/calendar.ics`, {
+        responseType: 'text',
+        transformResponse: [data => data],
+        headers: { Accept: 'text/calendar' }
+      })
+      .then(r => r.data)
+}
+
 /** Opening repertoires (docs/REPERTOIRE.md). Changes answer a delta (RepertoireChange). */
 export const repertoireApi = {
   list: () => http.get('/api/repertoires', JSON_LD).then(r => r.data.member),

@@ -23,6 +23,8 @@ security:
     # Note: Only the *first* matching rule is applied
     access_control:
         - { path: ^/api/auth/(register|login|logout|verify-email|forgot-password|reset-password|refresh|oauth)(/|$), roles: PUBLIC_ACCESS }
+        # Calendar feed: calendar apps send no credential, the secret token in the URL is one.
+        - { path: ^/api/calendar/, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

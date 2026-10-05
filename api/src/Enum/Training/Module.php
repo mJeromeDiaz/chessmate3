@@ -16,6 +16,17 @@ enum Module: string
     /** Free study (a book, a video...): a timer, nothing to submit. */
     case Free = 'free';
 
+    /** Its name for the user (emails, calendar). */
+    public function label(): string
+    {
+        return match ($this) {
+            self::Woodpecker => 'Woodpecker',
+            self::Repertoire => 'Répertoire',
+            self::Puzzles => 'Puzzles',
+            self::Free => 'Libre',
+        };
+    }
+
     /**
      * @return list<string>
      */

@@ -150,6 +150,14 @@
         label="Intégrer à mon calendrier"
       />
     </div>
+    <p
+      v-if="model.calendarEnabled && model.repetition !== 'on_demand'"
+      class="session-settings__hint"
+      data-testid="calendar-hint"
+    >
+      Ton agenda l'affiche une fois abonné à l'adresse de ton calendrier :
+      <router-link to="/profile">ton profil</router-link> la donne.
+    </p>
     <p v-if="model.repetition === 'on_demand'" class="session-settings__hint">
       Rappel et calendrier demandent une répétition (quotidienne ou
       hebdomadaire).

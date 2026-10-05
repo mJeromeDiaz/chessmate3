@@ -11,7 +11,7 @@ Chess training app (Duolingo-style). One git repository (monorepo) at the root:
   non-trivial functions and stores), file-based routing under `src/pages/`, hash router mode.
 - `docs/` (root): general documentation — `AUTH.md`, `SECURITY.md`, `PUZZLES.md`,
   `PUZZLE_IMPORT.md`, `ACTIVITY.md` (timezone, domain events, activity log), `WOODPECKER.md`
-  (classic and light modes), `TRAINING.md` (timed runs, module contract), `REPERTOIRE.md`
+  (classic and light modes), `TRAINING.md` (timed runs, module contract, sessions, saved sessions, iCal calendar feed), `REPERTOIRE.md`
   (opening repertoires: normalized FEN, graph, one prepared move per position, trash, segments,
   editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics), `DASHBOARD.md`
   (home dashboard: endpoints, local days, Lichess rating history, showcase values), `NOTIFICATIONS.md`

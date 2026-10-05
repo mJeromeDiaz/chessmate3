@@ -167,3 +167,20 @@ export function nextText(plan) {
     ? `Prochaine : ${nextFormat.format(new Date(plan.nextAt))}`
     : ''
 }
+
+/**
+ * The .ics file name of a session, from its title ("Matin échecs" → "matin-echecs.ics"), like the
+ * server's.
+ *
+ * @param {string} title
+ * @returns {string}
+ */
+export function icsFileName(title) {
+  const slug = title
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return `${slug || 'session'}.ics`
+}

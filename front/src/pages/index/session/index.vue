@@ -130,6 +130,19 @@
             />
             <q-space />
             <q-btn
+              v-if="plan.repetition !== 'on_demand'"
+              flat
+              round
+              dense
+              icon="event"
+              :loading="downloading === plan.id"
+              :aria-label="`Ajouter ${plan.title || 'la session'} à mon agenda (.ics)`"
+              data-testid="plan-ics"
+              @click="downloadIcs(plan)"
+            >
+              <q-tooltip>Télécharger pour mon agenda (.ics)</q-tooltip>
+            </q-btn>
+            <q-btn
               flat
               round
               dense
@@ -157,12 +170,14 @@ import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import RecentSessions from '@/components/dashboard/RecentSessions.vue'
 import { usePlanLaunch } from '@/composables/session/usePlanLaunch'
-import { planApi, sessionApi } from '@/services/api'
+import { calendarApi, planApi, sessionApi } from '@/services/api'
+import { downloadText } from '@/utils/download'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatMinutes } from '@/utils/session/catalog'
 import {
   REMINDER_CHANNELS,
   REMINDER_DELAYS,
+  icsFileName,
   nextText,
   repetitionText
 } from '@/utils/session/plans'
@@ -193,6 +208,27 @@ function reminderText(plan) {
 }
 
 /** @param {import('@/utils/session/plans').Plan} plan */
+/** @type {import('vue').Ref<string|null>} */
+const downloading = ref(null)
+
+/**
+ * One session as an .ics file, imported once into an agenda (the profile's calendar address
+ * follows later changes instead).
+ *
+ * @param {{id: string, title: string}} plan
+ */
+async function downloadIcs(plan) {
+  downloading.value = plan.id
+  try {
+    const ics = await calendarApi.planIcs(plan.id)
+    downloadText(ics, icsFileName(plan.title), 'text/calendar')
+  } catch (e) {
+    error.value = apiErrorMessage(e)
+  } finally {
+    downloading.value = null
+  }
+}
+
 function confirmDelete(plan) {
   $q.dialog({
     title: 'Supprimer cette session ?',

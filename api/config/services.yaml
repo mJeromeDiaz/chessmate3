@@ -80,6 +80,15 @@ services:
     App\:
         resource: '../src/'
 
+    # Calendar feed tokens, kept encrypted to show the address again (docs/TRAINING.md, calendar),
+    # with their own key: rotating one key never touches the other secrets.
+    app.calendar.secret_box:
+        class: App\Security\Crypto\SecretBox
+        arguments:
+            $base64Key: '%env(CALENDAR_TOKEN_KEY)%'
+            $base64PreviousKey: '%env(default::CALENDAR_TOKEN_KEY_PREVIOUS)%'
+            $keyName: 'CALENDAR_TOKEN_KEY'
+
     # Web Push requests to the browsers' push services: short timeout, no redirect followed (the
     # allowed hosts are checked before, App\Notification\Push\EndpointPolicy).
     push.client:
