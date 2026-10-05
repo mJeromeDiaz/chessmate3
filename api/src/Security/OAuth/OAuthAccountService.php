@@ -11,6 +11,9 @@ use App\Repository\AuthIdentityRepository;
 use App\Repository\UserRepository;
 use App\Security\Audit\AuditLogger;
 use App\Security\OAuth\Exception\OAuthFlowException;
+use App\Security\Registration\RegistrationGateInterface;
+use App\Security\Registration\RegistrationRefusedException;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
@@ -31,6 +34,8 @@ final readonly class OAuthAccountService
         private AuditLogger $auditLogger,
         private MailerInterface $mailer,
         private OAuthTokenVault $tokenVault,
+        private RegistrationGateInterface $registrationGate,
+        private EntityManagerInterface $entityManager,
         #[Autowire('%env(MAILER_FROM_ADDRESS)%')]
         private string $fromAddress,
         #[Autowire('%env(FRONTEND_URL)%')]
@@ -39,14 +44,18 @@ final readonly class OAuthAccountService
     }
 
     /**
-     * The user to sign in: the one this identity is linked to, or a brand new account.
+     * The user to sign in: the one this identity is linked to, or a brand new account, opened with
+     * the invitation the flow started with (spent in the same transaction).
+     *
+     * @param string|null $registrationTicket the flow's admitted invitation ({@see RegistrationGateInterface})
      *
      * @return array{User, bool} the user, and whether the account was just created
      *
      * @throws OAuthFlowException ACCOUNT_EXISTS if the identity is unknown but its verified email
-     *                            belongs to an existing account
+     *                            belongs to an existing account (the invitation is kept);
+     *                            INVITATION_* if a new account has no usable invitation
      */
-    public function resolveLogin(ExternalIdentity $identity): array
+    public function resolveLogin(ExternalIdentity $identity, ?string $registrationTicket = null): array
     {
         $linked = $this->authIdentityRepository->findOneByProviderAndUserId($identity->provider, $identity->providerUserId);
 
@@ -74,9 +83,27 @@ final readonly class OAuthAccountService
             $user->markEmailVerified();
         }
 
+        if (null === $registrationTicket) {
+            $this->tokenVault->discard($identity);
+
+            throw new OAuthFlowException(OAuthFlowException::INVITATION_REQUIRED);
+        }
+
         // Persisted along with the user (User::$authIdentities cascades).
         $this->newIdentity($user, $identity);
-        $this->userRepository->save($user);
+
+        // Not wrapInTransaction(): it would close the entity manager on a refusal, which the
+        // controller then logs. The gate refuses before anything is persisted.
+        try {
+            $this->entityManager->getConnection()->transactional(function () use ($registrationTicket, $user, $identity): void {
+                $this->registrationGate->redeem($registrationTicket, $user, $identity->provider->value);
+                $this->userRepository->save($user);
+            });
+        } catch (RegistrationRefusedException $refusal) {
+            $this->tokenVault->discard($identity);
+
+            throw new OAuthFlowException($refusal->reason, $refusal);
+        }
 
         return [$user, true];
     }

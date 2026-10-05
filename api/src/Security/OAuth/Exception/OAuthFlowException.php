@@ -30,6 +30,12 @@ final class OAuthFlowException extends \RuntimeException
     /** A grant came back from another provider account than the linked one. */
     public const IDENTITY_MISMATCH = 'identity_mismatch';
 
+    // Login that would open an account: the invitation key is missing, invalid or expired
+    // (the reasons of App\Security\Registration\RegistrationRefusedException).
+    public const INVITATION_REQUIRED = 'invitation_required';
+    public const INVITATION_INVALID = 'invitation_invalid';
+    public const INVITATION_EXPIRED = 'invitation_expired';
+
     public function __construct(public readonly string $reason, ?\Throwable $previous = null)
     {
         parent::__construct(sprintf('OAuth flow failed: %s.', $reason), 0, $previous);

@@ -19,6 +19,11 @@ use Symfony\Component\Uid\Uuid;
  * `ratedPuzzleId` is a stored generated column (puzzle_id when rated, NULL otherwise) under a unique
  * index with user_id: the database itself forbids a second rated attempt on the same puzzle, and the
  * same index answers "has this user already played these puzzles?" during selection.
+ *
+ * The puzzle is referenced by its id only, and its themes are copied here when the attempt starts:
+ * the puzzle catalogue lives in another database (docs/DEPLOY_OVH.md, § 3), and the statistics by
+ * theme (dashboard, quests, trophies, history filter) stay one query on the user's own attempts.
+ * The copy is a snapshot: a puzzle re-tagged later keeps its old themes on past attempts.
  */
 #[ORM\Entity(repositoryClass: AttemptRepository::class)]
 #[ORM\Table(name: 'puzzle_attempt')]
@@ -46,9 +51,13 @@ class Attempt
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
-    #[ORM\ManyToOne(targetEntity: Puzzle::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private Puzzle $puzzle;
+    /** Id of the puzzle in the catalogue (no foreign key: another database). */
+    #[ORM\Column(name: 'puzzle_id', options: ['unsigned' => true])]
+    private int $puzzleId;
+
+    /** @var list<string> the puzzle's themes when the attempt started */
+    #[ORM\Column(type: Types::JSON)]
+    private array $puzzleThemes;
 
     #[ORM\Column]
     private bool $rated;
@@ -105,7 +114,8 @@ class Attempt
     {
         $this->id = Uuid::v7();
         $this->user = $user;
-        $this->puzzle = $puzzle;
+        $this->puzzleId = $puzzle->getId() ?? throw new \LogicException('The puzzle is not in the catalogue yet.');
+        $this->puzzleThemes = $puzzle->getThemes();
         $this->rated = $rated;
         $this->startedAt = $startedAt;
     }
@@ -146,9 +156,18 @@ class Attempt
         return $this->user;
     }
 
-    public function getPuzzle(): Puzzle
+    /** Load the puzzle itself through App\Puzzle\Catalog\PuzzleCatalog. */
+    public function getPuzzleId(): int
     {
-        return $this->puzzle;
+        return $this->puzzleId;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getPuzzleThemes(): array
+    {
+        return $this->puzzleThemes;
     }
 
     public function getTrainingRun(): ?Run

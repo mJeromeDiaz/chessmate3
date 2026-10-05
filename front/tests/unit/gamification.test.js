@@ -154,9 +154,9 @@ describe('questText', () => {
     ).toBe(
       'Résous 10 puzzles « Fourchette » sans aide : c’est ton point faible du moment.'
     )
-    expect(questText(quest({ template: 'sessions', goal: 3 }), themeLabel)).toBe(
-      'Mène 3 sessions au bout cette semaine.'
-    )
+    expect(
+      questText(quest({ template: 'sessions', goal: 3 }), themeLabel)
+    ).toBe('Mène 3 sessions au bout cette semaine.')
     expect(
       questText(quest({ template: 'woodpecker', goal: 60 }), themeLabel)
     ).toBe('Joue 60 puzzles de ton set Woodpecker.')

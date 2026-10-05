@@ -30,6 +30,7 @@ use App\Woodpecker\Exception\SetNotFoundException;
 use App\Woodpecker\Exception\SetNotPlayableException;
 use App\Woodpecker\Mode\ProgressionRegistry;
 use App\Woodpecker\Training\WoodpeckerModule;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
@@ -55,6 +56,7 @@ final class CycleRunner
         private readonly CycleRepository $cycles,
         private readonly AttemptRepository $attempts,
         private readonly SolutionValidator $validator,
+        private readonly PuzzleCatalog $catalog,
         private readonly EventPublisher $events,
         private readonly ProgressionRegistry $progressions,
         private readonly RunRepository $runs,
@@ -130,7 +132,7 @@ final class CycleRunner
             ?? throw new \LogicException('Open cycle run with every puzzle played.');
         $setPuzzle = $this->setPuzzles->findAt($set, $position) ?? throw new \LogicException('Set list is incomplete.');
 
-        $attempt = new Attempt($cycle, $setPuzzle->getPuzzle(), $index, $now, $run);
+        $attempt = new Attempt($cycle, $setPuzzle->getPuzzleId(), $index, $now, $run);
         $this->entityManager->persist($attempt);
 
         return $attempt;
@@ -184,7 +186,8 @@ final class CycleRunner
             throw new CycleClosedException();
         }
 
-        $replay = $this->validator->replay($attempt->getPuzzle(), $submission->moves);
+        $puzzle = $this->catalog->get($attempt->getPuzzleId());
+        $replay = $this->validator->replay($puzzle, $submission->moves);
         $solved = $replay->isClean() && 0 === $submission->hintLevel && !$submission->solutionShown;
         $attempt->resolve($solved, $submission->moves, $replay->mistakes, $submission->hintLevel, $submission->solutionShown, $now);
         $this->entityManager->flush();
@@ -193,7 +196,7 @@ final class CycleRunner
             'setId' => $set->getId()->toRfc4122(),
             'cycle' => $cycle->getNumber(),
             'run' => $cycle->getRun(),
-            'puzzleId' => $attempt->getPuzzle()->getLichessId(),
+            'puzzleId' => $puzzle->getLichessId(),
             'mode' => $set->getMode()->value,
         ];
         if (null !== $run) {

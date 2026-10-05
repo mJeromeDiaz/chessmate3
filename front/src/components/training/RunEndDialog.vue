@@ -352,7 +352,8 @@ async function load() {
 function settleXp(gained) {
   const played =
     (props.run.summary?.itemCount ?? 0) > 0 ||
-    (props.run.module === 'free' && (props.run.summary?.durationMs ?? 0) >= 60_000)
+    (props.run.module === 'free' &&
+      (props.run.summary?.durationMs ?? 0) >= 60_000)
   if (gained > 0 || !played) {
     xp.value = gained
     gamification.load(['summary'])

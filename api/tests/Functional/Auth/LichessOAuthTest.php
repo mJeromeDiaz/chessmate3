@@ -90,6 +90,17 @@ final class LichessOAuthTest extends OAuthWebTestCase
         self::assertSame(200, $this->statusWithAccessToken($accessToken));
     }
 
+    public function testANewAccountWithoutInvitationIsRefusedAndItsTokenRevoked(): void
+    {
+        [$state, $challenge] = $this->startOAuthFlowWith(AuthProvider::Lichess, null);
+
+        $response = $this->oauthCallback(AuthProvider::Lichess, ['state' => $state, 'code' => FakeLichessProvider::consent($challenge, self::ACCOUNT)]);
+
+        self::assertSame('invitation_required', $this->spaOutcome($response)['reason'] ?? null);
+        self::assertSame(FakeLichessProvider::$issuedTokens, FakeLichessProvider::$revokedTokens);
+        self::assertSame(0, $this->userRepository->count([]));
+    }
+
     public function testReturningLoginReplacesTheStoredTokenAndRevokesTheOldOne(): void
     {
         $this->loginWithLichess(self::ACCOUNT);

@@ -17,13 +17,39 @@ use Symfony\Component\HttpFoundation\Response;
 abstract class OAuthWebTestCase extends AuthWebTestCase
 {
     /**
+     * Starts a sign-in as the sign-up page does: a form POST with a fresh invitation key, so that a
+     * first login can open its account.
+     *
      * @return array{string, string} state and PKCE challenge, as sent to the provider
      */
     protected function startOAuthFlow(AuthProvider $provider): array
     {
-        $this->client->request('GET', '/api/auth/oauth/'.$provider->value.'/redirect');
+        $this->postOAuthRedirect($provider, $this->createInvitationKey());
 
         return $this->stateAndChallenge((string) $this->client->getResponse()->headers->get('Location'));
+    }
+
+    /**
+     * @param string|null $invitationKey null: a plain GET (the login page), without any key
+     *
+     * @return array{string, string}
+     */
+    protected function startOAuthFlowWith(AuthProvider $provider, ?string $invitationKey): array
+    {
+        if (null === $invitationKey) {
+            $this->client->request('GET', '/api/auth/oauth/'.$provider->value.'/redirect');
+        } else {
+            $this->postOAuthRedirect($provider, $invitationKey);
+        }
+
+        return $this->stateAndChallenge((string) $this->client->getResponse()->headers->get('Location'));
+    }
+
+    protected function postOAuthRedirect(AuthProvider $provider, string $invitationKey): Response
+    {
+        $this->client->request('POST', '/api/auth/oauth/'.$provider->value.'/redirect', ['invitationKey' => $invitationKey]);
+
+        return $this->client->getResponse();
     }
 
     /**

@@ -62,10 +62,21 @@ export const authApi = {
       })
       .then(r => r.data),
   logout: () => http.post('/api/auth/logout', null, PUBLIC).then(r => r.data),
-  register: (email, password, timezone = null) =>
+  /** New accounts need an early access key (docs/EARLY_ACCESS.md). */
+  register: (email, password, timezone = null, invitationKey = null) =>
     http
-      .post('/api/auth/register', { email, password, timezone }, PUBLIC)
+      .post(
+        '/api/auth/register',
+        { email, password, timezone, invitationKey },
+        PUBLIC
+      )
       .then(r => r.data),
+  /**
+   * Is this invitation key usable? Resolves `{expiresAt}` (null: never expires); rejects with a
+   * 422 whose `data.error` is `invitation_invalid`, `invitation_expired` or `invitation_required`.
+   */
+  checkInvitation: key =>
+    http.post('/api/auth/invitation/check', { key }, PUBLIC).then(r => r.data),
   resendVerification: email =>
     http
       .post('/api/auth/verify-email/resend', { email }, PUBLIC)
@@ -80,7 +91,10 @@ export const authApi = {
     http
       .post('/api/auth/password/change', { currentPassword, newPassword })
       .then(r => r.data),
-  /** Full-page navigation target starting an OAuth login (not an XHR call). */
+  /**
+   * Full-page navigation target starting an OAuth login (not an XHR call): a GET signs an
+   * existing account in; a form POST with `invitationKey` may also open one (sign-up page).
+   */
   oauthLoginUrl: provider =>
     `${API_URL}/api/auth/oauth/${encodeURIComponent(provider)}/redirect`
 }
@@ -750,10 +764,114 @@ export const gamificationApi = {
     http.get('/api/gamification/summary', JSON_LD).then(r => r.data),
   /** Every trophy, won (with the date of the feat) or not (with its progress). */
   trophies: () =>
-    http
-      .get('/api/gamification/trophies', JSON_LD)
-      .then(r => r.data.trophies),
+    http.get('/api/gamification/trophies', JSON_LD).then(r => r.data.trophies),
   /** The quest of the week (drawn on its first read). */
   quest: () => http.get('/api/gamification/quest', JSON_LD).then(r => r.data)
 }
 
+/**
+ * Administration (docs/EARLY_ACCESS.md): ROLE_ADMIN only. Invitation keys, statistics, players.
+ *
+ * @typedef {'pending'|'used'|'expired'|'revoked'} InvitationStatus
+ */
+export const adminApi = {
+  /**
+   * The dashboard over the last `days` local days of the admin: invitations, sign-ups, activity,
+   * Lichess ratings.
+   */
+  stats: (days = 30) =>
+    http
+      .get('/api/admin/stats', { ...JSON_LD, params: { days } })
+      .then(r => r.data),
+  /**
+   * Invitations, newest first. Resolves `{member, totalItems}`.
+   *
+   * @param {{page?: number, itemsPerPage?: number, status?: InvitationStatus|null, email?: string}} params
+   */
+  invitations: ({
+    page = 1,
+    itemsPerPage = 20,
+    status = null,
+    email = ''
+  } = {}) =>
+    http
+      .get('/api/admin/invitation-keys', {
+        ...JSON_LD,
+        params: {
+          page,
+          itemsPerPage,
+          ...(status ? { status } : {}),
+          ...(email ? { email } : {})
+        }
+      })
+      .then(r => ({ member: r.data.member, totalItems: r.data.totalItems })),
+  /** One invitation, with its log. */
+  invitation: id =>
+    http
+      .get(`/api/admin/invitation-keys/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Creates an invitation and emails its key; the answer carries `key`, shown once.
+   *
+   * @param {{email: string, expiresAt?: string|null, neverExpires?: boolean}} body
+   */
+  createInvitation: body =>
+    http.post('/api/admin/invitation-keys', body, JSON_LD).then(r => r.data),
+  /** A new key on the invitation (the previous one stops working), emailed again; carries `key`. */
+  resendInvitation: id =>
+    http
+      .post(
+        `/api/admin/invitation-keys/${encodeURIComponent(id)}/resend`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** Revokes the invitation (idempotent; 409 once used). */
+  revokeInvitation: id =>
+    http
+      .delete(`/api/admin/invitation-keys/${encodeURIComponent(id)}`, JSON_LD)
+      .then(() => undefined),
+  /**
+   * Every account, newest first. Resolves `{member, totalItems}`.
+   *
+   * @param {{page?: number, itemsPerPage?: number, search?: string, suspended?: boolean|null}} params
+   */
+  players: ({
+    page = 1,
+    itemsPerPage = 20,
+    search = '',
+    suspended = null
+  } = {}) =>
+    http
+      .get('/api/admin/users', {
+        ...JSON_LD,
+        params: {
+          page,
+          itemsPerPage,
+          ...(search ? { search } : {}),
+          ...(suspended === null ? {} : { suspended })
+        }
+      })
+      .then(r => ({ member: r.data.member, totalItems: r.data.totalItems })),
+  /**
+   * Suspends the account (every session closed); the reason is an internal note. Resolves the
+   * player; 409 for an admin's account.
+   */
+  suspendPlayer: (id, reason = null) =>
+    http
+      .post(
+        `/api/admin/users/${encodeURIComponent(id)}/suspend`,
+        { reason },
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** Lifts the suspension; resolves the player. */
+  unsuspendPlayer: id =>
+    http
+      .post(
+        `/api/admin/users/${encodeURIComponent(id)}/unsuspend`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data)
+}

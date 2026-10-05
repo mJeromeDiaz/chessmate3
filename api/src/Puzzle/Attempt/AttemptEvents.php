@@ -6,6 +6,7 @@ namespace App\Puzzle\Attempt;
 
 use App\Activity\Event\ExerciseCompleted;
 use App\Entity\Puzzle\Attempt;
+use App\Entity\Puzzle\Puzzle;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Puzzle\AttemptStatus;
 
@@ -16,7 +17,7 @@ final class AttemptEvents
 {
     public const SOURCE_TYPE = 'puzzle_attempt';
 
-    public static function completed(Attempt $attempt): ExerciseCompleted
+    public static function completed(Attempt $attempt, Puzzle $puzzle): ExerciseCompleted
     {
         $submittedAt = $attempt->getSubmittedAt();
         if (null === $submittedAt) {
@@ -35,8 +36,8 @@ final class AttemptEvents
             sourceId: $attempt->getId()->toRfc4122(),
             occurredAt: $submittedAt,
             metadata: [
-                'puzzleId' => $attempt->getPuzzle()->getLichessId(),
-                'puzzleRating' => $attempt->getPuzzle()->getRating(),
+                'puzzleId' => $puzzle->getLichessId(),
+                'puzzleRating' => $puzzle->getRating(),
                 'ratingDelta' => null === $change ? null : round($change->getRatingDelta(), 1),
                 'mistakes' => $attempt->getMistakes(),
                 'hintLevel' => $attempt->getHintLevel(),

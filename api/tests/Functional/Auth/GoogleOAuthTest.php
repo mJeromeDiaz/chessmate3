@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Auth;
 
 use App\Entity\AuthIdentity;
+use App\Entity\EarlyAccess\InvitationLog;
 use App\Entity\OAuthFlow;
 use App\Entity\User;
 use App\Enum\AuditEventType;
 use App\Enum\AuthProvider;
+use App\Enum\EarlyAccess\InvitationAction;
+use App\Enum\EarlyAccess\InvitationStatus;
 use App\Tests\Double\FakeGoogleProvider;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Email;
@@ -290,6 +293,92 @@ final class GoogleOAuthTest extends OAuthWebTestCase
         self::assertSame(1, $this->auditCount(AuditEventType::AccountLinked));
     }
 
+    public function testANewAccountNeedsAnInvitation(): void
+    {
+        $response = $this->loginWithGoogleUsing(null, ['sub' => 'g-1', 'email' => 'alice@gmail.com', 'email_verified' => true, 'name' => 'Alice']);
+
+        self::assertSame(['status' => 'error', 'mode' => 'login', 'provider' => 'google', 'reason' => 'invitation_required'], $this->spaOutcome($response));
+        $this->assertNoRefreshCookie($response);
+        self::assertSame(0, $this->userRepository->count([]));
+        self::assertSame(0, $this->entityManager->getRepository(AuthIdentity::class)->count([]));
+    }
+
+    public function testAReturningUserSignsInWithoutAnyInvitation(): void
+    {
+        $this->loginWithGoogle(['sub' => 'g-1', 'email' => 'alice@gmail.com', 'email_verified' => true, 'name' => 'Alice']);
+        $this->client->getCookieJar()->clear();
+
+        $response = $this->loginWithGoogleUsing(null, ['sub' => 'g-1', 'email' => 'alice@gmail.com', 'email_verified' => true, 'name' => 'Alice']);
+
+        self::assertSame('success', $this->spaOutcome($response)['status']);
+        self::assertSame(1, $this->userRepository->count([]));
+    }
+
+    public function testTheInvitationIsSpentOnTheNewAccount(): void
+    {
+        $key = $this->createInvitationKey();
+
+        $response = $this->loginWithGoogleUsing($key, ['sub' => 'g-1', 'email' => 'alice@gmail.com', 'email_verified' => true, 'name' => 'Alice']);
+
+        self::assertSame('success', $this->spaOutcome($response)['status']);
+        $user = $this->identity('g-1')->getUser();
+        $invitation = $this->findInvitation($key);
+        self::assertSame(InvitationStatus::Used, $invitation->getStatus(new \DateTimeImmutable()));
+        self::assertSame($user->getId()->toRfc4122(), $invitation->getUsedBy()?->getId()->toRfc4122());
+        $log = $this->entityManager->getRepository(InvitationLog::class)->findOneBy(['invitation' => $invitation, 'action' => InvitationAction::KeyUsed]);
+        self::assertInstanceOf(InvitationLog::class, $log);
+        self::assertSame('google', $log->getDetails()['method'] ?? null);
+
+        // The flow kept a ticket, never the key.
+        self::assertSame(1, $this->entityManager->getRepository(OAuthFlow::class)->count(['registrationTicket' => hash('sha256', $key)]));
+    }
+
+    public function testAnInvalidInvitationIsRefusedBeforeGoingToGoogle(): void
+    {
+        $response = $this->postOAuthRedirect(AuthProvider::Google, str_repeat('A', 32));
+
+        self::assertSame(['status' => 'error', 'mode' => 'login', 'provider' => 'google', 'reason' => 'invitation_invalid'], $this->spaOutcome($response));
+        self::assertSame(0, $this->entityManager->getRepository(OAuthFlow::class)->count([]));
+    }
+
+    public function testAnExpiredInvitationIsRefusedBeforeGoingToGoogle(): void
+    {
+        $response = $this->postOAuthRedirect(AuthProvider::Google, $this->createInvitationKey(new \DateTimeImmutable('-1 minute')));
+
+        self::assertSame('invitation_expired', $this->spaOutcome($response)['reason'] ?? null);
+        self::assertSame(0, $this->entityManager->getRepository(OAuthFlow::class)->count([]));
+    }
+
+    public function testAnInvitationUsedMeanwhileIsRefusedAtTheCallback(): void
+    {
+        $key = $this->createInvitationKey();
+        [$state, $challenge] = $this->startOAuthFlowWith(AuthProvider::Google, $key);
+        $invitation = $this->findInvitation($key);
+        $invitation->markUsed(new \DateTimeImmutable(), null);
+        $this->entityManager->flush();
+
+        $response = $this->googleCallback(['state' => $state, 'code' => FakeGoogleProvider::consent($challenge, ['sub' => 'g-1', 'email' => 'alice@gmail.com', 'email_verified' => true, 'name' => 'Alice'])]);
+
+        self::assertSame('invitation_invalid', $this->spaOutcome($response)['reason'] ?? null);
+        $this->assertNoRefreshCookie($response);
+        self::assertSame(0, $this->userRepository->count([]));
+    }
+
+    /**
+     * The person proved owning the address: telling them it has an account leaks nothing, and
+     * their key stays usable.
+     */
+    public function testAnExistingAccountsEmailKeepsTheInvitation(): void
+    {
+        $this->createVerifiedUser('alice@gmail.com', self::PASSWORD);
+        $key = $this->createInvitationKey();
+
+        $response = $this->loginWithGoogleUsing($key, ['sub' => 'g-1', 'email' => 'alice@gmail.com', 'email_verified' => true, 'name' => 'Alice']);
+
+        self::assertSame('account_exists', $this->spaOutcome($response)['reason'] ?? null);
+        self::assertSame(InvitationStatus::Pending, $this->findInvitation($key)->getStatus(new \DateTimeImmutable()));
+    }
+
     /**
      * @return array{string, string} state and PKCE challenge, as sent to Google
      */
@@ -312,6 +401,17 @@ final class GoogleOAuthTest extends OAuthWebTestCase
     private function loginWithGoogle(array $userInfo): Response
     {
         [$state, $challenge] = $this->startFlow();
+
+        return $this->googleCallback(['state' => $state, 'code' => FakeGoogleProvider::consent($challenge, $userInfo)]);
+    }
+
+    /**
+     * @param string|null          $invitationKey null: from the login page, without any key
+     * @param array<string, mixed> $userInfo
+     */
+    private function loginWithGoogleUsing(?string $invitationKey, array $userInfo): Response
+    {
+        [$state, $challenge] = $this->startOAuthFlowWith(AuthProvider::Google, $invitationKey);
 
         return $this->googleCallback(['state' => $state, 'code' => FakeGoogleProvider::consent($challenge, $userInfo)]);
     }

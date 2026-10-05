@@ -39,6 +39,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => accessToken.value !== null)
   /** A deletion is scheduled: the account is frozen until it is cancelled (docs/AUTH.md). */
   const isFrozen = computed(() => !!profile.value?.deletionScheduledAt)
+  /** ROLE_ADMIN (docs/EARLY_ACCESS.md): shows the administration. The API checks it on its own. */
+  const isAdmin = computed(() => profile.value?.isAdmin === true)
 
   /** @type {Promise<void>|null} */
   let initPromise = null
@@ -303,6 +305,7 @@ export const useAuthStore = defineStore('auth', () => {
     initialized,
     isAuthenticated,
     isFrozen,
+    isAdmin,
     confirmDeletion,
     cancelDeletion,
     init,

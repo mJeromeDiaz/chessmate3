@@ -16,6 +16,7 @@
           autocomplete="one-time-code"
           maxlength="6"
           outlined
+          data-testid="mfa-code"
           autofocus
           :rules="[v => /^\d{6}$/.test(v) || '6 chiffres']"
         />
@@ -97,7 +98,8 @@ async function submit() {
     router.replace(safeRedirect(route.query.redirect))
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      401: 'Code invalide ou expiré. Après 5 essais, il faut recommencer la connexion.'
+      401: 'Code invalide ou expiré. Après 5 essais, il faut recommencer la connexion.',
+      423: 'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.'
     })
     code.value = ''
   } finally {

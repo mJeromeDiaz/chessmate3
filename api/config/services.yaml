@@ -53,6 +53,7 @@ when@test:
         App\Repertoire\Srs\DueQuery: { autowire: true, public: true }
         App\Repertoire\Import\Message\AnalyzeImportHandler: { autowire: true, autoconfigure: true, public: true }
         App\Repertoire\Import\Message\ApplyImportHandler: { autowire: true, autoconfigure: true, public: true }
+        App\Ops\Queue\QueueDrainer: { autowire: true, public: true }
     parameters:
         woodpecker.min_puzzles: 5
         woodpecker.light.initial_puzzles: 10

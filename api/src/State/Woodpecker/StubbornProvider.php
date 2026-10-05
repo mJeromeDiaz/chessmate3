@@ -7,7 +7,7 @@ namespace App\State\Woodpecker;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Woodpecker\StubbornPuzzle;
-use App\Repository\Puzzle\PuzzleRepository;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Repository\Woodpecker\AttemptRepository;
 use App\Repository\Woodpecker\SetRepository;
 use App\Security\AuthenticatedUser;
@@ -24,7 +24,7 @@ final class StubbornProvider implements ProviderInterface
     public function __construct(
         private readonly SetRepository $sets,
         private readonly AttemptRepository $attempts,
-        private readonly PuzzleRepository $puzzles,
+        private readonly PuzzleCatalog $catalog,
         private readonly AuthenticatedUser $authenticatedUser,
     ) {
     }
@@ -41,10 +41,7 @@ final class StubbornProvider implements ProviderInterface
         }
 
         $rows = $this->attempts->findStubborn($set);
-        $puzzles = [];
-        foreach ($this->puzzles->findBy(['id' => array_column($rows, 'puzzleId')]) as $puzzle) {
-            $puzzles[(int) $puzzle->getId()] = $puzzle;
-        }
+        $puzzles = $this->catalog->byIds(array_column($rows, 'puzzleId'));
 
         $views = [];
         foreach ($rows as $row) {

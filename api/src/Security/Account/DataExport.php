@@ -9,6 +9,7 @@ use App\Entity\TrustedDevice;
 use App\Entity\User;
 use App\Repertoire\Pgn\Exporter as PgnExporter;
 use App\Repository\Repertoire\RepertoireRepository;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Psr\Clock\ClockInterface;
@@ -48,6 +49,7 @@ final readonly class DataExport
         private RepertoireRepository $repertoires,
         private PgnExporter $pgn,
         private ClockInterface $clock,
+        private PuzzleCatalog $catalog,
     ) {
     }
 
@@ -71,14 +73,14 @@ final readonly class DataExport
         $zip->addFromString('puzzles.json', self::json([
             'rating' => $this->rows('SELECT rating, deviation, volatility, rated_count, last_rated_at, source, updated_at FROM puzzle_rating WHERE user_id = ?', $id)[0] ?? null,
             'ratingHistory' => $this->rows('SELECT reason, rating_before, rating_after, deviation_after, created_at FROM puzzle_rating_change WHERE user_id = ? ORDER BY created_at', $id),
-            'attempts' => $this->rows(
-                'SELECT BIN_TO_UUID(a.id) AS id, p.lichess_id AS puzzle, a.rated, a.status, a.started_at, a.submitted_at, a.duration_ms, a.moves,
+            'attempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(a.id) AS id, a.puzzle_id AS puzzle, a.rated, a.status, a.started_at, a.submitted_at, a.duration_ms, a.moves,
                         a.mistakes, a.hint_level, a.solution_shown, BIN_TO_UUID(a.training_run_id) AS training_run_id
-                   FROM puzzle_attempt a JOIN puzzle p ON p.id = a.puzzle_id
+                   FROM puzzle_attempt a
                   WHERE a.user_id = ? ORDER BY a.started_at',
                 $id,
                 ['moves'],
-            ),
+            )),
         ]));
         $zip->addFromString('woodpecker.json', self::json([
             'sets' => $this->rows(
@@ -88,12 +90,12 @@ final readonly class DataExport
                 $id,
                 ['themes'],
             ),
-            'setPuzzles' => $this->rows(
-                'SELECT BIN_TO_UUID(sp.set_id) AS set_id, sp.position, p.lichess_id AS puzzle
-                   FROM woodpecker_set_puzzle sp JOIN woodpecker_set s ON s.id = sp.set_id JOIN puzzle p ON p.id = sp.puzzle_id
+            'setPuzzles' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(sp.set_id) AS set_id, sp.position, sp.puzzle_id AS puzzle
+                   FROM woodpecker_set_puzzle sp JOIN woodpecker_set s ON s.id = sp.set_id
                   WHERE s.user_id = ? ORDER BY s.created_at, sp.position',
                 $id,
-            ),
+            )),
             'cycles' => $this->rows(
                 'SELECT BIN_TO_UUID(c.id) AS id, BIN_TO_UUID(c.set_id) AS set_id, c.number, c.run, c.status, c.duration_days, c.available_at,
                         c.deadline_at, c.completed_at, c.lost_at
@@ -101,15 +103,14 @@ final readonly class DataExport
                   WHERE s.user_id = ? ORDER BY c.available_at',
                 $id,
             ),
-            'attempts' => $this->rows(
-                'SELECT BIN_TO_UUID(a.cycle_id) AS cycle_id, a.order_index, p.lichess_id AS puzzle, a.status, a.started_at, a.submitted_at,
+            'attempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(a.cycle_id) AS cycle_id, a.order_index, a.puzzle_id AS puzzle, a.status, a.started_at, a.submitted_at,
                         a.duration_ms, a.moves, a.mistakes, a.hint_level, a.solution_shown, BIN_TO_UUID(a.training_run_id) AS training_run_id
                    FROM woodpecker_attempt a JOIN woodpecker_cycle c ON c.id = a.cycle_id JOIN woodpecker_set s ON s.id = c.set_id
-                   JOIN puzzle p ON p.id = a.puzzle_id
                   WHERE s.user_id = ? ORDER BY a.started_at',
                 $id,
                 ['moves'],
-            ),
+            )),
             'growths' => $this->rows(
                 'SELECT BIN_TO_UUID(g.set_id) AS set_id, g.round, g.added, g.puzzle_count, g.occurred_at
                    FROM woodpecker_set_growth g JOIN woodpecker_set s ON s.id = g.set_id
@@ -257,6 +258,25 @@ final readonly class DataExport
                     $rows[$i][$column] = str_replace(' ', 'T', $value).'Z';
                 }
             }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The `puzzle` column of these rows, a catalogue id, as the puzzle's Lichess id (the catalogue
+     * lives in another database: no SQL join).
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withLichessIds(array $rows): array
+    {
+        $ids = array_map(static fn (array $row): int => is_numeric($row['puzzle'] ?? null) ? (int) $row['puzzle'] : 0, $rows);
+        $lichessIds = $this->catalog->lichessIds($ids);
+        foreach ($rows as $i => $row) {
+            $rows[$i]['puzzle'] = $lichessIds[$ids[$i]] ?? null;
         }
 
         return $rows;

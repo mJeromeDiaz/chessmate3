@@ -13,6 +13,7 @@ use App\Training\Run\TimeboxRunner;
 use App\Woodpecker\Cycle\CycleRunner;
 use App\Woodpecker\Exception\SetNotFoundException;
 use App\Woodpecker\Exception\SetNotPlayableException;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
@@ -28,6 +29,7 @@ use Symfony\Component\Uid\Uuid;
 final class NextAttemptProcessor implements ProcessorInterface
 {
     public function __construct(
+        private readonly PuzzleCatalog $catalog,
         private readonly CycleRunner $runner,
         private readonly SetViewFactory $views,
         private readonly AuthenticatedUser $authenticatedUser,
@@ -56,6 +58,6 @@ final class NextAttemptProcessor implements ProcessorInterface
             throw new ConflictHttpException($e->getMessage());
         }
 
-        return Attempt::from($attempt, $this->views->create($attempt->getCycle()->getSet()));
+        return Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()), $this->views->create($attempt->getCycle()->getSet()));
     }
 }

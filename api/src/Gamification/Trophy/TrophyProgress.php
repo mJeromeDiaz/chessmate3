@@ -70,9 +70,9 @@ final readonly class TrophyProgress
                 ['status' => SessionStatus::Completed->value],
             ),
             Trophy::GoldenFork => $this->counter->nth(
-                "SELECT a.submitted_at AS at FROM puzzle_attempt a JOIN puzzle p ON p.id = a.puzzle_id
+                "SELECT a.submitted_at AS at FROM puzzle_attempt a
                   WHERE a.user_id = :user AND a.rated = 1 AND a.status = :status AND a.mistakes = 0 AND a.hint_level = 0
-                    AND a.solution_shown = 0 AND JSON_CONTAINS(p.themes, '\"fork\"')",
+                    AND a.solution_shown = 0 AND JSON_CONTAINS(a.puzzle_themes, '\"fork\"')",
                 $id,
                 $trophy->goal(),
                 ['status' => AttemptStatus::Solved->value],

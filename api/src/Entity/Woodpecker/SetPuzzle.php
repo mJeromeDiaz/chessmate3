@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Entity\Woodpecker;
 
-use App\Entity\Puzzle\Puzzle;
 use App\Repository\Woodpecker\SetPuzzleRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * One puzzle of a set's frozen list. The puzzle foreign key has no cascade: a puzzle referenced by
- * a set can never be deleted, and a re-import must upsert (docs/PUZZLE_IMPORT.md, § 7).
+ * One puzzle of a set's frozen list, by its id in the puzzle catalogue (another database, so no
+ * foreign key: a re-import must never delete a puzzle, docs/PUZZLE_IMPORT.md, § 7).
  */
 #[ORM\Entity(repositoryClass: SetPuzzleRepository::class, readOnly: true)]
 #[ORM\Table(name: 'woodpecker_set_puzzle')]
@@ -30,15 +29,14 @@ class SetPuzzle
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
     private int $position;
 
-    #[ORM\ManyToOne(targetEntity: Puzzle::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private Puzzle $puzzle;
+    #[ORM\Column(name: 'puzzle_id', options: ['unsigned' => true])]
+    private int $puzzleId;
 
-    public function __construct(Set $set, int $position, Puzzle $puzzle)
+    public function __construct(Set $set, int $position, int $puzzleId)
     {
         $this->set = $set;
         $this->position = $position;
-        $this->puzzle = $puzzle;
+        $this->puzzleId = $puzzleId;
     }
 
     public function getSet(): Set
@@ -51,8 +49,8 @@ class SetPuzzle
         return $this->position;
     }
 
-    public function getPuzzle(): Puzzle
+    public function getPuzzleId(): int
     {
-        return $this->puzzle;
+        return $this->puzzleId;
     }
 }

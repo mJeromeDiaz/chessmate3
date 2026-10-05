@@ -221,6 +221,8 @@ final class ProfileController extends AbstractController
             'pendingEmail' => $user->getPendingEmail(),
             'hasPassword' => $user->canSignInWithPassword(),
             'createdAt' => $user->getCreatedAt()->format(\DATE_ATOM),
+            // Opens the admin dashboard in the SPA (the API checks ROLE_ADMIN on its own).
+            'isAdmin' => \in_array('ROLE_ADMIN', $user->getRoles(), true),
             'timezone' => $user->getTimezone(),
             'theme' => $user->getTheme()?->value,
             'displayName' => $user->getDisplayName(),

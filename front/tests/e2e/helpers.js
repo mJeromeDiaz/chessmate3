@@ -10,17 +10,19 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * itself is covered by the Phase 1 tests).
  *
  * @param {import('@playwright/test').BrowserContext} context
+ * @param {{admin?: boolean, password?: string}} [options] an admin (docs/EARLY_ACCESS.md); a
+ *   password, for a test that also signs in through the login page
+ * @returns {Promise<{id: string, email: string}>}
  */
-export async function signIn(context) {
-  const output = execFileSync(
-    'php',
-    ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user'],
-    {
-      cwd: API_DIR,
-      env: { ...process.env, APP_ENV: 'e2e' }
-    }
-  )
-  const { refreshToken } = JSON.parse(output.toString().trim())
+export async function signIn(context, { admin = false, password } = {}) {
+  const args = ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user']
+  if (admin) args.push('--admin')
+  if (password) args.push(`--password=${password}`)
+  const output = execFileSync('php', args, {
+    cwd: API_DIR,
+    env: { ...process.env, APP_ENV: 'e2e' }
+  })
+  const { id, email, refreshToken } = JSON.parse(output.toString().trim())
   await context.addCookies([
     {
       name: 'refresh_token',
@@ -31,6 +33,29 @@ export async function signIn(context) {
       sameSite: 'Strict'
     }
   ])
+  return { id, email }
+}
+
+/**
+ * Runs the API's worker on the `async` queue for a moment, as production's would: the emails
+ * (invitations, address verification) leave through it. Nothing runs it in e2e otherwise.
+ *
+ * @param {number} [seconds] how long the worker stays up (it handles everything queued meanwhile)
+ */
+export function consumeQueue(seconds = 3) {
+  execFileSync(
+    'php',
+    [
+      '-d',
+      'xdebug.mode=off',
+      'bin/console',
+      'messenger:consume',
+      'async',
+      `--time-limit=${seconds}`,
+      '--quiet'
+    ],
+    { cwd: API_DIR, env: { ...process.env, APP_ENV: 'e2e' } }
+  )
 }
 
 /**

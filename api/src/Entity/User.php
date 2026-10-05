@@ -113,6 +113,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $deletionScheduledAt = null;
 
+    /**
+     * Suspended by an admin (docs/EARLY_ACCESS.md): no session can be opened or refreshed, and
+     * nothing of the account goes out (calendar feed, reminders) until it is lifted.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $suspendedAt = null;
+
+    /** The admin's internal note on a suspension, never shown to the player. */
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $suspensionReason = null;
+
     /** @var Collection<int, AuthIdentity> */
     #[ORM\OneToMany(targetEntity: AuthIdentity::class, mappedBy: 'user', cascade: ['persist'], orphanRemoval: true)]
     private Collection $authIdentities;
@@ -367,6 +378,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function cancelDeletion(): static
     {
         $this->deletionScheduledAt = null;
+
+        return $this;
+    }
+
+    public function getSuspendedAt(): ?\DateTimeImmutable
+    {
+        return $this->suspendedAt;
+    }
+
+    public function getSuspensionReason(): ?string
+    {
+        return $this->suspensionReason;
+    }
+
+    public function isSuspended(): bool
+    {
+        return null !== $this->suspendedAt;
+    }
+
+    /**
+     * Idempotent: suspending again only updates the reason.
+     */
+    public function suspend(\DateTimeImmutable $at, ?string $reason): static
+    {
+        $this->suspendedAt ??= $at;
+        $this->suspensionReason = $reason;
+
+        return $this;
+    }
+
+    public function liftSuspension(): static
+    {
+        $this->suspendedAt = null;
+        $this->suspensionReason = null;
 
         return $this;
     }

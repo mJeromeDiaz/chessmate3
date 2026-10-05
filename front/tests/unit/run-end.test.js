@@ -193,9 +193,10 @@ describe('endStats', () => {
       ['Classement', '1512', '+12 pts'],
       ['XP gagnés', '+36', 'Niveau 12 · 78 %']
     ])
-    expect(
-      endStats(run('puzzles', 4, 3), [])[3]
-    ).toMatchObject({ value: '…', sub: '' })
+    expect(endStats(run('puzzles', 4, 3), [])[3]).toMatchObject({
+      value: '…',
+      sub: ''
+    })
   })
 
   it('shows the cycle progress of a Woodpecker run and the graded positions of a repertoire run', () => {

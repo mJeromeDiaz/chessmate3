@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Entity\Woodpecker;
 
-use App\Entity\Puzzle\Puzzle;
 use App\Entity\Training\Run;
 use App\Enum\Puzzle\AttemptStatus;
 use App\Repository\Woodpecker\AttemptRepository;
@@ -39,9 +38,9 @@ class Attempt
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Cycle $cycle;
 
-    #[ORM\ManyToOne(targetEntity: Puzzle::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private Puzzle $puzzle;
+    /** Id of the puzzle in the catalogue (no foreign key: another database, docs/DEPLOY_OVH.md, § 3). */
+    #[ORM\Column(name: 'puzzle_id', options: ['unsigned' => true])]
+    private int $puzzleId;
 
     #[ORM\ManyToOne(targetEntity: Run::class)]
     #[ORM\JoinColumn(name: 'training_run_id', nullable: true, onDelete: 'SET NULL')]
@@ -76,11 +75,11 @@ class Attempt
     #[ORM\Column(options: ['default' => false])]
     private bool $solutionShown = false;
 
-    public function __construct(Cycle $cycle, Puzzle $puzzle, int $orderIndex, \DateTimeImmutable $startedAt, ?Run $run = null)
+    public function __construct(Cycle $cycle, int $puzzleId, int $orderIndex, \DateTimeImmutable $startedAt, ?Run $run = null)
     {
         $this->id = Uuid::v7();
         $this->cycle = $cycle;
-        $this->puzzle = $puzzle;
+        $this->puzzleId = $puzzleId;
         $this->orderIndex = $orderIndex;
         $this->startedAt = $startedAt;
         $this->run = $run;
@@ -136,9 +135,10 @@ class Attempt
         return $this->cycle;
     }
 
-    public function getPuzzle(): Puzzle
+    /** Load the puzzle itself through App\Puzzle\Catalog\PuzzleCatalog. */
+    public function getPuzzleId(): int
     {
-        return $this->puzzle;
+        return $this->puzzleId;
     }
 
     public function getOrderIndex(): int

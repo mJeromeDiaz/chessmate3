@@ -1,10 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createAuthGuard, FROZEN_PAGE, safeRedirect } from '@/router/guards'
 
-function fakeAuth({ authenticated = false, mfa = null, frozen = false } = {}) {
+function fakeAuth({
+  authenticated = false,
+  mfa = null,
+  frozen = false,
+  admin = false
+} = {}) {
   return {
     isAuthenticated: authenticated,
     isFrozen: frozen,
+    isAdmin: admin,
     mfa,
     init: vi.fn(async () => {})
   }
@@ -49,6 +55,22 @@ describe('createAuthGuard', () => {
       await createAuthGuard(() => fakeAuth({ authenticated: true }))(
         route('required')
       )
+    ).toBe(true)
+  })
+
+  it('keeps the administration to admins', async () => {
+    expect(
+      await createAuthGuard(() => fakeAuth())(route('admin', '/admin'))
+    ).toEqual({ path: '/login', query: { redirect: '/admin' } })
+    expect(
+      await createAuthGuard(() => fakeAuth({ authenticated: true }))(
+        route('admin')
+      )
+    ).toEqual({ path: '/' })
+    expect(
+      await createAuthGuard(() =>
+        fakeAuth({ authenticated: true, admin: true })
+      )(route('admin'))
     ).toBe(true)
   })
 

@@ -9,6 +9,7 @@ use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Puzzle\Attempt;
 use App\Repository\Puzzle\AttemptRepository;
 use App\Security\AuthenticatedUser;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -19,6 +20,7 @@ use Symfony\Component\Uid\Uuid;
 final class AttemptProvider implements ProviderInterface
 {
     public function __construct(
+        private readonly PuzzleCatalog $catalog,
         private readonly AttemptRepository $attempts,
         private readonly AuthenticatedUser $authenticatedUser,
     ) {
@@ -33,6 +35,6 @@ final class AttemptProvider implements ProviderInterface
 
         $attempt = $this->attempts->findOneBy(['id' => Uuid::fromString($id), 'user' => $this->authenticatedUser->get()]);
 
-        return null === $attempt ? null : Attempt::from($attempt);
+        return null === $attempt ? null : Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()));
     }
 }

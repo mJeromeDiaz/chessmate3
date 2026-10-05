@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
+// Mailpit (emails of the e2e API, read by tests/e2e/mailpit.js): `mailpit` must be in the PATH.
+import { MAILPIT_HTTP_PORT, MAILPIT_SMTP_PORT } from './tests/e2e/ports.js'
 
 /**
  * End-to-end tests against the real API (APP_ENV=e2e: its own database, ChessMateGo_e2e) and the
@@ -20,6 +22,13 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
+    {
+      // In-memory store (no --database): every run starts with an empty mailbox.
+      command: `mailpit --smtp localhost:${MAILPIT_SMTP_PORT} --listen localhost:${MAILPIT_HTTP_PORT}`,
+      url: `http://localhost:${MAILPIT_HTTP_PORT}/readyz`,
+      reuseExistingServer: false,
+      timeout: 30_000
+    },
     {
       // EGPCS: the built-in server must expose APP_ENV to Symfony ($_ENV), or it boots in dev.
       // index.php as the router script: without one, the built-in server answers a 404 of its own

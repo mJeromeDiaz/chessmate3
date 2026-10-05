@@ -14,6 +14,14 @@
           <q-btn flat no-caps to="/puzzle" label="Puzzles" />
           <q-btn flat no-caps to="/woodpecker" label="Woodpecker" />
           <q-btn flat no-caps to="/repertoire" label="Répertoires" />
+          <q-btn
+            v-if="auth.isAdmin"
+            flat
+            no-caps
+            to="/admin"
+            label="Admin"
+            data-testid="nav-admin"
+          />
           <q-btn flat no-caps to="/profile" label="Profil" />
           <q-btn
             flat

@@ -2,7 +2,10 @@
   <section class="cm-card trophies" data-testid="trophies">
     <div class="trophies__head">
       <h2 class="cm-card__title">Trophées</h2>
-      <span v-if="cards.length" class="trophies__count" data-testid="trophies-count"
+      <span
+        v-if="cards.length"
+        class="trophies__count"
+        data-testid="trophies-count"
         >{{ unlocked }} / {{ cards.length }} débloqués</span
       >
     </div>

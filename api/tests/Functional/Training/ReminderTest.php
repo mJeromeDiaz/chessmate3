@@ -59,6 +59,23 @@ final class ReminderTest extends WoodpeckerWebTestCase
         self::assertSame(1, $this->sendReminders());
     }
 
+    public function testASuspendedAccountGetsNoReminder(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->plan($alice, ['time' => '18:30', 'reminderMinutes' => 30]);
+
+        // Queued, then the account is suspended before the worker sends it: nothing goes out.
+        $this->travel('+6 hours');
+        self::assertSame(1, $this->sendReminders());
+        $this->suspend($alice);
+        $this->deliver();
+        self::assertCount(0, $this->emails());
+
+        // Nor is anything queued any more.
+        $this->travel('+1 day');
+        self::assertSame(0, $this->sendReminders());
+    }
+
     public function testAMissedReminderIsCaughtUpForFifteenMinutesOnly(): void
     {
         $alice = $this->createUserIn('alice@example.com');
@@ -169,6 +186,14 @@ final class ReminderTest extends WoodpeckerWebTestCase
     {
         $response = $this->api('POST', '/api/notifications/push/subscriptions', $user, ['endpoint' => self::endpoint('alice'), 'keys' => self::browserKeys()]);
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+    }
+
+    private function suspend(User $user): void
+    {
+        $managed = $this->entityManager->find(User::class, $user->getId());
+        self::assertInstanceOf(User::class, $managed);
+        $managed->suspend(new \DateTimeImmutable(), 'test');
+        $this->entityManager->flush();
     }
 
     private function sendReminders(): int

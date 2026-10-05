@@ -17,6 +17,7 @@ use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Training\Run\TimeboxRunner;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -32,6 +33,7 @@ use Symfony\Component\Uid\Uuid;
 final class SubmitAttemptProcessor implements ProcessorInterface
 {
     public function __construct(
+        private readonly PuzzleCatalog $catalog,
         private readonly AttemptService $attempts,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
@@ -68,6 +70,6 @@ final class SubmitAttemptProcessor implements ProcessorInterface
             throw new BadRequestHttpException($e->getMessage());
         }
 
-        return Attempt::from($attempt);
+        return Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()));
     }
 }

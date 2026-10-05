@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Auth;
 
+use App\EarlyAccess\Invitation\KeyGenerator;
+use App\Entity\EarlyAccess\InvitationKey;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,6 +47,30 @@ abstract class AuthWebTestCase extends WebTestCase
         $this->userRepository->save($user);
 
         return $user;
+    }
+
+    /**
+     * A pending early access key (docs/EARLY_ACCESS.md), as an admin would create it: new accounts
+     * need one.
+     *
+     * @param \DateTimeImmutable|null $expiresAt null: never expires
+     */
+    protected function createInvitationKey(?\DateTimeImmutable $expiresAt = null, string $email = 'guest@example.com'): string
+    {
+        $key = (new KeyGenerator())->generate();
+        $this->entityManager->persist(new InvitationKey($email, KeyGenerator::hash($key), KeyGenerator::hint($key), null, new \DateTimeImmutable(), $expiresAt));
+        $this->entityManager->flush();
+
+        return $key;
+    }
+
+    protected function findInvitation(string $key): InvitationKey
+    {
+        $this->entityManager->clear();
+        $invitation = $this->entityManager->getRepository(InvitationKey::class)->findOneBy(['keyHash' => KeyGenerator::hash($key)]);
+        self::assertInstanceOf(InvitationKey::class, $invitation);
+
+        return $invitation;
     }
 
     protected function createUnverifiedUser(string $email, string $plainPassword = 'a-strong-passw0rd!'): User

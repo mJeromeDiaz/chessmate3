@@ -22,4 +22,7 @@ final class RegisterRequest
     /** IANA timezone detected by the browser (optional). */
     #[Assert\Timezone]
     public ?string $timezone = null;
+
+    /** Early access key (docs/EARLY_ACCESS.md), checked by the registration gate. */
+    public ?string $invitationKey = null;
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Activity;
 
+use App\EarlyAccess\Invitation\KeyGenerator;
+use App\Entity\EarlyAccess\InvitationKey;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Connection;
@@ -34,6 +36,7 @@ final class TimezoneTest extends WebTestCase
             'email' => 'paris@example.com',
             'password' => 'a-strong-passw0rd!-for-tests',
             'timezone' => 'Europe/Paris',
+            'invitationKey' => $this->invitationKey(),
         ], \JSON_THROW_ON_ERROR));
 
         self::assertSame(202, $this->client->getResponse()->getStatusCode());
@@ -87,5 +90,16 @@ final class TimezoneTest extends WebTestCase
     {
         /** @var array<string, mixed> */
         return json_decode((string) $this->client->getResponse()->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+    }
+
+    /** New accounts need an early access key (docs/EARLY_ACCESS.md). */
+    private function invitationKey(): string
+    {
+        $key = (new KeyGenerator())->generate();
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $entityManager->persist(new InvitationKey('guest@example.com', KeyGenerator::hash($key), KeyGenerator::hint($key), null, new \DateTimeImmutable(), null));
+        $entityManager->flush();
+
+        return $key;
     }
 }

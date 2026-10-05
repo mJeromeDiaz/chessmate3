@@ -14,10 +14,10 @@ Conventions :
 
 | Méthode | Route | Accès | Rôle | Réponses |
 |---|---|---|---|---|
-| POST | `/api/auth/register` | public | Inscription `{email, password}` ; envoie le lien de vérification. | 202 (toujours, anti-énumération), 422 |
+| POST | `/api/auth/register` | public | Inscription `{email, password, invitationKey}` (clé d'accès anticipé, voir `EARLY_ACCESS.md`) ; envoie le lien de vérification. | 202 (toujours avec une clé valide, anti-énumération), 422 (validation, ou clé refusée `{error}`) |
 | GET | `/api/auth/verify-email/{id}` | lien signé | Confirme l'adresse (ou l'email en attente) puis redirige vers `/#/login?verified=1\|0`. | 302 |
 | POST | `/api/auth/verify-email/resend` | public | Renvoie le lien `{email}`. | 202 (toujours) |
-| POST | `/api/auth/login` | public | Étape 1 `{email, password}`. | 202 `{mfaPendingToken, method, expiresAt}` ; 200 `{accessToken}` + RT si appareil de confiance ; 401 ; 403 (email non vérifié) ; 429 |
+| POST | `/api/auth/login` | public | Étape 1 `{email, password}`. | 202 `{mfaPendingToken, method, expiresAt}` ; 200 `{accessToken}` + RT si appareil de confiance ; 401 ; 403 (email non vérifié) ; 423 (compte suspendu, voir `EARLY_ACCESS.md`) ; 429 |
 | POST | `/api/auth/login/mfa/verify` | public | Étape 2 `{pendingToken, code, trustDevice}`. | 200 `{accessToken}` + RT (+ cookie `trusted_device`) ; 401 |
 | POST | `/api/auth/login/mfa/resend` | public | Nouveau code `{pendingToken}`. | 202 ; 401 (connexion expirée) ; 429 |
 | POST | `/api/auth/refresh` | cookie RT + en-tête `X-Refresh-Request: 1` | Rotation du RT, nouvel AT. | 200 `{accessToken}` + nouveau RT ; 401 (+ cookie effacé) ; 403 (en-tête absent) |
@@ -58,6 +58,8 @@ qui ouvre une page `guest`, le SPA va au tableau de bord (`/`) ; seule une liais
 revient sur `/profile`.
 
 ## Inscription et vérification de l'email
+
+Toute inscription (mot de passe, Google, Lichess) exige une clé d'invitation : voir `EARLY_ACCESS.md`.
 
 ```mermaid
 sequenceDiagram

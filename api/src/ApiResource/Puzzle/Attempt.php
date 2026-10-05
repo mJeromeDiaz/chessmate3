@@ -16,6 +16,7 @@ use App\State\Puzzle\AttemptHistoryProvider;
 use App\State\Puzzle\AttemptProvider;
 use App\State\Puzzle\StartAttemptProcessor;
 use App\State\Puzzle\SubmitAttemptProcessor;
+use App\Entity\Puzzle\Puzzle;
 
 /**
  * A puzzle attempt of the current user. Only the owner ever sees or submits one: the providers and
@@ -87,7 +88,7 @@ final class Attempt
     #[ApiProperty(genId: false)]
     public PuzzleView $puzzle;
 
-    public static function from(AttemptEntity $attempt): self
+    public static function from(AttemptEntity $attempt, Puzzle $puzzle): self
     {
         $view = new self();
         $view->id = $attempt->getId()->toRfc4122();
@@ -105,7 +106,7 @@ final class Attempt
             $view->ratingAfter = round($change->getRatingAfter(), 1);
             $view->ratingDelta = round($change->getRatingDelta(), 1);
         }
-        $view->puzzle = PuzzleView::from($attempt->getPuzzle());
+        $view->puzzle = PuzzleView::from($puzzle);
 
         return $view;
     }

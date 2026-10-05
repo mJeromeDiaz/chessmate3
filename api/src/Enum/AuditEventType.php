@@ -37,4 +37,10 @@ enum AuditEventType: string
     /** Written after the purge, linked to no account and without any personal data. */
     case AccountDeleted = 'account_deleted';
     case DataExported = 'data_exported';
+    /** ROLE_ADMIN given or taken back from the command line (app:admin:grant). */
+    case AdminGranted = 'admin_granted';
+    case AdminRevoked = 'admin_revoked';
+    /** An admin suspended the account, or lifted its suspension (docs/EARLY_ACCESS.md). */
+    case AccountSuspended = 'account_suspended';
+    case AccountUnsuspended = 'account_unsuspended';
 }

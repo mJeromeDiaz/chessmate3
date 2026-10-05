@@ -31,6 +31,8 @@ framework:
             'App\Repertoire\Import\Message\ApplyImport': async
             # Reminders of saved sessions: email and Web Push (docs/TRAINING.md).
             'App\Training\Plan\Reminder\SessionReminderDue': async
+            # Early access invitations (docs/EARLY_ACCESS.md): retried, marked failed once given up.
+            'App\EarlyAccess\Invitation\Message\SendInvitationEmail': async
             # Domain events of every exercise and milestone (docs/ACTIVITY.md).
             'App\Activity\Event\DomainEventInterface': activity
 

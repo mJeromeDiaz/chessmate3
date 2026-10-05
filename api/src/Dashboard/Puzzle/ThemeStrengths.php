@@ -57,8 +57,7 @@ final class ThemeStrengths
         $rows = $this->connection->fetchAllAssociative(
             "SELECT jt.theme_key, COUNT(*) AS n, SUM($clean) AS ok
                FROM puzzle_attempt a
-               JOIN puzzle p ON p.id = a.puzzle_id
-               JOIN JSON_TABLE(p.themes, '$[*]' COLUMNS (theme_key VARCHAR(32) PATH '$')) jt
+               JOIN JSON_TABLE(a.puzzle_themes, '$[*]' COLUMNS (theme_key VARCHAR(32) PATH '$')) jt
               WHERE $where
               GROUP BY jt.theme_key
              HAVING n >= :min",

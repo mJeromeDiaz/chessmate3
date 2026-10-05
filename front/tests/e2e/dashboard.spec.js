@@ -148,7 +148,9 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
 
   // Gamification (docs/GAMIFICATION.md): level, streak, module level, trophies, weekly quest.
   await expect(page.getByTestId('level-title')).toHaveText('Niveau 12')
-  await expect(page.getByTestId('level-xp')).toHaveText('2\u202f340 / 3\u202f000 XP')
+  await expect(page.getByTestId('level-xp')).toHaveText(
+    '2\u202f340 / 3\u202f000 XP'
+  )
   await expect(page.getByTestId('streak')).toContainText('3 jours')
   await expect(page.getByTestId('best-streak')).toHaveText('Record 21 jours')
   await expect(
@@ -162,7 +164,9 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
     'data-unlocked',
     'true'
   )
-  await expect(page.getByTestId('trophy-centurion')).toContainText('22/1\u202f000')
+  await expect(page.getByTestId('trophy-centurion')).toContainText(
+    '22/1\u202f000'
+  )
   await expect(page.getByTestId('quest-text')).toHaveText(
     'Résous 40 puzzles classés cette semaine.'
   )

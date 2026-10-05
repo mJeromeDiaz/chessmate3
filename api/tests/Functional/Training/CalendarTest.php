@@ -51,6 +51,23 @@ final class CalendarTest extends WoodpeckerWebTestCase
         self::assertStringNotContainsString($token, $stored['encrypted_token']);
     }
 
+    public function testASuspendedAccountPublishesNothing(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->save($alice, ['title' => 'Soirs', 'repetition' => 'daily', 'time' => '18:30', 'weekdays' => [1, 2, 3, 4, 5], 'calendarEnabled' => true]);
+        $url = $this->regenerate($alice)['url'];
+        self::assertIsString($url);
+        $path = (string) parse_url($url, \PHP_URL_PATH);
+        self::assertSame(200, $this->anonymous('GET', $path));
+
+        $managed = $this->entityManager->find(User::class, $alice->getId());
+        self::assertInstanceOf(User::class, $managed);
+        $managed->suspend(new \DateTimeImmutable(), null);
+        $this->entityManager->flush();
+
+        self::assertSame(404, $this->anonymous('GET', $path));
+    }
+
     public function testRegeneratingOrRevokingClosesThePreviousAddress(): void
     {
         $alice = $this->createUserIn('alice@example.com');

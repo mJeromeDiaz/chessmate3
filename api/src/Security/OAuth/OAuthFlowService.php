@@ -46,9 +46,10 @@ final readonly class OAuthFlowService
     }
 
     /**
-     * @param list<string> $scopes more scopes than the provider's defaults (grant flows only)
+     * @param list<string> $scopes             more scopes than the provider's defaults (grant flows only)
+     * @param string|null  $registrationTicket a login that may open an account: its admitted invitation
      */
-    public function start(AuthProvider $provider, OAuthFlowPurpose $purpose, ?User $user = null, array $scopes = []): StartedOAuthFlow
+    public function start(AuthProvider $provider, OAuthFlowPurpose $purpose, ?User $user = null, array $scopes = [], ?string $registrationTicket = null): StartedOAuthFlow
     {
         $this->repository->deleteExpired();
 
@@ -56,7 +57,7 @@ final readonly class OAuthFlowService
         $binding = bin2hex(random_bytes(32));
         $authorization = $this->client($provider)->buildAuthorizationRequest($state, $scopes);
 
-        $flow = new OAuthFlow($provider, $purpose, $this->hash($binding), $this->hash($state), $authorization->codeVerifier, $user);
+        $flow = new OAuthFlow($provider, $purpose, $this->hash($binding), $this->hash($state), $authorization->codeVerifier, $user, $registrationTicket);
         $this->repository->save($flow);
 
         return new StartedOAuthFlow($authorization->url, $this->cookieFactory->create($binding, $flow->getExpiresAt()));

@@ -48,6 +48,10 @@ final readonly class SessionReminderHandler
             return;
         }
         $user = $plan->getUser();
+        // Suspended (or frozen) since the reminder was queued: nothing goes out.
+        if ($user->isSuspended() || $user->isFrozen()) {
+            return;
+        }
         $local = $occursAt->setTimezone($user->getDateTimeZone());
         $title = '' !== $plan->getTitle() ? $plan->getTitle() : 'Ta session';
         $when = self::when($local, $now->setTimezone($user->getDateTimeZone()));

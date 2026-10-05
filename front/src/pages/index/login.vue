@@ -21,6 +21,7 @@
           label="Email"
           autocomplete="username"
           outlined
+          data-testid="login-email"
           :rules="[required]"
         />
         <q-input
@@ -29,6 +30,7 @@
           label="Mot de passe"
           autocomplete="current-password"
           outlined
+          data-testid="login-password"
           :rules="[required]"
         />
 
@@ -52,6 +54,7 @@
             no-caps
             label="Se connecter"
             :loading="loading"
+            data-testid="login-submit"
           />
           <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
         </div>
@@ -152,7 +155,8 @@ async function submit() {
     unverified.value = e?.response?.status === 403
     error.value = apiErrorMessage(e, {
       401: 'Email ou mot de passe incorrect.',
-      403: "Votre adresse email n'est pas encore vérifiée. Ouvrez le lien reçu par email."
+      403: "Votre adresse email n'est pas encore vérifiée. Ouvrez le lien reçu par email.",
+      423: 'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.'
     })
   } finally {
     loading.value = false

@@ -16,6 +16,7 @@ use App\Puzzle\Attempt\Exception\AttemptAlreadySubmittedException;
 use App\Puzzle\Attempt\Exception\AttemptNotFoundException;
 use App\Puzzle\Attempt\Exception\NoPuzzleAvailableException;
 use App\Puzzle\Attempt\Submission;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Puzzle\Selection\SelectionCriteria;
 use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Repository\Puzzle\AttemptRepository;
@@ -56,6 +57,7 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
         private readonly AttemptService $service,
         private readonly AttemptRepository $attempts,
         private readonly ThemeRepository $themes,
+        private readonly PuzzleCatalog $catalog,
     ) {
     }
 
@@ -231,8 +233,11 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
 
     public function review(Run $run): array
     {
-        return array_map(static function (Attempt $attempt): ReviewItem {
-            $puzzle = PuzzleView::from($attempt->getPuzzle());
+        $attempts = $this->attempts->findResolvedOfRun($run);
+        $puzzles = $this->catalog->byIds(array_map(static fn (Attempt $attempt): int => $attempt->getPuzzleId(), $attempts));
+
+        return array_map(function (Attempt $attempt) use ($puzzles): ReviewItem {
+            $puzzle = PuzzleView::from($puzzles[$attempt->getPuzzleId()] ?? $this->catalog->get($attempt->getPuzzleId()));
 
             return new ReviewItem(
                 self::ITEM_TYPE,
@@ -253,12 +258,12 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
                     'solutionShown' => $attempt->isSolutionShown(),
                 ],
             );
-        }, $this->attempts->findResolvedOfRun($run));
+        }, $attempts);
     }
 
     private function item(Attempt $attempt): Item
     {
-        $puzzle = PuzzleView::from($attempt->getPuzzle());
+        $puzzle = PuzzleView::from($this->catalog->get($attempt->getPuzzleId()));
 
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, [
             'puzzle' => [

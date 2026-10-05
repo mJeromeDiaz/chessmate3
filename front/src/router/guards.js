@@ -3,11 +3,13 @@
  * - 'public' (default): anyone;
  * - 'guest': signed-out users only (login, register...): a signed-in user goes to the dashboard;
  * - 'required': signed-in users only: others go to the login page, which brings them back after;
- * - 'mfa': only while a password login waits for its emailed code.
+ * - 'mfa': only while a password login waits for its emailed code;
+ * - 'admin': signed-in admins only (`profile.isAdmin`): others go to the dashboard. The API checks
+ *   the role itself: this only keeps the pages out of sight.
  *
  * A frozen account (deletion scheduled) is kept on the deletion page, whatever the level.
  *
- * @typedef {'public'|'guest'|'required'|'mfa'} AuthLevel
+ * @typedef {'public'|'guest'|'required'|'mfa'|'admin'} AuthLevel
  */
 
 /**
@@ -54,8 +56,12 @@ export function createAuthGuard(getAuth) {
       return { path: FROZEN_PAGE }
     }
 
-    if (level === 'required' && !auth.isAuthenticated) {
+    if ((level === 'required' || level === 'admin') && !auth.isAuthenticated) {
       return { path: '/login', query: { redirect: to.fullPath } }
+    }
+
+    if (level === 'admin' && !auth.isAdmin) {
+      return { path: '/' }
     }
 
     if (level === 'guest' && auth.isAuthenticated) {

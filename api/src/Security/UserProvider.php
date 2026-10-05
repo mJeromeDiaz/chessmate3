@@ -60,7 +60,8 @@ final readonly class UserProvider implements UserProviderInterface, PayloadAware
     {
         $user = $this->loadUserByIdentifier($identifier);
 
-        if (($payload[JwtTokenVersionListener::CLAIM] ?? null) !== $user->getTokenVersion()) {
+        // A suspension bumps the version too: the second test only guards against a missed bump.
+        if (($payload[JwtTokenVersionListener::CLAIM] ?? null) !== $user->getTokenVersion() || $user->isSuspended()) {
             throw new InvalidTokenException('Invalid JWT Token');
         }
 

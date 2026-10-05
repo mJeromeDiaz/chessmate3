@@ -16,13 +16,13 @@ use App\Puzzle\Attempt\Exception\AttemptHeldByRunException;
 use App\Puzzle\Attempt\Exception\AttemptNotFoundException;
 use App\Puzzle\Attempt\Exception\NoPuzzleAvailableException;
 use App\Puzzle\Attempt\Exception\ReplayNotAllowedException;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Puzzle\Rating\RatingCalculator;
 use App\Puzzle\Selection\PuzzleSelector;
 use App\Puzzle\Selection\SelectionCriteria;
 use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Puzzle\Solution\SolutionValidator;
 use App\Repository\Puzzle\AttemptRepository;
-use App\Repository\Puzzle\PuzzleRepository;
 use App\Repository\Puzzle\RatingRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
@@ -45,7 +45,7 @@ final class AttemptService
         private readonly EntityManagerInterface $entityManager,
         private readonly RatingRepository $ratings,
         private readonly AttemptRepository $attempts,
-        private readonly PuzzleRepository $puzzles,
+        private readonly PuzzleCatalog $catalog,
         private readonly PuzzleSelector $selector,
         private readonly SolutionValidator $validator,
         private readonly RatingCalculator $calculator,
@@ -166,7 +166,7 @@ final class AttemptService
         $this->checkPolicies($user, true);
 
         $puzzleId = $this->selector->select($user, $rating->getRating(), $rating->getDeviation(), $criteria);
-        $puzzle = null === $puzzleId ? null : $this->puzzles->find($puzzleId);
+        $puzzle = null === $puzzleId ? null : $this->catalog->find($puzzleId);
         if (null === $puzzle) {
             throw new NoPuzzleAvailableException();
         }
@@ -203,7 +203,7 @@ final class AttemptService
             throw new AttemptHeldByRunException();
         }
 
-        $puzzle = $attempt->getPuzzle();
+        $puzzle = $this->catalog->get($attempt->getPuzzleId());
         $replay = $this->validator->replay($puzzle, $submission->moves);
         $solved = $replay->isClean() && 0 === $submission->hintLevel && !$submission->solutionShown;
 
@@ -225,7 +225,7 @@ final class AttemptService
 
         $attempt->resolve($solved, $submission->moves, $replay->mistakes, $submission->hintLevel, $submission->solutionShown, $now, $change);
         // Same transaction: the event exists if and only if the result is committed.
-        $this->events->publish(AttemptEvents::completed($attempt));
+        $this->events->publish(AttemptEvents::completed($attempt, $puzzle));
 
         return $attempt;
     }

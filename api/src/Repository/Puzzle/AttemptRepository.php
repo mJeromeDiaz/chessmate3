@@ -94,8 +94,6 @@ class AttemptRepository extends ServiceEntityRepository
     {
         /** @var list<Attempt> */
         return $this->createQueryBuilder('a')
-            ->addSelect('p')
-            ->join('a.puzzle', 'p')
             ->where('a.trainingRun = :run')
             ->andWhere('a.status <> :pending')
             ->setParameter('run', $run->getId(), 'uuid')
@@ -119,7 +117,7 @@ class AttemptRepository extends ServiceEntityRepository
     {
         return null !== $this->createQueryBuilder('a')
             ->select('1')
-            ->where('a.user = :user AND a.puzzle = :puzzle AND a.status != :pending')
+            ->where('a.user = :user AND a.puzzleId = :puzzle AND a.status != :pending')
             ->setParameter('user', $user->getId(), 'uuid')
             ->setParameter('puzzle', $puzzle->getId())
             ->setParameter('pending', AttemptStatus::Pending)
@@ -173,13 +171,13 @@ class AttemptRepository extends ServiceEntityRepository
     }
 
     /**
-     * The user's resolved attempts, newest first, with their puzzle and rating change.
+     * The user's resolved attempts, newest first, with their rating change (the puzzles are loaded
+     * from the catalogue, a page at a time).
      */
     public function createHistoryQueryBuilder(User $user, ?AttemptStatus $status, ?string $themeKey): QueryBuilder
     {
         $qb = $this->createQueryBuilder('a')
-            ->addSelect('p', 'rc')
-            ->join('a.puzzle', 'p')
+            ->addSelect('rc')
             ->leftJoin('a.ratingChange', 'rc')
             ->where('a.user = :user')
             ->setParameter('user', $user->getId(), 'uuid')
@@ -193,8 +191,8 @@ class AttemptRepository extends ServiceEntityRepository
         }
 
         if (null !== $themeKey) {
-            // Bounded by the user's own history (the user_id index), not by the puzzle table.
-            $qb->andWhere('JSON_CONTAINS(p.themes, :theme) = 1')->setParameter('theme', json_encode($themeKey));
+            // The themes copied on the attempt; bounded by the user's own history (the user_id index).
+            $qb->andWhere('JSON_CONTAINS(a.puzzleThemes, :theme) = 1')->setParameter('theme', json_encode($themeKey));
         }
 
         return $qb;

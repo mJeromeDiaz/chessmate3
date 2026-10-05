@@ -43,6 +43,7 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['oauth_flow', 'binding_hash'],
             ['oauth_flow', 'state_hash'],
             ['oauth_flow', 'code_verifier'],
+            ['oauth_flow', 'registration_ticket'],
             ['mfa_challenge', 'pending_token_hash'],
             ['mfa_challenge', 'code_hash'],
             ['account_deletion_code', 'code_hash'],
@@ -66,6 +67,8 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['repertoire_presentation', 'start_fen'],
             ['training_calendar_feed', 'token_hash'],
             ['training_calendar_feed', 'encrypted_token'],
+            ['early_access_invitation_key', 'key_hash'],
+            ['early_access_invitation_key', 'key_hint'],
         ] as [$table, $column]) {
             yield "$table.$column" => [$table, $column];
         }

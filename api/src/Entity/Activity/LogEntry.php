@@ -27,6 +27,8 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Index(name: 'idx_activity_log_entry_user_date', columns: ['user_id', 'local_date'])]
 #[ORM\Index(name: 'idx_activity_log_entry_user_type_date', columns: ['user_id', 'exercise_type', 'local_date'])]
 #[ORM\Index(name: 'idx_activity_log_entry_user', columns: ['user_id'])]
+// Admin statistics across players (docs/EARLY_ACCESS.md): active players by day, and in the last 7 days.
+#[ORM\Index(name: 'idx_activity_log_entry_date_user', columns: ['local_date', 'user_id'])]
 class LogEntry
 {
     #[ORM\Id]

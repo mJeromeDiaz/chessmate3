@@ -58,6 +58,12 @@ class OAuthFlow
         #[ORM\ManyToOne]
         #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
         private ?User $user = null,
+        /**
+         * A login that may open an account: the ticket of the invitation key it started with
+         * ({@see \App\Security\Registration\RegistrationGateInterface}), never the key itself.
+         */
+        #[ORM\Column(length: 64, nullable: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+        private ?string $registrationTicket = null,
     ) {
         if ($purpose->needsUser() && null === $user) {
             throw new \InvalidArgumentException('A link or grant flow needs the user it acts for.');
@@ -96,6 +102,11 @@ class OAuthFlow
     public function getUser(): ?User
     {
         return $this->user;
+    }
+
+    public function getRegistrationTicket(): ?string
+    {
+        return $this->registrationTicket;
     }
 
     public function getExpiresAt(): \DateTimeImmutable

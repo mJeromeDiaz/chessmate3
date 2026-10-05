@@ -87,7 +87,8 @@ final readonly class RefreshTokenService
 
         $user = $this->loadUser($refreshToken);
 
-        if (null === $user) {
+        // A suspension revokes every session; this only closes the race with one in flight.
+        if (null === $user || $user->isSuspended()) {
             throw new RefreshTokenNotFoundException();
         }
 

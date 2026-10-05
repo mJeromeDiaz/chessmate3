@@ -142,7 +142,7 @@ final class ProfileTest extends OAuthWebTestCase
         $verificationLink = $this->verificationLinkSentTo('victim@example.com');
 
         $this->client->getCookieJar()->clear();
-        $this->postJson('/api/auth/register', ['email' => 'victim@example.com', 'password' => 'VictimOwnPassphrase42!']);
+        $this->postJson('/api/auth/register', ['email' => 'victim@example.com', 'password' => 'VictimOwnPassphrase42!', 'invitationKey' => $this->createInvitationKey()]);
         self::assertNotNull($this->userRepository->findOneByEmail('victim@example.com'));
 
         $this->client->request('GET', $verificationLink);

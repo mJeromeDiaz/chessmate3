@@ -18,6 +18,7 @@ use App\Repository\Puzzle\ThemeRepository;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Training\Run\TimeboxRunner;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
@@ -31,6 +32,7 @@ use Symfony\Component\RateLimiter\RateLimiterFactory;
 final class StartAttemptProcessor implements ProcessorInterface
 {
     public function __construct(
+        private readonly PuzzleCatalog $catalog,
         private readonly AttemptService $attempts,
         private readonly ThemeRepository $themes,
         private readonly PuzzleRepository $puzzles,
@@ -55,7 +57,7 @@ final class StartAttemptProcessor implements ProcessorInterface
                     throw new ReplayNotAllowedException();
                 }
 
-                return Attempt::from($this->attempts->replay($user, $puzzle));
+                return Attempt::from($this->attempts->replay($user, $puzzle), $puzzle);
             } catch (ReplayNotAllowedException) {
                 throw new NotFoundHttpException('Puzzle not found in your history.');
             }
@@ -78,6 +80,6 @@ final class StartAttemptProcessor implements ProcessorInterface
             throw new ConflictHttpException('Your pending puzzle is being played in a timed run.');
         }
 
-        return Attempt::from($attempt);
+        return Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()));
     }
 }

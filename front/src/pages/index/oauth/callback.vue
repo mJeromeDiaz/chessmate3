@@ -45,8 +45,23 @@ const REASONS = {
   not_linked:
     'Liez d’abord votre compte Lichess depuis votre profil, puis autorisez l’accès à vos études.',
   identity_mismatch:
-    'Ce n’est pas le compte Lichess lié à votre profil : reconnectez-vous à Lichess avec ce compte-là.'
+    'Ce n’est pas le compte Lichess lié à votre profil : reconnectez-vous à Lichess avec ce compte-là.',
+  account_suspended:
+    'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.',
+  invitation_required:
+    'Aucun compte ChessMate n’est lié à ce compte. L’inscription se fait sur invitation : ouvrez le lien reçu par email.',
+  invitation_invalid:
+    'Cette clé d’invitation n’est pas valable : elle a peut-être déjà servi ou été remplacée.',
+  invitation_expired:
+    'Cette clé d’invitation a expiré. Demandez-en une nouvelle à l’équipe ChessMate.'
 }
+
+/** Sign-up refusals: going back means going back to the sign-up page. */
+const INVITATION_REASONS = [
+  'invitation_required',
+  'invitation_invalid',
+  'invitation_expired'
+]
 
 /** Set by the page that started a grant (repertoire import): where to come back. */
 const RETURN_KEY = 'chessmate.oauthReturn'
@@ -77,9 +92,13 @@ const error = ref('')
 
 const isLink = computed(() => route.query.mode === 'link')
 const isGrant = computed(() => route.query.mode === 'grant')
-const backTo = computed(() =>
-  isGrant.value ? '/repertoire/import' : isLink.value ? '/profile' : '/login'
-)
+const backTo = computed(() => {
+  if (isGrant.value) return '/repertoire/import'
+  if (isLink.value) return '/profile'
+  return INVITATION_REASONS.includes(String(route.query.reason))
+    ? '/register'
+    : '/login'
+})
 
 onMounted(async () => {
   const { status, reason, provider } = route.query

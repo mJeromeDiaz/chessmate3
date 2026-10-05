@@ -13,6 +13,7 @@ use App\Entity\Puzzle\Attempt as AttemptEntity;
 use App\Enum\Puzzle\AttemptStatus;
 use App\Repository\Puzzle\AttemptRepository;
 use App\Security\AuthenticatedUser;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
@@ -23,6 +24,7 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 final class AttemptHistoryProvider implements ProviderInterface
 {
     public function __construct(
+        private readonly PuzzleCatalog $catalog,
         private readonly AttemptRepository $attempts,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly Pagination $pagination,
@@ -52,9 +54,12 @@ final class AttemptHistoryProvider implements ProviderInterface
         /** @var Paginator<AttemptEntity> $paginator */
         $paginator = new Paginator($query, fetchJoinCollection: false);
 
+        $attempts = iterator_to_array($paginator, false);
+        // The page's puzzles in one query (they live in the catalogue).
+        $puzzles = $this->catalog->byIds(array_map(static fn (AttemptEntity $attempt): int => $attempt->getPuzzleId(), $attempts));
         $items = [];
-        foreach ($paginator as $attempt) {
-            $items[] = Attempt::from($attempt);
+        foreach ($attempts as $attempt) {
+            $items[] = Attempt::from($attempt, $puzzles[$attempt->getPuzzleId()] ?? $this->catalog->get($attempt->getPuzzleId()));
         }
 
         return new TraversablePaginator(new \ArrayIterator($items), $page, $limit, \count($paginator));

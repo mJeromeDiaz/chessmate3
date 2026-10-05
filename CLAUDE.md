@@ -16,7 +16,7 @@ Chess training app (Duolingo-style). One git repository (monorepo) at the root:
   editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics), `DASHBOARD.md`
   (home dashboard: endpoints, local days, Lichess rating history, showcase values), `NOTIFICATIONS.md`
   (Web Push, VAPID keys, session reminders and their cron), `GAMIFICATION.md` (XP rules and ledger,
-  levels, ranks, streaks, rebuild). Code paths quoted in them (`src/...`, `config/...`,
+  levels, ranks, streaks, rebuild), `DEPLOY_OVH.md` (OVH shared hosting: tick instead of worker and cron, configuration, two databases), `EARLY_ACCESS.md` (invitation keys and key sign-up, admins, their dashboard and statistics, account suspension). Code paths quoted in them (`src/...`, `config/...`,
   `bin/console`) are relative to `api/` unless they name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
@@ -33,7 +33,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification today) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification, EarlyAccess today) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
 
 | Layer | Location |
@@ -78,11 +78,13 @@ bin/console app:puzzle:rebuild-selection             # after a puzzle import or 
 bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
 bin/console app:repertoire:sync-openings             # load/update the opening names (data/chess-openings, ~9 s; fixtures do it too)
 bin/console cache:pool:prune                         # daily cron: expired Lichess explorer/cloud-eval answers
-bin/console app:training:send-reminders              # cron every minute: reminders of saved sessions (docs/NOTIFICATIONS.md)
+bin/console app:training:send-reminders              # cron every minute: reminders of saved sessions (docs/NOTIFICATIONS.md); on the OVH shared host, POST /api/ops/tick does it (docs/DEPLOY_OVH.md)
 bin/console app:account:purge                        # daily cron: purge the accounts whose deletion is due (docs/AUTH.md)
 bin/console app:gamification:rebuild [--user=<uuid>] # recompute the XP from what was played (after deploying, or after changing XpRules)
+bin/console app:admin:grant <email> [--revoke]        # give (or take back) ROLE_ADMIN: the only way to make an admin (docs/EARLY_ACCESS.md)
 bin/console app:notification:vapid-keys              # once per environment: Web Push key pair (private key = secret)
-bin/console messenger:consume activity async         # worker: domain events (outbox), emails, big repertoire imports
+bin/console app:deploy:check [--network]             # after each deployment: PHP, extensions, MySQL, secrets (web view: GET /api/ops/check, docs/DEPLOY_OVH.md)
+bin/console messenger:consume activity async         # worker: domain events (outbox), emails, big repertoire imports (none on the shared host: tick + drain on terminate, docs/DEPLOY_OVH.md)
 ```
 
 Front (`cd front`):
@@ -97,8 +99,12 @@ npm run test:e2e          # Playwright (API with APP_ENV=e2e on :8100, quasar de
 ```
 
 End-to-end environment: `APP_ENV=e2e` (`api/.env.e2e`) uses its own database (`dbname_suffix:
-_e2e`) and registers `app:e2e:seed-user` (a signed-in user without the email 2FA), which exists in
-no other environment. PHP's built-in server needs `-d variables_order=EGPCS` to see `APP_ENV`.
+_e2e`) and registers `app:e2e:seed-user [--admin] [--password=…]` (a signed-in user without the
+email 2FA), which exists in no other environment. PHP's built-in server needs `-d
+variables_order=EGPCS` to see `APP_ENV`. Emails go to **Mailpit** (`mailpit` must be in the PATH:
+`sudo sh < <(curl -sL https://raw.githubusercontent.com/axllent/mailpit/develop/install.sh)`),
+started by Playwright on SMTP 1125 / HTTP 8125 and read by `tests/e2e/mailpit.js`; no worker runs
+in e2e, a test drains the `async` queue itself (`consumeQueue()` in `tests/e2e/helpers.js`).
 
 ## Gotchas
 

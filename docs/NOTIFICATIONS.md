@@ -33,6 +33,9 @@ toute application qui signe ses messages avec sa paire de clés **VAPID**.
    ```
 
    L'envoi effectif passe par le worker `async` (`messenger:consume activity async`, déjà requis).
+   Sur un hébergement mutualisé, le *tick* de chaque minute fait les deux : il programme les rappels
+   (`ReminderDispatcher`, partagé avec la commande), puis vide la file. Voir
+   [DEPLOY_OVH.md](DEPLOY_OVH.md).
 
 ## 3. Abonnements (Web Push)
 

@@ -8,6 +8,7 @@ use App\Dto\Auth\LoginRequest;
 use App\Entity\User;
 use App\Enum\AuditEventType;
 use App\Repository\UserRepository;
+use App\Security\Account\AccountSuspendedException;
 use App\Security\Audit\AuditLogger;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Security\Session\AuthenticatedSessionFactory;
@@ -81,6 +82,13 @@ final class LoginController extends AbstractController
             $this->auditLogger->log(AuditEventType::LoginFailure, $user, ['email_attempted' => $email]);
 
             throw new HttpException(Response::HTTP_UNAUTHORIZED, 'Invalid credentials.');
+        }
+
+        // Only now that the password is proven: telling the account is suspended leaks nothing.
+        if ($user->isSuspended()) {
+            $this->auditLogger->log(AuditEventType::LoginFailure, $user, ['reason' => 'suspended']);
+
+            throw new AccountSuspendedException();
         }
 
         if (!$user->isEmailVerified()) {

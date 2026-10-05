@@ -110,6 +110,12 @@ Worker (production : sous superviseur, redémarré à chaque déploiement) :
 bin/console messenger:consume activity async --time-limit=3600
 ```
 
+Sur un hébergement mutualisé sans processus permanent (OVH), aucun worker ne tourne. Deux
+mécanismes le remplacent : un *tick* HTTP appelé chaque minute vide les files, et les quelques
+événements d'une requête d'écriture sont traités juste après sa réponse. Voir
+[DEPLOY_OVH.md](DEPLOY_OVH.md). La file transactionnelle ne change pas : seul le consommateur
+change.
+
 En test, `activity` reste un vrai transport Doctrine (c'est son comportement transactionnel qu'on
 teste) ; DAMA annule ses lignes. `ActivityOutboxTrait` consomme la file dans les tests fonctionnels.
 

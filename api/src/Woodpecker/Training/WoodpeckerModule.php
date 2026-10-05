@@ -42,6 +42,7 @@ use App\Woodpecker\Exception\AttemptNotFoundException;
 use App\Woodpecker\Exception\CycleClosedException;
 use App\Woodpecker\Exception\SetNotPlayableException;
 use App\Woodpecker\Mode\LightProgression;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -66,6 +67,7 @@ final class WoodpeckerModule implements TimeboxedModuleInterface, ReviewableModu
         private readonly AttemptRepository $attempts,
         private readonly GrowthRepository $growths,
         private readonly CycleRunner $runner,
+        private readonly PuzzleCatalog $catalog,
         private readonly LightProgression $light,
     ) {
     }
@@ -251,8 +253,11 @@ final class WoodpeckerModule implements TimeboxedModuleInterface, ReviewableModu
 
     public function review(Run $run): array
     {
-        return array_map(static function (Attempt $attempt): ReviewItem {
-            $puzzle = PuzzleView::from($attempt->getPuzzle());
+        $attempts = $this->attempts->findResolvedOfRun($run);
+        $puzzles = $this->catalog->byIds(array_map(static fn (Attempt $attempt): int => $attempt->getPuzzleId(), $attempts));
+
+        return array_map(function (Attempt $attempt) use ($puzzles): ReviewItem {
+            $puzzle = PuzzleView::from($puzzles[$attempt->getPuzzleId()] ?? $this->catalog->get($attempt->getPuzzleId()));
 
             return new ReviewItem(
                 self::ITEM_TYPE,
@@ -275,12 +280,12 @@ final class WoodpeckerModule implements TimeboxedModuleInterface, ReviewableModu
                     'solutionShown' => $attempt->isSolutionShown(),
                 ],
             );
-        }, $this->attempts->findResolvedOfRun($run));
+        }, $attempts);
     }
 
     private function item(Attempt $attempt, Set $set): Item
     {
-        $puzzle = PuzzleView::from($attempt->getPuzzle());
+        $puzzle = PuzzleView::from($this->catalog->get($attempt->getPuzzleId()));
         $round = $attempt->getCycle();
 
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, [

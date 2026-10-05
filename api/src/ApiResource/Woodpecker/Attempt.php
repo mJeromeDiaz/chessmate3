@@ -15,6 +15,7 @@ use App\ApiResource\Puzzle\SubmitAttemptInput;
 use App\Entity\Woodpecker\Attempt as AttemptEntity;
 use App\State\Woodpecker\NextAttemptProcessor;
 use App\State\Woodpecker\SubmitAttemptProcessor;
+use App\Entity\Puzzle\Puzzle;
 
 /**
  * A puzzle of the current cycle run. The solution travels with it (instant feedback, as in
@@ -62,7 +63,7 @@ final class Attempt
     #[ApiProperty(readableLink: true, genId: false)]
     public Set $set;
 
-    public static function from(AttemptEntity $attempt, Set $set): self
+    public static function from(AttemptEntity $attempt, Puzzle $puzzle, Set $set): self
     {
         $view = new self();
         $view->id = $attempt->getId()->toRfc4122();
@@ -71,7 +72,7 @@ final class Attempt
         $view->hintLevel = $attempt->getHintLevel();
         $view->solutionShown = $attempt->isSolutionShown();
         $view->durationMs = $attempt->getDurationMs();
-        $view->puzzle = PuzzleView::from($attempt->getPuzzle());
+        $view->puzzle = PuzzleView::from($puzzle);
         $view->set = $set;
 
         return $view;

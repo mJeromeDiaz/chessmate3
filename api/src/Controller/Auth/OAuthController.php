@@ -7,12 +7,15 @@ namespace App\Controller\Auth;
 use App\Enum\AuditEventType;
 use App\Enum\AuthProvider;
 use App\Enum\OAuthFlowPurpose;
+use App\Security\Account\AccountSuspendedException;
 use App\Security\Audit\AuditLogger;
 use App\Security\OAuth\Exception\OAuthFlowException;
 use App\Security\OAuth\OAuthAccountService;
 use App\Security\OAuth\OAuthFlowCookieFactory;
 use App\Security\OAuth\OAuthFlowService;
 use App\Security\RateLimit\RateLimitGuard;
+use App\Security\Registration\RegistrationGateInterface;
+use App\Security\Registration\RegistrationRefusedException;
 use App\Security\Session\AuthenticatedSessionFactory;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,6 +32,11 @@ use Symfony\Component\Routing\Attribute\Route;
  * back to the SPA, which then gets its access token from /api/auth/refresh; the redirect itself
  * only carries an outcome code. No application 2FA: the provider's own authentication stands in
  * for it.
+ *
+ * A new account needs an invitation key ({@see RegistrationGateInterface}): the sign-up page
+ * starts the flow with a form POST carrying it, so the key never appears in a URL (nor in an
+ * access log). It is checked before going to the provider, and spent when the account is opened.
+ * A plain GET only signs existing accounts in.
  */
 #[Route('/api/auth/oauth/{provider}', requirements: ['provider' => 'google|lichess'])]
 final class OAuthController extends AbstractController
@@ -40,6 +48,7 @@ final class OAuthController extends AbstractController
         private readonly AuthenticatedSessionFactory $sessionFactory,
         private readonly AuditLogger $auditLogger,
         private readonly RateLimitGuard $rateLimitGuard,
+        private readonly RegistrationGateInterface $registrationGate,
         #[Autowire(service: 'limiter.oauth_ip')]
         private readonly RateLimiterFactory $oauthIpLimiter,
         #[Autowire('%env(FRONTEND_URL)%')]
@@ -47,12 +56,22 @@ final class OAuthController extends AbstractController
     ) {
     }
 
-    #[Route('/redirect', name: 'app_auth_oauth_redirect', methods: ['GET'])]
+    #[Route('/redirect', name: 'app_auth_oauth_redirect', methods: ['GET', 'POST'])]
     public function redirectToProvider(AuthProvider $provider, Request $request): RedirectResponse
     {
         $this->rateLimitGuard->consume($this->oauthIpLimiter, $request->getClientIp() ?? 'unknown');
 
-        $flow = $this->flowService->start($provider, OAuthFlowPurpose::Login);
+        $ticket = null;
+        if ($request->isMethod('POST')) {
+            $key = $request->request->get('invitationKey');
+            try {
+                $ticket = $this->registrationGate->admit(\is_string($key) ? $key : null);
+            } catch (RegistrationRefusedException $refusal) {
+                return $this->toSpa(['status' => 'error', 'mode' => OAuthFlowPurpose::Login->value, 'provider' => $provider->value, 'reason' => $refusal->reason]);
+            }
+        }
+
+        $flow = $this->flowService->start($provider, OAuthFlowPurpose::Login, registrationTicket: $ticket);
 
         $response = $this->noStore(new RedirectResponse($flow->authorizationUrl));
         $response->headers->setCookie($flow->bindingCookie);
@@ -86,7 +105,7 @@ final class OAuthController extends AbstractController
                 return $this->toSpa(['status' => 'success', 'mode' => 'link', 'provider' => $provider->value]);
             }
 
-            [$user, $created] = $this->accountService->resolveLogin($completed->identity);
+            [$user, $created] = $this->accountService->resolveLogin($completed->identity, $completed->flow->getRegistrationTicket());
         } catch (OAuthFlowException|UniqueConstraintViolationException $exception) {
             $reason = $exception instanceof OAuthFlowException ? $exception->reason : OAuthFlowException::CONFLICT;
             $this->auditLogger->log(AuditEventType::OauthLoginFailure, $user, [
@@ -96,6 +115,13 @@ final class OAuthController extends AbstractController
             ]);
 
             return $this->toSpa(['status' => 'error', 'mode' => ($purpose ?? OAuthFlowPurpose::Login)->value, 'provider' => $provider->value, 'reason' => $reason]);
+        }
+
+        // The provider proved who this is: telling the account is suspended leaks nothing.
+        if ($user->isSuspended()) {
+            $this->auditLogger->log(AuditEventType::OauthLoginFailure, $user, ['provider' => $provider->value, 'purpose' => OAuthFlowPurpose::Login->value, 'reason' => AccountSuspendedException::REASON]);
+
+            return $this->toSpa(['status' => 'error', 'mode' => OAuthFlowPurpose::Login->value, 'provider' => $provider->value, 'reason' => AccountSuspendedException::REASON]);
         }
 
         $session = $this->sessionFactory->issueFor($user);

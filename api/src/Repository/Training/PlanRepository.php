@@ -59,8 +59,9 @@ class PlanRepository extends ServiceEntityRepository
             ->addSelect('u')
             ->join('p.user', 'u')
             ->where('p.reminderEnabled = true')
-            // A frozen account (deletion scheduled) gets no reminder.
+            // A frozen account (deletion scheduled) or a suspended one gets no reminder.
             ->andWhere('u.deletionScheduledAt IS NULL')
+            ->andWhere('u.suspendedAt IS NULL')
             ->getQuery()
             ->getResult();
     }

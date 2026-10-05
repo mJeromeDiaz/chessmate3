@@ -178,6 +178,28 @@ framework:
             limit: 120
             interval: '10 minutes'
 
+        # Early access (identifier = the admin's id): invitation keys created or resent, each one an email.
+        early_access_invitation_write:
+            policy: sliding_window
+            limit: 10
+            interval: '1 minute'
+        # Admin dashboard reads (identifier = the admin's id): statistics and the player list.
+        admin_read:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'
+        # Admin actions on players (identifier = the admin's id): suspensions and their lifting.
+        admin_write:
+            policy: sliding_window
+            limit: 30
+            interval: '10 minutes'
+        # Invitation link checked by the sign-up page (public, by IP). Keys can't be guessed: this
+        # only caps the cost of someone hammering the endpoint.
+        invitation_check_ip:
+            policy: sliding_window
+            limit: 30
+            interval: '15 minutes'
+
         # Dashboard reads (identifier = user id): the page asks for 2 or 3 of them per display.
         dashboard_read:
             policy: sliding_window

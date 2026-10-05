@@ -35,8 +35,8 @@ final class CalendarFeedController extends AbstractController
     {
         $this->rateLimitGuard->consume($this->trainingCalendarFeedLimiter, FeedTokens::hash($token));
         $user = $this->tokens->owner($token) ?? throw $this->createNotFoundException();
-        // A frozen account (deletion scheduled) publishes nothing.
-        if ($user->isFrozen()) {
+        // A frozen account (deletion scheduled) or a suspended one publishes nothing.
+        if ($user->isFrozen() || $user->isSuspended()) {
             throw $this->createNotFoundException();
         }
 

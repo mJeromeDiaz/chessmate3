@@ -43,11 +43,21 @@
   --cm-chart-repertoire: #1c86e0;
   --cm-chart-woodpecker: #8dba0a;
   --cm-chart-free: #8b6bff;
+  // Admin sign-ups by method, stacked in this order (password, Google, Lichess, without a key):
+  // validated together, adjacent pairs, light on the white surface and dark on the dark one.
+  --cm-admin-password: #2a78d6;
+  --cm-admin-google: #eb6834;
+  --cm-admin-lichess: #1baf7a;
+  --cm-admin-other: #eda100;
 }
 
 .body--dark {
   --cm-ink: #f3f1fa;
   --cm-chart-woodpecker: #77a100;
+  --cm-admin-password: #3987e5;
+  --cm-admin-google: #d95926;
+  --cm-admin-lichess: #199e70;
+  --cm-admin-other: #c98500;
   --cm-ink-soft: #cfcae0;
   --cm-muted: #9d98b3;
   --cm-faint: #6e6a80;

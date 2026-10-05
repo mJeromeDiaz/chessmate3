@@ -4,7 +4,10 @@
     <div class="quest__bubble">
       <div class="quest__kicker">
         {{ prof.name.toUpperCase() }} · DÉFI DE LA SEMAINE
-        <span v-if="quest.completed" class="quest__done" data-testid="quest-done"
+        <span
+          v-if="quest.completed"
+          class="quest__done"
+          data-testid="quest-done"
           >✓ RÉUSSI</span
         >
       </div>
@@ -13,7 +16,9 @@
         <div class="quest__bar">
           <div :style="{ width: `${percent}%` }" />
         </div>
-        <span data-testid="quest-progress">{{ quest.current }}/{{ quest.goal }}</span>
+        <span data-testid="quest-progress"
+          >{{ quest.current }}/{{ quest.goal }}</span
+        >
         <span class="quest__reward">+{{ quest.reward }} XP</span>
       </div>
     </div>

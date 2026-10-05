@@ -166,8 +166,6 @@ class AttemptRepository extends ServiceEntityRepository
     {
         /** @var list<Attempt> */
         return $this->createQueryBuilder('a')
-            ->addSelect('p')
-            ->join('a.puzzle', 'p')
             ->where('a.run = :run')
             ->andWhere('a.status <> :pending')
             ->setParameter('run', $run->getId(), 'uuid')
