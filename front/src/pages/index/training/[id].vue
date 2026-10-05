@@ -6,6 +6,14 @@
     >
       <RunRecap :run="runner.run.value">
         <template #actions>
+          <q-btn
+            outline
+            no-caps
+            icon="emoji_events"
+            label="Voir le bilan"
+            data-testid="run-end-open"
+            @click="endOpen = true"
+          />
           <template v-if="runner.run.value.parentId">
             <q-btn
               v-if="nextStep"
@@ -46,6 +54,15 @@
         v-if="isRepertoire"
         :run-id="runner.run.value.id"
         class="q-mt-md"
+      />
+      <RunEndDialog
+        v-model="endOpen"
+        :run="runner.run.value"
+        :live="seenRunning.has(runner.run.value.id)"
+        :next-step="nextStep"
+        :starting="sessionStep.starting.value"
+        :next-error="sessionStep.error.value"
+        @next="sessionStep.start(runner.run.value.parentId)"
       />
     </div>
 
@@ -169,7 +186,7 @@
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
  * (docs/REPERTOIRE.md § 15) or free study (a timer).
  */
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
@@ -177,6 +194,7 @@ import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
 import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
 import RunHeader from '@/components/training/RunHeader.vue'
+import RunEndDialog from '@/components/training/RunEndDialog.vue'
 import RunRecap from '@/components/training/RunRecap.vue'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
@@ -270,12 +288,20 @@ const nextStep = computed(() => {
   return step && step.status === 'pending' ? step : null
 })
 
+/** The end-of-run review dialog: opens when the run is over (also on a run reopened once over). */
+const endOpen = ref(false)
+/** Runs seen running on this page: their end is celebrated. */
+const seenRunning = reactive(new Set())
+
 // The run is over: nothing in progress any more for the rest of the app; a session step offers
 // the next module (the session follows its runs on the server).
 watch(
   () => runner.phase.value,
   phase => {
+    if (phase === 'running' && runner.run.value)
+      seenRunning.add(runner.run.value.id)
     if (phase !== 'ended') return
+    endOpen.value = true
     if (store.current?.id === runner.run.value?.id) store.current = null
     const parentId = runner.run.value?.parentId
     if (parentId) {
@@ -296,6 +322,7 @@ watch(
     loading.value = true
     error.value = ''
     session.value = null
+    endOpen.value = false
     try {
       await runner.resume(String(id))
     } catch (e) {

@@ -125,7 +125,7 @@ final class SessionTest extends AuthWebTestCase
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{id: string, current: bool, browser: string|null, os: string|null, form: string|null, ip: string|null, signedInAt: string|null, lastActiveAt: string|null}>
      */
     private function sessions(string $accessToken): array
     {
@@ -134,7 +134,7 @@ final class SessionTest extends AuthWebTestCase
         $sessions = $this->decodeJson($this->client->getResponse())['sessions'] ?? null;
         self::assertIsArray($sessions);
 
-        /** @var list<array<string, mixed>> $sessions */
+        /** @var list<array{id: string, current: bool, browser: string|null, os: string|null, form: string|null, ip: string|null, signedInAt: string|null, lastActiveAt: string|null}> $sessions */
         return $sessions;
     }
 }

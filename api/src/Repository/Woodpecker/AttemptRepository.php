@@ -157,6 +157,27 @@ class AttemptRepository extends ServiceEntityRepository
         return array_map(static fn (array $row): array => ['puzzleId' => self::int($row['puzzle_id']), 'failedCycles' => self::int($row['failed_cycles'])], $rows);
     }
 
+    /**
+     * The attempts a run resolved, in the order they were served (run review).
+     *
+     * @return list<Attempt>
+     */
+    public function findResolvedOfRun(Run $run): array
+    {
+        /** @var list<Attempt> */
+        return $this->createQueryBuilder('a')
+            ->addSelect('p')
+            ->join('a.puzzle', 'p')
+            ->where('a.run = :run')
+            ->andWhere('a.status <> :pending')
+            ->setParameter('run', $run->getId(), 'uuid')
+            ->setParameter('pending', AttemptStatus::Pending->value)
+            ->orderBy('a.startedAt', 'ASC')
+            ->addOrderBy('a.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     private static function int(mixed $value): int
     {
         return is_numeric($value) ? (int) $value : 0;

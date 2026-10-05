@@ -77,6 +77,13 @@ class Presentation
     private array $moves;
 
     /**
+     * Normalized FEN of the position the segment starts from, when presented (what a replay of the
+     * segment starts from); null for presentations recorded before it was kept.
+     */
+    #[ORM\Column(length: 92, nullable: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    private ?string $startFen;
+
+    /**
      * The segment's label when presented: its opening and its deviation ("3…c5"), null for the trunk.
      *
      * @var array{opening: array{eco: string, name: string}|null, move: string|null}
@@ -98,7 +105,7 @@ class Presentation
      * @param list<string>                                                           $moves
      * @param array{opening: array{eco: string, name: string}|null, move: string|null} $label
      */
-    public function __construct(User $user, Repertoire $repertoire, Segment $segment, ?Run $run, Uuid $unitId, TestUnit $unit, int $rank, int $round, array $moves, array $label, \DateTimeImmutable $startedAt)
+    public function __construct(User $user, Repertoire $repertoire, Segment $segment, ?Run $run, Uuid $unitId, TestUnit $unit, int $rank, int $round, array $moves, array $label, \DateTimeImmutable $startedAt, ?string $startFen = null)
     {
         $this->id = Uuid::v7();
         $this->user = $user;
@@ -112,6 +119,7 @@ class Presentation
         $this->moves = $moves;
         $this->label = $label;
         $this->startedAt = $startedAt;
+        $this->startFen = $startFen;
     }
 
     public function finish(PresentationStatus $status, ?int $firstErrorPly, int $positionsGraded, \DateTimeImmutable $finishedAt, int $durationMs): void
@@ -200,6 +208,11 @@ class Presentation
     public function getLabel(): array
     {
         return $this->label;
+    }
+
+    public function getStartFen(): ?string
+    {
+        return $this->startFen;
     }
 
     public function getStartedAt(): \DateTimeImmutable

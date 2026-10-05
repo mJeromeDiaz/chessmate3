@@ -380,6 +380,11 @@ classement** (Glicko-2) et le cloisonnement des tentatives entre utilisateurs.
 - Le rejeu (non classé) n'est permis que pour un puzzle de son propre historique (ou, depuis la
   phase 4, d'un de ses propres sets Woodpecker : § 7.2).
 - `GET /puzzles/{id}` ne renvoie pas la solution : elle ne voyage qu'avec une tentative.
+- Le bilan d'une séance (`GET /training/runs/{id}/review`, [TRAINING.md § 5 quater](TRAINING.md))
+  renvoie les solutions des puzzles **résolus** de cette séance et les coups des unités de
+  répertoire présentées, au **seul propriétaire** (404 sinon) et **une fois la séance close** (409
+  avant) : rien qui ne soit déjà passé par le client pendant la séance, et rien de rejouable en
+  classé. Le rejeu depuis le bilan reste côté client et n'écrit rien.
 
 ### 6.3 Rate limiting
 

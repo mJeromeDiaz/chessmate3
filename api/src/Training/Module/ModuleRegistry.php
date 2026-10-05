@@ -34,4 +34,14 @@ final class ModuleRegistry
     {
         return $this->byModule[$module->value] ?? throw new \LogicException(sprintf('No implementation of the %s module.', $module->value));
     }
+
+    /**
+     * The module's review, null when it has none (free study).
+     */
+    public function reviewer(Module $module): ?ReviewableModuleInterface
+    {
+        $implementation = $this->for($module);
+
+        return $implementation instanceof ReviewableModuleInterface ? $implementation : null;
+    }
 }

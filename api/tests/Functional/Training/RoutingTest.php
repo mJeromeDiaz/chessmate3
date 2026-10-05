@@ -27,6 +27,7 @@ final class RoutingTest extends WoodpeckerWebTestCase
         yield ['POST', '/api/training/runs/'.self::UUID.'/next', 'training_run_next'];
         yield ['POST', '/api/training/runs/'.self::UUID.'/submission', 'training_run_submission'];
         yield ['POST', '/api/training/runs/'.self::UUID.'/stop', 'training_run_stop'];
+        yield ['GET', '/api/training/runs/'.self::UUID.'/review', 'training_run_review'];
         yield ['POST', '/api/training/sessions', '_api_/training/sessions_post'];
         yield ['GET', '/api/training/sessions', '_api_/training/sessions_get_collection'];
         yield ['GET', '/api/training/sessions/current', 'training_session_current'];

@@ -295,6 +295,11 @@ export const trainingApi = {
         JSON_LD
       )
       .then(r => r.data),
+  /** The items of a closed run, for its end-of-run review (409 while it is active). */
+  review: id =>
+    http
+      .get(`/api/training/runs/${encodeURIComponent(id)}/review`, JSON_LD)
+      .then(r => r.data),
   stop: id =>
     http
       .post(`/api/training/runs/${encodeURIComponent(id)}/stop`, null, JSON_LD)

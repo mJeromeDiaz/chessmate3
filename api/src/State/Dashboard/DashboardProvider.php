@@ -9,10 +9,17 @@ use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Dashboard\Activity;
 use App\ApiResource\Dashboard\LichessRatingHistory;
 use App\ApiResource\Dashboard\RatingHistory;
+use App\ApiResource\Dashboard\Repertoire;
+use App\ApiResource\Dashboard\Themes;
+use App\ApiResource\Dashboard\Training;
 use App\Dashboard\Activity\ActivityCalendar;
 use App\Dashboard\Lichess\RatingHistoryClient;
 use App\Dashboard\Period;
+use App\Dashboard\Puzzle\ThemeStrengths;
 use App\Dashboard\Rating\RatingHistory as History;
+use App\Dashboard\Repertoire\RepertoireHealth;
+use App\Dashboard\Training\SessionStats;
+use App\Dashboard\Training\TrainingTime;
 use App\Entity\User;
 use App\Enum\AuthProvider;
 use App\Repertoire\Lichess\LichessUnavailableException;
@@ -24,10 +31,11 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 /**
- * GET /dashboard/activity, /dashboard/rating-history and /dashboard/lichess-rating-history: the
- * current user's data only, rate limited per user (dashboard_read).
+ * GET /dashboard/activity, /dashboard/rating-history, /dashboard/lichess-rating-history,
+ * /dashboard/training, /dashboard/themes and /dashboard/repertoire: the current user's data only,
+ * rate limited per user (dashboard_read).
  *
- * @implements ProviderInterface<Activity|RatingHistory|LichessRatingHistory>
+ * @implements ProviderInterface<Activity|RatingHistory|LichessRatingHistory|Training|Themes|Repertoire>
  */
 final class DashboardProvider implements ProviderInterface
 {
@@ -35,6 +43,10 @@ final class DashboardProvider implements ProviderInterface
         private readonly ActivityCalendar $calendar,
         private readonly History $ratingHistory,
         private readonly RatingHistoryClient $lichess,
+        private readonly TrainingTime $trainingTime,
+        private readonly SessionStats $sessionStats,
+        private readonly ThemeStrengths $themeStrengths,
+        private readonly RepertoireHealth $repertoireHealth,
         private readonly TokenResolver $tokens,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
@@ -43,7 +55,7 @@ final class DashboardProvider implements ProviderInterface
     ) {
     }
 
-    public function provide(Operation $operation, array $uriVariables = [], array $context = []): Activity|RatingHistory|LichessRatingHistory
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): Activity|RatingHistory|LichessRatingHistory|Training|Themes|Repertoire
     {
         $user = $this->authenticatedUser->get();
         $this->rateLimitGuard->consume($this->dashboardReadLimiter, $user->getId()->toRfc4122());
@@ -54,6 +66,9 @@ final class DashboardProvider implements ProviderInterface
             Activity::class => $this->activity($user, Period::last($days(Activity::DEFAULT_DAYS), $user, $this->clock->now())),
             RatingHistory::class => $this->rating($user, Period::last($days(RatingHistory::DEFAULT_DAYS), $user, $this->clock->now())),
             LichessRatingHistory::class => $this->lichess($user, Period::last($days(RatingHistory::DEFAULT_DAYS), $user, $this->clock->now())),
+            Training::class => $this->training($user, Period::last($days(Training::DEFAULT_DAYS), $user, $this->clock->now())),
+            Themes::class => $this->themes($user, Period::last($days(Themes::DEFAULT_DAYS), $user, $this->clock->now())),
+            Repertoire::class => $this->repertoire($user, Period::last($days(Repertoire::DEFAULT_DAYS), $user, $this->clock->now())),
             default => throw new \LogicException('Unexpected resource.'),
         };
     }
@@ -76,6 +91,47 @@ final class DashboardProvider implements ProviderInterface
         $view->from = $period->fromDate();
         $view->today = $period->todayDate();
         $view->points = $this->ratingHistory->points($user, $period);
+
+        return $view;
+    }
+
+    private function training(User $user, Period $period): Training
+    {
+        $view = new Training();
+        $view->from = $period->fromDate();
+        $view->today = $period->todayDate();
+        ['weeks' => $view->weeks, 'totals' => $view->totals] = $this->trainingTime->compute($user, $period);
+        $view->sessions = $this->sessionStats->compute($user, $period);
+
+        return $view;
+    }
+
+    private function themes(User $user, Period $period): Themes
+    {
+        $view = new Themes();
+        $view->from = $period->fromDate();
+        $view->today = $period->todayDate();
+        $themes = $this->themeStrengths->compute($user, $period);
+        $view->attempts = $themes['attempts'];
+        $view->successCount = $themes['successCount'];
+        $view->minAttempts = $themes['minAttempts'];
+        $view->themes = $themes['themes'];
+        $view->strong = $themes['strong'];
+        $view->weak = $themes['weak'];
+
+        return $view;
+    }
+
+    private function repertoire(User $user, Period $period): Repertoire
+    {
+        $view = new Repertoire();
+        $view->from = $period->fromDate();
+        $view->today = $period->todayDate();
+        $health = $this->repertoireHealth->compute($user, $period);
+        $view->repertoires = $health['repertoires'];
+        $view->cards = $health['cards'];
+        $view->tests = $health['tests'];
+        $view->fragile = $health['fragile'];
 
         return $view;
     }

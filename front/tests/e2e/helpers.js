@@ -38,9 +38,10 @@ export async function signIn(context) {
  *
  * @param {import('@playwright/test').Page} page
  * @param {string} uci
+ * @param {import('@playwright/test').Locator} [root] where the board is (a dialog), the page by default
  */
-export async function playMove(page, uci) {
-  const board = page.getByTestId('chess-board')
+export async function playMove(page, uci, root) {
+  const board = (root ?? page).getByTestId('chess-board')
   await board
     .locator(`[data-square="${uci.slice(0, 2)}"]`)
     .first()
@@ -62,12 +63,13 @@ export async function playMove(page, uci) {
  *
  * @param {import('@playwright/test').Page} page
  * @param {{fen: string, moves: string[]}} puzzle
+ * @param {import('@playwright/test').Locator} [root] where the board is (a dialog), the page by default
  */
-export async function solve(page, puzzle) {
-  const board = page.getByTestId('chess-board')
+export async function solve(page, puzzle, root) {
+  const board = (root ?? page).getByTestId('chess-board')
   for (let i = 1; i < puzzle.moves.length; i += 2) {
     await expect(board).toHaveAttribute('data-fen', fenAfter(puzzle, i))
-    await playMove(page, puzzle.moves[i])
+    await playMove(page, puzzle.moves[i], root)
   }
 }
 
@@ -87,4 +89,18 @@ export function fenAfter(puzzle, count) {
     })
   }
   return chess.fen()
+}
+
+/**
+ * Closes the end-of-run review that opens over the page when a run is over (its own tests check
+ * its content).
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {number} [timeout] how long the run may take to end
+ */
+export async function closeRunEnd(page, timeout) {
+  const dialog = page.getByTestId('run-end')
+  await expect(dialog).toBeVisible(timeout ? { timeout } : undefined)
+  await dialog.getByTestId('run-end-close').click()
+  await expect(dialog).toBeHidden()
 }

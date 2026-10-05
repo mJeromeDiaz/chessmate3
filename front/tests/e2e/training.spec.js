@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { signIn, solve } from './helpers.js'
+import { closeRunEnd, signIn, solve } from './helpers.js'
 
 const isRunNext = r =>
   /\/api\/training\/runs\/[^/]+\/next$/.test(r.url()) &&
@@ -43,7 +43,7 @@ test('light: a run stopped early shows its recap and joins the set history', asy
   const second = page.waitForResponse(isRunNext)
   await solve(page, first.item.data.puzzle)
   expect((await (await submitted).json()).result.success).toBe(true)
-  await second
+  const missedPuzzle = (await (await second).json()).item.data.puzzle
   await expect(page.getByTestId('run-progress')).toContainText(
     '1 puzzles · 1 réussis'
   )
@@ -56,6 +56,41 @@ test('light: a run stopped early shows its recap and joins the set history', asy
 
   await page.getByTestId('run-stop').click()
   await page.getByRole('button', { name: 'OK' }).click()
+
+  // The end-of-run review: both puzzles in the grid, the failed one to review again.
+  const end = page.getByTestId('run-end')
+  await expect(
+    end.getByTestId('run-end-grid').locator('[data-status]')
+  ).toHaveCount(2)
+  await expect(end.getByTestId('run-end-missed-item')).toHaveCount(1)
+  await expect(end.getByTestId('run-end-back')).toHaveText('Retour au set')
+
+  // Played again from the review, client side only: nothing reaches the API.
+  /** @type {string[]} */
+  const sent = []
+  page.on('request', request => {
+    if (request.method() !== 'GET') sent.push(request.url())
+  })
+  await end.getByTestId('run-end-missed-item').click()
+  const replay = end.getByTestId('run-end-replay')
+  await expect(replay).toBeVisible()
+  // Not a session step: no pause message.
+  await expect(replay.getByTestId('run-end-replay-pause')).toHaveCount(0)
+  await solve(page, missedPuzzle, replay)
+  await expect(replay.getByTestId('run-end-replay-result')).toHaveText(
+    'Bien joué, c’est revu !'
+  )
+  // The only missed puzzle: no next one.
+  await expect(replay.getByTestId('run-end-replay-next')).toHaveCount(0)
+  await replay.getByTestId('run-end-replay-done').click()
+  await expect(end.getByTestId('run-end-missed-item')).toHaveAttribute(
+    'data-reviewed',
+    'true'
+  )
+  expect(sent).toEqual([])
+  await closeRunEnd(page)
+  await page.getByTestId('run-end-open').click()
+  await closeRunEnd(page)
 
   const recap = page.getByTestId('run-recap')
   await expect(recap).toBeVisible()
@@ -92,9 +127,8 @@ test('classic: a run ends at its expiry and does not count the puzzle on screen'
   expect((await (await second).json()).item).not.toBeNull()
 
   // Leave the second puzzle on screen until the time is up.
-  await expect(page.getByTestId('run-recap')).toBeVisible({
-    timeout: 90_000
-  })
+  await closeRunEnd(page, 90_000)
+  await expect(page.getByTestId('run-recap')).toBeVisible()
   await expect(page.getByTestId('run-close-reason')).toHaveText('Temps écoulé.')
   await expect(page.getByTestId('run-items')).toHaveText('1')
   await expect(page.getByTestId('run-successes')).toHaveText('1')

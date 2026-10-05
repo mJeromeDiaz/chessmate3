@@ -144,6 +144,29 @@ journalisée en `ExerciseCompleted` de type `free_study` ([ACTIVITY.md](ACTIVITY
 est nulle. Récapitulatif : la durée, `metrics.format` et `metrics.notes`. Pas de point d'entrée
 seul : il se lance depuis une session (Session Builder).
 
+### 5 quater. Bilan d'une séance (`ReviewableModuleInterface`)
+
+Une séance **close** se revoit élément par élément (bilan de fin de séance, rejeu des ratés) :
+`GET /training/runs/{id}/review` → `{id, module, items}`, chaque élément
+`{index, type, status, durationMs, data}` dans l'ordre joué. Le module l'expose en implémentant
+aussi `Training\Module\ReviewableModuleInterface::review(Run)` (`ModuleRegistry::reviewer()` le
+trouve) ; le temps libre ne l'implémente pas (`items: []`). Statut (`ReviewItem`) : `ok` réussi,
+`hint` raté sans coup faux (indice ou solution demandés), `fail` un coup faux. Les éléments non
+comptés (puzzle à l'écran à la fin, unité interrompue ou abandonnée) n'y sont pas.
+
+- `puzzle` et `woodpecker_puzzle` : les tentatives résolues de la séance (`training_run_id`), avec le
+  puzzle complet (solution comprise : la séance est close), `mistakes`, `hintLevel`,
+  `solutionShown`, et pour Woodpecker `number` (sa place dans l'ordre du cycle, 1-based).
+- `repertoire_unit` : une entrée par unité présentée (une ligne regroupe ses tronçons), `fail` si un
+  de ses tronçons est raté. `data` : `unit`, `rank`, `round`, `repertoireId`, `repertoireName`,
+  `orientation`, `label` (celui du dernier tronçon), `moves` (SAN des tronçons bout à bout),
+  `firstErrorPly`, et `startFen`, la FEN normalisée d'où part le premier tronçon,
+  **figée à la présentation** (`repertoire_presentation.start_fen`) pour rester juste si le
+  répertoire change ensuite ; `null` pour les présentations antérieures (non rejouables).
+
+Le rejeu depuis le bilan se fait **côté client**, sans appel d'API : aucun effet sur le classement,
+le cycle Woodpecker, les cartes FSRS, l'activité ni la durée de la session.
+
 Ajouter un module : un cas à `Module`, une implémentation du contrat, un `subjectPath` côté front
 (`utils/training.js`) et le rendu de son type d'élément dans `pages/index/training/[id].vue`.
 
@@ -159,9 +182,10 @@ Préfixe `/api`, utilisateur authentifié ; une séance d'un autre utilisateur r
 | `POST /training/runs/{id}/next` | `{run, item}` : élément à jouer, `item: null` une fois close (600 par 10 min) | 404 |
 | `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown, thinkMs?}` → `{run, result}` (600 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis ou séance close |
 | `POST /training/runs/{id}/stop` | Termine la séance | 404 |
+| `GET /training/runs/{id}/review` | Bilan d'une séance close, élément par élément (§ 5 quater) | 404, 409 séance encore active |
 
 L'identifiant de l'élément est dans le corps, pas dans l'URL : une seule route de soumission quel que
-soit le module. `shortName` : `TrainingRun`, `TrainingRunStep` ; `requirements` UUID sur les routes
+soit le module. `shortName` : `TrainingRun`, `TrainingRunStep`, `TrainingRunReview` ; `requirements` UUID sur les routes
 d'item, routes sœurs couvertes par `tests/Functional/Training/RoutingTest.php`. La vue d'un set
 Woodpecker liste ses séances (`runs`).
 
@@ -190,6 +214,26 @@ Woodpecker liste ses séances (`runs`).
   le temps libre n'échoue jamais), `success3.mp3` sinon ; pour une étape de session, la page recharge
   la session et, si elle est désormais `completed`, joue `success.mp3` à la place. Ces sons, comme
   ceux des puzzles et des unités de répertoire, suivent le réglage « Sons » du profil (`moveSound`).
+- `RunEndDialog` (design « Fin de séance ») : bilan qui s'ouvre sur la page dès que la séance est
+  close, aussi pour une séance rouverte une fois finie. Il contient :
+  - un bandeau du prof du module (content, ou pensif si le module est en échec selon la règle de
+    `moduleEndSound`), avec des confettis (`ConfettiBurst`) seulement pour une fin vécue sur la page
+    et réussie ;
+  - le message du prof, composé côté client : taux de réussite, thème ou ouverture le plus raté ;
+  - quatre chiffres selon le module, dont l'XP en « Aperçu » factice ;
+  - la grille des éléments (Réussi / Avec aide / Raté) et la liste « À revoir », dont chaque élément
+    se rejoue dans le bilan (`RunEndReplay`, colonne de droite ; toute la feuille sur un téléphone),
+    **côté client seul** : rien n'est envoyé (ni classement, ni cycle, ni carte FSRS, ni activité, ni
+    temps de session ; une étape de session affiche « Session en pause le temps de la révision »).
+    Un puzzle se rejoue avec `PuzzlePlayer` (indices et solution, son `resolve` ignoré) ; une unité
+    de répertoire depuis sa position de départ (`start_fen`) avec `composables/repertoire/useLineReplay.js`
+    (coups adverses joués seuls, mauvais coup repris et bon coup fléché, seul accepté ensuite) ; une
+    unité présentée avant `start_fen` est « non rejouable ». « Raté suivant → » enchaîne, l'élément
+    rejoué jusqu'au bout est coché « revu » (en mémoire seulement) ;
+  - les boutons « Module suivant → » (étape de session), « Bilan de la session → » ou le retour au
+    sujet, et « Fermer », qui laisse le récapitulatif avec un bouton « Voir le bilan ».
+
+  Calculs purs dans `utils/runEnd.js` ; données de `GET /training/runs/{id}/review` (§ 5 quater).
 - `RunRecap` : récapitulatif normalisé et lignes du module ; `RunTable` : historique avec l'évolution
   des puzzles par minute d'une séance à l'autre.
 
@@ -200,11 +244,11 @@ Woodpecker liste ses séances (`runs`).
   événements, temps actif plafonné), `ClassicRunTest.php` (cycle qui avance et set tenu, repos,
   enchaînement sans repos, set terminé, pause pendant la séance, cycle perdu pendant la séance) et `RoutingTest.php`.
 - Vitest : `use-timeboxed-run.test.js` (décalage d'horloge, phases, fin de temps),
-  `training-store.test.js`.
+  `training-store.test.js`, `run-end.test.js` (bilan), `use-line-replay.test.js` (rejeu d'une unité).
 - Playwright : `tests/e2e/training.spec.js` : une séance light d'1 min terminée avec « Terminer »
-  (1 réussi, 1 échoué, récapitulatif, historique) et une séance classique d'1 min menée **jusqu'à son
+  (1 réussi, 1 échoué, bilan et rejeu du raté sans requête à l'API, récapitulatif, historique) et une séance classique d'1 min menée **jusqu'à son
   expiration réelle** (puzzle à l'écran non compté, cycle avancé d'un seul puzzle). Environ 75 s.
-  Le test des répertoires a le sien : `tests/e2e/repertoire-test.spec.js` ([REPERTOIRE.md § 16](REPERTOIRE.md#16-tests)).
+  Le test des répertoires a le sien (dont le rejeu d'un tronçon raté depuis le bilan) : `tests/e2e/repertoire-test.spec.js` ([REPERTOIRE.md § 16](REPERTOIRE.md#16-tests)).
 - Puzzles et Libre : `tests/Functional/Training/{PuzzleRunTest, FreeRunTest}.php` (puzzles classés
   et thèmes, puzzle en attente qui ouvre la séance, puzzle à l'écran qui reste en attente, jeu libre
   refusé pendant la séance, aucun puzzle ; durée réelle journalisée, séance abandonnée comptée

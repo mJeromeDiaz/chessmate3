@@ -79,7 +79,7 @@ arbre. Mesure : 1 Mo de PGN analysé en 87 ms, 0,27 ms par coup rejoué et norma
 | `repertoire_revision` | Journal d'annulation (§ 7) | `idx_repertoire_revision_repertoire_version` |
 | `repertoire_trash` | Corbeille (§ 7) : une suite retirée (`reason`, FEN de départ, coup, chemin SAN, compteurs) et ses lignes exactes en JSON (`suite_rows`) | `idx_repertoire_trash_repertoire_created` |
 | `repertoire_card` | Cartes de répétition espacée (§ 14) : mémoire FSRS (`state`, `step`, `stability`, `difficulty`, `due`, `last_review`), `reps`, `lapses`, FEN | `uniq_repertoire_card_key (repertoire_id, fen_hash, uci)` : l'identité de la carte ; `idx_repertoire_card_repertoire_due` |
-| `repertoire_presentation` | Présentations d'un tronçon dans un test (§ 15), l'unité des statistiques, avec les coups et le libellé du moment | `idx_repertoire_presentation_{segment,repertoire,user}_finished`, `idx_repertoire_presentation_run` |
+| `repertoire_presentation` | Présentations d'un tronçon dans un test (§ 15), l'unité des statistiques, avec les coups, le libellé et la position de départ (`start_fen`, pour le rejeu du bilan de séance) du moment | `idx_repertoire_presentation_{segment,repertoire,user}_finished`, `idx_repertoire_presentation_run` |
 | `repertoire_run_state` | État d'une séance de test (§ 15) : portée, file, unité en cours, compteurs (JSON) | clé primaire `run_id` |
 | `repertoire_review` | Journal des réponses, en ajout seul (§ 14) : coup joué, juste ou non, note, temps de réflexion, carte mise à jour ou non, mémoire avant et après (JSON), séance | `idx_repertoire_review_card_reviewed`, `idx_repertoire_review_run` |
 | `repertoire_opening` | Noms d'ouverture (`lichess-org/chess-openings`, CC0) par FEN normalisée | par empreinte de FEN (`epd_hash`) |

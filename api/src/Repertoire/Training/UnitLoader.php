@@ -25,7 +25,8 @@ final readonly class UnitLoader
      * @return array{
      *     context: list<array{uci: string, san: string}>,
      *     questions: list<Question>,
-     *     sans: array<string, list<string>>
+     *     sans: array<string, list<string>>,
+     *     starts: array<string, string>
      * }
      */
     public function load(UnitPlan $plan): array
@@ -39,11 +40,14 @@ final readonly class UnitLoader
 
         $questions = [];
         $sans = [];
+        $starts = [];
         $play = [];
         foreach ($plan->segments as $segment) {
             foreach ($segment['moveIds'] as $id) {
                 $row = $rows[$id] ?? throw new \UnexpectedValueException('No move '.$id);
                 $sans[$segment['segmentId']][] = $row['san'];
+                // The position the segment's first move is played from.
+                $starts[$segment['segmentId']] ??= $row['fen'];
                 if (MoveRole::Reply->value === $row['role']) {
                     $play[] = ['uci' => $row['uci'], 'san' => $row['san']];
                     continue;
@@ -57,6 +61,7 @@ final readonly class UnitLoader
             'context' => $context,
             'questions' => $questions,
             'sans' => $sans,
+            'starts' => $starts,
         ];
     }
 

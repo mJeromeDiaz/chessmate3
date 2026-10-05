@@ -15,7 +15,10 @@ maquette ne montre pas encore viendront avec le lot B (§ 6).
 | Heatmap, totaux | `App\Dashboard\Activity\ActivityCalendar` |
 | Courbe du classement puzzles | `App\Dashboard\Rating\RatingHistory` |
 | Elo Lichess | `App\Dashboard\Lichess\RatingHistoryClient` (via `Repertoire\Lichess\LichessGateway`) |
-| API | `App\ApiResource\Dashboard\{Activity, RatingHistory, LichessRatingHistory}`, `App\State\Dashboard\DashboardProvider` |
+| Temps par semaine et module, sessions (lot B) | `App\Dashboard\Training\{TrainingTime, SessionStats}` |
+| Thèmes forts et faibles (lot B) | `App\Dashboard\Puzzle\ThemeStrengths` |
+| Santé du répertoire (lot B) | `App\Dashboard\Repertoire\RepertoireHealth` |
+| API | `App\ApiResource\Dashboard\{Activity, RatingHistory, LichessRatingHistory, Training, Themes, Repertoire}`, `App\State\Dashboard\DashboardProvider` |
 | Fixtures | `App\DataFixtures\Dashboard\ActivityHistoryFixtures` (12 semaines pour l'utilisateur de démo) |
 | Front | `services/api.js` (`dashboardApi`), `stores/dashboard.js`, `utils/dashboard/{heatmap, curve, modules, showcase}.js`, `components/dashboard/*` |
 
@@ -30,6 +33,9 @@ onglet Lichess). `days` est borné à [7, 371] (`Period`).
 | `GET /api/dashboard/activity?days=84` | `timezone`, `from`, `today`, `days[]` (jours actifs : `count`, `successCount`, `durationMs`), `totals` par type d'exercice (depuis toujours) | `activity_log_entry`, index `(user_id, local_date)` |
 | `GET /api/dashboard/rating-history?days=90` | `from`, `today`, `points[]` (`date`, `rating`) | `puzzle_rating_change`, index `(user_id, created_at)` |
 | `GET /api/dashboard/lichess-rating-history?days=90` | `linked`, `username`, `perfs.{blitz, rapid, classical}[]` | API Lichess `/api/user/{id}/rating-history` |
+| `GET /api/dashboard/training?days=30` | `weeks[]` (`start` = lundi local, `durationMs` par module), `totals` par module (`count`, `durationMs`), `sessions` (`closed`, `completed`, `abandoned`, `expired`, `playedMs`, `averageMs`) | `activity_log_entry` ; `training_session` + `training_run` (`idx_training_session_user_started`) |
+| `GET /api/dashboard/themes?days=30` | `attempts`, `successCount`, `minAttempts`, `themes[]` (du meilleur au pire), `strong[]`, `weak[]` (`key`, `attempts`, `successCount`, `successRate`) | `puzzle_attempt` (`idx_puzzle_attempt_user_status`) + `JSON_TABLE` sur `puzzle.themes` |
+| `GET /api/dashboard/repertoire?days=30` | `repertoires`, `cards` (`total`, `new`, `due` maintenant), `tests` de la période (`total`, `succeeded`, `successRate`), `fragile[]` (5 au plus : répertoire, couleur, tronçon, libellé, tests, `recentFailureRate`) | `DueQuery::counts`, `repertoire_presentation` (`idx_repertoire_presentation_user_finished`) |
 
 Règles :
 
@@ -46,6 +52,26 @@ Règles :
   écartés ; les mois Lichess (0 à 11) sont convertis. Indisponibilité : 503 et `X-Lichess-Unavailable`
   (comme le proxy du répertoire). Le front ne l'appelle qu'au premier clic sur Blitz, Rapide ou
   Classique.
+
+Règles des statistiques (lot B, choix validés le 2026-10-05) :
+
+- **Temps** : somme des `duration_ms` du journal d'activité par jour local, regroupée par semaine
+  (lundi) ; toutes les semaines de la période sont listées, vides comprises (la première et la
+  dernière peuvent être partielles). Puzzles classés et non classés = module `puzzles`.
+- **Sessions** : celles commencées dans la période et closes (l'active est exclue), par statut final ;
+  temps joué = somme des `durationMs` de leurs séances (comme `SessionClosed`) ; la moyenne ne compte
+  que les sessions où quelque chose a été joué.
+- **Thèmes** : **puzzles classés seuls** (Woodpecker repasse les mêmes puzzles et les compterait
+  plusieurs fois) ; une réussite est un puzzle résolu **sans aide** (ni erreur, ni indice, ni
+  solution), comme pour le classement. Un thème est listé à partir de **5 essais** sur la période ;
+  les longueurs, objectifs et origines (`short`, `crushing`, `master`…) sont écartés. Forts : les
+  meilleurs (5 au plus) ; faibles : les pires, le pire en premier (5 au plus) ; jamais le même thème
+  des deux côtés (avec 3 thèmes : 2 forts, 1 faible).
+- **Répertoire** : tous les répertoires ensemble. Un test est la première présentation d'un tronçon
+  dans une séance ([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)).
+  Tronçons fragiles : même règle que les statistiques d'un répertoire (au moins 3 tests, des échecs
+  parmi les 10 derniers), sur toute l'histoire et non sur la période, tronçons actifs seulement (ni
+  archivés, ni fusionnés), libellés comme à leur dernier test.
 
 Performances : pas de table d'agrégats pour l'instant. Une année d'activité donne au plus 371 lignes
 groupées sur un index ; les totaux par type parcourent les entrées de l'utilisateur. Les tables
@@ -90,14 +116,23 @@ n'est **pas** reprise : l'en-tête actuel reste, en attendant la passe dédiée 
 
 - PHPUnit : `tests/Functional/Dashboard/DashboardApiTest.php` (jours locaux, isolation entre
   utilisateurs, bornes de période, courbe, Lichess non lié / normalisé / en cache / jeton révoqué /
-  429, authentification, rate limit), `tests/Unit/Dashboard/PeriodTest.php` (minuit local, heure d'été).
+  429, authentification, rate limit), `StatsApiTest.php` (temps par semaine et module, sessions,
+  thèmes : non classés, en attente, hors période, indice = échec, seuil, catégories écartées),
+  `RepertoireHealthTest.php` (tests de la période, tronçon fragile hors période),
+  `tests/Unit/Dashboard/PeriodTest.php` (minuit local, heure d'été), `ThemeStrengthsTest.php`
+  (partage forts / faibles).
 - Vitest : `tests/unit/dashboard.test.js` (grille de la heatmap, courbe, lignes des modules, store).
 - Playwright : `tests/e2e/dashboard.spec.js` (accueil d'un nouvel utilisateur ; heatmap, courbe,
   modules et onglet Lichess d'un compte non lié, API du dashboard simulée).
 
-## 6. À venir (lot B)
+## 6. Lot B (en cours)
 
-Temps d'entraînement par semaine et par module ; thèmes forts et faibles ; lignes de répertoire dues,
-solidité, lignes fragiles ; sessions réalisées et temps moyen ; sélecteur de période ; « Lancer la
-session du jour » ; agrégats précalculés, commande de recalcul et test de performance (300 ms pour un
-an d'historique).
+Choix validés le 2026-10-05 : les statistiques vont sur une page **Statistiques** dédiée (`/stats`,
+sélecteur de période 7 j / 30 j / 90 j / 1 an) ; l'accueil gagne un lien « Mes statistiques → » et
+un mini-bloc « ton thème le plus faible ». « Lancer la session du jour » est déjà couvert (« Lancer »
+dans Mes sessions, « Reprendre → » dans Dernières sessions).
+
+- **B1, API** : fait (`/dashboard/training`, `/dashboard/themes`, `/dashboard/repertoire`, § 2).
+- **B2, performances** : historique lourd d'un an dans la base de bench, mesure des trois endpoints
+  (objectif 300 ms) ; agrégats précalculés et commande de recalcul seulement si la mesure les exige.
+- **B3, front** : page `/stats`, mini-bloc de l'accueil, Vitest, Playwright.

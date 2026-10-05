@@ -194,7 +194,7 @@ final class DashboardApiTest extends WebTestCase
 
     public function testEndpointsNeedASignedInUserAndAreRateLimited(): void
     {
-        foreach (['activity', 'rating-history', 'lichess-rating-history'] as $endpoint) {
+        foreach (['activity', 'rating-history', 'lichess-rating-history', 'training', 'themes', 'repertoire'] as $endpoint) {
             $this->client->request('GET', '/api/dashboard/'.$endpoint);
             self::assertSame(401, $this->client->getResponse()->getStatusCode(), $endpoint);
         }
@@ -204,6 +204,7 @@ final class DashboardApiTest extends WebTestCase
             self::assertSame(200, $this->api('/api/dashboard/activity', $alice)->getStatusCode());
         }
         self::assertSame(429, $this->api('/api/dashboard/rating-history', $alice)->getStatusCode(), 'one budget for every dashboard read');
+        self::assertSame(429, $this->api('/api/dashboard/themes', $alice)->getStatusCode());
     }
 
     private function createUser(string $email, string $timezone): User

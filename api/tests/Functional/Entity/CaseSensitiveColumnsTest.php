@@ -59,6 +59,7 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['repertoire_card', 'fen'],
             ['repertoire_card', 'uci'],
             ['repertoire_review', 'played_uci'],
+            ['repertoire_presentation', 'start_fen'],
             ['training_calendar_feed', 'token_hash'],
             ['training_calendar_feed', 'encrypted_token'],
         ] as [$table, $column]) {

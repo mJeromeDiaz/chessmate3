@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { Chess } from 'chess.js'
 import { normalizeFen } from '../../src/utils/chess/normalizeFen.js'
-import { playMove, signIn } from './helpers.js'
+import { closeRunEnd, playMove, signIn } from './helpers.js'
 
 /** White: the trunk 1.e4, then 1...e5 (2.Nf3 3.Bc4) and 1...c5 (2.Nf3 3.d4): 3 segments. */
 const LINES = [
@@ -23,6 +23,33 @@ const PREPARED = (() => {
   }
   return prepared
 })()
+
+/**
+ * Plays the prepared moves of a segment replayed from the end-of-run review, to its end.
+ *
+ * @param {import('@playwright/test').Locator} replay
+ */
+async function replayLine(replay) {
+  const page = replay.page()
+  const board = replay.getByTestId('chess-board')
+  const status = replay.getByTestId('run-end-replay-status')
+  let last = ''
+  for (;;) {
+    let fen = ''
+    // The user's turn once the board shows a new position with a prepared move, or the end.
+    await expect
+      .poll(async () => {
+        if ((await status.textContent())?.startsWith('Ligne terminée'))
+          return 'done'
+        fen = normalizeFen((await board.getAttribute('data-fen')) ?? '')
+        return fen !== last && PREPARED.has(fen) ? 'play' : 'wait'
+      })
+      .not.toBe('wait')
+    if ((await status.textContent())?.startsWith('Ligne terminée')) return
+    last = fen
+    await playMove(page, PREPARED.get(fen), replay)
+  }
+}
 
 /** @param {import('@playwright/test').Page} page */
 async function importItalian(page) {
@@ -139,7 +166,31 @@ test('a one-minute test: a failed segment comes back, the end of time cuts a seg
     await expect(page.getByTestId('drill-status')).toHaveText(/coup 2 sur/)
   }
 
-  await expect(page.getByTestId('run-recap')).toBeVisible({ timeout: 70_000 })
+  // The failed segment played again from the review, from its start position.
+  const end = page.getByTestId('run-end')
+  await expect(end).toBeVisible({ timeout: 70_000 })
+  await end.getByTestId('run-end-missed-item').first().click()
+  const replay = end.getByTestId('run-end-replay')
+  const status = replay.getByTestId('run-end-replay-status')
+  // A wrong move first: the right one is shown, then accepted.
+  await expect(status).toHaveText('Joue le coup de ton répertoire.')
+  const board = replay.getByTestId('chess-board')
+  const at = normalizeFen((await board.getAttribute('data-fen')) ?? '')
+  const right = PREPARED.get(at)
+  await playMove(page, right === 'a2a3' ? 'h2h3' : 'a2a3', replay)
+  await expect(status).toHaveText(
+    'Ce n’est pas ton coup : joue celui de la flèche.'
+  )
+  await replayLine(replay)
+  await expect(status).toHaveText('Ligne terminée, 1 erreur.')
+  await replay.getByTestId('run-end-replay-back').click()
+  await expect(end.getByTestId('run-end-missed-item').first()).toHaveAttribute(
+    'data-reviewed',
+    'true'
+  )
+
+  await closeRunEnd(page)
+  await expect(page.getByTestId('run-recap')).toBeVisible()
   await expect(page.getByTestId('run-close-reason')).toHaveText('Temps écoulé.')
   await expect(page.getByTestId('run-items')).toHaveText('4')
   await expect(page.getByTestId('run-successes')).toHaveText('3')
@@ -177,6 +228,7 @@ test('"Tester cette ligne" from the editor, then the statistics and a segment hi
   await expect(page.getByTestId('drill-new-round')).toBeVisible()
   await page.getByTestId('run-stop').click()
   await page.getByRole('button', { name: 'OK' }).click()
+  await closeRunEnd(page)
   await expect(page.getByTestId('run-recap')).toBeVisible()
   await expect(page.getByTestId('run-items')).toHaveText('1')
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { signIn, solve } from './helpers.js'
+import { closeRunEnd, signIn, solve } from './helpers.js'
 
 const isRunNext = r =>
   /\/api\/training\/runs\/[^/]+\/next$/.test(r.url()) &&
@@ -27,6 +27,7 @@ async function addModule(page, moduleId, minutes) {
 async function stopRun(page) {
   await page.getByTestId('run-stop').click()
   await page.getByRole('button', { name: 'OK' }).click()
+  await closeRunEnd(page)
   await expect(page.getByTestId('run-recap')).toBeVisible()
 }
 

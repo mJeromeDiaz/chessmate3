@@ -30,6 +30,8 @@ use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
 use App\Training\Module\PreparedStep;
+use App\Training\Module\ReviewItem;
+use App\Training\Module\ReviewableModuleInterface;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use Symfony\Component\Uid\Uuid;
@@ -44,7 +46,7 @@ use Symfony\Component\Uid\Uuid;
  * an earlier run ended) is the run's first puzzle; the puzzle on screen when the run ends is not
  * counted but stays pending, so letting the time run out never skips a puzzle.
  */
-final class PuzzleModule implements TimeboxedModuleInterface
+final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleInterface
 {
     public const SUBJECT_TYPE = 'puzzle_player';
     public const ITEM_TYPE = 'puzzle';
@@ -225,6 +227,33 @@ final class PuzzleModule implements TimeboxedModuleInterface
         }
 
         return array_values(array_unique($clean));
+    }
+
+    public function review(Run $run): array
+    {
+        return array_map(static function (Attempt $attempt): ReviewItem {
+            $puzzle = PuzzleView::from($attempt->getPuzzle());
+
+            return new ReviewItem(
+                self::ITEM_TYPE,
+                ReviewItem::puzzleStatus(AttemptStatus::Solved === $attempt->getStatus(), $attempt->getMistakes(), $attempt->getHintLevel(), $attempt->isSolutionShown()),
+                $attempt->getDurationMs(),
+                [
+                    'puzzle' => [
+                        'id' => $puzzle->id,
+                        'fen' => $puzzle->fen,
+                        'moves' => $puzzle->moves,
+                        'playerColor' => $puzzle->playerColor,
+                        'rating' => $puzzle->rating,
+                        'themes' => $puzzle->themes,
+                        'gameUrl' => $puzzle->gameUrl,
+                    ],
+                    'mistakes' => $attempt->getMistakes(),
+                    'hintLevel' => $attempt->getHintLevel(),
+                    'solutionShown' => $attempt->isSolutionShown(),
+                ],
+            );
+        }, $this->attempts->findResolvedOfRun($run));
     }
 
     private function item(Attempt $attempt): Item

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { signIn, solve } from './helpers.js'
+import { closeRunEnd, signIn, solve } from './helpers.js'
 
 const API = 'http://localhost:8100'
 
@@ -64,6 +64,7 @@ test('puzzles: a timed run of rated puzzles; the puzzle on screen at the end com
 
   await page.getByTestId('run-stop').click()
   await page.getByRole('button', { name: 'OK' }).click()
+  await closeRunEnd(page)
   await expect(page.getByTestId('run-recap')).toContainText('Classement : ')
   await expect(page.getByTestId('run-items')).toHaveText('1')
 
@@ -110,6 +111,7 @@ test('free study: a timer with the format and notes, its time in the recap', asy
     'Le temps passé jusqu’ici sera compté.'
   )
   await page.getByRole('button', { name: 'OK' }).click()
+  await closeRunEnd(page)
 
   const recap = page.getByTestId('run-recap')
   await expect(recap).toContainText('Format : Livre.')

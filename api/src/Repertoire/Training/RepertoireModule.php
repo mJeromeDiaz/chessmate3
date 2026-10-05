@@ -25,6 +25,7 @@ use App\Repertoire\Training\State\Progress;
 use App\Repertoire\Training\State\Question;
 use App\Repertoire\Training\State\Read;
 use App\Repertoire\Training\State\Unit;
+use App\Repository\Repertoire\PresentationRepository;
 use App\Repository\Repertoire\RepertoireRepository;
 use App\Repository\Repertoire\RunStateRepository;
 use App\Training\Exception\InvalidItemSubmissionException;
@@ -37,6 +38,8 @@ use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
 use App\Training\Module\PreparedStep;
+use App\Training\Module\ReviewItem;
+use App\Training\Module\ReviewableModuleInterface;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use Doctrine\DBAL\Connection;
@@ -55,10 +58,12 @@ use Symfony\Component\Uid\Uuid;
  * mistake it is failed. A unit whose prepared move changed meanwhile (the editor, in another tab)
  * is dropped without penalty.
  */
-final class RepertoireModule implements TimeboxedModuleInterface
+final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModuleInterface
 {
     public const SUBJECT_TYPE = 'repertoire_owner';
     public const ITEM_TYPE = 'repertoire_move';
+    /** A unit in a run review. */
+    public const REVIEW_TYPE = 'repertoire_unit';
     public const SOURCE_TYPE = 'repertoire_presentation';
 
     public function __construct(
@@ -71,6 +76,7 @@ final class RepertoireModule implements TimeboxedModuleInterface
         private readonly UnitQueue $queue,
         private readonly Reviewer $reviewer,
         private readonly EventPublisher $events,
+        private readonly PresentationRepository $presentations,
     ) {
     }
 
@@ -284,6 +290,7 @@ final class RepertoireModule implements TimeboxedModuleInterface
                     $loaded['sans'][$segmentId] ?? [],
                     $plan->labels[$segmentId] ?? ['opening' => null, 'move' => null],
                     $now,
+                    $loaded['starts'][$segmentId] ?? null,
                 );
                 $this->entityManager->persist($presentation);
                 $segments[] = ['segmentId' => $segmentId, 'presentationId' => $presentation->getId()->toRfc4122()];
@@ -388,6 +395,60 @@ final class RepertoireModule implements TimeboxedModuleInterface
                 'unit' => $presentation->getUnit()->value,
             ],
         ));
+    }
+
+    /**
+     * One item per unit presented, its segments' moves put end to end from the position the first
+     * one starts from (null for units presented before it was kept: not replayable). A unit
+     * failed if one of its segments failed; units not counted (interrupted) are left out.
+     */
+    public function review(Run $run): array
+    {
+        /** @var array<string, list<Presentation>> $units */
+        $units = [];
+        foreach ($this->presentations->findByRun($run) as $presentation) {
+            $units[$presentation->getUnitId()->toRfc4122()][] = $presentation;
+        }
+
+        $items = [];
+        foreach ($units as $unitId => $presentations) {
+            $failed = false;
+            $succeeded = true;
+            foreach ($presentations as $presentation) {
+                $failed = $failed || PresentationStatus::Failed === $presentation->getStatus();
+                $succeeded = $succeeded && PresentationStatus::Succeeded === $presentation->getStatus();
+            }
+            if (!$failed && !$succeeded) {
+                continue;
+            }
+            $first = $presentations[0];
+            // A line is labelled by its last segment.
+            $last = $presentations[\count($presentations) - 1];
+            $durations = array_filter(array_map(static fn (Presentation $presentation): ?int => $presentation->getDurationMs(), $presentations), static fn (?int $ms): bool => null !== $ms);
+            $errorPlies = array_filter(array_map(static fn (Presentation $presentation): ?int => $presentation->getFirstErrorPly(), $presentations), static fn (?int $ply): bool => null !== $ply);
+            $repertoire = $first->getRepertoire();
+
+            $items[] = new ReviewItem(
+                self::REVIEW_TYPE,
+                $failed ? ReviewItem::FAIL : ReviewItem::OK,
+                [] === $durations ? null : array_sum($durations),
+                [
+                    'unitId' => $unitId,
+                    'unit' => $first->getUnit()->value,
+                    'rank' => $first->getRank(),
+                    'round' => $first->getRound(),
+                    'repertoireId' => $repertoire->getId()->toRfc4122(),
+                    'repertoireName' => $repertoire->getName(),
+                    'orientation' => $repertoire->getColor()->value,
+                    'label' => $last->getLabel(),
+                    'startFen' => $first->getStartFen(),
+                    'moves' => array_merge(...array_map(static fn (Presentation $presentation): array => $presentation->getMoves(), $presentations)),
+                    'firstErrorPly' => [] === $errorPlies ? null : min($errorPlies),
+                ],
+            );
+        }
+
+        return $items;
     }
 
     private function item(Unit $unit): Item

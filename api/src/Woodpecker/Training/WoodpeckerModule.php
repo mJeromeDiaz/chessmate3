@@ -32,6 +32,8 @@ use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
 use App\Training\Module\PreparedStep;
+use App\Training\Module\ReviewItem;
+use App\Training\Module\ReviewableModuleInterface;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use App\Woodpecker\Cycle\CycleRunner;
@@ -52,7 +54,7 @@ use Symfony\Component\Uid\Uuid;
  *   (subject_finished), or when the set is paused or abandoned meanwhile (subject_unavailable).
  *   A paused, closed or resting set cannot start a run.
  */
-final class WoodpeckerModule implements TimeboxedModuleInterface
+final class WoodpeckerModule implements TimeboxedModuleInterface, ReviewableModuleInterface
 {
     public const SUBJECT_TYPE = 'woodpecker_set';
     public const ITEM_TYPE = 'woodpecker_puzzle';
@@ -245,6 +247,35 @@ final class WoodpeckerModule implements TimeboxedModuleInterface
         }
 
         return [null, []];
+    }
+
+    public function review(Run $run): array
+    {
+        return array_map(static function (Attempt $attempt): ReviewItem {
+            $puzzle = PuzzleView::from($attempt->getPuzzle());
+
+            return new ReviewItem(
+                self::ITEM_TYPE,
+                ReviewItem::puzzleStatus(AttemptStatus::Solved === $attempt->getStatus(), $attempt->getMistakes(), $attempt->getHintLevel(), $attempt->isSolutionShown()),
+                $attempt->getDurationMs(),
+                [
+                    'puzzle' => [
+                        'id' => $puzzle->id,
+                        'fen' => $puzzle->fen,
+                        'moves' => $puzzle->moves,
+                        'playerColor' => $puzzle->playerColor,
+                        'rating' => $puzzle->rating,
+                        'themes' => $puzzle->themes,
+                        'gameUrl' => $puzzle->gameUrl,
+                    ],
+                    // Its place in the cycle's order (1-based), as the set shows it.
+                    'number' => $attempt->getOrderIndex() + 1,
+                    'mistakes' => $attempt->getMistakes(),
+                    'hintLevel' => $attempt->getHintLevel(),
+                    'solutionShown' => $attempt->isSolutionShown(),
+                ],
+            );
+        }, $this->attempts->findResolvedOfRun($run));
     }
 
     private function item(Attempt $attempt, Set $set): Item
