@@ -1,4 +1,4 @@
-// ChessMate look (design "Session Builder"): DM Sans text, Bricolage Grotesque headings, ink on a
+// Don't Stay Rooky look (design "Session Builder"): DM Sans text, Bricolage Grotesque headings, ink on a
 // pale lavender page. Components read the tokens below, redefined for Quasar's dark mode.
 
 :root {
@@ -122,6 +122,7 @@ h6,
   font-weight: 800;
   color: var(--cm-ink);
   text-decoration: none;
+  white-space: nowrap;
 
   span {
     color: var(--cm-brand);

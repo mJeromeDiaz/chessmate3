@@ -1,6 +1,10 @@
-# ChessMate3
+# Don't Stay Rooky
 
-Chess training app (Duolingo-style). One git repository (monorepo) at the root:
+Chess training app (Duolingo-style), formerly ChessMate (the repository folder and the local database
+names, `ChessMateGo*`, keep the old name). Name in texts and logo: **Don't Stay Rooky**; technical
+slug (storage keys, locks, file names, calendar UIDs): `dontstayrooky`. Slogans, in turn in the
+landing hero: "Don't Stay Rooky ! Stop taking checkmate and find a mate !" / "Don't Stay Rooky !
+Become the King !". One git repository (monorepo) at the root:
 
 - `api/`: Symfony 7.4 + API Platform 5, Doctrine ORM 3, **MySQL 8.0** (8.0.46 in dev, local
   server, no Docker), Messenger on the Doctrine transport. **No PostgreSQL**: never use a
@@ -34,7 +38,7 @@ editor and OS files.
 ## Code organisation: by domain, short class names
 
 Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification, EarlyAccess today) gets a sub-namespace in every
-layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never `PuzzleTheme`.
+layer, and classes inside it keep short names: `App\Entity\Puzzle\Attempt`, never `PuzzleAttempt`.
 
 | Layer | Location |
 |---|---|
@@ -51,7 +55,9 @@ layer, and classes inside it keep short names: `App\Entity\Puzzle\Theme`, never 
 | Server, cross-domain | `src/Chess/` → `App\Chess\Rules` (legal moves, UCI, lenient SAN, normalized FEN), `App\Chess\Position\{FenNormalizer, PositionKey}`, `App\Chess\Pgn\{Parser, Writer}`; front twin of the normalizer: `src/utils/chess/normalizeFen.js` |
 
 Directories and namespaces are PascalCase and singular (PSR-4). Transverse entities stay at the root:
-`App\Entity\User` and the Phase 1 auth entities are not moved.
+`App\Entity\User` and the Phase 1 auth entities are not moved. Exception: the puzzle catalogue
+(`puzzle`, `puzzle_theme`, `puzzle_theme_membership`) lives in its own database, under
+`App\Entity\Catalog` / `App\Repository\Catalog` (docs/DEPLOY_OVH.md, § 3).
 
 Naming in the database and the API, to avoid collisions between domains that all have a `Theme` or
 an `Attempt`:
@@ -72,7 +78,8 @@ vendor/bin/phpunit                                   # all tests (unit + functio
 vendor/bin/phpunit --group perf                      # performance measures, excluded by default (dashboard stats, docs/DASHBOARD.md)
 vendor/bin/phpstan analyse --memory-limit=1G         # level max
 bin/console doctrine:migrations:migrate [--env=test]
-bin/console doctrine:fixtures:load                   # PURGES the DB: themes, sample puzzles, demo user + Woodpecker data + 12 weeks of activity, openings + demo repertoires
+bin/console doctrine:migrations:migrate --configuration=config/migrations/catalog.php [--env=test]  # the puzzle catalogue's database (docs/DEPLOY_OVH.md, § 3)
+bin/console doctrine:fixtures:load                   # PURGES the main DB (never the catalogue: sample puzzles added if missing): themes, sample puzzles, demo user + Woodpecker data + 12 weeks of activity, openings + demo repertoires
 bin/console app:puzzle:sync-themes                   # load/update the Lichess puzzle themes
 bin/console app:puzzle:rebuild-selection             # after a puzzle import or a quality-threshold change
 bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
@@ -122,6 +129,11 @@ in e2e, a test drains the `async` queue itself (`consumeQueue()` in `tests/e2e/h
 - Tests never reach a push service (`push.client` is a `MockHttpClient` under `when@test`); a test
   that replaces it calls `$client->disableReboot()` first (a kernel reboot brings the original back).
 - MySQL `SET @a = 1, @b = @a + 1` evaluates `@b` with the old `@a`: use separate statements.
+- Two databases (docs/DEPLOY_OVH.md, § 3): the puzzle catalogue (`App\Entity\Catalog`) has its own
+  connection and entity manager. Never join, link (association/FK) or write it through the main
+  ones: keep the puzzle id, autowire `doctrine.dbal.catalog_connection` /
+  `doctrine.orm.catalog_entity_manager` explicitly, and call `PuzzleCatalog::clear()` next to a
+  batch job's `clear()`.
 - MySQL collations ignore case (and accents) by default: a column holding a FEN, moves, a Lichess id
   or any case-sensitive identifier or digest uses `ascii_bin` (or `utf8mb4_bin`), e.g.
   `options: ['charset' => 'ascii', 'collation' => 'ascii_bin']`; `CaseSensitiveColumnsTest` lists them.

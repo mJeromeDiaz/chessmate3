@@ -6,18 +6,17 @@ namespace App\Puzzle\Selection;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Maintains the data derived from the `puzzle` table for selection: the `selectable` flag,
  * `puzzle_theme_membership` and `puzzle_theme.puzzle_count`. Plain SQL in id-range chunks, so a
- * full rebuild over 5M puzzles never holds one huge transaction or loads entities.
+ * full rebuild over 5M puzzles never holds one huge transaction or loads entities. All in the
+ * catalogue's database (docs/DEPLOY_OVH.md, § 3).
  */
 final class SelectionRebuilder
 {
     public const CHUNK_SIZE = 100_000;
-
-    /** Shadow table the full rebuild fills before swapping it in (excluded from the Doctrine schema). */
-    public const BUILD_TABLE = 'puzzle_theme_membership_build';
 
     /**
      * Unfolds the `themes` JSON array into one row per known theme key; unknown keys are dropped.
@@ -31,53 +30,79 @@ final class SelectionRebuilder
         WHERE p.selectable = 1
         SQL;
 
-    public function __construct(private Connection $connection)
+    public function __construct(
+        #[Autowire(service: 'doctrine.dbal.catalog_connection')]
+        private Connection $connection,
+    )
     {
     }
 
     /**
      * Full rebuild after an import or a change of {@see Quality} thresholds.
      *
-     * Inserting 20M rows in random order into the clustered (theme_id, rating, random_key,
-     * puzzle_id) key thrashes the buffer pool (it did not finish in 10 min on the benchmark), so the
-     * rows are appended to a shadow table without a primary key, which InnoDB then builds in one
-     * sorted pass; a single atomic RENAME swaps it in. Live selection keeps using the old table
-     * until then. DDL commits implicitly: never call this inside a transaction (tests use
+     * In place, to keep the catalogue's database under the shared host's 1 GB (a shadow copy of
+     * the table would double its ~240 MB at the peak, docs/DEPLOY_OVH.md, § 3): the table is
+     * emptied and loses its primary key, the rows are appended in id chunks, then InnoDB builds the
+     * key in one sorted pass (inserting 20M rows in random order into the clustered key thrashes
+     * the buffer pool: it did not finish in 10 min on the benchmark). Meanwhile {@see RebuildLock}
+     * is held and themed draws refuse ({@see SelectionUnavailableException}); draws without theme
+     * read `puzzle` and go on. If the process dies halfway, the table stays without its primary
+     * key until the next rebuild: `app:deploy:check` reports it.
+     *
+     * DDL commits implicitly: never call this inside a transaction (tests use
      * {@see self::addPuzzles()}).
      *
      * @param (callable(int $done, int $total): void)|null $progress
+     *
+     * @throws \RuntimeException when another rebuild is running
      */
     public function rebuildAll(?callable $progress = null): void
     {
-        $max = $this->connection->fetchOne('SELECT MAX(id) FROM puzzle');
-        $maxId = is_numeric($max) ? (int) $max : 0;
-        $build = self::BUILD_TABLE;
-
-        $this->connection->executeStatement("DROP TABLE IF EXISTS $build");
-        $this->connection->executeStatement("CREATE TABLE $build LIKE puzzle_theme_membership");
-        $this->connection->executeStatement("ALTER TABLE $build DROP PRIMARY KEY");
-
-        for ($from = 1; $from <= $maxId; $from += self::CHUNK_SIZE) {
-            $to = $from + self::CHUNK_SIZE - 1;
-            $this->connection->executeStatement(
-                'UPDATE puzzle SET selectable = (popularity >= :pop AND nb_plays >= :plays) WHERE id BETWEEN :from AND :to',
-                ['pop' => Quality::MIN_POPULARITY, 'plays' => Quality::MIN_PLAYS, 'from' => $from, 'to' => $to],
-            );
-            $this->connection->executeStatement(
-                "INSERT INTO $build (theme_id, rating, random_key, puzzle_id) ".self::SELECT_MEMBERSHIPS.' AND p.id BETWEEN :from AND :to',
-                ['from' => $from, 'to' => $to],
-            );
-
-            if (null !== $progress) {
-                $progress(min($to, $maxId), $maxId);
-            }
+        $lock = new RebuildLock($this->connection);
+        if (!$lock->acquire()) {
+            throw new \RuntimeException('Another rebuild of the selection index is running.');
         }
 
-        $this->connection->executeStatement("ALTER TABLE $build ADD PRIMARY KEY (theme_id, rating, random_key, puzzle_id)");
-        $this->connection->executeStatement("RENAME TABLE puzzle_theme_membership TO puzzle_theme_membership_old, $build TO puzzle_theme_membership");
-        $this->connection->executeStatement('DROP TABLE puzzle_theme_membership_old');
+        try {
+            $max = $this->connection->fetchOne('SELECT MAX(id) FROM puzzle');
+            $maxId = is_numeric($max) ? (int) $max : 0;
 
-        $this->refreshThemeCounts();
+            $this->connection->executeStatement('TRUNCATE TABLE puzzle_theme_membership');
+            if ($this->isComplete()) { // else already dropped by a rebuild that died halfway
+                $this->connection->executeStatement('ALTER TABLE puzzle_theme_membership DROP PRIMARY KEY');
+            }
+
+            for ($from = 1; $from <= $maxId; $from += self::CHUNK_SIZE) {
+                $to = $from + self::CHUNK_SIZE - 1;
+                $this->connection->executeStatement(
+                    'UPDATE puzzle SET selectable = (popularity >= :pop AND nb_plays >= :plays) WHERE id BETWEEN :from AND :to',
+                    ['pop' => Quality::MIN_POPULARITY, 'plays' => Quality::MIN_PLAYS, 'from' => $from, 'to' => $to],
+                );
+                $this->connection->executeStatement(
+                    'INSERT INTO puzzle_theme_membership (theme_id, rating, random_key, puzzle_id) '.self::SELECT_MEMBERSHIPS.' AND p.id BETWEEN :from AND :to',
+                    ['from' => $from, 'to' => $to],
+                );
+
+                if (null !== $progress) {
+                    $progress(min($to, $maxId), $maxId);
+                }
+            }
+
+            $this->connection->executeStatement('ALTER TABLE puzzle_theme_membership ADD PRIMARY KEY (theme_id, rating, random_key, puzzle_id)');
+            $this->refreshThemeCounts();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * False when a rebuild died before rebuilding the primary key: the table is incomplete.
+     */
+    public function isComplete(): bool
+    {
+        return false !== $this->connection->fetchOne(
+            "SELECT 1 FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'puzzle_theme_membership' AND constraint_type = 'PRIMARY KEY'",
+        );
     }
 
     /**

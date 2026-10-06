@@ -2,7 +2,7 @@
   <header class="landing-header" data-testid="landing-header">
     <div class="landing-header__inner">
       <router-link to="/" class="cm-brand-name landing-header__brand"
-        >Chess<span>Mate</span></router-link
+        >Don't Stay <span>Rooky</span></router-link
       >
       <nav class="landing-header__nav">
         <button

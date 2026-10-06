@@ -7,7 +7,7 @@ namespace App\Tests\Functional\Puzzle;
 use App\Enum\Puzzle\ThemeCategory;
 use App\Puzzle\Theme\ThemeCatalog;
 use App\Puzzle\Theme\ThemeSynchronizer;
-use App\Repository\Puzzle\ThemeRepository;
+use App\Repository\Catalog\ThemeRepository;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 final class ThemeSynchronizerTest extends KernelTestCase

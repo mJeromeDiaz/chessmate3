@@ -51,7 +51,7 @@ final readonly class Exporter
         $game = new Game();
         $game->tags = [
             'Event' => $repertoire->getName(),
-            'Site' => 'ChessMate',
+            'Site' => 'Don\'t Stay Rooky',
             'Orientation' => $repertoire->getColor()->value,
             'Result' => '*',
         ];

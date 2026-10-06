@@ -41,7 +41,7 @@ test('the profile shows the design cards with the account data', async ({
   await expect(page.getByTestId('profile-delete')).toBeEnabled()
 
   await expect(page.getByTestId('profile-footer')).toContainText(
-    /ChessMate v\d+\.\d+\.\d+/
+    /Don't Stay Rooky v\d+\.\d+\.\d+/
   )
 })
 
@@ -162,7 +162,7 @@ test('the export downloads a ZIP of the account', async ({ page, context }) => {
   const download = page.waitForEvent('download')
   await page.getByTestId('profile-export').click()
   expect((await download).suggestedFilename()).toMatch(
-    /^chessmate-export-\d{4}-\d{2}-\d{2}\.zip$/
+    /^dontstayrooky-export-\d{4}-\d{2}-\d{2}\.zip$/
   )
 })
 

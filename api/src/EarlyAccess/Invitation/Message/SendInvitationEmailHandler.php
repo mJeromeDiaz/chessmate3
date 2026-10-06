@@ -59,9 +59,9 @@ final readonly class SendInvitationEmailHandler
         $timezone = $invitation->getCreatedBy()?->getDateTimeZone() ?? new \DateTimeZone('UTC');
         $expiresAt = $invitation->getExpiresAt()?->setTimezone($timezone);
         $this->mailer->send((new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($invitation->getEmail())
-            ->subject('Ton invitation à l\'accès anticipé de ChessMate')
+            ->subject('Ton invitation à l\'accès anticipé de Don\'t Stay Rooky')
             ->htmlTemplate('emails/early_access_invitation.html.twig')
             ->textTemplate('emails/early_access_invitation.txt.twig')
             ->context([

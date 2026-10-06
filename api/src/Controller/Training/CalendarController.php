@@ -71,7 +71,7 @@ final class CalendarController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        return new Response($this->writer->calendar($user, [$plan], '' !== $plan->getTitle() ? $plan->getTitle() : 'Session ChessMate'), Response::HTTP_OK, [
+        return new Response($this->writer->calendar($user, [$plan], '' !== $plan->getTitle() ? $plan->getTitle() : 'Session Don\'t Stay Rooky'), Response::HTTP_OK, [
             'Content-Type' => 'text/calendar; charset=UTF-8',
             'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, IcsWriter::fileName($plan)),
             'Cache-Control' => 'private, no-store',

@@ -1,4 +1,4 @@
-# Notifications — ChessMate
+# Notifications — Don't Stay Rooky
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 

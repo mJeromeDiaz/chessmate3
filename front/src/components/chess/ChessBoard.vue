@@ -159,7 +159,7 @@ onMounted(() => {
     assetsUrl: `${import.meta.env.BASE_URL || '/'}chessboard/`,
     style: {
       // Our own theme: square colours come from CSS variables (the user's board theme).
-      cssClass: 'chessmate',
+      cssClass: 'dontstayrooky',
       borderType: BORDER_TYPE.none,
       showCoordinates: true,
       animationDuration: props.animationDuration
@@ -330,29 +330,29 @@ defineExpose({ setPosition, shake })
 </script>
 
 <style lang="scss">
-// The "chessmate" cm-chessboard theme: the squares take the user's board colours.
-.cm-chessboard.chessmate .board .square.white {
+// The "dontstayrooky" cm-chessboard theme: the squares take the user's board colours.
+.cm-chessboard.dontstayrooky .board .square.white {
   fill: var(--cm-board-light);
 }
-.cm-chessboard.chessmate .board .square.black {
+.cm-chessboard.dontstayrooky .board .square.black {
   fill: var(--cm-board-dark);
 }
-.cm-chessboard.chessmate .board .border {
+.cm-chessboard.dontstayrooky .board .border {
   stroke-width: 0;
   fill: var(--cm-board-dark);
 }
-.cm-chessboard.chessmate .coordinates {
+.cm-chessboard.dontstayrooky .coordinates {
   pointer-events: none;
   user-select: none;
 }
-.cm-chessboard.chessmate .coordinates .coordinate {
+.cm-chessboard.dontstayrooky .coordinates .coordinate {
   font-size: 7px;
   cursor: default;
 }
-.cm-chessboard.chessmate .coordinates .coordinate.white {
+.cm-chessboard.dontstayrooky .coordinates .coordinate.white {
   fill: var(--cm-board-dark);
 }
-.cm-chessboard.chessmate .coordinates .coordinate.black {
+.cm-chessboard.dontstayrooky .coordinates .coordinate.black {
   fill: var(--cm-board-light);
 }
 .chess-board {

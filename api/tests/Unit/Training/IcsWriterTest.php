@@ -26,12 +26,12 @@ final class IcsWriterTest extends TestCase
         $user = self::user('Europe/Paris');
         $plan = self::plan($user, Repetition::Daily, '18:30', [5, 1, 2], reminder: true);
 
-        $ics = $this->writer()->calendar($user, [$plan], 'ChessMate');
+        $ics = $this->writer()->calendar($user, [$plan], "Don't Stay Rooky");
         $lines = self::unfold($ics);
 
         self::assertStringStartsWith("BEGIN:VCALENDAR\r\nVERSION:2.0\r\n", $ics);
         self::assertStringEndsWith("END:VCALENDAR\r\n", $ics);
-        self::assertContains('UID:'.$plan->getId()->toRfc4122().'@chessmate', $lines);
+        self::assertContains('UID:'.$plan->getId()->toRfc4122().'@dontstayrooky', $lines);
         // Saved on Monday 12:00 in Paris: the first occurrence is that evening.
         self::assertContains('DTSTART;TZID=Europe/Paris:20260928T183000', $lines);
         self::assertContains('DURATION:PT30M', $lines);
@@ -48,7 +48,7 @@ final class IcsWriterTest extends TestCase
         $weekly = self::plan($user, Repetition::Weekly, '07:00', [3]);
         $onDemand = self::plan($user, Repetition::OnDemand, null, []);
 
-        $ics = $this->writer()->calendar($user, [$weekly, $onDemand], 'ChessMate');
+        $ics = $this->writer()->calendar($user, [$weekly, $onDemand], "Don't Stay Rooky");
 
         self::assertSame(1, substr_count($ics, 'BEGIN:VEVENT'));
         self::assertStringNotContainsString('VALARM', $ics);
@@ -58,7 +58,7 @@ final class IcsWriterTest extends TestCase
     public function testAUtcUserGetsUtcTimesAndNoTimezoneComponent(): void
     {
         $user = self::user('UTC');
-        $ics = $this->writer()->calendar($user, [self::plan($user, Repetition::Weekly, '07:00', [3])], 'ChessMate');
+        $ics = $this->writer()->calendar($user, [self::plan($user, Repetition::Weekly, '07:00', [3])], "Don't Stay Rooky");
 
         self::assertStringNotContainsString('VTIMEZONE', $ics);
         self::assertContains('DTSTART:20260930T070000Z', self::unfold($ics));
@@ -69,7 +69,7 @@ final class IcsWriterTest extends TestCase
         $user = self::user('UTC');
         $plan = self::plan($user, Repetition::Weekly, '07:00', [3], title: str_repeat('é', 100));
 
-        $ics = $this->writer()->calendar($user, [$plan], 'ChessMate');
+        $ics = $this->writer()->calendar($user, [$plan], "Don't Stay Rooky");
 
         foreach (explode("\r\n", $ics) as $line) {
             self::assertLessThanOrEqual(75, \strlen($line));

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Woodpecker;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
 use App\Woodpecker\Event\SetGrown;
 use App\Woodpecker\Integration\ActiveSetExclusion;
@@ -228,8 +228,8 @@ final class LightModeTest extends WoodpeckerWebTestCase
      */
     private function listOf(string $setId): array
     {
-        return array_map(static fn (mixed $id): string => \is_string($id) ? $id : '', self::getContainer()->get(Connection::class)->fetchFirstColumn(
-            'SELECT p.lichess_id FROM woodpecker_set_puzzle sp JOIN puzzle p ON p.id = sp.puzzle_id WHERE sp.set_id = :set ORDER BY sp.position',
+        return array_map(fn (mixed $id): string => $this->puzzleById(is_numeric($id) ? (int) $id : 0)->getLichessId(), self::getContainer()->get(Connection::class)->fetchFirstColumn(
+            'SELECT puzzle_id FROM woodpecker_set_puzzle WHERE set_id = :set ORDER BY position',
             ['set' => Uuid::fromString($setId)->toBinary()],
         ));
     }

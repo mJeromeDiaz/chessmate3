@@ -1,4 +1,4 @@
-# Activité — ChessMate (phase 4, socle)
+# Activité — Don't Stay Rooky (phase 4, socle)
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 

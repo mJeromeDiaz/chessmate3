@@ -6,12 +6,12 @@
 # cache, deployment checks.
 #
 # Usage:  OVH_SSH=<login>@ssh.<cluster>.hosting.ovh.net API_URL=https://api.<domain> deploy/ovh/deploy.sh
-# Optional: REMOTE_DIR (default: chessmate, in the hosting's home), PHP_BIN (default: PHP 8.3's).
+# Optional: REMOTE_DIR (default: dontstayrooky, in the hosting's home), PHP_BIN (default: PHP 8.3's).
 set -euo pipefail
 
 : "${OVH_SSH:?OVH_SSH=<login>@ssh.<cluster>.hosting.ovh.net}"
 : "${API_URL:?API_URL=https://api.<domain>}"
-REMOTE_DIR="${REMOTE_DIR:-chessmate}"
+REMOTE_DIR="${REMOTE_DIR:-dontstayrooky}"
 PHP_BIN="${PHP_BIN:-/usr/local/php8.3/bin/php}"
 
 ROOT="$(git rev-parse --show-toplevel)"
@@ -45,6 +45,7 @@ rsync -az --delete "$BUILD/front/dist/spa/" "$OVH_SSH:$REMOTE_DIR/app/"
 echo "==> On the host: migrations, cache, checks"
 ssh "$OVH_SSH" "set -e; cd $REMOTE_DIR/api \
   && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration \
+  && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --configuration=config/migrations/catalog.php \
   && $PHP_BIN bin/console cache:clear \
   && $PHP_BIN bin/console assets:install public \
   && $PHP_BIN bin/console app:deploy:check"

@@ -6,25 +6,33 @@ namespace App\Puzzle\Selection;
 
 use Doctrine\DBAL\Connection;
 use Random\Randomizer;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Random puzzles without ORDER BY RAND() (docs/PUZZLES.md, "Adaptive selection"): draw a rating t
  * in [low, high] and a random key k, then read the next rows after (t, k) in (rating, random_key)
  * order — one index range scan on `idx_puzzle_selection` (no theme) or on the clustered key of
  * `puzzle_theme_membership` (one per theme, OR) — wrapping around to the start of the range.
- * Selectable puzzles only. Shared by the rated selection and the Woodpecker set generator.
+ * Selectable puzzles only. Shared by the rated selection and the Woodpecker set generator. Reads
+ * the catalogue's database only (docs/DEPLOY_OVH.md, § 3).
+ *
+ * While `puzzle_theme_membership` is rebuilt in place ({@see RebuildLock}), a themed draw throws
+ * {@see SelectionUnavailableException}; a draw without theme reads `puzzle` and goes on.
  */
 final class RandomSeeker
 {
     private const MAX_RANDOM_KEY = 0xFFFFFFFF;
 
     private readonly Randomizer $randomizer;
+    private readonly RebuildLock $rebuildLock;
 
     public function __construct(
+        #[Autowire(service: 'doctrine.dbal.catalog_connection')]
         private readonly Connection $connection,
         ?Randomizer $randomizer = null,
     ) {
         $this->randomizer = $randomizer ?? new Randomizer();
+        $this->rebuildLock = new RebuildLock($connection);
     }
 
     /**
@@ -33,6 +41,8 @@ final class RandomSeeker
      * @param list<int> $themeIds puzzle_theme ids (OR); empty = any theme
      *
      * @return list<int>
+     *
+     * @throws SelectionUnavailableException themed draw during a rebuild of the selection index
      */
     public function draw(array $themeIds, int $low, int $high, int $limit): array
     {
@@ -43,6 +53,9 @@ final class RandomSeeker
             return $this->seek('puzzle', 'id', 'selectable = 1', [], $low, $high, $rating, $key, $limit);
         }
 
+        if ($this->rebuildLock->isHeld()) {
+            throw new SelectionUnavailableException();
+        }
         $ids = [];
         foreach ($themeIds as $themeId) {
             $ids[] = $this->seek('puzzle_theme_membership', 'puzzle_id', 'theme_id = :theme', ['theme' => $themeId], $low, $high, $rating, $key, $limit);

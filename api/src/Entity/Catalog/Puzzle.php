@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Puzzle;
+namespace App\Entity\Catalog;
 
 use App\Puzzle\Selection\Quality;
-use App\Repository\Puzzle\PuzzleRepository;
+use App\Repository\Catalog\PuzzleRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 

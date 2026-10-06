@@ -3,7 +3,9 @@
  *
  * In production the API only says which status it answered (its messages are for debugging),
  * so each page maps the statuses it expects to its own wording. Validation errors (422) are the
- * exception: their per-field messages are meant for users and are shown as they are.
+ * exception: their per-field messages are meant for users and are shown as they are, and so is the
+ * 503 of a themed puzzle while the catalogue's selection index is rebuilt (`X-Puzzle-Maintenance`),
+ * which any page drawing puzzles may receive.
  *
  * @param {unknown} error an axios error
  * @param {Record<number, string>} byStatus
@@ -16,10 +18,16 @@ export function apiErrorMessage(
   fallback = 'Une erreur est survenue. Réessayez.'
 ) {
   const response =
-    /** @type {{response?: {status: number, data?: any}}} */ (error)?.response
+    /** @type {{response?: {status: number, data?: any, headers?: Record<string, string>}}} */ (
+      error
+    )?.response
 
   if (!response) {
     return 'Le serveur est injoignable. Vérifiez votre connexion.'
+  }
+
+  if (response.status === 503 && response.headers?.['x-puzzle-maintenance']) {
+    return 'Le catalogue de puzzles est en maintenance. Réessayez dans une minute.'
   }
 
   if (byStatus[response.status]) {

@@ -8,9 +8,8 @@ use App\Entity\Puzzle\Attempt;
 use App\Enum\Puzzle\Difficulty;
 use App\Puzzle\Selection\PuzzleSelector;
 use App\Puzzle\Selection\SelectionCriteria;
+use App\Repository\Catalog\ThemeRepository;
 use App\Repository\Puzzle\AttemptRepository;
-use App\Repository\Puzzle\ThemeRepository;
-use Doctrine\DBAL\Connection;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
 
@@ -23,7 +22,7 @@ final class PuzzleSelectorTest extends PuzzleWebTestCase
         parent::setUp();
         $container = self::getContainer();
         $this->selector = new PuzzleSelector(
-            $container->get(Connection::class),
+            $container->get('doctrine.dbal.catalog_connection'),
             $container->get(AttemptRepository::class),
             randomizer: new Randomizer(new Mt19937(42)),
         );
@@ -108,7 +107,7 @@ final class PuzzleSelectorTest extends PuzzleWebTestCase
     public function testUnselectablePuzzlesAreNeverServed(): void
     {
         $user = $this->createUser('alice@example.com');
-        $connection = self::getContainer()->get(Connection::class);
+        $connection = $this->catalog->getConnection();
         $connection->executeStatement('UPDATE puzzle SET selectable = 0');
         $connection->executeStatement('DELETE FROM puzzle_theme_membership');
 
@@ -127,16 +126,5 @@ final class PuzzleSelectorTest extends PuzzleWebTestCase
             static fn ($theme): int => (int) $theme->getId(),
             self::getContainer()->get(ThemeRepository::class)->findByKeys($keys),
         );
-    }
-
-    private function puzzleById(int $id): \App\Entity\Puzzle\Puzzle
-    {
-        foreach ($this->puzzles as $puzzle) {
-            if ($puzzle->getId() === $id) {
-                return $puzzle;
-            }
-        }
-
-        self::fail("Unknown puzzle $id");
     }
 }

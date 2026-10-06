@@ -1,4 +1,4 @@
-# chessmate4 (chessmate)
+# Don't Stay Rooky (front)
 
 ## Install the dependencies
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Woodpecker;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
 use App\Woodpecker\Integration\ActiveSetExclusion;
 use Doctrine\DBAL\Exception\DriverException;

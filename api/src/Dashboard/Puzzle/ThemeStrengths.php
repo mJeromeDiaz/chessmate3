@@ -11,13 +11,15 @@ use App\Enum\Puzzle\ThemeCategory;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Strong and weak puzzle themes (docs/DASHBOARD.md), over the rated puzzles attempted in the period
  * (Woodpecker repeats its puzzles and would weigh them several times). A success is a puzzle solved
  * without help: no mistake, hint or solution, as for the rating. A theme counts from
  * {@see MIN_ATTEMPTS} attempts; lengths, goals and origins (short, advantage, master...) are not
- * themes to work on and are left out.
+ * themes to work on and are left out. Their keys come from the catalogue's database, the attempts
+ * (with a copy of their puzzle's themes) from the main one (docs/DEPLOY_OVH.md, § 3).
  *
  * @phpstan-type ThemeRow array{key: string, attempts: int, successCount: int, successRate: float}
  * @phpstan-type Themes array{attempts: int, successCount: int, minAttempts: int, themes: list<ThemeRow>, strong: list<ThemeRow>, weak: list<ThemeRow>}
@@ -30,8 +32,11 @@ final class ThemeStrengths
 
     private const LEFT_OUT = [ThemeCategory::Lengths, ThemeCategory::Goals, ThemeCategory::Origin];
 
-    public function __construct(private readonly Connection $connection)
-    {
+    public function __construct(
+        private readonly Connection $connection,
+        #[Autowire(service: 'doctrine.dbal.catalog_connection')]
+        private readonly Connection $catalog,
+    ) {
     }
 
     /**
@@ -64,7 +69,7 @@ final class ThemeStrengths
             [...$params, 'min' => self::MIN_ATTEMPTS],
             [...$types, 'min' => ParameterType::INTEGER],
         );
-        $leftOut = array_flip(array_filter($this->connection->fetchFirstColumn(
+        $leftOut = array_flip(array_filter($this->catalog->fetchFirstColumn(
             'SELECT theme_key FROM puzzle_theme WHERE category IN (:categories)',
             ['categories' => array_map(static fn (ThemeCategory $category): string => $category->value, self::LEFT_OUT)],
             ['categories' => ArrayParameterType::STRING],

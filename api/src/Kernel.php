@@ -2,7 +2,9 @@
 
 namespace App;
 
+use App\Doctrine\Mapping\CatalogMappingPass;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 
 class Kernel extends BaseKernel
@@ -17,5 +19,10 @@ class Kernel extends BaseKernel
         date_default_timezone_set('UTC');
 
         parent::boot();
+    }
+
+    protected function build(ContainerBuilder $container): void
+    {
+        $container->addCompilerPass(new CatalogMappingPass());
     }
 }

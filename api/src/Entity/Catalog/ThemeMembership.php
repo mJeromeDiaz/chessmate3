@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Puzzle;
+namespace App\Entity\Catalog;
 
-use App\Repository\Puzzle\ThemeMembershipRepository;
+use App\Repository\Catalog\ThemeMembershipRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 

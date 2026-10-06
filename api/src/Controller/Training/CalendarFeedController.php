@@ -40,9 +40,9 @@ final class CalendarFeedController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        return new Response($this->writer->calendar($user, $this->plans->findInCalendar($user), 'ChessMate — sessions'), Response::HTTP_OK, [
+        return new Response($this->writer->calendar($user, $this->plans->findInCalendar($user), 'Don\'t Stay Rooky — sessions'), Response::HTTP_OK, [
             'Content-Type' => 'text/calendar; charset=UTF-8',
-            'Content-Disposition' => 'inline; filename="chessmate.ics"',
+            'Content-Disposition' => 'inline; filename="dontstayrooky.ics"',
             'Cache-Control' => 'private, no-cache',
             'X-Robots-Tag' => 'noindex',
         ]);

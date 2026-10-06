@@ -9,6 +9,9 @@ test('landing: a visitor sees the landing page with its own header', async ({
   await expect(page.getByTestId('landing-header')).toBeVisible()
   // The layout's header is replaced, not stacked.
   await expect(page.locator('.app-header')).toHaveCount(0)
+  await expect(page.getByTestId('landing-header')).toContainText(
+    "Don't Stay Rooky"
+  )
 
   // All eight modules, those not built yet tagged "Bientôt".
   await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(8)
@@ -59,4 +62,21 @@ test('landing: a signed-in user gets the dashboard and the app header', async ({
   await expect(page.getByTestId('dashboard')).toBeVisible()
   await expect(page.getByTestId('landing')).toHaveCount(0)
   await expect(page.locator('.app-header')).toBeVisible()
+})
+
+test('landing: the hero shows the slogans in turn', async ({ page }) => {
+  await page.clock.install()
+  await page.goto('/#/')
+  const slogan = page.getByTestId('landing-slogan')
+  const shown = slogan.locator('[aria-hidden="false"]')
+
+  await expect(shown).toHaveText(
+    "Don't Stay Rooky ! Stop taking checkmate and find a mate !"
+  )
+  await page.clock.runFor(6000)
+  await expect(shown).toHaveText("Don't Stay Rooky ! Become the King !")
+  await page.clock.runFor(6000)
+  await expect(shown).toHaveText(
+    "Don't Stay Rooky ! Stop taking checkmate and find a mate !"
+  )
 })

@@ -103,7 +103,7 @@ export async function unsubscribePush() {
 /** @type {Record<PushState, string>} */
 export const PUSH_STATE_TEXT = {
   unsupported:
-    'Ce navigateur ne reçoit pas de notifications (sur iPhone, ajoute d’abord ChessMate à l’écran d’accueil).',
+    "Ce navigateur ne reçoit pas de notifications (sur iPhone, ajoute d’abord Don't Stay Rooky à l’écran d’accueil).",
   unavailable:
     'Les notifications du navigateur ne sont pas disponibles pour le moment.',
   denied:

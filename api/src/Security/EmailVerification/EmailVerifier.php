@@ -48,7 +48,7 @@ final readonly class EmailVerifier
         );
 
         $message = (new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($email)
             ->subject('Confirmez votre adresse email')
             ->htmlTemplate('emails/verify_email.html.twig')

@@ -107,9 +107,9 @@ final readonly class AccountDeletion
         $request = $this->requestStack->getCurrentRequest();
         // Delivered before being stored: if sending fails, no code is left behind.
         $this->syncMailer->send((new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($email)
-            ->subject('Confirmez la suppression de votre compte ChessMate')
+            ->subject('Confirmez la suppression de votre compte Don\'t Stay Rooky')
             ->htmlTemplate('emails/account_deletion_code.html.twig')
             ->textTemplate('emails/account_deletion_code.txt.twig')
             ->context([
@@ -176,7 +176,7 @@ final readonly class AccountDeletion
         $user->scheduleDeletion($scheduledAt)->bumpTokenVersion();
         $this->users->save($user);
         $this->auditLogger->log(AuditEventType::AccountDeletionScheduled, $user, [...$metadata, 'scheduledAt' => $scheduledAt->format(\DATE_ATOM)]);
-        $this->notify($user, 'account_deletion_scheduled', 'Suppression de votre compte ChessMate programmée', ['scheduledAt' => $scheduledAt]);
+        $this->notify($user, 'account_deletion_scheduled', 'Suppression de votre compte Don\'t Stay Rooky programmée', ['scheduledAt' => $scheduledAt]);
 
         // Last: the bulk revocation clears the entity manager, detaching $user.
         $this->refreshTokens->revokeAllSessions($user);
@@ -195,7 +195,7 @@ final readonly class AccountDeletion
         $user->cancelDeletion();
         $this->users->save($user);
         $this->auditLogger->log(AuditEventType::AccountDeletionCancelled, $user);
-        $this->notify($user, 'account_deletion_cancelled', 'Suppression de votre compte ChessMate annulée', []);
+        $this->notify($user, 'account_deletion_cancelled', 'Suppression de votre compte Don\'t Stay Rooky annulée', []);
     }
 
     /**
@@ -208,7 +208,7 @@ final readonly class AccountDeletion
             return;
         }
         $this->mailer->send((new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($email)
             ->subject($subject)
             ->htmlTemplate(\sprintf('emails/%s.html.twig', $template))

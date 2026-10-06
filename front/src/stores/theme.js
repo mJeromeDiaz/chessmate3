@@ -5,7 +5,7 @@ import { profileApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 
 /** Where this browser keeps the choice, to apply it before the profile is loaded. */
-export const THEME_KEY = 'chessmate.theme'
+export const THEME_KEY = 'dontstayrooky.theme'
 
 /** @typedef {'auto'|'light'|'dark'} Theme */
 

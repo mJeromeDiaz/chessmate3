@@ -1,4 +1,4 @@
-# Répertoire d'ouvertures — ChessMate (phase 5)
+# Répertoire d'ouvertures — Don't Stay Rooky (phase 5)
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 > Lot A (construction des répertoires) : échecs côté serveur, modèle et éditeur de graphe, API,

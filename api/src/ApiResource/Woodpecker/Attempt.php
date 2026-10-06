@@ -12,10 +12,10 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use App\ApiResource\Puzzle\PuzzleView;
 use App\ApiResource\Puzzle\SubmitAttemptInput;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Woodpecker\Attempt as AttemptEntity;
 use App\State\Woodpecker\NextAttemptProcessor;
 use App\State\Woodpecker\SubmitAttemptProcessor;
-use App\Entity\Puzzle\Puzzle;
 
 /**
  * A puzzle of the current cycle run. The solution travels with it (instant feedback, as in

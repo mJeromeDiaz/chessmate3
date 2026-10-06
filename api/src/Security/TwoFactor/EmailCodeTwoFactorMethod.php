@@ -52,9 +52,9 @@ final readonly class EmailCodeTwoFactorMethod implements TwoFactorMethodInterfac
         $challenge->setCodeHash($this->hashCode($code));
 
         $message = (new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to((string) $challenge->getUser()->getEmail())
-            ->subject('Votre code de connexion ChessMate')
+            ->subject('Votre code de connexion Don\'t Stay Rooky')
             ->htmlTemplate('emails/mfa_code.html.twig')
             ->textTemplate('emails/mfa_code.txt.twig')
             ->context([

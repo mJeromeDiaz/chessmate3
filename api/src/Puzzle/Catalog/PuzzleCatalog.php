@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Puzzle\Catalog;
 
-use App\Entity\Puzzle\Puzzle;
-use App\Repository\Puzzle\PuzzleRepository;
+use App\Entity\Catalog\Puzzle;
+use App\Repository\Catalog\PuzzleRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * The puzzles behind the ids that attempts and Woodpecker sets keep (docs/DEPLOY_OVH.md, § 3): the
@@ -14,8 +16,11 @@ use App\Repository\Puzzle\PuzzleRepository;
  */
 final readonly class PuzzleCatalog
 {
-    public function __construct(private PuzzleRepository $puzzles)
-    {
+    public function __construct(
+        private PuzzleRepository $puzzles,
+        #[Autowire(service: 'doctrine.orm.catalog_entity_manager')]
+        private EntityManagerInterface $entityManager,
+    ) {
     }
 
     public function find(int $id): ?Puzzle
@@ -59,5 +64,14 @@ final readonly class PuzzleCatalog
     public function lichessIds(iterable $ids): array
     {
         return $this->puzzles->findLichessIds([...$ids]);
+    }
+
+    /**
+     * Detaches the puzzles loaded so far: batch jobs call it with their own `clear()`, which only
+     * reaches the main database's entity manager.
+     */
+    public function clear(): void
+    {
+        $this->entityManager->clear();
     }
 }

@@ -39,7 +39,7 @@ final class CalendarTest extends WoodpeckerWebTestCase
         self::assertSame('text/calendar; charset=UTF-8', $response->headers->get('Content-Type'));
         $ics = (string) $response->getContent();
         self::assertSame(1, substr_count($ics, 'BEGIN:VEVENT'));
-        self::assertStringContainsString('UID:'.$evening['id'].'@chessmate', $ics);
+        self::assertStringContainsString('UID:'.$evening['id'].'@dontstayrooky', $ics);
         self::assertStringContainsString('DTSTART;TZID=Europe/Paris:20260928T183000', $ics);
 
         // Only a hash and an encrypted copy are stored.

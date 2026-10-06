@@ -5,7 +5,7 @@
       <router-link to="/confidentialite">Confidentialité</router-link>
       <router-link to="/contact">Contact</router-link>
     </nav>
-    <div>ChessMate v{{ version }}</div>
+    <div>Don't Stay Rooky v{{ version }}</div>
   </footer>
 </template>
 

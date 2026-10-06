@@ -117,7 +117,7 @@ function unlink(identity) {
   $q.dialog({
     title: `Déconnecter ${providerLabel(identity.provider)} ?`,
     message:
-      'Tu ne pourras plus te connecter avec ce compte. Tes autres sessions seront fermées. Tes données ChessMate restent sauvegardées.',
+      "Tu ne pourras plus te connecter avec ce compte. Tes autres sessions seront fermées. Tes données Don't Stay Rooky restent sauvegardées.",
     cancel: true
   }).onOk(async () => {
     busy.value = identity.id

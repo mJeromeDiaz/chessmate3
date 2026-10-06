@@ -110,7 +110,7 @@ describe('useExplorer', () => {
       { speeds: ['blitz', 'rapid'], ratings: [1800, 2000] },
       expect.any(AbortSignal)
     )
-    expect(JSON.parse(localStorage.getItem('chessmate.explorer'))).toEqual({
+    expect(JSON.parse(localStorage.getItem('dontstayrooky.explorer'))).toEqual({
       source: 'lichess',
       speeds: ['rapid', 'blitz'],
       ratings: [2000, 1800]

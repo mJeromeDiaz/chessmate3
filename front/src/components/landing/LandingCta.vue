@@ -29,7 +29,7 @@
     </div>
     <footer class="landing-footer">
       <div class="cm-brand-name landing-footer__brand"
-        >Chess<span>Mate</span></div
+        >Don't Stay <span>Rooky</span></div
       >
       <nav class="landing-footer__links">
         <router-link to="/conditions">Conditions d’utilisation</router-link>

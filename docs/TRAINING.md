@@ -1,4 +1,4 @@
-# Séances chronométrées — ChessMate (phase 4b)
+# Séances chronométrées — Don't Stay Rooky (phase 4b)
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
@@ -383,7 +383,7 @@ Règles validées (2026-10-04) :
   (`DTSTART;TZID=<fuseau de l'utilisateur>`, `VTIMEZONE` dérivé des transitions de PHP ; heures UTC
   pour un utilisateur sans fuseau), durée = somme des modules, première occurrence = la prochaine
   après la dernière modification (l'agenda ne réécrit pas le passé). `VALARM` seulement si la
-  session a un rappel (même délai). UID stable `<id du plan>@chessmate`.
+  session a un rappel (même délai). UID stable `<id du plan>@dontstayrooky`.
 - Une session répétée se télécharge aussi en `.ics` (« Mes sessions », icône agenda) : import
   ponctuel, qui ne suit pas les changements.
 - Écrivain maison (`IcsWriter`) : les bibliothèques disponibles n'écrivent pas de `RRULE`. Lignes

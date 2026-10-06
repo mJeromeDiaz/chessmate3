@@ -112,7 +112,7 @@ export const profileApi = {
       fileName:
         /filename="?([^";]+)"?/.exec(
           r.headers['content-disposition'] ?? ''
-        )?.[1] ?? 'chessmate-export.zip'
+        )?.[1] ?? 'dontstayrooky-export.zip'
     })),
   /**
    * Starts an account deletion: a code emailed (`email`), or, without a verified email, whether

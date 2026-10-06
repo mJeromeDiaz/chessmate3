@@ -105,9 +105,9 @@ final readonly class PasswordAdder
         $request = $this->requestStack->getCurrentRequest();
 
         $this->mailer->send((new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($email)
-            ->subject('Un mot de passe a été ajouté à votre compte ChessMate')
+            ->subject('Un mot de passe a été ajouté à votre compte Don\'t Stay Rooky')
             ->htmlTemplate('emails/password_added.html.twig')
             ->textTemplate('emails/password_added.txt.twig')
             ->context([
@@ -122,9 +122,9 @@ final readonly class PasswordAdder
     private function notifyAddressInUse(string $email): void
     {
         $this->mailer->send((new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($email)
-            ->subject('Votre adresse email ChessMate')
+            ->subject('Votre adresse email Don\'t Stay Rooky')
             ->htmlTemplate('emails/email_already_in_use.html.twig')
             ->textTemplate('emails/email_already_in_use.txt.twig')
             ->context([

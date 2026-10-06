@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Ops\Check;
 
+use App\Puzzle\Selection\RebuildLock;
+use App\Puzzle\Selection\SelectionRebuilder;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -23,6 +25,9 @@ final readonly class DeploymentChecker
 
     public function __construct(
         private Connection $connection,
+        #[Autowire(service: 'doctrine.dbal.catalog_connection')]
+        private Connection $catalog,
+        private SelectionRebuilder $selection,
         private HttpClientInterface $httpClient,
         #[Autowire('%kernel.environment%')]
         private string $environment,
@@ -78,7 +83,7 @@ final readonly class DeploymentChecker
         $checks = [...$checks, ...$this->database()];
 
         foreach (['cache' => $this->cacheDir, 'logs' => $this->logsDir] as $name => $dir) {
-            $checks[] = self::check('var/'.$name, is_dir($dir) && is_writable($dir) ? 'ok' : 'error', $dir);
+            $checks[] = self::writableDir('var/'.$name, $dir);
         }
         foreach (['JWT private key' => $this->jwtSecretKey, 'JWT public key' => $this->jwtPublicKey] as $name => $path) {
             $checks[] = self::check($name, is_readable($path) ? 'ok' : 'error', is_readable($path) ? 'readable' : 'unreadable: '.$path);
@@ -135,7 +140,36 @@ final readonly class DeploymentChecker
         $tables = $this->connection->createSchemaManager()->listTableNames();
         $checks[] = self::check('Messenger table', \in_array('messenger_messages', $tables, true) ? 'ok' : 'error', \in_array('messenger_messages', $tables, true) ? 'messenger_messages' : 'missing: run the migrations');
 
-        return $checks;
+        return [...$checks, $this->catalog()];
+    }
+
+    /**
+     * The puzzle catalogue's database (docs/DEPLOY_OVH.md, § 3): reachable, migrated, filled, and
+     * not left halfway by a rebuild of the selection index that died.
+     *
+     * @return Check
+     */
+    private function catalog(): array
+    {
+        try {
+            $tables = $this->catalog->createSchemaManager()->listTableNames();
+            if (!\in_array('puzzle', $tables, true) || !\in_array('puzzle_theme_membership', $tables, true)) {
+                return self::check('Puzzle catalogue', 'error', 'tables missing: run the catalogue migrations (--configuration=config/migrations/catalog.php)');
+            }
+            if ((new RebuildLock($this->catalog))->isHeld()) {
+                return self::check('Puzzle catalogue', 'warning', 'selection index being rebuilt: themed puzzles are paused for a minute or two');
+            }
+            if (!$this->selection->isComplete()) {
+                return self::check('Puzzle catalogue', 'error', 'selection index incomplete (a rebuild was interrupted): run app:puzzle:rebuild-selection');
+            }
+            $filled = false !== $this->catalog->fetchOne('SELECT 1 FROM puzzle_theme_membership LIMIT 1');
+        } catch (\Throwable $exception) {
+            return self::check('Puzzle catalogue', 'error', 'unreachable: '.$exception->getMessage());
+        }
+
+        return $filled
+            ? self::check('Puzzle catalogue', 'ok', 'puzzles indexed for selection')
+            : self::check('Puzzle catalogue', 'warning', 'no puzzle to serve: import the catalogue, then app:puzzle:rebuild-selection (docs/PUZZLE_IMPORT.md)');
     }
 
     /**
@@ -150,6 +184,23 @@ final readonly class DeploymentChecker
         } catch (\Throwable $exception) {
             return self::check('Outgoing HTTPS', 'error', 'blocked: '.$exception->getMessage());
         }
+    }
+
+    /**
+     * Writable, or absent but creatable: nothing creates `var/log` while the logs go to stderr (no
+     * MonologBundle), and Symfony creates it on its first write otherwise.
+     *
+     * @return Check
+     */
+    private static function writableDir(string $name, string $dir): array
+    {
+        if (is_dir($dir)) {
+            return self::check($name, is_writable($dir) ? 'ok' : 'error', is_writable($dir) ? $dir : 'not writable: '.$dir);
+        }
+
+        return is_writable(\dirname($dir))
+            ? self::check($name, 'ok', 'absent, creatable: '.$dir)
+            : self::check($name, 'error', 'absent and not creatable: '.$dir);
     }
 
     /**

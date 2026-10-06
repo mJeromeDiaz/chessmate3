@@ -29,7 +29,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final class LichessGateway
 {
-    public const LOCK_NAME = 'chessmate.lichess';
+    public const LOCK_NAME = 'dontstayrooky.lichess';
     public const LOCK_WAIT_SECONDS = 3;
     public const PAUSE_SECONDS = 60;
     private const PAUSE_KEY = 'lichess.paused_until';

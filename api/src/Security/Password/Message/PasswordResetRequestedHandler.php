@@ -78,9 +78,9 @@ final readonly class PasswordResetRequestedHandler
     private function send(PasswordResetRequested $message, string $template, array $context): void
     {
         $this->mailer->send((new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($message->email)
-            ->subject('Réinitialisation de votre mot de passe ChessMate')
+            ->subject('Réinitialisation de votre mot de passe Don\'t Stay Rooky')
             ->htmlTemplate($template.'.html.twig')
             ->textTemplate($template.'.txt.twig')
             ->context($context + [

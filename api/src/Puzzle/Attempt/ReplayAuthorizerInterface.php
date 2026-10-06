@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Puzzle\Attempt;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 

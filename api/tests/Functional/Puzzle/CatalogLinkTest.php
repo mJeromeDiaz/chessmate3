@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Puzzle;
 
 use App\Entity\Puzzle\Attempt;
-use Doctrine\DBAL\Connection;
 
 /**
  * Attempts keep the puzzle's id and a copy of its themes (docs/DEPLOY_OVH.md, § 3): the catalogue
@@ -43,7 +42,7 @@ final class CatalogLinkTest extends PuzzleWebTestCase
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
         $theme = $this->puzzles[$started['puzzle']['id']]->getThemes()[0];
 
-        self::getContainer()->get(Connection::class)->executeStatement(
+        $this->catalog->getConnection()->executeStatement(
             'UPDATE puzzle SET themes = JSON_ARRAY(\'retagged\') WHERE id = :id',
             ['id' => $this->puzzles[$started['puzzle']['id']]->getId()],
         );

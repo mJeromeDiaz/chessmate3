@@ -44,7 +44,7 @@ final class LichessOAuthTest extends OAuthWebTestCase
 
         parse_str((string) parse_url($location, \PHP_URL_QUERY), $query);
         self::assertSame('code', $query['response_type'] ?? null);
-        self::assertSame('chessmate-test', $query['client_id'] ?? null);
+        self::assertSame('dontstayrooky-test', $query['client_id'] ?? null);
         self::assertSame('http://localhost/api/auth/oauth/lichess/callback', $query['redirect_uri'] ?? null);
         self::assertSame('S256', $query['code_challenge_method'] ?? null);
         self::assertArrayNotHasKey('scope', $query);

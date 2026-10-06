@@ -104,6 +104,14 @@ export const LANDING_IMAGES = {
   albertJoy: profImage('albert-joy')
 }
 
+/** The hero's title: the slogans, shown in turn ({@link HERO_SLOGAN_INTERVAL_MS} each). */
+export const HERO_SLOGANS = [
+  "Don't Stay Rooky ! Stop taking checkmate and find a mate !",
+  "Don't Stay Rooky ! Become the King !"
+]
+
+export const HERO_SLOGAN_INTERVAL_MS = 6000
+
 /** The in-page sections reachable from the header. */
 export const LANDING_ANCHORS = [
   { id: 'modules', label: 'Modules' },

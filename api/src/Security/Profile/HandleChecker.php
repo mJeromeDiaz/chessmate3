@@ -21,7 +21,7 @@ final readonly class HandleChecker
 
     /** Names that could pass for the app or its staff. */
     private const array RESERVED_HANDLES = [
-        'admin', 'administrator', 'api', 'chessmate', 'contact', 'help', 'lichess', 'mod',
+        'admin', 'administrator', 'api', 'chessmate', 'contact', 'dontstayrooky', 'help', 'lichess', 'mod',
         'moderator', 'null', 'root', 'staff', 'support', 'system', 'undefined',
     ];
 

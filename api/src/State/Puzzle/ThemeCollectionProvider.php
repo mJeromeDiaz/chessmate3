@@ -7,7 +7,7 @@ namespace App\State\Puzzle;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Puzzle\Theme;
-use App\Repository\Puzzle\ThemeRepository;
+use App\Repository\Catalog\ThemeRepository;
 
 /**
  * GET /puzzles/themes: ~75 rows read by primary key order, counts precomputed: no COUNT here.

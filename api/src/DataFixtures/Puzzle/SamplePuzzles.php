@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataFixtures\Puzzle;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 
 /**
  * 50 real Lichess puzzles in the exact format of the Lichess CSV export (with its header line), so

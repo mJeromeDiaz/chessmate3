@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Puzzle;
+namespace App\Repository\Catalog;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Persistence\ManagerRegistry;
@@ -22,7 +22,7 @@ class PuzzleRepository extends ServiceEntityRepository
     /**
      * Lichess ids of these puzzles, without loading them (exports: thousands of ids).
      *
-     * @param list<int> $ids
+     * @param array<int> $ids
      *
      * @return array<int, string> by id
      */
@@ -36,7 +36,9 @@ class PuzzleRepository extends ServiceEntityRepository
                 ['ids' => ArrayParameterType::INTEGER],
             );
             foreach ($rows as $id => $lichessId) {
-                $byId[(int) $id] = (string) $lichessId;
+                if (\is_string($lichessId)) {
+                    $byId[(int) $id] = $lichessId;
+                }
             }
         }
 

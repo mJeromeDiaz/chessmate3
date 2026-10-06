@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Puzzle\Theme;
 
-use App\Entity\Puzzle\Theme;
-use App\Repository\Puzzle\ThemeRepository;
+use App\Entity\Catalog\Theme;
+use App\Repository\Catalog\ThemeRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Upserts {@see ThemeCatalog} into `puzzle_theme`. Idempotent: existing rows keep their id (which
@@ -16,6 +17,7 @@ final class ThemeSynchronizer
 {
     public function __construct(
         private ThemeRepository $themes,
+        #[Autowire(service: 'doctrine.orm.catalog_entity_manager')]
         private EntityManagerInterface $entityManager,
     ) {
     }

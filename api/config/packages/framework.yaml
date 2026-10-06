@@ -30,6 +30,8 @@ framework:
     exceptions:
         App\State\Repertoire\LichessUnavailableHttpException:
             log_level: warning
+        App\State\Puzzle\PuzzleMaintenanceHttpException:
+            log_level: warning
 
     cache:
         pools:

@@ -7,7 +7,7 @@ namespace App\ApiResource\Puzzle;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
-use App\Entity\Puzzle\Puzzle as PuzzleEntity;
+use App\Entity\Catalog\Puzzle as PuzzleEntity;
 use App\State\Puzzle\PuzzleProvider;
 
 /**

@@ -18,7 +18,7 @@ import { browserTimezone } from '@/utils/timezone'
 function withCrossTabLock(task) {
   const locks = globalThis.navigator?.locks
 
-  return locks ? locks.request('chessmate-auth-refresh', task) : task()
+  return locks ? locks.request('dontstayrooky-auth-refresh', task) : task()
 }
 
 /**

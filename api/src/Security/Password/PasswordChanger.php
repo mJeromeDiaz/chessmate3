@@ -81,9 +81,9 @@ final readonly class PasswordChanger
         $request = $this->requestStack->getCurrentRequest();
 
         $message = (new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($email)
-            ->subject('Votre mot de passe ChessMate a été modifié')
+            ->subject('Votre mot de passe Don\'t Stay Rooky a été modifié')
             ->htmlTemplate('emails/password_changed.html.twig')
             ->textTemplate('emails/password_changed.txt.twig')
             ->context([

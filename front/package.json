@@ -1,8 +1,8 @@
 {
-  "name": "chessmate",
+  "name": "dontstayrooky",
   "version": "0.0.1",
   "private": true,
-  "description": "A Quasar Project",
+  "description": "Don't Stay Rooky ! Stop taking checkmate and find a mate !",
   "keywords": [
     "quasar",
     "quasar-app",
@@ -22,7 +22,7 @@
     "postinstall": "quasar prepare --silent",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e:prepare": "cd ../api && export APP_ENV=e2e && php -d xdebug.mode=off bin/console doctrine:database:create --if-not-exists && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n && php -d xdebug.mode=off bin/console doctrine:fixtures:load -n",
+    "e2e:prepare": "cd ../api && export APP_ENV=e2e && php -d xdebug.mode=off bin/console doctrine:database:create --if-not-exists && php -d xdebug.mode=off bin/console doctrine:database:create --connection=catalog --if-not-exists && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n --configuration=config/migrations/catalog.php && php -d xdebug.mode=off bin/console doctrine:fixtures:load -n",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -53,5 +53,5 @@
   "engines": {
     "node": ">= 26 || ^24 || ^22.12"
   },
-  "productName": "chessmate4"
+  "productName": "Don't Stay Rooky"
 }

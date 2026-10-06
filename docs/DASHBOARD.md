@@ -1,4 +1,4 @@
-# Dashboard — ChessMate (phase 6, première version)
+# Dashboard — Don't Stay Rooky (phase 6, première version)
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 

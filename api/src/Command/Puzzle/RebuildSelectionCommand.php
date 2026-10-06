@@ -15,7 +15,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Post-import step (docs/PUZZLE_IMPORT.md), also needed after changing the {@see Quality}
  * thresholds: recomputes `puzzle.selectable`, rebuilds `puzzle_theme_membership` and the
- * per-theme counts. Not an import: it only reads the `puzzle` table.
+ * per-theme counts. Not an import: it only reads the `puzzle` table. Themed puzzles are paused
+ * meanwhile ({@see SelectionRebuilder::rebuildAll()}).
  */
 #[AsCommand(name: 'app:puzzle:rebuild-selection', description: 'Rebuilds the puzzle selection index and theme counts')]
 final class RebuildSelectionCommand extends Command

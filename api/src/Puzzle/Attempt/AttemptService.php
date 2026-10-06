@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Puzzle\Attempt;
 
 use App\Activity\EventPublisher;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt;
-use App\Entity\Puzzle\Puzzle;
 use App\Entity\Puzzle\RatingChange;
 use App\Entity\Training\Run;
 use App\Entity\User;

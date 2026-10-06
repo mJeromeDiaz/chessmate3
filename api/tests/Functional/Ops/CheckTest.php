@@ -34,6 +34,8 @@ final class CheckTest extends WebTestCase
         self::assertSame('ok', $checks['MySQL']['level'] ?? null);
         self::assertSame('ok', $checks['ext-sodium']['level'] ?? null);
         self::assertSame('ok', $checks['Messenger table']['level'] ?? null);
+        // The test catalogue is migrated but empty: nothing to serve yet.
+        self::assertSame('warning', $checks['Puzzle catalogue']['level'] ?? null);
         // Not production: reported, not fatal.
         self::assertSame('warning', $checks['APP_ENV']['level'] ?? null);
         self::assertArrayNotHasKey('Outgoing HTTPS', $checks);

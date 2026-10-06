@@ -1,7 +1,7 @@
 <template>
   <section class="welcome" data-testid="dashboard-welcome">
     <div class="welcome__text">
-      <div class="welcome__kicker">Bienvenue sur ChessMate</div>
+      <div class="welcome__kicker">Bienvenue sur Don't Stay Rooky</div>
       <h1 class="welcome__title"
         >Ton tableau de bord se remplira dès ton premier exercice.</h1
       >

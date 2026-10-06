@@ -58,6 +58,7 @@ final class AttemptBackfillSource implements SourceInterface
                 $attempts,
             );
             $this->entityManager->clear();
+            $this->catalog->clear();
         } while (\count($attempts) === $batchSize);
     }
 }

@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\Puzzle\AttemptRepository;
 use Doctrine\DBAL\Connection;
 use Random\Randomizer;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
@@ -40,6 +41,7 @@ final class PuzzleSelector
      * @param iterable<ExclusionProviderInterface> $exclusions
      */
     public function __construct(
+        #[Autowire(service: 'doctrine.dbal.catalog_connection')]
         Connection $connection,
         private readonly AttemptRepository $attempts,
         #[AutowireIterator(ExclusionProviderInterface::TAG)]

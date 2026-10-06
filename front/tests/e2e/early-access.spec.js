@@ -249,7 +249,10 @@ test('a player sees no administration', async ({ page, context }) => {
   await signIn(context)
   await page.goto('/#/')
   await expect(page.getByTestId('dashboard')).toBeVisible()
+  await page.getByTestId('account-menu').click()
+  await expect(page.getByTestId('nav-profile')).toBeVisible()
   await expect(page.getByTestId('nav-admin')).toHaveCount(0)
+  await page.keyboard.press('Escape')
 
   await page.goto('/#/admin/joueurs')
   await expect(page).not.toHaveURL(/admin/)

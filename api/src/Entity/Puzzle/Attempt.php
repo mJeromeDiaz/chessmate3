@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Puzzle;
 
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Puzzle\AttemptStatus;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Puzzle\Rating;
 
 /**
- * How ChessMate applies Glicko-2 to puzzles (docs/PUZZLES.md, "Rating rules"):
+ * How Don't Stay Rooky applies Glicko-2 to puzzles (docs/PUZZLES.md, "Rating rules"):
  *
  * - each rated attempt is a rating period of one game against the puzzle, whose rating and RD are
  *   fixed (the puzzle's RD still matters: an uncertain puzzle rating moves the player less);

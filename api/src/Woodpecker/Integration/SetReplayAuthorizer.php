@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Woodpecker\Integration;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
 use App\Puzzle\Attempt\ReplayAuthorizerInterface;
 use App\Repository\Woodpecker\SetPuzzleRepository;

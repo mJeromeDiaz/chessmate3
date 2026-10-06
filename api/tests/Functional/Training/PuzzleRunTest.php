@@ -117,7 +117,7 @@ final class PuzzleRunTest extends WoodpeckerWebTestCase
     public function testNoPuzzleLeftRefusesTheRun(): void
     {
         $alice = $this->createUserIn('alice@example.com');
-        self::getContainer()->get(Connection::class)->executeStatement('UPDATE puzzle SET selectable = 0');
+        $this->catalog->getConnection()->executeStatement('UPDATE puzzle SET selectable = 0');
 
         self::assertSame(409, $this->api('POST', '/api/training/runs', $alice, $this->payload($alice))->getStatusCode());
         self::assertEquals(0, self::getContainer()->get(Connection::class)->fetchOne('SELECT COUNT(*) FROM training_run'));

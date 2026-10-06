@@ -209,9 +209,9 @@ final readonly class OAuthAccountService
         }
 
         $this->mailer->send((new TemplatedEmail())
-            ->from(new Address($this->fromAddress, 'ChessMate'))
+            ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
             ->to($email)
-            ->subject('Un nouveau compte a été lié à votre compte ChessMate')
+            ->subject('Un nouveau compte a été lié à votre compte Don\'t Stay Rooky')
             ->htmlTemplate('emails/account_linked.html.twig')
             ->textTemplate('emails/account_linked.txt.twig')
             ->context([

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Repository\Puzzle;
+namespace App\Repository\Catalog;
 
-use App\Entity\Puzzle\ThemeMembership;
+use App\Entity\Catalog\ThemeMembership;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

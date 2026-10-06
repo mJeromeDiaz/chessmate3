@@ -11,7 +11,7 @@
 
       <template v-else>
         <p class="text-body2">
-          ChessMate est en accès anticipé : l'inscription se fait avec la clé
+          Don't Stay Rooky est en accès anticipé : l'inscription se fait avec la clé
           d'invitation reçue par email.
         </p>
 
@@ -111,7 +111,7 @@ const KEY_ERRORS = {
   invitation_invalid:
     'Cette clé n’est pas valable : elle a peut-être déjà servi ou été remplacée.',
   invitation_expired:
-    'Cette clé a expiré. Demandez-en une nouvelle à l’équipe ChessMate.'
+    "Cette clé a expiré. Demandez-en une nouvelle à l’équipe Don't Stay Rooky."
 }
 
 const KEY_PATTERN = /^[A-Za-z0-9]{32}$/

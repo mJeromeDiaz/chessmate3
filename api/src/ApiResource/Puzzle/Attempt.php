@@ -11,12 +11,12 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use ApiPlatform\OpenApi\Model\Parameter;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt as AttemptEntity;
 use App\State\Puzzle\AttemptHistoryProvider;
 use App\State\Puzzle\AttemptProvider;
 use App\State\Puzzle\StartAttemptProcessor;
 use App\State\Puzzle\SubmitAttemptProcessor;
-use App\Entity\Puzzle\Puzzle;
 
 /**
  * A puzzle attempt of the current user. Only the owner ever sees or submits one: the providers and

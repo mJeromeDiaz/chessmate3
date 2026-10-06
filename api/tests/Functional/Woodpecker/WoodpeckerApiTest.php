@@ -22,20 +22,19 @@ final class WoodpeckerApiTest extends WoodpeckerWebTestCase
 
         self::assertSame('active', $set['status']);
         self::assertSame(8, $set['puzzleCount']);
-        /** @var list<array{position: int|string, rating: int|string, themes: string, selectable: int|string}> $rows */
+        /** @var list<array{position: int|string, puzzle_id: int|string}> $rows */
         $rows = self::getContainer()->get(Connection::class)->fetchAllAssociative(
-            'SELECT sp.position, p.rating, p.themes, p.selectable FROM woodpecker_set_puzzle sp JOIN puzzle p ON p.id = sp.puzzle_id WHERE sp.set_id = UNHEX(REPLACE(:id, \'-\', \'\')) ORDER BY sp.position',
+            'SELECT position, puzzle_id FROM woodpecker_set_puzzle WHERE set_id = UNHEX(REPLACE(:id, \'-\', \'\')) ORDER BY position',
             ['id' => $set['id']],
         );
         self::assertCount(8, $rows);
         self::assertSame(range(0, 7), array_map(static fn (array $row): int => (int) $row['position'], $rows));
         foreach ($rows as $row) {
-            self::assertGreaterThanOrEqual(900, (int) $row['rating']);
-            self::assertLessThanOrEqual(2600, (int) $row['rating']);
-            self::assertSame(1, (int) $row['selectable']);
-            /** @var list<string> $themes */
-            $themes = json_decode($row['themes'], true);
-            self::assertNotEmpty(array_intersect(['endgame', 'mate'], $themes));
+            $puzzle = $this->puzzleById((int) $row['puzzle_id']);
+            self::assertGreaterThanOrEqual(900, $puzzle->getRating());
+            self::assertLessThanOrEqual(2600, $puzzle->getRating());
+            self::assertTrue($puzzle->isSelectable());
+            self::assertNotEmpty(array_intersect(['endgame', 'mate'], $puzzle->getThemes()));
         }
         // The first run is open, its deadline 4 local days later (end of 2026-10-01 in Paris).
         self::assertNotNull($set['current']);

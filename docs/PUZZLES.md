@@ -1,4 +1,4 @@
-# Puzzles — ChessMate (phase 2)
+# Puzzles — Don't Stay Rooky (phase 2)
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
@@ -13,7 +13,7 @@ Résolution de puzzles Lichess avec classement Glicko-2 et sélection adaptative
 | Entités | `App\Entity\Puzzle\{Puzzle, Theme, ThemeMembership, Attempt, Rating, RatingChange}` |
 | Logique métier | `App\Puzzle\Rating\` (Glicko-2, règles, import Lichess), `App\Puzzle\Selection\` (sélection, qualité, index de sélection), `App\Puzzle\Solution\` (validation), `App\Puzzle\Attempt\` (cycle de vie des tentatives), `App\Puzzle\Theme\` (référentiel) |
 | API | `App\ApiResource\Puzzle\*` (DTO de sortie), `App\State\Puzzle\*` (providers, processors) |
-| Commandes | `app:puzzle:sync-themes`, `app:puzzle:rebuild-selection` |
+| Commandes | `app:puzzle:import` (docs/PUZZLE_IMPORT.md), `app:puzzle:sync-themes`, `app:puzzle:rebuild-selection` |
 | Fixtures | `App\DataFixtures\Puzzle\` (thèmes + 50 puzzles réels au format CSV Lichess) |
 | Front | `components/chess/ChessBoard.vue`, `composables/puzzle/usePuzzle.js`, `stores/puzzle.js`, `components/puzzle/`, `pages/index/puzzle/` |
 
@@ -44,10 +44,23 @@ MySQL n'a ni tableau ni GIN. Son équivalent, l'index multi-valué sur JSON (`ME
 - les tags d'ouverture restent en JSON non indexé (aucun filtre ne les utilise ; même schéma de table
   de sélection le jour où il en faudra un).
 
-Reconstruction (`SelectionRebuilder::rebuildAll`) : table fantôme sans PK remplie en ajout
-séquentiel, PK construite en une passe triée, puis `RENAME TABLE` atomique. Une insertion directe
-dans la PK clusterisée (ordre aléatoire) ne se terminait pas en 10 minutes sur 5 M puzzles ; la
-version fantôme prend **1 min 50**, sans interrompre la sélection.
+Reconstruction (`SelectionRebuilder::rebuildAll`), **en place** : la table est vidée et perd sa PK,
+remplie en ajout séquentiel, puis la PK est construite en une passe triée. Une insertion directe dans
+la PK clusterisée (ordre aléatoire) ne se terminait pas en 10 minutes sur 5 M puzzles ; en ajout puis
+tri, la reconstruction prend environ 1 min 50 sur 5 M puzzles.
+
+Elle se fait en place, sans table fantôme, pour tenir dans la base de 1 Go du mutualisé : une copie
+doublerait la table (environ 240 Mo pour 1,5 M puzzles) au pic (docs/DEPLOY_OVH.md, § 3). Pendant la
+reconstruction, le verrou nommé MySQL de `App\Puzzle\Selection\RebuildLock` est pris :
+
+- un tirage **par thème** (puzzle suivant, séance chronométrée, set Woodpecker) lève
+  `SelectionUnavailableException`, que `App\EventListener\PuzzleMaintenanceListener` transforme en
+  **503** avec `Retry-After: 60` et l'en-tête `X-Puzzle-Maintenance: rebuilding` (exposé par CORS) ;
+  le front affiche « Le catalogue de puzzles est en maintenance. Réessayez dans une minute. » ;
+- un tirage **sans thème** lit `puzzle` et continue normalement.
+
+Si le processus meurt en route, la table reste sans PK : `app:deploy:check` le signale en erreur
+jusqu'à la prochaine reconstruction, qui repart de zéro.
 
 ### Qualité
 
@@ -162,6 +175,8 @@ tentatives classées) :
 
 Scripts de mesure : génération des 5 M lignes par CTE (aucune lecture du CSV Lichess), puis
 `app:puzzle:rebuild-selection` sur la base `ChessMateGo_bench`.
+Depuis que le catalogue a sa propre base (docs/DEPLOY_OVH.md, § 3), ses tables vivent dans
+`ChessMateGo_bench_catalog` (déplacées par `RENAME TABLE`, procédure dans la même section).
 
 ## 5. API
 
@@ -224,7 +239,7 @@ Responsive (largeur disponible, max `min(92vw, 70vh, 560px)`), thème clair/somb
 
 Préférences du profil (`composables/chess/useBoardPreferences.js`, lues dans `auth.profile`) :
 
-- **Couleurs des cases** : thème cm-chessboard maison `chessmate`, dont les cases prennent les
+- **Couleurs des cases** : thème cm-chessboard maison `dontstayrooky`, dont les cases prennent les
   variables CSS `--cm-board-light` / `--cm-board-dark` posées sur l'échiquier
   (`utils/chess/boardThemes.js` : Bois, Verre, Pastel, Tournoi, Ardoise ; Bois par défaut et pour
   les visiteurs). Un changement sur le profil s'applique aussitôt à tous les échiquiers.

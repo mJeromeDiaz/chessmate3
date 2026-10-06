@@ -1,4 +1,4 @@
-# Woodpecker — ChessMate (phases 4 et 4b)
+# Woodpecker — Don't Stay Rooky (phases 4 et 4b)
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
@@ -278,7 +278,7 @@ ont un `requirements` UUID ; `tests/Functional/Woodpecker/RoutingTest.php` couvr
 `bin/console doctrine:fixtures:load` (**purge la base**, dev ou `e2e` uniquement) crée, en plus des
 thèmes et des 50 puzzles d'exemple, un compte de démo :
 
-- `demo@chessmate.test` / `chessmate-demo` (`DemoUserFixtures`), fuseau Europe/Paris. La connexion
+- `demo@dontstayrooky.test` / `dontstayrooky-demo` (`DemoUserFixtures`), fuseau Europe/Paris. La connexion
   demande quand même le code 2FA : en dev (`MAILER_DSN=null://null`), il se lit dans le panneau
   *Mailer* du profiler Symfony (`/_profiler`).
 - `WoodpeckerFixtures` : un set classique « Tactiques de base » (20 puzzles, cycle 1 entamé) et un set

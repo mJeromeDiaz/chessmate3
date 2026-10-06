@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Entity;
 
 use App\Entity\AuthIdentity;
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
 use App\Enum\AuthProvider;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,11 +19,14 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 final class CaseSensitiveColumnsTest extends KernelTestCase
 {
     private EntityManagerInterface $entityManager;
+    /** The puzzle catalogue's entity manager: its own database (docs/DEPLOY_OVH.md, § 3). */
+    private EntityManagerInterface $catalog;
 
     protected function setUp(): void
     {
         self::bootKernel();
         $this->entityManager = self::getContainer()->get(EntityManagerInterface::class);
+        $this->catalog = self::getContainer()->get('doctrine.orm.catalog_entity_manager');
     }
 
     /**
@@ -77,7 +80,8 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
     #[DataProvider('binaryColumns')]
     public function testColumnUsesABinaryCollation(string $table, string $column): void
     {
-        $collation = $this->entityManager->getConnection()->fetchOne(
+        $manager = \in_array($table, ['puzzle', 'puzzle_theme'], true) ? $this->catalog : $this->entityManager;
+        $collation = $manager->getConnection()->fetchOne(
             'SELECT COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
             [$table, $column],
         );
@@ -88,13 +92,13 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
 
     public function testPuzzleIdsDifferingOnlyByCaseAreDistinct(): void
     {
-        $this->entityManager->persist($this->puzzle('0009B'));
-        $this->entityManager->persist($this->puzzle('0009b'));
+        $this->catalog->persist($this->puzzle('0009B'));
+        $this->catalog->persist($this->puzzle('0009b'));
         // The unique index on lichess_id would reject the second row under a case-insensitive collation.
-        $this->entityManager->flush();
-        $this->entityManager->clear();
+        $this->catalog->flush();
+        $this->catalog->clear();
 
-        $repository = $this->entityManager->getRepository(Puzzle::class);
+        $repository = $this->catalog->getRepository(Puzzle::class);
         self::assertSame('0009B', $repository->findOneBy(['lichessId' => '0009B'])?->getLichessId());
         self::assertSame('0009b', $repository->findOneBy(['lichessId' => '0009b'])?->getLichessId());
         self::assertNull($repository->findOneBy(['lichessId' => '0009C']));
@@ -103,10 +107,10 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
     public function testFensDifferingOnlyByCaseAreNotEqual(): void
     {
         // Same squares, colours swapped: only the case of the piece letters differs.
-        $this->entityManager->persist($this->puzzle('zz001', '4k3/8/8/8/8/8/8/4K2R w - - 0 1'));
-        $this->entityManager->flush();
+        $this->catalog->persist($this->puzzle('zz001', '4k3/8/8/8/8/8/8/4K2R w - - 0 1'));
+        $this->catalog->flush();
 
-        $connection = $this->entityManager->getConnection();
+        $connection = $this->catalog->getConnection();
 
         self::assertSame([], $connection->fetchFirstColumn('SELECT id FROM puzzle WHERE fen = ?', ['4K3/8/8/8/8/8/8/4k2r w - - 0 1']));
         self::assertCount(1, $connection->fetchFirstColumn('SELECT id FROM puzzle WHERE fen = ?', ['4k3/8/8/8/8/8/8/4K2R w - - 0 1']));

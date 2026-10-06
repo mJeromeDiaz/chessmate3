@@ -7,8 +7,8 @@ namespace App\Tests\Functional\Profile;
 use App\Activity\Event\ExerciseCompleted;
 use App\Entity\Activity\LogEntry;
 use App\Entity\AuthIdentity;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt;
-use App\Entity\Puzzle\Puzzle;
 use App\Entity\Training\Session;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
@@ -56,7 +56,9 @@ final class ExportTest extends WebTestCase
         $alice = $this->createUser('alice@example.com');
         $bob = $this->createUser('bob@example.com');
         $puzzle = new Puzzle('Ab1Cd', '8/8/8/8/8/8/8/K6k w - - 0 1', 'a1a2 h1h2', 1500, 80, 90, 1000, ['fork', 'short'], 'https://lichess.org/test');
-        $this->entityManager->persist($puzzle);
+        $catalog = self::getContainer()->get('doctrine.orm.catalog_entity_manager');
+        $catalog->persist($puzzle);
+        $catalog->flush();
         foreach ([$alice, $bob] as $user) {
             $attempt = new Attempt($user, $puzzle, true, new \DateTimeImmutable('-1 hour'));
             $attempt->resolve(true, ['h1h2'], 0, 0, false, new \DateTimeImmutable('-59 minutes'), null);
@@ -146,7 +148,7 @@ final class ExportTest extends WebTestCase
         $response = $this->client->getResponse();
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('application/zip', $response->headers->get('Content-Type'));
-        self::assertStringContainsString('attachment; filename=chessmate-export-', (string) $response->headers->get('Content-Disposition'));
+        self::assertStringContainsString('attachment; filename=dontstayrooky-export-', (string) $response->headers->get('Content-Disposition'));
 
         // The test client captured the sent file (deleted after sending).
         $path = (string) tempnam(sys_get_temp_dir(), 'export-test-');

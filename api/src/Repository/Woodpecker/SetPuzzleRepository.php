@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository\Woodpecker;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
 use App\Entity\Woodpecker\Cycle;
 use App\Entity\Woodpecker\Set;

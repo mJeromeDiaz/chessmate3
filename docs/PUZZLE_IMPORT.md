@@ -2,22 +2,27 @@
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
-L'application ne fournit pas de commande d'import : le CSV se charge avec `LOAD DATA` de MySQL, puis
-on lance les étapes post-import ci-dessous. Ce document donne le mapping exact, le SQL et les
-vérifications.
+Les puzzles sont importés par **`bin/console app:puzzle:import`**, en PHP pur : le mutualisé OVH
+n'offre pas `LOAD DATA` (docs/DEPLOY_OVH.md). La commande garde un **sous-ensemble équilibré** de
+l'export (1,5 M puzzles par défaut), pour que la base du catalogue tienne sous la limite de 1 Go.
 
-Cible : MySQL 8.0 (testé sur 8.0.46), ~5 M puzzles. Les tables sont créées par les migrations Doctrine
-(`bin/console doctrine:migrations:migrate`) ; ne jamais les créer ni les modifier à la main, sauf la
-suppression/recréation d'index décrite ici.
+Cible : MySQL 8.0, **la base du catalogue** (`CATALOG_DATABASE_URL`, `ChessMateGo_catalog` en local :
+docs/DEPLOY_OVH.md, § 3), jamais la base principale. Les tables sont créées par les migrations du
+catalogue (`bin/console doctrine:migrations:migrate --configuration=config/migrations/catalog.php`).
 
-Pour tester la procédure sur un petit fichier au bon format : `src/DataFixtures/Puzzle/data/puzzles.csv`
-(50 puzzles réels, avec ligne d'en-tête).
+Pour tester sur un petit fichier au bon format : `src/DataFixtures/Puzzle/data/puzzles.csv` (50 puzzles
+réels, avec ligne d'en-tête).
 
-## 1. Fichier source
+## 1. Fichiers source
 
-`https://database.lichess.org/lichess_db_puzzle.csv.zst`, à décompresser avec `zstd -d`. Séparateur
-virgule. Les exports récents commencent par une ligne d'en-tête (`PuzzleId,FEN,Moves,...`), les plus
-anciens non : le SQL ci-dessous l'ignore dans les deux cas.
+`https://database.lichess.org/lichess_db_puzzle.csv.zst`, à décompresser avec `zstd -d`, ou une copie
+découpée en morceaux (`lichess_db_puzzle-000.csv`, `-001.csv`…). La commande accepte des fichiers et
+des dossiers (leurs `*.csv`, dans l'ordre naturel) et s'adapte à chaque fichier :
+
+- séparateur virgule ou tabulation (deviné sur la première ligne) ;
+- ligne d'en-tête (`PuzzleId,FEN,...`) présente ou non ;
+- fins de ligne `\n` ou `\r\n` ;
+- 9 à 11 colonnes (les exports anciens n'ont ni `OpeningTags` ni `DailyDate`).
 
 | # | Colonne CSV | Exemple | Sens |
 |---|---|---|---|
@@ -30,8 +35,13 @@ anciens non : le SQL ci-dessous l'ignore dans les deux cas.
 | 7 | NbPlays | `72` | Nombre de parties jouées |
 | 8 | Themes | `mate mateIn2 middlegame short` | Clés de thèmes séparées par des espaces |
 | 9 | GameUrl | `https://lichess.org/yyznGmXs/black#34` | Partie d'origine |
-| 10 | OpeningTags | `Italian_Game Italian_Game_Classical_Variation` | Souvent vide, séparés par des espaces |
+| 10 | OpeningTags | `Benoni_Defense Benoni_Defense_Benoni-Indian_Defense` | Souvent vide, séparés par des espaces (lettres, chiffres, `_`, `-`) |
 | 11 | DailyDate | | Souvent vide (absente des exports anciens) |
+
+Chaque ligne est validée (`App\Puzzle\Import\LineParser`) : id de 5 caractères alphanumériques, FEN
+bien formée et de 92 caractères au plus, au moins deux coups UCI, nombres dans les bornes des colonnes,
+URL Lichess. Une ligne invalide est **écartée et comptée**, jamais tronquée ; le rapport en cite les
+dix premières (`fichier:ligne raison`).
 
 ## 2. Mapping CSV → tables
 
@@ -51,11 +61,11 @@ Table `puzzle` :
 | `opening_tags` | `JSON NULL` | OpeningTags | même découpage ; vide → `NULL` |
 | `game_url` | `VARCHAR(255)` | GameUrl | telle quelle |
 | `daily_date` | `DATE NULL` | DailyDate | vide → `NULL` |
-| `random_key` | `INT UNSIGNED` | — | **dérivée** : `FLOOR(RAND() * 4294967296)` |
+| `random_key` | `INT UNSIGNED` | — | **dérivée** : aléatoire uniforme sur [0, 2³²) |
 | `selectable` | `TINYINT(1)` | — | **dérivée** : `popularity >= 50 AND nb_plays >= 100` (`App\Puzzle\Selection\Quality`) |
 
 Tables dérivées, **pas chargées depuis le CSV** — reconstruites par `app:puzzle:rebuild-selection`
-(étape 5) :
+(§ 5) :
 
 - `puzzle_theme_membership (theme_id, rating, random_key, puzzle_id)` : une ligne par (puzzle
   sélectionnable, thème connu). C'est l'index dans lequel la requête « puzzle suivant » lit.
@@ -63,143 +73,96 @@ Tables dérivées, **pas chargées depuis le CSV** — reconstruites par `app:pu
 
 Le référentiel `puzzle_theme` vient de `bin/console app:puzzle:sync-themes`.
 
-## 3. Réglages du serveur
+## 3. Le sous-ensemble gardé
 
-`LOAD DATA LOCAL` est désactivé par défaut des deux côtés (`@@local_infile = 0` sur le serveur de
-dev). Soit on l'active le temps de l'import (droit `SYSTEM_VARIABLES_ADMIN` requis) :
+Seuls les puzzles **sélectionnables** (seuils de qualité ci-dessus) sont importés, et parmi eux environ
+`--target` (`App\Puzzle\Import\SubsetPlanner`, choix validé le 2026-10-06) :
 
-```sql
-SET GLOBAL local_infile = 1;   -- puis SET GLOBAL local_infile = 0; après l'import
-```
+- **chaque tranche de 100 points de classement garde sa part** : si la tranche 2600–2699 contient
+  1,4 % des puzzles sélectionnables, elle garde 1,4 % de la cible. Les joueurs forts et les débutants
+  gardent autant de choix, en proportion, que le milieu ;
+- **dans chaque tranche, les meilleurs d'abord** : popularité, puis nombre de parties (échelle
+  logarithmique) pour départager. À la note de coupure, la part gardée est tirée d'un hachage de l'id
+  Lichess, pas au hasard : relancer l'import sur le même export garde les mêmes puzzles ;
+- **un thème rare est gardé en entier** : moins de `--rare-theme` (2 000) puzzles sélectionnables dans
+  l'export. Sur l'export de 2026 : `bodenMate`, `castling`, `doubleBishopMate`, `dovetailMate`,
+  `equality`, `underPromotion`.
 
-et on lance le client avec `mysql --local-infile=1 ...` ; soit on copie le fichier dans le répertoire
-`secure_file_priv` du serveur et on utilise `LOAD DATA INFILE` (sans `LOCAL`).
-
-Pour de bonnes performances en production, donner assez de mémoire à InnoDB pour garder les index
-chauds en cache : `innodb_buffer_pool_size` ≥ 2G (128M par défaut ; `puzzle` fait ~1,2 Go et
-`puzzle_theme_membership` ~0,6 Go pour 5 M puzzles).
-
-## 4. Premier import (table `puzzle` vide)
-
-```sql
--- 4.1 Supprimer les index secondaires : les construire une fois à la fin est bien plus rapide que de
---     les maintenir ligne par ligne. (La clé primaire reste : les lignes arrivent dans l'ordre des id,
---     elle est remplie en ajout.)
-ALTER TABLE puzzle DROP INDEX uniq_puzzle_lichess_id, DROP INDEX idx_puzzle_selection;
-
--- 4.2 Table de staging : tout en texte, chargé tel quel. Exclue du schéma Doctrine
---     (schema_filter de doctrine.yaml) : les migrations ne la suppriment jamais.
-CREATE TABLE puzzle_import_staging (
-    seq INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    puzzle_id VARCHAR(16) NOT NULL,
-    fen VARCHAR(120) NOT NULL,
-    moves VARCHAR(400) NOT NULL,
-    rating VARCHAR(16) NOT NULL,
-    rating_deviation VARCHAR(16) NOT NULL,
-    popularity VARCHAR(16) NOT NULL,
-    nb_plays VARCHAR(16) NOT NULL,
-    themes VARCHAR(600) NOT NULL,
-    game_url VARCHAR(255) NOT NULL,
-    opening_tags VARCHAR(600) NOT NULL DEFAULT '',
-    daily_date VARCHAR(16) NOT NULL DEFAULT ''
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 4.3 Chargement. Une colonne finale absente des exports anciens garde sa valeur '' par défaut.
-LOAD DATA LOCAL INFILE '/chemin/vers/lichess_db_puzzle.csv'
-INTO TABLE puzzle_import_staging
-CHARACTER SET utf8mb4
-FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
-(puzzle_id, fen, moves, rating, rating_deviation, popularity, nb_plays, themes, game_url, opening_tags, daily_date);
-
-SHOW WARNINGS LIMIT 20;   -- attendu seulement : « Row N doesn't contain data for all columns » (pas de DailyDate)
-```
-
-4.4 Transformation vers `puzzle`, par tranches de 500 000 lignes de staging pour garder chaque
-transaction (undo log) petite. À lancer pour `@from` = 1, 500001, 1000001… jusqu'à
-`SELECT MAX(seq) FROM puzzle_import_staging` :
-
-```sql
-SET SESSION unique_checks = 0, foreign_key_checks = 0;
-SET @from = 1;
-SET @to = @from + 499999;   -- instruction séparée : dans un même SET, @to verrait l'ancien @from (NULL)
-
-INSERT INTO puzzle (lichess_id, fen, moves, rating, rating_deviation, popularity, nb_plays,
-                    themes, opening_tags, game_url, daily_date, random_key, selectable)
-SELECT
-    s.puzzle_id,
-    s.fen,
-    s.moves,
-    CAST(s.rating AS UNSIGNED),
-    CAST(s.rating_deviation AS UNSIGNED),
-    CAST(s.popularity AS SIGNED),
-    CAST(s.nb_plays AS UNSIGNED),
-    IF(TRIM(s.themes) = '', JSON_ARRAY(),
-       CAST(CONCAT('["', REPLACE(TRIM(s.themes), ' ', '","'), '"]') AS JSON)),
-    IF(TRIM(s.opening_tags) = '', NULL,
-       CAST(CONCAT('["', REPLACE(TRIM(s.opening_tags), ' ', '","'), '"]') AS JSON)),
-    s.game_url,
-    CAST(NULLIF(TRIM(s.daily_date), '') AS DATE),
-    FLOOR(RAND() * 4294967296),
-    CAST(s.popularity AS SIGNED) >= 50 AND CAST(s.nb_plays AS UNSIGNED) >= 100
-FROM puzzle_import_staging s
-WHERE s.seq BETWEEN @from AND @to
-  AND s.puzzle_id <> 'PuzzleId'          -- ligne d'en-tête éventuelle
-ORDER BY s.seq;
-```
-
-La même chose en boucle shell :
+## 4. La commande
 
 ```bash
-MAX=$(mysql -N -e 'SELECT MAX(seq) FROM puzzle_import_staging' ChessMateGo)
-for FROM in $(seq 1 500000 "$MAX"); do
-  mysql -e "SET @from = $FROM; SET @to = $FROM + 499999; <l'INSERT ci-dessus>" ChessMateGo
-done
+bin/console app:puzzle:import <fichiers ou dossiers…> [--dry-run] [--rebuild]
+    [--target=1500000] [--rare-theme=2000] [--max-size=900]
 ```
 
-La conversion JSON échoue bruyamment (erreur 3141) sur une valeur malformée au lieu de stocker des
-données fausses ; les clés de thèmes et les tags d'ouverture ne contiennent que des lettres, des
-chiffres et `_`.
+Deux passes sur les fichiers, en mémoire constante (une ligne à la fois) :
+
+1. **Comptage** : nombre de puzzles sélectionnables par tranche et par note de qualité, par thème
+   (quelques Ko), d'où les seuils de chaque tranche. Rapport : lignes valides et invalides, puzzles
+   sélectionnables, puzzles gardés (au plus), répartition par tranche, thèmes rares, **clés de thème
+   inconnues** de `App\Puzzle\Theme\ThemeCatalog` (un nouveau thème Lichess à y ajouter), et **taille
+   estimée** du catalogue (`App\Puzzle\Import\SizeEstimate` : 292 octets par puzzle, 38 par ligne
+   d'appartenance, mesurés sur l'import réel). Au-delà de `--max-size` (Mo), la commande **refuse**
+   d'écrire.
+2. **Écriture** (sauf `--dry-run`) : `INSERT … ON DUPLICATE KEY UPDATE` sur `lichess_id`, par paquets
+   de 1 000 lignes (`App\Puzzle\Import\PuzzleWriter`). Un puzzle déjà présent garde son `id` (que
+   les tentatives et les sets Woodpecker référencent) et sa `random_key` ; seuls `rating`,
+   `rating_deviation`, `popularity`, `nb_plays`, `themes`, `opening_tags` et `daily_date` sont mis à
+   jour.
+
+Relancer la commande ne crée jamais de doublon : après une coupure (session SSH perdue), il suffit de
+la relancer.
+
+`--rebuild` enchaîne `app:puzzle:sync-themes` et `app:puzzle:rebuild-selection` (§ 5).
+
+Mesures sur la machine de dev (export de 2026 en 1 016 fichiers, 718 Mo ; MySQL 8.0.46, buffer pool de
+128 Mo, SSD) : 4 062 423 lignes valides, 2 999 967 sélectionnables, **1 504 954 gardées** ;
+`puzzle` 418 Mo, `puzzle_theme_membership` 236 Mo (6,56 M lignes), soit **environ 654 Mo** ;
+**3 min 22** au total, reconstruction comprise.
 
 ## 5. Après l'import
 
-```sql
--- 5.1 Vérifier les doublons AVANT de recréer l'index unique (ne doit renvoyer aucune ligne).
-SELECT lichess_id, COUNT(*) FROM puzzle GROUP BY lichess_id HAVING COUNT(*) > 1 LIMIT 10;
-
--- 5.2 Recréer les index (une construction triée chacun).
-ALTER TABLE puzzle
-    ADD UNIQUE INDEX uniq_puzzle_lichess_id (lichess_id),
-    ADD INDEX idx_puzzle_selection (selectable, rating, random_key);
-```
+Avec `--rebuild`, rien à faire. Sinon :
 
 ```bash
-# 5.3 Les thèmes d'abord (la reconstruction associe les clés aux id de thèmes), puis l'index de
-#     sélection et les compteurs.
+# Les thèmes d'abord (la reconstruction associe les clés aux id de thèmes), puis l'index de
+# sélection et les compteurs.
 bin/console app:puzzle:sync-themes
 bin/console app:puzzle:rebuild-selection
 ```
 
-`app:puzzle:rebuild-selection` recalcule `selectable`, remplit une table fantôme
-`puzzle_theme_membership_build` sans clé primaire (insertions en ajout), construit la clé primaire en
-une passe triée, puis la met en place par un `RENAME TABLE` atomique : les puzzles restent jouables
-pendant la reconstruction. À relancer après un changement des seuils de qualité.
+`app:puzzle:rebuild-selection` recalcule `selectable` et reconstruit `puzzle_theme_membership` **en
+place** (docs/PUZZLES.md, § 2) : pendant une à deux minutes, les puzzles **par thème** répondent 503
+« catalogue en maintenance », les puzzles sans thème restent servis. À lancer après chaque import, et
+après un changement des seuils de qualité.
 
 ```sql
--- 5.4 Statistiques à jour pour l'optimiseur, puis suppression du staging.
+-- Statistiques à jour pour l'optimiseur.
 ANALYZE TABLE puzzle, puzzle_theme_membership, puzzle_theme;
-DROP TABLE puzzle_import_staging;
 ```
 
-Temps mesurés sur la machine de dev (5 M puzzles synthétiques, buffer pool de 128 Mo, SSD) :
-chargement des 5 M lignes sans index secondaires puis création des deux index : **43 s** ;
-`app:puzzle:rebuild-selection` : **1 min 50** (1,9 M puzzles sélectionnables, 9,3 M lignes
-d'appartenance, 333 Mo).
+Pour de bonnes performances sur un serveur que l'on contrôle, donner assez de mémoire à InnoDB pour
+garder les index chauds en cache : `innodb_buffer_pool_size` ≥ 1G (128M par défaut).
 
-## 6. Requêtes de vérification
+## 6. Mise à jour mensuelle
+
+Lichess met à jour chaque mois classements, parties et popularité, et ajoute des puzzles. On relance
+**la même commande** sur le nouvel export, puis la reconstruction (`--rebuild`) :
+
+- les puzzles gardés sont insérés ou mis à jour ;
+- un puzzle **déjà en base mais plus gardé** (sa popularité a baissé, par exemple) est quand même mis
+  à jour : il reste en base, et la reconstruction le retire de la sélection s'il ne passe plus les
+  seuils de qualité ;
+- **aucun puzzle n'est jamais supprimé** : l'historique des tentatives et les sets Woodpecker les
+  référencent par leur id.
+
+La base grossit donc d'environ 20 Mo par mois (les nouveaux puzzles gardés) : surveiller la taille
+estimée du `--dry-run` avant chaque import.
+
+## 7. Requêtes de vérification
 
 ```sql
--- Nombre de lignes : puzzle = lignes de staging moins l'en-tête.
+-- Nombre de lignes : comparer avec le rapport de la commande.
 SELECT (SELECT COUNT(*) FROM puzzle) AS puzzles,
        (SELECT SUM(selectable) FROM puzzle) AS selectable,
        (SELECT COUNT(*) FROM puzzle_theme_membership) AS memberships;
@@ -232,56 +195,3 @@ SELECT theme_key, category, puzzle_count FROM puzzle_theme ORDER BY puzzle_count
 -- Contrôle ponctuel contre https://lichess.org/training/<id>.
 SELECT * FROM puzzle WHERE lichess_id = '00sHx';
 ```
-
-## 7. Mise à jour avec un export plus récent
-
-Lichess met à jour chaque mois classements, parties et popularité, et ajoute des puzzles. **Ne jamais
-vider `puzzle`** : les tentatives référencent `puzzle.id`, ainsi que les sets Woodpecker
-(`woodpecker_set_puzzle`, `woodpecker_attempt`) par des FK **sans cascade** : un `DELETE` d'un
-puzzle référencé échoue (voulu : un set est un instantané figé, voir
-[WOODPECKER.md § 3](WOODPECKER.md#3-modèle-de-données)). Charger le nouveau fichier dans une
-nouvelle table de staging (4.2–4.3), garder les index, et faire un upsert par tranches ; les puzzles
-existants gardent leur `id` et leur `random_key` :
-
-```sql
-SET @from = 1;
-SET @to = @from + 499999;
-
-INSERT INTO puzzle (lichess_id, fen, moves, rating, rating_deviation, popularity, nb_plays,
-                    themes, opening_tags, game_url, daily_date, random_key, selectable)
-SELECT * FROM (
-    SELECT
-        s.puzzle_id AS lichess_id,
-        s.fen AS fen,
-        s.moves AS moves,
-        CAST(s.rating AS UNSIGNED) AS rating,
-        CAST(s.rating_deviation AS UNSIGNED) AS rating_deviation,
-        CAST(s.popularity AS SIGNED) AS popularity,
-        CAST(s.nb_plays AS UNSIGNED) AS nb_plays,
-        IF(TRIM(s.themes) = '', JSON_ARRAY(),
-           CAST(CONCAT('["', REPLACE(TRIM(s.themes), ' ', '","'), '"]') AS JSON)) AS themes,
-        IF(TRIM(s.opening_tags) = '', NULL,
-           CAST(CONCAT('["', REPLACE(TRIM(s.opening_tags), ' ', '","'), '"]') AS JSON)) AS opening_tags,
-        s.game_url AS game_url,
-        CAST(NULLIF(TRIM(s.daily_date), '') AS DATE) AS daily_date,
-        FLOOR(RAND() * 4294967296) AS random_key,
-        CAST(s.popularity AS SIGNED) >= 50 AND CAST(s.nb_plays AS UNSIGNED) >= 100 AS selectable
-    FROM puzzle_import_staging s
-    WHERE s.seq BETWEEN @from AND @to
-      AND s.puzzle_id <> 'PuzzleId'
-    ORDER BY s.seq
-) AS new
-ON DUPLICATE KEY UPDATE
-    rating = new.rating, rating_deviation = new.rating_deviation,
-    popularity = new.popularity, nb_plays = new.nb_plays,
-    themes = new.themes, opening_tags = new.opening_tags, daily_date = new.daily_date;
-```
-
-La table dérivée `new` remplace `VALUES(col)`, déprécié depuis MySQL 8.0.20 (l'alias de ligne
-`INSERT … VALUES … AS new` ne s'applique pas à un `INSERT … SELECT`). `random_key` et `id` ne sont pas
-dans la clause `UPDATE` : un puzzle existant les garde. `selectable` n'y est pas non plus : 5.3 le
-recalcule. La correspondance sur `lichess_id` est exacte grâce à sa collation `ascii_bin` (`0009B` et
-`0009b` sont deux puzzles).
-
-puis refaire 5.3 et 5.4. Les puzzles retirés de l'export restent en base (l'historique fonctionne
-toujours) ; ils ne sont simplement plus mis à jour.

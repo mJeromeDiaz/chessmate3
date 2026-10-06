@@ -8,7 +8,7 @@ use App\Activity\EventPublisher;
 use App\Entity\Woodpecker\Cycle;
 use App\Entity\Woodpecker\Growth;
 use App\Entity\Woodpecker\Set;
-use App\Repository\Puzzle\ThemeRepository;
+use App\Repository\Catalog\ThemeRepository;
 use App\Repository\Woodpecker\SetPuzzleRepository;
 use App\Woodpecker\Event\SetGrown;
 use App\Woodpecker\Set\SetGenerator;

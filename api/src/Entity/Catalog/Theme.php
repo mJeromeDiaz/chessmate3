@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Puzzle;
+namespace App\Entity\Catalog;
 
 use App\Enum\Puzzle\ThemeCategory;
-use App\Repository\Puzzle\ThemeRepository;
+use App\Repository\Catalog\ThemeRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 

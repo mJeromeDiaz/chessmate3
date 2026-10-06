@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Puzzle\Solution;
 
 use App\DataFixtures\Puzzle\SamplePuzzles;
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Puzzle\Solution\SolutionValidator;
 use PHPUnit\Framework\Attributes\DataProvider;

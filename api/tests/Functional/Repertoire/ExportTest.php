@@ -32,7 +32,7 @@ final class ExportTest extends RepertoireWebTestCase
         self::assertSame('attachment; filename=blancs-1-d4-londres.pgn', $response->headers->get('Content-Disposition'));
         self::assertSame(<<<'PGN'
             [Event "Blancs : 1.d4 — Londres"]
-            [Site "ChessMate"]
+            [Site "Don't Stay Rooky"]
             [Orientation "white"]
             [Result "*"]
 

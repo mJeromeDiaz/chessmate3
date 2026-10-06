@@ -8,7 +8,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     # Identifies the application to Lichess (their API asks for a meaningful User-Agent).
-    app.lichess.user_agent: 'ChessMate/1.0 (opening repertoire trainer; +https://github.com/mJeromeDiaz)'
+    app.lichess.user_agent: 'DontStayRooky/1.0 (opening repertoire trainer; +https://github.com/mJeromeDiaz)'
     # Smallest Woodpecker set (docs/WOODPECKER.md); lowered in tests to finish a cycle quickly.
     woodpecker.min_puzzles: 50
     # Light sets (docs/WOODPECKER.md): initial size, then a batch added whenever fewer than

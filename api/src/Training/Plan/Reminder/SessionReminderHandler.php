@@ -59,7 +59,7 @@ final readonly class SessionReminderHandler
 
         if (\in_array('email', $plan->getReminderChannels(), true) && null !== $user->getEmail() && $user->isEmailVerified()) {
             $this->mailer->send((new TemplatedEmail())
-                ->from(new Address($this->fromAddress, 'ChessMate'))
+                ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
                 ->to($user->getEmail())
                 ->subject(sprintf('Rappel : %s %s', $title, $when))
                 ->htmlTemplate('emails/session_reminder.html.twig')

@@ -16,7 +16,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * A ChessMate account.
+ * A Don't Stay Rooky account.
  *
  * The Symfony security identifier ({@see self::getUserIdentifier()}) is the UUID, never the email:
  * email is nullable (a Lichess-only signup may have none) and can change, but the identifier used in

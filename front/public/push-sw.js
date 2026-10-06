@@ -1,5 +1,5 @@
 /*
- * ChessMate's service worker, for Web Push only (docs/NOTIFICATIONS.md): shows the notifications
+ * Don't Stay Rooky's service worker, for Web Push only (docs/NOTIFICATIONS.md): shows the notifications
  * the server sends (session reminders) and opens the app on click. No cache, no offline mode.
  */
 
@@ -17,9 +17,9 @@ self.addEventListener('push', event => {
     data = { body: event.data ? event.data.text() : '' }
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'ChessMate', {
+    self.registration.showNotification(data.title || "Don't Stay Rooky", {
       body: data.body || '',
-      tag: data.tag || 'chessmate',
+      tag: data.tag || 'dontstayrooky',
       icon: new URL('icons/favicon-128x128.png', self.registration.scope).href,
       data: { url: new URL(data.url || '/', self.registration.scope).href }
     })

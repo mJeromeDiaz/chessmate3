@@ -18,7 +18,7 @@ use Doctrine\DBAL\Connection;
  */
 final readonly class TickRunner
 {
-    public const LOCK = 'chessmate_ops_tick';
+    public const LOCK = 'dontstayrooky_ops_tick';
     /** Under the host's max_execution_time (165 s with PHP-FPM at OVH), and under a minute. */
     public const DRAIN_SECONDS = 50;
     public const MAX_MESSAGES = 1000;

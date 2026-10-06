@@ -9,8 +9,8 @@ import {
 describe('signupLink', () => {
   it('points at the sign-up page of this SPA, without its current route', () => {
     expect(
-      signupLink('Abc123', 'https://chessmate.test/app/#/admin/invitations')
-    ).toBe('https://chessmate.test/app/#/register?key=Abc123')
+      signupLink('Abc123', 'https://dontstayrooky.test/app/#/admin/invitations')
+    ).toBe('https://dontstayrooky.test/app/#/register?key=Abc123')
   })
 })
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Puzzle\Solution;
 
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use PChess\Chess\Chess;
 
 /**

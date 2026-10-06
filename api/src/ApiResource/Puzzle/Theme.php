@@ -8,7 +8,7 @@ use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\NotExposed;
-use App\Entity\Puzzle\Theme as ThemeEntity;
+use App\Entity\Catalog\Theme as ThemeEntity;
 use App\State\Puzzle\ThemeCollectionProvider;
 
 /**

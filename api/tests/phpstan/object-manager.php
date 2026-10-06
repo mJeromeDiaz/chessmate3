@@ -9,4 +9,5 @@ require_once dirname(__DIR__, 2).'/vendor/autoload.php';
 $kernel = new App\Kernel('dev', true);
 $kernel->boot();
 
-return $kernel->getContainer()->get('doctrine')->getManager();
+// The registry, not one manager: the puzzle catalogue has its own (docs/DEPLOY_OVH.md, § 3).
+return $kernel->getContainer()->get('doctrine');

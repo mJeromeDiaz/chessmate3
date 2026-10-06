@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Puzzle;
 
 use App\DataFixtures\Puzzle\SamplePuzzles;
-use App\Entity\Puzzle\Puzzle;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
 use App\Puzzle\Selection\SelectionRebuilder;
 use App\Puzzle\Theme\ThemeSynchronizer;
-use App\Repository\Puzzle\PuzzleRepository;
+use App\Repository\Catalog\PuzzleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -18,7 +18,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Themes and the ~50 sample puzzles loaded (and indexed for selection) in every test's
- * transaction, which DAMA rolls back afterwards.
+ * transaction, which DAMA rolls back afterwards. They live in the catalogue's database
+ * (docs/DEPLOY_OVH.md, § 3), through its own entity manager ({@see self::$catalog}).
  *
  * @phpstan-type PuzzleJson array{id: string, fen: string, moves: list<string>, playerColor: string, rating: int, themes: list<string>, gameUrl: string}
  * @phpstan-type AttemptJson array{id: string, status: string, rated: bool, mistakes: int, hintLevel: int, solutionShown: bool, durationMs: int|null, ratingBefore: float|int|null, ratingAfter: float|int|null, ratingDelta: float|int|null, puzzle: PuzzleJson}
@@ -28,6 +29,7 @@ abstract class PuzzleWebTestCase extends WebTestCase
 {
     protected KernelBrowser $client;
     protected EntityManagerInterface $entityManager;
+    protected EntityManagerInterface $catalog;
 
     /** @var array<string, Puzzle> by Lichess id */
     protected array $puzzles = [];
@@ -37,14 +39,15 @@ abstract class PuzzleWebTestCase extends WebTestCase
         $this->client = static::createClient();
         $container = self::getContainer();
         $this->entityManager = $container->get(EntityManagerInterface::class);
+        $this->catalog = $container->get('doctrine.orm.catalog_entity_manager');
         $container->get('cache.rate_limiter')->clear();
 
         $container->get(ThemeSynchronizer::class)->sync();
         foreach (SamplePuzzles::create() as $puzzle) {
-            $this->entityManager->persist($puzzle);
+            $this->catalog->persist($puzzle);
             $this->puzzles[$puzzle->getLichessId()] = $puzzle;
         }
-        $this->entityManager->flush();
+        $this->catalog->flush();
         $container->get(SelectionRebuilder::class)->addPuzzles(array_values(array_map(
             static fn (Puzzle $puzzle): int => (int) $puzzle->getId(),
             $this->puzzles,
@@ -52,7 +55,7 @@ abstract class PuzzleWebTestCase extends WebTestCase
 
         // The rebuilder writes in plain SQL (theme counts, selectable flag): drop the entities
         // loaded so far so nothing reads stale values from the identity map, then reload.
-        $this->entityManager->clear();
+        $this->catalog->clear();
         $this->puzzles = [];
         foreach ($container->get(PuzzleRepository::class)->findAll() as $puzzle) {
             $this->puzzles[$puzzle->getLichessId()] = $puzzle;
@@ -67,6 +70,21 @@ abstract class PuzzleWebTestCase extends WebTestCase
     protected function selectablePuzzles(): array
     {
         return array_values(array_filter($this->puzzles, static fn (Puzzle $puzzle): bool => $puzzle->isSelectable()));
+    }
+
+    /**
+     * A sample puzzle by catalogue id: tests read the catalogue apart, never through a join with
+     * the main database (docs/DEPLOY_OVH.md, § 3).
+     */
+    protected function puzzleById(int $id): Puzzle
+    {
+        foreach ($this->puzzles as $puzzle) {
+            if ($puzzle->getId() === $id) {
+                return $puzzle;
+            }
+        }
+
+        throw new \LogicException(\sprintf('No sample puzzle %d.', $id));
     }
 
     protected function createUser(string $email): User

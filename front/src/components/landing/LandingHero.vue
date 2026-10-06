@@ -5,12 +5,18 @@
       <div class="landing-hero__glow" />
       <div class="landing-hero__text">
         <span class="landing-pill">Compatible Lichess</span>
-        <h1 class="landing-hero__title cm-heading"
-          >Compose ton entraînement d’échecs, coup par coup.</h1
-        >
+        <h1 class="landing-hero__title cm-heading" data-testid="landing-slogan">
+          <span
+            v-for="(slogan, i) in HERO_SLOGANS"
+            :key="slogan"
+            class="landing-hero__slogan"
+            :class="{ 'landing-hero__slogan--shown': i === current }"
+            :aria-hidden="i !== current"
+            >{{ slogan }}</span
+          >
+        </h1>
         <p class="landing-hero__lead">
-          Puzzles, finales, répertoire, analyse : assemble ta session en
-          quelques touches, et laisse tes profs te guider.
+          Compose ton entraînement d’échecs, coup par coup.
         </p>
         <div class="landing-actions">
           <LichessButton />
@@ -47,10 +53,58 @@
 </template>
 
 <script setup>
-import { LANDING_IMAGES } from '@/utils/landing/content'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import {
+  HERO_SLOGANS,
+  HERO_SLOGAN_INTERVAL_MS,
+  LANDING_IMAGES
+} from '@/utils/landing/content'
 import LichessButton from '@/components/landing/LichessButton.vue'
 
-/** The landing page's hero: the pitch and the three professors. */
+/**
+ * The landing page's hero: the slogans in turn, the pitch and the three professors. Both slogans
+ * share one grid cell (the title keeps the height of the longer one, no jump). Paused while the
+ * tab is hidden; with reduced motion, no rotation: one slogan picked at random per visit.
+ */
+
+const current = ref(0)
+let timer = null
+
+function start() {
+  stop()
+  timer = setInterval(() => {
+    current.value = (current.value + 1) % HERO_SLOGANS.length
+  }, HERO_SLOGAN_INTERVAL_MS)
+}
+
+function stop() {
+  if (timer !== null) {
+    clearInterval(timer)
+    timer = null
+  }
+}
+
+function onVisibility() {
+  if (document.hidden) {
+    stop()
+  } else {
+    start()
+  }
+}
+
+onMounted(() => {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    current.value = Math.floor(Math.random() * HERO_SLOGANS.length)
+    return
+  }
+  start()
+  document.addEventListener('visibilitychange', onVisibility)
+})
+
+onBeforeUnmount(() => {
+  stop()
+  document.removeEventListener('visibilitychange', onVisibility)
+})
 
 /** Without any full-length picture (not dropped in src/assets/profs yet), no empty space. */
 const hasCast = Boolean(
@@ -112,10 +166,25 @@ const hasCast = Boolean(
 
 .landing-hero__title {
   margin: 0;
+  display: grid;
   font-size: clamp(40px, 6vw, 72px);
   line-height: 1;
   letter-spacing: -0.01em;
   text-wrap: balance;
+}
+
+.landing-hero__slogan {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+
+  &--shown {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 }
 
 .landing-hero__lead {

@@ -26,7 +26,7 @@ final readonly class DataExport
     private const DATETIME = '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/';
 
     private const README = <<<'TXT'
-        Export de vos données ChessMate
+        Export de vos données Don't Stay Rooky
         ===============================
 
         Généré le %s (UTC) pour le compte %s.
@@ -58,7 +58,7 @@ final readonly class DataExport
      */
     public function build(User $user): string
     {
-        $path = tempnam(sys_get_temp_dir(), 'chessmate-export-');
+        $path = tempnam(sys_get_temp_dir(), 'dontstayrooky-export-');
         if (false === $path) {
             throw new \RuntimeException('No temporary file for the export.');
         }
@@ -157,10 +157,10 @@ final readonly class DataExport
         return $path;
     }
 
-    /** The download's name: chessmate-export-2026-10-05.zip. */
+    /** The download's name: dontstayrooky-export-2026-10-05.zip. */
     public function fileName(): string
     {
-        return \sprintf('chessmate-export-%s.zip', $this->clock->now()->format('Y-m-d'));
+        return \sprintf('dontstayrooky-export-%s.zip', $this->clock->now()->format('Y-m-d'));
     }
 
     /**

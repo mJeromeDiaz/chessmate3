@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\ApiResource\Puzzle;
 
-use App\Entity\Puzzle\Puzzle as PuzzleEntity;
+use App\Entity\Catalog\Puzzle as PuzzleEntity;
 
 /**
  * A puzzle as the board needs it, solution included: the client gives instant feedback on each

@@ -6,8 +6,8 @@ namespace App\Tests\Functional\Dashboard;
 
 use App\Activity\Event\ExerciseCompleted;
 use App\Entity\Activity\LogEntry;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt;
-use App\Entity\Puzzle\Puzzle;
 use App\Entity\Training\Run;
 use App\Entity\Training\Session;
 use App\Entity\User;
@@ -198,13 +198,14 @@ final class StatsApiTest extends WebTestCase
      */
     private function puzzles(int $count, array $themes): array
     {
+        $catalog = self::getContainer()->get('doctrine.orm.catalog_entity_manager');
         $puzzles = [];
         for ($i = 0; $i < $count; ++$i) {
             $puzzle = new Puzzle(\sprintf('t%04d', ++$this->sequence), '8/8/8/8/8/8/8/K6k w - - 0 1', 'a1a2 h1h2', 1500, 80, 90, 1000, $themes, 'https://lichess.org/test');
-            $this->entityManager->persist($puzzle);
+            $catalog->persist($puzzle);
             $puzzles[] = $puzzle;
         }
-        $this->entityManager->flush();
+        $catalog->flush();
 
         return $puzzles;
     }

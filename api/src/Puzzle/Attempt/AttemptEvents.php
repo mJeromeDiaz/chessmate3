@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Puzzle\Attempt;
 
 use App\Activity\Event\ExerciseCompleted;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt;
-use App\Entity\Puzzle\Puzzle;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Puzzle\AttemptStatus;
 

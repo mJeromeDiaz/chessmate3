@@ -44,7 +44,7 @@ export async function requestNotifications() {
 export function notify(title, body) {
   if (!notificationsSupported() || Notification.permission !== 'granted') return
   try {
-    new Notification(title, { body, tag: 'chessmate-run' })
+    new Notification(title, { body, tag: 'dontstayrooky-run' })
   } catch {
     // Some mobile browsers only notify through a service worker.
   }

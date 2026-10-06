@@ -20,7 +20,7 @@ import {
 } from '@/utils/session/plans'
 
 /** Where the draft is kept between visits (this browser only; wiped on sign-out). */
-export const DRAFT_KEY = 'chessmate.session.draft'
+export const DRAFT_KEY = 'dontstayrooky.session.draft'
 
 /**
  * @typedef {import('@/utils/session/catalog').SessionItem} SessionItem

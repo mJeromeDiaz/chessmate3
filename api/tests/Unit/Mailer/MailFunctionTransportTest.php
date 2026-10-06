@@ -19,9 +19,9 @@ final class MailFunctionTransportTest extends TestCase
     public function testTheRenderedMessageIsHandedToMailInItsParts(): void
     {
         $this->transport(true)->send((new Email())
-            ->from('ChessMate <noreply@chessmate.test>')
+            ->from("Don't Stay Rooky <noreply@dontstayrooky.test>")
             ->to('alice@example.com')
-            ->subject('Votre code de connexion ChessMate — à saisir')
+            ->subject("Votre code de connexion Don't Stay Rooky — à saisir")
             ->text('Votre code : 123456')
             ->html('<p>Votre code : <strong>123456</strong></p>'));
 
@@ -33,7 +33,8 @@ final class MailFunctionTransportTest extends TestCase
         self::assertStringNotContainsString("\n", $call['subject']);
         self::assertStringNotContainsString("\r", $call['to']);
         // Every other header, the body's own included; never To or Subject twice.
-        self::assertStringContainsString('From: ChessMate <noreply@chessmate.test>', $call['headers']);
+        // The apostrophe is an atext character (RFC 5322): the name needs no quoting.
+        self::assertStringContainsString("From: Don't Stay Rooky <noreply@dontstayrooky.test>", $call['headers']);
         self::assertStringContainsString('MIME-Version: 1.0', $call['headers']);
         self::assertStringContainsString('Content-Type: multipart/alternative', $call['headers']);
         self::assertDoesNotMatchRegularExpression('/^(To|Subject):/mi', $call['headers']);
@@ -41,14 +42,14 @@ final class MailFunctionTransportTest extends TestCase
         self::assertStringContainsString('Votre code : 123456', $call['body']);
         self::assertStringNotContainsString('From:', $call['body']);
         // Bounces come back to the sender.
-        self::assertSame('-fnoreply@chessmate.test', $call['params']);
+        self::assertSame('-fnoreply@dontstayrooky.test', $call['params']);
     }
 
     public function testARefusalIsAnError(): void
     {
         $this->expectException(TransportException::class);
 
-        $this->transport(false)->send((new Email())->from('noreply@chessmate.test')->to('alice@example.com')->subject('x')->text('y'));
+        $this->transport(false)->send((new Email())->from('noreply@dontstayrooky.test')->to('alice@example.com')->subject('x')->text('y'));
     }
 
     public function testTheFactoryAnswersItsScheme(): void

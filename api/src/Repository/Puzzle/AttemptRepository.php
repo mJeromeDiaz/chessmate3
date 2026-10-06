@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository\Puzzle;
 
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt;
-use App\Entity\Puzzle\Puzzle;
 use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Puzzle\AttemptStatus;

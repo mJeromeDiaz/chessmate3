@@ -43,6 +43,10 @@ final class PerformanceTest extends WebTestCase
 
     private KernelBrowser $client;
     private Connection $connection;
+    /** The puzzle catalogue's database (docs/DEPLOY_OVH.md, § 3). */
+    private Connection $catalog;
+    /** JSON list of the seeded puzzles, {id, themes}, for the attempts. */
+    private string $seededPuzzles = '[]';
 
     protected function setUp(): void
     {
@@ -50,6 +54,7 @@ final class PerformanceTest extends WebTestCase
         $this->client->disableReboot();
         $container = self::getContainer();
         $this->connection = $container->get(Connection::class);
+        $this->catalog = $container->get('doctrine.dbal.catalog_connection');
         $container->get('cache.rate_limiter')->clear();
         Clock::set(new MockClock(self::NOW, 'UTC'));
     }
@@ -123,7 +128,7 @@ final class PerformanceTest extends WebTestCase
     /** Puzzles shared by both users, with a motif, a phase and a length among their themes. */
     private function puzzles(): void
     {
-        $this->connection->executeStatement(
+        $this->catalog->executeStatement(
             "INSERT INTO puzzle (lichess_id, fen, moves, rating, rating_deviation, popularity, nb_plays, themes, game_url, random_key, selectable)
              WITH RECURSIVE seq (n) AS (SELECT 0 UNION ALL SELECT n + 1 FROM seq WHERE n < :last)
              SELECT LPAD(CONV(n + 1000000, 10, 36), 5, '0'), '8/8/8/8/8/8/8/K6k w - - 0 1', 'a1a2 h1h2', 800 + n % 1600, 80, 90, 1000,
@@ -137,20 +142,26 @@ final class PerformanceTest extends WebTestCase
             ['last' => self::PUZZLES - 1],
             ['last' => ParameterType::INTEGER],
         );
+        // No join between the two databases: the attempts read the puzzles from this list.
+        $seeded = $this->catalog->fetchOne(
+            "SELECT JSON_ARRAYAGG(JSON_OBJECT('id', id, 'themes', themes)) FROM puzzle WHERE game_url = 'https://perf.test'",
+        );
+        $this->seededPuzzles = \is_string($seeded) ? $seeded : '[]';
     }
 
     /** 100 rated attempts a day, 30 % failed, some solved with a hint. */
     private function attempts(User $user): void
     {
         $this->connection->executeStatement(
-            "INSERT INTO puzzle_attempt (id, rated, status, started_at, submitted_at, duration_ms, moves, mistakes, hint_level, solution_shown, user_id, puzzle_id)
+            "INSERT INTO puzzle_attempt (id, rated, status, started_at, submitted_at, duration_ms, moves, mistakes, hint_level, solution_shown, user_id, puzzle_id, puzzle_themes)
              SELECT UUID_TO_BIN(UUID()), 1, IF(k % 10 < 3, 'failed', 'solved'),
                     TIMESTAMPADD(MINUTE, -(k DIV 365), TIMESTAMPADD(DAY, -(k % 365), :now)),
                     TIMESTAMPADD(SECOND, 20, TIMESTAMPADD(MINUTE, -(k DIV 365), TIMESTAMPADD(DAY, -(k % 365), :now))),
-                    20000, '[\"a1a2\"]', IF(k % 10 < 3, 1, 0), IF(k % 10 >= 3 AND k % 17 = 0, 1, 0), 0, :user, id
-               FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY id) - 1 AS k FROM puzzle WHERE game_url = 'https://perf.test') p
+                    20000, '[\"a1a2\"]', IF(k % 10 < 3, 1, 0), IF(k % 10 >= 3 AND k % 17 = 0, 1, 0), 0, :user, id, themes
+               FROM (SELECT p.id, p.themes, p.ordinal - 1 AS k
+                       FROM JSON_TABLE(:puzzles, '$[*]' COLUMNS (ordinal FOR ORDINALITY, id INT UNSIGNED PATH '$.id', themes JSON PATH '$.themes')) p) p
               WHERE k < :count",
-            ['now' => self::NOW, 'user' => $user->getId()->toBinary(), 'count' => self::ATTEMPTS],
+            ['now' => self::NOW, 'user' => $user->getId()->toBinary(), 'count' => self::ATTEMPTS, 'puzzles' => $this->seededPuzzles],
             ['count' => ParameterType::INTEGER],
         );
     }

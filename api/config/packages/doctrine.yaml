@@ -1,76 +1,111 @@
 doctrine:
     dbal:
-        url: '%env(resolve:DATABASE_URL)%'
+        default_connection: default
         types:
             uuid: Symfony\Bridge\Doctrine\Types\UuidType
-
-        # IMPORTANT: You MUST configure your server version,
-        # either here or in the DATABASE_URL env var (see .env file)
-        #server_version: '16'
-
-        # UTC session: SQL date functions (NOW(), CURDATE()...) agree with PHP. DATETIME columns
-        # are not converted by MySQL, the application always writes UTC values.
-        # 1002 = PDO::MYSQL_ATTR_INIT_COMMAND (Pdo\Mysql::ATTR_INIT_COMMAND in PHP 8.4+).
-        options:
-            1002: "SET time_zone = '+00:00'"
-
-        profiling_collect_backtrace: '%kernel.debug%'
-        use_savepoints: true
-        # Transient tables of the puzzle import (docs/PUZZLE_IMPORT.md) and of the selection
-        # rebuild (App\Puzzle\Selection\SelectionRebuilder): not mapped, so keep migrations:diff
-        # from dropping them while an import or a rebuild is in progress.
-        schema_filter: '~^(?!puzzle_import_staging$|puzzle_theme_membership_(build|old)$)~'
+        connections:
+            default:
+                url: '%env(resolve:DATABASE_URL)%'
+                # UTC session: SQL date functions (NOW(), CURDATE()...) agree with PHP. DATETIME
+                # columns are not converted by MySQL, the application always writes UTC values.
+                # 1002 = PDO::MYSQL_ATTR_INIT_COMMAND (Pdo\Mysql::ATTR_INIT_COMMAND in PHP 8.4+).
+                options:
+                    1002: "SET time_zone = '+00:00'"
+                profiling_collect_backtrace: '%kernel.debug%'
+                use_savepoints: true
+            # The puzzle catalogue (puzzle, puzzle_theme, puzzle_theme_membership) in its own
+            # database: docs/DEPLOY_OVH.md, § 3. Nothing joins it to the main database.
+            catalog:
+                url: '%env(resolve:CATALOG_DATABASE_URL)%'
+                options:
+                    1002: "SET time_zone = '+00:00'"
+                profiling_collect_backtrace: '%kernel.debug%'
+                use_savepoints: true
     orm:
+        default_entity_manager: default
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
-        report_fields_where_declared: true
-        validate_xml_mapping: true
-        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-        auto_mapping: true
-        mappings:
-            App:
-                type: attribute
-                is_bundle: false
-                dir: '%kernel.project_dir%/src/Entity'
-                prefix: 'App\Entity'
-                alias: App
-            # Not auto-registered by the bundle (recipes-contrib is disabled in this project):
-            # App\Entity\RefreshToken extends this mapped-superclass.
-            GesdinetJWTRefreshToken:
-                type: xml
-                is_bundle: false
-                dir: '%kernel.project_dir%/vendor/gesdinet/jwt-refresh-token-bundle/config/doctrine'
-                prefix: 'Gesdinet\JWTRefreshTokenBundle\Entity'
-                alias: GesdinetJWTRefreshToken
         controller_resolver:
             auto_mapping: false
-        dql:
-            numeric_functions:
-                JSON_CONTAINS: App\Doctrine\Query\JsonContains
+        entity_managers:
+            default:
+                connection: default
+                report_fields_where_declared: true
+                validate_xml_mapping: true
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                auto_mapping: true
+                mappings:
+                    # Covers src/Entity except src/Entity/Catalog (App\Doctrine\Mapping\CatalogMappingPass).
+                    App:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Entity'
+                        prefix: 'App\Entity'
+                        alias: App
+                    # Not auto-registered by the bundle (recipes-contrib is disabled in this project):
+                    # App\Entity\RefreshToken extends this mapped-superclass.
+                    GesdinetJWTRefreshToken:
+                        type: xml
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/vendor/gesdinet/jwt-refresh-token-bundle/config/doctrine'
+                        prefix: 'Gesdinet\JWTRefreshTokenBundle\Entity'
+                        alias: GesdinetJWTRefreshToken
+                dql:
+                    numeric_functions:
+                        JSON_CONTAINS: App\Doctrine\Query\JsonContains
+            catalog:
+                connection: catalog
+                report_fields_where_declared: true
+                validate_xml_mapping: true
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                mappings:
+                    Catalog:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Entity/Catalog'
+                        prefix: 'App\Entity\Catalog'
+                        alias: Catalog
 
 when@test:
     doctrine:
         dbal:
-            # "TEST_TOKEN" is typically set by ParaTest
-            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+            connections:
+                # "TEST_TOKEN" is typically set by ParaTest
+                default:
+                    dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+                catalog:
+                    dbname_suffix: '_test%env(default::TEST_TOKEN)%'
 
 when@e2e:
     doctrine:
         dbal:
-            # Playwright runs (front/tests/e2e) never touch the dev database.
-            dbname_suffix: '_e2e'
+            # Playwright runs (front/tests/e2e) never touch the dev databases.
+            connections:
+                default:
+                    dbname_suffix: '_e2e'
+                catalog:
+                    dbname_suffix: '_e2e'
 
 when@prod:
     doctrine:
         orm:
             auto_generate_proxy_classes: false
             proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
-            query_cache_driver:
-                type: pool
-                pool: doctrine.system_cache_pool
-            result_cache_driver:
-                type: pool
-                pool: doctrine.result_cache_pool
+            entity_managers:
+                default:
+                    query_cache_driver:
+                        type: pool
+                        pool: doctrine.system_cache_pool
+                    result_cache_driver:
+                        type: pool
+                        pool: doctrine.result_cache_pool
+                catalog:
+                    query_cache_driver:
+                        type: pool
+                        pool: doctrine.system_cache_pool
+                    result_cache_driver:
+                        type: pool
+                        pool: doctrine.result_cache_pool
 
     framework:
         cache:

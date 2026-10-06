@@ -7,7 +7,7 @@ namespace App\State\Puzzle;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Puzzle\Puzzle;
-use App\Repository\Puzzle\PuzzleRepository;
+use App\Repository\Catalog\PuzzleRepository;
 
 /**
  * @implements ProviderInterface<Puzzle>

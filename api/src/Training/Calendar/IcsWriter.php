@@ -39,7 +39,7 @@ final readonly class IcsWriter
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//ChessMate//Sessions//FR',
+            'PRODID:-//DontStayRooky//Sessions//FR',
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
             'X-WR-CALNAME:'.self::text($name),
@@ -76,7 +76,7 @@ final readonly class IcsWriter
         if (null === $first) {
             return [];
         }
-        $title = '' !== $plan->getTitle() ? $plan->getTitle() : 'Session ChessMate';
+        $title = '' !== $plan->getTitle() ? $plan->getTitle() : 'Session Don\'t Stay Rooky';
         $minutes = max(1, array_sum(array_column($plan->getSteps(), 'minutes')));
         $days = $plan->getWeekdays();
         sort($days);
@@ -89,7 +89,7 @@ final readonly class IcsWriter
 
         $lines = [
             'BEGIN:VEVENT',
-            'UID:'.$plan->getId()->toRfc4122().'@chessmate',
+            'UID:'.$plan->getId()->toRfc4122().'@dontstayrooky',
             'DTSTAMP:'.self::utc($now),
             'LAST-MODIFIED:'.self::utc($plan->getUpdatedAt()),
             $utc ? 'DTSTART:'.self::utc($first) : 'DTSTART;TZID='.$timezone->getName().':'.$first->setTimezone($timezone)->format('Ymd\THis'),

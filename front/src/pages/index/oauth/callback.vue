@@ -38,7 +38,7 @@ const REASONS = {
   provider_error: 'Le fournisseur a refusé ou n’a pas répondu. Réessayez.',
   account_exists:
     'Un compte existe déjà avec cette adresse email. Connectez-vous avec votre mot de passe, puis liez ce compte depuis votre profil.',
-  identity_in_use: 'Ce compte est déjà lié à un autre compte ChessMate.',
+  identity_in_use: "Ce compte est déjà lié à un autre compte Don't Stay Rooky.",
   provider_already_linked:
     'Un compte de ce fournisseur est déjà lié à votre profil. Retirez-le d’abord.',
   conflict: 'La connexion a échoué. Réessayez.',
@@ -49,11 +49,11 @@ const REASONS = {
   account_suspended:
     'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.',
   invitation_required:
-    'Aucun compte ChessMate n’est lié à ce compte. L’inscription se fait sur invitation : ouvrez le lien reçu par email.',
+    "Aucun compte Don't Stay Rooky n’est lié à ce compte. L’inscription se fait sur invitation : ouvrez le lien reçu par email.",
   invitation_invalid:
     'Cette clé d’invitation n’est pas valable : elle a peut-être déjà servi ou été remplacée.',
   invitation_expired:
-    'Cette clé d’invitation a expiré. Demandez-en une nouvelle à l’équipe ChessMate.'
+    "Cette clé d’invitation a expiré. Demandez-en une nouvelle à l’équipe Don't Stay Rooky."
 }
 
 /** Sign-up refusals: going back means going back to the sign-up page. */
@@ -64,7 +64,7 @@ const INVITATION_REASONS = [
 ]
 
 /** Set by the page that started a grant (repertoire import): where to come back. */
-const RETURN_KEY = 'chessmate.oauthReturn'
+const RETURN_KEY = 'dontstayrooky.oauthReturn'
 
 /**
  * The page to come back to after a grant: a path of the repertoire pages only (never another

@@ -8,7 +8,7 @@ nelmio_cors:
         allow_headers: ['Content-Type', 'Authorization', 'X-Refresh-Request']
         # Retry-After and X-Lichess-Unavailable: the reason of a 503 of the Lichess proxy.
         # Content-Disposition: the file name of a PGN export, downloaded by the SPA.
-        expose_headers: ['Link', 'Retry-After', 'X-Lichess-Unavailable', 'Content-Disposition']
+        expose_headers: ['Link', 'Retry-After', 'X-Lichess-Unavailable', 'X-Puzzle-Maintenance', 'Content-Disposition']
         allow_credentials: true
         max_age: 3600
     paths:

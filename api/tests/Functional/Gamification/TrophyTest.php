@@ -6,8 +6,8 @@ namespace App\Tests\Functional\Gamification;
 
 use App\Activity\Event\ExerciseCompleted;
 use App\Entity\Activity\LogEntry;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt;
-use App\Entity\Puzzle\Puzzle;
 use App\Entity\Training\Session;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
@@ -66,9 +66,11 @@ final class TrophyTest extends WebTestCase
             $this->log($alice, \sprintf('2026-10-%02d 18:00:00', $day));
         }
         // Three forks solved without help, one with a hint.
+        $catalog = self::getContainer()->get('doctrine.orm.catalog_entity_manager');
         foreach (['clean', 'clean', 'clean', 'hint'] as $i => $outcome) {
             $puzzle = new Puzzle(\sprintf('f%04d', $i), '8/8/8/8/8/8/8/K6k w - - 0 1', 'a1a2 h1h2', 1500, 80, 90, 1000, ['fork', 'short'], 'https://lichess.org/test');
-            $this->entityManager->persist($puzzle);
+            $catalog->persist($puzzle);
+            $catalog->flush();
             $attempt = new Attempt($alice, $puzzle, true, new \DateTimeImmutable('2026-10-02 08:00:00'));
             $attempt->resolve(true, ['h1h2'], 0, 'hint' === $outcome ? 1 : 0, false, new \DateTimeImmutable('2026-10-02 08:00:20'), null);
             $this->entityManager->persist($attempt);

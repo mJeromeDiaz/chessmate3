@@ -154,7 +154,7 @@ export function useLichessQuery(request, { delay = QUERY_DELAY_MS } = {}) {
   return { data, loading, failure, retry }
 }
 
-const STORAGE_KEY = 'chessmate.explorer'
+const STORAGE_KEY = 'dontstayrooky.explorer'
 
 /**
  * The explorer's settings, remembered in this browser.

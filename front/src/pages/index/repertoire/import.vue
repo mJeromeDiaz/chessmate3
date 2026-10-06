@@ -278,7 +278,7 @@ import { apiErrorMessage } from '@/utils/apiError'
 definePage({ meta: { auth: 'required' } })
 
 /** Where the OAuth callback page sends the user back after a grant (sessionStorage). */
-const RETURN_KEY = 'chessmate.oauthReturn'
+const RETURN_KEY = 'dontstayrooky.oauthReturn'
 
 const route = useRoute()
 const router = useRouter()

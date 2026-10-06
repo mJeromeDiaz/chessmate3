@@ -1,4 +1,4 @@
-# Sécurité de l'authentification — ChessMate
+# Sécurité de l'authentification — Don't Stay Rooky
 
 Ce document couvre la phase 1 (authentification et profil) : le modèle de menaces, les choix faits et
 leurs raisons, les risques résiduels acceptés, et les procédures d'exploitation (rotation des clés,
@@ -324,7 +324,7 @@ d'email non encore utilisés (ils peuvent en redemander un). Aucune session n'es
 - En-têtes de sécurité du serveur qui sert le SPA (§ 2.10).
 - `composer audit` et `npm audit` dans la CI.
 - **Jamais de `doctrine:fixtures:load` en production** : il purge la base et crée le compte de démo
-  `demo@chessmate.test` au mot de passe public ([WOODPECKER.md § 10](WOODPECKER.md#10-données-de-démonstration)).
+  `demo@dontstayrooky.test` au mot de passe public ([WOODPECKER.md § 10](WOODPECKER.md#10-données-de-démonstration)).
   Les fixtures ne sont chargées qu'en dev et en `e2e`.
 - Purge périodique des lignes expirées (`refresh_token`, `mfa_challenge`, `oauth_flow`,
   `reset_password_request`) et politique de rétention du journal d'audit (données personnelles :
@@ -470,7 +470,7 @@ Woodpecker ne sont pas classées : l'enjeu est surtout le cloisonnement, la fiab
   locale (`localStorage`) est relue avec la même liste blanche.
 - `PUT /api/profile/info` : nom affiché ≤ 40 caractères sans caractère de contrôle (affiché par Vue,
   donc échappé) ; pseudo `^[a-z0-9_]{3,20}$` après mise en minuscules, hors liste de noms réservés
-  (`admin`, `support`, `chessmate`…, `HandleChecker`), unique (index `uniq_user_handle`, colonne
+  (`admin`, `support`, `chessmate`, `dontstayrooky`…, `HandleChecker`), unique (index `uniq_user_handle`, colonne
   `ascii_bin` : deux demandes simultanées ⇒ la seconde reçoit 409) ; avatar limité à l'enum
   `Avatar`. 30 écritures / heure par compte.
 - **Sessions actives** (`/api/auth/sessions`) : chaque refresh token garde le User-Agent et l'IP de
