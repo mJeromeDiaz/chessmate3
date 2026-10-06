@@ -34,6 +34,10 @@ when@test:
         push.client:
             class: Symfony\Component\HttpClient\MockHttpClient
             public: true
+        # The request traces of the last request (config/packages/monolog.yaml, when@test).
+        app.trace.test_handler:
+            class: Monolog\Handler\TestHandler
+            public: true
         # Built by hand in tests (other limits), or used by one service only and inlined otherwise.
         App\Repertoire\RepertoireManager: { autowire: true, public: true }
         App\Repertoire\Graph\GraphEditor: { autowire: true, public: true }

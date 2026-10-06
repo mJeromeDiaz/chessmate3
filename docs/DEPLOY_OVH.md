@@ -192,6 +192,18 @@ Les messages en file ne sont pas perdus pendant un déploiement : le tick suivan
   - **`scheme` doit valoir `https`.** Les liens des emails (vérification d'adresse) en sont
     construits. Même remède si ce n'est pas le cas.
 
+### Journaux
+
+- **Traces des requêtes** ([SECURITY.md § 2.12](SECURITY.md#212-journal-daudit)) :
+  `~/dontstayrooky/api/var/log/traces/prod-AAAA-MM-JJ.log`, un fichier par jour, gardés 365 jours.
+  `var/` est hors de la racine web (`api/public`) et le déploiement n'y touche pas (`rsync` l'exclut) :
+  les traces survivent aux mises à jour. L'IP qu'elles portent est celle que voit l'API : vérifiez
+  `clientIp` ci-dessus. Ordre de grandeur : environ 400 octets par requête, soit environ 20 Mo par
+  jour pour 100 joueurs actifs (environ 7 Go sur un an), dans le quota disque de l'offre. Pour lire
+  une session : `grep '"fingerprint":"<empreinte>"' var/log/traces/prod-*.log`.
+- **Erreurs** : en production, Monolog écrit les erreurs (avec les messages qui les précèdent) et les
+  dépréciations sur `stderr`, c'est-à-dire dans les journaux d'erreurs PHP de l'hébergement.
+
 ## 3. Deux bases de données
 
 Les bases incluses dans l'offre sont limitées à 1 Go chacune. Le **catalogue de puzzles** occupe donc

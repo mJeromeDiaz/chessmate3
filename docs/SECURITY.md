@@ -239,6 +239,35 @@ token, connexions OAuth, déconnexion. Chaque entrée porte l'IP et l'user-agent
 passe, code, jeton ni secret** dans les métadonnées (testé pour le token Lichess). Une erreur
 d'écriture du journal est loguée mais n'interrompt jamais une connexion.
 
+**Traces des requêtes** (complément du journal d'audit : chaque requête brute, pas seulement les
+événements de sécurité). `App\Security\Trace\RequestTraceListener` écrit une ligne JSON par requête
+dans le canal Monolog `trace`, sur `kernel.terminate` (après l'envoi de la réponse ; un échec n'est
+qu'un avertissement dans le journal principal) :
+
+- **Requêtes tracées** : GET, POST, PUT, PATCH et DELETE sur toute route `/api/auth/*`, et sur toute
+  route que `security.yaml` n'ouvre pas à tous (lu dans l'`access_control` : une nouvelle route
+  protégée est tracée d'office), refus 401/403 compris. Jamais : le flux iCal, `/api/ops/*`, OPTIONS.
+- **Contenu** : date (UTC), méthode, chemin, query, statut, durée, IP, user-agent, id du joueur, et
+  le corps des écritures. L'id du joueur n'est lu que sur les routes protégées (sur une route
+  publique, le firewall paresseux ne l'a pas authentifié, et l'interroger après la réponse le
+  ferait).
+- **Le jeton d'accès n'est jamais écrit** : seulement une empreinte (16 premiers caractères hexa de
+  son SHA-256, la même pour toutes les requêtes d'un jeton, inutilisable pour se connecter) et, une
+  fois sa signature vérifiée par le firewall, ses `iat` et `exp`. Le cookie du refresh token n'est
+  jamais lu.
+- **Masquage** (`App\Security\Trace\Redactor`), dans le corps (récursivement) et la query : toute
+  clé contenant `password`, `token` ou `secret`, et `code`, `key`, `invitationKey`, `state`,
+  `signature`, `auth`, `p256dh`, `endpoint`. `RedactorTest` vérifie chaque champ des DTO de
+  `src/Dto` : un nouveau champ doit y être déclaré inoffensif ou être masqué. Un corps qui n'est pas
+  du JSON (ni un formulaire) n'est que mesuré ; un fichier envoyé n'est décrit que par son nom et sa
+  taille ; au-delà de 4 Ko après masquage, le corps est coupé (`bodyTruncated`, `bodyBytes`).
+- **Fichiers** : `var/log/traces/<env>-AAAA-MM-JJ.log` (un par jour UTC, `rotating_file`),
+  **conservés 365 jours** (recommandation CNIL pour la journalisation : 6 mois à 1 an), supprimés à
+  la rotation suivante. En test, un `TestHandler` en mémoire (`app.trace.test_handler`).
+- Les traces contiennent des données personnelles (IP, emails saisis) et survivent à la suppression
+  d'un compte pendant leur durée de conservation : à mentionner dans la politique de
+  confidentialité.
+
 ### 2.13 Secrets
 
 Aucun secret dans le dépôt. `.env` ne contient que des valeurs par défaut non sensibles et des
@@ -328,7 +357,7 @@ d'email non encore utilisés (ils peuvent en redemander un). Aucune session n'es
   Les fixtures ne sont chargées qu'en dev et en `e2e`.
 - Purge périodique des lignes expirées (`refresh_token`, `mfa_challenge`, `oauth_flow`,
   `reset_password_request`) et politique de rétention du journal d'audit (données personnelles :
-  IP, user-agent, email tenté).
+  IP, user-agent, email tenté). Les traces des requêtes (§ 2.12) se purgent seules à 365 jours.
 
 ## 5. Revue de sécurité finale (phase 1)
 
