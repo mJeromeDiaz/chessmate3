@@ -14,23 +14,6 @@
           >
         </div>
         <div class="dashboard__head-actions">
-          <span
-            v-if="!store.isNewUser && gamification.summary"
-            class="dashboard__streak"
-            :class="{
-              'dashboard__streak--waiting':
-                !gamification.summary.streak.playedToday
-            }"
-            :title="
-              gamification.summary.streak.playedToday
-                ? 'Série en cours'
-                : 'Joue aujourd’hui pour garder ta série'
-            "
-            data-testid="streak"
-            >🔥&#xFE0E; {{ gamification.summary.streak.current }} jour{{
-              gamification.summary.streak.current > 1 ? 's' : ''
-            }}</span
-          >
           <q-btn
             unelevated
             no-caps
@@ -69,6 +52,7 @@
           <ModuleProgress :rows="moduleRows" class="dashboard__modules" />
         </div>
         <div class="dashboard__col">
+          <StreakCard class="dashboard__streak-card" />
           <ActivityHeatmap
             v-if="store.activity"
             :today="store.activity.today"
@@ -128,6 +112,7 @@ import ModuleProgress from '@/components/dashboard/ModuleProgress.vue'
 import RatingCard from '@/components/dashboard/RatingCard.vue'
 import MyPlans from '@/components/dashboard/MyPlans.vue'
 import RecentSessions from '@/components/dashboard/RecentSessions.vue'
+import StreakCard from '@/components/dashboard/StreakCard.vue'
 import TrophyGrid from '@/components/dashboard/TrophyGrid.vue'
 import WeakThemeTip from '@/components/dashboard/WeakThemeTip.vue'
 import WeeklyQuest from '@/components/dashboard/WeeklyQuest.vue'
@@ -161,20 +146,22 @@ const sectionError = computed(() =>
     : ''
 )
 
+/** Loads the dashboard; an announcement left unseen (a run closed later, another tab) shows. */
+function loadAll() {
+  store.load()
+  gamification
+    .load()
+    .then(() => gamification.celebrateStreak({ afterExercise: false }))
+}
+
 onMounted(() => {
-  if (auth.isAuthenticated) {
-    store.load()
-    gamification.load()
-  }
+  if (auth.isAuthenticated) loadAll()
 })
 
 watch(
   () => auth.isAuthenticated,
   signedIn => {
-    if (signedIn) {
-      store.load()
-      gamification.load()
-    }
+    if (signedIn) loadAll()
   }
 )
 </script>
@@ -232,25 +219,6 @@ watch(
   gap: 10px;
 }
 
-.dashboard__streak {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 14px;
-  background: var(--cm-orange-soft);
-  color: var(--cm-orange-ink);
-  font-weight: 800;
-  font-size: 15px;
-}
-
-// Not played yet today: the streak is still alive, but waits for today's exercise.
-.dashboard__streak--waiting {
-  background: var(--cm-subtle);
-  color: var(--cm-muted);
-}
-
 .dashboard__new {
   height: 40px;
   border-radius: 14px;
@@ -285,7 +253,8 @@ watch(
   }
 }
 
-.dashboard__banner {
+.dashboard__banner,
+.dashboard__streak-card {
   order: 1;
 }
 .dashboard__rating {

@@ -33,6 +33,7 @@
               :aria-current="isNavActive(link, route.path) ? 'page' : undefined"
             />
           </nav>
+          <StreakChip class="app-header__streak" />
           <RatingBadge class="gt-xs" />
           <AccountMenu class="gt-sm" />
         </template>
@@ -51,6 +52,7 @@
     </q-header>
 
     <NavDrawer v-if="auth.isAuthenticated" v-model="drawer" />
+    <StreakCelebration v-if="auth.isAuthenticated" />
 
     <q-page-container>
       <router-view />
@@ -62,6 +64,8 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import StreakCelebration from '@/components/gamification/StreakCelebration.vue'
+import StreakChip from '@/components/gamification/StreakChip.vue'
 import AccountMenu from '@/components/layout/AccountMenu.vue'
 import NavDrawer from '@/components/layout/NavDrawer.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
@@ -98,6 +102,10 @@ const showHeader = computed(() => auth.isAuthenticated || !route.meta.landing)
 .cm-brand-name {
   font-size: 19px;
   white-space: nowrap;
+}
+
+.app-header__streak {
+  margin-right: 4px;
 }
 
 .app-header__nav {

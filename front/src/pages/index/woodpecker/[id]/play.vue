@@ -91,6 +91,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import CycleRecap from '@/components/woodpecker/CycleRecap.vue'
+import { useGamificationStore } from '@/stores/gamification'
 import { useTrainingStore } from '@/stores/training'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -102,6 +103,7 @@ definePage({ meta: { auth: 'required' } })
 const route = useRoute()
 const store = useWoodpeckerStore()
 const training = useTrainingStore()
+const gamification = useGamificationStore()
 const id = computed(() => String(route.params.id))
 const set = computed(() => (store.set?.id === id.value ? store.set : null))
 const loading = ref(false)
@@ -109,14 +111,20 @@ const error = ref('')
 /** Why no puzzle can be played now (paused, resting, finished), or ''. */
 const blocked = ref('')
 
-/** The result sheet's button, once the submission answered (or failed). */
+/**
+ * The result sheet's button, once the submission answered (or failed); the day's first puzzle
+ * shows the streak celebration first.
+ */
 const actions = computed(() => [
   {
     label: store.recap ? 'Continuer' : 'Puzzle suivant →',
     primary: true,
     disable: !store.result && !error.value,
     testid: 'woodpecker-next',
-    onClick: next
+    onClick: async () => {
+      await gamification.celebrateStreak({ afterExercise: !!store.result })
+      await next()
+    }
   }
 ])
 

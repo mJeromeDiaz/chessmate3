@@ -14,6 +14,7 @@ use App\State\Gamification\SummaryProvider;
  * streaks, today's exercise XP against the daily cap.
  *
  * @phpstan-import-type ModuleLevel from SummaryReader
+ * @phpstan-import-type StreakView from SummaryReader
  */
 #[ApiResource(
     shortName: 'GamificationSummary',
@@ -35,8 +36,8 @@ final class Summary
     public ?array $nextRank = null;
     /** @var array<string, ModuleLevel> by module (Module values) */
     public array $modules = [];
-    /** @var array{current: int, best: int, playedToday: bool} */
-    public array $streak = ['current' => 0, 'best' => 0, 'playedToday' => false];
-    /** @var array{exerciseXp: int, cap: int} */
-    public array $today = ['exerciseXp' => 0, 'cap' => 0];
+    /** @var StreakView week: the active days of the current local week, Monday first; nextMilestone: the next streak badge's length */
+    public array $streak = ['current' => 0, 'best' => 0, 'playedToday' => false, 'week' => [false, false, false, false, false, false, false], 'nextMilestone' => 3];
+    /** @var array{date: string, exerciseXp: int, cap: int} date: the user's local day (Y-m-d) */
+    public array $today = ['date' => '', 'exerciseXp' => 0, 'cap' => 0];
 }

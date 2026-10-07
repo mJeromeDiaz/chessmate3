@@ -9,12 +9,24 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * set as the HttpOnly cookie the SPA uses to restore its session on load (the email 2FA login
  * itself is covered by the Phase 1 tests).
  *
+ * The streak celebration (docs/GAMIFICATION.md, "Annonce de la série") would cover the page after
+ * the user's first exercise: unless `streak` is asked, the API is answered "none pending".
+ *
  * @param {import('@playwright/test').BrowserContext} context
- * @param {{admin?: boolean, password?: string}} [options] an admin (docs/EARLY_ACCESS.md); a
- *   password, for a test that also signs in through the login page
+ * @param {{admin?: boolean, password?: string, streak?: boolean}} [options] an admin
+ *   (docs/EARLY_ACCESS.md); a password, for a test that also signs in through the login page;
+ *   the real streak announcements
  * @returns {Promise<{id: string, email: string}>}
  */
-export async function signIn(context, { admin = false, password } = {}) {
+export async function signIn(
+  context,
+  { admin = false, password, streak = false } = {}
+) {
+  if (!streak) {
+    await context.route('**/api/gamification/streak/notice', route =>
+      route.fulfill({ json: { pending: false } })
+    )
+  }
   const args = ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user']
   if (admin) args.push('--admin')
   if (password) args.push(`--password=${password}`)

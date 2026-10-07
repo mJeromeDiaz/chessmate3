@@ -222,6 +222,7 @@ import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
 import { sessionApi } from '@/services/api'
+import { useGamificationStore } from '@/stores/gamification'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
 import { stepModule } from '@/utils/session/steps'
@@ -252,6 +253,7 @@ const STOP_MESSAGES = {
 const route = useRoute()
 const $q = useQuasar()
 const store = useTrainingStore()
+const gamification = useGamificationStore()
 const runner = useTimeboxedRun()
 const loading = ref(false)
 const error = ref('')
@@ -368,7 +370,10 @@ watch(
     if (phase === 'running' && runner.run.value)
       seenRunning.add(runner.run.value.id)
     if (phase !== 'ended') return
-    endOpen.value = true
+    // The day's first exercise may have been in this run: its streak celebration comes first.
+    gamification
+      .celebrateStreak({ afterExercise: false })
+      .then(() => (endOpen.value = true))
     if (store.current?.id === runner.run.value?.id) store.current = null
     const parentId = runner.run.value?.parentId
     if (parentId) {

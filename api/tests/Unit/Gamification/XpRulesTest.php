@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Gamification;
 
 use App\Enum\Activity\ExerciseType;
+use App\Enum\Gamification\Trophy;
 use App\Enum\Training\Module;
 use App\Gamification\Summary\Streak;
 use App\Gamification\Xp\XpRules;
@@ -63,5 +64,26 @@ final class XpRulesTest extends TestCase
         self::assertSame(['current' => 4, 'best' => 4, 'playedToday' => true], Streak::of([...$days, '2026-10-05'], '2026-10-05'));
         self::assertSame(['current' => 0, 'best' => 4, 'playedToday' => false], Streak::of($days, '2026-10-06'), 'a day missed');
         self::assertSame(['current' => 2, 'best' => 2, 'playedToday' => true], Streak::of(['2026-02-28', '2026-03-01'], '2026-03-01'), 'across months');
+    }
+
+    public function testTheWeekOfStreaksStartsOnMonday(): void
+    {
+        $days = ['2026-10-04', '2026-10-05', '2026-10-07', '2026-10-12'];
+        self::assertSame([true, false, true, false, false, false, false], Streak::week($days, '2026-10-07'));
+        self::assertSame([true, false, true, false, false, false, false], Streak::week($days, '2026-10-11'), 'Sunday ends the week');
+        self::assertSame([false, false, false, false, false, false, true], Streak::week($days, '2026-10-04'));
+    }
+
+    public function testStreakBadgesAndTheirMilestones(): void
+    {
+        self::assertSame([3, 7, 14, 30, 50, 100, 200, 300, 365, 450, 500, 1000], array_map(static fn (Trophy $trophy): int => $trophy->goal(), Trophy::streaks()));
+        self::assertSame(Trophy::Streak3, Trophy::forStreak(3));
+        self::assertSame(Trophy::OnFire, Trophy::forStreak(7));
+        self::assertSame(Trophy::Unstoppable, Trophy::forStreak(30));
+        self::assertNull(Trophy::forStreak(8));
+        self::assertSame(3, Streak::nextMilestone(0));
+        self::assertSame(7, Streak::nextMilestone(3));
+        self::assertSame(365, Streak::nextMilestone(300));
+        self::assertNull(Streak::nextMilestone(1000));
     }
 }

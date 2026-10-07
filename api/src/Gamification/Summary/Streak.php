@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Gamification\Summary;
 
+use App\Enum\Gamification\Trophy;
+
 /**
  * Streaks of active local days (docs/GAMIFICATION.md): a day counts with at least one exercise.
  * The current streak is still alive when the last active day is yesterday (today is not over).
@@ -47,6 +49,37 @@ final class Streak
                 return $day;
             }
             $previous = $day;
+        }
+
+        return null;
+    }
+
+    /**
+     * The active days of the week (Monday to Sunday) holding $today.
+     *
+     * @param list<string> $days active local days (Y-m-d)
+     *
+     * @return list<bool> 7 days, Monday first
+     */
+    public static function week(array $days, string $today): array
+    {
+        $monday = (new \DateTimeImmutable($today.' 00:00:00', new \DateTimeZone('UTC')))->modify('monday this week');
+        $active = array_flip($days);
+        $week = [];
+        for ($i = 0; $i < 7; ++$i) {
+            $week[] = isset($active[$monday->modify(\sprintf('+%d days', $i))->format('Y-m-d')]);
+        }
+
+        return $week;
+    }
+
+    /** The next streak badge's length after a streak of $length days, null past the last one. */
+    public static function nextMilestone(int $length): ?int
+    {
+        foreach (Trophy::streaks() as $trophy) {
+            if ($trophy->goal() > $length) {
+                return $trophy->goal();
+            }
         }
 
         return null;

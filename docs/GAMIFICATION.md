@@ -16,6 +16,12 @@ défi de la semaine, trophées, XP de fin de séance. Choix validés le 2026-10-
 Lots : G1 XP, niveaux et niveaux de module, G2 séries, G3 trophées, G4 défi de la semaine, G5 front
 (fin de `showcase.js`).
 
+Séries mises en avant (maquette « Série », choix validés le 2026-10-07) : écran de célébration une
+fois par jour (après le premier exercice en jeu libre, à la fin de la séance chronométrée), 12 badges
+de série de 3 à 1 000 jours, flamme dans l'en-tête, carte « Série » au dashboard, rappel « série en
+danger » le soir ([NOTIFICATIONS.md § 5](NOTIFICATIONS.md#5-rappel-série-en-danger)). Lots S1 API,
+S2 rappel, S3 front, S4 documentation.
+
 ## 1. Organisation du code
 
 | Couche | Emplacement |
@@ -24,13 +30,14 @@ Lots : G1 XP, niveaux et niveaux de module, G2 séries, G3 trophées, G4 défi d
 | Écriture des gains | `App\Gamification\Xp\XpLedger` (SQL, idempotent), handlers `App\Gamification\Handler\{AwardExerciseXp, AwardBonusXp}` |
 | Recalcul | `App\Gamification\Xp\XpRebuilder`, commande `app:gamification:rebuild [--user=<uuid>]` |
 | Lecture | `App\Gamification\Summary\{SummaryReader, Streak}` |
+| Annonce de la série | `App\Gamification\Streak\{StreakNoticeWriter, StreakNoticeReader}`, entité `App\Entity\Gamification\StreakNotice` (table `gamification_streak_notice`), API `App\ApiResource\Gamification\StreakNotice`, `App\State\Gamification\{StreakNoticeProvider, StreakNoticeProcessor}` |
 | Trophées | `App\Gamification\Trophy\{TrophyProgress, TrophyEvaluator}`, enum `App\Enum\Gamification\Trophy`, entité `App\Entity\Gamification\TrophyUnlock` (table `gamification_trophy`) |
 | Entité, enum | `App\Entity\Gamification\XpEntry` (table `gamification_xp_entry`), `App\Enum\Gamification\XpKind` |
 | Défi de la semaine | `App\Gamification\Quest\{QuestService, QuestProgress}`, enum `App\Enum\Gamification\QuestTemplate`, entité `App\Entity\Gamification\Quest` (table `gamification_quest`) |
 | Comptage commun (N-ième élément) | `App\Gamification\Progress\Counter` |
 | API | `App\ApiResource\Gamification\{Summary, Trophies, WeeklyQuest}`, `App\State\Gamification\SummaryProvider` |
 | Fixtures | `App\DataFixtures\Gamification\GamificationFixtures` (XP du compte démo, par le recalcul) |
-| Front | `front/src/services/api.js` (`gamificationApi`), `stores/gamification.js`, `utils/gamification.js` ; blocs `components/dashboard/{LevelBanner, TrophyGrid, WeeklyQuest, ModuleProgress, ActivityHeatmap}.vue`, XP de fin de séance dans `components/training/RunEndDialog.vue` |
+| Front | `front/src/services/api.js` (`gamificationApi`), `stores/gamification.js`, `utils/gamification.js`, `utils/streak.js` ; blocs `components/dashboard/{LevelBanner, StreakCard, TrophyGrid, WeeklyQuest, ModuleProgress, ActivityHeatmap}.vue`, XP de fin de séance dans `components/training/RunEndDialog.vue` ; série : `components/gamification/{StreakCelebration, StreakChip}.vue` (célébration, flamme de l'en-tête et du menu), réglage du rappel `components/profile/StreakReminderSection.vue` |
 
 ## 2. Règles (`XpRules`)
 
@@ -80,7 +87,40 @@ tables, et la première série validante de chaque orientation (`coordinates_ser
 
 Calculées à la lecture depuis les jours distincts du journal d'activité (`idx_activity_log_entry_user_date`) :
 la série en cours reste vivante tant que le dernier jour actif est hier ou aujourd'hui ; le record est la
-plus longue suite de jours consécutifs. Aucune table.
+plus longue suite de jours consécutifs. Aucune table. Le résumé donne aussi la **semaine locale**
+(lundi → dimanche, jours réellement actifs) et le **prochain palier** de badge.
+
+### Badges de série (2026-10-07)
+
+Douze paliers : **3, 7, 14, 30, 50, 100, 200, 300, 365, 450, 500, 1000** jours. Ce sont des trophées
+(§ 4 bis : même table, même évaluation à la lecture, même date d'exploit = premier exercice du jour où
+la série atteint sa longueur, même recalcul), gagnés pour toujours même si la série casse ensuite ;
+7 et 30 sont « En feu » et « Inarrêtable », les autres les cas `streak_<n>` de l'enum
+(`Trophy::isStreak()`, `Trophy::streaks()`, `Trophy::forStreak()`). Le front les montre dans la carte
+« Série » du dashboard, pas dans la grille des trophées.
+
+### Annonce de la série (2026-10-07)
+
+L'écran de célébration (`front/src/components/gamification/StreakCelebration.vue`) se montre une
+fois par jour, après le premier exercice du jour (jeu libre) ou à la fin de la séance chronométrée.
+
+- Le journal d'activité est écrit **après** la réponse (outbox) : `StreakNoticeWriter` écoute
+  `SendMessageToTransportsEvent` (comme `ExerciseXp`) et, quand un `ExerciseCompleted` du jour local
+  de l'utilisateur entre dans l'outbox alors que le journal n'a encore rien ce jour-là, écrit la série
+  atteinte (série vivante + 1, sinon 1), celle d'avant (0 si cassée) et le badge éventuel, **dans la
+  transaction de l'exercice** (annulée avec lui).
+- Une ligne par utilisateur (`INSERT … AS new ON DUPLICATE KEY UPDATE`) que seul un jour plus récent
+  remplace : un deuxième exercice du même jour, journalisé ou encore dans l'outbox, n'annonce rien de
+  plus. Un exercice d'un jour passé (séance close paresseusement après minuit, reprise) n'annonce rien.
+- Un seul mécanisme pour tous les modules et toutes les fermetures de séance (arrêt, temps écoulé,
+  fermeture paresseuse) : le front lit `GET /gamification/streak/notice` et l'acquitte une fois
+  montrée. L'annonce d'un jour passé n'est jamais montrée.
+- Front (`useGamificationStore().celebrateStreak()`, qui se résout quand le joueur ferme l'écran) :
+  au clic sur le bouton de la fiche de résultat en jeu libre (puzzle, Woodpecker), à la fin d'une
+  séance chronométrée avant le bilan, et à l'ouverture du dashboard (annonce restée non vue). Après
+  un exercice, « rien en attente » veut dire « déjà montrée » (autre onglet) : plus aucune question
+  ce jour-là. « Continuer » acquitte, met à jour la série du résumé (flamme de l'en-tête allumée sans
+  rechargement) et reprend là où le joueur était. Animation réduite : l'état final d'emblée.
 
 ## 4 bis. Trophées
 
@@ -142,7 +182,9 @@ Modèles validés le 2026-10-05 :
 
 | Endpoint | Contenu |
 |---|---|
-| `GET /api/gamification/summary` | `xp`, `level`, `xpInLevel`, `xpForNext`, `rank`, `nextRank` (`{rank, level}` ou null), `modules.{woodpecker, repertoire, puzzles, free}` (`xp`, `level`, `xpInLevel`, `xpForNext`), `streak` (`current`, `best`, `playedToday`), `today` (`exerciseXp`, `cap`) |
+| `GET /api/gamification/summary` | `xp`, `level`, `xpInLevel`, `xpForNext`, `rank`, `nextRank` (`{rank, level}` ou null), `modules.{woodpecker, repertoire, puzzles, free}` (`xp`, `level`, `xpInLevel`, `xpForNext`), `streak` (`current`, `best`, `playedToday`, `week` : 7 booléens du lundi au dimanche, `nextMilestone` ou null), `today` (`date` : jour local, `exerciseXp`, `cap`) |
+| `GET /api/gamification/streak/notice` | L'annonce de série du jour pas encore montrée : `pending` (false : aucune, autres champs null), `streak`, `previousStreak` (0 : cassée), `badge` (clé de trophée) ou null, `week` (aujourd'hui compris), `nextMilestone`, `localDate` |
+| `POST /api/gamification/streak/notice/acknowledgement` | 204 : l'annonce du jour est montrée (idempotent) |
 | `GET /api/gamification/quest` | Le défi de la semaine : `id`, `template`, `theme`, `module`, `goal`, `current`, `reward`, `completed`, `completedAt`, `weekStart`, `weekEnd` (dimanche) ; le tire au premier affichage, le termine et verse sa récompense |
 | `GET /api/gamification/trophies` | `trophies[]` dans l'ordre du catalogue : `key`, `goal`, `current`, `unlocked`, `unlockedAt` (date de l'exploit) ou null, `ratio` (Mémoire d'acier) ; enregistre ceux qui viennent d'être atteints |
 | `GET /api/training/runs/{id}/review` | Porte aussi `xp` : l'XP gagnée dans la séance (somme du registre pour ce `run`), 0 tant que le worker ne l'a pas écrite |
@@ -169,9 +211,15 @@ avec le test de performance du dashboard (un an d'un joueur très assidu, XP rec
   `tests/Functional/Gamification/XpTest.php` (handlers idempotents, plafond et jour local, bonus,
   résumé, recalcul identique aux handlers), `TrophyTest.php` (progression, date de l'exploit, fenêtre
   de 30 jours, enregistrement unique, recalcul identique), `QuestTest.php` (nouveau joueur, semaine
-  passée soldée plus tard, objectif sur 4 semaines, pas deux fois le même modèle, récompense unique).
+  passée soldée plus tard, objectif sur 4 semaines, pas deux fois le même modèle, récompense unique),
+  `StreakNoticeTest.php` (annonce au premier exercice du jour, une seule fois, badge, série cassée,
+  annulée avec l'exercice, jamais pour un jour passé).
   `tests/Functional/Training/RunReviewTest.php` vérifie l'`xp` de la revue avant et après l'outbox.
 - Vitest : `tests/unit/gamification.test.js` (barre de niveau, niveau d'un module du catalogue,
-  cartes de trophées, phrase et prof du défi), `run-end.test.js` (XP et niveau de fin de séance).
+  cartes de trophées, phrase et prof du défi), `run-end.test.js` (XP et niveau de fin de séance),
+  `streak.test.js` (badges, paroles d'Albert, semaine, jour local, célébration une fois par jour).
 - Playwright : `tests/e2e/dashboard.spec.js` (réponses de gamification simulées : niveau, série,
-  record, niveau de module, trophées, défi ; plus aucune étiquette « Aperçu »).
+  carte « Série » et badges, record, niveau de module, trophées, défi ; plus aucune étiquette
+  « Aperçu »), `streak.spec.js` (célébration réelle après le premier puzzle du jour puis plus rien,
+  annonce restée non vue au dashboard avec son badge, réglage du rappel). Les autres specs reçoivent
+  « aucune annonce » (`signIn()`, sauf `{streak: true}`).

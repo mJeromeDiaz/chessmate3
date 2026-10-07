@@ -11,6 +11,7 @@
     <div class="nav-drawer__who">
       <UserAvatar />
       <div class="nav-drawer__name">{{ name }}</div>
+      <StreakChip v-if="open" testid="drawer-streak" />
       <RatingBadge v-if="open" class="nav-drawer__rating" />
     </div>
 
@@ -82,6 +83,7 @@
 <script setup>
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import StreakChip from '@/components/gamification/StreakChip.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
 import UserAvatar from '@/components/layout/UserAvatar.vue'
 import { useLogout } from '@/composables/layout/useLogout'

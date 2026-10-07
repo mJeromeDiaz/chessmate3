@@ -77,10 +77,19 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
         modules: {
           puzzles: { xp: 2100, level: 6, xpInLevel: 0, xpForNext: 600 }
         },
-        streak: { current: 3, best: 21, playedToday: true },
-        today: { exerciseXp: 40, cap: 500 }
+        streak: {
+          current: 3,
+          best: 21,
+          playedToday: true,
+          week: [true, true, true, false, false, false, false],
+          nextMilestone: 7
+        },
+        today: { date: today, exerciseXp: 40, cap: 500 }
       }
     })
+  )
+  await page.route('**/api/gamification/streak/notice', route =>
+    route.fulfill({ json: { pending: false } })
   )
   await page.route('**/api/gamification/trophies', route =>
     route.fulfill({
@@ -90,6 +99,14 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
             key: 'first_step',
             goal: 1,
             current: 1,
+            unlocked: true,
+            unlockedAt: `${day(-2)}T08:00:00+00:00`,
+            ratio: null
+          },
+          {
+            key: 'streak_3',
+            goal: 3,
+            current: 3,
             unlocked: true,
             unlockedAt: `${day(-2)}T08:00:00+00:00`,
             ratio: null
@@ -151,7 +168,18 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
   await expect(page.getByTestId('level-xp')).toHaveText(
     '2\u202f340 / 3\u202f000 XP'
   )
-  await expect(page.getByTestId('streak')).toContainText('3 jours')
+  // The streak: in the header, and its card (streak badges there, not in the trophy grid).
+  await expect(page.getByTestId('streak-count')).toHaveText('3')
+  await expect(page.getByTestId('streak-card-count')).toHaveText('3')
+  await expect(page.getByTestId('streak-card-best')).toHaveText(
+    'Record : 21 jours'
+  )
+  await expect(page.getByTestId('streak-badges-count')).toHaveText('1 / 12')
+  await expect(page.getByTestId('streak-badge-3')).toHaveAttribute(
+    'data-unlocked',
+    'true'
+  )
+  await expect(page.getByTestId('streak-badge-7')).toContainText('encore 4 j')
   await expect(page.getByTestId('best-streak')).toHaveText('Record 21 jours')
   await expect(
     page.getByTestId('module-row-puzzles').getByTestId('module-level')

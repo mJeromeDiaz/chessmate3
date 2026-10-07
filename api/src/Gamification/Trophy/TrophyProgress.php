@@ -47,8 +47,11 @@ final readonly class TrophyProgress
     {
         $id = $user->getId()->toBinary();
 
+        if ($trophy->isStreak()) {
+            return $this->streak($id, $trophy->goal());
+        }
+
         return match ($trophy) {
-            Trophy::OnFire, Trophy::Unstoppable => $this->streak($id, $trophy->goal()),
             Trophy::FirstStep => $this->counter->nth('SELECT occurred_at AS at FROM activity_log_entry WHERE user_id = :user', $id, 1),
             Trophy::Woodpecker => $this->counter->nth(
                 'SELECT c.completed_at AS at FROM woodpecker_cycle c JOIN woodpecker_set s ON s.id = c.set_id
@@ -89,6 +92,7 @@ final readonly class TrophyProgress
             ),
             Trophy::Marathon => $this->marathon($id, $trophy->goal()),
             Trophy::IronMemory => $this->ironMemory($id, $trophy->goal()),
+            default => throw new \LogicException(\sprintf('No progress for trophy "%s".', $trophy->value)),
         };
     }
 

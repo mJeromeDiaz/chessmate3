@@ -135,6 +135,7 @@ import { useRoute, useRouter } from 'vue-router'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import PuzzleRunDialog from '@/components/puzzle/PuzzleRunDialog.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
+import { useGamificationStore } from '@/stores/gamification'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -185,6 +186,20 @@ async function heldByRun(e) {
 
 const attempt = computed(() => store.attempt)
 
+const gamification = useGamificationStore()
+
+/**
+ * After the result sheet, the day's first puzzle shows the streak celebration first.
+ *
+ * @param {() => void} action
+ */
+function afterStreak(action) {
+  return async () => {
+    await gamification.celebrateStreak({ afterExercise: !!store.result })
+    action()
+  }
+}
+
 /**
  * The result sheet's buttons: the next puzzle once the submission answered (asking earlier would
  * hand back the same, still pending, attempt), and an unrated replay after a failure.
@@ -195,7 +210,7 @@ const actions = computed(() => {
     primary: true,
     disable: !store.result && !error.value,
     testid: 'puzzle-next',
-    onClick: next
+    onClick: afterStreak(next)
   }
   const current = attempt.value
   if (store.result?.status !== 'failed' || !current) return [next_]
@@ -203,7 +218,7 @@ const actions = computed(() => {
     {
       label: 'Réessayer',
       testid: 'puzzle-retry',
-      onClick: () => replay(current.puzzle.id)
+      onClick: afterStreak(() => replay(current.puzzle.id))
     },
     next_
   ]

@@ -22,6 +22,7 @@
           >
             <h2 class="cm-card__title">Notifications et calendrier</h2>
             <NotificationSection />
+            <StreakReminderSection />
             <CalendarSection />
           </section>
           <DataCard class="profile__data" />
@@ -50,6 +51,7 @@ import PreferencesCard from '@/components/profile/PreferencesCard.vue'
 import ProfileFooter from '@/components/profile/ProfileFooter.vue'
 import ProfileHero from '@/components/profile/ProfileHero.vue'
 import SecurityCard from '@/components/profile/SecurityCard.vue'
+import StreakReminderSection from '@/components/profile/StreakReminderSection.vue'
 
 definePage({ meta: { auth: 'required' } })
 

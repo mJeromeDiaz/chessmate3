@@ -16,8 +16,9 @@ import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
  * @property {string} rank
  * @property {{rank: string, level: number}|null} nextRank
  * @property {Record<string, ModuleLevel>} modules by API module (puzzles, woodpecker, repertoire, free)
- * @property {{current: number, best: number, playedToday: boolean}} streak
- * @property {{exerciseXp: number, cap: number}} today
+ * @property {{current: number, best: number, playedToday: boolean, week: boolean[], nextMilestone: number|null}} streak
+ *   week: the active days of the local week, Monday first
+ * @property {{date: string, exerciseXp: number, cap: number}} today date: the user's local day (Y-m-d)
  *
  * @typedef {object} Trophy
  * @property {string} key

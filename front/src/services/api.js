@@ -779,7 +779,21 @@ export const gamificationApi = {
   trophies: () =>
     http.get('/api/gamification/trophies', JSON_LD).then(r => r.data.trophies),
   /** The quest of the week (drawn on its first read). */
-  quest: () => http.get('/api/gamification/quest', JSON_LD).then(r => r.data)
+  quest: () => http.get('/api/gamification/quest', JSON_LD).then(r => r.data),
+  /** Today's streak announcement not shown yet (`pending` false when none). */
+  streakNotice: () =>
+    http.get('/api/gamification/streak/notice', JSON_LD).then(r => r.data),
+  /** Marks today's announcement as shown (idempotent). */
+  acknowledgeStreak: () =>
+    http.post('/api/gamification/streak/notice/acknowledgement', null, JSON_LD),
+  /** The "streak in danger" reminder: `{enabled, hour, email}`. */
+  streakReminder: () =>
+    http.get('/api/gamification/streak/reminder', JSON_LD).then(r => r.data),
+  /** @param {{enabled: boolean, hour: number, email: boolean}} settings */
+  saveStreakReminder: settings =>
+    http
+      .put('/api/gamification/streak/reminder', settings, JSON_LD)
+      .then(r => r.data)
 }
 
 /**

@@ -25,8 +25,8 @@ DrainOnTerminateListener}`, `App\Controller\Ops\TickController`.
 l'appelle **chaque minute** (cron-job.org, gratuit : méthode POST et en-tête personnalisé). À
 chaque appel :
 
-1. les rappels de session dus sont mis en file : `ReminderDispatcher`, la même logique que
-   `app:training:send-reminders` ;
+1. les rappels dus sont mis en file : sessions (`ReminderDispatcher`) et « série en danger »
+   (`StreakReminderDispatcher`), la même logique que `app:training:send-reminders` ;
 2. les files sont vidées, `activity` puis `async` (domaine, emails, imports, rappels), et le tick
    s'arrête dès que :
    - les files sont vides ;
@@ -45,7 +45,8 @@ autorisées.
   secret configuré, ou avec un mauvais secret, la route répond **404**, comme si elle n'existait
   pas.
 - **Si le planificateur tombe**, rien n'est perdu : messages et rappels attendent le tick suivant.
-  Un rappel en retard de plus de 15 minutes n'est plus envoyé (`docs/NOTIFICATIONS.md`).
+  Un rappel de session en retard de plus de 15 minutes n'est plus envoyé, un rappel de série au-delà
+  de 30 minutes (`docs/NOTIFICATIONS.md`).
 
 ### Après chaque requête d'écriture
 

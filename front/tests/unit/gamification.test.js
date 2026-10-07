@@ -25,8 +25,14 @@ function summary(overrides = {}) {
       puzzles: { xp: 2100, level: 6, xpInLevel: 0, xpForNext: 600 },
       free: { xp: 0, level: 1, xpInLevel: 0, xpForNext: 100 }
     },
-    streak: { current: 3, best: 21, playedToday: true },
-    today: { exerciseXp: 40, cap: 500 },
+    streak: {
+      current: 3,
+      best: 21,
+      playedToday: true,
+      week: [true, true, true, false, false, false, false],
+      nextMilestone: 7
+    },
+    today: { date: '2026-10-07', exerciseXp: 40, cap: 500 },
     ...overrides
   }
 }

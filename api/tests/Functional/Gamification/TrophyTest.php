@@ -85,7 +85,8 @@ final class TrophyTest extends WebTestCase
         $lastTest = $this->repertoireTests($alice);
 
         $trophies = $this->trophies($alice);
-        self::assertSame(['on_fire', 'woodpecker', 'golden_fork', 'iron_memory', 'first_step', 'unstoppable', 'steel_woodpecker', 'centurion', 'conductor', 'marathon'], array_column($trophies, 'key'));
+        self::assertSame(['on_fire', 'woodpecker', 'golden_fork', 'iron_memory', 'first_step', 'unstoppable', 'steel_woodpecker', 'centurion', 'conductor', 'marathon',
+            'streak_3', 'streak_14', 'streak_50', 'streak_100', 'streak_200', 'streak_300', 'streak_365', 'streak_450', 'streak_500', 'streak_1000'], array_column($trophies, 'key'));
         $byKey = array_column($trophies, null, 'key');
         self::assertSame([true, '2026-10-03T08:00:00+00:00'], [$byKey['on_fire']['unlocked'], $byKey['on_fire']['unlockedAt']], 'the first exercise of the 7th day');
         self::assertSame('2026-09-27T08:00:00+00:00', $byKey['first_step']['unlockedAt']);
@@ -93,20 +94,22 @@ final class TrophyTest extends WebTestCase
         self::assertSame([3, 100, false], [$byKey['golden_fork']['current'], $byKey['golden_fork']['goal'], $byKey['golden_fork']['unlocked']], 'the hinted one does not count');
         self::assertSame([4, 1000], [$byKey['centurion']['current'], $byKey['centurion']['goal']], 'every solved puzzle');
         self::assertSame([7, 30], [$byKey['unstoppable']['current'], $byKey['unstoppable']['goal']]);
+        self::assertSame([true, '2026-09-29T08:00:00+00:00'], [$byKey['streak_3']['unlocked'], $byKey['streak_3']['unlockedAt']], 'a streak badge');
+        self::assertSame([7, 14, false], [$byKey['streak_14']['current'], $byKey['streak_14']['goal'], $byKey['streak_14']['unlocked']]);
         self::assertSame(2, $byKey['conductor']['current']);
         self::assertSame([0, false], [$byKey['woodpecker']['current'], $byKey['woodpecker']['unlocked']]);
         self::assertSame(0, $byKey['marathon']['current']);
-        self::assertSame(3, $this->stored($alice));
+        self::assertSame(4, $this->stored($alice));
 
         // Read again: the same dates, nothing more stored.
         $again = array_column($this->trophies($alice), null, 'key');
         self::assertSame($byKey['on_fire']['unlockedAt'], $again['on_fire']['unlockedAt']);
-        self::assertSame(3, $this->stored($alice));
+        self::assertSame(4, $this->stored($alice));
 
         // Rebuilt: the same trophies at the same dates.
         $command = new CommandTester((new Application($this->client->getKernel()))->find('app:gamification:rebuild'));
         self::assertSame(0, $command->execute(['--user' => $alice->getId()->toRfc4122()]));
-        self::assertStringContainsString('3 trophies', $command->getDisplay());
+        self::assertStringContainsString('4 trophies', $command->getDisplay());
         $rebuilt = array_column($this->trophies($alice), null, 'key');
         self::assertSame($byKey['iron_memory']['unlockedAt'], $rebuilt['iron_memory']['unlockedAt']);
     }

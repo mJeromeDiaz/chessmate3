@@ -82,7 +82,7 @@ d'agrégats (et leur commande de recalcul) arriveront au lot B si une mesure les
 | Bloc de la maquette | Données |
 |---|---|
 | Bannière niveau / XP avec Aaron | Réelle (`GET /api/gamification/summary`) : niveau, grade, XP dans le niveau, ce qui reste avant le niveau suivant et le prochain grade ([GAMIFICATION.md](GAMIFICATION.md)) |
-| Série 🔥, record de série | Réels (même résumé) ; la série est grisée tant qu'on n'a pas joué aujourd'hui |
+| Série 🔥, record de série | Réels (même résumé). La flamme est dans l'en-tête de toutes les pages et dans le menu burger (`components/gamification/StreakChip.vue`), grisée tant qu'on n'a pas joué aujourd'hui ; la carte « Série » (`StreakCard`, juste sous la bannière sur mobile) donne la série, le record, la semaine réelle et la frise des 12 badges de série ; l'ancienne pastille en haut de page a disparu. Une célébration de série restée non vue s'affiche à l'ouverture ([GAMIFICATION.md § 4](GAMIFICATION.md#4-séries-streak)) |
 | Courbe 90 jours, onglets Puzzles · Blitz · Rapide · Classique | Réelles. La maquette montrait un « Elo Lichess » seul ; l'onglet Puzzles (Glicko-2 interne) est ajouté et ouvert par défaut |
 | Heatmap « Régularité », 12 semaines | Réelle : une colonne par semaine, lundi en haut, aujourd'hui cerclé, jours futurs vides ; teintes à 1, 5, 10 et 20 exercices |
 | Défi de la semaine | Réel (`GET /api/gamification/quest`), donné par le prof du module du défi (Lizy pour un défi sur plusieurs modules) ; masqué si la lecture échoue |

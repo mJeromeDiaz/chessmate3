@@ -20,7 +20,8 @@ use Psr\Clock\ClockInterface;
  * @phpstan-import-type Level from XpRules
  *
  * @phpstan-type ModuleLevel array{xp: int, level: int, xpInLevel: int, xpForNext: int}
- * @phpstan-type Summary array{xp: int, level: int, xpInLevel: int, xpForNext: int, rank: string, nextRank: array{rank: string, level: int}|null, modules: array<string, ModuleLevel>, streak: array{current: int, best: int, playedToday: bool}, today: array{exerciseXp: int, cap: int}}
+ * @phpstan-type Summary array{xp: int, level: int, xpInLevel: int, xpForNext: int, rank: string, nextRank: array{rank: string, level: int}|null, modules: array<string, ModuleLevel>, streak: StreakView, today: array{date: string, exerciseXp: int, cap: int}}
+ * @phpstan-type StreakView array{current: int, best: int, playedToday: bool, week: list<bool>, nextMilestone: int|null}
  */
 final readonly class SummaryReader
 {
@@ -69,6 +70,7 @@ final readonly class SummaryReader
         ), 'is_string'));
 
         $level = XpRules::level($total);
+        $streak = Streak::of($days, $today);
 
         return [
             'xp' => $total,
@@ -76,8 +78,12 @@ final readonly class SummaryReader
             'rank' => XpRules::rank($level['level']),
             'nextRank' => XpRules::nextRank($level['level']),
             'modules' => $modules,
-            'streak' => Streak::of($days, $today),
-            'today' => ['exerciseXp' => is_numeric($todayXp) ? (int) $todayXp : 0, 'cap' => XpRules::DAILY_EXERCISE_CAP],
+            'streak' => [
+                ...$streak,
+                'week' => Streak::week($days, $today),
+                'nextMilestone' => Streak::nextMilestone($streak['current']),
+            ],
+            'today' => ['date' => $today, 'exerciseXp' => is_numeric($todayXp) ? (int) $todayXp : 0, 'cap' => XpRules::DAILY_EXERCISE_CAP],
         ];
     }
 }
