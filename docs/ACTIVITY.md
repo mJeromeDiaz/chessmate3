@@ -57,9 +57,10 @@ n'en supprime jamais.
 | `Woodpecker\Event\SetCompleted` | dernier cycle terminé | set, nombre de cycles et de puzzles, runs perdus |
 | `Woodpecker\Event\SetGrown` | croissance d'un set light | set, manche, puzzles ajoutés, nouvelle taille |
 | `Training\Event\RunCompleted` | clôture d'une séance chronométrée ([TRAINING.md](TRAINING.md)) | séance, module, sujet (`subjectType` + `subjectId`), `parentId`, motif, budget, durée réelle, éléments et réussites, `startedAt` |
+| `Coordinates\Event\SeriesValidated` | une série de coordonnées valide son orientation ([COORDINATES.md](COORDINATES.md)) | série, séance, orientation, réponses, réussites |
 | `Training\Event\SessionClosed` | clôture d'une session ([TRAINING.md § 9](TRAINING.md#9-sessions)) : terminée, abandonnée ou expirée (paresseusement) | session, statut, étapes, faites, passées, temps joué, `startedAt` |
 
-`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study` (extensible).
+`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study`, `coordinates_series`, `blindfold_puzzle` (extensible).
 
 | Source | `type` | `sourceType` |
 |---|---|---|
@@ -68,6 +69,8 @@ n'en supprime jamais.
 | Puzzle Woodpecker (cycle classique ou manche light) | `woodpecker_puzzle` | `woodpecker_attempt` |
 | Tronçon présenté dans un test de répertoire (une ligne : un par tronçon traversé) | `repertoire_segment` | `repertoire_presentation` |
 | Séance libre (livre, vidéo…) close, durée serveur > 0 | `free_study` | `training_run` |
+| Puzzle à l'aveugle résolu ou raté ([BLINDFOLD.md](BLINDFOLD.md)) ; `metadata.status` : `solved`, `helped` ou `failed` | `blindfold_puzzle` | `blindfold_puzzle_attempt` |
+| Série de coordonnées close avec au moins une réponse ([COORDINATES.md](COORDINATES.md)) ; `success` = série validante, `itemCount` = réponses | `coordinates_series` | `coordinates_series` |
 
 `metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
 (`classic`, `light`) et, joué en séance, `trainingRunId`. Un puzzle classé ou rejoué porte aussi

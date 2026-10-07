@@ -21,10 +21,12 @@ describe('apiErrorMessage', () => {
   })
 
   it('leaves any other 503 to the page', () => {
-    expect(apiErrorMessage(answered(503), { 503: 'Lichess est indisponible.' })).toBe(
-      'Lichess est indisponible.'
+    expect(
+      apiErrorMessage(answered(503), { 503: 'Lichess est indisponible.' })
+    ).toBe('Lichess est indisponible.')
+    expect(apiErrorMessage(answered(503))).toBe(
+      'Une erreur est survenue. Réessayez.'
     )
-    expect(apiErrorMessage(answered(503))).toBe('Une erreur est survenue. Réessayez.')
   })
 
   it('says when the server cannot be reached', () => {

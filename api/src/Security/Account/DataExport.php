@@ -38,7 +38,8 @@ final readonly class DataExport
         - woodpecker.json : vos sets, leurs puzzles, cycles, tentatives et agrandissements.
         - repertoires.json : vos répertoires, leurs cartes de révision (FSRS), vos réponses et vos tests ;
           repertoires/*.pgn : chaque répertoire au format PGN.
-        - entrainement.json : vos séances chronométrées, sessions et sessions enregistrées.
+        - entrainement.json : vos séances chronométrées, sessions, sessions enregistrées, séries
+          de coordonnées et puzzles à l'aveugle.
         - activite.json : le journal de vos exercices terminés.
 
         Les dates sont en UTC (ISO 8601), les identifiants des UUID.
@@ -140,6 +141,20 @@ final readonly class DataExport
                 $id,
                 ['steps', 'weekdays', 'reminder_channels'],
             ),
+            'coordinates' => $this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, orientation, squares, answers, answer_count, success_count,
+                        answered_ms, validated, started_at, closed_at
+                   FROM coordinates_series WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['squares', 'answers'],
+            ),
+            'blindfoldPuzzles' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, puzzle_id AS puzzle, level, length, visible_seconds, status,
+                        started_at, submitted_at, duration_ms, moves, mistakes
+                   FROM blindfold_puzzle_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['moves'],
+            )),
         ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(

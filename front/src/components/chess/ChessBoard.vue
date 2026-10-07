@@ -21,6 +21,17 @@
         :data-testid="`glyph-${glyph.square}`"
         >{{ glyph.text }}</span
       >
+      <div v-if="squareInput" class="chess-board__squares">
+        <button
+          v-for="square in displayedSquares"
+          :key="square"
+          type="button"
+          tabindex="-1"
+          class="chess-board__square"
+          :data-testid="`square-${square}`"
+          @pointerdown.prevent="emit('square', square)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -110,12 +121,18 @@ const props = defineProps({
   /** Piece animation duration in ms (0 disables animations). */
   animationDuration: { type: Number, default: 250 },
   /** Show dots on the legal destinations of the picked piece. */
-  showLegalMoves: { type: Boolean, default: true }
+  showLegalMoves: { type: Boolean, default: true },
+  /** Show the files and ranks on the edge (read once, when the board is created). */
+  coordinates: { type: Boolean, default: true },
+  /** Every square is clickable and emits `square` (the coordinates series, docs/COORDINATES.md; blindfold puzzles, docs/BLINDFOLD.md). */
+  squareInput: { type: Boolean, default: false }
 })
 
 const emit = defineEmits({
   /** A legal move made by the user: {from, to, promotion?, uci, san}. */
-  move: payload => typeof payload?.uci === 'string'
+  move: payload => typeof payload?.uci === 'string',
+  /** A square clicked, with `squareInput`: its name ("e4"). */
+  square: name => /^[a-h][1-8]$/.test(name)
 })
 
 /** Square colours and move sounds of the signed-in user (profile preferences). */
@@ -126,9 +143,21 @@ const container = ref(null)
 const board = shallowRef(null)
 const shaking = ref(false)
 const currentFen = ref(props.fen)
-let rules = new Chess(props.fen)
+let rules = rulesOf(props.fen)
 /** Number of setPosition calls, so that only the latest one sets data-fen. */
 let positionCalls = 0
+
+/**
+ * The rules of a position. An empty board (the coordinates series) has no king, which chess.js
+ * refuses unless told to skip its checks.
+ *
+ * @param {string} fen
+ */
+function rulesOf(fen) {
+  return new Chess(fen, {
+    skipValidation: fen.split(' ')[0] === '8/8/8/8/8/8/8/8'
+  })
+}
 
 /** @param {string} color */
 const toBoardColor = color => (color === 'black' ? COLOR.black : COLOR.white)
@@ -151,6 +180,20 @@ const placedGlyphs = computed(() =>
     })
 )
 
+/** The squares row by row from the top left corner, as seen from `orientation`. */
+const displayedSquares = computed(() => {
+  const black = props.orientation === 'black'
+  const squares = []
+  for (let row = 0; row < 8; row++) {
+    for (let column = 0; column < 8; column++) {
+      const file = black ? 7 - column : column
+      const rank = black ? row : 7 - row
+      squares.push(String.fromCharCode(97 + file) + (rank + 1))
+    }
+  }
+  return squares
+})
+
 onMounted(() => {
   board.value = new Chessboard(container.value, {
     position: props.fen,
@@ -161,7 +204,7 @@ onMounted(() => {
       // Our own theme: square colours come from CSS variables (the user's board theme).
       cssClass: 'dontstayrooky',
       borderType: BORDER_TYPE.none,
-      showCoordinates: true,
+      showCoordinates: props.coordinates,
       animationDuration: props.animationDuration
     },
     extensions: [
@@ -205,7 +248,7 @@ async function setPosition(fen, animated = true) {
     const kind = moveKind(rules.fen(), fen)
     if (kind) playMoveSound(kind)
   }
-  rules = new Chess(fen)
+  rules = rulesOf(fen)
   const call = ++positionCalls
   if (board.value) {
     await board.value.setPosition(fen, animated && props.animationDuration > 0)
@@ -366,6 +409,22 @@ defineExpose({ setPosition, shake })
 .chess-board__surface {
   width: 100%;
   aspect-ratio: 1;
+}
+// One transparent button per square over the board (squareInput).
+.chess-board__squares {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+}
+.chess-board__square {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .chess-board__glyph {
   position: absolute;

@@ -235,3 +235,91 @@ describe('gridTitle', () => {
     )
   })
 })
+
+describe('a coordinates series', () => {
+  /** @param {number} index @param {string} target @param {string} clicked */
+  const coordinate = (index, target, clicked) => /** @type {any} */ ({
+    index,
+    type: 'coordinate',
+    status: target === clicked ? 'ok' : 'fail',
+    durationMs: 1_000,
+    data: { index: index - 1, target, clicked }
+  })
+  const rules = { seriesSeconds: 300, minAnswers: 50, minSuccessRate: 0.95 }
+
+  it('counts squares, tells whether it validated and which squares were missed', () => {
+    const validated = run('coordinates', 60, 58, {
+      orientation: 'black',
+      validated: true,
+      averageMs: 1_250,
+      rules
+    })
+    const items = [
+      coordinate(1, 'e4', 'e4'),
+      coordinate(2, 'b6', 'c6'),
+      coordinate(3, 'b6', 'b5')
+    ]
+
+    expect(endHero(validated, 'Alice', false)).toMatchObject({
+      kicker: 'SÉRIE VALIDÉE · NOIRS',
+      subtitle: '60 cases en 2:05'
+    })
+    expect(endMessage(validated, items, 'Alice', label)).toBe(
+      'Noirs validés ! Cases à retravailler : b6.'
+    )
+    expect(
+      endStats(validated, items).map(s => [s.label, s.value, s.sub])
+    ).toEqual([
+      ['Réussite', '97 %', '58 sur 60'],
+      ['Moyenne / case', '1,3 s', '2:05 au total'],
+      ['Validation', 'Validée', 'Noirs en bas'],
+      ['XP gagnés', '…', '']
+    ])
+    expect(gridTitle(validated)).toBe('Cases de la série')
+
+    const short = run('coordinates', 30, 30, {
+      orientation: 'white',
+      validated: false,
+      rules
+    })
+    expect(endHero(short, 'Alice', false).kicker).toBe(
+      'SÉRIE TERMINÉE · BLANCS'
+    )
+    expect(endMessage(short, [], 'Alice', label)).toBe(
+      '30 réponses : il en faut 50 pour valider. Aucune erreur !'
+    )
+  })
+})
+
+describe('a blindfold puzzles run', () => {
+  it('counts the peeks and the misses, and points at the theme missed most', () => {
+    const blind = run('blindfold', 4, 2, {
+      level: 'easy',
+      length: 2,
+      visibleSeconds: 10,
+      solved: 2,
+      helped: 1,
+      failed: 1,
+      averageMs: 40_000
+    })
+    const items = [
+      { ...puzzle(1, 'ok', ['fork']), type: 'blindfold_puzzle' },
+      { ...puzzle(2, 'hint', ['pin']), type: 'blindfold_puzzle' },
+      { ...puzzle(3, 'fail', ['pin']), type: 'blindfold_puzzle' }
+    ]
+
+    expect(endHero(blind, 'Alice', false).subtitle).toBe('4 puzzles en 2:05')
+    expect(endStats(blind, items).map(s => [s.label, s.value, s.sub])).toEqual([
+      ['Réussite', '50 %', '2 sur 4'],
+      ['Moyenne / puzzle', '0:40', '2:05 au total'],
+      ['Avec coup d’œil', '1', '1 raté'],
+      ['XP gagnés', '…', '']
+    ])
+    expect(weakPoint(items, label)).toEqual({ label: 'Clouage', count: 2 })
+    expect(missedItems(items, label).map(m => m.replayable)).toEqual([
+      true,
+      true
+    ])
+    expect(gridTitle(blind)).toBe('Puzzles de la séance')
+  })
+})

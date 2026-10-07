@@ -22,6 +22,8 @@ export function closeReasonText(run) {
     case 'stopped':
       return 'Séance terminée avant la fin du temps.'
     case 'subject_finished':
+      if (run.module === 'coordinates')
+        return 'Toutes les cases de la série sont faites !'
       return 'Set terminé, bravo !'
     case 'subject_resting':
       return `Cycle terminé. Repos : prochain cycle le ${formatDate(run.summary?.context?.availableAt)}.`
@@ -30,6 +32,8 @@ export function closeReasonText(run) {
         return 'Plus rien à tester dans cette sélection : séance close.'
       if (run.module === 'puzzles')
         return 'Plus aucun puzzle disponible pour ces thèmes : séance close.'
+      if (run.module === 'blindfold')
+        return 'Plus aucun puzzle à l’aveugle à ce niveau et de cette longueur : séance close.'
       return 'Le set a été mis en pause ou abandonné : séance close.'
     default:
       return ''
@@ -47,6 +51,8 @@ export function subjectPath(run) {
     return `/woodpecker/${run.subjectId}`
   if (run.subjectType === 'repertoire_owner') return '/repertoire'
   if (run.subjectType === 'puzzle_player') return '/puzzle'
+  if (run.subjectType === 'coordinates_player') return '/coordinates'
+  if (run.subjectType === 'blindfold_player') return '/blindfold'
   return '/'
 }
 
@@ -64,6 +70,10 @@ export function backLabel(run) {
       return 'Retour aux répertoires'
     case 'puzzles':
       return 'Retour aux puzzles'
+    case 'coordinates':
+      return 'Retour aux coordonnées'
+    case 'blindfold':
+      return 'Retour au jeu à l’aveugle'
     default:
       return 'Retour à l’accueil'
   }

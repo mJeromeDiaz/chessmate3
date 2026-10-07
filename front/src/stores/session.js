@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { planApi, repertoireApi, woodpeckerApi } from '@/services/api'
+import {
+  coordinatesApi,
+  planApi,
+  repertoireApi,
+  woodpeckerApi
+} from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -11,7 +16,8 @@ import {
   itemIssue,
   move as moveItem,
   sessionMinutes,
-  toStep
+  toStep,
+  withFixedDuration
 } from '@/utils/session/catalog'
 import {
   normalizeSettings,
@@ -133,28 +139,42 @@ export const useSessionStore = defineStore('session', () => {
   const repertoires = ref([])
   /** @type {import('vue').Ref<SubjectContext['lightSet']>} */
   const lightSet = ref(null)
+  /** @type {import('vue').Ref<Record<string, number>>} */
+  const fixedMinutes = ref({})
 
   /** @type {import('vue').ComputedRef<SubjectContext>} */
   const context = computed(() => ({
     loaded: subjectsLoaded.value,
     repertoires: repertoires.value,
     lightSet: lightSet.value,
-    themeLabel: key => puzzles.themeLabel(key)
+    themeLabel: key => puzzles.themeLabel(key),
+    fixedMinutes: fixedMinutes.value
   }))
 
   /**
-   * Fetches what the modules play on: the user's repertoires, their ongoing light set and the
-   * puzzle themes. Fetched again on each call (the user may have created one meanwhile).
+   * Fetches what the modules play on: the user's repertoires, their ongoing light set, the
+   * puzzle themes and the length of a coordinates series (the program's items follow it). Fetched
+   * again on each call (the user may have created one meanwhile).
    */
   async function fetchSubjects() {
     subjectsLoading.value = true
     subjectsError.value = ''
     try {
-      const [repertoireList, sets] = await Promise.all([
+      const [repertoireList, sets, , coordinates] = await Promise.all([
         repertoireApi.list(),
         woodpeckerApi.sets(),
-        puzzles.fetchThemes()
+        puzzles.fetchThemes(),
+        coordinatesApi.overview()
       ])
+      fixedMinutes.value = {
+        coordonnees: Math.round(coordinates.rules.seriesSeconds / 60)
+      }
+      items.value = items.value.map(item => {
+        const module = MODULES_BY_ID[item.moduleId]
+        if (!module) return item
+        const values = withFixedDuration(module, item.values, context.value)
+        return values === item.values ? item : { ...item, values }
+      })
       repertoires.value = repertoireList.map((/** @type {any} */ r) => ({
         id: r.id,
         name: r.name,
@@ -216,6 +236,7 @@ export const useSessionStore = defineStore('session', () => {
         reset()
         repertoires.value = []
         lightSet.value = null
+        fixedMinutes.value = {}
         subjectsLoaded.value = false
       }
     }
@@ -300,7 +321,13 @@ export const useSessionStore = defineStore('session', () => {
     const item = {
       uid: ++lastUid,
       moduleId,
-      values: clone(values ?? defaultValues(module))
+      values: clone(
+        withFixedDuration(
+          module,
+          values ?? defaultValues(module),
+          context.value
+        )
+      )
     }
     items.value = [...items.value, item]
     return item

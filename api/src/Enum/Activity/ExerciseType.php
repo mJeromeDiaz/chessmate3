@@ -16,4 +16,8 @@ enum ExerciseType: string
     case RepertoireSegment = 'repertoire_segment';
     /** Free study timed in a run (a book, a video...): its real duration. */
     case FreeStudy = 'free_study';
+    /** A coordinates series (docs/COORDINATES.md): its answers are its items. */
+    case CoordinatesSeries = 'coordinates_series';
+    /** A puzzle solved from memory (docs/BLINDFOLD.md); `metadata.status`: solved, helped or failed. */
+    case BlindfoldPuzzle = 'blindfold_puzzle';
 }

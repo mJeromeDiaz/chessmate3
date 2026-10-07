@@ -32,6 +32,12 @@ import {
   formatPercent,
   formatRatingDelta
 } from '@/utils/format'
+import { LEVELS } from '@/utils/blindfold'
+import {
+  ORIENTATIONS,
+  formatAnswerTime,
+  validationText
+} from '@/utils/coordinates'
 import { unitWord } from '@/utils/repertoireTest'
 import { FREE_FORMATS, closeReasonText } from '@/utils/training'
 
@@ -77,7 +83,7 @@ const stats = computed(() => {
   ]
 })
 
-/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study). */
+/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles). */
 const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
@@ -105,6 +111,26 @@ const details = computed(() => {
   if (props.run.module === 'free') {
     lines.push(`Format : ${FREE_FORMATS[m.format] ?? m.format}.`)
     if (m.notes) lines.push(`Notes : ${m.notes}`)
+    return lines
+  }
+  if (props.run.module === 'coordinates') {
+    lines.push(
+      `Orientation : ${ORIENTATIONS[m.orientation] ?? m.orientation} en bas.`
+    )
+    lines.push(validationText(props.run))
+    if (m.averageMs)
+      lines.push(`Temps moyen par case : ${formatAnswerTime(m.averageMs)}.`)
+    return lines
+  }
+  if (props.run.module === 'blindfold') {
+    lines.push(
+      `Niveau ${LEVELS[m.level] ?? m.level} · ${m.length} coups · ${m.visibleSeconds} s pour mémoriser.`
+    )
+    lines.push(
+      `Résolus de mémoire : ${m.solved ?? 0} · avec un coup d’œil : ${m.helped ?? 0} · ratés : ${m.failed ?? 0}.`
+    )
+    if (m.averageMs)
+      lines.push(`Temps moyen par puzzle : ${formatDuration(m.averageMs)}`)
     return lines
   }
   if (props.run.module === 'puzzles' && m.ratingBefore != null) {

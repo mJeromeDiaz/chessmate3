@@ -9,9 +9,11 @@ import { PROFS } from '@/utils/prof/profs'
  *
  * Field types beyond the generic ones: `themes` (puzzle theme keys, picked in a second panel),
  * `repertoire` (ids of the user's repertoires, at least one) and `lightSet` (the user's Woodpecker light
- * set: shown, not chosen, as there is at most one; no value).
+ * set: shown, not chosen, as there is at most one; no value) and `fixedDuration` (the length of a
+ * module whose runs all last the same time, the coordinates series: shown, not chosen, set from the
+ * API's rules in `context.fixedMinutes`).
  *
- * @typedef {'slider'|'one'|'many'|'toggle'|'text'|'themes'|'repertoire'|'lightSet'} FieldType
+ * @typedef {'slider'|'one'|'many'|'toggle'|'text'|'themes'|'repertoire'|'lightSet'|'fixedDuration'} FieldType
  *
  * @typedef {object} Field
  * @property {string} key value key in the module's settings
@@ -97,18 +99,6 @@ const count = (label, min, max, def, unit) => ({
   format: v => `${v} ${unit}`
 })
 
-/** @param {number} def @returns {Field} */
-const clock = def => ({
-  key: 'chrono',
-  label: 'Chronomètre par coup',
-  type: 'slider',
-  min: 0,
-  max: 120,
-  step: 10,
-  default: def,
-  format: v => (v === 0 ? 'Sans limite' : `${v} s / coup`)
-})
-
 /**
  * @param {string} key @param {string} label @param {string[]} options @param {string} def
  * @returns {Field}
@@ -180,6 +170,14 @@ const themes = {
   default: [],
   hint: 'Aucun thème : tous les thèmes. Sinon, un puzzle a au moins un des thèmes choisis.'
 }
+
+/**
+ * The settings of blindfold puzzles (App\Blindfold\Puzzle\PuzzleRules, docs/BLINDFOLD.md),
+ * labels to API values. The API refuses any other value (422): change them together.
+ */
+const BLINDFOLD_LEVELS = { Facile: 'easy', Moyen: 'medium', Difficile: 'hard' }
+const BLINDFOLD_LENGTHS = { '2 coups': 2, '3 coups': 3, '4 coups et +': 4 }
+const BLINDFOLD_VISIBLE = ['5 s', '10 s', '15 s', '20 s', '30 s']
 
 /** @type {Module[]} */
 export const MODULES = [
@@ -351,28 +349,46 @@ export const MODULES = [
     ]
   },
   {
+    id: 'coordonnees',
+    title: 'Coordonnées',
+    desc: 'Trouver les cases sur un échiquier vide, sans coordonnées.',
+    ...noCard('Noctis'),
+    glyph: glyph('♙'),
+    available: true,
+    bg: '#4A3D86',
+    ink: '#FFFFFF',
+    soft: '#E7E4F2',
+    deep: '#2B2250',
+    accentInk: '#4A3D86',
+    fields: [
+      {
+        key: 'duree',
+        label: 'Durée',
+        type: 'fixedDuration',
+        default: 0,
+        hint: 'Une série dure toujours le même temps.'
+      },
+      one('orientation', 'Orientation', ['Blancs', 'Noirs'], 'Blancs'),
+      notes()
+    ]
+  },
+  {
     id: 'aveugle',
     title: 'Jeu à l’aveugle',
-    desc: 'Jouer en visualisant l’échiquier sans le voir.',
+    desc: 'Des puzzles résolus de mémoire : la position s’affiche, disparaît, puis tu joues sur un échiquier vide.',
     ...noCard('Noctis'),
     glyph: glyph('♘'),
-    available: false,
+    available: true,
     bg: '#2B2250',
     ink: '#FFFFFF',
     soft: '#E7E4F2',
     deep: '#5B4BA6',
     accentInk: '#4A3D86',
     fields: [
-      duration(20),
-      elo(1200, 'Niveau adversaire'),
-      color('Blancs'),
-      one(
-        'aide',
-        'Aide visuelle',
-        ['Aucune', 'Coordonnées', 'Échiquier vide'],
-        'Coordonnées'
-      ),
-      clock(30),
+      duration(15, MAX_RUN_MINUTES),
+      one('niveau', 'Niveau', Object.keys(BLINDFOLD_LEVELS), 'Facile'),
+      one('longueur', 'Longueur', Object.keys(BLINDFOLD_LENGTHS), '2 coups'),
+      one('memorisation', 'Temps pour mémoriser', BLINDFOLD_VISIBLE, '10 s'),
       notes()
     ]
   }
@@ -453,6 +469,8 @@ export function sessionMinutes(items) {
  * @property {{id: string, name: string, status: string, puzzleCount: number, runCount: number}|null} lightSet the
  *   ongoing (active or paused) light set
  * @property {(key: string) => string} themeLabel
+ * @property {Record<string, number>} fixedMinutes the length of each fixed-length module (catalogue
+ *   id), from the API
  */
 
 /** @type {SubjectContext} */
@@ -460,7 +478,24 @@ const NO_CONTEXT = {
   loaded: false,
   repertoires: [],
   lightSet: null,
-  themeLabel: key => key
+  themeLabel: key => key,
+  fixedMinutes: {}
+}
+
+/**
+ * The settings with the length of a fixed-length module set from the API (unchanged when it is
+ * not known yet, or for another module).
+ *
+ * @param {Module} module
+ * @param {Record<string, any>} values
+ * @param {SubjectContext} [context]
+ * @returns {Record<string, any>}
+ */
+export function withFixedDuration(module, values, context = NO_CONTEXT) {
+  const minutes = context.fixedMinutes?.[module.id]
+  const field = module.fields.find(f => f.type === 'fixedDuration')
+  if (!field || !minutes || values[field.key] === minutes) return values
+  return { ...values, [field.key]: minutes }
 }
 
 /**
@@ -548,6 +583,9 @@ export function itemIssue(module, values, context = NO_CONTEXT) {
         return 'Un répertoire choisi n’existe plus.'
       }
     }
+    if (f.type === 'fixedDuration' && !(v > 0)) {
+      return 'Chargement de la durée…'
+    }
     if (f.type === 'lightSet' && context.loaded) {
       if (!context.lightSet) return 'Tu n’as pas de set light en cours.'
       if (context.lightSet.status === 'paused')
@@ -562,7 +600,9 @@ export const API_MODULES = {
   libre: 'free',
   puzzles: 'puzzles',
   woodpecker: 'woodpecker',
-  repertoire: 'repertoire'
+  repertoire: 'repertoire',
+  coordonnees: 'coordinates',
+  aveugle: 'blindfold'
 }
 
 /** Free study formats: the catalogue's labels, as the API names them. */
@@ -591,6 +631,14 @@ export function toStep(item) {
   if (module === 'puzzles') settings = { themes: [...(v.themes ?? [])] }
   if (module === 'repertoire')
     settings = { repertoireIds: [...(v.repertoires ?? [])] }
+  if (module === 'coordinates')
+    settings = { orientation: v.orientation === 'Noirs' ? 'black' : 'white' }
+  if (module === 'blindfold')
+    settings = {
+      level: BLINDFOLD_LEVELS[v.niveau] ?? 'easy',
+      length: BLINDFOLD_LENGTHS[v.longueur] ?? 2,
+      visibleSeconds: parseInt(v.memorisation, 10) || 10
+    }
   return {
     module,
     minutes: v.duree,
@@ -628,7 +676,27 @@ export function fromStep(step) {
   if (step.module === 'puzzles') values.themes = [...(settings.themes ?? [])]
   if (step.module === 'repertoire')
     values.repertoires = [...(settings.repertoireIds ?? [])]
+  if (step.module === 'coordinates')
+    values.orientation = settings.orientation === 'black' ? 'Noirs' : 'Blancs'
+  if (step.module === 'blindfold') {
+    values.niveau = labelOf(BLINDFOLD_LEVELS, settings.level) ?? values.niveau
+    values.longueur =
+      labelOf(BLINDFOLD_LENGTHS, settings.length) ?? values.longueur
+    if (BLINDFOLD_VISIBLE.includes(`${settings.visibleSeconds} s`))
+      values.memorisation = `${settings.visibleSeconds} s`
+  }
   return { moduleId, values }
+}
+
+/**
+ * The label of an API value in a labels-to-values map, or null.
+ *
+ * @param {Record<string, any>} map
+ * @param {any} value
+ * @returns {string|null}
+ */
+function labelOf(map, value) {
+  return Object.entries(map).find(([, v]) => v === value)?.[0] ?? null
 }
 
 /**

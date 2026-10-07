@@ -15,6 +15,10 @@ enum Module: string
     case Puzzles = 'puzzles';
     /** Free study (a book, a video...): a timer, nothing to submit. */
     case Free = 'free';
+    /** Coordinates series: find the squares named on an empty board (docs/COORDINATES.md). */
+    case Coordinates = 'coordinates';
+    /** Blindfold puzzles: shown, hidden, solved from memory (docs/BLINDFOLD.md). */
+    case Blindfold = 'blindfold';
 
     /** Its name for the user (emails, calendar). */
     public function label(): string
@@ -24,6 +28,8 @@ enum Module: string
             self::Repertoire => 'Répertoire',
             self::Puzzles => 'Puzzles',
             self::Free => 'Libre',
+            self::Coordinates => 'Coordonnées',
+            self::Blindfold => 'Aveugle',
         };
     }
 

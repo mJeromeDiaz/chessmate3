@@ -62,3 +62,15 @@ export function formatPercent(ratio) {
 export function formatCountdown(ms) {
   return formatDuration(Math.ceil(Math.max(0, ms) / 1000) * 1000)
 }
+
+/**
+ * A success rate rounded down, so that 94.6 % never reads as the 95 % that validates.
+ *
+ * @param {number|null|undefined} rate 0..1
+ * @returns {string}
+ */
+export function formatRate(rate) {
+  return rate === null || rate === undefined
+    ? '—'
+    : `${Math.floor(rate * 100 + 1e-9)} %`
+}

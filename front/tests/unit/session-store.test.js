@@ -6,7 +6,12 @@ const api = vi.hoisted(() => ({
   repertoireApi: { list: vi.fn() },
   woodpeckerApi: { sets: vi.fn() },
   planApi: { create: vi.fn(), update: vi.fn() },
-  puzzleApi: { themes: vi.fn() }
+  puzzleApi: { themes: vi.fn() },
+  coordinatesApi: {
+    overview: vi.fn(async () => ({
+      rules: { seriesSeconds: 300, minAnswers: 50, minSuccessRate: 0.95 }
+    }))
+  }
 }))
 
 vi.mock('@/services/api', () => ({
@@ -322,5 +327,35 @@ describe('session store', () => {
 
     expect(store.items).toEqual([])
     expect(stored()).toBeNull()
+  })
+
+  it('gives a coordinates series the length of the API, before or after the load', async () => {
+    api.repertoireApi.list.mockResolvedValue([])
+    api.woodpeckerApi.sets.mockResolvedValue([])
+    api.puzzleApi.themes.mockResolvedValue([])
+    const store = useSessionStore()
+    store.title = 'Coordonnées'
+    store.add('coordonnees')
+    expect(store.items[0].values.duree).toBe(0)
+    expect(store.canSave).toBe(false)
+
+    await store.fetchSubjects()
+
+    expect(store.items[0].values.duree).toBe(5)
+    expect(store.add('coordonnees')?.values.duree).toBe(5)
+    expect(store.totalMinutes).toBe(10)
+    expect(store.canSave).toBe(true)
+  })
+
+  it('saves blindfold puzzles without any coordinates series', async () => {
+    api.repertoireApi.list.mockResolvedValue([])
+    api.woodpeckerApi.sets.mockResolvedValue([])
+    api.puzzleApi.themes.mockResolvedValue([])
+    const store = useSessionStore()
+    store.title = 'À l’aveugle'
+    store.add('aveugle')
+
+    await store.fetchSubjects()
+    expect(store.canSave).toBe(true)
   })
 })

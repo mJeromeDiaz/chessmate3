@@ -30,6 +30,8 @@ final class TrainingTime
         ExerciseType::WoodpeckerPuzzle->value => Module::Woodpecker,
         ExerciseType::RepertoireSegment->value => Module::Repertoire,
         ExerciseType::FreeStudy->value => Module::Free,
+        ExerciseType::CoordinatesSeries->value => Module::Coordinates,
+        ExerciseType::BlindfoldPuzzle->value => Module::Blindfold,
     ];
 
     public function __construct(private readonly Connection $connection)

@@ -37,7 +37,7 @@ final readonly class XpLedger
             return 0;
         }
         $localDate = LocalDate::of($event->occurredAt, $user->getDateTimeZone())->format('Y-m-d');
-        $earned = XpRules::exercise($event->type, $event->success, $event->durationMs);
+        $earned = XpRules::exercise($event->type, $event->success, $event->durationMs, $event->itemCount, $event->metadata);
         $runId = $event->metadata['trainingRunId'] ?? null;
 
         return $this->insert(
@@ -54,11 +54,12 @@ final readonly class XpLedger
     }
 
     /**
-     * A bonus (session, cycle, set, quest): not capped.
+     * A bonus (session, cycle, set, quest, validation): not capped. $runId: the run where it was
+     * earned, when it belongs to the run's XP (a validation).
      *
      * @return int XP gained (0: already counted, or unknown user)
      */
-    public function awardBonus(string $userId, XpKind $kind, ?string $module, int $xp, string $sourceType, string $sourceId, \DateTimeImmutable $occurredAt): int
+    public function awardBonus(string $userId, XpKind $kind, ?string $module, int $xp, string $sourceType, string $sourceId, \DateTimeImmutable $occurredAt, ?Uuid $runId = null): int
     {
         $user = $this->user($userId);
         if (null === $user) {
@@ -72,7 +73,7 @@ final readonly class XpLedger
             $xp,
             $sourceType,
             $sourceId,
-            null,
+            $runId,
             LocalDate::of($occurredAt, $user->getDateTimeZone())->format('Y-m-d'),
             $occurredAt,
         );

@@ -10,7 +10,9 @@
     <UserAvatar />
     <q-menu anchor="bottom right" self="top right">
       <q-list style="min-width: 210px">
-        <q-item-label header class="account-menu__name">{{ name }}</q-item-label>
+        <q-item-label header class="account-menu__name">{{
+          name
+        }}</q-item-label>
         <q-item v-close-popup clickable to="/profile" data-testid="nav-profile">
           <q-item-section avatar><q-icon name="person" /></q-item-section>
           <q-item-section>Profil</q-item-section>
@@ -28,7 +30,9 @@
           <q-item-section>Admin</q-item-section>
         </q-item>
         <q-item clickable data-testid="account-theme">
-          <q-item-section avatar><q-icon :name="current.icon" /></q-item-section>
+          <q-item-section avatar
+            ><q-icon :name="current.icon"
+          /></q-item-section>
           <q-item-section>Thème : {{ current.label }}</q-item-section>
           <q-item-section side><q-icon name="chevron_right" /></q-item-section>
           <q-menu anchor="top start" self="top end">
@@ -42,7 +46,9 @@
                 :data-testid="`theme-${option.value}`"
                 @click="theme.choose(option.value)"
               >
-                <q-item-section avatar><q-icon :name="option.icon" /></q-item-section>
+                <q-item-section avatar
+                  ><q-icon :name="option.icon"
+                /></q-item-section>
                 <q-item-section>{{ option.label }}</q-item-section>
               </q-item>
             </q-list>
@@ -80,7 +86,9 @@ const { loggingOut, logout } = useLogout()
 
 const name = computed(() => profileName(auth.profile ?? {}))
 const current = computed(
-  () => THEME_OPTIONS.find(option => option.value === theme.theme) ?? THEME_OPTIONS[0]
+  () =>
+    THEME_OPTIONS.find(option => option.value === theme.theme) ??
+    THEME_OPTIONS[0]
 )
 </script>
 

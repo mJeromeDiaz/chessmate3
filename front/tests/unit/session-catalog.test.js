@@ -12,7 +12,9 @@ import {
   move,
   sessionMinutes,
   settingChips,
-  toStep
+  fromStep,
+  toStep,
+  withFixedDuration
 } from '@/utils/session/catalog'
 import { PROFS, PROF_SLUGS } from '@/utils/prof/profs'
 
@@ -22,7 +24,9 @@ describe('session catalogue', () => {
       'libre',
       'puzzles',
       'woodpecker',
-      'repertoire'
+      'repertoire',
+      'coordonnees',
+      'aveugle'
     ])
   })
 
@@ -32,9 +36,18 @@ describe('session catalogue', () => {
     expect(keys('woodpecker')).toEqual(['duree', 'set', 'notes'])
     expect(keys('repertoire')).toEqual(['duree', 'repertoires', 'notes'])
     expect(keys('libre')).toEqual(['duree', 'type', 'notes'])
+    expect(keys('coordonnees')).toEqual(['duree', 'orientation', 'notes'])
+    expect(keys('aveugle')).toEqual([
+      'duree',
+      'niveau',
+      'longueur',
+      'memorisation',
+      'notes'
+    ])
     expect(MODULES_BY_ID.libre.fields[1].options).toContain('Autre')
     for (const m of MODULES.filter(m => m.available)) {
-      expect(m.fields[0].max).toBe(MAX_RUN_MINUTES)
+      if (m.fields[0].type === 'slider')
+        expect(m.fields[0].max).toBe(MAX_RUN_MINUTES)
     }
   })
 
@@ -215,5 +228,91 @@ describe('session catalogue', () => {
     expect(() =>
       toStep({ uid: 5, moduleId: 'finales', values: { duree: 5 } })
     ).toThrow()
+  })
+
+  it('gives a coordinates series the length of the API and its orientation', () => {
+    const module = MODULES_BY_ID.coordonnees
+    const values = defaultValues(module)
+    const context = {
+      loaded: true,
+      repertoires: [],
+      lightSet: null,
+      themeLabel: key => key,
+      fixedMinutes: { coordonnees: 5 }
+    }
+    expect(itemIssue(module, values)).toBe('Chargement de la durée…')
+    expect(withFixedDuration(module, values)).toBe(values)
+
+    const fixed = withFixedDuration(module, values, context)
+    expect(fixed.duree).toBe(5)
+    expect(itemIssue(module, fixed, context)).toBeNull()
+    expect(moduleMinutes(module, fixed)).toBe(5)
+    expect(withFixedDuration(module, fixed, context)).toBe(fixed)
+    expect(
+      withFixedDuration(MODULES_BY_ID.libre, { duree: 30 }, context)
+    ).toEqual({ duree: 30 })
+
+    const step = toStep({
+      uid: 6,
+      moduleId: 'coordonnees',
+      values: { ...fixed, orientation: 'Noirs' }
+    })
+    expect(step).toEqual({
+      module: 'coordinates',
+      minutes: 5,
+      notes: '',
+      settings: { orientation: 'black' }
+    })
+    expect(fromStep(step)).toEqual({
+      moduleId: 'coordonnees',
+      values: { duree: 5, orientation: 'Noirs', notes: '' }
+    })
+  })
+
+  it('plays blindfold puzzles without any prerequisite, their settings as API values', () => {
+    const module = MODULES_BY_ID.aveugle
+    const values = defaultValues(module)
+    const context = {
+      loaded: true,
+      repertoires: [],
+      lightSet: null,
+      themeLabel: key => key,
+      fixedMinutes: {}
+    }
+    expect(itemIssue(module, values, context)).toBeNull()
+    expect(itemIssue(module, values)).toBeNull()
+
+    const step = toStep({
+      uid: 7,
+      moduleId: 'aveugle',
+      values: {
+        ...values,
+        duree: 20,
+        niveau: 'Difficile',
+        longueur: '4 coups et +',
+        memorisation: '30 s'
+      }
+    })
+    expect(step).toEqual({
+      module: 'blindfold',
+      minutes: 20,
+      notes: '',
+      settings: { level: 'hard', length: 4, visibleSeconds: 30 }
+    })
+    expect(fromStep(step)).toEqual({
+      moduleId: 'aveugle',
+      values: {
+        duree: 20,
+        niveau: 'Difficile',
+        longueur: '4 coups et +',
+        memorisation: '30 s',
+        notes: ''
+      }
+    })
+    expect(toStep({ uid: 8, moduleId: 'aveugle', values }).settings).toEqual({
+      level: 'easy',
+      length: 2,
+      visibleSeconds: 10
+    })
   })
 })

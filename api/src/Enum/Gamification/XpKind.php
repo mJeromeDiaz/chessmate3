@@ -19,4 +19,6 @@ enum XpKind: string
     case Set = 'set';
     /** A weekly quest completed. */
     case Quest = 'quest';
+    /** An orientation of the coordinates series validated for the first time. */
+    case Validation = 'validation';
 }

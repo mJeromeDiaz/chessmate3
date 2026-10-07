@@ -6,7 +6,8 @@ Une **séance** (*run*) est un temps d'entraînement fixé à l'avance (5 à 30 
 60) pendant lequel on enchaîne les éléments d'un **module** : Woodpecker, dans ses deux
 modes ([WOODPECKER.md](WOODPECKER.md)), le test des répertoires d'ouvertures
 ([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)), les puzzles
-classés (§ 5 bis) et le temps libre (§ 5 ter). Le socle est générique : un module
+classés (§ 5 bis), le temps libre (§ 5 ter), les séries de coordonnées
+([COORDINATES.md](COORDINATES.md)) et les puzzles à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)). Le socle est générique : un module
 implémente un contrat et hérite du chronomètre, des règles de fin et du récapitulatif. Événements et
 journal : [ACTIVITY.md](ACTIVITY.md).
 
@@ -23,6 +24,8 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Module Répertoire | `App\Repertoire\Training\RepertoireModule` |
 | Module Puzzles | `App\Puzzle\Training\PuzzleModule` |
 | Module Libre | `App\Training\Free\FreeModule` |
+| Module Coordonnées | `App\Coordinates\Training\CoordinatesModule` (durée fixe : `Training\Module\FixedBudgetInterface`) |
+| Module Aveugle | `App\Blindfold\Training\PuzzleModule` (puzzles à l'aveugle) |
 | API | `App\ApiResource\Training\*`, `App\State\Training\*` |
 | Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable, FreeRunPanel}.vue`, `components/puzzle/PuzzleRunDialog.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
 
@@ -103,7 +106,8 @@ Service tagué `app.training.module` (autoconfiguré) et cas dans l'enum `Module
 | `summarize(Run, closedAt)` | le `Summary` figé dans la séance |
 
 `ItemSubmission` rapporte ce que le client a fait (coups UCI tentés, niveau d'indice, solution
-affichée, et `thinkMs`, le temps de réflexion qu'il a mesuré, animations exclues), **jamais un résultat**.
+affichée, et `thinkMs`, le temps de réflexion qu'il a mesuré, animations exclues ; ou, pour les
+coordonnées, `answers`, les cases cliquées), **jamais un résultat**.
 Un module qui utilise `thinkMs` le plafonne par le temps écoulé côté serveur depuis que l'élément a
 été servi : le client peut minorer son temps, jamais l'augmenter.
 
@@ -180,7 +184,7 @@ Préfixe `/api`, utilisateur authentifié ; une séance d'un autre utilisateur r
 | `GET /training/runs/current` | La séance active, sinon `null` | — |
 | `GET /training/runs/{id}` | Une séance, avec `serverNow` | 404 |
 | `POST /training/runs/{id}/next` | `{run, item}` : élément à jouer, `item: null` une fois close (600 par 10 min) | 404 |
-| `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown, thinkMs?}` → `{run, result}` (600 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis ou séance close |
+| `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown, thinkMs?, answers?}` → `{run, result}` (600 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis ou séance close |
 | `POST /training/runs/{id}/stop` | Termine la séance | 404 |
 | `GET /training/runs/{id}/review` | Bilan d'une séance close, élément par élément (§ 5 quater) | 404, 409 séance encore active |
 
@@ -195,8 +199,10 @@ Woodpecker liste ses séances (`runs`).
   partir de `serverNow` sur l'échange **au plus court aller-retour** ; le compte à rebours affiche
   l'horloge serveur. À zéro, plus rien n'est joué : le composable demande l'état au serveur, qui
   clôt la séance. Pas de grâce côté client non plus.
-- `training/[id]` choisit le lecteur selon le module : `PuzzlePlayer` (Woodpecker) ou
-  `RepertoireDrillPlayer` ([REPERTOIRE.md § 15](REPERTOIRE.md#front)) ; `RunHeader` (compte à
+- `training/[id]` choisit le lecteur selon le module : `PuzzlePlayer` (Woodpecker),
+  `RepertoireDrillPlayer` ([REPERTOIRE.md § 15](REPERTOIRE.md#front)), `CoordinatesPlayer`
+  ([COORDINATES.md](COORDINATES.md)) ou `BlindfoldPuzzlePlayer` ([BLINDFOLD.md](BLINDFOLD.md)) ; un lecteur qui envoie ses réponses en différé s'inscrit à
+  `beforeClose()` pour les envoyer avant la clôture ; `RunHeader` (compte à
   rebours, « Terminer », barre du temps écoulé) leur est commun.
 - Woodpecker : après un puzzle réussi, le suivant arrive seul (500 ms) ; après une erreur, la
   solution se déroule, puis « Suivant ». Répertoire : unité réussie, la suivante seule (600 ms) ;

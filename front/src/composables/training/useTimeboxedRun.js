@@ -81,6 +81,8 @@ export function useTimeboxedRun(options = {}) {
   let lastExpiry = -Infinity
   /** @type {ReturnType<typeof setInterval>|null} */
   let timer = null
+  /** @type {Set<() => Promise<void>>} what a player still has to send before the run closes */
+  const closingHooks = new Set()
 
   const remainingMs = computed(() =>
     run.value
@@ -217,8 +219,27 @@ export function useTimeboxedRun(options = {}) {
     }
   }
 
+  /**
+   * Registers what a player must send before the run closes (its last answers): awaited before
+   * "Terminer" and before the request that lets the server close the run at zero. Its failures
+   * are ignored: the run closes anyway.
+   *
+   * @param {() => Promise<void>} hook
+   * @returns {() => void} unregisters it
+   */
+  function beforeClose(hook) {
+    closingHooks.add(hook)
+    return () => closingHooks.delete(hook)
+  }
+
+  async function runClosingHooks() {
+    await Promise.all([...closingHooks].map(hook => hook().catch(() => {})))
+  }
+
   /** Ends the run now. */
   async function stop() {
+    if (!run.value) return
+    await runClosingHooks()
     if (!run.value) return
     applyRun(
       await call(() => api.stop(/** @type {TrainingRun} */ (run.value).id))
@@ -244,6 +265,8 @@ export function useTimeboxedRun(options = {}) {
     expiring = true
     lastExpiry = clock.value
     try {
+      await runClosingHooks()
+      if (!run.value || run.value.status === 'closed') return
       const step = await call(() =>
         api.next(/** @type {TrainingRun} */ (run.value).id)
       )
@@ -294,6 +317,7 @@ export function useTimeboxedRun(options = {}) {
     next,
     submit,
     stop,
+    beforeClose,
     dispose: stopTicking
   }
 }

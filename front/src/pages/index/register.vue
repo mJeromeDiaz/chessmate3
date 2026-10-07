@@ -11,8 +11,8 @@
 
       <template v-else>
         <p class="text-body2">
-          Don't Stay Rooky est en accès anticipé : l'inscription se fait avec la clé
-          d'invitation reçue par email.
+          Don't Stay Rooky est en accès anticipé : l'inscription se fait avec la
+          clé d'invitation reçue par email.
         </p>
 
         <q-input

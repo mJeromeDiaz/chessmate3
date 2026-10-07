@@ -52,7 +52,7 @@ final class SubmitItemProcessor implements ProcessorInterface
         $this->rateLimitGuard->consume($this->trainingItemSubmitLimiter, $user->getId()->toRfc4122());
 
         try {
-            $step = $this->runner->submit($user, self::runId($uriVariables), new ItemSubmission($data->itemId, $data->moves, $data->hintLevel, $data->solutionShown, $data->thinkMs));
+            $step = $this->runner->submit($user, self::runId($uriVariables), new ItemSubmission($data->itemId, $data->moves, $data->hintLevel, $data->solutionShown, $data->thinkMs, $data->answers));
         } catch (RunNotFoundException) {
             throw new NotFoundHttpException('Run not found.');
         } catch (ItemNotFoundException) {

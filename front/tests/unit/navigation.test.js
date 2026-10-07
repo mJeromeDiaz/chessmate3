@@ -10,13 +10,17 @@ describe('NAV_LINKS', () => {
       'Sessions',
       'Puzzles',
       'Woodpecker',
-      'Répertoires'
+      'Répertoires',
+      'Coordonnées',
+      'Aveugle'
     ])
     expect(NAV_LINKS.filter(l => l.header).map(l => l.to)).toEqual([
       '/session',
       '/puzzle',
       '/woodpecker',
-      '/repertoire'
+      '/repertoire',
+      '/coordinates',
+      '/blindfold'
     ])
   })
 })

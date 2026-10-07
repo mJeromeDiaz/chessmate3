@@ -334,7 +334,8 @@ export const trainingApi = {
       .then(r => r.data),
   /**
    * @param {string} id
-   * @param {{itemId: string, moves: string[], hintLevel: number, solutionShown: boolean, thinkMs?: number}} report
+   * @param {{itemId: string, moves?: string[], hintLevel?: number, solutionShown?: boolean, thinkMs?: number, answers?: {index: number, square: string, ms: number}[]}} report
+   *   `answers`: the squares clicked in a coordinates series (docs/COORDINATES.md)
    */
   submit: (id, report) =>
     http
@@ -755,6 +756,18 @@ export const dashboardApi = {
     http
       .get('/api/dashboard/repertoire', { ...JSON_LD, params: { days } })
       .then(r => r.data)
+}
+
+/** The coordinates series (docs/COORDINATES.md). */
+export const coordinatesApi = {
+  /** The rules, each orientation's state (validated, best series) and the latest series. */
+  overview: () => http.get('/api/coordinates', JSON_LD).then(r => r.data)
+}
+
+/** Blindfold puzzles (docs/BLINDFOLD.md). */
+export const blindfoldApi = {
+  /** The rules (levels, lengths, times) and the results so far, by level and by length. */
+  puzzles: () => http.get('/api/blindfold/puzzles', JSON_LD).then(r => r.data)
 }
 
 /** Gamification (docs/GAMIFICATION.md): XP, level, streaks, trophies, the weekly quest. */

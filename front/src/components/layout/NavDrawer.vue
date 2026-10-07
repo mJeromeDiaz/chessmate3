@@ -104,7 +104,9 @@ const { loggingOut, logout } = useLogout()
 
 const name = computed(() => profileName(auth.profile ?? {}))
 const current = computed(
-  () => THEME_OPTIONS.find(option => option.value === theme.theme) ?? THEME_OPTIONS[0]
+  () =>
+    THEME_OPTIONS.find(option => option.value === theme.theme) ??
+    THEME_OPTIONS[0]
 )
 
 watch(

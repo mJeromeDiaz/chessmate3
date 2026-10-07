@@ -78,6 +78,10 @@
           </div>
           <div v-if="loading" class="run-end__muted">Chargement…</div>
           <div v-else-if="error" class="run-end__error">{{ error }}</div>
+          <CoordinateRibbon
+            v-else-if="run.module === 'coordinates'"
+            :items="items"
+          />
           <template v-else>
             <div class="run-end__grid" data-testid="run-end-grid">
               <div
@@ -118,6 +122,35 @@
             @next="current = nextMissed"
             @reviewed="reviewed.add(current.item.index)"
           />
+          <section
+            v-else-if="run.module === 'coordinates'"
+            class="run-end__card"
+            data-testid="run-end-squares"
+          >
+            <h3 class="run-end__h3">Cases à retravailler</h3>
+            <div class="run-end__muted">{{
+              weakSquares.length
+                ? 'Les cases que tu as le plus ratées dans cette série.'
+                : 'Aucune erreur : toutes les cases sont justes.'
+            }}</div>
+            <div
+              v-for="w in weakSquares"
+              :key="w.square"
+              class="run-end__missed"
+              data-testid="run-end-square"
+            >
+              <div
+                class="run-end__missed-n"
+                :style="{ background: STATUS.fail.color }"
+                >{{ w.square }}</div
+              >
+              <div class="run-end__missed-text">
+                <div class="run-end__missed-title"
+                  >{{ w.count }} erreur{{ w.count > 1 ? 's' : '' }}</div
+                >
+              </div>
+            </div>
+          </section>
           <section
             v-else-if="run.module !== 'free'"
             class="run-end__card"
@@ -210,12 +243,14 @@
 /**
  * The end-of-run review (design "Fin de séance", docs/TRAINING.md § 5 quater): the professor's
  * congratulations and message, four figures, the grid of items and those to review again. Adapted
- * to the module (puzzles, Woodpecker, repertoire units, free study). Confetti only for a run whose
- * end was seen on the page and not failed. An item to review is played again in the side column
+ * to the module (puzzles, Woodpecker, repertoire units, free study, coordinates: a ribbon of the
+ * answers and the squares most missed instead of the grid and the replay). Confetti only for a
+ * run whose end was seen on the page and not failed. An item to review is played again in the side column
  * (`RunEndReplay`, the whole sheet on a phone), client side only.
  */
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import CoordinateRibbon from '@/components/coordinates/CoordinateRibbon.vue'
 import ProfAvatar from '@/components/session/ProfAvatar.vue'
 import ConfettiBurst from '@/components/training/ConfettiBurst.vue'
 import RunEndReplay from '@/components/training/RunEndReplay.vue'
@@ -224,6 +259,7 @@ import { useAuthStore } from '@/stores/auth'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useGamificationStore } from '@/stores/gamification'
 import { apiErrorMessage } from '@/utils/apiError'
+import { missedSquares } from '@/utils/coordinates'
 import { profileName } from '@/utils/profile'
 import {
   STATUS,
@@ -296,6 +332,10 @@ const stats = computed(() =>
   })
 )
 const missed = computed(() => missedItems(items.value, themeLabel))
+/** Coordinates: the squares missed most often. */
+const weakSquares = computed(() =>
+  props.run.module === 'coordinates' ? missedSquares(items.value) : []
+)
 /**
  * The missed item being played again (client side only), null on the review.
  *
@@ -329,7 +369,7 @@ async function load() {
   try {
     const [review] = await Promise.all([
       trainingApi.review(props.run.id),
-      props.run.module === 'repertoire' || props.run.module === 'free'
+      ['repertoire', 'free', 'coordinates'].includes(props.run.module)
         ? null
         : puzzles.fetchThemes().catch(() => null)
     ])

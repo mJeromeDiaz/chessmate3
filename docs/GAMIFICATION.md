@@ -41,13 +41,17 @@ Lots : G1 XP, niveaux et niveaux de module, G2 séries, G3 trophées, G4 défi d
 | Puzzle Woodpecker | 8 | 2 |
 | Tronçon de répertoire | 12 | 4 |
 | Temps libre | 1 par minute, 60 au plus par séance | — |
+| Série de coordonnées ([COORDINATES.md](COORDINATES.md)) | 20 par série d'au moins 10 réponses, validante ou non | — |
+| Puzzle à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)) | 12 (6 après un coup d'œil, `metadata.status` = `helped`) | 2 |
 
 - **Plafond** : 500 XP d'exercices par jour local (fuseau de l'utilisateur). Un exercice gagne ce qui
   reste du plafond de son jour (deux événements traités au même instant peuvent le dépasser
   légèrement : accepté).
 - **Bonus** (hors plafond) : session menée au bout (`SessionClosed` `completed`) +50 ; cycle
   Woodpecker terminé dans les temps (`CycleCompleted`) +100 ; set Woodpecker terminé
-  (`SetCompleted`) +300 ; défi de la semaine : sa récompense (G4).
+  (`SetCompleted`) +300 ; première validation de chaque orientation des coordonnées
+  (`SeriesValidated`, kind `validation`, une fois pour les Blancs, une fois pour les Noirs) +100, rattachée à
+  la séance qui valide ; défi de la semaine : sa récompense (G4).
 - **Niveaux** : passer du niveau N à N+1 demande 250 × N XP (niveau 12 : barre de 3 000, comme la
   maquette). **Niveau d'un module** : même courbe sur l'XP du module, paliers de 100 × N.
 - **Grades** : 1–4 Débutant, 5–9 Amateur, 10–14 Tacticien, 15–19 Stratège, 20–29 Expert, 30+ Maître.
@@ -56,7 +60,7 @@ Changer une valeur : modifier `XpRules`, puis `bin/console app:gamification:rebu
 
 ## 3. Registre (`gamification_xp_entry`)
 
-Une ligne par gain, jamais modifiée : `kind` (`exercise`, `session`, `cycle`, `set`, `quest`),
+Une ligne par gain, jamais modifiée : `kind` (`exercise`, `session`, `cycle`, `set`, `quest`, `validation`),
 `module` (valeurs de `Module`, null pour une session), `xp`, `source_type` + `source_id` (**unique** :
 un événement relivré ne gagne rien de plus ; `ascii_bin`), `training_run_id` (séance où l'XP a été
 gagnée : l'XP de fin de séance), `local_date`, `occurred_at`. Index `(user_id, local_date)`. Supprimée
@@ -64,12 +68,13 @@ avec le compte (cascade).
 
 Sources : un exercice garde celle du journal d'activité (`puzzle_attempt`, `woodpecker_attempt`,
 `repertoire_presentation`, `training_run`) ; une session `training_session` + son id ; un cycle
-`woodpecker_cycle` + `<set>:<numéro>:<run>` (un cycle perdu se rejoue) ; un set `woodpecker_set`.
+`woodpecker_cycle` + `<set>:<numéro>:<run>` (un cycle perdu se rejoue) ; un set `woodpecker_set` ; une validation `coordinates_validation` + `<user>:<orientation>` (la première
+seulement, quelle que soit la série).
 
 **Recalcul** (`XpRebuilder`, une transaction par utilisateur) : supprime les gains hors défis, puis
 rejoue le journal d'activité dans l'ordre chronologique (plafond appliqué sur le `local_date` écrit
 avec chaque entrée) et ajoute les sessions `completed`, cycles `completed` et sets `completed` des
-tables. Mêmes sources que les handlers : recalculer ne double rien.
+tables, et la première série validante de chaque orientation (`coordinates_series`). Mêmes sources que les handlers : recalculer ne double rien.
 
 ## 4. Séries (`Streak`)
 

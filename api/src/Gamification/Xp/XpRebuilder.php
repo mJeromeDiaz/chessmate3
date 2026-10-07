@@ -21,7 +21,8 @@ use Symfony\Component\Uid\Uuid;
 /**
  * Recomputes the XP of a user from what they played (docs/GAMIFICATION.md): the activity log in
  * chronological order (the daily cap applied on each `local_date` written with the entry), the
- * completed sessions, Woodpecker cycles and sets. Quest rewards are kept. One transaction per
+ * completed sessions, Woodpecker cycles and sets, and the first validation of each orientation of
+ * the coordinates. Quest rewards are kept. One transaction per
  * user; the same rows as the handlers would have written, under the same sources.
  */
 final readonly class XpRebuilder
@@ -67,7 +68,7 @@ final readonly class XpRebuilder
     private function exercises(User $user): int
     {
         $rows = $this->connection->iterateAssociative(
-            'SELECT exercise_type, success, duration_ms, source_type, source_id, occurred_at, local_date, metadata
+            'SELECT exercise_type, success, duration_ms, item_count, source_type, source_id, occurred_at, local_date, metadata
                FROM activity_log_entry WHERE user_id = ? ORDER BY occurred_at, id',
             [$user->getId()->toBinary()],
             [ParameterType::BINARY],
@@ -82,13 +83,13 @@ final readonly class XpRebuilder
                 continue;
             }
             $day = self::string($row['local_date']);
+            $metadata = json_decode(self::string($row['metadata']), true);
             $xp = min(
-                XpRules::exercise($type, (bool) $row['success'], is_numeric($row['duration_ms']) ? (int) $row['duration_ms'] : 0),
+                XpRules::exercise($type, (bool) $row['success'], is_numeric($row['duration_ms']) ? (int) $row['duration_ms'] : 0, is_numeric($row['item_count']) ? (int) $row['item_count'] : 1, \is_array($metadata) ? $metadata : []),
                 max(0, XpRules::DAILY_EXERCISE_CAP - ($byDay[$day] ?? 0)),
             );
             $byDay[$day] = ($byDay[$day] ?? 0) + $xp;
             $total += $xp;
-            $metadata = json_decode(self::string($row['metadata']), true);
             $runId = \is_array($metadata) ? ($metadata['trainingRunId'] ?? null) : null;
             $batch[] = [
                 XpKind::Exercise, XpRules::module($type)->value, $xp, self::string($row['source_type']), self::string($row['source_id']),
@@ -132,6 +133,22 @@ final readonly class XpRebuilder
             [ParameterType::BINARY],
         ) as $row) {
             $rows[] = [XpKind::Set, Module::Woodpecker->value, XpRules::SET_COMPLETED, 'woodpecker_set', self::string($row['id']), null, null, self::string($row['completed_at'])];
+        }
+        // The first series validating each orientation of the coordinates.
+        $validated = [];
+        foreach ($this->connection->fetchAllAssociative(
+            'SELECT orientation, run_id, closed_at FROM coordinates_series
+              WHERE user_id = ? AND validated = 1 AND closed_at IS NOT NULL ORDER BY closed_at',
+            [$id],
+            [ParameterType::BINARY],
+        ) as $row) {
+            $orientation = self::string($row['orientation']);
+            if (isset($validated[$orientation])) {
+                continue;
+            }
+            $validated[$orientation] = true;
+            $source = AwardBonusXp::validationSource($user->getId()->toRfc4122(), $orientation);
+            $rows[] = [XpKind::Validation, Module::Coordinates->value, XpRules::COORDINATES_VALIDATED, AwardBonusXp::VALIDATION_SOURCE, $source, self::string($row['run_id']), null, self::string($row['closed_at'])];
         }
         // The local day of each bonus, in the user's timezone.
         foreach ($rows as $i => $row) {

@@ -13,11 +13,13 @@ test('landing: a visitor sees the landing page with its own header', async ({
     "Don't Stay Rooky"
   )
 
-  // All eight modules, those not built yet tagged "Bientôt".
-  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(8)
-  await expect(page.getByTestId('landing-module-puzzles')).not.toContainText(
-    'Bientôt'
-  )
+  // All nine modules, those not built yet tagged "Bientôt".
+  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(9)
+  for (const id of ['puzzles', 'coordonnees', 'aveugle']) {
+    await expect(page.getByTestId(`landing-module-${id}`)).not.toContainText(
+      'Bientôt'
+    )
+  }
   await expect(page.getByTestId('landing-module-finales')).toContainText(
     'Bientôt'
   )

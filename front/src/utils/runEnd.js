@@ -1,3 +1,9 @@
+import {
+  ORIENTATIONS,
+  formatAnswerTime,
+  missedSquares,
+  validationText
+} from '@/utils/coordinates'
 import { levelBar } from '@/utils/gamification'
 import { formatDuration, formatRatingDelta } from '@/utils/format'
 import { profImage } from '@/utils/prof/images'
@@ -14,7 +20,7 @@ import { MODULE_FAIL_MIN_ITEMS, MODULE_FAIL_RATE } from '@/utils/sounds'
  *
  * @typedef {object} ReviewItem
  * @property {number} index 1-based, in the order played
- * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'} type
+ * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'} type
  * @property {ItemStatus} status
  * @property {number|null} durationMs
  * @property {Record<string, any>} data
@@ -98,6 +104,7 @@ export function endProf(module, failed) {
  */
 function itemWord(count, module, unit) {
   if (module === 'repertoire') return unitWord(unit ?? 'segment', count)
+  if (module === 'coordinates') return `${count} case${count > 1 ? 's' : ''}`
   return `${count} puzzle${count > 1 ? 's' : ''}`
 }
 
@@ -111,10 +118,13 @@ function itemWord(count, module, unit) {
 export function endHero(run, name, failed) {
   const s = run.summary
   const cycle = s?.metrics?.cycle?.number
+  const orientation = ORIENTATIONS[s?.metrics?.orientation] ?? ''
   const kicker =
     run.module === 'woodpecker' && cycle
       ? `SÉANCE TERMINÉE · CYCLE ${cycle}`
-      : 'SÉANCE TERMINÉE'
+      : run.module === 'coordinates'
+        ? `${s?.metrics?.validated ? 'SÉRIE VALIDÉE' : 'SÉRIE TERMINÉE'} · ${orientation.toUpperCase()}`
+        : 'SÉANCE TERMINÉE'
   const title = failed ? `Courage ${name} !` : `Bravo ${name} !`
   const duration = formatDuration(s?.durationMs)
   const subtitle =
@@ -211,6 +221,13 @@ export function endMessage(run, items, name, themeLabel) {
     return 'Rien de terminé cette fois. Pas grave : on fait mieux au prochain module.'
   }
   const pct = Math.round((s.successCount / s.itemCount) * 100)
+  if (run.module === 'coordinates') {
+    const missed = missedSquares(items, 3)
+    const squares = missed.length
+      ? ` Cases à retravailler : ${missed.map(m => m.square).join(', ')}.`
+      : ' Aucune erreur !'
+    return `${validationText(run)}${squares}`
+  }
   const opener =
     pct >= 85
       ? `Quelle séance, ${name} !`
@@ -261,6 +278,29 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
   const count = s?.itemCount ?? 0
   const pct =
     count > 0 ? Math.round(((s?.successCount ?? 0) / count) * 100) : null
+  if (run.module === 'coordinates') {
+    return [
+      {
+        value: pct === null ? '—' : `${pct} %`,
+        label: 'Réussite',
+        sub: `${s?.successCount ?? 0} sur ${count}`,
+        tone: isFailedRun(run) ? 'bad' : 'good'
+      },
+      {
+        value: formatAnswerTime(m.averageMs ?? null),
+        label: 'Moyenne / case',
+        sub: `${formatDuration(s?.durationMs)} au total`,
+        tone: 'muted'
+      },
+      {
+        value: m.validated ? 'Validée' : 'Non validée',
+        label: 'Validation',
+        sub: `${ORIENTATIONS[m.orientation] ?? ''} en bas`,
+        tone: m.validated ? 'good' : 'muted'
+      },
+      xp
+    ]
+  }
   const timed = items.filter(i => i.durationMs !== null)
   const average =
     m.averageMs ??
@@ -283,7 +323,14 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
       tone: 'muted'
     }
   ]
-  if (run.module === 'puzzles') {
+  if (run.module === 'blindfold') {
+    stats.push({
+      value: String(m.helped ?? 0),
+      label: 'Avec coup d’œil',
+      sub: `${m.failed ?? 0} raté${(m.failed ?? 0) > 1 ? 's' : ''}`,
+      tone: 'muted'
+    })
+  } else if (run.module === 'puzzles') {
     stats.push({
       value: m.ratingAfter == null ? '—' : String(m.ratingAfter),
       label: 'Classement',
@@ -327,6 +374,7 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
  * @param {import('@/composables/training/useTimeboxedRun').TrainingRun} run
  */
 export function gridTitle(run) {
+  if (run.module === 'coordinates') return 'Cases de la série'
   if (run.module !== 'repertoire') return 'Puzzles de la séance'
   return run.summary?.metrics?.unit === 'line'
     ? 'Lignes de la séance'

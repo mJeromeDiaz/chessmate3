@@ -62,6 +62,8 @@ final class StatsApiTest extends WebTestCase
         $this->log($alice, ExerciseType::WoodpeckerPuzzle, '2026-07-19 21:59:00', 15_000); // Sunday 23:59 Paris
         $this->log($alice, ExerciseType::FreeStudy, '2026-07-20 08:00:00', 600_000);
         $this->log($alice, ExerciseType::RepertoireSegment, '2026-07-20 09:00:00', 5_000);
+        $this->log($alice, ExerciseType::BlindfoldPuzzle, '2026-07-16 08:00:00', 8_000);
+        $this->log($alice, ExerciseType::CoordinatesSeries, '2026-07-20 09:30:00', 300_000);
         $this->log($bob, ExerciseType::FreeStudy, '2026-07-20 08:00:00', 900_000);
 
         $response = $this->api('/api/dashboard/training?days=7', $alice);
@@ -69,14 +71,16 @@ final class StatsApiTest extends WebTestCase
         $body = $this->json($response);
         self::assertSame(['2026-07-14', '2026-07-20'], [$body['from'], $body['today']]);
         self::assertSame([
-            ['start' => '2026-07-13', 'durationMs' => ['woodpecker' => 15_000, 'repertoire' => 0, 'puzzles' => 30_000, 'free' => 0]],
-            ['start' => '2026-07-20', 'durationMs' => ['woodpecker' => 0, 'repertoire' => 5_000, 'puzzles' => 0, 'free' => 600_000]],
+            ['start' => '2026-07-13', 'durationMs' => ['woodpecker' => 15_000, 'repertoire' => 0, 'puzzles' => 30_000, 'free' => 0, 'coordinates' => 0, 'blindfold' => 8_000]],
+            ['start' => '2026-07-20', 'durationMs' => ['woodpecker' => 0, 'repertoire' => 5_000, 'puzzles' => 0, 'free' => 600_000, 'coordinates' => 300_000, 'blindfold' => 0]],
         ], $body['weeks'], 'weeks from Monday, the first one partial');
         self::assertSame([
             'woodpecker' => ['count' => 1, 'durationMs' => 15_000],
             'repertoire' => ['count' => 1, 'durationMs' => 5_000],
             'puzzles' => ['count' => 2, 'durationMs' => 30_000],
             'free' => ['count' => 1, 'durationMs' => 600_000],
+            'coordinates' => ['count' => 1, 'durationMs' => 300_000],
+            'blindfold' => ['count' => 1, 'durationMs' => 8_000],
         ], $body['totals'], 'rated and unrated puzzles together, Bob excluded');
 
         $body = $this->json($this->api('/api/dashboard/training', $this->createUser('new@example.com', 'UTC')));

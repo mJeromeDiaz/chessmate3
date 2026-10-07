@@ -84,6 +84,77 @@
       </template>
     </RepertoireDrillPlayer>
 
+    <CoordinatesPlayer
+      v-else-if="
+        (runner.phase.value === 'running' || runner.phase.value === 'timeUp') &&
+        runner.item.value?.type === 'coordinates_series'
+      "
+      :runner="runner"
+      :item="runner.item.value"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        />
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </CoordinatesPlayer>
+
+    <BlindfoldPuzzlePlayer
+      v-else-if="
+        runner.phase.value === 'running' &&
+        runner.item.value?.type === 'blindfold_puzzle'
+      "
+      :item="runner.item.value"
+      @resolve="onBlindfoldResolve"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">
+            {{ runner.played.value }} puzzles ·
+            {{ runner.solved.value }} résolus
+          </div>
+        </RunHeader>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+
+      <template #result>
+        <div v-if="!runner.result.value" class="row items-center q-gutter-sm">
+          <q-spinner size="1.5em" />
+          <span>Enregistrement…</span>
+        </div>
+        <div
+          v-else
+          class="text-h6"
+          :class="BLINDFOLD_RESULTS[runner.result.value.data?.status]?.color"
+          data-testid="blindfold-verdict"
+          >{{
+            BLINDFOLD_RESULTS[runner.result.value.data?.status]?.label ??
+            'Enregistré'
+          }}</div
+        >
+        <q-btn
+          color="primary"
+          no-caps
+          icon="skip_next"
+          label="Suivant"
+          :disable="!runner.result.value"
+          data-testid="run-next"
+          @click="next"
+        />
+      </template>
+    </BlindfoldPuzzlePlayer>
+
     <FreeRunPanel
       v-else-if="
         runner.phase.value === 'running' &&
@@ -184,11 +255,13 @@
  * A timed run (docs/TRAINING.md): countdown on the server's clock, items one after the other,
  * recap at the end. Reloading or coming back before the end resumes the same run and item. The
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
- * (docs/REPERTOIRE.md § 15) or free study (a timer).
+ * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series or blindfold puzzles (docs/BLINDFOLD.md).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.vue'
+import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
@@ -220,7 +293,16 @@ const STOP_MESSAGES = {
     'L’unité en cours ne sera pas comptée, sauf si vous y avez déjà fait une erreur.',
   puzzles:
     'Le puzzle en cours ne sera pas compté : il vous attendra au prochain puzzle.',
-  free: 'Le temps passé jusqu’ici sera compté.'
+  free: 'Le temps passé jusqu’ici sera compté.',
+  coordinates:
+    'Tes réponses seront comptées, mais une série arrêtée avant la fin ne valide pas.',
+  blindfold: 'Le puzzle en cours ne sera pas compté.'
+}
+/** The server's verdict on a blindfold puzzle. */
+const BLINDFOLD_RESULTS = {
+  solved: { label: 'Résolu !', color: 'text-positive' },
+  helped: { label: 'Résolu avec un coup d’œil', color: 'text-warning' },
+  failed: { label: 'Raté', color: 'text-negative' }
 }
 const route = useRoute()
 const $q = useQuasar()
@@ -246,6 +328,20 @@ async function onResolve(_outcome, report) {
   try {
     const result = await runner.submit(report)
     if (result?.success) setTimeout(next, AUTO_NEXT_MS)
+  } catch (e) {
+    error.value = apiErrorMessage(e)
+  }
+}
+
+/**
+ * A blindfold puzzle's outcome: no automatic next puzzle, the final position stays on the board.
+ *
+ * @param {string} _status
+ * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
+ */
+async function onBlindfoldResolve(_status, report) {
+  try {
+    await runner.submit(report)
   } catch (e) {
     error.value = apiErrorMessage(e)
   }

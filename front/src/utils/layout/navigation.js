@@ -23,7 +23,9 @@ export const NAV_LINKS = [
   { to: '/session', label: 'Sessions', icon: 'playlist_play', header: true },
   { to: '/puzzle', label: 'Puzzles', icon: 'extension', header: true },
   { to: '/woodpecker', label: 'Woodpecker', icon: 'repeat', header: true },
-  { to: '/repertoire', label: 'Répertoires', icon: 'menu_book', header: true }
+  { to: '/repertoire', label: 'Répertoires', icon: 'menu_book', header: true },
+  { to: '/coordinates', label: 'Coordonnées', icon: 'grid_on', header: true },
+  { to: '/blindfold', label: 'Aveugle', icon: 'visibility_off', header: true }
 ]
 
 /**

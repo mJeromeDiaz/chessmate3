@@ -22,6 +22,15 @@ final class XpRules
     public const SET_COMPLETED = 300;
     /** Free study: one XP a minute, at most this much per run. */
     public const FREE_STUDY_MAX = 60;
+    /** Coordinates series: a flat gain, for a series of at least COORDINATES_MIN_ANSWERS answers. */
+    public const COORDINATES_SERIES = 20;
+    public const COORDINATES_MIN_ANSWERS = 10;
+    /** Bonus: an orientation of the coordinates validated for the first time (once per orientation). */
+    public const COORDINATES_VALIDATED = 100;
+    /** Blindfold puzzle: solved, solved after a peek ("helped"), failed. */
+    public const BLINDFOLD_SOLVED = 12;
+    public const BLINDFOLD_HELPED = 6;
+    public const BLINDFOLD_FAILED = 2;
 
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
@@ -39,8 +48,10 @@ final class XpRules
 
     /**
      * XP of one exercise, before the daily cap.
+     *
+     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status)
      */
-    public static function exercise(ExerciseType $type, bool $success, int $durationMs): int
+    public static function exercise(ExerciseType $type, bool $success, int $durationMs, int $itemCount = 1, array $metadata = []): int
     {
         return match ($type) {
             ExerciseType::PuzzleRated => $success ? 10 : 3,
@@ -48,6 +59,12 @@ final class XpRules
             ExerciseType::WoodpeckerPuzzle => $success ? 8 : 2,
             ExerciseType::RepertoireSegment => $success ? 12 : 4,
             ExerciseType::FreeStudy => min(self::FREE_STUDY_MAX, intdiv(max(0, $durationMs), 60_000)),
+            ExerciseType::CoordinatesSeries => $itemCount >= self::COORDINATES_MIN_ANSWERS ? self::COORDINATES_SERIES : 0,
+            ExerciseType::BlindfoldPuzzle => match ($metadata['status'] ?? null) {
+                'solved' => self::BLINDFOLD_SOLVED,
+                'helped' => self::BLINDFOLD_HELPED,
+                default => $success ? self::BLINDFOLD_SOLVED : self::BLINDFOLD_FAILED,
+            },
         };
     }
 
@@ -61,6 +78,8 @@ final class XpRules
             ExerciseType::WoodpeckerPuzzle => Module::Woodpecker,
             ExerciseType::RepertoireSegment => Module::Repertoire,
             ExerciseType::FreeStudy => Module::Free,
+            ExerciseType::CoordinatesSeries => Module::Coordinates,
+            ExerciseType::BlindfoldPuzzle => Module::Blindfold,
         };
     }
 

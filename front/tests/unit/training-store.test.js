@@ -159,4 +159,20 @@ describe('training utils', () => {
     expect(backLabel({ module: 'puzzles' })).toBe('Retour aux puzzles')
     expect(backLabel({ module: 'free' })).toBe('Retour à l’accueil')
   })
+
+  it('knows the blindfold puzzles', () => {
+    expect(
+      closeReasonText({
+        closeReason: 'subject_unavailable',
+        module: 'blindfold'
+      })
+    ).toContain('Plus aucun puzzle à l’aveugle')
+    expect(
+      subjectPath({ subjectType: 'blindfold_player', subjectId: 'u' })
+    ).toBe('/blindfold')
+    expect(
+      subjectPath({ subjectType: 'coordinates_player', subjectId: 'u' })
+    ).toBe('/coordinates')
+    expect(backLabel({ module: 'blindfold' })).toBe('Retour au jeu à l’aveugle')
+  })
 })

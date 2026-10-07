@@ -297,7 +297,8 @@ import {
   defaultValues,
   formatMinutes,
   itemIssue,
-  moduleMinutes
+  moduleMinutes,
+  withFixedDuration
 } from '@/utils/session/catalog'
 
 /**
@@ -346,6 +347,17 @@ watch(
   { immediate: true }
 )
 
+// A fixed-length module takes its length from the API, once known.
+watch(
+  () => context.value.fixedMinutes,
+  () =>
+    Object.assign(
+      values,
+      withFixedDuration(props.module, values, context.value)
+    ),
+  { immediate: true }
+)
+
 const kicker = computed(
   () =>
     `PROF ${props.module.prof.toUpperCase()} · ${props.mode === 'edit' ? 'MODIFIER' : 'NOUVEAU MODULE'}`
@@ -358,6 +370,7 @@ const kicker = computed(
 function display(field) {
   const v = values[field.key]
   if (field.type === 'slider') return field.format ? field.format(v) : String(v)
+  if (field.type === 'fixedDuration') return v > 0 ? formatMinutes(v) : '…'
   if ((field.type === 'many' || field.type === 'repertoire') && v.length) {
     return `${v.length} choisi${v.length > 1 ? 's' : ''}`
   }

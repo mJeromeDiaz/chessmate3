@@ -23,7 +23,16 @@ final class XpRulesTest extends TestCase
         self::assertSame([12, 4], [XpRules::exercise(ExerciseType::RepertoireSegment, true, 0), XpRules::exercise(ExerciseType::RepertoireSegment, false, 0)]);
         self::assertSame(25, XpRules::exercise(ExerciseType::FreeStudy, true, 25 * 60_000 + 59_000), 'one a minute');
         self::assertSame(60, XpRules::exercise(ExerciseType::FreeStudy, true, 3 * 3_600_000), 'at most 60 a run');
+        self::assertSame([20, 20], [XpRules::exercise(ExerciseType::CoordinatesSeries, true, 300_000, 10), XpRules::exercise(ExerciseType::CoordinatesSeries, false, 300_000, 120)], 'a flat gain, validated or not');
+        self::assertSame(0, XpRules::exercise(ExerciseType::CoordinatesSeries, false, 300_000, 9), 'fewer than 10 answers');
         self::assertSame(Module::Puzzles, XpRules::module(ExerciseType::PuzzleUnrated));
+        self::assertSame(Module::Coordinates, XpRules::module(ExerciseType::CoordinatesSeries));
+        self::assertSame([12, 6, 2], [
+            XpRules::exercise(ExerciseType::BlindfoldPuzzle, true, 0, 1, ['status' => 'solved']),
+            XpRules::exercise(ExerciseType::BlindfoldPuzzle, false, 0, 1, ['status' => 'helped']),
+            XpRules::exercise(ExerciseType::BlindfoldPuzzle, false, 0, 1, ['status' => 'failed']),
+        ], 'blindfold: solved, after a peek, failed');
+        self::assertSame(Module::Blindfold, XpRules::module(ExerciseType::BlindfoldPuzzle));
     }
 
     public function testLevelsNeed250TimesTheLevel(): void

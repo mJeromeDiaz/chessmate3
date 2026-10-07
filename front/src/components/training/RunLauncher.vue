@@ -11,6 +11,7 @@
     />
     <div class="row items-center q-gutter-sm">
       <q-btn-toggle
+        v-if="!fixedMinutes"
         v-model="choice"
         no-caps
         unelevated
@@ -34,7 +35,7 @@
         color="primary"
         no-caps
         icon="timer"
-        label="Lancer la séance"
+        :label="label"
         :loading="starting"
         :disable="disable || !valid"
         data-testid="run-start"
@@ -67,7 +68,8 @@
 /**
  * Picks a duration (5 to 30 minutes, or custom) and starts a timed run on a subject; only one
  * run at a time: when one is in progress, offers to resume or end it. A module's options go in
- * `config`; the repertoire test adds its unit (segments or whole lines) with `showUnit`.
+ * `config`; the repertoire test adds its unit (segments or whole lines) with `showUnit`; a module of
+ * fixed length (`fixedMinutes`) offers no choice.
  */
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -86,7 +88,10 @@ const props = defineProps({
   config: { type: Object, default: null },
   /** Offer the repertoire test's unit: segments (default) or whole lines. */
   showUnit: { type: Boolean, default: false },
-  disable: { type: Boolean, default: false }
+  disable: { type: Boolean, default: false },
+  /** A module whose runs all last this long (the coordinates series): no duration to pick. */
+  fixedMinutes: { type: Number, default: null },
+  label: { type: String, default: 'Lancer la séance' }
 })
 
 const UNIT_OPTIONS = [
@@ -104,6 +109,13 @@ const MESSAGES = {
     422: 'Thème inconnu.'
   },
   free: {
+    422: 'Réglages invalides.'
+  },
+  coordinates: {
+    422: 'Réglages invalides.'
+  },
+  blindfold: {
+    409: 'Aucun puzzle disponible à ce niveau et de cette longueur.',
     422: 'Réglages invalides.'
   },
   repertoire: {
@@ -128,7 +140,11 @@ const options = [
 ]
 
 const minutes = computed(() =>
-  choice.value === 'custom' ? Number(custom.value) : Number(choice.value)
+  props.fixedMinutes
+    ? props.fixedMinutes
+    : choice.value === 'custom'
+      ? Number(custom.value)
+      : Number(choice.value)
 )
 const valid = computed(
   () =>

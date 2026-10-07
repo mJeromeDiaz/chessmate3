@@ -324,4 +324,58 @@ describe('useTimeboxedRun', () => {
     expect(runner.phase.value).toBe('ended')
     expect(runner.item.value).toBeNull()
   })
+
+  it('lets a player send its last answers before the run closes', async () => {
+    const api = mockApi()
+    const { runner, expiresAt } = await started(api)
+    const order = []
+    const hook = vi.fn(async () => {
+      await later(100)
+      order.push('hook')
+    })
+    const unregister = runner.beforeClose(hook)
+    api.next.mockImplementation(async () => {
+      order.push('next')
+      return {
+        run: runJson({
+          status: 'closed',
+          closeReason: 'time_up',
+          expiresAt,
+          serverNow: expiresAt,
+          summary: SUMMARY
+        }),
+        item: null
+      }
+    })
+
+    await vi.advanceTimersByTimeAsync(121_000)
+
+    expect(runner.phase.value).toBe('ended')
+    expect(order).toEqual(['hook', 'next'])
+
+    // Before "Terminer" too, and no more once unregistered.
+    vi.setSystemTime(T0)
+    const second = await started(api)
+    api.stop.mockImplementation(async () => {
+      order.push('stop')
+      return runJson({
+        status: 'closed',
+        closeReason: 'stopped',
+        expiresAt: second.expiresAt,
+        serverNow: Date.now(),
+        summary: SUMMARY
+      })
+    })
+    const failing = vi.fn(async () => {
+      order.push('failing')
+      throw new Error('network')
+    })
+    second.runner.beforeClose(failing)
+    await second.runner.stop()
+    expect(order.slice(-2)).toEqual(['failing', 'stop'])
+    expect(second.runner.phase.value).toBe('ended')
+
+    unregister()
+    expect(hook).toHaveBeenCalledTimes(1)
+  })
 })
