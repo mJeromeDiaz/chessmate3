@@ -110,7 +110,12 @@ test('blindfold puzzles: open without coordinates, solved from memory, with a pe
     '8/8/8/8/8/8/8/8 w - - 0 1'
   )
   await solveBlind(player, item.data.puzzle)
-  await expect(page.getByTestId('blindfold-verdict')).toHaveText('Résolu !')
+  await expect(page.getByTestId('result-sheet')).toHaveAttribute(
+    'data-kind',
+    'win'
+  )
+  await expect(page.getByTestId('result-xp')).toHaveText('+12 XP')
+  await expect(page.getByTestId('prof-bubble')).toContainText('NOCTIS · BRAVO')
   await expect(player).toHaveAttribute('data-phase', 'complete')
 
   // Second puzzle: a mistake, the current position shown again, then solved "with help".
@@ -127,9 +132,14 @@ test('blindfold puzzles: open without coordinates, solved from memory, with a pe
   )
   await memorize(player)
   await solveBlind(player, puzzle)
-  await expect(page.getByTestId('blindfold-verdict')).toHaveText(
-    'Résolu avec un coup d’œil'
+  await expect(page.getByTestId('result-sheet')).toHaveAttribute(
+    'data-kind',
+    'help'
   )
+  await expect(page.getByTestId('result-sub')).toContainText(
+    'Trouvé avec un coup d’œil'
+  )
+  await expect(page.getByTestId('result-xp')).toHaveText('+6 XP')
 
   // "Terminer": the third puzzle on screen is not counted.
   served = page.waitForResponse(isRunNext)

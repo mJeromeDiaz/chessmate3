@@ -228,3 +228,31 @@ export const PROFS = {
 
 /** URL slugs of the professors, for the route's `requirements`-like check. */
 export const PROF_SLUGS = Object.keys(PROFS)
+
+/**
+ * The professors' expressions (src/assets/profs): neutral while playing, pleased after a success,
+ * thoughtful after a miss.
+ *
+ * @type {Record<string, {neutral: string, happy: string, sad: string}>}
+ */
+export const PROF_MOODS = {
+  'albert-stein': {
+    neutral: 'albert-face',
+    happy: 'albert-joy',
+    sad: 'albert-think'
+  },
+  aaron: { neutral: 'aaron-bust', happy: 'aaron-laugh', sad: 'aaron-wow' },
+  lizy: { neutral: 'lizy-cool', happy: 'lizy-joy', sad: 'lizy-think' }
+}
+
+/**
+ * A professor's picture for a mood, '' when there is none (no card, or a missing file).
+ *
+ * @param {string|null} slug
+ * @param {'neutral'|'happy'|'sad'} mood
+ * @returns {string}
+ */
+export function moodImage(slug, mood) {
+  const moods = slug ? PROF_MOODS[slug] : null
+  return moods ? profImage(moods[mood]) : ''
+}

@@ -44,6 +44,8 @@ export function usePuzzle(options = {}) {
   /** Index in puzzle.moves of the next move to play. */
   const cursor = ref(0)
   const failed = ref(false)
+  /** A wrong move was played (failed also counts hints and the solution). */
+  const mistaken = ref(false)
   const outcome = ref(/** @type {Outcome|null} */ (null))
   /** Highest hint level used on this puzzle (reported to the server). */
   const hintLevel = ref(0)
@@ -109,6 +111,7 @@ export function usePuzzle(options = {}) {
     lastMove.value = null
     cursor.value = 0
     failed.value = false
+    mistaken.value = false
     outcome.value = null
     hintLevel.value = 0
     hintShown.value = 0
@@ -140,6 +143,7 @@ export function usePuzzle(options = {}) {
     const mates = probe.isCheckmate()
     if (uci !== expectedMove.value && !mates) {
       feedback.value = { square: move.to, type: 'error' }
+      mistaken.value = true
       fail()
       if (options.afterMistake === 'showSolution') showSolution()
       return 'wrong'
@@ -240,6 +244,7 @@ export function usePuzzle(options = {}) {
     highlights,
     arrows,
     failed,
+    mistaken,
     outcome,
     hintLevel,
     hintShown,

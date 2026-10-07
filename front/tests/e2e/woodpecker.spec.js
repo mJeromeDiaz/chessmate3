@@ -25,7 +25,7 @@ test('creates a small set, completes a cycle and sees the recap', async ({
       `${i} / 5`
     )
     await expect(page.getByTestId('puzzle-status')).toContainText(
-      'Trouvez le meilleur coup'
+      'Trouve le meilleur coup'
     )
 
     const submitted = page.waitForResponse(isSubmission)
@@ -38,9 +38,14 @@ test('creates a small set, completes a cycle and sees the recap', async ({
     }
     const result = await (await submitted).json()
     expect(result.status).toBe(i === 0 ? 'solved' : 'failed')
-    await expect(page.getByTestId('puzzle-result')).toBeVisible({
-      timeout: 20_000
-    })
+    await expect(page.getByTestId('result-sheet')).toHaveAttribute(
+      'data-kind',
+      i === 0 ? 'win' : 'miss',
+      { timeout: 20_000 }
+    )
+    await expect(page.getByTestId('result-xp')).toHaveText(
+      i === 0 ? '+8 XP' : '+2 XP'
+    )
 
     if (i < 4) {
       started = page.waitForResponse(isNext)

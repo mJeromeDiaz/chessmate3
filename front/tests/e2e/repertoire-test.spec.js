@@ -87,7 +87,7 @@ async function launch(page, minutes) {
  */
 async function question(page) {
   const status = page.getByTestId('drill-status')
-  await expect(status).toHaveText(/À vous : coup \d+ sur \d+/)
+  await expect(status).toHaveText(/À toi : coup \d+ sur \d+/)
   const [, index, total] = /coup (\d+) sur (\d+)/.exec(await status.innerText())
   // The board's data-fen changes once its animation is over: wait until it shows the question.
   const board = page.getByTestId('chess-board')
@@ -146,7 +146,14 @@ test('a one-minute test: a failed segment comes back, the end of time cuts a seg
 
   // First unit: the context is shown, not asked; a mistake, the right move imposed.
   const failed = await playUnit(page, { mistake: true })
-  await expect(page.getByTestId('drill-failed')).toContainText('reviendra')
+  await expect(page.getByTestId('result-sheet')).toHaveAttribute(
+    'data-kind',
+    'miss'
+  )
+  await expect(page.getByTestId('result-xp')).toHaveText('+4 XP')
+  await expect(page.getByTestId('prof-bubble')).toContainText(
+    'revient plus tard'
+  )
   await page.getByTestId('drill-next').click()
 
   // The two others, then the failed one again.

@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Training\RunStep;
 use App\ApiResource\Training\SubmitItemInput;
+use App\Gamification\Xp\ExerciseXp;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Training\Exception\InvalidItemSubmissionException;
@@ -43,6 +44,7 @@ final class SubmitItemProcessor implements ProcessorInterface
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly RateLimiterFactory $trainingItemSubmitLimiter,
         private readonly ClockInterface $clock,
+        private readonly ExerciseXp $exerciseXp,
     ) {
     }
 
@@ -50,6 +52,7 @@ final class SubmitItemProcessor implements ProcessorInterface
     {
         $user = $this->authenticatedUser->get();
         $this->rateLimitGuard->consume($this->trainingItemSubmitLimiter, $user->getId()->toRfc4122());
+        $this->exerciseXp->reset();
 
         try {
             $step = $this->runner->submit($user, self::runId($uriVariables), new ItemSubmission($data->itemId, $data->moves, $data->hintLevel, $data->solutionShown, $data->thinkMs, $data->answers));
@@ -69,6 +72,9 @@ final class SubmitItemProcessor implements ProcessorInterface
             throw new BadRequestHttpException($e->getMessage());
         }
 
-        return RunStep::from($step, $this->clock->now());
+        $view = RunStep::from($step, $this->clock->now());
+        $view->xp = $this->exerciseXp->gained();
+
+        return $view;
     }
 }

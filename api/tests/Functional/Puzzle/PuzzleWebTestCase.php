@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
  * (docs/DEPLOY_OVH.md, § 3), through its own entity manager ({@see self::$catalog}).
  *
  * @phpstan-type PuzzleJson array{id: string, fen: string, moves: list<string>, playerColor: string, rating: int, themes: list<string>, gameUrl: string}
- * @phpstan-type AttemptJson array{id: string, status: string, rated: bool, mistakes: int, hintLevel: int, solutionShown: bool, durationMs: int|null, ratingBefore: float|int|null, ratingAfter: float|int|null, ratingDelta: float|int|null, puzzle: PuzzleJson}
+ * @phpstan-type AttemptJson array{id: string, status: string, rated: bool, mistakes: int, hintLevel: int, solutionShown: bool, durationMs: int|null, ratingBefore: float|int|null, ratingAfter: float|int|null, ratingDelta: float|int|null, xp: int|null, puzzle: PuzzleJson}
  * @phpstan-type HistoryJson array{totalItems: int, member: list<AttemptJson>}
  */
 abstract class PuzzleWebTestCase extends WebTestCase

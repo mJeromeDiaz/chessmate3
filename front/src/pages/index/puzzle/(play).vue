@@ -3,6 +3,10 @@
     <PuzzlePlayer
       :puzzle="attempt?.puzzle ?? null"
       :loading="loading"
+      module="puzzles"
+      :xp="store.result ? store.result.xp : undefined"
+      :rating-delta="store.result?.ratingDelta ?? null"
+      :actions="actions"
       @resolve="onResolve"
     >
       <template #header>
@@ -108,52 +112,18 @@
       </template>
 
       <template #result>
-        <!-- The server's verdict, not the local one: shown once the submission answered. -->
-        <div v-if="!store.result" class="row items-center q-gutter-sm">
-          <q-spinner size="1.5em" />
-          <span>Enregistrement du résultat…</span>
-        </div>
-        <div
-          v-else
-          class="text-h6"
-          :class="
-            store.result.status === 'solved' ? 'text-positive' : 'text-negative'
-          "
-        >
-          {{ store.result.status === 'solved' ? 'Réussi !' : 'Échoué' }}
-          <span v-if="store.result.ratingDelta !== null">
-            ({{ formatRatingDelta(store.result.ratingDelta) }})
-          </span>
-        </div>
-        <div v-if="attempt" class="row q-gutter-sm">
-          <!-- Disabled until the submission answered: asking earlier would hand back the
-               same, still pending, attempt. -->
-          <q-btn
-            color="primary"
-            no-caps
-            icon="skip_next"
-            label="Suivant"
-            :disable="!store.result && !error"
-            data-testid="puzzle-next"
-            @click="next"
-          />
-          <q-btn
-            outline
-            no-caps
-            icon="replay"
-            label="Rejouer"
-            @click="replay(attempt.puzzle.id)"
-          />
-          <q-btn
-            flat
-            no-caps
-            icon="open_in_new"
-            label="Partie d'origine"
-            :href="attempt.puzzle.gameUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          />
-        </div>
+        <q-btn
+          v-if="attempt"
+          flat
+          dense
+          no-caps
+          icon="open_in_new"
+          label="Partie d'origine"
+          class="self-start"
+          :href="attempt.puzzle.gameUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        />
       </template>
     </PuzzlePlayer>
   </q-page>
@@ -168,7 +138,6 @@ import RatingBadge from '@/components/puzzle/RatingBadge.vue'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
-import { formatRatingDelta } from '@/utils/format'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -215,6 +184,30 @@ async function heldByRun(e) {
 }
 
 const attempt = computed(() => store.attempt)
+
+/**
+ * The result sheet's buttons: the next puzzle once the submission answered (asking earlier would
+ * hand back the same, still pending, attempt), and an unrated replay after a failure.
+ */
+const actions = computed(() => {
+  const next_ = {
+    label: replayId.value ? 'Retour aux puzzles' : 'Puzzle suivant →',
+    primary: true,
+    disable: !store.result && !error.value,
+    testid: 'puzzle-next',
+    onClick: next
+  }
+  const current = attempt.value
+  if (store.result?.status !== 'failed' || !current) return [next_]
+  return [
+    {
+      label: 'Réessayer',
+      testid: 'puzzle-retry',
+      onClick: () => replay(current.puzzle.id)
+    },
+    next_
+  ]
+})
 const replayId = computed(() =>
   typeof route.query.replay === 'string' ? route.query.replay : null
 )

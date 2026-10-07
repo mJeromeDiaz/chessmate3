@@ -79,6 +79,7 @@ final class WoodpeckerApiTest extends WoodpeckerWebTestCase
         self::assertSame($first['id'], $this->next($user, $set['id'])['id'], 'the pending puzzle is handed back');
         $played = $this->play($user, $set['id']);
         self::assertSame('solved', $played['status']);
+        self::assertSame(8, $played['xp'], 'XpRules: a Woodpecker puzzle solved');
         self::assertSame(1, $played['set']['current']['played'] ?? null);
 
         $order1 = [$played['puzzle']['id']];

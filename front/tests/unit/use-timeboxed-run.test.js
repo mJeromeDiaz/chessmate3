@@ -176,10 +176,12 @@ describe('useTimeboxedRun', () => {
           serverNow: expiresAt + 1000,
           summary: SUMMARY
         }),
-        result: { itemId: 'a1', success: true, data: {} }
+        result: { itemId: 'a1', success: true, data: {} },
+        xp: 8
       })
     )
 
+    expect(runner.xp.value).toBeUndefined()
     const submitting = runner.submit({
       moves: ['e2e4'],
       hintLevel: 0,
@@ -198,6 +200,7 @@ describe('useTimeboxedRun', () => {
       solutionShown: false
     })
     expect(runner.result.value.success).toBe(true)
+    expect(runner.xp.value).toBe(8)
     expect([runner.played.value, runner.solved.value]).toEqual([1, 1])
     expect(runner.phase.value).toBe('ended')
   })

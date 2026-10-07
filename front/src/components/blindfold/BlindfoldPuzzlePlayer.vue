@@ -26,9 +26,15 @@
     <div class="blind-player__panel column q-gutter-md">
       <slot name="header" />
 
-      <div class="text-subtitle1" data-testid="blindfold-status">{{
-        statusText
-      }}</div>
+      <ProfBubble
+        :prof="prof"
+        :kicker="bubble.kicker"
+        :text="bubble.text"
+        :kind="timeline.kind.value"
+        :step="timeline.step.value"
+        :hint="game.peeking.value"
+        text-testid="blindfold-status"
+      />
 
       <div
         v-if="game.phase.value === 'show'"
@@ -104,8 +110,19 @@
         />
       </div>
 
-      <div v-else class="column q-gutter-sm" data-testid="blindfold-result">
-        <slot name="result" :status="game.status.value" />
+      <div v-else data-testid="blindfold-result">
+        <ResultSheet
+          v-if="timeline.kind.value"
+          :kind="timeline.kind.value"
+          :step="timeline.step.value"
+          :run="timeline.run.value"
+          :title="copy.title"
+          :sub="copy.sub"
+          :xp="xp"
+          :actions="actions"
+        >
+          <slot name="result" :status="game.status.value" />
+        </ResultSheet>
       </div>
     </div>
   </div>
@@ -117,21 +134,35 @@
  * time (or until "J'ai mémorisé"), hidden a few seconds, then played from memory on an empty
  * board with its coordinates, by clicking the start square then the arrival square. The
  * opponent's replies come as text and a flash of their squares; the moves played are listed.
- * The logic lives in {@see useBlindfoldPuzzle}; the page owns the API calls (through `resolve`)
- * and fills the `header` and `result` slots.
+ * The logic lives in {@see useBlindfoldPuzzle}; the page owns the API calls (through `resolve`),
+ * gives the XP the server announced and the result sheet's buttons, and fills the `header` and
+ * `result` slots. Noctis, the module's professor, talks and reacts (design "Animation Puzzle").
  */
-import { computed, onBeforeUnmount, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import ProfBubble from '@/components/feedback/ProfBubble.vue'
+import ResultSheet from '@/components/feedback/ResultSheet.vue'
+import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { useBlindfoldPuzzle } from '@/composables/blindfold/useBlindfoldPuzzle'
 import { useBoardPreferences } from '@/composables/chess/useBoardPreferences'
 import { LEVELS } from '@/utils/blindfold'
 import { numberedLine } from '@/utils/chess/lichess'
+import {
+  blindfoldCopy,
+  blindfoldKind,
+  feedbackProf,
+  keyMove
+} from '@/utils/feedback'
 import { moveKind, playMoveSound } from '@/utils/chess/moveSounds'
 import { playOutcomeSound } from '@/utils/sounds'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/composables/training/useTimeboxedRun').RunItem>} the blindfold_puzzle item; a new one starts a new puzzle */
-  item: { type: Object, required: true }
+  item: { type: Object, required: true },
+  /** The submission's `xp`: undefined until it answered. */
+  xp: { type: [Number, null], default: undefined },
+  /** @type {import('vue').PropType<import('@/components/feedback/ResultSheet.vue').SheetAction[]>} the result sheet's buttons */
+  actions: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits({
@@ -150,12 +181,49 @@ const PROMOTIONS = [
 ]
 
 const { soundOn } = useBoardPreferences()
+const timeline = useFeedbackTimeline()
+/** From the position shown to the end: memorizing counts. */
+let loadedAt = 0
+const durationMs = ref(/** @type {number|null} */ (null))
 const game = useBlindfoldPuzzle({
   onResolve: (status, report) => emit('resolve', status, report),
   onComplete: status => {
-    playOutcomeSound(status === 'solved' ? 'puzzleDone' : 'puzzleMissed')
+    durationMs.value = loadedAt ? Date.now() - loadedAt : null
+    const kind = blindfoldKind(status)
+    playOutcomeSound(kind === 'miss' ? 'puzzleMissed' : 'puzzleDone')
+    timeline.play(kind)
     emit('complete')
   }
+})
+
+const copy = computed(() =>
+  blindfoldCopy(timeline.kind.value ?? 'win', {
+    move: game.puzzle.value ? keyMove(game.puzzle.value) : '',
+    durationMs: durationMs.value
+  })
+)
+
+const reacting = computed(
+  () => timeline.kind.value !== null && timeline.step.value >= 2
+)
+
+const prof = computed(() =>
+  feedbackProf('blindfold', reacting.value ? timeline.kind.value : null)
+)
+
+/** What the professor says: the phase's instruction, then the reaction to the verdict. */
+const bubble = computed(() => {
+  if (reacting.value)
+    return { kicker: copy.value.kicker, text: copy.value.bubble }
+  const kicker =
+    game.phase.value === 'show'
+      ? game.peeking.value
+        ? 'COUP D’ŒIL'
+        : 'MÉMORISE'
+      : game.phase.value === 'hidden'
+        ? 'VISUALISE'
+        : 'À TOI'
+  return { kicker, text: statusText.value }
 })
 
 const side = computed(() =>
@@ -232,6 +300,9 @@ watch(
 watch(
   () => props.item.id,
   () => {
+    timeline.reset()
+    loadedAt = Date.now()
+    durationMs.value = null
     const d = props.item.data
     game.load(d.puzzle, {
       visibleSeconds: d.visibleSeconds,

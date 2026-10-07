@@ -139,7 +139,9 @@ onMounted(async () => {
     if (!r.visibleSeconds.includes(visibleSeconds.value))
       visibleSeconds.value = r.visibleSeconds[0]
     if (!r.lengths.includes(length.value)) length.value = r.lengths[0]
-    if (!r.levels.some((/** @type {{key: string}} */ l) => l.key === level.value))
+    if (
+      !r.levels.some((/** @type {{key: string}} */ l) => l.key === level.value)
+    )
       level.value = r.levels[0].key
   } catch (e) {
     error.value = apiErrorMessage(e)

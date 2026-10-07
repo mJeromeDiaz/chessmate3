@@ -57,6 +57,8 @@ final class Attempt
     public int $hintLevel;
     public bool $solutionShown;
     public ?int $durationMs;
+    /** Submission only: XP this attempt gains, daily cap included; null elsewhere. */
+    public ?int $xp = null;
     #[ApiProperty(genId: false)]
     public PuzzleView $puzzle;
     /** The set after this request (progress, current run, cycle runs), embedded. */

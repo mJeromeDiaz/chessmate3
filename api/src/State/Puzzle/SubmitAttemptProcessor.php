@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Puzzle\Attempt;
 use App\ApiResource\Puzzle\SubmitAttemptInput;
+use App\Gamification\Xp\ExerciseXp;
 use App\Puzzle\Attempt\AttemptService;
 use App\Puzzle\Attempt\Exception\AttemptAlreadySubmittedException;
 use App\Puzzle\Attempt\Exception\AttemptHeldByRunException;
@@ -39,6 +40,7 @@ final class SubmitAttemptProcessor implements ProcessorInterface
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly RateLimiterFactory $puzzleAttemptSubmitLimiter,
         private readonly TimeboxRunner $timebox,
+        private readonly ExerciseXp $exerciseXp,
     ) {
     }
 
@@ -48,6 +50,7 @@ final class SubmitAttemptProcessor implements ProcessorInterface
         $this->rateLimitGuard->consume($this->puzzleAttemptSubmitLimiter, $user->getId()->toRfc4122());
         // A timed run past its time must not keep holding the pending puzzle.
         $this->timebox->closeExpired($user);
+        $this->exerciseXp->reset();
 
         $id = $uriVariables['id'] ?? null;
         if (!\is_string($id) || !Uuid::isValid($id)) {
@@ -70,6 +73,9 @@ final class SubmitAttemptProcessor implements ProcessorInterface
             throw new BadRequestHttpException($e->getMessage());
         }
 
-        return Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()));
+        $view = Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()));
+        $view->xp = $this->exerciseXp->gained();
+
+        return $view;
     }
 }

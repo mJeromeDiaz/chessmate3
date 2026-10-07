@@ -17,7 +17,7 @@ async function openPuzzle(page) {
   const attempt = await (await started).json()
   // The opponent's first move is played automatically.
   await expect(page.getByTestId('puzzle-status')).toContainText(
-    'Trouvez le meilleur coup'
+    'Trouve le meilleur coup'
   )
   return attempt
 }
@@ -39,7 +39,13 @@ test('solves a puzzle', async ({ page, context }) => {
   }
   expect((await (await submitted).json()).status).toBe('solved')
 
-  await expect(page.getByTestId('puzzle-result')).toContainText('Réussi')
+  // The result sheet: a success, with the XP the server announced.
+  await expect(page.getByTestId('result-sheet')).toHaveAttribute(
+    'data-kind',
+    'win'
+  )
+  await expect(page.getByTestId('result-xp')).toHaveText('+10 XP')
+  await expect(page.getByTestId('prof-bubble')).toContainText('BRAVO')
   await expect(page.getByTestId('puzzle-rating').first()).not.toContainText(
     '1500'
   )
@@ -84,9 +90,14 @@ test('fails a puzzle, then sees the solution', async ({ page, context }) => {
   )
 
   await page.getByTestId('puzzle-solution').click()
-  await expect(page.getByTestId('puzzle-result')).toContainText('Échoué', {
+  await expect(page.getByTestId('result-title')).toHaveText('Raté !', {
     timeout: 20_000
   })
+  await expect(page.getByTestId('result-sheet')).toHaveAttribute(
+    'data-kind',
+    'miss'
+  )
+  await expect(page.getByTestId('result-xp')).toHaveText('+3 XP')
   await expect(page.getByTestId('chess-board')).toHaveAttribute(
     'data-fen',
     fenAfter(attempt.puzzle, attempt.puzzle.moves.length)

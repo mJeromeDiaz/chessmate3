@@ -262,6 +262,16 @@ trait RepertoireRunTrait
         }, $rows);
     }
 
+    /**
+     * The XP announced by the last submission's response.
+     */
+    private function lastXp(): mixed
+    {
+        $body = json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        return \is_array($body) ? ($body['xp'] ?? null) : null;
+    }
+
     private function connection(): Connection
     {
         return self::getContainer()->get(Connection::class);

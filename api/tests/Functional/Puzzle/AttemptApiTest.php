@@ -6,9 +6,12 @@ namespace App\Tests\Functional\Puzzle;
 
 use App\Entity\Puzzle\Attempt;
 use App\Entity\User;
+use App\Gamification\Xp\XpRules;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use PChess\Chess\Chess;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @phpstan-import-type AttemptJson from PuzzleWebTestCase
@@ -23,6 +26,7 @@ final class AttemptApiTest extends PuzzleWebTestCase
 
         self::assertSame('pending', $attempt['status']);
         self::assertTrue($attempt['rated']);
+        self::assertNull($attempt['xp'], 'only a submission gains XP');
         $puzzle = $attempt['puzzle'];
         self::assertArrayHasKey($puzzle['id'], $this->puzzles);
         self::assertGreaterThanOrEqual(2, \count($puzzle['moves']));
@@ -52,6 +56,7 @@ final class AttemptApiTest extends PuzzleWebTestCase
         self::assertGreaterThan(0, $result['ratingDelta']);
         self::assertSame(1500.0, (float) $result['ratingBefore']);
         self::assertIsInt($result['durationMs']);
+        self::assertSame(10, $result['xp'], 'XpRules: a rated puzzle solved');
 
         $rating = $this->json($this->api('GET', '/api/puzzles/rating', $user));
         self::assertSame(1, $rating['ratedCount']);
@@ -87,6 +92,22 @@ final class AttemptApiTest extends PuzzleWebTestCase
         self::assertSame('failed', $result['status']);
         self::assertSame(1, $result['mistakes']);
         self::assertLessThan(0, $result['ratingDelta']);
+        self::assertSame(3, $result['xp'], 'XpRules: a rated puzzle failed');
+    }
+
+    public function testTheXpShownStaysWithinTheDailyCap(): void
+    {
+        $user = $this->createUser('alice@example.com');
+        $today = (new \DateTimeImmutable('now', $user->getDateTimeZone()))->format('Y-m-d');
+        self::getContainer()->get(Connection::class)->executeStatement(
+            "INSERT INTO gamification_xp_entry (id, user_id, kind, module, xp, source_type, source_id, training_run_id, local_date, occurred_at)
+             VALUES (?, ?, 'exercise', 'puzzles', ?, 'test', 'earlier', NULL, ?, UTC_TIMESTAMP())",
+            [Uuid::v7()->toBinary(), $user->getId()->toBinary(), XpRules::DAILY_EXERCISE_CAP - 5, $today],
+            [ParameterType::BINARY, ParameterType::BINARY, ParameterType::INTEGER],
+        );
+        $attempt = $this->startAttempt($user);
+
+        self::assertSame(5, $this->submit($user, $attempt, self::playerMoves($attempt))['xp'], 'what is left of the cap, not 10');
     }
 
     public function testAHintCountsAsAFailure(): void
@@ -192,6 +213,7 @@ final class AttemptApiTest extends PuzzleWebTestCase
 
         self::assertSame('solved', $result['status']);
         self::assertNull($result['ratingDelta']);
+        self::assertSame(4, $result['xp'], 'XpRules: an unrated puzzle solved');
         self::assertSame($ratingBefore, $this->json($this->api('GET', '/api/puzzles/rating', $user)));
 
         $unseen = array_values(array_diff(array_keys($this->puzzles), [$attempt['puzzle']['id']]))[0];

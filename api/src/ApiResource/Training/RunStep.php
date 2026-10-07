@@ -57,6 +57,8 @@ final class RunStep
     public ?ItemView $item;
     #[ApiProperty(genId: false)]
     public ?ItemResultView $result;
+    /** Submission only: XP of the exercise the item completed (daily cap included), null when none did. */
+    public ?int $xp = null;
 
     public static function from(Step $step, \DateTimeImmutable $now): self
     {

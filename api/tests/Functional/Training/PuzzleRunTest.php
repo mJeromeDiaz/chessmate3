@@ -31,7 +31,8 @@ final class PuzzleRunTest extends WoodpeckerWebTestCase
         self::assertNotNull($result);
         self::assertTrue($result['success']);
         self::assertGreaterThan(0, $result['data']['ratingDelta']);
-        $this->playInRun($alice, $run['id'], []);
+        self::assertSame(10, $first['step']['xp'], 'XpRules: a rated puzzle solved');
+        self::assertSame(3, $this->playInRun($alice, $run['id'], [])['step']['xp'], 'XpRules: a rated puzzle failed');
 
         $this->travel('+2 minutes');
         $summary = $this->stop($alice, $run['id'])['summary'];

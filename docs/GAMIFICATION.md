@@ -146,6 +146,17 @@ Modèles validés le 2026-10-05 :
 | `GET /api/gamification/quest` | Le défi de la semaine : `id`, `template`, `theme`, `module`, `goal`, `current`, `reward`, `completed`, `completedAt`, `weekStart`, `weekEnd` (dimanche) ; le tire au premier affichage, le termine et verse sa récompense |
 | `GET /api/gamification/trophies` | `trophies[]` dans l'ordre du catalogue : `key`, `goal`, `current`, `unlocked`, `unlockedAt` (date de l'exploit) ou null, `ratio` (Mémoire d'acier) ; enregistre ceux qui viennent d'être atteints |
 | `GET /api/training/runs/{id}/review` | Porte aussi `xp` : l'XP gagnée dans la séance (somme du registre pour ce `run`), 0 tant que le worker ne l'a pas écrite |
+| `POST /api/puzzles/attempts/{id}/submission`, `POST /api/woodpecker/attempts/{id}/submission`, `POST /api/training/runs/{id}/submission` | Portent `xp` : l'XP de l'exercice que la soumission termine, plafond du jour compris (voir ci-dessous) ; null quand aucun ne se termine (coup de répertoire au milieu d'une unité) et sur les autres opérations |
+
+**XP d'un exercice dans la réponse** (animation de fin d'exercice, `components/feedback/`) : le
+registre est écrit plus tard par le handler de l'outbox ; `App\Gamification\Xp\ExerciseXp` écoute
+`SendMessageToTransportsEvent` et, pour chaque `ExerciseCompleted` qui entre dans l'outbox pendant la
+requête, calcule `XpLedger::preview()` : la règle de `XpRules`, bornée par ce qui reste du plafond du
+jour (registre + exercices déjà prévus dans la même requête). Les domaines qui publient n'en savent
+rien. Une ligne de répertoire, journalisée tronçon par tronçon, additionne ses tronçons. Approximation
+acceptée : un exercice pas encore écrit par le worker (file en retard) ne compte pas dans le plafond
+annoncé ; le registre, lui, applique le plafond exact. Les processeurs remettent le compteur à zéro
+après la fermeture paresseuse d'une séance expirée, qui ne concerne pas l'exercice soumis.
 
 Utilisateur connecté, ses seules données ; budget de lecture du dashboard (`dashboard_read`). Mesurés
 avec le test de performance du dashboard (un an d'un joueur très assidu, XP recalculée,

@@ -68,6 +68,13 @@ export function useTimeboxedRun(options = {}) {
   const item = ref(null)
   /** @type {import('vue').Ref<ItemResult|null>} The verdict on the last submission. */
   const result = ref(null)
+  /**
+   * XP announced by the last submission (`xp` of the API, daily cap included): undefined until it
+   * answered, null when it completed no exercise.
+   *
+   * @type {import('vue').Ref<number|null|undefined>}
+   */
+  const xp = ref(undefined)
   /** Items resolved and solved in this run, as seen by this page (reset by a reload). */
   const played = ref(0)
   const solved = ref(0)
@@ -175,6 +182,7 @@ export function useTimeboxedRun(options = {}) {
   async function next() {
     if (!run.value || run.value.status === 'closed') return null
     result.value = null
+    xp.value = undefined
     const step = await call(() =>
       api.next(/** @type {TrainingRun} */ (run.value).id)
     )
@@ -201,6 +209,7 @@ export function useTimeboxedRun(options = {}) {
         })
       )
       result.value = step.result
+      xp.value = step.xp ?? null
       if (step.result) {
         played.value++
         if (step.result.success) solved.value++
@@ -295,6 +304,7 @@ export function useTimeboxedRun(options = {}) {
     run.value = null
     item.value = null
     result.value = null
+    xp.value = undefined
     played.value = 0
     solved.value = 0
   }
@@ -305,6 +315,7 @@ export function useTimeboxedRun(options = {}) {
     run,
     item,
     result,
+    xp,
     played,
     solved,
     submitting,

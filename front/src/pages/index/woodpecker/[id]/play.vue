@@ -13,6 +13,9 @@
       :puzzle="store.attempt?.puzzle ?? null"
       :loading="loading"
       after-mistake="showSolution"
+      module="woodpecker"
+      :xp="store.result ? store.result.xp : undefined"
+      :actions="actions"
       @resolve="onResolve"
     >
       <template #header>
@@ -51,40 +54,18 @@
       </template>
 
       <template #result>
-        <div v-if="!store.result" class="row items-center q-gutter-sm">
-          <q-spinner size="1.5em" />
-          <span>Enregistrement…</span>
-        </div>
-        <div
-          v-else
-          class="text-h6"
-          :class="
-            store.result.status === 'solved' ? 'text-positive' : 'text-negative'
-          "
-        >
-          {{ store.result.status === 'solved' ? 'Réussi !' : 'Échoué' }}
-        </div>
-        <div class="row q-gutter-sm">
-          <q-btn
-            color="primary"
-            no-caps
-            icon="skip_next"
-            :label="store.recap ? 'Continuer' : 'Suivant'"
-            :disable="!store.result && !error"
-            data-testid="woodpecker-next"
-            @click="next"
-          />
-          <q-btn
-            v-if="store.attempt"
-            flat
-            no-caps
-            icon="open_in_new"
-            label="Partie d'origine"
-            :href="store.attempt.puzzle.gameUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          />
-        </div>
+        <q-btn
+          v-if="store.attempt"
+          flat
+          dense
+          no-caps
+          icon="open_in_new"
+          label="Partie d'origine"
+          class="self-start"
+          :href="store.attempt.puzzle.gameUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        />
       </template>
     </PuzzlePlayer>
 
@@ -127,6 +108,17 @@ const loading = ref(false)
 const error = ref('')
 /** Why no puzzle can be played now (paused, resting, finished), or ''. */
 const blocked = ref('')
+
+/** The result sheet's button, once the submission answered (or failed). */
+const actions = computed(() => [
+  {
+    label: store.recap ? 'Continuer' : 'Puzzle suivant →',
+    primary: true,
+    disable: !store.result && !error.value,
+    testid: 'woodpecker-next',
+    onClick: next
+  }
+])
 
 const paceInfo = computed(() =>
   set.value?.current

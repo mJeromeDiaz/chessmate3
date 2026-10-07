@@ -54,7 +54,11 @@
  * clicked and the time it took. Totals underneath.
  */
 import { computed, ref } from 'vue'
-import { formatAnswerTime, ribbonCells, ribbonTotals } from '@/utils/coordinates'
+import {
+  formatAnswerTime,
+  ribbonCells,
+  ribbonTotals
+} from '@/utils/coordinates'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/utils/coordinates').CoordinateItem[]>} the run review's items */

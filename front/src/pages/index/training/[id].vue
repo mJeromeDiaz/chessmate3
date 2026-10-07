@@ -110,6 +110,8 @@
         runner.item.value?.type === 'blindfold_puzzle'
       "
       :item="runner.item.value"
+      :xp="runner.xp.value"
+      :actions="blindfoldActions"
       @resolve="onBlindfoldResolve"
     >
       <template #header>
@@ -126,32 +128,6 @@
         <q-banner v-if="error" rounded class="bg-negative text-white">{{
           error
         }}</q-banner>
-      </template>
-
-      <template #result>
-        <div v-if="!runner.result.value" class="row items-center q-gutter-sm">
-          <q-spinner size="1.5em" />
-          <span>Enregistrement…</span>
-        </div>
-        <div
-          v-else
-          class="text-h6"
-          :class="BLINDFOLD_RESULTS[runner.result.value.data?.status]?.color"
-          data-testid="blindfold-verdict"
-          >{{
-            BLINDFOLD_RESULTS[runner.result.value.data?.status]?.label ??
-            'Enregistré'
-          }}</div
-        >
-        <q-btn
-          color="primary"
-          no-caps
-          icon="skip_next"
-          label="Suivant"
-          :disable="!runner.result.value"
-          data-testid="run-next"
-          @click="next"
-        />
       </template>
     </BlindfoldPuzzlePlayer>
 
@@ -179,6 +155,10 @@
       :puzzle="puzzle"
       :loading="loading"
       after-mistake="showSolution"
+      :module="runner.run.value?.module ?? 'puzzles'"
+      :xp="runner.xp.value"
+      :rating-delta="runner.result.value?.data?.ratingDelta ?? null"
+      :actions="missActions"
       @resolve="onResolve"
     >
       <template #header>
@@ -202,37 +182,6 @@
           >Un seul essai par puzzle : en cas d’erreur, la solution
           s’affiche.</div
         >
-      </template>
-
-      <template #result>
-        <div v-if="!runner.result.value" class="row items-center q-gutter-sm">
-          <q-spinner size="1.5em" />
-          <span>Enregistrement…</span>
-        </div>
-        <div
-          v-else
-          class="text-h6"
-          :class="
-            runner.result.value.success ? 'text-positive' : 'text-negative'
-          "
-          >{{ runner.result.value.success ? 'Réussi !' : 'Échoué' }}
-          <span
-            v-if="runner.result.value.data?.ratingDelta != null"
-            data-testid="run-rating-delta"
-            >({{
-              formatRatingDelta(runner.result.value.data.ratingDelta)
-            }})</span
-          ></div
-        >
-        <q-btn
-          color="primary"
-          no-caps
-          icon="skip_next"
-          label="Suivant"
-          :disable="!runner.result.value"
-          data-testid="run-next"
-          @click="next"
-        />
       </template>
     </PuzzlePlayer>
 
@@ -275,14 +224,16 @@ import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
 import { sessionApi } from '@/services/api'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
-import { formatRatingDelta } from '@/utils/format'
 import { stepModule } from '@/utils/session/steps'
 import { backLabel, subjectPath } from '@/utils/training'
 
 definePage({ meta: { auth: 'required' } })
 
-/** After a solved puzzle, the next one comes by itself (speed matters); after a miss, the solution first. */
-const AUTO_NEXT_MS = 500
+/**
+ * After a solved puzzle, the next one comes by itself once the short success animation played
+ * (speed matters); after a miss, the solution and the result sheet wait for "Suivant".
+ */
+const AUTO_NEXT_MS = 1200
 
 /** Item types played on the puzzle board. */
 const PUZZLE_ITEMS = ['woodpecker_puzzle', 'puzzle']
@@ -298,12 +249,6 @@ const STOP_MESSAGES = {
     'Tes réponses seront comptées, mais une série arrêtée avant la fin ne valide pas.',
   blindfold: 'Le puzzle en cours ne sera pas compté.'
 }
-/** The server's verdict on a blindfold puzzle. */
-const BLINDFOLD_RESULTS = {
-  solved: { label: 'Résolu !', color: 'text-positive' },
-  helped: { label: 'Résolu avec un coup d’œil', color: 'text-warning' },
-  failed: { label: 'Raté', color: 'text-negative' }
-}
 const route = useRoute()
 const $q = useQuasar()
 const store = useTrainingStore()
@@ -317,6 +262,32 @@ const puzzle = computed(() =>
     ? runner.item.value?.data.puzzle
     : null
 )
+
+/** The result sheet's button after a failed item or a failed request (a success moves on by itself). */
+const missActions = computed(() =>
+  (runner.result.value && !runner.result.value.success) || error.value
+    ? [
+        {
+          label: 'Suivant →',
+          primary: true,
+          disable: loading.value,
+          testid: 'run-next',
+          onClick: next
+        }
+      ]
+    : []
+)
+
+/** A blindfold puzzle never moves on by itself: the final position stays to be looked at. */
+const blindfoldActions = computed(() => [
+  {
+    label: 'Suivant →',
+    primary: true,
+    disable: (!runner.result.value && !error.value) || loading.value,
+    testid: 'run-next',
+    onClick: next
+  }
+])
 
 const isRepertoire = computed(() => runner.run.value?.module === 'repertoire')
 

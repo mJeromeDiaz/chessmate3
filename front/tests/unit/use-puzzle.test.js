@@ -84,9 +84,11 @@ describe('usePuzzle', () => {
     const { puzzle, onResolve, onComplete } = await started(MATE_IN_2)
     const before = puzzle.fen.value
 
+    expect(puzzle.mistaken.value).toBe(false)
     expect(puzzle.play('e1e2')).toBe('wrong')
     expect(puzzle.fen.value).toBe(before)
     expect(puzzle.failed.value).toBe(true)
+    expect(puzzle.mistaken.value).toBe(true)
     expect(puzzle.highlights.value).toContainEqual({
       square: 'e2',
       type: 'error'
@@ -130,6 +132,7 @@ describe('usePuzzle', () => {
     const { puzzle, onResolve } = await started(MATE_IN_2)
 
     puzzle.hint()
+    expect([puzzle.failed.value, puzzle.mistaken.value]).toEqual([true, false])
     expect(puzzle.highlights.value).toContainEqual({
       square: 'e1',
       type: 'hint'

@@ -7,6 +7,7 @@ namespace App\Tests\Functional\Blindfold;
 use App\Blindfold\Puzzle\PuzzleRules;
 use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
+use App\Gamification\Xp\XpRules;
 use App\Tests\Functional\Woodpecker\WoodpeckerWebTestCase;
 use Doctrine\DBAL\Connection;
 use PChess\Chess\Chess;
@@ -51,18 +52,18 @@ final class PuzzleRunTest extends WoodpeckerWebTestCase
 
         // Solved; solved after a mistake (and the peek); failed at the second mistake.
         $this->travel('+20 seconds');
-        $solved = $this->submitOk($alice, $run['id'], $first['id'], self::solution($first['data']));
+        $solved = $this->submitOk($alice, $run['id'], $first['id'], self::solution($first['data']), XpRules::BLINDFOLD_SOLVED);
         self::assertSame([true, 'solved', 0, 20_000], [$solved['success'], $solved['data']['status'] ?? null, $solved['data']['mistakes'] ?? null, $solved['data']['durationMs'] ?? null]);
         self::assertSame(409, $this->submit($alice, $run['id'], $first['id'], self::solution($first['data']))->getStatusCode(), 'Already submitted.');
 
         $second = $this->item($alice, $run['id']);
         self::assertNotSame($first['data']['puzzle']['id'], $second['data']['puzzle']['id']);
-        $helped = $this->submitOk($alice, $run['id'], $second['id'], [self::wrongFirstMove($second), ...self::solution($second['data'])]);
+        $helped = $this->submitOk($alice, $run['id'], $second['id'], [self::wrongFirstMove($second), ...self::solution($second['data'])], XpRules::BLINDFOLD_HELPED);
         self::assertSame([false, 'helped', 1], [$helped['success'], $helped['data']['status'] ?? null, $helped['data']['mistakes'] ?? null]);
 
         $third = $this->item($alice, $run['id']);
         $wrong = self::wrongFirstMove($third);
-        $failed = $this->submitOk($alice, $run['id'], $third['id'], [$wrong, $wrong]);
+        $failed = $this->submitOk($alice, $run['id'], $third['id'], [$wrong, $wrong], XpRules::BLINDFOLD_FAILED);
         self::assertSame([false, 'failed', 2], [$failed['success'], $failed['data']['status'] ?? null, $failed['data']['mistakes'] ?? null]);
 
         // The puzzle on screen at the end is not counted.
@@ -214,14 +215,19 @@ final class PuzzleRunTest extends WoodpeckerWebTestCase
 
     /**
      * @param list<string> $moves
+     * @param int|null      $xp    the XP the response must announce, if checked
      *
      * @return array{itemId: string, success: bool, data: array<string, mixed>}
      */
-    private function submitOk(User $user, string $runId, string $itemId, array $moves): array
+    private function submitOk(User $user, string $runId, string $itemId, array $moves, ?int $xp = null): array
     {
         $response = $this->submit($user, $runId, $itemId, $moves);
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
-        $result = $this->json($response)['result'] ?? null;
+        $step = $this->json($response);
+        if (null !== $xp) {
+            self::assertSame($xp, $step['xp'] ?? null);
+        }
+        $result = $step['result'] ?? null;
         self::assertIsArray($result);
 
         /** @var array{itemId: string, success: bool, data: array<string, mixed>} */

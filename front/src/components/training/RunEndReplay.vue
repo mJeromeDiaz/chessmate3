@@ -24,6 +24,7 @@
       v-if="puzzle"
       class="run-end-replay__puzzle"
       :puzzle="puzzle"
+      :feedback="false"
       @complete="finished = true"
     >
       <template #result="{ failed }">

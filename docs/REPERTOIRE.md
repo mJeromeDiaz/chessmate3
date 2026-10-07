@@ -619,8 +619,9 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
     animations et « Revoir les coups » exclus.
   - Coup faux : l'échiquier tremble, le coup est repris, une flèche montre le coup préparé (avec
     son commentaire), seul coup accepté ensuite ; l'unité continue.
-  - Unité réussie : la suivante arrive seule (600 ms). Unité ratée : « Suivant », avec « il
-    reviendra plus tard dans la séance ». Bandeaux « Nouvelle tentative », « Nouveau tour », « Le
+  - Unité réussie : feuille de résultat verte, la suivante arrive seule (1,2 s). Unité ratée :
+    feuille rose avec le coup préparé manqué et « Suivant » ; Aaron rappelle qu'elle revient plus
+    tard dans la séance ([TRAINING.md](TRAINING.md), fin d'exercice). Bandeaux « Nouvelle tentative », « Nouveau tour », « Le
     répertoire a changé ».
   - Sons (réglage « Sons » du profil, `utils/sounds.js`) : `puzzleIsDone.mp3` pour une unité
     réussie, `funnyFail.mp3` pour une unité ratée.

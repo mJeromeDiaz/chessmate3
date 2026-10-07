@@ -6,7 +6,7 @@ import {
 } from '@/utils/coordinates'
 import { levelBar } from '@/utils/gamification'
 import { formatDuration, formatRatingDelta } from '@/utils/format'
-import { profImage } from '@/utils/prof/images'
+import { moodImage } from '@/utils/prof/profs'
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
 import { unitWord } from '@/utils/repertoireTest'
 import { FREE_FORMATS } from '@/utils/training'
@@ -44,13 +44,6 @@ export const STATUS = {
   fail: { label: 'Raté', color: '#FF6FAE' }
 }
 
-/** The professor's picture at the end of a run, by professor: pleased, or thoughtful. */
-const MOODS = {
-  'albert-stein': { happy: 'albert-joy', sad: 'albert-think' },
-  aaron: { happy: 'aaron-laugh', sad: 'aaron-wow' },
-  lizy: { happy: 'lizy-joy', sad: 'lizy-think' }
-}
-
 /**
  * Whether the run counts as failed: the rule of its end sound (`moduleEndSound`).
  *
@@ -82,9 +75,19 @@ export function catalogModule(module) {
  * @param {boolean} failed
  */
 export function endProf(module, failed) {
+  return moduleProf(module, failed ? 'sad' : 'happy')
+}
+
+/**
+ * A module's professor in a mood: name, picture (the bust when the mood has none) and the module's
+ * colours.
+ *
+ * @param {string} module the API's module
+ * @param {'neutral'|'happy'|'sad'} mood
+ */
+export function moduleProf(module, mood) {
   const m = catalogModule(module)
-  const mood = m?.profSlug ? MOODS[m.profSlug] : null
-  const picture = mood ? profImage(failed ? mood.sad : mood.happy) : ''
+  const picture = moodImage(m?.profSlug ?? null, mood)
   return {
     name: m?.prof ?? 'Ton prof',
     image: picture || m?.image || '',

@@ -68,6 +68,7 @@ final class RepertoireRunTest extends RepertoireWebTestCase
         $this->clock->modify('+1 second');
         $result = $this->submit($alice, $run['id'], $item, 'g1f3', 800);
         self::assertSame(['answered', true, 'easy', false, null], [$result['data']['status'], $result['data']['correct'], $result['data']['rating'], $result['data']['unitDone'], $result['data']['unitSuccess']]);
+        self::assertNull($this->lastXp(), 'no XP in the middle of a unit');
 
         $item = $this->next($alice, $run['id']);
         self::assertNull($item['data']['start']);
@@ -75,6 +76,7 @@ final class RepertoireRunTest extends RepertoireWebTestCase
         self::assertSame([4, 'segment', 'white', '1…c5'], [$item['data']['ply'], $item['data']['unit'], $item['data']['orientation'], $item['data']['label']['move']], 'a reload in the middle of a unit can show the question');
         $result = $this->submit($alice, $run['id'], $item, 'b1c3');
         self::assertSame([false, ['uci' => 'd2d4', 'san' => 'd4'], true, false, true], [$result['data']['correct'], $result['data']['expected'], $result['data']['unitDone'], $result['data']['unitSuccess'], $result['data']['retry']]);
+        self::assertSame(4, $this->lastXp(), 'XpRules: a failed unit');
         self::assertSame(409, $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $item['id'], 'moves' => ['d2d4']])->getStatusCode(), 'already answered');
 
         $again = $this->next($alice, $run['id']);

@@ -20,7 +20,17 @@
       <slot name="header" />
 
       <template v-if="puzzle">
-        <div class="text-subtitle1" data-testid="puzzle-status">{{
+        <ProfBubble
+          v-if="feedback"
+          :prof="prof"
+          :kicker="bubble.kicker"
+          :text="bubble.text"
+          :kind="timeline.kind.value"
+          :step="timeline.step.value"
+          :hint="game.hintShown.value > 0 && game.phase.value === 'playing'"
+          text-testid="puzzle-status"
+        />
+        <div v-else class="text-subtitle1" data-testid="puzzle-status">{{
           statusText
         }}</div>
         <slot name="info" />
@@ -48,8 +58,29 @@
           />
         </div>
 
-        <div v-else class="column q-gutter-sm" data-testid="puzzle-result">
-          <slot name="result" :failed="game.failed.value" />
+        <div v-else data-testid="puzzle-result">
+          <ResultSheet
+            v-if="feedback && timeline.kind.value"
+            :kind="timeline.kind.value"
+            :step="timeline.step.value"
+            :run="timeline.run.value"
+            :title="copy.title"
+            :sub="copy.sub"
+            :xp="xp"
+            :actions="actions"
+          >
+            <slot
+              name="result"
+              :kind="timeline.kind.value"
+              :failed="game.failed.value"
+            />
+          </ResultSheet>
+          <slot
+            v-else-if="!feedback"
+            name="result"
+            :kind="timeline.kind.value"
+            :failed="game.failed.value"
+          />
         </div>
       </template>
     </div>
@@ -58,21 +89,44 @@
 
 <script setup>
 /**
- * One puzzle being played: the board, the status line, hint and solution buttons. Shared by the
- * rated puzzles and Woodpecker; the page owns the API calls (through `resolve`) and fills the
- * `header`, `info` and `result` slots.
+ * One puzzle being played: the board, the module's professor talking (instruction, hint, then
+ * their reaction), hint and solution buttons, and the result sheet at the end (design "Animation
+ * Puzzle"). Shared by the rated puzzles, Woodpecker and the timed runs; the page owns the API
+ * calls (through `resolve`), gives the XP and rating change the server announced and the sheet's
+ * buttons, and fills the `header`, `info` and `result` slots.
  */
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import ProfBubble from '@/components/feedback/ProfBubble.vue'
+import ResultSheet from '@/components/feedback/ResultSheet.vue'
+import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { usePuzzle } from '@/composables/puzzle/usePuzzle'
+import { usePuzzleStore } from '@/stores/puzzle'
+import {
+  feedbackProf,
+  keyMove,
+  motifTheme,
+  puzzleCopy,
+  puzzleKind
+} from '@/utils/feedback'
 import { playOutcomeSound } from '@/utils/sounds'
 
 const props = defineProps({
-  /** @type {import('vue').PropType<{fen: string, moves: string[], playerColor: 'white'|'black'}|null>} A new object starts a new game. */
+  /** @type {import('vue').PropType<{fen: string, moves: string[], playerColor: 'white'|'black', themes?: string[]}|null>} A new object starts a new game. */
   puzzle: { type: Object, default: null },
   /** After a wrong move: keep searching, or play the solution at once (one try). */
   afterMistake: { type: String, default: 'continue' },
-  loading: { type: Boolean, default: false }
+  loading: { type: Boolean, default: false },
+  /** The API's module: its professor talks (puzzles, woodpecker). */
+  module: { type: String, default: 'puzzles' },
+  /** The submission's `xp`: undefined until it answered. */
+  xp: { type: [Number, null], default: undefined },
+  /** Rated puzzles: the rating change the server computed. */
+  ratingDelta: { type: [Number, null], default: null },
+  /** @type {import('vue').PropType<import('@/components/feedback/ResultSheet.vue').SheetAction[]>} the result sheet's buttons */
+  actions: { type: Array, default: () => [] },
+  /** The professor and the result sheet; false: a plain status line and the `result` slot (a replay nothing records). */
+  feedback: { type: Boolean, default: true }
 })
 
 const emit = defineEmits({
@@ -84,13 +138,24 @@ const emit = defineEmits({
 })
 
 const board = ref(null)
+const timeline = useFeedbackTimeline()
+const puzzles = usePuzzleStore()
+/** When the player could first move, and how long they took to the end. */
+let startedAt = 0
+const durationMs = ref(/** @type {number|null} */ (null))
+
 const game = usePuzzle({
   afterMistake: props.afterMistake,
   onResolve: (outcome, report) => emit('resolve', outcome, report),
   onComplete: () => {
-    playOutcomeSound(
-      game.outcome.value === 'solved' ? 'puzzleDone' : 'puzzleMissed'
-    )
+    durationMs.value = startedAt ? Date.now() - startedAt : null
+    const kind = puzzleKind({
+      mistaken: game.mistaken.value,
+      solutionShown: game.solutionShown.value,
+      hinted: game.hintLevel.value > 0
+    })
+    playOutcomeSound(kind === 'miss' ? 'puzzleMissed' : 'puzzleDone')
+    timeline.play(kind)
     emit('complete')
   }
 })
@@ -101,15 +166,61 @@ const statusText = computed(() => {
     case 'intro':
       return game.solutionShown.value ? 'Solution…' : 'Au tour de l’adversaire…'
     case 'playing':
-      return game.failed.value
-        ? 'Ce n’est pas le bon coup. Cherchez encore !'
-        : `Trouvez le meilleur coup pour ${side}.`
+      return game.mistaken.value
+        ? 'Ce n’est pas le bon coup. Cherche encore !'
+        : `Trouve le meilleur coup pour ${side}.`
     case 'complete':
       return game.failed.value ? 'Puzzle terminé.' : 'Bravo !'
     default:
       return ''
   }
 })
+
+/** The motif's French label, once the themes are known (none for an unknown theme). */
+const motif = computed(() => {
+  const key = motifTheme(props.puzzle?.themes)
+  return key ? (puzzles.themes.find(t => t.key === key)?.labelFr ?? null) : null
+})
+
+/** The verdict's words, once the animation reached the title. */
+const copy = computed(() =>
+  puzzleCopy(timeline.kind.value ?? 'win', {
+    move: props.puzzle ? keyMove(props.puzzle) : '',
+    motif: motif.value,
+    durationMs: durationMs.value,
+    ratingDelta: props.ratingDelta
+  })
+)
+
+const reacting = computed(
+  () => timeline.kind.value !== null && timeline.step.value >= 2
+)
+
+const prof = computed(() =>
+  feedbackProf(props.module, reacting.value ? timeline.kind.value : null)
+)
+
+const bubble = computed(() => {
+  if (reacting.value)
+    return { kicker: copy.value.kicker, text: copy.value.bubble }
+  if (game.phase.value === 'playing' && game.hintShown.value > 0) {
+    return {
+      kicker: 'INDICE',
+      text:
+        game.hintShown.value === 1
+          ? 'Indice : la pièce à jouer est en surbrillance.'
+          : 'Indice : suis la flèche.'
+    }
+  }
+  return { kicker: 'À TOI', text: statusText.value }
+})
+
+watch(
+  () => game.phase.value,
+  phase => {
+    if (phase === 'playing' && !startedAt) startedAt = Date.now()
+  }
+)
 
 /** @param {{uci: string}} move */
 async function onMove(move) {
@@ -124,10 +235,15 @@ watch(
   () => props.puzzle,
   puzzle => {
     game.dispose()
+    timeline.reset()
+    startedAt = 0
+    durationMs.value = null
     if (puzzle) game.load(puzzle)
   },
   { immediate: true }
 )
+
+onMounted(() => puzzles.fetchThemes().catch(() => null))
 
 onBeforeUnmount(() => game.dispose())
 </script>

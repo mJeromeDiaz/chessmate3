@@ -94,7 +94,15 @@
         />
       </div>
 
-      <div class="text-subtitle1" data-testid="drill-status">{{ status }}</div>
+      <ProfBubble
+        :prof="prof"
+        :kicker="bubble.kicker"
+        :text="bubble.text"
+        :kind="timeline.kind.value"
+        :step="timeline.step.value"
+        :hint="drill.phase.value === 'correcting'"
+        text-testid="drill-status"
+      />
       <div
         v-if="drill.comment.value"
         class="text-body2 cm-muted"
@@ -102,28 +110,17 @@
         >{{ drill.comment.value }}</div
       >
 
-      <div
-        v-if="drill.outcome.value && !drill.outcome.value.success"
-        class="column q-gutter-sm"
-        data-testid="drill-failed"
-      >
-        <div class="text-negative">
-          {{ unitName }} raté{{ unit === 'line' ? 'e' : ''
-          }}<template v-if="drill.outcome.value.retry">
-            : {{ unit === 'line' ? 'elle' : 'il' }} reviendra plus tard dans la
-            séance</template
-          >.
-        </div>
-        <q-btn
-          color="primary"
-          no-caps
-          icon="skip_next"
-          label="Suivant"
-          :loading="loading"
-          data-testid="drill-next"
-          @click="next"
-        />
-      </div>
+      <ResultSheet
+        v-if="timeline.kind.value && drill.phase.value === 'unitDone'"
+        :kind="timeline.kind.value"
+        :step="timeline.step.value"
+        :run="timeline.run.value"
+        :title="copy.title"
+        :sub="copy.sub"
+        :xp="runner.xp.value"
+        :actions="actions"
+        data-testid="drill-result"
+      />
       <div v-if="error" class="text-negative">{{ error }}</div>
     </div>
   </div>
@@ -132,18 +129,23 @@
 <script setup>
 /**
  * The repertoire test in a timed run (docs/REPERTOIRE.md § 15): the board and the unit's moves,
- * driven by `useRepertoireDrill`; the API calls go through the run (`useTimeboxedRun`). A unit
- * succeeded moves on by itself, a failed one waits for "Suivant".
+ * driven by `useRepertoireDrill`; the API calls go through the run (`useTimeboxedRun`). Aaron,
+ * the module's professor, talks and reacts, and the result sheet closes each unit (design
+ * "Animation Puzzle"): a unit succeeded moves on by itself, a failed one waits for "Suivant".
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import ProfBubble from '@/components/feedback/ProfBubble.vue'
+import ResultSheet from '@/components/feedback/ResultSheet.vue'
+import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { useRepertoireDrill } from '@/composables/repertoire/useRepertoireDrill'
 import { apiErrorMessage } from '@/utils/apiError'
+import { feedbackProf, repertoireCopy } from '@/utils/feedback'
 import { labelText, unitWord } from '@/utils/repertoireTest'
 import { playOutcomeSound } from '@/utils/sounds'
 
-/** After a unit succeeded, the next one comes by itself. */
-const AUTO_NEXT_MS = 600
+/** After a unit succeeded, the next one comes by itself once the short success animation played. */
+const AUTO_NEXT_MS = 1200
 
 const props = defineProps({
   /** @type {import('vue').PropType<ReturnType<typeof import('@/composables/training/useTimeboxedRun').useTimeboxedRun>>} */
@@ -151,6 +153,7 @@ const props = defineProps({
 })
 
 const drill = useRepertoireDrill()
+const timeline = useFeedbackTimeline()
 const board = ref(null)
 const loading = ref(false)
 const error = ref('')
@@ -165,11 +168,11 @@ const status = computed(() => {
     case 'showing':
       return 'Au tour de l’adversaire…'
     case 'playing':
-      return `À vous : coup ${drill.index.value + 1} sur ${drill.total.value}.`
+      return `À toi : coup ${drill.index.value + 1} sur ${drill.total.value}.`
     case 'submitting':
       return 'Vérification…'
     case 'correcting':
-      return `Ce n’est pas le coup préparé : jouez ${drill.expected.value?.san ?? 'le coup indiqué'}.`
+      return `Ce n’est pas le coup préparé : joue ${drill.expected.value?.san ?? 'le coup indiqué'}.`
     case 'replaying':
       return 'Revoir les coups…'
     case 'unitDone':
@@ -231,9 +234,64 @@ async function follow(verdict) {
   if (verdict === 'next') await next()
   else if (verdict === 'unitSucceeded') {
     playOutcomeSound('puzzleDone')
+    timeline.play('win')
     autoNext = setTimeout(next, AUTO_NEXT_MS)
-  } else if (verdict === 'unitFailed') playOutcomeSound('unitFailed')
+  } else if (verdict === 'unitFailed') {
+    playOutcomeSound('unitFailed')
+    timeline.play('miss')
+  }
 }
+
+/** The prepared move missed in the unit, numbered: "5.Bc4" ('' if none). */
+const missedMove = computed(() => {
+  const i = drill.moves.value.findIndex(m => m.kind === 'corrected')
+  return i >= 0 ? numbered(i, drill.moves.value[i].san) : ''
+})
+
+const copy = computed(() =>
+  repertoireCopy(timeline.kind.value ?? 'win', {
+    unit: unit.value,
+    moves: drill.total.value,
+    expected: missedMove.value,
+    retry: drill.outcome.value?.retry ?? false
+  })
+)
+
+const reacting = computed(
+  () => timeline.kind.value !== null && timeline.step.value >= 2
+)
+
+const prof = computed(() =>
+  feedbackProf('repertoire', reacting.value ? timeline.kind.value : null)
+)
+
+/** What Aaron says: the question, the correction, then the reaction to the unit. */
+const bubble = computed(() => {
+  if (reacting.value)
+    return { kicker: copy.value.kicker, text: copy.value.bubble }
+  const kicker =
+    drill.phase.value === 'correcting'
+      ? 'ATTENTION'
+      : drill.phase.value === 'playing'
+        ? 'À TOI'
+        : 'RÉPERTOIRE'
+  return { kicker, text: status.value }
+})
+
+/** The sheet's button after a failed unit (a success moves on by itself). */
+const actions = computed(() =>
+  drill.outcome.value && !drill.outcome.value.success
+    ? [
+        {
+          label: 'Suivant →',
+          primary: true,
+          loading: loading.value,
+          testid: 'drill-next',
+          onClick: next
+        }
+      ]
+    : []
+)
 
 async function next() {
   if (props.runner.phase.value !== 'running' || loading.value) return
@@ -251,7 +309,10 @@ async function next() {
 watch(
   () => props.runner.item.value,
   item => {
-    if (item?.type === 'repertoire_move') drill.present(item)
+    if (item?.type !== 'repertoire_move') return
+    // A new unit starts: the sheet of the previous one goes away.
+    if (item.data.start) timeline.reset()
+    drill.present(item)
   },
   { immediate: true }
 )

@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Puzzle\SubmitAttemptInput;
 use App\ApiResource\Woodpecker\Attempt;
+use App\Gamification\Xp\ExerciseXp;
 use App\Puzzle\Attempt\Submission;
 use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Security\AuthenticatedUser;
@@ -42,6 +43,7 @@ final class SubmitAttemptProcessor implements ProcessorInterface
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly RateLimiterFactory $woodpeckerAttemptSubmitLimiter,
         private readonly TimeboxRunner $timebox,
+        private readonly ExerciseXp $exerciseXp,
     ) {
     }
 
@@ -51,6 +53,7 @@ final class SubmitAttemptProcessor implements ProcessorInterface
         $this->rateLimitGuard->consume($this->woodpeckerAttemptSubmitLimiter, $user->getId()->toRfc4122());
         // A timed run past its time must not keep holding the set.
         $this->timebox->closeExpired($user);
+        $this->exerciseXp->reset();
         $id = $uriVariables['id'] ?? null;
         if (!\is_string($id) || !Uuid::isValid($id)) {
             throw new NotFoundHttpException();
@@ -70,6 +73,9 @@ final class SubmitAttemptProcessor implements ProcessorInterface
             throw new BadRequestHttpException($e->getMessage());
         }
 
-        return Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()), $this->views->create($attempt->getCycle()->getSet()));
+        $view = Attempt::from($attempt, $this->catalog->get($attempt->getPuzzleId()), $this->views->create($attempt->getCycle()->getSet()));
+        $view->xp = $this->exerciseXp->gained();
+
+        return $view;
     }
 }

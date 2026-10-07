@@ -37,20 +37,34 @@ final readonly class XpLedger
             return 0;
         }
         $localDate = LocalDate::of($event->occurredAt, $user->getDateTimeZone())->format('Y-m-d');
-        $earned = XpRules::exercise($event->type, $event->success, $event->durationMs, $event->itemCount, $event->metadata);
         $runId = $event->metadata['trainingRunId'] ?? null;
 
         return $this->insert(
             $user,
             XpKind::Exercise,
             XpRules::module($event->type)->value,
-            min($earned, max(0, XpRules::DAILY_EXERCISE_CAP - $this->exerciseXpOn($user, $localDate))),
+            $this->capped($user, $event, $localDate, 0),
             $event->sourceType,
             $event->sourceId,
             \is_string($runId) && Uuid::isValid($runId) ? Uuid::fromString($runId) : null,
             $localDate,
             $event->occurredAt,
         );
+    }
+
+    /**
+     * What awardExercise() will gain for this exercise, written or not yet: its rule, within what is
+     * left of the daily cap once $pending more XP (exercises of the same request, not written yet)
+     * are counted. Writes nothing.
+     */
+    public function preview(ExerciseCompleted $event, int $pending = 0): int
+    {
+        $user = $this->user($event->userId);
+        if (null === $user) {
+            return 0;
+        }
+
+        return $this->capped($user, $event, LocalDate::of($event->occurredAt, $user->getDateTimeZone())->format('Y-m-d'), $pending);
     }
 
     /**
@@ -77,6 +91,13 @@ final readonly class XpLedger
             LocalDate::of($occurredAt, $user->getDateTimeZone())->format('Y-m-d'),
             $occurredAt,
         );
+    }
+
+    private function capped(User $user, ExerciseCompleted $event, string $localDate, int $pending): int
+    {
+        $earned = XpRules::exercise($event->type, $event->success, $event->durationMs, $event->itemCount, $event->metadata);
+
+        return max(0, min($earned, XpRules::DAILY_EXERCISE_CAP - $this->exerciseXpOn($user, $localDate) - $pending));
     }
 
     private function exerciseXpOn(User $user, string $localDate): int

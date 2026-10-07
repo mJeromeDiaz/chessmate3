@@ -204,9 +204,20 @@ Woodpecker liste ses séances (`runs`).
   ([COORDINATES.md](COORDINATES.md)) ou `BlindfoldPuzzlePlayer` ([BLINDFOLD.md](BLINDFOLD.md)) ; un lecteur qui envoie ses réponses en différé s'inscrit à
   `beforeClose()` pour les envoyer avant la clôture ; `RunHeader` (compte à
   rebours, « Terminer », barre du temps écoulé) leur est commun.
-- Woodpecker : après un puzzle réussi, le suivant arrive seul (500 ms) ; après une erreur, la
-  solution se déroule, puis « Suivant ». Répertoire : unité réussie, la suivante seule (600 ms) ;
-  ratée, « Suivant ».
+- Woodpecker : après un puzzle réussi, le suivant arrive seul (1,2 s, le temps de l'animation de
+  réussite) ; après une erreur, la solution se déroule, puis « Suivant ». Répertoire : unité
+  réussie, la suivante seule (1,2 s) ; ratée, « Suivant ». Puzzle à l'aveugle : toujours
+  « Suivant ».
+- Fin d'exercice (design « Animation Puzzle », `components/feedback/`) : le prof du module (Albert
+  pour les puzzles et Woodpecker, Aaron pour le répertoire, Noctis pour l'aveugle) parle dans une
+  bulle au-dessus du jeu (`ProfBubble` : consigne, indice, puis sa réaction) ; à la fin, une feuille
+  de résultat monte (`ResultSheet`, dans le panneau de droite, en bas de l'écran sous 800 px) :
+  juste (vert, pion promu en dame, confettis), juste avec aide (jaune, un indice ou un coup d'œil,
+  promu en cavalier), raté (rose, roi qui vacille, feuille secouée). Titre, coup clé, durée, Elo
+  d'un puzzle classé et pastille XP (`xp` de la réponse de soumission, [GAMIFICATION.md](GAMIFICATION.md#5-api)).
+  Séquence commune dans `useFeedbackTimeline`, textes dans `utils/feedback.js` ; « moins
+  d'animations » montre l'état final. La relecture de fin de séance (`RunEndReplay`) garde
+  l'affichage simple (`PuzzlePlayer` `feedback=false`).
 - `RunLauncher` (page du set, dialogue de test d'un répertoire) : durées 5, 10, 15, 20, 30 min ou
   « Autre » (1 à 60), `config` du module envoyée telle quelle (`show-unit` ajoute le choix tronçons
   ou lignes) ; si une séance est déjà en cours, propose de la reprendre ou de la terminer.

@@ -85,6 +85,8 @@ final class Attempt
     public ?float $ratingBefore = null;
     public ?float $ratingAfter = null;
     public ?float $ratingDelta = null;
+    /** Submission only: XP this attempt gains, daily cap included; null elsewhere. */
+    public ?int $xp = null;
     #[ApiProperty(genId: false)]
     public PuzzleView $puzzle;
 
