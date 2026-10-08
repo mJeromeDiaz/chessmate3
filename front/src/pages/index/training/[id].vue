@@ -208,10 +208,11 @@
         }}</q-banner>
       </template>
 
-      <template #info>
-        <div class="text-caption text-grey"
-          >Un seul essai par puzzle : en cas d’erreur, la solution
-          s’affiche.</div
+      <template #chips>
+        <span class="play-chip"
+          >Un seul essai<q-tooltip
+            >En cas d’erreur, la solution s’affiche.</q-tooltip
+          ></span
         >
       </template>
     </PuzzlePlayer>

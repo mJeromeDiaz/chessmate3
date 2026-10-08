@@ -165,5 +165,7 @@ test('professor card: unknown professors are not found', async ({
 }) => {
   await signIn(context)
   await page.goto('/#/prof/magnus')
-  await expect(page.getByText('Oops. Nothing here...')).toBeVisible()
+  await expect(
+    page.getByTestId('not-found').getByRole('heading', { name: 'Blunder !' })
+  ).toBeVisible()
 })

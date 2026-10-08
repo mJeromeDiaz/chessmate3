@@ -1,5 +1,10 @@
 <template>
-  <div class="prof-bubble" data-testid="prof-bubble" :data-kind="kind ?? ''">
+  <div
+    class="prof-bubble"
+    :class="{ 'prof-bubble--large': large }"
+    data-testid="prof-bubble"
+    :data-kind="kind ?? ''"
+  >
     <div class="prof-bubble__prof" :style="{ transform: pose }">
       <ProfAvatar
         class="prof-bubble__avatar"
@@ -41,6 +46,8 @@ const props = defineProps({
   step: { type: Number, default: 0 },
   /** A hint is shown: yellow border. */
   hint: { type: Boolean, default: false },
+  /** Above a game's board (PlayLayout): bigger, and bigger still on a wide screen. */
+  large: { type: Boolean, default: false },
   /** Kept from the status line it replaces, for the tests. */
   textTestid: { type: String, default: undefined }
 })
@@ -100,6 +107,46 @@ const border = computed(() => {
   font-size: 15px;
   line-height: 1.4;
   text-wrap: pretty;
+}
+
+.prof-bubble--large {
+  min-height: 96px;
+
+  .prof-bubble__avatar {
+    width: 96px;
+    height: 96px;
+  }
+
+  .prof-bubble__bubble {
+    padding: 12px 14px;
+  }
+
+  .prof-bubble__text {
+    font-size: 16px;
+  }
+
+  @media (min-width: 1024px) {
+    gap: 16px;
+    min-height: 120px;
+
+    .prof-bubble__avatar {
+      width: 120px;
+      height: 120px;
+    }
+
+    .prof-bubble__bubble {
+      padding: 16px 18px;
+      border-radius: 24px 24px 24px 8px;
+    }
+
+    .prof-bubble__kicker {
+      font-size: 13px;
+    }
+
+    .prof-bubble__text {
+      font-size: 19px;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

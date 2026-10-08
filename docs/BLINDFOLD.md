@@ -82,7 +82,8 @@ Exportée avec le compte (`entrainement.json`, `blindfoldPuzzles`).
   faux mais légal : coup d’œil (la position courante, même temps, puis cachée) tant qu’il en
   reste, sinon raté et la solution se joue sur l’échiquier visible. Coup **impossible** (pas de
   pièce, déplacement illégal) : refusé sans compter comme erreur (le serveur ne rejoue que des
-  coups légaux). « Voir la solution » abandonne (raté). Le verdict part dès qu’il est connu ; pas
+  coups légaux). « Solution » abandonne (raté). Mise en page commune aux puzzles (`PlayLayout`, voir
+  [PUZZLES.md](PUZZLES.md)) : niveau, temps et coups d’œil restants en chips au-dessus de l’échiquier. Le verdict part dès qu’il est connu ; pas
   de puzzle suivant automatique : la position finale reste affichée jusqu’à « Suivant ».
 - Fin de séance : quatrième chiffre « Avec coup d’œil » (et les ratés) ; la grille et « À revoir »
   comme les autres puzzles (le rejeu se fait à vue).

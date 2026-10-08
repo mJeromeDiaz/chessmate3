@@ -103,3 +103,62 @@ test('fails a puzzle, then sees the solution', async ({ page, context }) => {
     fenAfter(attempt.puzzle, attempt.puzzle.moves.length)
   )
 })
+
+test('skips a puzzle: a failure once confirmed, then the next one', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  const attempt = await openPuzzle(page)
+
+  await page.getByTestId('puzzle-skip').click()
+  // Cancelling keeps the puzzle going.
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Annuler' })
+    .click()
+  await expect(page.getByTestId('puzzle-skip')).toBeEnabled()
+
+  await page.getByTestId('puzzle-skip').click()
+  const submitted = page.waitForResponse(r => r.url().endsWith('/submission'))
+  const started = page.waitForResponse(
+    r =>
+      r.url().endsWith('/api/puzzles/attempts') &&
+      r.request().method() === 'POST'
+  )
+  await page.getByRole('dialog').getByRole('button', { name: 'Passer' }).click()
+
+  const result = await (await submitted).json()
+  expect(result.status).toBe('failed')
+  expect(result.ratingDelta).toBeLessThan(0)
+  const next = await (await started).json()
+  expect(next.id).not.toBe(attempt.id)
+  // No result sheet: straight to the next puzzle.
+  await expect(page.getByTestId('result-sheet')).toHaveCount(0)
+  await expect(page.getByTestId('puzzle-status')).toContainText(
+    'Trouve le meilleur coup'
+  )
+})
+
+test('picks themes and difficulty in the settings', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await openPuzzle(page)
+
+  await page.getByTestId('puzzle-settings').click()
+  const dialog = page.getByTestId('puzzle-settings-dialog')
+  await dialog
+    .getByTestId('puzzle-settings-theme')
+    .filter({ hasText: 'Clouage' })
+    .click()
+  await dialog.getByRole('button', { name: 'Plus difficile' }).click()
+  await page.getByTestId('puzzle-settings-apply').click()
+
+  await expect(dialog).toBeHidden()
+  await expect(page.getByTestId('puzzle-theme-filter')).toHaveText('Clouage')
+  await expect(page.getByTestId('puzzle-difficulty-filter')).toHaveText(
+    'Plus difficile'
+  )
+})

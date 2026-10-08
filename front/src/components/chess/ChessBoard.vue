@@ -400,7 +400,8 @@ defineExpose({ setPosition, shake })
 }
 .chess-board {
   width: 100%;
-  max-width: min(92vw, 70vh, 560px);
+  // A screen layout may size it (PlayLayout's --board-max).
+  max-width: var(--board-max, min(92vw, 70vh, 560px));
   margin: 0 auto;
 }
 .chess-board__frame {

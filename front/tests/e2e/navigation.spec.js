@@ -68,7 +68,7 @@ test('phone: the burger opens a drawer that closes once a page is chosen', async
   await page.getByTestId('nav-burger').click()
   await page.getByTestId('drawer-logout').click()
   await expect(page).toHaveURL(/#\/login/)
-  // Signed out, the header still fits.
-  await expect(page.locator('.app-header')).toBeVisible()
+  // Signed out, the login screen has its own header (no app header) and still fits.
+  await expect(page.locator('.app-header')).toHaveCount(0)
   expect(await overflows(page)).toBe(false)
 })

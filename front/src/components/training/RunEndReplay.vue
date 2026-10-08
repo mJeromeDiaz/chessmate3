@@ -25,6 +25,7 @@
       class="run-end-replay__puzzle"
       :puzzle="puzzle"
       :feedback="false"
+      stacked
       @complete="finished = true"
     >
       <template #result="{ failed }">
@@ -213,12 +214,6 @@ onBeforeUnmount(() => replay.dispose())
   border-radius: 12px;
   background: var(--cm-subtle);
   font-size: 12.5px;
-}
-
-// The side column is narrow: the puzzle's panel goes under its board.
-.run-end-replay .run-end-replay__puzzle {
-  grid-template-columns: 1fr;
-  gap: 12px;
 }
 
 .run-end-replay__status {

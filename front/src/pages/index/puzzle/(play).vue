@@ -7,21 +7,18 @@
       :xp="store.result ? store.result.xp : undefined"
       :rating-delta="store.result?.ratingDelta ?? null"
       :actions="actions"
+      :skippable="!replayId"
+      with-settings
+      :settings-active="filtersActive(store.filters)"
       @resolve="onResolve"
+      @skip="onSkip"
+      @settings="settingsOpen = true"
     >
       <template #header>
-        <div class="row items-center q-gutter-sm">
+        <div class="gt-sm row items-center q-gutter-sm puzzle-page__bar">
           <div class="text-h6">Puzzles</div>
           <RatingBadge />
           <q-space />
-          <q-btn
-            flat
-            dense
-            no-caps
-            icon="category"
-            label="Thèmes"
-            to="/puzzle/themes"
-          />
           <q-btn
             flat
             dense
@@ -30,22 +27,12 @@
             label="Historique"
             to="/puzzle/history"
           />
-          <q-btn
-            flat
-            dense
-            no-caps
-            icon="timer"
-            label="Séance chronométrée"
-            data-testid="puzzle-run-open"
-            @click="runDialog = true"
-          />
         </div>
-        <PuzzleRunDialog v-model="runDialog" />
 
         <q-banner
           v-if="store.rating?.lichessImportAvailable"
           rounded
-          class="cm-banner--info"
+          class="gt-sm cm-banner--info q-mt-sm"
         >
           Vous avez lié votre compte Lichess : démarrer avec votre classement
           puzzle Lichess ?
@@ -61,33 +48,10 @@
           </template>
         </q-banner>
 
-        <div v-if="!replayId" class="row items-center q-gutter-sm">
-          <q-btn-toggle
-            :model-value="store.filters.difficulty"
-            no-caps
-            dense
-            toggle-color="primary"
-            :options="DIFFICULTIES"
-            @update:model-value="store.setDifficulty"
-          />
-          <q-chip
-            v-for="key in store.filters.themes"
-            :key="key"
-            dense
-            removable
-            data-testid="puzzle-theme-filter"
-            @remove="
-              store.setThemes(store.filters.themes.filter(k => k !== key))
-            "
-          >
-            {{ store.themeLabel(key) }}
-          </q-chip>
-        </div>
-
         <q-banner
           v-if="error"
           rounded
-          class="bg-negative text-white"
+          class="bg-negative text-white q-mt-sm"
           data-testid="puzzle-error"
         >
           {{ error }}
@@ -104,11 +68,20 @@
         </q-banner>
       </template>
 
-      <template #info>
-        <div v-if="attempt" class="text-caption text-grey">
-          {{ attempt.rated ? 'Partie classée' : 'Rejeu non classé' }} · puzzle
-          {{ attempt.puzzle.rating }}
-        </div>
+      <template v-if="!replayId && filtersActive(store.filters)" #chips>
+        <span
+          v-for="key in store.filters.themes"
+          :key="key"
+          class="play-chip play-chip--accent"
+          data-testid="puzzle-theme-filter"
+          >{{ store.themeLabel(key) }}</span
+        >
+        <span
+          v-if="store.filters.difficulty !== 'normal'"
+          class="play-chip play-chip--accent"
+          data-testid="puzzle-difficulty-filter"
+          >{{ difficultyLabel }}</span
+        >
       </template>
 
       <template #result>
@@ -125,7 +98,22 @@
           rel="noopener noreferrer"
         />
       </template>
+
+      <template #footer>
+        <q-btn
+          outline
+          no-caps
+          icon="timer"
+          label="Séance chronométrée"
+          class="full-width puzzle-page__run"
+          data-testid="puzzle-run-open"
+          @click="runDialog = true"
+        />
+      </template>
     </PuzzlePlayer>
+
+    <PuzzleRunDialog v-model="runDialog" />
+    <PuzzleSettingsDialog v-model="settingsOpen" />
   </q-page>
 </template>
 
@@ -134,19 +122,19 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import PuzzleRunDialog from '@/components/puzzle/PuzzleRunDialog.vue'
+import PuzzleSettingsDialog from '@/components/puzzle/PuzzleSettingsDialog.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
 import { useGamificationStore } from '@/stores/gamification'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
+import {
+  DIFFICULTIES,
+  LICHESS_IMPORT_ERRORS,
+  filtersActive
+} from '@/utils/puzzle'
 
 definePage({ meta: { auth: 'required' } })
-
-const DIFFICULTIES = [
-  { label: 'Plus facile', value: 'easier' },
-  { label: 'Normal', value: 'normal' },
-  { label: 'Plus difficile', value: 'harder' }
-]
 
 const store = usePuzzleStore()
 const route = useRoute()
@@ -155,6 +143,9 @@ const loading = ref(false)
 const importing = ref(false)
 const error = ref('')
 const runDialog = ref(false)
+const settingsOpen = ref(false)
+/** The submission in flight: "Passer" waits for it before asking for the next puzzle. */
+let submitting = Promise.resolve()
 /** The timed run holding the pending puzzle (free play answered 409), to join it. */
 const heldBy = ref(/** @type {string|null} */ (null))
 const training = useTrainingStore()
@@ -185,6 +176,11 @@ async function heldByRun(e) {
 }
 
 const attempt = computed(() => store.attempt)
+
+const difficultyLabel = computed(
+  () =>
+    DIFFICULTIES.find(d => d.value === store.filters.difficulty)?.label ?? ''
+)
 
 const gamification = useGamificationStore()
 
@@ -234,13 +230,27 @@ const replayId = computed(() =>
  * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
  */
 function onResolve(_outcome, report) {
-  store.submit(report).catch(async e => {
-    if (await heldByRun(e)) return
-    error.value = apiErrorMessage(e, {
-      409: 'Ce puzzle a déjà été soumis.',
-      404: 'Cette tentative est introuvable.'
+  submitting = store
+    .submit(report)
+    .then(() => {})
+    .catch(async e => {
+      if (await heldByRun(e)) return
+      error.value = apiErrorMessage(e, {
+        409: 'Ce puzzle a déjà été soumis.',
+        404: 'Cette tentative est introuvable.'
+      })
     })
-  })
+}
+
+/** "Passer" confirmed: once its failure is recorded, straight to the next puzzle. */
+async function onSkip() {
+  loading.value = true
+  await submitting
+  if (error.value) {
+    loading.value = false
+    return
+  }
+  await afterStreak(next)()
 }
 
 /** @param {() => Promise<object>} request */
@@ -281,10 +291,7 @@ async function importLichess() {
   try {
     await store.importLichessRating()
   } catch (e) {
-    error.value = apiErrorMessage(e, {
-      409: 'Votre classement est déjà établi.',
-      422: 'Lichess n’a pas de classement puzzle pour ce compte.'
-    })
+    error.value = apiErrorMessage(e, LICHESS_IMPORT_ERRORS)
   } finally {
     importing.value = false
   }
@@ -299,3 +306,10 @@ onMounted(() => {
   else begin(() => store.next())
 })
 </script>
+
+<style scoped>
+.puzzle-page__run {
+  border-radius: 14px;
+  min-height: 44px;
+}
+</style>

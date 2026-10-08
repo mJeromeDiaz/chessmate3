@@ -234,7 +234,8 @@ légaux et la promotion, mais rien des puzzles. **Le parent possède la position
 | `setPosition(fen, animated = true): Promise` | Force une position (retour arrière après un coup refusé). |
 | `shake(): Promise` | Secousse d'erreur (0,4 s). |
 
-Responsive (largeur disponible, max `min(92vw, 70vh, 560px)`), thème clair/sombre suivi par Quasar
+Responsive (largeur disponible, max `min(92vw, 70vh, 560px)`, ou la variable CSS `--board-max`
+posée par un écran de jeu, voir l'écran de jeu ci-dessous), thème clair/sombre suivi par Quasar
 (`dark: 'auto'`). Les sprites (pièces, marqueurs, flèches) sont servis depuis `public/chessboard/`.
 
 Préférences du profil (`composables/chess/useBoardPreferences.js`, lues dans `auth.profile`) :
@@ -266,6 +267,7 @@ await puzzle.load({ fen, moves, playerColor }) // coup adverse joué après `opp
 puzzle.play('e1e7')   // 'correct' | 'wrong' | 'ignored'
 puzzle.hint()         // niveau 1 : pièce à jouer ; niveau 2 : flèche du coup
 await puzzle.showSolution() // déroulé animé coup par coup
+puzzle.skip()         // « Passer » : échec signalé comme une solution vue, puis plus rien ne bouge
 puzzle.dispose()      // annule les minuteries en cours
 ```
 
@@ -276,6 +278,27 @@ puzzle.dispose()      // annule les minuteries en cours
 
 Tout coup qui mate est accepté (mat en un alternatif). Sur `'wrong'`, le parent secoue l'échiquier et
 le remet sur `puzzle.fen`.
+
+### Écran de jeu (design « Animation Puzzle »)
+
+`components/chess/PlayLayout.vue` met en page `PuzzlePlayer` et `BlindfoldPuzzlePlayer` (puzzles
+notés, Woodpecker, séances, rejeu de fin de séance avec `stacked`). Mobile (< 1024 px), une colonne :
+le prof et sa bulle (`ProfBubble large`), les filtres actifs en chips,
+l'échiquier pleine largeur, puis les gros boutons **Aide** (2ᵉ appui : flèche), **Solution**,
+**Passer** et l'icône réglages (puzzles libres seulement), la feuille de résultat montant du bas.
+PC : l'échiquier à gauche, aussi haut que la fenêtre (`min(100vh − 170px, 800px)`) avec 28 px
+de marge au-dessus et en dessous, le reste à droite, en plus grand.
+
+- **Passer** (`skippable`) : après confirmation, `usePuzzle.skip()` soumet un échec avec
+  `solutionShown` (le classement baisse, aucun tri des puzzles possible), puis la page enchaîne sur
+  le puzzle suivant sans feuille de résultat (après la soumission en cours).
+- **Réglages** (`PuzzleSettingsDialog`, plein écran sur mobile) : difficulté, thèmes cochés
+  (`utils/puzzle.js`, `groupThemes`), classement et import Lichess, Historique. Appliqués au store
+  sur « Appliquer », donc à partir du prochain puzzle (une tentative classée en attente reste la
+  suivante). Un point sur l'icône signale des filtres autres que ceux par défaut. La page
+  `/puzzle/themes` reste accessible mais n'est plus liée.
+- Sur PC, une barre fine au-dessus du panneau garde le titre, le classement et l'Historique (et
+  la bannière d'import Lichess) ; le bouton **Séance chronométrée** reste en bas, sur mobile aussi.
 
 ### `stores/puzzle.js`
 
@@ -291,5 +314,6 @@ classée), `fetchRating()`, `fetchThemes()`, `importLichessRating()`, `setThemes
   résultat falsifié, double soumission, tentative d'un autre, rejeu, historique, rate limit,
   collisions de routes, import Lichess), synchronisation des thèmes.
 - Vitest : `usePuzzle` (déroulé complet, erreur, mat alternatif, promotion, indices, solution,
-  annulation) et le store.
-- Playwright (`front/tests/e2e`) : résoudre un puzzle, échouer un puzzle.
+  passer, annulation), le store et `utils/puzzle.js` (groupement des thèmes, filtres actifs).
+- Playwright (`front/tests/e2e`) : résoudre un puzzle, échouer un puzzle, passer un puzzle
+  (confirmation, échec, puzzle suivant), choisir thèmes et difficulté dans les réglages.

@@ -1,32 +1,17 @@
 <template>
-  <div
+  <PlayLayout
     class="blind-player"
     data-testid="blindfold-player"
     :data-phase="game.phase.value"
     :data-moves="game.history.value.length"
   >
-    <div class="blind-player__board">
-      <ChessBoard
-        :fen="game.boardFen.value"
-        :orientation="game.orientation.value"
-        :highlights="game.highlights.value"
-        :square-input="game.phase.value === 'play'"
-        @square="game.clickSquare"
-      />
-      <div
-        v-if="game.phase.value === 'hidden'"
-        class="blind-player__veil"
-        data-testid="blindfold-veil"
-      >
-        <div class="blind-player__veil-label">Position cachée</div>
-        <div class="blind-player__veil-count">{{ game.countdown.value }}</div>
-      </div>
-    </div>
-
-    <div class="blind-player__panel column q-gutter-md">
+    <template v-if="$slots.header" #header>
       <slot name="header" />
+    </template>
 
+    <template #prof>
       <ProfBubble
+        large
         :prof="prof"
         :kicker="bubble.kicker"
         :text="bubble.text"
@@ -35,25 +20,72 @@
         :hint="game.peeking.value"
         text-testid="blindfold-status"
       />
+    </template>
 
-      <div
-        v-if="game.phase.value === 'show'"
-        class="row items-center q-gutter-md"
+    <template #chips>
+      <span
+        v-for="chip in infoChips"
+        :key="chip"
+        class="play-chip"
+        data-testid="blindfold-info"
+        >{{ chip }}</span
       >
+    </template>
+
+    <template #board>
+      <div class="blind-player__board">
+        <ChessBoard
+          :fen="game.boardFen.value"
+          :orientation="game.orientation.value"
+          :highlights="game.highlights.value"
+          :square-input="game.phase.value === 'play'"
+          @square="game.clickSquare"
+        />
+        <div
+          v-if="game.phase.value === 'hidden'"
+          class="blind-player__veil"
+          data-testid="blindfold-veil"
+        >
+          <div class="blind-player__veil-label">Position cachée</div>
+          <div class="blind-player__veil-count">{{ game.countdown.value }}</div>
+        </div>
+      </div>
+    </template>
+
+    <template v-if="game.phase.value !== 'complete'" #controls>
+      <template v-if="game.phase.value === 'show'">
         <div class="blind-player__count" data-testid="blindfold-countdown"
           >{{ game.countdown.value }} s</div
         >
         <q-btn
-          color="primary"
-          no-caps
           unelevated
-          icon="visibility_off"
+          no-caps
+          class="play-btn play-btn--skip"
           label="J’ai mémorisé"
           data-testid="blindfold-memorized"
           @click="game.memorized()"
         />
-      </div>
+      </template>
+      <q-btn
+        unelevated
+        no-caps
+        class="play-btn play-btn--solution"
+        label="Solution"
+        :disable="!canGiveUp"
+        data-testid="blindfold-give-up"
+        @click="game.giveUp()"
+      />
+    </template>
 
+    <div
+      v-if="
+        game.message.value ||
+        game.promotion.value ||
+        line ||
+        game.phase.value === 'complete'
+      "
+      class="column q-gutter-sm"
+    >
       <div
         v-if="game.message.value"
         class="blind-player__message"
@@ -94,23 +126,10 @@
         >{{ line }}</div
       >
 
-      <div class="text-caption text-grey" data-testid="blindfold-info">{{
-        infoText
-      }}</div>
-
-      <div v-if="game.phase.value !== 'complete'" class="row q-gutter-sm">
-        <q-btn
-          outline
-          no-caps
-          icon="flag"
-          label="Voir la solution"
-          :disable="!canGiveUp"
-          data-testid="blindfold-give-up"
-          @click="game.giveUp()"
-        />
-      </div>
-
-      <div v-else data-testid="blindfold-result">
+      <div
+        v-if="game.phase.value === 'complete'"
+        data-testid="blindfold-result"
+      >
         <ResultSheet
           v-if="timeline.kind.value"
           :kind="timeline.kind.value"
@@ -125,7 +144,7 @@
         </ResultSheet>
       </div>
     </div>
-  </div>
+  </PlayLayout>
 </template>
 
 <script setup>
@@ -140,6 +159,7 @@
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import PlayLayout from '@/components/chess/PlayLayout.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
@@ -271,16 +291,17 @@ const line = computed(() => {
   })
 })
 
-const infoText = computed(() => {
+/** The level, the time to memorize and the peeks left, above the board. */
+const infoChips = computed(() => {
   const d = props.item.data
   const peeks = game.peeksLeft.value
   return [
     LEVELS[d.level] ?? d.level,
     `${d.visibleSeconds} s pour mémoriser`,
     peeks > 0
-      ? `${peeks} coup${peeks > 1 ? 's' : ''} d’œil après une erreur`
+      ? `${peeks} coup${peeks > 1 ? 's' : ''} d’œil`
       : 'plus de coup d’œil'
-  ].join(' · ')
+  ]
 })
 
 const canGiveUp = computed(() =>
@@ -317,20 +338,6 @@ onBeforeUnmount(() => game.dispose())
 </script>
 
 <style scoped lang="scss">
-.blind-player {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(0, 560px) minmax(260px, 1fr);
-  align-items: start;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-@media (max-width: 800px) {
-  .blind-player {
-    grid-template-columns: 1fr;
-  }
-}
-
 .blind-player__board {
   position: relative;
   user-select: none;
@@ -365,10 +372,13 @@ onBeforeUnmount(() => game.dispose())
 }
 
 .blind-player__count {
+  flex: none;
+  align-self: center;
   font-family: var(--cm-heading);
   font-size: 32px;
   font-weight: 800;
-  min-width: 2.5em;
+  min-width: 2.2em;
+  text-align: center;
 }
 
 .blind-player__message {

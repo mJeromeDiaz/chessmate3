@@ -61,6 +61,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { apiErrorMessage } from '@/utils/apiError'
+import { formatCount, groupThemes } from '@/utils/puzzle'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -69,27 +70,7 @@ const router = useRouter()
 const selected = ref([...store.filters.themes])
 const error = ref('')
 
-/** Themes grouped by category, in the API's order. */
-const groups = computed(() => {
-  /** @type {Map<string, {category: string, label: string, themes: import('@/stores/puzzle').Theme[]}>} */
-  const byCategory = new Map()
-  for (const theme of store.themes) {
-    if (!byCategory.has(theme.category)) {
-      byCategory.set(theme.category, {
-        category: theme.category,
-        label: theme.categoryLabelFr,
-        themes: []
-      })
-    }
-    byCategory.get(theme.category).themes.push(theme)
-  }
-  return [...byCategory.values()]
-})
-
-/** @param {number} count */
-function formatCount(count) {
-  return new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(count)
-}
+const groups = computed(() => groupThemes(store.themes))
 
 function play() {
   store.setThemes(selected.value)

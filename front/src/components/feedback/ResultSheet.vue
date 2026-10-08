@@ -558,7 +558,7 @@ const tiles = computed(() =>
 }
 
 // On a phone, the sheet comes up from the bottom of the screen, over the buttons.
-@media (max-width: 800px) {
+@media (max-width: 1023px) {
   .result-sheet {
     position: fixed;
     left: 0;

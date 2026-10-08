@@ -180,6 +180,32 @@ describe('usePuzzle', () => {
     expect(onComplete).toHaveBeenCalledOnce()
   })
 
+  it('skips a puzzle as a failure with the solution shown, and freezes it', async () => {
+    const { puzzle, onResolve, onComplete } = await started(MATE_IN_2)
+
+    puzzle.skip()
+    expect(onResolve).toHaveBeenCalledExactlyOnceWith('failed', {
+      moves: [],
+      hintLevel: 0,
+      solutionShown: true
+    })
+    expect(puzzle.phase.value).toBe('idle')
+    expect(puzzle.movableColor.value).toBeNull()
+
+    await vi.advanceTimersByTimeAsync(DELAYS.solutionStep * 4)
+    expect(puzzle.lastMove.value).toEqual({ from: 'g5', to: 'g4' })
+    expect(onComplete).not.toHaveBeenCalled()
+  })
+
+  it('skips after a mistake without reporting the outcome twice', async () => {
+    const { puzzle, onResolve } = await started(MATE_IN_2)
+
+    expect(puzzle.play('e1e2')).toBe('wrong')
+    puzzle.skip()
+    expect(onResolve).toHaveBeenCalledOnce()
+    expect(puzzle.phase.value).toBe('idle')
+  })
+
   it('stops pending moves when disposed or when another puzzle is loaded', async () => {
     const puzzle = usePuzzle({ delays: DELAYS })
     puzzle.load(MATE_IN_2)

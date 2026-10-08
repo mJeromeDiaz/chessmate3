@@ -1,6 +1,31 @@
 <template>
-  <div class="puzzle-player">
-    <div class="puzzle-player__board">
+  <PlayLayout class="puzzle-player" :stacked="stacked">
+    <template v-if="$slots.header" #header>
+      <slot name="header" />
+    </template>
+
+    <template v-if="puzzle" #prof>
+      <ProfBubble
+        v-if="feedback"
+        large
+        :prof="prof"
+        :kicker="bubble.kicker"
+        :text="bubble.text"
+        :kind="timeline.kind.value"
+        :step="timeline.step.value"
+        :hint="game.hintShown.value > 0 && game.phase.value === 'playing'"
+        text-testid="puzzle-status"
+      />
+      <div v-else class="text-subtitle1" data-testid="puzzle-status">{{
+        statusText
+      }}</div>
+    </template>
+
+    <template v-if="puzzle && $slots.chips" #chips>
+      <slot name="chips" />
+    </template>
+
+    <template #board>
       <ChessBoard
         v-if="game.puzzle.value"
         ref="board"
@@ -14,89 +39,98 @@
       <div v-else-if="loading" class="flex flex-center q-pa-xl">
         <q-spinner size="3em" />
       </div>
-    </div>
+    </template>
 
-    <div class="puzzle-player__panel column q-gutter-md">
-      <slot name="header" />
+    <template v-if="puzzle && game.phase.value !== 'complete'" #controls>
+      <q-btn
+        unelevated
+        no-caps
+        class="play-btn play-btn--hint"
+        :class="{ 'play-btn--hint-used': game.hintLevel.value > 0 }"
+        label="Aide"
+        :disable="game.phase.value !== 'playing' || game.hintShown.value >= 2"
+        data-testid="puzzle-hint"
+        @click="game.hint()"
+      />
+      <q-btn
+        unelevated
+        no-caps
+        class="play-btn play-btn--solution"
+        label="Solution"
+        :disable="game.phase.value === 'idle' || game.solutionShown.value"
+        data-testid="puzzle-solution"
+        @click="game.showSolution()"
+      />
+      <q-btn
+        v-if="skippable"
+        unelevated
+        no-caps
+        class="play-btn play-btn--skip"
+        label="Passer"
+        :disable="game.phase.value !== 'playing'"
+        data-testid="puzzle-skip"
+        @click="confirmSkip"
+      />
+      <q-btn
+        v-if="withSettings"
+        unelevated
+        class="play-btn play-btn--icon"
+        icon="tune"
+        aria-label="Réglages des puzzles"
+        data-testid="puzzle-settings"
+        @click="emit('settings')"
+      >
+        <q-badge v-if="settingsActive" floating rounded color="primary" />
+      </q-btn>
+    </template>
 
-      <template v-if="puzzle">
-        <ProfBubble
-          v-if="feedback"
-          :prof="prof"
-          :kicker="bubble.kicker"
-          :text="bubble.text"
+    <div
+      v-if="puzzle && game.phase.value === 'complete'"
+      data-testid="puzzle-result"
+    >
+      <ResultSheet
+        v-if="feedback && timeline.kind.value"
+        :kind="timeline.kind.value"
+        :step="timeline.step.value"
+        :run="timeline.run.value"
+        :title="copy.title"
+        :sub="copy.sub"
+        :xp="xp"
+        :actions="actions"
+      >
+        <slot
+          name="result"
           :kind="timeline.kind.value"
-          :step="timeline.step.value"
-          :hint="game.hintShown.value > 0 && game.phase.value === 'playing'"
-          text-testid="puzzle-status"
+          :failed="game.failed.value"
         />
-        <div v-else class="text-subtitle1" data-testid="puzzle-status">{{
-          statusText
-        }}</div>
-        <slot name="info" />
-
-        <div v-if="game.phase.value !== 'complete'" class="row q-gutter-sm">
-          <q-btn
-            outline
-            no-caps
-            icon="lightbulb"
-            :label="game.hintShown.value === 0 ? 'Indice' : 'Indice suivant'"
-            :disable="
-              game.phase.value !== 'playing' || game.hintShown.value >= 2
-            "
-            data-testid="puzzle-hint"
-            @click="game.hint()"
-          />
-          <q-btn
-            outline
-            no-caps
-            icon="visibility"
-            label="Voir la solution"
-            :disable="game.phase.value === 'idle' || game.solutionShown.value"
-            data-testid="puzzle-solution"
-            @click="game.showSolution()"
-          />
-        </div>
-
-        <div v-else data-testid="puzzle-result">
-          <ResultSheet
-            v-if="feedback && timeline.kind.value"
-            :kind="timeline.kind.value"
-            :step="timeline.step.value"
-            :run="timeline.run.value"
-            :title="copy.title"
-            :sub="copy.sub"
-            :xp="xp"
-            :actions="actions"
-          >
-            <slot
-              name="result"
-              :kind="timeline.kind.value"
-              :failed="game.failed.value"
-            />
-          </ResultSheet>
-          <slot
-            v-else-if="!feedback"
-            name="result"
-            :kind="timeline.kind.value"
-            :failed="game.failed.value"
-          />
-        </div>
-      </template>
+      </ResultSheet>
+      <slot
+        v-else-if="!feedback"
+        name="result"
+        :kind="timeline.kind.value"
+        :failed="game.failed.value"
+      />
     </div>
-  </div>
+
+    <template v-if="$slots.footer" #footer>
+      <slot name="footer" />
+    </template>
+  </PlayLayout>
 </template>
 
 <script setup>
 /**
- * One puzzle being played: the board, the module's professor talking (instruction, hint, then
- * their reaction), hint and solution buttons, and the result sheet at the end (design "Animation
- * Puzzle"). Shared by the rated puzzles, Woodpecker and the timed runs; the page owns the API
- * calls (through `resolve`), gives the XP and rating change the server announced and the sheet's
- * buttons, and fills the `header`, `info` and `result` slots.
+ * One puzzle being played (design "Animation Puzzle", PlayLayout): the module's professor talking
+ * (instruction, hint, then their reaction), the board, the Aide / Solution buttons (and Passer,
+ * the settings icon in free play), and the result sheet at the end. Shared by the rated puzzles,
+ * Woodpecker, the timed runs and the replay at a run's end; the page owns the API calls (through
+ * `resolve`), gives the XP and rating change the server announced and the sheet's buttons, and
+ * fills the `header`, `chips`, `result` and `footer` slots.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import PlayLayout from '@/components/chess/PlayLayout.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
@@ -126,7 +160,15 @@ const props = defineProps({
   /** @type {import('vue').PropType<import('@/components/feedback/ResultSheet.vue').SheetAction[]>} the result sheet's buttons */
   actions: { type: Array, default: () => [] },
   /** The professor and the result sheet; false: a plain status line and the `result` slot (a replay nothing records). */
-  feedback: { type: Boolean, default: true }
+  feedback: { type: Boolean, default: true },
+  /** One column whatever the screen (a narrow side column). */
+  stacked: { type: Boolean, default: false },
+  /** Free play: "Passer" gives up (a failure, after confirmation) and asks for the next puzzle. */
+  skippable: { type: Boolean, default: false },
+  /** Free play: the settings icon (themes, difficulty). */
+  withSettings: { type: Boolean, default: false },
+  /** A dot on the settings icon: filters other than the defaults. */
+  settingsActive: { type: Boolean, default: false }
 })
 
 const emit = defineEmits({
@@ -134,8 +176,14 @@ const emit = defineEmits({
   resolve: (outcome, report) =>
     typeof outcome === 'string' && Array.isArray(report?.moves),
   /** The final position is on the board. */
-  complete: null
+  complete: null,
+  /** "Passer" confirmed: the failure is reported through `resolve`, show the next puzzle. */
+  skip: null,
+  /** The settings icon. */
+  settings: null
 })
+
+const $q = useQuasar()
 
 const board = ref(null)
 const timeline = useFeedbackTimeline()
@@ -222,6 +270,21 @@ watch(
   }
 )
 
+/** "Passer" counts as a failure: say so before giving up. */
+function confirmSkip() {
+  $q.dialog({
+    title: 'Passer ce puzzle ?',
+    message: 'Passer compte comme un échec.',
+    cancel: { label: 'Annuler', flat: true, noCaps: true },
+    ok: { label: 'Passer', unelevated: true, noCaps: true },
+    persistent: false
+  }).onOk(() => {
+    if (game.phase.value !== 'playing') return
+    game.skip()
+    emit('skip')
+  })
+}
+
 /** @param {{uci: string}} move */
 async function onMove(move) {
   const verdict = game.play(move.uci)
@@ -247,19 +310,3 @@ onMounted(() => puzzles.fetchThemes().catch(() => null))
 
 onBeforeUnmount(() => game.dispose())
 </script>
-
-<style scoped>
-.puzzle-player {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(0, 560px) minmax(260px, 1fr);
-  align-items: start;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-@media (max-width: 800px) {
-  .puzzle-player {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

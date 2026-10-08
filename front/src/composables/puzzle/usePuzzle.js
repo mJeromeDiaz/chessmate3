@@ -198,6 +198,20 @@ export function usePuzzle(options = {}) {
     finish()
   }
 
+  /**
+   * Gives up on the puzzle without seeing the solution ("Passer"): reported like a shown solution
+   * (a failure, unless the outcome was already sent), then nothing moves until the next `load`.
+   */
+  function skip() {
+    if (!puzzle.value || phase.value === 'complete' || phase.value === 'idle')
+      return
+    generation++
+    solutionShown.value = true
+    fail()
+    feedback.value = null
+    phase.value = 'idle'
+  }
+
   /** Stops any pending timer (component unmounted, next puzzle...). */
   function dispose() {
     generation++
@@ -254,6 +268,7 @@ export function usePuzzle(options = {}) {
     play,
     hint,
     showSolution,
+    skip,
     dispose
   }
 }
