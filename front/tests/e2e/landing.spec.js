@@ -82,3 +82,25 @@ test('landing: the hero shows the slogans in turn', async ({ page }) => {
     "Don't Stay Rooky ! Stop taking checkmate and find a mate !"
   )
 })
+
+test('404: an unknown page, back to the landing page for a visitor, to the dashboard once signed in', async ({
+  page,
+  context
+}) => {
+  await page.goto('/#/nowhere/at-all')
+  const notFound = page.getByTestId('not-found')
+  await expect(notFound).toBeVisible()
+  await expect(notFound.getByRole('heading', { name: 'Blunder !' })).toBeVisible()
+  await expect(notFound.getByTestId('not-found-home')).toHaveText(
+    'Retour à l’accueil'
+  )
+  await expect(notFound.getByRole('link', { name: 'Se venger sur un puzzle' })).toHaveCount(0)
+
+  await signIn(context)
+  await page.goto('/#/nowhere/at-all')
+  await expect(page.getByTestId('not-found-home')).toHaveText(
+    'Retour au tableau de bord'
+  )
+  await page.getByTestId('not-found-home').click()
+  await expect(page.getByTestId('dashboard')).toBeVisible()
+})
