@@ -12,7 +12,7 @@ maquette ne montre pas encore viendront avec le lot B (§ 6).
 | Couche | Emplacement |
 |---|---|
 | Période (jours locaux) | `App\Dashboard\Period` |
-| Heatmap, totaux | `App\Dashboard\Activity\ActivityCalendar` |
+| Jours actifs, totaux (lignes des modules, nouvel utilisateur) | `App\Dashboard\Activity\ActivityCalendar` |
 | Courbe du classement puzzles | `App\Dashboard\Rating\RatingHistory` |
 | Elo Lichess | `App\Dashboard\Lichess\RatingHistoryClient` (via `Repertoire\Lichess\LichessGateway`) |
 | Temps par semaine et module, sessions (lot B) | `App\Dashboard\Training\{TrainingTime, SessionStats}` |
@@ -20,7 +20,7 @@ maquette ne montre pas encore viendront avec le lot B (§ 6).
 | Santé du répertoire (lot B) | `App\Dashboard\Repertoire\RepertoireHealth` |
 | API | `App\ApiResource\Dashboard\{Activity, RatingHistory, LichessRatingHistory, Training, Themes, Repertoire}`, `App\State\Dashboard\DashboardProvider` |
 | Fixtures | `App\DataFixtures\Dashboard\ActivityHistoryFixtures` (12 semaines pour l'utilisateur de démo) |
-| Front | `services/api.js` (`dashboardApi`), `stores/dashboard.js`, `utils/dashboard/{heatmap, curve, modules, stats}.js`, `components/dashboard/*`, pages `(home).vue` et `stats.vue` |
+| Front | `services/api.js` (`dashboardApi`), `stores/dashboard.js`, `utils/dashboard/{days, curve, modules, stats}.js`, `components/dashboard/*`, pages `(home).vue` et `stats.vue` |
 
 ## 2. Endpoints
 
@@ -82,14 +82,13 @@ d'agrégats (et leur commande de recalcul) arriveront au lot B si une mesure les
 | Bloc de la maquette | Données |
 |---|---|
 | Bannière niveau / XP avec Aaron | Réelle (`GET /api/gamification/summary`) : niveau, grade, XP dans le niveau, ce qui reste avant le niveau suivant et le prochain grade ([GAMIFICATION.md](GAMIFICATION.md)) |
-| Série 🔥, record de série | Réels (même résumé). La flamme est dans l'en-tête de toutes les pages et dans le menu burger (`components/gamification/StreakChip.vue`), grisée tant qu'on n'a pas joué aujourd'hui ; la carte « Série » (`StreakCard`, juste sous la bannière sur mobile) donne la série, le record, la semaine réelle et la frise des 12 badges de série ; l'ancienne pastille en haut de page a disparu. Une célébration de série restée non vue s'affiche à l'ouverture ([GAMIFICATION.md § 4](GAMIFICATION.md#4-séries-streak)) |
+| Série 🔥, record de série | Réels (même résumé). La flamme est dans l'en-tête de toutes les pages et dans le menu burger (`components/gamification/StreakChip.vue`), grisée tant qu'on n'a pas joué aujourd'hui ; la carte « Série » (`StreakCard`, juste sous la bannière sur mobile) montre une flamme avec la série en cours, allumée et animée tant que la série vit (grise à 0), petite sous une semaine et plus grande à chaque badge de série atteint (`flameScale()`, `utils/streak.js`), le record et la semaine réelle ; elle remplace l'ancienne heatmap « Régularité », retirée le 2026-10-08, et les 12 badges de série sont dans « Trophées » ; l'ancienne pastille en haut de page a disparu. Une célébration de série restée non vue s'affiche à l'ouverture ([GAMIFICATION.md § 4](GAMIFICATION.md#4-séries-streak)) |
 | Courbe 90 jours, onglets Puzzles · Blitz · Rapide · Classique | Réelles. La maquette montrait un « Elo Lichess » seul ; l'onglet Puzzles (Glicko-2 interne) est ajouté et ouvert par défaut |
-| Heatmap « Régularité », 12 semaines | Réelle : une colonne par semaine, lundi en haut, aujourd'hui cerclé, jours futurs vides ; teintes à 1, 5, 10 et 20 exercices |
 | Défi de la semaine | Réel (`GET /api/gamification/quest`), donné par le prof du module du défi (Lizy pour un défi sur plusieurs modules) ; masqué si la lecture échoue |
 | Progression par module | Ligne réelle (puzzles résolus et classement ; cycle Woodpecker en cours ; coups de répertoire, dus, réussite sur 30 j) et barre réelle (taux de réussite, avancement du cycle, réussite sur 30 j) ; « Niv. » réel (niveau du module, gamification) ; Finales, Évaluation, Analyse : « Bientôt » |
 | Mes sessions | Réelles (`GET /api/training/plans`) : les 3 prochaines (puis celles à la demande) avec « Lancer » ; « Toutes → » mène à `/session` ([TRAINING.md § 10](TRAINING.md#10-sessions-enregistrées-plans)) |
 | Dernières sessions | Réelles (`GET /api/training/sessions`, 5 dernières) : titre, jour, modules faits / programme, temps joué, statut ; « Reprendre → » sur la session du jour. Un nouvel utilisateur la voit sous la carte d'accueil dès sa première session ([TRAINING.md § 9](TRAINING.md#9-sessions)) |
-| Trophées | Réels (`GET /api/gamification/trophies`) : date de l'exploit pour un trophée gagné, progression pour un trophée verrouillé |
+| Trophées | Réels (`GET /api/gamification/trophies`) : seuls les trophées gagnés s'affichent, avec la date de l'exploit (les badges de série à la fin, du plus court au plus long) ; les autres restent cachés, seulement comptés (« 2 / 20 débloqués ») |
 | Lien « Mes statistiques → » (sous le titre) | Mène à `/stats` (§ 3 bis) |
 | « À travailler » (`WeakThemeTip`) | Réel : le thème le plus faible sur 30 jours (`/dashboard/themes?days=30`) et « S'entraîner », qui ouvre `/puzzle` filtré sur ce thème ; masqué s'il n'y en a pas ou si la lecture échoue |
 
@@ -143,10 +142,10 @@ légende chiffrée, l'info-bulle et la vue tableau portent l'information.
   `RepertoireHealthTest.php` (tests de la période, tronçon fragile hors période),
   `tests/Unit/Dashboard/PeriodTest.php` (minuit local, heure d'été), `ThemeStrengthsTest.php`
   (partage forts / faibles).
-- Vitest : `tests/unit/dashboard.test.js` (grille de la heatmap, courbe, lignes des modules, store),
+- Vitest : `tests/unit/dashboard.test.js` (jours, courbe, lignes des modules, store),
   `dashboard-stats.test.js` (périodes, durées, barres empilées, échelle, dates, sessions, thème
   faible ; store : période retenue, bloc en échec seul, réponse périmée ignorée, astuce de l'accueil).
-- Playwright : `tests/e2e/dashboard.spec.js` (accueil d'un nouvel utilisateur ; heatmap, courbe,
+- Playwright : `tests/e2e/dashboard.spec.js` (accueil d'un nouvel utilisateur ; série, courbe,
   modules et onglet Lichess d'un compte non lié, API du dashboard simulée), `stats.spec.js`
   (astuce de l'accueil, page Statistiques : graphique, info-bulle, tableau, sessions, thèmes,
   répertoire, période retenue après rechargement, thème faible vers les puzzles filtrés ; nouvel

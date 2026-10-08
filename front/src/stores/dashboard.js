@@ -11,7 +11,7 @@ import { describeFailure } from '@/composables/repertoire/useExplorer'
 import { DEFAULT_PERIOD, validPeriod } from '@/utils/dashboard/stats'
 
 /**
- * @typedef {import('@/utils/dashboard/heatmap').ActivityDay} ActivityDay
+ * @typedef {import('@/utils/dashboard/days').ActivityDay} ActivityDay
  * @typedef {import('@/utils/dashboard/curve').RatingPoint} RatingPoint
  *
  * @typedef {object} Activity
@@ -73,7 +73,7 @@ import { DEFAULT_PERIOD, validPeriod } from '@/utils/dashboard/stats'
  * @typedef {'training'|'themes'|'repertoire'} StatsSection
  */
 
-/** Heatmap: 12 weeks. */
+/** Activity window (module totals, the new-user check): 12 weeks. */
 export const ACTIVITY_DAYS = 84
 /** Rating curves. */
 export const CURVE_DAYS = 90

@@ -1,4 +1,4 @@
-import { addDays } from '@/utils/dashboard/heatmap'
+import { addDays } from '@/utils/dashboard/days'
 
 /**
  * A rating curve drawn in a 100 × 100 SVG box stretched to its card (design "Dashboard"): x is

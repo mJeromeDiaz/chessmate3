@@ -136,3 +136,19 @@ export function weekRow(week, today) {
     future: i > t
   }))
 }
+
+/** Size of the streak card's flame below the first badge, and what each badge reached adds. */
+export const FLAME_BASE = 0.55
+export const FLAME_STEP = 0.06
+
+/**
+ * How big the streak card's flame is (1 = 132 px): small for less than a week, a little bigger
+ * with each streak badge the current streak has reached (3, 7, 14, 30 days… up to 1000).
+ *
+ * @param {number} streak the current streak
+ * @returns {number} a scale, from FLAME_BASE to FLAME_BASE + 12 × FLAME_STEP
+ */
+export function flameScale(streak) {
+  const reached = STREAK_BADGES.filter(b => streak >= b.goal).length
+  return Math.round((FLAME_BASE + reached * FLAME_STEP) * 100) / 100
+}

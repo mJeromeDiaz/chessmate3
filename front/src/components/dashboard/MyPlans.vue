@@ -42,6 +42,7 @@
         color="primary"
         icon="play_arrow"
         label="Lancer"
+        class="my-plans__launch"
         :loading="launcher.launching.value === plan.id"
         data-testid="my-plan-launch"
         @click="launcher.launch(plan.id)"
@@ -106,6 +107,11 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+// The dense button's icon pulls the label left: as much room on the right.
+.my-plans__launch {
+  padding-right: 12px;
+}
+
 .my-plans {
   display: flex;
   flex-direction: column;

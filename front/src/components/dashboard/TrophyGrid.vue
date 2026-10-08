@@ -6,18 +6,25 @@
         v-if="cards.length"
         class="trophies__count"
         data-testid="trophies-count"
-        >{{ unlocked }} / {{ cards.length }} débloqués</span
+        >{{ won.length }} / {{ cards.length }} débloqués</span
       >
     </div>
     <p v-if="error" class="cm-muted q-my-none">{{ error }}</p>
+    <p
+      v-else-if="won.length === 0"
+      class="cm-muted q-my-none"
+      data-testid="trophies-empty"
+    >
+      Aucun trophée pour l’instant : ils se débloquent en jouant, la surprise
+      est au bout.
+    </p>
     <div v-else class="trophies__grid">
       <div
-        v-for="card in cards"
+        v-for="card in won"
         :key="card.key"
         class="trophies__badge"
-        :class="{ 'trophies__badge--locked': !card.unlocked }"
         :data-testid="`trophy-${card.key}`"
-        :data-unlocked="card.unlocked || undefined"
+        data-unlocked="true"
         :title="card.desc"
       >
         <div
@@ -29,9 +36,6 @@
         </div>
         <div class="trophies__name">{{ card.name }}</div>
         <div class="trophies__desc">{{ card.desc }}</div>
-        <div v-if="!card.unlocked" class="trophies__track" aria-hidden="true">
-          <div :style="{ width: `${card.percent}%`, background: card.ink }" />
-        </div>
         <div class="trophies__progress">{{ card.progress }}</div>
       </div>
     </div>
@@ -40,8 +44,8 @@
 
 <script setup>
 /**
- * The trophies (docs/GAMIFICATION.md): won ones with the date of the feat, locked ones dimmed with
- * their progress; the 12 streak badges come last, shortest first.
+ * The trophies (docs/GAMIFICATION.md): only the won ones, with the date of the feat (the streak
+ * badges last, shortest first); the others stay hidden, only counted.
  */
 import { computed } from 'vue'
 import { useGamificationStore } from '@/stores/gamification'
@@ -49,7 +53,7 @@ import { trophyCards } from '@/utils/gamification'
 
 const gamification = useGamificationStore()
 const cards = computed(() => trophyCards(gamification.trophies))
-const unlocked = computed(() => cards.value.filter(c => c.unlocked).length)
+const won = computed(() => cards.value.filter(c => c.unlocked))
 const error = computed(() => gamification.errors.trophies ?? '')
 </script>
 
@@ -95,11 +99,6 @@ const error = computed(() => gamification.errors.trophies ?? '')
   border-radius: 16px;
   background: var(--cm-page);
   text-align: center;
-
-  &--locked .trophies__icon,
-  &--locked .trophies__name {
-    opacity: 0.45;
-  }
 }
 
 .trophies__icon {
@@ -131,18 +130,6 @@ const error = computed(() => gamification.errors.trophies ?? '')
   font-size: 10.5px;
   line-height: 1.2;
   color: var(--cm-muted);
-}
-.trophies__track {
-  width: 70%;
-  height: 4px;
-  border-radius: 4px;
-  background: var(--cm-subtle);
-  overflow: hidden;
-
-  > div {
-    height: 100%;
-    opacity: 0.6;
-  }
 }
 
 .trophies__progress {

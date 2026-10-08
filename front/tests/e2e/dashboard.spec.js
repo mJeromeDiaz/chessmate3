@@ -29,7 +29,7 @@ test('a new user is welcomed and pointed to a first session', async ({
   await expect(page).toHaveURL(/#\/session\/new$/)
 })
 
-test('with history: heatmap, rating curve, modules, gamification, and the Lichess tab of an unlinked account', async ({
+test('with history: streak, rating curve, modules, gamification, and the Lichess tab of an unlinked account', async ({
   page,
   context
 }) => {
@@ -145,16 +145,8 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
   await expect(page.getByTestId('dashboard')).toBeVisible()
   await expect(page.getByTestId('dashboard-welcome')).toHaveCount(0)
 
-  const heatmap = page.getByTestId('activity-heatmap')
-  await expect(heatmap.locator(`[data-date="${today}"]`)).toHaveAttribute(
-    'data-level',
-    '4'
-  )
-  await expect(heatmap.locator(`[data-date="${day(-2)}"]`)).toHaveAttribute(
-    'data-level',
-    '1'
-  )
-  await expect(heatmap).toContainText('2 jours actifs')
+  // No more activity heatmap: the streak card replaces it.
+  await expect(page.getByTestId('activity-heatmap')).toHaveCount(0)
 
   await expect(page.getByTestId('rating-current')).toHaveText('1612')
   await expect(page.getByTestId('rating-delta')).toContainText('+112')
@@ -171,11 +163,18 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
   // The streak: in the header and its card; its badges are in the trophy grid.
   await expect(page.getByTestId('streak-count')).toHaveText('3')
   await expect(page.getByTestId('streak-card-count')).toHaveText('3')
+  // 3 days: the first badge reached, a small flame, lit (the streak is alive).
+  await expect(page.getByTestId('streak-card-flame')).toHaveAttribute(
+    'data-scale',
+    '0.61'
+  )
+  await expect(page.getByTestId('streak-card-flame')).not.toHaveClass(
+    /streak-card__flame--out/
+  )
   await expect(page.getByTestId('streak-card-best')).toHaveText(
     'Record : 21 jours'
   )
   await expect(page.getByTestId('streak-badges-count')).toHaveCount(0)
-  await expect(page.getByTestId('best-streak')).toHaveText('Record 21 jours')
   await expect(
     page.getByTestId('module-row-puzzles').getByTestId('module-level')
   ).toHaveText('Niv. 6')
@@ -191,9 +190,8 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
     'data-unlocked',
     'true'
   )
-  await expect(page.getByTestId('trophy-centurion')).toContainText(
-    '22/1\u202f000'
-  )
+  // Only won trophies show; the others are only counted.
+  await expect(page.getByTestId('trophy-centurion')).toHaveCount(0)
   await expect(page.getByTestId('quest-text')).toHaveText(
     'Résous 40 puzzles classés cette semaine.'
   )

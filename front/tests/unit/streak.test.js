@@ -16,7 +16,10 @@ vi.mock('@/services/api', () => ({
 const { gamificationApi } = await import('@/services/api')
 const { useGamificationStore } = await import('@/stores/gamification')
 const {
+  FLAME_BASE,
+  FLAME_STEP,
   STREAK_BADGES,
+  flameScale,
   localToday,
   nextMilestoneText,
   streakBadge,
@@ -49,6 +52,16 @@ describe('streak badges', () => {
     expect(streakBadge('on_fire')?.name).toBe('En feu')
     expect(streakBadge('streak_1000')?.name).toBe('Légende')
     expect(streakBadge(null)).toBeNull()
+  })
+
+  it('grows the flame with each badge reached, small below a week', () => {
+    expect(flameScale(0)).toBe(FLAME_BASE)
+    expect(flameScale(2)).toBe(FLAME_BASE)
+    expect(flameScale(3)).toBeCloseTo(FLAME_BASE + FLAME_STEP, 5)
+    expect(flameScale(6)).toBe(flameScale(3))
+    expect(flameScale(7)).toBeGreaterThan(flameScale(6))
+    expect(flameScale(29)).toBeLessThan(flameScale(30))
+    expect(flameScale(5000)).toBeCloseTo(FLAME_BASE + 12 * FLAME_STEP, 5)
   })
 })
 

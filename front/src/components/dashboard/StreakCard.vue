@@ -10,18 +10,28 @@
     <div class="streak-card__now">
       <div
         class="streak-card__flame"
-        :class="{ 'streak-card__flame--waiting': !playedToday }"
-        aria-hidden="true"
-        >🔥&#xFE0E;</div
+        :class="{ 'streak-card__flame--out': streak.current === 0 }"
+        :style="{
+          width: `${FLAME_PX * scale}px`,
+          height: `${FLAME_PX * scale}px`
+        }"
+        :data-scale="scale"
+        data-testid="streak-card-flame"
       >
-      <div>
-        <div class="streak-card__count" data-testid="streak-card-count">{{
-          streak.current
-        }}</div>
-        <div class="streak-card__unit">{{
-          streak.current > 1 ? 'jours d’affilée' : 'jour d’affilée'
-        }}</div>
+        <div class="streak-card__art" :style="{ transform: `scale(${scale})` }">
+          <div class="streak-card__glow" aria-hidden="true" />
+          <div class="streak-card__drops" aria-hidden="true">
+            <div class="streak-card__drop streak-card__drop--outer" />
+            <div class="streak-card__drop streak-card__drop--inner" />
+          </div>
+          <div class="streak-card__count" data-testid="streak-card-count">{{
+            streak.current
+          }}</div>
+        </div>
       </div>
+      <div class="streak-card__unit">{{
+        streak.current > 1 ? 'jours d’affilée' : 'jour d’affilée'
+      }}</div>
       <p class="streak-card__hint">{{ hint }}</p>
     </div>
 
@@ -46,18 +56,24 @@
 
 <script setup>
 /**
- * The streak card of the dashboard (docs/GAMIFICATION.md, § 4): today's streak and the record, the
- * active days of the week. The streak badges are in the trophy grid.
+ * The streak card of the dashboard (docs/GAMIFICATION.md, § 4): a flame holding the current streak,
+ * lit and flickering while the streak is alive (grey and still at 0), small below a week and bigger
+ * with each streak badge reached; the record, the active days of the week. The streak badges are
+ * in the trophy grid.
  */
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGamificationStore } from '@/stores/gamification'
-import { days, localToday, weekRow } from '@/utils/streak'
+import { days, flameScale, localToday, weekRow } from '@/utils/streak'
 
 const auth = useAuthStore()
 const gamification = useGamificationStore()
 
+/** The flame's size at scale 1, in px. */
+const FLAME_PX = 132
+
 const streak = computed(() => gamification.summary?.streak ?? null)
+const scale = computed(() => flameScale(streak.value?.current ?? 0))
 const today = computed(() => localToday(auth.profile?.timezone))
 const playedToday = computed(
   () =>
@@ -104,48 +120,135 @@ const hint = computed(() => {
 
 .streak-card__now {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 2px;
+  text-align: center;
 }
 
+// The flame of the celebration screen, smaller: two drops, the streak in the heart.
 .streak-card__flame {
+  position: relative;
+  transition:
+    width 0.6s cubic-bezier(0.34, 1.6, 0.64, 1),
+    height 0.6s cubic-bezier(0.34, 1.6, 0.64, 1);
+
+  &--out {
+    filter: grayscale(1);
+    opacity: 0.55;
+  }
+}
+
+.streak-card__art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 132px;
+  height: 132px;
+  margin: -66px 0 0 -66px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  flex: none;
-  border-radius: 18px;
-  background: var(--cm-orange-soft);
-  font-size: 30px;
+  transform-origin: 50% 50%;
+  transition: transform 0.6s cubic-bezier(0.34, 1.6, 0.64, 1);
+}
 
-  &--waiting {
-    background: var(--cm-subtle);
-    filter: grayscale(1);
-    opacity: 0.7;
+.streak-card__glow {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff8a3d 0%, transparent 65%);
+  opacity: 0.35;
+
+  .streak-card__flame--out & {
+    display: none;
+  }
+}
+
+.streak-card__drops {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.streak-card__drop {
+  position: absolute;
+  border-radius: 50% 0 50% 50%;
+  transform: rotate(-45deg);
+
+  &--outer {
+    width: 100px;
+    height: 100px;
+    background: #ff8a3d;
+    box-shadow: inset -8px 8px 0 #ffa85e;
+    animation: streak-card-flicker 1.6s ease-in-out infinite;
+  }
+
+  &--inner {
+    top: 46px;
+    width: 62px;
+    height: 62px;
+    background: #ffd43b;
+    animation: streak-card-flicker-2 1.2s ease-in-out infinite;
+  }
+
+  .streak-card__flame--out & {
+    animation: none;
   }
 }
 
 .streak-card__count {
+  position: relative;
+  top: 26px;
   font-family: var(--cm-heading);
   font-weight: 800;
-  font-size: 36px;
+  font-size: 34px;
   line-height: 1;
-  color: var(--cm-orange-ink);
+  color: #1b1530;
   font-variant-numeric: tabular-nums;
 }
 
 .streak-card__unit {
-  font-size: 13px;
-  color: var(--cm-muted);
+  font-family: var(--cm-heading);
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--cm-orange-ink);
 }
 
 .streak-card__hint {
-  flex: 1;
   margin: 0;
   font-size: 13px;
   color: var(--cm-ink-soft);
-  text-align: right;
+  text-wrap: pretty;
+}
+
+@keyframes streak-card-flicker {
+  0%,
+  100% {
+    transform: rotate(-45deg) scale(1, 1);
+  }
+  50% {
+    transform: rotate(-43deg) scale(0.96, 1.05);
+  }
+}
+
+@keyframes streak-card-flicker-2 {
+  0%,
+  100% {
+    transform: rotate(-45deg) scale(1);
+  }
+  50% {
+    transform: rotate(-47deg) scale(1.08, 0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .streak-card__drop {
+    animation: none;
+  }
 }
 
 .streak-card__week {

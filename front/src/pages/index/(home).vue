@@ -53,22 +53,6 @@
         </div>
         <div class="dashboard__col">
           <StreakCard class="dashboard__streak-card" />
-          <ActivityHeatmap
-            v-if="store.activity"
-            :today="store.activity.today"
-            :days="store.activity.days"
-            :best-streak="gamification.summary?.streak.best ?? null"
-            class="dashboard__heat"
-          />
-          <div
-            v-else-if="store.errors.activity"
-            class="cm-card dashboard__heat"
-          >
-            <h2 class="cm-card__title">Régularité</h2>
-            <p class="cm-muted q-mt-sm q-mb-none">{{
-              store.errors.activity
-            }}</p>
-          </div>
           <WeakThemeTip class="dashboard__tip" />
           <WeeklyQuest class="dashboard__quest" />
           <MyPlans class="dashboard__sessions" />
@@ -106,7 +90,6 @@ import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
 import { buildModuleRows } from '@/utils/dashboard/modules'
 import { useGamificationStore } from '@/stores/gamification'
-import ActivityHeatmap from '@/components/dashboard/ActivityHeatmap.vue'
 import LevelBanner from '@/components/dashboard/LevelBanner.vue'
 import ModuleProgress from '@/components/dashboard/ModuleProgress.vue'
 import RatingCard from '@/components/dashboard/RatingCard.vue'
@@ -139,9 +122,9 @@ const moduleRows = computed(() =>
   })
 )
 
-/** Module figures that could not be loaded (their row then reads as empty). */
+/** Module figures that could not be loaded (their row then reads as empty; activity: the totals). */
 const sectionError = computed(() =>
-  ['puzzle', 'woodpecker', 'repertoire'].some(s => store.errors[s])
+  ['activity', 'puzzle', 'woodpecker', 'repertoire'].some(s => store.errors[s])
     ? 'Certaines statistiques des modules n’ont pas pu être chargées.'
     : ''
 )
@@ -259,9 +242,6 @@ watch(
 }
 .dashboard__rating {
   order: 2;
-}
-.dashboard__heat {
-  order: 3;
 }
 .dashboard__tip,
 .dashboard__quest {

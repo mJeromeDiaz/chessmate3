@@ -17,48 +17,12 @@ const { dashboardApi, puzzleApi, woodpeckerApi, repertoireApi } =
   await import('@/services/api')
 const { useDashboardStore } = await import('@/stores/dashboard')
 const { useAuthStore } = await import('@/stores/auth')
-const { buildHeatmap, heatLevel, addDays } =
-  await import('@/utils/dashboard/heatmap')
+const { addDays } = await import('@/utils/dashboard/days')
 const { buildCurve, monthTicks } = await import('@/utils/dashboard/curve')
 const { buildModuleRows, DASHBOARD_MODULES } =
   await import('@/utils/dashboard/modules')
 
-describe('heatmap', () => {
-  it('lays weeks out Monday first, the current week last, future days blank', () => {
-    // 2026-10-03 is a Saturday.
-    const cells = buildHeatmap(
-      '2026-10-03',
-      [
-        { date: '2026-10-03', count: 12, successCount: 10, durationMs: 1 },
-        { date: '2026-09-28', count: 3, successCount: 3, durationMs: 1 },
-        { date: '2026-07-01', count: 50, successCount: 1, durationMs: 1 }
-      ],
-      12
-    )
-    expect(cells).toHaveLength(84)
-    expect(cells[0].date).toBe('2026-07-13') // a Monday, 11 weeks before 2026-09-28
-    expect(cells[77].date).toBe('2026-09-28')
-    expect(cells[77]).toMatchObject({ count: 3, level: 1, today: false })
-    expect(cells[82]).toMatchObject({
-      date: '2026-10-03',
-      count: 12,
-      level: 3,
-      today: true
-    })
-    expect(cells[83]).toMatchObject({
-      date: '2026-10-04',
-      future: true,
-      count: 0
-    })
-    expect(cells.filter(c => c.count > 0)).toHaveLength(2) // July 1st is out of range
-  })
-
-  it('shades by exercises per day', () => {
-    expect([0, 1, 4, 5, 9, 10, 19, 20, 300].map(heatLevel)).toEqual([
-      0, 1, 1, 2, 2, 3, 3, 4, 4
-    ])
-  })
-
+describe('days', () => {
   it('adds days across month ends and DST changes', () => {
     expect(addDays('2026-10-24', 2)).toBe('2026-10-26')
     expect(addDays('2026-03-01', -1)).toBe('2026-02-28')
