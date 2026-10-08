@@ -77,6 +77,14 @@ export const authApi = {
    */
   checkInvitation: key =>
     http.post('/api/auth/invitation/check', { key }, PUBLIC).then(r => r.data),
+  /**
+   * Leaves the address on the early access waiting list: always the same 202 (nothing emailed);
+   * 422 for an invalid address. `website` is the honeypot, empty for a person.
+   */
+  requestAccess: (email, website = '') =>
+    http
+      .post('/api/auth/invitation/request', { email, website }, PUBLIC)
+      .then(r => r.data),
   resendVerification: email =>
     http
       .post('/api/auth/verify-email/resend', { email }, PUBLIC)
@@ -862,6 +870,36 @@ export const adminApi = {
   revokeInvitation: id =>
     http
       .delete(`/api/admin/invitation-keys/${encodeURIComponent(id)}`, JSON_LD)
+      .then(() => undefined),
+  /**
+   * The early access waiting list, in order of arrival. Resolves `{member, totalItems}`.
+   *
+   * @param {{page?: number, itemsPerPage?: number, invited?: boolean|null}} params null: all
+   */
+  accessRequests: ({ page = 1, itemsPerPage = 20, invited = null } = {}) =>
+    http
+      .get('/api/admin/access-requests', {
+        ...JSON_LD,
+        params: {
+          page,
+          itemsPerPage,
+          ...(invited === null ? {} : { invited })
+        }
+      })
+      .then(r => ({ member: r.data.member, totalItems: r.data.totalItems })),
+  /** Invites the request's address (7 days); the answer carries `key`, shown once. 409 if already invited. */
+  inviteAccessRequest: id =>
+    http
+      .post(
+        `/api/admin/access-requests/${encodeURIComponent(id)}/invite`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** Deletes the request (its invitation, if any, stays). */
+  deleteAccessRequest: id =>
+    http
+      .delete(`/api/admin/access-requests/${encodeURIComponent(id)}`, JSON_LD)
       .then(() => undefined),
   /**
    * Every account, newest first. Resolves `{member, totalItems}`.

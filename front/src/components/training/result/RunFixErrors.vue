@@ -231,7 +231,11 @@ onMounted(play)
   width: 520px;
   height: 520px;
   margin-left: -260px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent 62%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3),
+    transparent 62%
+  );
 }
 
 .fix__column {

@@ -12,7 +12,9 @@
       />
       <div class="eval-player__chips">
         <span class="eval-player__chip" data-testid="evaluation-turn">{{
-          data.position.turn === 'white' ? 'Trait aux Blancs' : 'Trait aux Noirs'
+          data.position.turn === 'white'
+            ? 'Trait aux Blancs'
+            : 'Trait aux Noirs'
         }}</span>
         <span
           v-if="data.position.tagLabel"
@@ -34,7 +36,11 @@
         text-testid="evaluation-bubble"
       />
 
-      <div v-if="!result" class="eval-player__clock" data-testid="evaluation-clock">
+      <div
+        v-if="!result"
+        class="eval-player__clock"
+        data-testid="evaluation-clock"
+      >
         <div
           class="eval-player__ring"
           :style="{
@@ -47,13 +53,19 @@
           <div class="eval-player__clock-label"
             >Temps restant · {{ data.seconds }} s max</div
           >
-          <div class="eval-player__clock-value" :class="{ 'eval-player__clock-value--low': remainingMs <= 20_000 }">{{
-            clock(remainingMs)
-          }}</div>
+          <div
+            class="eval-player__clock-value"
+            :class="{ 'eval-player__clock-value--low': remainingMs <= 20_000 }"
+            >{{ clock(remainingMs) }}</div
+          >
         </div>
       </div>
 
-      <div v-if="!result" class="eval-player__card" data-testid="evaluation-ask">
+      <div
+        v-if="!result"
+        class="eval-player__card"
+        data-testid="evaluation-ask"
+      >
         <div class="eval-player__question">Qui est mieux ?</div>
         <div class="eval-player__choices">
           <button
@@ -72,7 +84,9 @@
           </button>
         </div>
         <template v-if="data.askPlan">
-          <div class="eval-player__question">Le plan <span class="cm-muted">(facultatif)</span></div>
+          <div class="eval-player__question"
+            >Le plan <span class="cm-muted">(facultatif)</span></div
+          >
           <div class="eval-player__plans">
             <button
               v-for="p in data.plans"
@@ -103,11 +117,16 @@
 
       <div v-else class="eval-player__card" data-testid="evaluation-correction">
         <div class="eval-player__verdict">
-          <span data-testid="evaluation-verdict">{{ VERDICTS[result.status] }}</span>
+          <span data-testid="evaluation-verdict">{{
+            VERDICTS[result.status]
+          }}</span>
         </div>
         <div class="eval-player__gauge" aria-hidden="true">
           <div class="eval-player__gauge-bar" />
-          <div class="eval-player__gauge-engine" :style="{ left: gaugeX(result.evalCp) }" />
+          <div
+            class="eval-player__gauge-engine"
+            :style="{ left: gaugeX(result.evalCp) }"
+          />
           <div
             v-if="result.guess !== null"
             class="eval-player__gauge-guess"
@@ -115,17 +134,30 @@
           />
         </div>
         <div class="eval-player__legend">
-          <span><i class="eval-player__dot eval-player__dot--guess" />Toi : {{ choiceLabel(result.guess) }}</span>
-          <span data-testid="evaluation-engine"><i class="eval-player__dot eval-player__dot--engine" />Moteur : {{ result.engine }}</span>
+          <span
+            ><i class="eval-player__dot eval-player__dot--guess" />Toi :
+            {{ choiceLabel(result.guess) }}</span
+          >
+          <span data-testid="evaluation-engine"
+            ><i class="eval-player__dot eval-player__dot--engine" />Moteur :
+            {{ result.engine }}</span
+          >
         </div>
         <ul class="eval-player__ideas" data-testid="evaluation-ideas">
-          <li v-for="(idea, i) in result.ideas" :key="i"><span>✓</span>{{ idea }}</li>
+          <li v-for="(idea, i) in result.ideas" :key="i"
+            ><span>✓</span>{{ idea }}</li
+          >
         </ul>
-        <div v-if="result.planLabel" class="eval-player__plan-line" data-testid="evaluation-plan-result"
+        <div
+          v-if="result.planLabel"
+          class="eval-player__plan-line"
+          data-testid="evaluation-plan-result"
           >Meilleur plan : <b>{{ result.planLabel }}</b
           ><template v-if="planLine"> · {{ planLine }}</template></div
         >
-        <div v-if="result.source" class="eval-player__source">{{ result.source }}</div>
+        <div v-if="result.source" class="eval-player__source">{{
+          result.source
+        }}</div>
       </div>
 
       <div class="eval-player__dots" aria-hidden="true">
@@ -261,7 +293,15 @@ watch(
 const feedback = computed(() =>
   props.result
     ? evaluationFeedback(props.result, data.value.index)
-    : { kind: 'win', palette: null, badge: '?', title: '', sub: '', kicker: '', bubble: '' }
+    : {
+        kind: 'win',
+        palette: null,
+        badge: '?',
+        title: '',
+        sub: '',
+        kicker: '',
+        bubble: ''
+      }
 )
 const planLine = computed(() =>
   props.result ? planResult(props.result, data.value.plans) : ''

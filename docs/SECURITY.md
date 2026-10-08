@@ -681,3 +681,27 @@ aucun secret (testé), fichier temporaire supprimé après l'envoi, `Cache-Contr
 | # | Risque | Pourquoi accepté / atténuation |
 |---|---|---|
 | R31 | Une session volée suffit à télécharger toutes les données du compte. | Comme toute lecture de l'API ; trace `data_exported` dans le journal d'audit ; limité à 3 par jour. |
+
+## 10. Écrans de connexion et liste d'attente (2026-10-08)
+
+Refonte visuelle (designs « Connexion » et « Accès anticipé ») **sans changer le parcours ni l'API
+d'authentification** : mot de passe d'abord, code par email ensuite (§ 2.3), réponses inchangées.
+
+- **L'adresse seule ne part jamais** : « Continuer » ne fait que passer à l'écran du mot de passe,
+  côté navigateur. Aucun appel ne dit si une adresse a un compte avant le mot de passe.
+- **Clé d'invitation** : toujours 32 caractères (≈ 190 bits), envoyée en POST (corps ou formulaire),
+  jamais dans une URL hormis le lien de l'email, retiré de la barre d'adresse dès la lecture.
+- **Retour OAuth sans compte** : le SPA renvoie vers l'écran d'accès anticipé ; la clé saisie relance
+  un flux OAuth complet (nouveau `state`, PKCE, cookie lié au navigateur) : rien n'est gardé côté
+  serveur entre les deux passages.
+- **Liste d'attente** (`POST /api/auth/invitation/request`, `EARLY_ACCESS.md`) : réponse 202
+  identique dans tous les cas (pas d'énumération des comptes ni des demandes), **aucun email
+  envoyé** (le formulaire ne peut pas servir à écrire à un tiers), une ligne par adresse
+  (`INSERT IGNORE`), champ piège anti-robots, 5 demandes par heure et par IP et 300 par jour au
+  total. Côté admin : `ROLE_ADMIN` (double verrou), invitation réclamée atomiquement (une seule clé
+  même si deux admins cliquent ensemble), suppression possible (données personnelles).
+
+| # | Risque | Pourquoi accepté / atténuation |
+|---|---|---|
+| R32 | L'étape 1 de la connexion dit toujours si le mot de passe est bon (401 contre « code envoyé ») : un détenteur de mots de passe volés ailleurs peut les vérifier ici, sans pouvoir entrer sans le code. | Choix validé (2026-10-08) : message clair pour l'utilisateur plutôt qu'une réponse neutre. Limites par IP et par adresse (§ 2.9) ; le titulaire reçoit le code par email, signe qu'on connaît son mot de passe. |
+| R33 | N'importe qui peut inscrire l'adresse d'un tiers sur la liste d'attente ; un réseau de robots peut remplir la liste jusqu'au plafond quotidien. | Aucun email n'est envoyé à la demande ; l'admin choisit qui inviter et peut supprimer une demande ; plafond global de 300 par jour. |

@@ -173,9 +173,7 @@ export function resultButtons(kind, fixable) {
   if (kind === 'close')
     return {
       primary: carryOn,
-      secondary: fixable
-        ? { label: 'Revoir mes erreurs', action: 'fix' }
-        : next
+      secondary: fixable ? { label: 'Revoir mes erreurs', action: 'fix' } : next
     }
   if (kind === 'fail')
     return fixable

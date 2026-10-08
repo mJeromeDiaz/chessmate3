@@ -1,72 +1,70 @@
 <template>
-  <q-page padding class="row justify-center">
-    <div class="col-12 col-sm-8 col-md-5">
-      <div class="text-h5 q-mb-md">Code de vérification</div>
-      <p>
-        Nous avons envoyé un code à 6 chiffres à
-        <strong>{{ auth.mfa?.email }}</strong
-        >. Il est valable 10 minutes.
-      </p>
+  <AuthShell>
+    <form class="auth-step" novalidate @submit.prevent="submit()">
+      <button type="button" class="auth-back" @click="cancel">← Retour</button>
+      <div>
+        <div class="auth-kicker">MOT DE PASSE ✓ · DERNIÈRE ÉTAPE</div>
+        <h1 class="auth-title">Vérifie ta boîte mail</h1>
+        <p class="auth-lead">
+          Un code à 6 chiffres vient d’être envoyé à
+          <b>{{ auth.mfa?.email }}</b
+          >. Il est valable 10 minutes.
+        </p>
+      </div>
 
-      <q-form class="q-gutter-md" @submit="submit">
-        <q-input
-          v-model="code"
-          label="Code"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          maxlength="6"
-          outlined
-          data-testid="mfa-code"
-          autofocus
-          :rules="[v => /^\d{6}$/.test(v) || '6 chiffres']"
-        />
-        <q-checkbox
-          v-model="trustDevice"
-          label="Faire confiance à cet appareil pendant 30 jours"
-        />
+      <OtpInput
+        v-model="code"
+        :error="!!error"
+        data-testid="mfa-code"
+        @complete="submit"
+        @update:model-value="error = ''"
+      />
+      <p v-if="error" class="auth-error mfa__error">{{ error }}</p>
+      <div v-if="info" class="auth-note">{{ info }}</div>
 
-        <q-banner v-if="error" class="cm-banner--danger" rounded>{{
-          error
-        }}</q-banner>
-        <q-banner v-if="info" class="cm-banner--success" rounded>{{
-          info
-        }}</q-banner>
+      <div class="mfa__resend">
+        <span>Rien reçu ? Pense aux spams.</span>
+        <button
+          type="button"
+          class="auth-link"
+          :disabled="cooldown > 0 || resending"
+          @click="resend"
+          >{{
+            cooldown > 0 ? `Renvoyer dans ${cooldown} s` : 'Renvoyer le code'
+          }}</button
+        >
+      </div>
 
-        <div class="row q-gutter-sm">
-          <q-btn
-            type="submit"
-            color="primary"
-            no-caps
-            label="Valider"
-            :loading="loading"
-          />
-          <q-btn
-            flat
-            no-caps
-            :label="
-              cooldown > 0
-                ? `Renvoyer le code (${cooldown} s)`
-                : 'Renvoyer le code'
-            "
-            :disable="cooldown > 0"
-            :loading="resending"
-            @click="resend"
-          />
-          <q-btn flat no-caps label="Annuler" @click="cancel" />
-        </div>
-      </q-form>
-    </div>
-  </q-page>
+      <label class="mfa__trust">
+        <input v-model="trustDevice" type="checkbox" data-testid="mfa-trust" />
+        Faire confiance à cet appareil pendant 30 jours
+      </label>
+
+      <button
+        type="submit"
+        class="auth-btn"
+        :disabled="loading || code.length !== 6"
+        data-testid="mfa-submit"
+        >{{ loading ? 'Vérification…' : 'Valider' }}</button
+      >
+    </form>
+  </AuthShell>
 </template>
 
 <script setup>
 import { onBeforeUnmount, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AuthShell from '@/components/auth/AuthShell.vue'
+import OtpInput from '@/components/auth/OtpInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import { safeRedirect } from '@/router/guards'
 import { apiErrorMessage } from '@/utils/apiError'
 
-definePage({ meta: { auth: 'mfa' } })
+/**
+ * The emailed code, after a right password (docs/AUTH.md): six boxes, sent as soon as the sixth
+ * digit is in. A trusted device skips this page for 30 days.
+ */
+definePage({ meta: { auth: 'mfa', landing: true } })
 
 /** Client-side hint only; the API enforces its own minimum delay between two sends. */
 const RESEND_COOLDOWN_SECONDS = 60
@@ -89,6 +87,7 @@ const timer = setInterval(() => {
 onBeforeUnmount(() => clearInterval(timer))
 
 async function submit() {
+  if (loading.value || code.value.length !== 6) return
   loading.value = true
   error.value = ''
   info.value = ''
@@ -99,7 +98,7 @@ async function submit() {
   } catch (e) {
     error.value = apiErrorMessage(e, {
       401: 'Code invalide ou expiré. Après 5 essais, il faut recommencer la connexion.',
-      423: 'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.'
+      423: 'Ce compte est suspendu. Écris-nous depuis la page Contact si tu penses qu’il s’agit d’une erreur.'
     })
     code.value = ''
   } finally {
@@ -117,15 +116,16 @@ async function resend() {
     info.value =
       'Un nouveau code a été envoyé. Le précédent ne fonctionne plus.'
     cooldown.value = RESEND_COOLDOWN_SECONDS
+    code.value = ''
   } catch (e) {
-    if (e?.response?.status === 401) {
+    if (/** @type {any} */ (e)?.response?.status === 401) {
       // The pending login is over (expired or locked): start again.
       auth.cancelMfa()
       router.replace('/login')
       return
     }
     error.value = apiErrorMessage(e, {
-      429: 'Patientez avant de demander un nouveau code.'
+      429: 'Patiente avant de demander un nouveau code.'
     })
   } finally {
     resending.value = false
@@ -137,3 +137,34 @@ function cancel() {
   router.replace('/login')
 }
 </script>
+
+<style scoped lang="scss">
+.mfa__error {
+  margin-top: -6px;
+}
+
+.mfa__resend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  color: var(--cm-muted);
+}
+
+.mfa__trust {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--cm-ink-soft);
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--cm-brand);
+  }
+}
+</style>

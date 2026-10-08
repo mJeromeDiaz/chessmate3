@@ -90,7 +90,9 @@ test('404: an unknown page, back to the landing page for a visitor, to the dashb
   await page.goto('/#/nowhere/at-all')
   const notFound = page.getByTestId('not-found')
   await expect(notFound).toBeVisible()
-  await expect(notFound.getByRole('heading', { name: 'Blunder !' })).toBeVisible()
+  await expect(
+    notFound.getByRole('heading', { name: 'Blunder !' })
+  ).toBeVisible()
   await expect(notFound.getByTestId('not-found-home')).toHaveText(
     'Retour à l’accueil'
   )

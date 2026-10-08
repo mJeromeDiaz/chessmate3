@@ -1,141 +1,226 @@
 <template>
-  <q-page padding class="row justify-center">
-    <div class="col-12 col-sm-8 col-md-5">
-      <div class="text-h5 q-mb-md">Connexion</div>
-
-      <q-banner
-        v-if="notice"
-        class="q-mb-md"
-        :class="
-          notice.type === 'error' ? 'cm-banner--danger' : 'cm-banner--success'
-        "
-        rounded
+  <AuthShell>
+    <Transition name="auth-slide" mode="out-in">
+      <!-- 1. Providers, or an address. -->
+      <form
+        v-if="step === 'start'"
+        key="start"
+        class="auth-step"
+        novalidate
+        @submit.prevent="toPassword"
       >
-        {{ notice.text }}
-      </q-banner>
-
-      <q-form class="q-gutter-md" @submit="submit">
-        <q-input
-          v-model="email"
-          type="email"
-          label="Email"
-          autocomplete="username"
-          outlined
-          data-testid="login-email"
-          :rules="[required]"
-        />
-        <q-input
-          v-model="password"
-          type="password"
-          label="Mot de passe"
-          autocomplete="current-password"
-          outlined
-          data-testid="login-password"
-          :rules="[required]"
-        />
-
-        <q-banner v-if="error" class="cm-banner--danger" rounded>
-          {{ error }}
-          <template v-if="unverified" #action>
-            <q-btn
-              flat
-              no-caps
-              label="Renvoyer l'email de vérification"
-              :loading="resending"
-              @click="resendVerification"
-            />
-          </template>
-        </q-banner>
-
-        <div class="row items-center justify-between">
-          <q-btn
-            type="submit"
-            color="primary"
-            no-caps
-            label="Se connecter"
-            :loading="loading"
-            data-testid="login-submit"
-          />
-          <router-link to="/forgot-password">Mot de passe oublié ?</router-link>
+        <div class="auth-rise" style="--d: 0ms">
+          <h1 class="auth-title">Connexion</h1>
+          <p class="auth-lead">Content de te voir ! Choisis comment entrer.</p>
         </div>
-      </q-form>
 
-      <q-separator class="q-my-lg" />
+        <div
+          v-if="notice"
+          class="auth-note auth-rise"
+          :class="notice.tone"
+          data-testid="login-notice"
+        >
+          {{ notice.text }}
+        </div>
 
-      <div class="column q-gutter-sm">
-        <q-btn
-          outline
-          no-caps
-          icon="login"
-          label="Continuer avec Google"
-          :href="authApi.oauthLoginUrl('google')"
-        />
-        <q-btn
-          outline
-          no-caps
-          icon="login"
-          label="Continuer avec Lichess"
-          :href="authApi.oauthLoginUrl('lichess')"
-        />
-      </div>
+        <ProviderButtons :delay="650" />
 
-      <p class="q-mt-lg"
-        >Pas encore de compte ?
-        <router-link to="/register">Inscrivez-vous</router-link></p
+        <div class="auth-sep auth-rise" style="--d: 260ms">ou par e-mail</div>
+
+        <div class="auth-field auth-rise" style="--d: 390ms">
+          <label class="auth-label" for="login-email">Adresse e-mail</label>
+          <input
+            id="login-email"
+            v-model="email"
+            type="email"
+            class="auth-input"
+            :class="{ 'auth-input--error': emailError }"
+            autocomplete="username"
+            placeholder="toi@exemple.fr"
+            data-testid="login-email"
+            @input="emailError = ''"
+          />
+          <p v-if="emailError" class="auth-error">{{ emailError }}</p>
+        </div>
+
+        <button
+          type="submit"
+          class="auth-btn auth-btn--brand auth-rise"
+          style="--d: 520ms"
+          data-testid="login-continue"
+          >Continuer</button
+        >
+
+        <p class="auth-foot auth-rise" style="--d: 780ms">
+          Pas encore de compte ?
+          <router-link
+            to="/register"
+            class="auth-link"
+            data-testid="login-to-register"
+            >Accès anticipé →</router-link
+          >
+        </p>
+      </form>
+
+      <!-- 2. The password (the code, when asked, comes on the next page). -->
+      <form
+        v-else
+        key="password"
+        class="auth-step"
+        novalidate
+        @submit.prevent="submit"
       >
-    </div>
-  </q-page>
+        <button type="button" class="auth-back" @click="back">← Retour</button>
+        <div>
+          <h1 class="auth-title">Ton mot de passe</h1>
+          <div class="auth-lead login__who">
+            <span class="auth-chip">{{ email }}</span>
+            <button type="button" class="auth-link" @click="back"
+              >Modifier</button
+            >
+          </div>
+        </div>
+
+        <!-- For password managers: the account this password belongs to. -->
+        <input
+          type="email"
+          :value="email"
+          autocomplete="username"
+          class="login__username"
+          tabindex="-1"
+          aria-hidden="true"
+          readonly
+        />
+
+        <div class="auth-field">
+          <div class="auth-label-row">
+            <label class="auth-label" for="login-password">Mot de passe</label>
+            <button type="button" class="auth-link" @click="forgot"
+              >Mot de passe oublié ?</button
+            >
+          </div>
+          <PasswordField
+            id="login-password"
+            ref="passwordField"
+            v-model="password"
+            :error="!!error"
+            data-testid="login-password"
+            @input="error = ''"
+          />
+          <p v-if="error" class="auth-error" data-testid="login-error">{{
+            error
+          }}</p>
+          <button
+            v-if="unverified"
+            type="button"
+            class="auth-link login__resend"
+            :disabled="resending"
+            @click="resendVerification"
+            >Renvoyer l’e-mail de vérification</button
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="auth-btn"
+          :disabled="loading || !password"
+          data-testid="login-submit"
+          >{{ loading ? 'Connexion…' : 'Se connecter' }}</button
+        >
+      </form>
+    </Transition>
+  </AuthShell>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AuthShell from '@/components/auth/AuthShell.vue'
+import PasswordField from '@/components/auth/PasswordField.vue'
+import ProviderButtons from '@/components/auth/ProviderButtons.vue'
 import { authApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { safeRedirect } from '@/router/guards'
 import { apiErrorMessage } from '@/utils/apiError'
+import { WELCOME_PATH, isEmail } from '@/utils/auth/authFlow'
 
-definePage({ meta: { auth: 'guest' } })
+/**
+ * Sign-in (design "Connexion", docs/AUTH.md): Lichess or Google, or an address then its password
+ * (two screens, but one request: the address alone is never sent, so nothing tells whether it has
+ * an account). The emailed code, when asked, comes after the password on /mfa.
+ */
+definePage({ meta: { auth: 'guest', landing: true } })
 
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
+/** @type {import('vue').Ref<'start'|'password'>} */
+const step = ref('start')
 const email = ref('')
+const emailError = ref('')
 const password = ref('')
 const loading = ref(false)
 const resending = ref(false)
 const error = ref('')
 const unverified = ref(false)
 const resent = ref(false)
+const passwordField = ref(/** @type {{focus: () => void}|null} */ (null))
 
-const required = v => !!v || 'Champ requis'
+/** Arrived from the email verification link: the first sign-in opens the welcome screen. */
+const firstSignIn = route.query.verified === '1'
 
 /** Messages carried by redirects to this page (email verification link, expired session...). */
 const notice = computed(() => {
   if (resent.value) {
     return {
-      type: 'info',
-      text: 'Si cette adresse doit être vérifiée, un nouvel email vient de lui être envoyé.'
+      tone: 'auth-note--info',
+      text: 'Si cette adresse doit être vérifiée, un nouvel e-mail vient de lui être envoyé.'
     }
   }
   if (route.query.verified === '1') {
     return {
-      type: 'info',
-      text: 'Adresse email confirmée. Vous pouvez vous connecter.'
+      tone: '',
+      text: 'Adresse confirmée ✓ Connecte-toi pour commencer.'
     }
   }
   if (route.query.verified === '0') {
     return {
-      type: 'error',
+      tone: 'auth-note--danger',
       text: 'Ce lien de vérification est invalide ou a expiré.'
     }
   }
   if (route.query.expired === '1') {
-    return { type: 'error', text: 'Votre session a expiré. Reconnectez-vous.' }
+    return {
+      tone: 'auth-note--danger',
+      text: 'Ta session a expiré. Reconnecte-toi.'
+    }
   }
   return null
 })
+
+async function toPassword() {
+  if (!isEmail(email.value)) {
+    emailError.value = 'Saisis une adresse e-mail valide.'
+    return
+  }
+  email.value = email.value.trim()
+  step.value = 'password'
+  await nextTick()
+  // After the slide (the field is not there before).
+  setTimeout(() => passwordField.value?.focus(), 320)
+}
+
+function back() {
+  step.value = 'start'
+  password.value = ''
+  error.value = ''
+  unverified.value = false
+}
+
+function forgot() {
+  router.push({ path: '/forgot-password', state: { email: email.value } })
+}
 
 async function submit() {
   loading.value = true
@@ -144,7 +229,10 @@ async function submit() {
 
   try {
     const outcome = await auth.login(email.value, password.value)
-    const redirect = safeRedirect(route.query.redirect)
+    const redirect = safeRedirect(
+      route.query.redirect,
+      firstSignIn ? WELCOME_PATH : '/'
+    )
 
     if (outcome === 'mfa') {
       router.push({ path: '/mfa', query: { redirect } })
@@ -152,11 +240,11 @@ async function submit() {
       router.push(redirect)
     }
   } catch (e) {
-    unverified.value = e?.response?.status === 403
+    unverified.value = /** @type {any} */ (e)?.response?.status === 403
     error.value = apiErrorMessage(e, {
-      401: 'Email ou mot de passe incorrect.',
-      403: "Votre adresse email n'est pas encore vérifiée. Ouvrez le lien reçu par email.",
-      423: 'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.'
+      401: 'E-mail ou mot de passe incorrect.',
+      403: 'Ton adresse n’est pas encore vérifiée : ouvre le lien reçu par e-mail.',
+      423: 'Ce compte est suspendu. Écris-nous depuis la page Contact si tu penses qu’il s’agit d’une erreur.'
     })
   } finally {
     loading.value = false
@@ -169,7 +257,9 @@ async function resendVerification() {
   try {
     await authApi.resendVerification(email.value)
     error.value = ''
+    unverified.value = false
     resent.value = true
+    step.value = 'start'
   } catch (e) {
     error.value = apiErrorMessage(e)
   } finally {
@@ -177,3 +267,24 @@ async function resendVerification() {
   }
 }
 </script>
+
+<style scoped lang="scss">
+.login__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.login__username {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.login__resend {
+  align-self: flex-start;
+}
+</style>

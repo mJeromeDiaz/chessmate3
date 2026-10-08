@@ -109,7 +109,14 @@ describe('position evaluation', () => {
   })
 
   it('sums up the results, rate rounded down', () => {
-    const none = { played: 0, exact: 0, close: 0, miss: 0, timeout: 0, planOk: 0 }
+    const none = {
+      played: 0,
+      exact: 0,
+      close: 0,
+      miss: 0,
+      timeout: 0,
+      planOk: 0
+    }
     expect(resultsText(none)).toBe('Aucune position jouée.')
     expect(
       resultsText({ ...none, played: 3, exact: 2, close: 1, planOk: 1 })

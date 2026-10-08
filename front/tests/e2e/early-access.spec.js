@@ -35,19 +35,43 @@ async function invite(page, email) {
 }
 
 /**
- * Signs in through the login page: password, then the code emailed (read in Mailpit).
+ * Types the address, then the password, on the login page (two screens, one request).
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} email
+ */
+async function enterPassword(page, email) {
+  await page.getByTestId('login-email').fill(email)
+  await page.getByTestId('login-continue').click()
+  await page.getByTestId('login-password').fill(PASSWORD)
+  await page.getByTestId('login-submit').click()
+}
+
+/**
+ * Signs in through the login page: password, then the code emailed (read in Mailpit), sent as
+ * soon as its sixth digit is in.
  *
  * @param {import('@playwright/test').Page} page
  * @param {string} email
  */
 async function logIn(page, email) {
-  await page.getByTestId('login-email').fill(email)
-  await page.getByTestId('login-password').fill(PASSWORD)
-  await page.getByTestId('login-submit').click()
+  await enterPassword(page, email)
   await expect(page).toHaveURL(/#\/mfa/)
   const code = codeIn(await emailTo(email, { subject: /code de connexion/ }))
   await page.getByTestId('mfa-code').fill(code)
-  await page.getByRole('button', { name: 'Valider' }).click()
+}
+
+/**
+ * Fills in and sends the sign-up form of the early access screen (key already accepted).
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} email
+ */
+async function signUp(page, email) {
+  await page.getByTestId('register-email').fill(email)
+  await page.getByTestId('new-password').fill(PASSWORD)
+  await page.getByTestId('new-password-confirmation').fill(PASSWORD)
+  await page.getByTestId('register-submit').click()
 }
 
 test('an invitation opens an account: email, sign-up, verification, first sign-in', async ({
@@ -71,12 +95,12 @@ test('an invitation opens an account: email, sign-up, verification, first sign-i
   const guestContext = await browser.newContext()
   const guestPage = await guestContext.newPage()
   await guestPage.goto(link)
-  await expect(guestPage.getByText(/Clé valable jusqu/)).toBeVisible()
+  await expect(guestPage.getByText(/Valable jusqu/)).toBeVisible()
   await expect(guestPage).not.toHaveURL(/key=/)
-  await guestPage.getByTestId('register-email').fill(guest)
-  await guestPage.getByTestId('register-password').fill(PASSWORD)
-  await guestPage.getByTestId('register-submit').click()
-  await expect(guestPage.getByText(/email de vérification/)).toBeVisible()
+  await signUp(guestPage, guest)
+  await expect(guestPage.getByTestId('register-done')).toContainText(
+    'e-mail de vérification'
+  )
 
   // The verification email, then the first sign-in with the emailed code.
   consumeQueue()
@@ -86,7 +110,20 @@ test('an invitation opens an account: email, sign-up, verification, first sign-i
   )
   await guestPage.goto(verify)
   await expect(guestPage).toHaveURL(/#\/login\?verified=1/)
+  await expect(guestPage.getByTestId('login-notice')).toContainText(
+    'Adresse confirmée'
+  )
   await logIn(guestPage, guest)
+
+  // The first sign-in opens the welcome screen: Lichess can wait.
+  await expect(guestPage).toHaveURL(/#\/bienvenue/)
+  await guestPage.getByTestId('welcome-skip').click()
+  await expect(guestPage.getByTestId('welcome-done')).toContainText(
+    'C’est parti'
+  )
+  await guestPage
+    .getByRole('link', { name: 'Aller au tableau de bord' })
+    .click()
   await expect(guestPage.getByTestId('dashboard')).toBeVisible()
   await guestContext.close()
 
@@ -134,9 +171,9 @@ test('a resent key replaces the previous one, a revoked one opens nothing', asyn
   const guestPage = await guestContext.newPage()
   await guestPage.goto(`/#/register?key=${first}`)
   await expect(guestPage.getByText(/Cette clé n’est pas valable/)).toBeVisible()
-  await expect(guestPage.getByTestId('register-submit')).toBeDisabled()
+  await expect(guestPage.getByTestId('register-submit')).toHaveCount(0)
   await guestPage.goto(`/#/register?key=${second}`)
-  await expect(guestPage.getByText(/Clé valable jusqu/)).toBeVisible()
+  await expect(guestPage.getByText(/Valable jusqu/)).toBeVisible()
 
   // Revoked: the second link stops working too.
   await row.getByTestId('invitation-revoke').click()
@@ -151,19 +188,81 @@ test('a resent key replaces the previous one, a revoked one opens nothing', asyn
   await guestContext.close()
 })
 
-test('the sign-up page needs a usable key', async ({ page }) => {
+test('the early access screen needs a usable key', async ({ page }) => {
   await page.goto('/#/register')
-  await expect(page.getByTestId('register-submit')).toBeDisabled()
-  await expect(
-    page.getByRole('button', { name: "S'inscrire avec Google" })
-  ).toBeDisabled()
+  const activate = page.getByTestId('invitation-activate')
+  await expect(activate).toBeDisabled()
+  await expect(page.getByTestId('provider-google')).toHaveCount(0)
+  await expect(page.getByTestId('register-submit')).toHaveCount(0)
 
   await page.getByTestId('invitation-key').fill('trop-court')
-  await expect(page.getByText(/32 lettres et chiffres/)).toBeVisible()
+  await expect(page.getByText('10 / 32')).toBeVisible()
+  await expect(activate).toBeDisabled()
 
   await page.getByTestId('invitation-key').fill('A'.repeat(32))
+  await expect(page.getByText('Clé complète ✓')).toBeVisible()
+  await activate.click()
   await expect(page.getByText(/Cette clé n’est pas valable/)).toBeVisible()
-  await expect(page.getByTestId('register-submit')).toBeDisabled()
+  await expect(page.getByTestId('register-submit')).toHaveCount(0)
+})
+
+test('a Lichess sign-in without an account leads to the early access screen', async ({
+  page
+}) => {
+  // What the API's OAuth callback answers for a Lichess account linked to no account.
+  await page.goto(
+    '/#/oauth/callback?status=error&mode=login&provider=lichess&reason=invitation_required'
+  )
+  await expect(page).toHaveURL(/#\/register$/)
+  await expect(page.getByTestId('access-provider-note')).toContainText(
+    'Ton compte Lichess n’est lié à aucun compte'
+  )
+})
+
+test('a visitor joins the waiting list, an admin invites then deletes the request', async ({
+  page,
+  context,
+  browser
+}) => {
+  const visitor = `waiting-${Date.now()}@example.com`
+  const visitorContext = await browser.newContext()
+  const visitorPage = await visitorContext.newPage()
+  await visitorPage.goto('/#/register')
+  await visitorPage.getByTestId('access-tab-ask').click()
+  await visitorPage.getByTestId('access-email').fill(visitor)
+  await visitorPage.getByTestId('access-submit').click()
+  await expect(visitorPage.getByTestId('access-queued')).toBeVisible()
+  await expect(visitorPage.getByText(visitor)).toBeVisible()
+  await visitorContext.close()
+
+  await signIn(context, { admin: true })
+  await page.goto('/#/admin/demandes')
+  const row = page.getByTestId('request-row').filter({ hasText: visitor })
+  await expect(row).toContainText('En attente')
+  await row.getByTestId('request-invite').click()
+  await page
+    .locator('.q-dialog')
+    .getByRole('button', { name: 'Inviter' })
+    .click()
+  const dialog = page.getByTestId('key-dialog')
+  await expect(dialog).toContainText('Invitation envoyée')
+  const key = (await dialog.getByTestId('key-dialog-key').textContent()).trim()
+  await dialog.getByTestId('key-dialog-close').click()
+  await expect(row.getByTestId('request-invite')).toHaveCount(0)
+  await expect(row).toContainText(key.slice(0, 4))
+
+  // The worker sends the invitation to the waiting address.
+  consumeQueue()
+  expect(
+    linkIn(await emailTo(visitor, { subject: /invitation/ }), SIGNUP_LINK)
+  ).toBe(`${SIGNUP_LINK}${key}`)
+
+  await row.getByTestId('request-delete').click()
+  await page
+    .locator('.q-dialog')
+    .getByRole('button', { name: 'Supprimer' })
+    .click()
+  await expect(row).toHaveCount(0)
 })
 
 test('the dashboard shows the figures and charts, each chart as a table too', async ({
@@ -227,9 +326,7 @@ test('a suspended player cannot sign in until the suspension is lifted', async (
   const playerPage = await playerContext.newPage()
   await playerPage.goto('/#/profile')
   await expect(playerPage).toHaveURL(/#\/login/)
-  await playerPage.getByTestId('login-email').fill(player.email)
-  await playerPage.getByTestId('login-password').fill(PASSWORD)
-  await playerPage.getByTestId('login-submit').click()
+  await enterPassword(playerPage, player.email)
   await expect(playerPage.getByText(/Ce compte est suspendu/)).toBeVisible()
 
   // Lifted: the player signs in again (password, then the emailed code).
@@ -239,7 +336,9 @@ test('a suspended player cannot sign in until the suspension is lifted', async (
     .getByRole('button', { name: 'Réactiver' })
     .click()
   await expect(row.getByTestId('player-suspended')).toHaveCount(0)
+  // A hash change keeps the login page instance (still on its password screen): reload it.
   await playerPage.goto('/#/login')
+  await playerPage.reload()
   await logIn(playerPage, player.email)
   await expect(playerPage.getByTestId('dashboard')).toBeVisible()
   await playerContext.close()

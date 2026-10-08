@@ -19,6 +19,11 @@
         data-testid="admin-tab-invitations"
       />
       <q-route-tab
+        to="/admin/demandes"
+        label="Demandes"
+        data-testid="admin-tab-requests"
+      />
+      <q-route-tab
         to="/admin/joueurs"
         label="Joueurs"
         data-testid="admin-tab-players"

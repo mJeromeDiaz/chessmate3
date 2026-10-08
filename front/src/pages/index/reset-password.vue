@@ -1,67 +1,54 @@
 <template>
-  <q-page padding class="row justify-center">
-    <div class="col-12 col-sm-8 col-md-5">
-      <div class="text-h5 q-mb-md">Nouveau mot de passe</div>
+  <AuthShell>
+    <div class="auth-step">
+      <div>
+        <h1 class="auth-title">Nouveau mot de passe</h1>
+        <p class="auth-lead"
+          >Choisis-en un que tu n’utilises nulle part ailleurs.</p
+        >
+      </div>
 
       <template v-if="done">
-        <q-banner class="cm-banner--success" rounded>
-          Votre mot de passe a été réinitialisé. Toutes vos sessions et vos
-          appareils de confiance ont été révoqués.
-        </q-banner>
-        <q-btn
-          class="q-mt-md"
-          color="primary"
-          no-caps
-          to="/login"
-          label="Se connecter"
-        />
+        <div class="auth-note">
+          Ton mot de passe a été changé. Toutes tes sessions et tes appareils de
+          confiance ont été fermés.
+        </div>
+        <router-link to="/login" class="auth-btn">Se connecter</router-link>
       </template>
 
-      <q-banner v-else-if="!token" class="cm-banner--danger" rounded>
+      <div v-else-if="!token" class="auth-note auth-note--danger">
         Lien de réinitialisation incomplet.
-        <router-link to="/forgot-password">Demandez-en un nouveau.</router-link>
-      </q-banner>
+        <router-link to="/forgot-password">Demandes-en un nouveau.</router-link>
+      </div>
 
-      <q-form v-else class="q-gutter-md" @submit="submit">
-        <q-input
+      <form v-else class="auth-step" novalidate @submit.prevent="submit">
+        <NewPasswordFields
           v-model="password"
-          type="password"
-          label="Nouveau mot de passe"
-          autocomplete="new-password"
-          hint="12 caractères minimum."
-          outlined
-          :rules="[v => (v && v.length >= 12) || '12 caractères minimum']"
+          v-model:confirmation="confirmation"
         />
-        <q-input
-          v-model="confirmation"
-          type="password"
-          label="Confirmation"
-          autocomplete="new-password"
-          outlined
-          :rules="[v => v === password || 'Les mots de passe diffèrent']"
-        />
-        <q-banner v-if="error" class="cm-banner--danger" rounded>{{
-          error
-        }}</q-banner>
-        <q-btn
+        <p v-if="error" class="auth-error">{{ error }}</p>
+        <button
           type="submit"
-          color="primary"
-          no-caps
-          label="Enregistrer"
-          :loading="loading"
-        />
-      </q-form>
+          class="auth-btn"
+          :disabled="loading || !acceptable"
+        >
+          {{ loading ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </form>
     </div>
-  </q-page>
+  </AuthShell>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import AuthShell from '@/components/auth/AuthShell.vue'
+import NewPasswordFields from '@/components/auth/NewPasswordFields.vue'
 import { authApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
+import { PASSWORD_MIN_LENGTH } from '@/utils/auth/authFlow'
 
-definePage({ meta: { auth: 'public' } })
+definePage({ meta: { auth: 'public', landing: true } })
 
 const route = useRoute()
 const router = useRouter()
@@ -74,6 +61,12 @@ const confirmation = ref('')
 const loading = ref(false)
 const error = ref('')
 const done = ref(false)
+
+const acceptable = computed(
+  () =>
+    password.value.length >= PASSWORD_MIN_LENGTH &&
+    password.value === confirmation.value
+)
 
 onMounted(() => {
   // Keep the token out of the address bar (and so out of history and screenshots).
@@ -91,7 +84,7 @@ async function submit() {
     done.value = true
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      400: 'Ce lien est invalide, expiré ou a déjà servi. Demandez-en un nouveau.'
+      400: 'Ce lien est invalide, expiré ou a déjà servi. Demandes-en un nouveau.'
     })
   } finally {
     loading.value = false

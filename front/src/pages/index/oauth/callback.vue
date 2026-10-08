@@ -23,6 +23,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import {
+  INVITATION_REASONS,
+  WELCOME_PATH,
+  takeLinkFromWelcome,
+  takeWelcome
+} from '@/utils/auth/authFlow'
 
 /**
  * Where the API sends the browser back after Google/Lichess. The URL carries only an outcome
@@ -47,21 +53,8 @@ const REASONS = {
   identity_mismatch:
     'Ce n’est pas le compte Lichess lié à votre profil : reconnectez-vous à Lichess avec ce compte-là.',
   account_suspended:
-    'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.',
-  invitation_required:
-    "Aucun compte Don't Stay Rooky n’est lié à ce compte. L’inscription se fait sur invitation : ouvrez le lien reçu par email.",
-  invitation_invalid:
-    'Cette clé d’invitation n’est pas valable : elle a peut-être déjà servi ou été remplacée.',
-  invitation_expired:
-    "Cette clé d’invitation a expiré. Demandez-en une nouvelle à l’équipe Don't Stay Rooky."
+    'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.'
 }
-
-/** Sign-up refusals: going back means going back to the sign-up page. */
-const INVITATION_REASONS = [
-  'invitation_required',
-  'invitation_invalid',
-  'invitation_expired'
-]
 
 /** Set by the page that started a grant (repertoire import): where to come back. */
 const RETURN_KEY = 'dontstayrooky.oauthReturn'
@@ -95,16 +88,24 @@ const isGrant = computed(() => route.query.mode === 'grant')
 const backTo = computed(() => {
   if (isGrant.value) return '/repertoire/import'
   if (isLink.value) return '/profile'
-  return INVITATION_REASONS.includes(String(route.query.reason))
-    ? '/register'
-    : '/login'
+  return '/login'
 })
 
 onMounted(async () => {
   const { status, reason, provider } = route.query
 
+  // A sign-up or a link started from the welcome screen: read once, whatever the outcome.
+  const welcome = takeWelcome()
+  const linkFromWelcome = isLink.value && takeLinkFromWelcome()
+
   if (status !== 'success') {
     if (isGrant.value) grantReturn()
+    // No account for this provider account, or a refused key: the early access screen, which
+    // sends the visitor back to the provider with a key (docs/EARLY_ACCESS.md).
+    if (!isLink.value && INVITATION_REASONS.includes(String(reason))) {
+      router.replace({ path: '/register', query: { provider, reason } })
+      return
+    }
     error.value = REASONS[reason] ?? 'La connexion a échoué.'
     return
   }
@@ -117,7 +118,11 @@ onMounted(async () => {
 
   if (isLink.value) {
     await auth.fetchProfile().catch(() => {})
-    router.replace({ path: '/profile', query: { linked: provider } })
+    router.replace(
+      linkFromWelcome
+        ? WELCOME_PATH
+        : { path: '/profile', query: { linked: provider } }
+    )
     return
   }
 
@@ -127,7 +132,7 @@ onMounted(async () => {
     if (!auth.isAuthenticated) {
       await auth.startSession(await auth.refresh())
     }
-    router.replace('/')
+    router.replace(welcome ? WELCOME_PATH : '/')
   } catch {
     error.value = 'La session n’a pas pu être ouverte. Réessayez.'
   }

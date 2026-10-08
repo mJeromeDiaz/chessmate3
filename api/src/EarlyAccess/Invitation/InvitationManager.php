@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\EarlyAccess\Invitation;
 
 use App\EarlyAccess\Invitation\Message\SendInvitationEmail;
+use App\Entity\EarlyAccess\AccessRequest;
 use App\Entity\EarlyAccess\InvitationKey;
 use App\Entity\EarlyAccess\InvitationLog;
 use App\Entity\User;
 use App\Enum\EarlyAccess\InvitationAction;
 use App\Enum\EarlyAccess\InvitationStatus;
+use App\Repository\EarlyAccess\AccessRequestRepository;
 use App\Repository\EarlyAccess\InvitationKeyRepository;
 use App\Security\Crypto\SecretBox;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,9 +20,10 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The admin side of invitations (docs/EARLY_ACCESS.md): create, resend (a new key), revoke. Each
- * change, its log line and its queued email are written in one transaction: the async transport is
- * a table of the same database, so an email is only ever queued for a committed key.
+ * The admin side of invitations (docs/EARLY_ACCESS.md): create (from scratch or from a waiting-list
+ * request), resend (a new key), revoke. Each change, its log line and its queued email are written
+ * in one transaction: the async transport is a table of the same database, so an email is only
+ * ever queued for a committed key.
  *
  * Refusals are checked before the first write ({@see InvitationException}): a transaction closes
  * the entity manager on any exception.
@@ -33,6 +36,7 @@ final readonly class InvitationManager
     public function __construct(
         private EntityManagerInterface $entityManager,
         private InvitationKeyRepository $invitations,
+        private AccessRequestRepository $requests,
         private KeyGenerator $keyGenerator,
         private SecretBox $secretBox,
         private MessageBusInterface $bus,
@@ -55,14 +59,42 @@ final readonly class InvitationManager
         $invitation = new InvitationKey(mb_strtolower(trim($email)), KeyGenerator::hash($key), KeyGenerator::hint($key), $admin, $now, $expiresAt);
 
         $this->entityManager->wrapInTransaction(function () use ($invitation, $admin, $now, $key): void {
-            $this->entityManager->persist($invitation);
-            $this->entityManager->persist(new InvitationLog($invitation, InvitationAction::KeyCreated, $admin, $now, [
-                'keyHint' => $invitation->getKeyHint(),
-                'expiresAt' => $invitation->getExpiresAt()?->format(\DATE_ATOM),
-            ]));
-            $this->entityManager->flush();
-            $this->queueEmail($invitation, $key);
+            $this->persistNew($invitation, $admin, $now, $key);
         });
+
+        return [$invitation, $key];
+    }
+
+    /**
+     * Invites the address of a waiting-list request (default lifetime). The request is claimed in
+     * the same transaction, so two admins clicking at once create a single invitation.
+     *
+     * @return array{InvitationKey, string}
+     *
+     * @throws InvitationException
+     */
+    public function createFromRequest(User $admin, AccessRequest $request): array
+    {
+        if (null !== $request->getInvitedAt()) {
+            throw new InvitationException(InvitationException::ALREADY_INVITED, 'This request was already invited.');
+        }
+        $now = $this->clock->now();
+        $key = $this->keyGenerator->generate();
+        $invitation = new InvitationKey($request->getEmail(), KeyGenerator::hash($key), KeyGenerator::hint($key), $admin, $now, $now->modify(InvitationKey::DEFAULT_LIFETIME));
+
+        // The refusal is returned, not thrown: a transaction closes the entity manager on any exception.
+        $claimed = $this->entityManager->wrapInTransaction(function () use ($invitation, $admin, $now, $key, $request): bool {
+            if (!$this->requests->claim($request->getId(), $now)) {
+                return false;
+            }
+            $request->markInvited($invitation, $now);
+            $this->persistNew($invitation, $admin, $now, $key, ['fromRequest' => true]);
+
+            return true;
+        });
+        if (!$claimed) {
+            throw new InvitationException(InvitationException::ALREADY_INVITED, 'This request was already invited.');
+        }
 
         return [$invitation, $key];
     }
@@ -148,6 +180,22 @@ final readonly class InvitationManager
         }
 
         return $expiresAt->setTimezone(new \DateTimeZone('UTC'));
+    }
+
+    /**
+     * Inside a transaction: the new invitation, its log line and its email.
+     *
+     * @param array<string, mixed> $details added to the log line
+     */
+    private function persistNew(InvitationKey $invitation, User $admin, \DateTimeImmutable $now, #[\SensitiveParameter] string $key, array $details = []): void
+    {
+        $this->entityManager->persist($invitation);
+        $this->entityManager->persist(new InvitationLog($invitation, InvitationAction::KeyCreated, $admin, $now, [
+            'keyHint' => $invitation->getKeyHint(),
+            'expiresAt' => $invitation->getExpiresAt()?->format(\DATE_ATOM),
+        ] + $details));
+        $this->entityManager->flush();
+        $this->queueEmail($invitation, $key);
     }
 
     private function queueEmail(InvitationKey $invitation, #[\SensitiveParameter] string $key): void

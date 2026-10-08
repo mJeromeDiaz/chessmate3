@@ -5,8 +5,8 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { DEFAULT_PERIOD, validPeriod } from '@/utils/dashboard/stats'
 
 /**
- * The administration (docs/EARLY_ACCESS.md): the dashboard's statistics, the invitations and the
- * players, each list with its own page and filters. Admins only: the API answers 403 to others.
+ * The administration (docs/EARLY_ACCESS.md): the dashboard's statistics, the invitations, the
+ * waiting list and the players, each list with its own page and filters. Admins only: the API answers 403 to others.
  *
  * @typedef {import('@/services/api').InvitationStatus} InvitationStatus
  *
@@ -49,9 +49,18 @@ import { DEFAULT_PERIOD, validPeriod } from '@/utils/dashboard/stats'
  * @property {string|null} deletionScheduledAt
  * @property {string|null} suspendedAt
  * @property {string|null} suspensionReason the admin's internal note
+ *
+ * @typedef {object} AccessRequest
+ * @property {string} id
+ * @property {string} email
+ * @property {string} createdAt
+ * @property {string|null} invitedAt
+ * @property {boolean} hasAccount the address already belongs to an account
+ * @property {{id: string, status: InvitationStatus, keyHint: string}|null} invitation
+ * @property {string|null} key only in the answer to an invite
  */
 
-/** Rows per page of both lists. */
+/** Rows per page of every list. */
 export const PAGE_SIZE = 20
 
 export const useAdminStore = defineStore('admin', () => {
@@ -159,6 +168,62 @@ export const useAdminStore = defineStore('admin', () => {
     )
   }
 
+  // Waiting list.
+  /** @type {import('vue').Ref<AccessRequest[]>} */
+  const requests = ref([])
+  const requestTotal = ref(0)
+  const requestPage = ref(1)
+  /** @type {import('vue').Ref<boolean|null>} false: still waiting (default); null: all */
+  const requestInvited = ref(/** @type {boolean|null} */ (false))
+  const requestsLoading = ref(false)
+  const requestsError = ref('')
+  let requestsSeq = 0
+
+  /** Loads the current page of the waiting list, with the current filter. */
+  async function loadRequests() {
+    const seq = ++requestsSeq
+    requestsLoading.value = true
+    requestsError.value = ''
+    try {
+      const { member, totalItems } = await adminApi.accessRequests({
+        page: requestPage.value,
+        itemsPerPage: PAGE_SIZE,
+        invited: requestInvited.value
+      })
+      if (seq !== requestsSeq) return
+      requests.value = member
+      requestTotal.value = totalItems
+    } catch (e) {
+      if (seq === requestsSeq) requestsError.value = apiErrorMessage(e)
+    } finally {
+      if (seq === requestsSeq) requestsLoading.value = false
+    }
+  }
+
+  /**
+   * Invites a request's address; the row is updated in place. Rejects with the API's error.
+   *
+   * @param {string} id
+   * @returns {Promise<AccessRequest>} with the invitation's `key`, shown once
+   */
+  async function inviteRequest(id) {
+    const invited = await adminApi.inviteAccessRequest(id)
+    requests.value = requests.value.map(r =>
+      r.id === id ? { ...invited, key: null } : r
+    )
+    return invited
+  }
+
+  /**
+   * Deletes a request, then reloads the page. Rejects with the API's error.
+   *
+   * @param {string} id
+   */
+  async function deleteRequest(id) {
+    await adminApi.deleteAccessRequest(id)
+    await loadRequests()
+  }
+
   // Players.
   /** @type {import('vue').Ref<Player[]>} */
   const players = ref([])
@@ -234,6 +299,15 @@ export const useAdminStore = defineStore('admin', () => {
     createInvitation,
     resendInvitation,
     revokeInvitation,
+    requests,
+    requestTotal,
+    requestPage,
+    requestInvited,
+    requestsLoading,
+    requestsError,
+    loadRequests,
+    inviteRequest,
+    deleteRequest,
     players,
     playerTotal,
     playerPage,

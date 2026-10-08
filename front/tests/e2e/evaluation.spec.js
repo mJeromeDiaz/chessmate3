@@ -56,7 +56,12 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
   await expect(page).toHaveURL(/#\/training\/[^/]+$/)
   let item = (await (await served).json()).item
   expect(item.type).toBe('evaluation_position')
-  expect(item.data).toMatchObject({ seconds: 30, index: 1, count: 3, askPlan: true })
+  expect(item.data).toMatchObject({
+    seconds: 30,
+    index: 1,
+    count: 3,
+    askPlan: true
+  })
   // Nothing of the answer is sent with the position.
   expect(item.data).not.toHaveProperty('evalCp')
   expect(item.data).not.toHaveProperty('ideas')
@@ -80,7 +85,9 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
   await expect(player.getByTestId('evaluation-plan-result')).toContainText(
     '✓ bien trouvé (+5 XP)'
   )
-  await expect(player.getByTestId('evaluation-ideas').locator('li')).not.toHaveCount(0)
+  await expect(
+    player.getByTestId('evaluation-ideas').locator('li')
+  ).not.toHaveCount(0)
   await expect(page.getByTestId('run-progress')).toContainText('Position 1 / 3')
 
   // Second position: one notch off, no plan: "Presque !".

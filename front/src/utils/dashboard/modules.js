@@ -95,7 +95,8 @@ function puzzles({ totals, puzzleRating }) {
  */
 function evaluation({ totals }) {
   const played = totals.position_evaluation
-  if (!played?.count) return { to: '/evaluation', stat: 'Aucune position jouée' }
+  if (!played?.count)
+    return { to: '/evaluation', stat: 'Aucune position jouée' }
   const ratio = played.successCount / played.count
   return {
     to: '/evaluation',

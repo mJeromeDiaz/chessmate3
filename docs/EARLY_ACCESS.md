@@ -1,7 +1,8 @@
 # Accès anticipé et administration
 
 Le site s'ouvre en avant-première : on ne crée un compte qu'avec une **clé d'invitation**, envoyée par
-un admin depuis le tableau de bord d'administration.
+un admin depuis le tableau de bord d'administration. Sans clé, un visiteur peut laisser son adresse
+sur la **liste d'attente** (§ Liste d'attente), où un admin choisit qui inviter.
 
 ## Admins
 
@@ -151,7 +152,61 @@ frappe dans l'adresse la perd, et l'admin en crée une nouvelle.
 - **200** `{expiresAt}` (`null` si la clé n'expire jamais) ;
 - **422** `{error}`, avec les codes ci-dessus.
 
-La page d'inscription s'en sert pour signaler un lien mort avant qu'on remplisse le formulaire.
+L'écran d'accès anticipé s'en sert : la clé n'ouvre le formulaire d'inscription qu'une fois acceptée.
+
+### Écran « Accès anticipé » (SPA)
+
+`front/src/pages/index/register.vue` (design « Accès anticipé », 2026-10-08), pour les visiteurs
+déconnectés. Deux onglets :
+
+- **« J'ai une clé »** : un seul champ (32 caractères, espaces et retours à la ligne retirés). « Activer
+  mon compte » appelle `invitation/check` ; une clé acceptée ouvre l'étape suivante (confettis,
+  « Bienvenue à bord ! ») : créer le compte avec Lichess, Google (POST de formulaire avec la clé,
+  ci-dessus) ou une adresse et un mot de passe (12 caractères minimum, jauge de force, confirmation).
+  Un compte par mot de passe reçoit ensuite le lien de vérification habituel.
+- **« Demander l'accès »** : l'adresse rejoint la liste d'attente (§ suivant) ; un ticket « C'est
+  noté ✓ » s'affiche, sans numéro de place.
+
+Entrées :
+
+- le lien de l'email d'invitation, `#/register?key=…` : la clé est lue, retirée de l'URL, puis
+  vérifiée d'office ;
+- une connexion Google ou Lichess refusée faute de compte (`invitation_required`) ou pour une clé
+  refusée (`invitation_invalid`, `invitation_expired`) : la page de retour OAuth renvoie vers
+  `#/register?provider=…&reason=…`. L'écran explique que ce compte n'est lié à aucun compte, et une
+  fois la clé acceptée, le bouton de ce fournisseur passe en premier : le visiteur repasse chez lui
+  avec la clé (souvent sans recliquer « Autoriser »). Le serveur ne garde rien entre les deux
+  passages.
+
+Après une inscription par Google ou Lichess (drapeau `dontstayrooky.welcome` en `sessionStorage`,
+posé avant de partir chez le fournisseur), et après la première connexion qui suit la vérification
+de l'email (`#/login?verified=1`), le SPA ouvre `#/bienvenue` : lier Lichess (ou plus tard), puis
+« C'est parti ! ». Une liaison lancée de là y revient (drapeau `dontstayrooky.linkReturn`).
+
+## Liste d'attente
+
+Code : `App\Entity\EarlyAccess\AccessRequest` (table `early_access_request`),
+`App\Controller\EarlyAccess\AccessRequestController`, `App\ApiResource\EarlyAccess\AccessRequest`,
+`App\State\EarlyAccess\AccessRequest{Provider, Processor}`, `InvitationManager::createFromRequest()`.
+
+- **Demande** : `POST /api/auth/invitation/request {email, website}`, public. Réponse **toujours
+  202** et identique, que l'adresse soit nouvelle, déjà sur la liste ou déjà liée à un compte : le
+  formulaire ne dit rien de personne. **Aucun email n'est envoyé**, si bien qu'il ne peut pas servir
+  à écrire à un tiers. 422 pour une adresse invalide.
+- **Une ligne par adresse** (minuscules, index unique `uniq_early_access_request_email`), insérée par
+  `INSERT IGNORE` : deux demandes simultanées ne peuvent pas échouer.
+- **Anti-robots** : `website` est un champ piège, invisible pour une personne ; rempli, la demande
+  reçoit le même 202 et n'est pas enregistrée. Limites : 5 demandes par heure et par IP
+  (`access_request_ip`, relevée en e2e) et 300 par jour au total (`access_request_global`), pour
+  qu'un réseau de robots ne puisse pas noyer la liste.
+- **Ordre** : par id (UUID v7), donc par ordre d'arrivée ; aucun numéro de place n'est montré.
+- **Inviter** : crée une invitation de 7 jours pour l'adresse, avec son email (comme une création
+  d'invitation, comptée dans `early_access_invitation_write`, journal `key_created` avec
+  `fromRequest: true`). La demande est réclamée par un `UPDATE … WHERE invited_at IS NULL` dans la
+  même transaction : deux admins qui cliquent ensemble ne créent qu'une invitation, l'autre reçoit
+  409. La clé n'est montrée qu'une fois, dans la réponse.
+- **Supprimer** : efface la demande (données personnelles) ; son invitation éventuelle reste.
+- Une adresse qui a déjà un compte est signalée à l'admin (`hasAccount`), jamais au visiteur.
 
 ## Statistiques du tableau de bord
 
@@ -231,6 +286,7 @@ dans `services/api.js`.
 | Page | Contenu |
 |---|---|
 | `/admin` | Sélecteur de période (7 j, 30 j, 90 j, 1 an). Tuiles : comptes, inscriptions, joueurs actifs, temps moyen par joueur actif et par semaine, Elo médian. Graphiques : inscriptions par jour empilées par méthode, joueurs actifs par jour, temps moyen par semaine, histogramme Elo. Entonnoir des invitations. |
+| `/admin/demandes` | Liste d'attente par ordre d'arrivée, filtrée (en attente, invitées, toutes) ; badge « A déjà un compte » ; actions Inviter (la clé s'affiche une fois) et Supprimer, chacune confirmée. |
 | `/admin/invitations` | Formulaire de création (7 jours, une date choisie (fin de journée locale) ou jamais). Liste filtrable par statut et par email, paginée par 20. Actions Détail (avec le journal), Renvoyer et Révoquer, chacune confirmée. |
 | `/admin/joueurs` | Recherche ; nom, inscription, méthode et indice de clé, statut actif et dernier exercice, temps sur 30 jours, Elo Lichess ; badges admin, email non vérifié, suppression programmée, suspendu (avec la note). Filtre par suspension ; actions Suspendre et Réactiver. |
 
@@ -319,6 +375,9 @@ Tous ces endpoints exigent `ROLE_ADMIN`.
 | GET | `/api/admin/invitation-keys/{id}` | Détail, avec `logs` | 200 ; 404 |
 | POST | `/api/admin/invitation-keys/{id}/resend` | Nouvelle clé, nouvel email | 200 (avec `key`) ; 404 ; 409 ; 429 |
 | DELETE | `/api/admin/invitation-keys/{id}` | Révocation (idempotente) | 204 ; 404 ; 409 (déjà utilisée) |
+| GET | `/api/admin/access-requests?invited=` | Liste d'attente par ordre d'arrivée (`invited` : `true`, `false` ou absent), paginée | 200 ; 400 |
+| POST | `/api/admin/access-requests/{id}/invite` | Invite l'adresse (7 jours) ; la réponse contient `key` | 200 ; 404 ; 409 (déjà invitée) ; 429 |
+| DELETE | `/api/admin/access-requests/{id}` | Supprime la demande | 204 ; 404 |
 | GET | `/api/admin/stats?days=` | Statistiques du tableau de bord (voir plus haut) | 200 ; 429 |
 | GET | `/api/admin/users?search=&suspended=` | Liste des joueurs (voir plus haut) | 200 ; 429 |
 | POST | `/api/admin/users/{id}/suspend` | `{reason?}` : suspend le compte (voir plus haut) | 200 ; 404 ; 409 (soi-même ou un admin) ; 422 ; 429 |
@@ -340,20 +399,23 @@ Champs d'une invitation :
 - `tests/Functional/EarlyAccess/` : création et email, filtres et pagination, renvoi, révocation,
   échec d'envoi, accès, rate limiting, `isAdmin`, commande `app:admin:grant`, vérification d'un
   lien, statistiques et liste des joueurs (`StatsTest`), suspension (`SuspensionTest`, et des cas
-  dans `Training\{CalendarTest, ReminderTest}`).
+  dans `Training\{CalendarTest, ReminderTest}`), liste d'attente (`AccessRequestTest` : réponse
+  identique quelle que soit l'adresse, aucun email, champ piège, limite par IP, ordre, invitation
+  unique, suppression, accès).
 - `tests/Functional/Auth/{RegisterControllerTest, GoogleOAuthTest, LichessOAuthTest}` : inscription
   avec une clé (absente, invalide, expirée, révoquée, déjà utilisée, email pris, consommée entre le
   départ et le retour d'OAuth). Les helpers de test (`createInvitationKey()`, `startOAuthFlow()`)
   fournissent une clé fraîche par défaut.
-- `front/tests/unit/{admin-charts, admin-invitations, guards}.test.js` (Vitest) : échelles et
-  disposition des graphiques, entonnoir, formats, lien d'inscription, actions possibles, niveau
-  d'accès `admin`.
+- `front/tests/unit/{admin-charts, admin-invitations, guards, auth-flow}.test.js` (Vitest) : échelles
+  et disposition des graphiques, entonnoir, formats, lien d'inscription, actions possibles, niveau
+  d'accès `admin`, format d'une clé, jauge de mot de passe, drapeaux de l'écran de bienvenue.
 - `front/tests/e2e/early-access.spec.js` (Playwright, vraie API) :
   - le parcours complet : invitation, email lu dans Mailpit, inscription avec la clé du lien,
-    email de vérification, première connexion avec le code reçu par email, puis clé « Utilisée »
-    côté admin ;
+    email de vérification, première connexion avec le code reçu par email, écran de bienvenue, puis
+    clé « Utilisée » côté admin ;
   - le renvoi (l'ancien lien meurt) et la révocation ;
-  - la page d'inscription sans clé valable ;
+  - l'écran d'accès anticipé sans clé valable, et l'arrivée depuis un refus Lichess ;
+  - la liste d'attente : demande d'un visiteur, invitation par un admin (email reçu), suppression ;
   - le tableau de bord (tuiles, graphiques, bascule vers le tableau, période) ;
   - la suspension puis la réactivation d'un joueur ;
   - l'absence d'administration pour un joueur.

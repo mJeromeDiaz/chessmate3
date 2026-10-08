@@ -1,7 +1,9 @@
 <template>
   <div class="nf" data-testid="not-found">
     <div class="nf__top">
-      <router-link to="/" class="nf__logo">Don't Stay <span>Rooky</span></router-link>
+      <router-link to="/" class="nf__logo"
+        >Don't Stay <span>Rooky</span></router-link
+      >
       <button
         type="button"
         class="nf__replay"
@@ -13,8 +15,15 @@
 
     <div class="nf__main">
       <div class="nf__scene">
-        <div class="nf__board" :style="{ transform: f.boardTf }" aria-hidden="true">
-          <div class="nf__square nf__square--from" :style="{ opacity: f.fromOp }" />
+        <div
+          class="nf__board"
+          :style="{ transform: f.boardTf }"
+          aria-hidden="true"
+        >
+          <div
+            class="nf__square nf__square--from"
+            :style="{ opacity: f.fromOp }"
+          />
           <div class="nf__square nf__square--to" :style="{ opacity: f.toOp }" />
           <div
             class="nf__page-wrap"
@@ -74,7 +83,10 @@
           <div class="nf__sub-title">La page était juste là.</div>
           <div class="nf__sub-text">Tu l’as laissée se faire capturer.</div>
         </div>
-        <div class="nf__aaron" :style="{ opacity: f.endOp, transform: f.endTf }">
+        <div
+          class="nf__aaron"
+          :style="{ opacity: f.endOp, transform: f.endTf }"
+        >
           <div class="nf__aaron-face">
             <img :src="aaronWow" alt="" />
           </div>

@@ -49,8 +49,18 @@ Codes `reason` du callback OAuth : `cancelled`, `invalid_state`, `provider_error
 `identity_in_use`, `provider_already_linked`, `conflict`, et pour un `grant` : `not_linked`,
 `identity_mismatch`.
 
-Pages du SPA : `/login`, `/register`, `/mfa`, `/forgot-password`, `/reset-password`, `/profile`,
-`/oauth/callback`, `/account-deletion` (compte gelé). Accès par page via `definePage({ meta: { auth } })` et le guard global
+Pages du SPA : `/login`, `/register` (écran « Accès anticipé », voir `EARLY_ACCESS.md`), `/mfa`,
+`/forgot-password`, `/reset-password`, `/bienvenue` (premier écran d'un nouveau compte : lier
+Lichess), `/profile`, `/oauth/callback`, `/account-deletion` (compte gelé).
+
+Écrans de connexion (design « Connexion », 2026-10-08) : un cadre commun (`components/auth/AuthShell`,
+les trois profs animés au-dessus du formulaire sur téléphone, à sa gauche sur grand écran).
+`/login` montre d'abord Lichess (recommandé) et Google, puis l'adresse ; « Continuer » affiche
+l'écran du mot de passe **sans rien envoyer** (l'adresse seule ne part jamais, rien ne dit donc si
+elle a un compte), et « Se connecter » fait l'unique appel `POST /api/auth/login`. L'ordre ne change
+pas : le code par email vient **après** le mot de passe, sur `/mfa` (six cases, envoyé dès le
+sixième chiffre). « Mot de passe oublié » transmet l'adresse par l'état de navigation, jamais par
+l'URL. Accès par page via `definePage({ meta: { auth } })` et le guard global
 (`src/router/guards.js`) : `public` (défaut), `guest` (déconnecté uniquement), `required` (connecté
 uniquement ⇒ sinon `/login?redirect=…`), `mfa` (uniquement pendant une connexion en attente de code).
 Après une connexion (mot de passe, code 2FA ou OAuth) sans `redirect`, et pour un utilisateur connecté

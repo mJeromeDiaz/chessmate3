@@ -15,7 +15,12 @@ import {
 } from '@/utils/runResult'
 import { MODULE_FAIL_RATE } from '@/utils/sounds'
 
-const run = (/** @type {string} */ module, itemCount, successCount, more = {}) => ({
+const run = (
+  /** @type {string} */ module,
+  itemCount,
+  successCount,
+  more = {}
+) => ({
   module,
   summary: { itemCount, successCount, durationMs: 0, ...more }
 })

@@ -151,7 +151,9 @@
         >
           <div class="text-subtitle2" data-testid="run-progress">
             Position {{ evalItem.data.index }} / {{ evalItem.data.count }} ·
-            {{ runner.solved.value }} juste{{ runner.solved.value > 1 ? 's' : '' }}
+            {{ runner.solved.value }} juste{{
+              runner.solved.value > 1 ? 's' : ''
+            }}
           </div>
         </RunHeader>
         <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -352,7 +354,9 @@ const evalResult = computed(() =>
 const evaluationActions = computed(() => [
   {
     label:
-      runner.phase.value === 'running' ? 'Position suivante →' : 'Voir le résultat',
+      runner.phase.value === 'running'
+        ? 'Position suivante →'
+        : 'Voir le résultat',
     primary: true,
     disable: loading.value,
     testid: 'run-next',

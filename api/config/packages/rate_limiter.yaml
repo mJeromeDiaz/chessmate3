@@ -199,6 +199,16 @@ framework:
             policy: sliding_window
             limit: 30
             interval: '15 minutes'
+        # Waiting-list requests (public, nothing emailed): per IP, and overall (identifier "all") so
+        # that a botnet can't flood the table the admins read.
+        access_request_ip:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        access_request_global:
+            policy: sliding_window
+            limit: 300
+            interval: '1 day'
 
         # Dashboard reads (identifier = user id): the page asks for 2 or 3 of them per display.
         dashboard_read:
@@ -242,3 +252,8 @@ when@e2e:
                 policy: sliding_window
                 limit: 100000
                 interval: '15 minutes'
+            # Every waiting-list request of a run (and of reruns) comes from 127.0.0.1 too.
+            access_request_ip:
+                policy: sliding_window
+                limit: 100000
+                interval: '1 hour'

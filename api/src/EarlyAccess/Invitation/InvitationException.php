@@ -13,6 +13,8 @@ final class InvitationException extends \RuntimeException
     /** Already used, or revoked: nothing more can be done with it. */
     public const CLOSED = 'invitation_closed';
     public const INVALID_EXPIRY = 'invalid_expiry';
+    /** A waiting-list request that already led to an invitation. */
+    public const ALREADY_INVITED = 'already_invited';
 
     public function __construct(public readonly string $reason, string $message)
     {

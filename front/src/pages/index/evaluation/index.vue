@@ -8,9 +8,9 @@
         {{ overview ? pawns(overview.rules.advantageCp) : '…' }} pion, avantage
         jusqu’à {{ overview ? pawns(overview.rules.winningCp) : '…' }} pions,
         gain au-delà (un mat ou une finale gagnée compte comme un gain). Quand
-        la position en a un, trouve aussi le plan (facultatif, en bonus).
-        Chaque position a son temps ; une réponse en retard compte comme un
-        temps écoulé.
+        la position en a un, trouve aussi le plan (facultatif, en bonus). Chaque
+        position a son temps ; une réponse en retard compte comme un temps
+        écoulé.
       </p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{

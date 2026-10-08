@@ -42,7 +42,9 @@ const pieces = computed(() =>
       glyph: mark ? '?' : GLYPHS[i % GLYPHS.length],
       style: {
         left: `${(i * 29 + 7) % 92}%`,
-        top: down ? `${-80 - (i % 4) * 40}px` : `calc(100% + ${(i % 4) * 40}px)`,
+        top: down
+          ? `${-80 - (i % 4) * 40}px`
+          : `calc(100% + ${(i % 4) * 40}px)`,
         fontSize: `${22 + (i % 4) * 9}px`,
         color: props.ink,
         opacity: 0.2 + (i % 3) * 0.08,

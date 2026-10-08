@@ -171,7 +171,9 @@ export function resultsText(results) {
   ]
   if (results.close) parts.push(`${results.close} à un cran`)
   if (results.planOk)
-    parts.push(`${results.planOk} plan${s(results.planOk)} trouvé${s(results.planOk)}`)
+    parts.push(
+      `${results.planOk} plan${s(results.planOk)} trouvé${s(results.planOk)}`
+    )
   return parts.join(' · ')
 }
 
