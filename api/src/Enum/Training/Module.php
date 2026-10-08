@@ -19,6 +19,8 @@ enum Module: string
     case Coordinates = 'coordinates';
     /** Blindfold puzzles: shown, hidden, solved from memory (docs/BLINDFOLD.md). */
     case Blindfold = 'blindfold';
+    /** Position evaluation: who stands better, and the plan (docs/EVALUATION.md). */
+    case Evaluation = 'evaluation';
 
     /** Its name for the user (emails, calendar). */
     public function label(): string
@@ -30,6 +32,7 @@ enum Module: string
             self::Free => 'Libre',
             self::Coordinates => 'Coordonnées',
             self::Blindfold => 'Aveugle',
+            self::Evaluation => 'Évaluation',
         };
     }
 

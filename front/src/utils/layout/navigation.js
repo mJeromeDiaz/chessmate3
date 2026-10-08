@@ -25,7 +25,8 @@ export const NAV_LINKS = [
   { to: '/woodpecker', label: 'Woodpecker', icon: 'repeat', header: true },
   { to: '/repertoire', label: 'Répertoires', icon: 'menu_book', header: true },
   { to: '/coordinates', label: 'Coordonnées', icon: 'grid_on', header: true },
-  { to: '/blindfold', label: 'Aveugle', icon: 'visibility_off', header: true }
+  { to: '/blindfold', label: 'Aveugle', icon: 'visibility_off', header: true },
+  { to: '/evaluation', label: 'Évaluation', icon: 'balance', header: true }
 ]
 
 /**

@@ -31,6 +31,14 @@ final class XpRules
     public const BLINDFOLD_SOLVED = 12;
     public const BLINDFOLD_HELPED = 6;
     public const BLINDFOLD_FAILED = 2;
+    /** Position evaluation: the engine's category, one away, further or no answer; bonuses. */
+    public const EVALUATION_EXACT = 15;
+    public const EVALUATION_CLOSE = 6;
+    public const EVALUATION_MISS = 1;
+    /** The right plan, whatever the category. */
+    public const EVALUATION_PLAN = 5;
+    /** Exact in less than half the position's time. */
+    public const EVALUATION_FAST = 3;
 
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
@@ -49,7 +57,7 @@ final class XpRules
     /**
      * XP of one exercise, before the daily cap.
      *
-     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status)
+     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status, an evaluation's status and bonuses)
      */
     public static function exercise(ExerciseType $type, bool $success, int $durationMs, int $itemCount = 1, array $metadata = []): int
     {
@@ -65,6 +73,12 @@ final class XpRules
                 'helped' => self::BLINDFOLD_HELPED,
                 default => $success ? self::BLINDFOLD_SOLVED : self::BLINDFOLD_FAILED,
             },
+            ExerciseType::PositionEvaluation => match ($metadata['status'] ?? null) {
+                'exact' => self::EVALUATION_EXACT,
+                'close' => self::EVALUATION_CLOSE,
+                default => self::EVALUATION_MISS,
+            } + (true === ($metadata['planOk'] ?? null) ? self::EVALUATION_PLAN : 0)
+              + (true === ($metadata['fast'] ?? null) ? self::EVALUATION_FAST : 0),
         };
     }
 
@@ -80,6 +94,7 @@ final class XpRules
             ExerciseType::FreeStudy => Module::Free,
             ExerciseType::CoordinatesSeries => Module::Coordinates,
             ExerciseType::BlindfoldPuzzle => Module::Blindfold,
+            ExerciseType::PositionEvaluation => Module::Evaluation,
         };
     }
 

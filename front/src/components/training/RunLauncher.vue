@@ -118,6 +118,10 @@ const MESSAGES = {
     409: 'Aucun puzzle disponible à ce niveau et de cette longueur.',
     422: 'Réglages invalides.'
   },
+  evaluation: {
+    409: 'Aucune position disponible pour ces réglages.',
+    422: 'Réglages invalides.'
+  },
   repertoire: {
     409: 'Rien à tester dans cette sélection : ajoutez vos coups au répertoire.',
     404: 'Répertoire introuvable.',

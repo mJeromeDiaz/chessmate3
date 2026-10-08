@@ -121,9 +121,12 @@ describe('module rows', () => {
     expect(rows.map(r => r.module.id)).toEqual(DASHBOARD_MODULES)
     expect(rows.filter(r => r.to === null).map(r => r.module.id)).toEqual([
       'finales',
-      'evaluation',
       'analyse'
     ])
+    expect(rows.find(r => r.module.id === 'evaluation')).toMatchObject({
+      to: '/evaluation',
+      stat: 'Aucune position jouée'
+    })
     expect(rows.find(r => r.module.id === 'finales').stat).toBe('Bientôt')
     expect(rows.find(r => r.module.id === 'puzzles').stat).toBe(
       'Aucun puzzle joué'
@@ -140,7 +143,8 @@ describe('module rows', () => {
     const rows = buildModuleRows({
       totals: {
         puzzle_rated: { count: 1500, successCount: 1200, durationMs: 0 },
-        puzzle_unrated: { count: 100, successCount: 84, durationMs: 0 }
+        puzzle_unrated: { count: 100, successCount: 84, durationMs: 0 },
+        position_evaluation: { count: 8, successCount: 5, durationMs: 0 }
       },
       puzzleRating: { rating: 1742, provisional: false },
       sets: [
@@ -184,6 +188,11 @@ describe('module rows', () => {
     })
     expect(repertoire.stat).toBe('142 coups · 9 à revoir · 85 % sur 30 j')
     expect(repertoire.ratio).toBeCloseTo(0.85)
+    expect(rows.find(r => r.module.id === 'evaluation')).toMatchObject({
+      to: '/evaluation',
+      stat: '8 positions · 63 % justes',
+      ratio: 5 / 8
+    })
   })
 })
 

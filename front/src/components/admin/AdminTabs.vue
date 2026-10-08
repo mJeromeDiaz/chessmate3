@@ -23,12 +23,17 @@
         label="Joueurs"
         data-testid="admin-tab-players"
       />
+      <q-route-tab
+        to="/admin/positions"
+        label="Positions"
+        data-testid="admin-tab-positions"
+      />
     </q-tabs>
   </nav>
 </template>
 
 <script setup>
-/** The three pages of the administration, one address each (shareable, back button works). */
+/** The pages of the administration, one address each (shareable, back button works). */
 </script>
 
 <style scoped lang="scss">

@@ -765,6 +765,11 @@ export const coordinatesApi = {
 }
 
 /** Blindfold puzzles (docs/BLINDFOLD.md). */
+/** Position evaluation (docs/EVALUATION.md): the settings' bounds, the catalogue's size, my results. */
+export const evaluationApi = {
+  overview: () => http.get('/api/evaluation', JSON_LD).then(r => r.data)
+}
+
 export const blindfoldApi = {
   /** The rules (levels, lengths, times) and the results so far, by level and by length. */
   puzzles: () => http.get('/api/blindfold/puzzles', JSON_LD).then(r => r.data)
@@ -900,5 +905,60 @@ export const adminApi = {
         null,
         JSON_LD
       )
+      .then(r => r.data),
+  /**
+   * The positions to evaluate (docs/EVALUATION.md), newest first. Resolves `{member, totalItems}`.
+   *
+   * @param {{page?: number, itemsPerPage?: number, active?: boolean|null, tag?: string|null}} params
+   */
+  evaluationPositions: ({
+    page = 1,
+    itemsPerPage = 20,
+    active = null,
+    tag = null
+  } = {}) =>
+    http
+      .get('/api/admin/evaluation/positions', {
+        ...JSON_LD,
+        params: {
+          page,
+          itemsPerPage,
+          ...(active === null ? {} : { active }),
+          ...(tag ? { tag } : {})
+        }
+      })
+      .then(r => ({ member: r.data.member, totalItems: r.data.totalItems })),
+  /** @param {import('@/utils/admin/evaluation').PositionBody} body */
+  createEvaluationPosition: body =>
+    http
+      .post('/api/admin/evaluation/positions', body, JSON_LD)
+      .then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {import('@/utils/admin/evaluation').PositionBody} body
+   */
+  updateEvaluationPosition: (id, body) =>
+    http
+      .put(
+        `/api/admin/evaluation/positions/${encodeURIComponent(id)}`,
+        body,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** Deletes a position never played (409 otherwise: deactivate it). */
+  deleteEvaluationPosition: id =>
+    http
+      .delete(
+        `/api/admin/evaluation/positions/${encodeURIComponent(id)}`,
+        JSON_LD
+      )
+      .then(() => undefined),
+  /**
+   * Checks a FEN and its evaluation against Lichess, nothing saved: `{verdict, source, lichess,
+   * lichessCategory, category, nearBorder, fen, turn}`.
+   */
+  checkEvaluationPosition: (fen, evalCp) =>
+    http
+      .post('/api/admin/evaluation/verification', { fen, evalCp }, JSON_LD)
       .then(r => r.data)
 }

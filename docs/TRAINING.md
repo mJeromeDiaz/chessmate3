@@ -7,7 +7,7 @@ Une **séance** (*run*) est un temps d'entraînement fixé à l'avance (5 à 30 
 modes ([WOODPECKER.md](WOODPECKER.md)), le test des répertoires d'ouvertures
 ([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)), les puzzles
 classés (§ 5 bis), le temps libre (§ 5 ter), les séries de coordonnées
-([COORDINATES.md](COORDINATES.md)) et les puzzles à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)). Le socle est générique : un module
+([COORDINATES.md](COORDINATES.md)) les puzzles à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)) et l'évaluation de position ([EVALUATION.md](EVALUATION.md)). Le socle est générique : un module
 implémente un contrat et hérite du chronomètre, des règles de fin et du récapitulatif. Événements et
 journal : [ACTIVITY.md](ACTIVITY.md).
 
@@ -26,6 +26,7 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Module Libre | `App\Training\Free\FreeModule` |
 | Module Coordonnées | `App\Coordinates\Training\CoordinatesModule` (durée fixe : `Training\Module\FixedBudgetInterface`) |
 | Module Aveugle | `App\Blindfold\Training\PuzzleModule` (puzzles à l'aveugle) |
+| Module Évaluation | `App\Evaluation\Training\EvaluationModule` (un temps par position) |
 | API | `App\ApiResource\Training\*`, `App\State\Training\*` |
 | Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable, FreeRunPanel}.vue`, `components/puzzle/PuzzleRunDialog.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
 
@@ -201,7 +202,7 @@ Woodpecker liste ses séances (`runs`).
   clôt la séance. Pas de grâce côté client non plus.
 - `training/[id]` choisit le lecteur selon le module : `PuzzlePlayer` (Woodpecker),
   `RepertoireDrillPlayer` ([REPERTOIRE.md § 15](REPERTOIRE.md#front)), `CoordinatesPlayer`
-  ([COORDINATES.md](COORDINATES.md)) ou `BlindfoldPuzzlePlayer` ([BLINDFOLD.md](BLINDFOLD.md)) ; un lecteur qui envoie ses réponses en différé s'inscrit à
+  ([COORDINATES.md](COORDINATES.md)), `BlindfoldPuzzlePlayer` ([BLINDFOLD.md](BLINDFOLD.md)) ou `EvaluationPlayer` ([EVALUATION.md](EVALUATION.md)) ; un lecteur qui envoie ses réponses en différé s'inscrit à
   `beforeClose()` pour les envoyer avant la clôture ; `RunHeader` (compte à
   rebours, « Terminer », barre du temps écoulé) leur est commun.
 - Woodpecker : après un puzzle réussi, le suivant arrive seul (1,2 s, le temps de l'animation de

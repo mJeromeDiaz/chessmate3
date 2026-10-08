@@ -20,4 +20,9 @@ enum ExerciseType: string
     case CoordinatesSeries = 'coordinates_series';
     /** A puzzle solved from memory (docs/BLINDFOLD.md); `metadata.status`: solved, helped or failed. */
     case BlindfoldPuzzle = 'blindfold_puzzle';
+    /**
+     * A position evaluated (docs/EVALUATION.md); `metadata.status` (exact, close, miss, timeout),
+     * `metadata.planOk`, `metadata.fast`.
+     */
+    case PositionEvaluation = 'position_evaluation';
 }

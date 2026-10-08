@@ -83,7 +83,7 @@ const stats = computed(() => {
   ]
 })
 
-/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles). */
+/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles, position evaluation). */
 const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
@@ -131,6 +131,15 @@ const details = computed(() => {
     )
     if (m.averageMs)
       lines.push(`Temps moyen par puzzle : ${formatDuration(m.averageMs)}`)
+    return lines
+  }
+  if (props.run.module === 'evaluation') {
+    lines.push(
+      `Justes : ${m.exact ?? 0} · à un cran : ${m.close ?? 0} · ratées : ${m.miss ?? 0} · temps écoulé : ${m.timeout ?? 0}.`
+    )
+    if (m.planOk) lines.push(`Plans trouvés : ${m.planOk}.`)
+    if (m.averageMs)
+      lines.push(`Temps moyen par position : ${formatDuration(m.averageMs)}`)
     return lines
   }
   if (props.run.module === 'puzzles' && m.ratingBefore != null) {

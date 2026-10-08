@@ -59,6 +59,7 @@ export function buildModuleRows(sources) {
     if (id === 'puzzles') Object.assign(row, puzzles(sources))
     if (id === 'woodpecker') Object.assign(row, woodpecker(sources.sets))
     if (id === 'repertoire') Object.assign(row, repertoire(sources.repertoires))
+    if (id === 'evaluation') Object.assign(row, evaluation(sources))
     return row
   })
 }
@@ -83,6 +84,24 @@ function puzzles({ totals, puzzleRating }) {
       : 'Aucun puzzle joué',
     ratio: count ? solved / count : 0,
     ratioLabel: count ? `Réussite ${percent(solved / count)}` : ''
+  }
+}
+
+/**
+ * Positions evaluated (docs/EVALUATION.md): how many, and the share judged exactly.
+ *
+ * @param {ModuleSources} sources
+ * @returns {Partial<ModuleRow>}
+ */
+function evaluation({ totals }) {
+  const played = totals.position_evaluation
+  if (!played?.count) return { to: '/evaluation', stat: 'Aucune position jouée' }
+  const ratio = played.successCount / played.count
+  return {
+    to: '/evaluation',
+    stat: `${number.format(played.count)} positions · ${percent(ratio)} justes`,
+    ratio,
+    ratioLabel: `Justes ${percent(ratio)}`
   }
 }
 

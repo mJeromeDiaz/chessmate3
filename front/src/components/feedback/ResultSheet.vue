@@ -101,7 +101,7 @@
               :style="{
                 transform: `scale(${step >= 4 ? 1 : 0}) rotate(-12deg)`
               }"
-              >?</div
+              >{{ badge }}</div
             >
           </div>
 
@@ -232,7 +232,14 @@ const props = defineProps({
   xp: { type: [Number, null], default: undefined },
   /** @type {import('vue').PropType<SheetAction[]>} */
   actions: { type: Array, default: () => [] },
-  confetti: { type: Boolean, default: true }
+  confetti: { type: Boolean, default: true },
+  /**
+   * @type {import('vue').PropType<import('@/utils/feedback').FeedbackKind|null>} another verdict's
+   * colours on this one's shape (the evaluation's "Presque !": a miss in yellow)
+   */
+  palette: { type: String, default: null },
+  /** The badge on the king of a miss. */
+  badge: { type: String, default: '?' }
 })
 
 /** The scallops on top of a success: [left %, size px]. */
@@ -248,7 +255,7 @@ const SHAKE = { 2: -10, 3: 9, 4: -6, 5: 3 }
 const KING = { 2: -32, 3: -32, 4: 14, 5: -6 }
 
 const win = computed(() => props.kind !== 'miss')
-const theme = computed(() => FEEDBACK_THEMES[props.kind])
+const theme = computed(() => FEEDBACK_THEMES[props.palette ?? props.kind])
 const xpLabel = computed(() => xpText(props.xp))
 const shakeX = computed(() => (win.value ? 0 : (SHAKE[props.step] ?? 0)))
 const kingR = computed(() => KING[props.step] ?? 0)

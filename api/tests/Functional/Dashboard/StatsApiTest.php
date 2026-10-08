@@ -71,8 +71,8 @@ final class StatsApiTest extends WebTestCase
         $body = $this->json($response);
         self::assertSame(['2026-07-14', '2026-07-20'], [$body['from'], $body['today']]);
         self::assertSame([
-            ['start' => '2026-07-13', 'durationMs' => ['woodpecker' => 15_000, 'repertoire' => 0, 'puzzles' => 30_000, 'free' => 0, 'coordinates' => 0, 'blindfold' => 8_000]],
-            ['start' => '2026-07-20', 'durationMs' => ['woodpecker' => 0, 'repertoire' => 5_000, 'puzzles' => 0, 'free' => 600_000, 'coordinates' => 300_000, 'blindfold' => 0]],
+            ['start' => '2026-07-13', 'durationMs' => ['woodpecker' => 15_000, 'repertoire' => 0, 'puzzles' => 30_000, 'free' => 0, 'coordinates' => 0, 'blindfold' => 8_000, 'evaluation' => 0]],
+            ['start' => '2026-07-20', 'durationMs' => ['woodpecker' => 0, 'repertoire' => 5_000, 'puzzles' => 0, 'free' => 600_000, 'coordinates' => 300_000, 'blindfold' => 0, 'evaluation' => 0]],
         ], $body['weeks'], 'weeks from Monday, the first one partial');
         self::assertSame([
             'woodpecker' => ['count' => 1, 'durationMs' => 15_000],
@@ -81,6 +81,7 @@ final class StatsApiTest extends WebTestCase
             'free' => ['count' => 1, 'durationMs' => 600_000],
             'coordinates' => ['count' => 1, 'durationMs' => 300_000],
             'blindfold' => ['count' => 1, 'durationMs' => 8_000],
+            'evaluation' => ['count' => 0, 'durationMs' => 0],
         ], $body['totals'], 'rated and unrated puzzles together, Bob excluded');
 
         $body = $this->json($this->api('/api/dashboard/training', $this->createUser('new@example.com', 'UTC')));

@@ -179,6 +179,23 @@ const BLINDFOLD_LEVELS = { Facile: 'easy', Moyen: 'medium', Difficile: 'hard' }
 const BLINDFOLD_LENGTHS = { '2 coups': 2, '3 coups': 3, '4 coups et +': 4 }
 const BLINDFOLD_VISIBLE = ['5 s', '10 s', '15 s', '20 s', '30 s']
 
+/**
+ * The position evaluation (App\Evaluation\EvaluationRules, docs/EVALUATION.md): the side to move
+ * asked, and the seconds a run adds to each position's time (asking for the next one), so that the
+ * run's time never cuts the last position.
+ */
+const EVALUATION_SIDES = { Blancs: 'white', Noirs: 'black', 'Les deux': 'both' }
+export const EVALUATION_MARGIN_SECONDS = 5
+
+/**
+ * Minutes of an evaluation run: its positions, each with its time and the margin.
+ *
+ * @param {number} count
+ * @param {number} seconds
+ */
+export const evaluationMinutes = (count, seconds) =>
+  Math.ceil((count * (seconds + EVALUATION_MARGIN_SECONDS)) / 60)
+
 /** @type {Module[]} */
 export const MODULES = [
   {
@@ -298,7 +315,7 @@ export const MODULES = [
     desc: 'Juger une position en 2 minutes maximum.',
     ...byProf('aaron'),
     glyph: glyph('♟'),
-    available: false,
+    available: true,
     bg: '#FFD43B',
     ink: '#1B1530',
     soft: '#FFF5D1',
@@ -317,11 +334,11 @@ export const MODULES = [
         format: formatSeconds,
         hint: '2 minutes maximum.'
       },
-      elo(1600),
-      color(),
+      elo(1500),
+      one('couleur', 'Trait', ['Blancs', 'Noirs', 'Les deux'], 'Les deux'),
       notes()
     ],
-    duration: v => Math.ceil((v.nombre * v.chrono) / 60)
+    duration: v => evaluationMinutes(v.nombre, v.chrono)
   },
   {
     id: 'analyse',
@@ -602,7 +619,8 @@ export const API_MODULES = {
   woodpecker: 'woodpecker',
   repertoire: 'repertoire',
   coordonnees: 'coordinates',
-  aveugle: 'blindfold'
+  aveugle: 'blindfold',
+  evaluation: 'evaluation'
 }
 
 /** Free study formats: the catalogue's labels, as the API names them. */
@@ -639,9 +657,16 @@ export function toStep(item) {
       length: BLINDFOLD_LENGTHS[v.longueur] ?? 2,
       visibleSeconds: parseInt(v.memorisation, 10) || 10
     }
+  if (module === 'evaluation')
+    settings = {
+      count: v.nombre,
+      seconds: v.chrono,
+      elo: v.elo,
+      side: EVALUATION_SIDES[v.couleur] ?? 'both'
+    }
   return {
     module,
-    minutes: v.duree,
+    minutes: moduleMinutes(MODULES_BY_ID[item.moduleId], v),
     notes: String(v.notes ?? '').trim(),
     settings
   }
@@ -684,6 +709,12 @@ export function fromStep(step) {
       labelOf(BLINDFOLD_LENGTHS, settings.length) ?? values.longueur
     if (BLINDFOLD_VISIBLE.includes(`${settings.visibleSeconds} s`))
       values.memorisation = `${settings.visibleSeconds} s`
+  }
+  if (step.module === 'evaluation') {
+    if (Number.isInteger(settings.count)) values.nombre = settings.count
+    if (Number.isInteger(settings.seconds)) values.chrono = settings.seconds
+    if (Number.isInteger(settings.elo)) values.elo = settings.elo
+    values.couleur = labelOf(EVALUATION_SIDES, settings.side) ?? values.couleur
   }
   return { moduleId, values }
 }

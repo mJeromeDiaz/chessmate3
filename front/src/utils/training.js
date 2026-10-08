@@ -24,6 +24,8 @@ export function closeReasonText(run) {
     case 'subject_finished':
       if (run.module === 'coordinates')
         return 'Toutes les cases de la série sont faites !'
+      if (run.module === 'evaluation')
+        return 'Toutes les positions sont évaluées !'
       return 'Set terminé, bravo !'
     case 'subject_resting':
       return `Cycle terminé. Repos : prochain cycle le ${formatDate(run.summary?.context?.availableAt)}.`
@@ -34,6 +36,8 @@ export function closeReasonText(run) {
         return 'Plus aucun puzzle disponible pour ces thèmes : séance close.'
       if (run.module === 'blindfold')
         return 'Plus aucun puzzle à l’aveugle à ce niveau et de cette longueur : séance close.'
+      if (run.module === 'evaluation')
+        return 'Plus aucune position pour ces réglages : séance close.'
       return 'Le set a été mis en pause ou abandonné : séance close.'
     default:
       return ''
@@ -53,6 +57,7 @@ export function subjectPath(run) {
   if (run.subjectType === 'puzzle_player') return '/puzzle'
   if (run.subjectType === 'coordinates_player') return '/coordinates'
   if (run.subjectType === 'blindfold_player') return '/blindfold'
+  if (run.subjectType === 'evaluation_player') return '/evaluation'
   return '/'
 }
 
@@ -74,6 +79,8 @@ export function backLabel(run) {
       return 'Retour aux coordonnées'
     case 'blindfold':
       return 'Retour au jeu à l’aveugle'
+    case 'evaluation':
+      return 'Retour à l’évaluation'
     default:
       return 'Retour à l’accueil'
   }

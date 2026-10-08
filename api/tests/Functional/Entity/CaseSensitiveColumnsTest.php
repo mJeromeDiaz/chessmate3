@@ -72,6 +72,7 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['training_calendar_feed', 'encrypted_token'],
             ['early_access_invitation_key', 'key_hash'],
             ['early_access_invitation_key', 'key_hint'],
+            ['evaluation_position', 'fen'],
         ] as [$table, $column]) {
             yield "$table.$column" => [$table, $column];
         }

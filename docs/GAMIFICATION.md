@@ -50,6 +50,7 @@ S2 rappel, S3 front, S4 documentation.
 | Temps libre | 1 par minute, 60 au plus par séance | — |
 | Série de coordonnées ([COORDINATES.md](COORDINATES.md)) | 20 par série d'au moins 10 réponses, validante ou non | — |
 | Puzzle à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)) | 12 (6 après un coup d'œil, `metadata.status` = `helped`) | 2 |
+| Évaluation de position ([EVALUATION.md](EVALUATION.md)) | 15 (6 à un cran) ; +5 bon plan, +3 exact en moins de la moitié du temps | 1 |
 
 - **Plafond** : 500 XP d'exercices par jour local (fuseau de l'utilisateur). Un exercice gagne ce qui
   reste du plafond de son jour (deux événements traités au même instant peuvent le dépasser

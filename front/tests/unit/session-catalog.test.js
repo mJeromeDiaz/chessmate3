@@ -25,6 +25,7 @@ describe('session catalogue', () => {
       'puzzles',
       'woodpecker',
       'repertoire',
+      'evaluation',
       'coordonnees',
       'aveugle'
     ])
@@ -44,9 +45,17 @@ describe('session catalogue', () => {
       'memorisation',
       'notes'
     ])
+    // The evaluation's length follows from its positions: no duration field.
+    expect(keys('evaluation')).toEqual([
+      'nombre',
+      'chrono',
+      'elo',
+      'couleur',
+      'notes'
+    ])
     expect(MODULES_BY_ID.libre.fields[1].options).toContain('Autre')
     for (const m of MODULES.filter(m => m.available)) {
-      if (m.fields[0].type === 'slider')
+      if (m.fields[0].key === 'duree' && m.fields[0].type === 'slider')
         expect(m.fields[0].max).toBe(MAX_RUN_MINUTES)
     }
   })
@@ -85,9 +94,10 @@ describe('session catalogue', () => {
 
   it('computes durations, the evaluation one from its positions', () => {
     const evaluation = MODULES_BY_ID.evaluation
-    // 6 positions × 120 s.
-    expect(moduleMinutes(evaluation, defaultValues(evaluation))).toBe(12)
-    expect(moduleMinutes(evaluation, { nombre: 5, chrono: 45 })).toBe(4)
+    // 6 positions × (120 s + 5 s of margin) = 12.5 min, rounded up.
+    expect(moduleMinutes(evaluation, defaultValues(evaluation))).toBe(13)
+    // 5 × (45 + 5) s = 4 min 10 s.
+    expect(moduleMinutes(evaluation, { nombre: 5, chrono: 45 })).toBe(5)
     expect(
       sessionMinutes([
         { uid: 1, moduleId: 'puzzles', values: { duree: 20 } },

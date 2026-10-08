@@ -25,6 +25,14 @@ framework:
                 headers:
                     Accept: 'application/json'
                     User-Agent: '%app.lichess.user_agent%'
+            # Lichess endgame tablebase (no token): checking the hand-written positions to evaluate
+            # (App\Evaluation\Verification, docs/EVALUATION.md).
+            lichess_tablebase.client:
+                base_uri: 'https://tablebase.lichess.ovh'
+                timeout: 5
+                headers:
+                    Accept: 'application/json'
+                    User-Agent: '%app.lichess.user_agent%'
 
     # Expected third-party outages: warning, not the critical level of a 5xx.
     exceptions:

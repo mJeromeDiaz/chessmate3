@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <div
-      v-if="runner.phase.value === 'ended' && runner.run.value"
+      v-if="runner.phase.value === 'ended' && runner.run.value && !holdEnd"
       class="training-page"
     >
       <RunRecap :run="runner.run.value">
@@ -131,6 +131,33 @@
       </template>
     </BlindfoldPuzzlePlayer>
 
+    <EvaluationPlayer
+      v-else-if="evalItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="evalPlayer"
+      :item="evalItem"
+      :result="evalResult"
+      :xp="runner.xp.value"
+      :offset-ms="runner.offsetMs.value"
+      :actions="evaluationActions"
+      @resolve="onEvaluationResolve"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">
+            Position {{ evalItem.data.index }} / {{ evalItem.data.count }} ·
+            {{ runner.solved.value }} juste{{ runner.solved.value > 1 ? 's' : '' }}
+          </div>
+        </RunHeader>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </EvaluationPlayer>
+
     <FreeRunPanel
       v-else-if="
         runner.phase.value === 'running' &&
@@ -204,13 +231,15 @@
  * A timed run (docs/TRAINING.md): countdown on the server's clock, items one after the other,
  * recap at the end. Reloading or coming back before the end resumes the same run and item. The
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
- * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series or blindfold puzzles (docs/BLINDFOLD.md).
+ * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series, blindfold puzzles (docs/BLINDFOLD.md) or
+ * positions to evaluate (docs/EVALUATION.md).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.vue'
 import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
+import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
@@ -248,7 +277,8 @@ const STOP_MESSAGES = {
   free: 'Le temps passé jusqu’ici sera compté.',
   coordinates:
     'Tes réponses seront comptées, mais une série arrêtée avant la fin ne valide pas.',
-  blindfold: 'Le puzzle en cours ne sera pas compté.'
+  blindfold: 'Le puzzle en cours ne sera pas compté.',
+  evaluation: 'La position à l’écran ne sera pas comptée.'
 }
 const route = useRoute()
 const $q = useQuasar()
@@ -292,6 +322,60 @@ const blindfoldActions = computed(() => [
 ])
 
 const isRepertoire = computed(() => runner.run.value?.module === 'repertoire')
+
+/**
+ * The position being evaluated, kept once the run closed on the last one: its correction stays on
+ * screen (`holdEnd`) until "Voir le bilan".
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const evalItem = ref(null)
+const holdEnd = ref(false)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const evalPlayer = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'evaluation_position') evalItem.value = item
+    else if (item) evalItem.value = null
+  }
+)
+/** The verdict and correction of the position on screen. */
+const evalResult = computed(() =>
+  evalItem.value && runner.result.value?.itemId === evalItem.value.id
+    ? runner.result.value.data
+    : null
+)
+const evaluationActions = computed(() => [
+  {
+    label:
+      runner.phase.value === 'running' ? 'Position suivante →' : 'Voir le bilan',
+    primary: true,
+    disable: loading.value,
+    testid: 'run-next',
+    onClick: async () => {
+      holdEnd.value = false
+      if (runner.phase.value === 'running') await next()
+    }
+  }
+])
+
+/** @param {{guess: number|null, plan: string|null}} answer */
+async function onEvaluationResolve(answer) {
+  // Held before the answer leaves: the last one closes the run, and the player must not be
+  // unmounted (its sheet lost, the review opened) before the correction is shown.
+  holdEnd.value = true
+  try {
+    const result = await runner.submit({ evaluation: answer })
+    if (result) return
+    holdEnd.value = false
+    evalPlayer.value?.unlock()
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    evalPlayer.value?.unlock()
+  }
+}
 
 /**
  * @param {string} _outcome
@@ -359,6 +443,26 @@ const nextStep = computed(() => {
 
 /** The end-of-run review dialog: opens when the run is over (also on a run reopened once over). */
 const endOpen = ref(false)
+/** The review waits for the last correction to be left (`holdEnd`). */
+let endWaiting = false
+
+function openEnd() {
+  if (holdEnd.value) {
+    endWaiting = true
+    return
+  }
+  // The day's first exercise may have been in this run: its streak celebration comes first.
+  gamification
+    .celebrateStreak({ afterExercise: false })
+    .then(() => (endOpen.value = true))
+}
+
+watch(holdEnd, held => {
+  if (!held && endWaiting) {
+    endWaiting = false
+    openEnd()
+  }
+})
 /** Runs seen running on this page: their end is celebrated. */
 const seenRunning = reactive(new Set())
 
@@ -370,10 +474,7 @@ watch(
     if (phase === 'running' && runner.run.value)
       seenRunning.add(runner.run.value.id)
     if (phase !== 'ended') return
-    // The day's first exercise may have been in this run: its streak celebration comes first.
-    gamification
-      .celebrateStreak({ afterExercise: false })
-      .then(() => (endOpen.value = true))
+    openEnd()
     if (store.current?.id === runner.run.value?.id) store.current = null
     const parentId = runner.run.value?.parentId
     if (parentId) {
@@ -395,6 +496,8 @@ watch(
     error.value = ''
     session.value = null
     endOpen.value = false
+    holdEnd.value = false
+    evalItem.value = null
     try {
       await runner.resume(String(id))
     } catch (e) {

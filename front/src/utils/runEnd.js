@@ -108,6 +108,7 @@ export function moduleProf(module, mood) {
 function itemWord(count, module, unit) {
   if (module === 'repertoire') return unitWord(unit ?? 'segment', count)
   if (module === 'coordinates') return `${count} case${count > 1 ? 's' : ''}`
+  if (module === 'evaluation') return `${count} position${count > 1 ? 's' : ''}`
   return `${count} puzzle${count > 1 ? 's' : ''}`
 }
 
@@ -149,6 +150,8 @@ export function itemTitle(item, themeLabel) {
     const opening = label.opening?.name ?? item.data.repertoireName ?? ''
     return label.move ? `${opening} · ${label.move}` : opening
   }
+  if (item.type === 'evaluation_position')
+    return `${item.data.position?.tagLabel ?? 'Position'} · moteur ${item.data.engine ?? ''}`
   const theme = item.data.puzzle?.themes?.[0]
   return theme ? themeLabel(theme) : 'Puzzle'
 }
@@ -177,7 +180,10 @@ export function missedItems(items, themeLabel) {
       title: itemTitle(item, themeLabel),
       meta: `${STATUS[item.status].label} · ${formatDuration(item.durationMs)}`,
       color: STATUS[item.status].color,
-      replayable: item.type !== 'repertoire_unit' || !!item.data.startFen
+      // A position to evaluate has no line to replay.
+      replayable:
+        item.type !== 'evaluation_position' &&
+        (item.type !== 'repertoire_unit' || !!item.data.startFen)
     }))
 }
 

@@ -12,7 +12,8 @@ describe('NAV_LINKS', () => {
       'Woodpecker',
       'Répertoires',
       'Coordonnées',
-      'Aveugle'
+      'Aveugle',
+      'Évaluation'
     ])
     expect(NAV_LINKS.filter(l => l.header).map(l => l.to)).toEqual([
       '/session',
@@ -20,7 +21,8 @@ describe('NAV_LINKS', () => {
       '/woodpecker',
       '/repertoire',
       '/coordinates',
-      '/blindfold'
+      '/blindfold',
+      '/evaluation'
     ])
   })
 })
