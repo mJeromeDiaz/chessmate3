@@ -16,7 +16,11 @@
       module="woodpecker"
       :xp="store.result ? store.result.xp : undefined"
       :actions="actions"
+      skippable
+      replaceable
       @resolve="onResolve"
+      @skip="onSkip"
+      @replace="onReplace"
     >
       <template #header>
         <div class="row items-center q-gutter-sm">
@@ -47,7 +51,7 @@
       </template>
 
       <template #chips>
-        <span class="play-chip"
+        <span class="play-chip lt-md"
           >Un seul essai<q-tooltip
             >En cas d’erreur, la solution s’affiche.</q-tooltip
           ></span
@@ -95,6 +99,7 @@ import CycleRecap from '@/components/woodpecker/CycleRecap.vue'
 import { useGamificationStore } from '@/stores/gamification'
 import { useTrainingStore } from '@/stores/training'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
+import { woodpeckerApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
 import { pace } from '@/utils/woodpeckerPace'
@@ -111,6 +116,8 @@ const loading = ref(false)
 const error = ref('')
 /** Why no puzzle can be played now (paused, resting, finished), or ''. */
 const blocked = ref('')
+/** The submission in flight: "Passer" waits for it before asking for the next puzzle. */
+let submitting = Promise.resolve()
 
 /**
  * The result sheet's button, once the submission answered (or failed); the day's first puzzle
@@ -146,12 +153,49 @@ const paceInfo = computed(() =>
  * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
  */
 function onResolve(_outcome, report) {
-  store.submit(report).catch(e => {
-    error.value = apiErrorMessage(e, {
-      409: 'Ce cycle est terminé ou perdu : rechargez le set.',
-      404: 'Ce puzzle est introuvable.'
+  submitting = store
+    .submit(report)
+    .then(() => {})
+    .catch(e => {
+      error.value = apiErrorMessage(e, {
+        409: 'Ce cycle est terminé ou perdu : rechargez le set.',
+        404: 'Ce puzzle est introuvable.'
+      })
     })
-  })
+}
+
+/** "Passer" confirmed: failed for this cycle; once recorded, straight to the next puzzle. */
+async function onSkip() {
+  loading.value = true
+  await submitting
+  if (error.value) {
+    loading.value = false
+    return
+  }
+  await gamification.celebrateStreak({ afterExercise: !!store.result })
+  // The skip may have ended the cycle: its recap stays above the next screen.
+  const recap = store.recap
+  await next()
+  if (recap) store.recap = recap
+}
+
+/** "Remplacer" confirmed: another puzzle takes its place in the set, served at once. */
+async function onReplace() {
+  const current = store.attempt
+  if (!current) return
+  loading.value = true
+  error.value = ''
+  try {
+    await woodpeckerApi.replacePuzzle(id.value, current.puzzle.id)
+  } catch (e) {
+    error.value = apiErrorMessage(e, {
+      409: 'Ce set est terminé : son contenu ne change plus.',
+      422: 'Plus aucun autre puzzle ne correspond à ce set.'
+    })
+    loading.value = false
+    return
+  }
+  await next()
 }
 
 async function next() {

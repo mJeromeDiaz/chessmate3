@@ -1,184 +1,133 @@
 <template>
   <q-page padding>
-    <div v-if="set" class="woodpecker-page q-gutter-y-md">
-      <div class="row items-center q-gutter-sm">
-        <q-btn flat dense icon="arrow_back" to="/woodpecker" />
-        <div class="text-h5">{{ set.name }}</div>
-        <q-badge outline color="primary">{{
+    <div v-if="set" class="woodpecker-page">
+      <div class="woodpecker-page__head">
+        <q-btn flat round dense icon="arrow_back" to="/woodpecker" />
+        <div class="woodpecker-page__name cm-heading">{{ set.name }}</div>
+        <span class="woodpecker-page__mode">{{
           light ? 'Light' : 'Classique'
-        }}</q-badge>
-        <q-badge :color="set.status === 'active' ? 'primary' : 'grey'">{{
-          STATUS_LABEL[set.status]
-        }}</q-badge>
+        }}</span>
         <q-space />
         <q-btn
-          v-if="!light && set.status === 'active'"
-          color="primary"
-          no-caps
-          icon="play_arrow"
-          label="Jouer sans chrono"
-          :to="`/woodpecker/${set.id}/play`"
-        />
-        <q-btn
-          v-if="set.status === 'active'"
+          v-if="menu.length"
           flat
-          no-caps
-          icon="pause"
-          label="Pause"
-          @click="act('pause')"
-        />
-        <q-btn
-          v-if="set.status === 'paused'"
-          color="primary"
-          no-caps
-          icon="play_arrow"
-          label="Reprendre"
-          @click="act('resume')"
-        />
-        <q-btn
-          v-if="set.status === 'active' || set.status === 'paused'"
-          flat
-          no-caps
-          color="negative"
-          label="Abandonner"
-          @click="confirmAbandon"
-        />
-        <q-btn
-          v-if="
-            !set.archived &&
-            (set.status === 'completed' || set.status === 'abandoned')
-          "
-          flat
-          no-caps
-          icon="archive"
-          label="Archiver"
-          @click="act('archive')"
-        />
+          round
+          icon="more_vert"
+          aria-label="Actions du set"
+          data-testid="set-menu"
+        >
+          <q-menu auto-close>
+            <q-list style="min-width: 200px">
+              <q-item
+                v-for="item in menu"
+                :key="item.action"
+                clickable
+                :class="{ 'text-negative': item.danger }"
+                :data-testid="`set-${item.action}`"
+                @click="item.onClick"
+              >
+                <q-item-section avatar>
+                  <q-icon :name="item.icon" />
+                </q-item-section>
+                <q-item-section>{{ item.label }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </div>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
         error
       }}</q-banner>
 
-      <q-banner
-        v-if="runHere"
-        rounded
-        class="cm-banner--info"
-        data-testid="run-in-progress"
+      <CurrentCycleCard
+        :set="set"
+        :run-here="runHere"
+        @resume="act('resume')"
+      />
+
+      <CycleExplainer :set="set" />
+
+      <section
+        v-if="!light && set.cycles.length"
+        class="woodpecker-page__section"
       >
-        Une séance chronométrée est en cours sur ce set.
-        <template #action>
-          <q-btn
-            flat
-            no-caps
-            label="Reprendre la séance"
-            :to="`/training/${runHere.id}`"
-          />
-        </template>
-      </q-banner>
+        <h2 class="woodpecker-page__title">Cycles</h2>
+        <CycleTable
+          :cycles="set.cycles"
+          :puzzle-count="set.puzzleCount"
+          :time-zone="set.timezone"
+        />
+      </section>
 
-      <div v-else-if="launchable">
-        <div class="text-h6">Séance chronométrée</div>
-        <p class="text-caption text-grey">{{
-          light
-            ? 'Chaque séance repart du premier puzzle. Le set grandit quand vous en venez à bout.'
-            : 'La séance fait avancer le cycle en cours, échéance comprise.'
-        }}</p>
-        <RunLauncher module="woodpecker" :subject-id="set.id" />
-      </div>
+      <section v-if="light || set.runs.length" class="woodpecker-page__section">
+        <h2 class="woodpecker-page__title">Séances chronométrées</h2>
+        <RunTable :runs="set.runs" />
+      </section>
 
-      <template v-if="light">
-        <div class="text-body1" data-testid="light-size"
-          >{{ set.puzzleCount }} puzzles dans le set.</div
+      <section v-if="light" class="woodpecker-page__section">
+        <h2 class="woodpecker-page__title">Croissance du set</h2>
+        <div
+          v-if="set.growths.length"
+          class="woodpecker-page__rows"
+          data-testid="growth-list"
         >
-        <div>
-          <div class="text-h6">Séances</div>
-          <RunTable :runs="set.runs" />
-        </div>
-        <div>
-          <div class="text-h6">Croissance du set</div>
-          <q-list
-            v-if="set.growths.length"
-            bordered
-            separator
-            dense
-            data-testid="growth-list"
+          <div
+            v-for="g in [...set.growths].reverse()"
+            :key="g.occurredAt + g.puzzleCount"
+            class="woodpecker-page__row"
           >
-            <q-item
-              v-for="g in [...set.growths].reverse()"
-              :key="g.occurredAt + g.puzzleCount"
+            <div class="woodpecker-page__row-main"
+              >+{{ g.added }} puzzles → {{ g.puzzleCount }}</div
             >
-              <q-item-section>
-                <q-item-label
-                  >+{{ g.added }} puzzles → {{ g.puzzleCount }}</q-item-label
-                >
-                <q-item-label caption>{{
-                  formatDate(g.occurredAt)
-                }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-          <div v-else class="text-grey"
-            >Pas encore : le set grandit quand une séance en vient à bout.</div
-          >
+            <div class="woodpecker-page__row-side">{{
+              formatDate(g.occurredAt)
+            }}</div>
+          </div>
         </div>
-      </template>
-
-      <template v-else>
-        <div v-if="set.current" class="text-body1">
-          Cycle {{ set.current.number }} / {{ set.cycleCount
-          }}<span v-if="set.current.run > 1">
-            (essai {{ set.current.run }})</span
-          >
-          : {{ set.current.played }} / {{ set.puzzleCount }}.
-          <span v-if="set.current.status === 'resting'"
-            >Repos jusqu’au {{ formatDate(set.current.availableAt) }}.</span
-          >
-          <span v-else>{{ paceText }}</span>
-        </div>
-        <div class="text-caption text-grey">
-          Échéances en fin de journée, fuseau {{ set.timezone }}. Un cycle non
-          terminé à temps est perdu et recommence.
-        </div>
-        <CycleTable :cycles="set.cycles" :puzzle-count="set.puzzleCount" />
-        <div v-if="set.runs.length">
-          <div class="text-h6">Séances chronométrées</div>
-          <RunTable :runs="set.runs" />
-        </div>
-      </template>
-
-      <div>
-        <div class="text-h6">Puzzles récalcitrants</div>
-        <p class="text-caption text-grey"
-          >Échoués dans au moins deux {{ light ? 'séances' : 'cycles' }}.
-          Rejouables librement (non comptés).</p
+        <div v-else class="woodpecker-page__empty"
+          >Pas encore : le set grandit quand une séance en vient à bout.</div
         >
-        <q-list v-if="stubborn.length" bordered separator dense>
-          <q-item v-for="p in stubborn" :key="p.puzzleId">
-            <q-item-section>
-              <q-item-label
-                >Puzzle {{ p.puzzleId }} ({{ p.rating }})</q-item-label
+      </section>
+
+      <SetPuzzleList
+        :set-id="set.id"
+        :count="set.puzzleCount"
+        :editable="set.status === 'active' || set.status === 'paused'"
+      />
+
+      <section class="woodpecker-page__section">
+        <h2 class="woodpecker-page__title">Puzzles récalcitrants</h2>
+        <div class="woodpecker-page__hint"
+          >Échoués dans au moins deux {{ light ? 'séances' : 'cycles' }}.
+          Rejouables librement (non comptés).</div
+        >
+        <div v-if="stubborn.length" class="woodpecker-page__rows">
+          <div
+            v-for="p in stubborn"
+            :key="p.puzzleId"
+            class="woodpecker-page__row"
+          >
+            <div class="woodpecker-page__row-main">
+              <div
+                >Puzzle {{ p.rating }} · raté dans {{ p.failedCycles }}
+                {{ light ? 'séances' : 'cycles' }}</div
               >
-              <q-item-label caption
-                >Échoué dans {{ p.failedCycles }}
-                {{ light ? 'séances' : 'cycles' }} ·
-                {{ p.themes.map(puzzles.themeLabel).join(', ') }}</q-item-label
-              >
-            </q-item-section>
-            <q-item-section side>
-              <q-btn
-                flat
-                dense
-                no-caps
-                icon="replay"
-                label="Rejouer"
-                :to="{ path: '/puzzle', query: { replay: p.puzzleId } }"
-              />
-            </q-item-section>
-          </q-item>
-        </q-list>
-        <div v-else class="text-grey">Aucun pour l’instant.</div>
-      </div>
+              <div class="woodpecker-page__row-sub">{{
+                p.themes.slice(0, 4).map(puzzles.themeLabel).join(' · ')
+              }}</div>
+            </div>
+            <q-btn
+              flat
+              no-caps
+              icon="replay"
+              label="Rejouer"
+              :to="{ path: '/puzzle', query: { replay: p.puzzleId } }"
+            />
+          </div>
+        </div>
+        <div v-else class="woodpecker-page__empty">Aucun pour l’instant.</div>
+      </section>
     </div>
     <div v-else-if="error" class="text-negative">{{ error }}</div>
   </q-page>
@@ -188,25 +137,19 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-import CycleTable from '@/components/woodpecker/CycleTable.vue'
-import RunLauncher from '@/components/training/RunLauncher.vue'
 import RunTable from '@/components/training/RunTable.vue'
+import CurrentCycleCard from '@/components/woodpecker/CurrentCycleCard.vue'
+import CycleExplainer from '@/components/woodpecker/CycleExplainer.vue'
+import CycleTable from '@/components/woodpecker/CycleTable.vue'
+import SetPuzzleList from '@/components/woodpecker/SetPuzzleList.vue'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useTrainingStore } from '@/stores/training'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
 import { woodpeckerApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
-import { pace } from '@/utils/woodpeckerPace'
 
 definePage({ meta: { auth: 'required' } })
-
-const STATUS_LABEL = {
-  active: 'En cours',
-  paused: 'En pause',
-  completed: 'Terminé',
-  abandoned: 'Abandonné'
-}
 
 const route = useRoute()
 const $q = useQuasar()
@@ -224,22 +167,40 @@ const runHere = computed(() =>
   training.current?.subjectId === id.value ? training.current : null
 )
 
-/** A run can start: active set, and (classic) not resting. */
-const launchable = computed(
-  () =>
-    set.value?.status === 'active' &&
-    (light.value || set.value.current?.status !== 'resting')
-)
-
-const paceText = computed(() =>
-  set.value?.current && set.value.current.deadlineAt
-    ? pace({
-        remaining: set.value.puzzleCount - set.value.current.played,
-        deadlineAt: set.value.current.deadlineAt,
-        timeZone: set.value.timezone
-      }).text
-    : ''
-)
+/** The ⋮ menu: what the set's status allows. */
+const menu = computed(() => {
+  const s = set.value
+  if (!s) return []
+  const ongoing = s.status === 'active' || s.status === 'paused'
+  return [
+    s.status === 'active' && {
+      action: 'pause',
+      label: 'Mettre en pause',
+      icon: 'pause',
+      onClick: () => act('pause')
+    },
+    s.status === 'paused' && {
+      action: 'resume',
+      label: 'Reprendre',
+      icon: 'play_arrow',
+      onClick: () => act('resume')
+    },
+    ongoing && {
+      action: 'abandon',
+      label: 'Abandonner',
+      icon: 'flag',
+      danger: true,
+      onClick: confirmAbandon
+    },
+    !ongoing &&
+      !s.archived && {
+        action: 'archive',
+        label: 'Archiver',
+        icon: 'archive',
+        onClick: () => act('archive')
+      }
+  ].filter(Boolean)
+})
 
 /** @param {'pause'|'resume'|'abandon'|'archive'} action */
 async function act(action) {
@@ -274,9 +235,108 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .woodpecker-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   max-width: 1000px;
   margin: 0 auto;
+}
+
+.woodpecker-page__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.woodpecker-page__name {
+  font-size: 24px;
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.woodpecker-page__mode {
+  flex: none;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--cm-subtle);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.woodpecker-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.woodpecker-page__title {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.woodpecker-page__hint,
+.woodpecker-page__empty {
+  font-size: 15px;
+  color: var(--cm-muted);
+}
+
+.woodpecker-page__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.woodpecker-page__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-line);
+  font-size: 16px;
+}
+
+.woodpecker-page__row-main {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.woodpecker-page__row-sub {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--cm-muted);
+}
+
+.woodpecker-page__row-side {
+  font-size: 14px;
+  color: var(--cm-muted);
+}
+
+@media (min-width: 1024px) {
+  .woodpecker-page {
+    gap: 24px;
+  }
+
+  .woodpecker-page__name {
+    font-size: 30px;
+  }
+
+  .woodpecker-page__title {
+    font-size: 22px;
+  }
+
+  .woodpecker-page__row {
+    font-size: 17px;
+    padding: 14px 20px;
+  }
 }
 </style>

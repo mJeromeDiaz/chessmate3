@@ -1,50 +1,65 @@
 <template>
-  <q-markup-table flat bordered dense data-testid="run-table">
-    <thead>
-      <tr>
-        <th class="text-left">Séance</th>
-        <th class="text-right">Durée</th>
-        <th class="text-right">Terminés</th>
-        <th class="text-right">Réussis</th>
-        <th class="text-right">Précision</th>
-        <th class="text-right">Par minute</th>
-        <th class="text-right">Évolution</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="row in rows" :key="row.id">
-        <td>{{ formatDate(row.startedAt) }}</td>
-        <td class="text-right">{{
-          formatDuration(row.summary?.durationMs)
-        }}</td>
-        <td class="text-right">{{ row.summary?.itemCount ?? '—' }}</td>
-        <td class="text-right">{{ row.summary?.successCount ?? '—' }}</td>
-        <td class="text-right">{{
-          formatPercent(row.summary?.successRate)
-        }}</td>
-        <td class="text-right">{{ perMinute(row.summary?.itemsPerMinute) }}</td>
-        <td
-          class="text-right"
-          :class="
-            row.trend > 0
-              ? 'text-positive'
-              : row.trend < 0
-                ? 'text-negative'
-                : ''
-          "
-        >
-          {{
-            row.trend === null
-              ? '—'
-              : `${row.trend > 0 ? '+' : ''}${perMinute(row.trend)}`
-          }}
-        </td>
-      </tr>
-      <tr v-if="rows.length === 0">
-        <td colspan="7" class="text-grey">Aucune séance pour l’instant.</td>
-      </tr>
-    </tbody>
-  </q-markup-table>
+  <div class="run-list" data-testid="run-table">
+    <div
+      v-for="row in rows"
+      :key="row.id"
+      class="run-row"
+      data-testid="run-row"
+    >
+      <div class="run-row__date">{{ formatDate(row.startedAt) }}</div>
+      <div class="run-row__stats">
+        <div>
+          <div class="run-row__value">{{
+            formatDuration(row.summary?.durationMs)
+          }}</div>
+          <div class="run-row__label">durée</div>
+        </div>
+        <div>
+          <div class="run-row__value">{{ row.summary?.itemCount ?? '—' }}</div>
+          <div class="run-row__label">terminés</div>
+        </div>
+        <div>
+          <div class="run-row__value">{{
+            row.summary?.successCount ?? '—'
+          }}</div>
+          <div class="run-row__label">réussis</div>
+        </div>
+        <div>
+          <div class="run-row__value">{{
+            formatPercent(row.summary?.successRate)
+          }}</div>
+          <div class="run-row__label">précision</div>
+        </div>
+        <div>
+          <div class="run-row__value">{{
+            perMinute(row.summary?.itemsPerMinute)
+          }}</div>
+          <div class="run-row__label">par minute</div>
+        </div>
+        <div>
+          <div
+            class="run-row__value"
+            :class="
+              row.trend > 0
+                ? 'text-positive'
+                : row.trend < 0
+                  ? 'text-negative'
+                  : ''
+            "
+            >{{
+              row.trend === null
+                ? '—'
+                : `${row.trend > 0 ? '+' : ''}${perMinute(row.trend)}`
+            }}</div
+          >
+          <div class="run-row__label">évolution</div>
+        </div>
+      </div>
+    </div>
+    <div v-if="rows.length === 0" class="run-list__empty"
+      >Aucune séance pour l’instant.</div
+    >
+  </div>
 </template>
 
 <script setup>
@@ -70,3 +85,74 @@ function perMinute(value) {
     : value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
 }
 </script>
+
+<style scoped lang="scss">
+.run-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.run-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-line);
+}
+
+.run-row__date {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.run-row__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.run-row__value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-row__label {
+  font-size: 13px;
+  color: var(--cm-muted);
+}
+
+.run-list__empty {
+  font-size: 15px;
+  color: var(--cm-muted);
+}
+
+@media (min-width: 1024px) {
+  .run-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 22px;
+  }
+
+  .run-row__date {
+    flex: 0 0 170px;
+    font-size: 17px;
+  }
+
+  .run-row__stats {
+    flex: 1;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .run-row__value {
+    font-size: 18px;
+  }
+
+  .run-row__label {
+    font-size: 14px;
+  }
+}
+</style>

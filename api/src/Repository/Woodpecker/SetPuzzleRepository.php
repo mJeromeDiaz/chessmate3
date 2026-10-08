@@ -56,6 +56,59 @@ class SetPuzzleRepository extends ServiceEntityRepository
     }
 
     /**
+     * The position of a puzzle in the set's list, or null when it is not in it.
+     */
+    public function findPositionOf(Set $set, int $puzzleId): ?int
+    {
+        $position = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT position FROM woodpecker_set_puzzle WHERE set_id = :set AND puzzle_id = :puzzle',
+            ['set' => $set->getId()->toBinary(), 'puzzle' => $puzzleId],
+        );
+
+        return is_numeric($position) ? (int) $position : null;
+    }
+
+    /**
+     * Puts another puzzle at a position of the set's list (raw SQL: a SetPuzzle already loaded in
+     * this process keeps the old id, clear the entity manager before reading it again).
+     */
+    public function replaceAt(Set $set, int $position, int $puzzleId): void
+    {
+        $this->getEntityManager()->getConnection()->executeStatement(
+            'UPDATE woodpecker_set_puzzle SET puzzle_id = :puzzle WHERE set_id = :set AND position = :position',
+            ['puzzle' => $puzzleId, 'set' => $set->getId()->toBinary(), 'position' => $position],
+        );
+    }
+
+    /**
+     * The set's list in its order, with how often each puzzle was played and failed (every cycle
+     * run of the set, lost ones included).
+     *
+     * @return list<array{position: int, puzzleId: int, played: int, failed: int}>
+     */
+    public function findListWithStats(Set $set): array
+    {
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
+            "SELECT sp.position, sp.puzzle_id,
+                    COUNT(a.id) AS played, COALESCE(SUM(a.status = 'failed'), 0) AS failed
+             FROM woodpecker_set_puzzle sp
+             LEFT JOIN woodpecker_cycle c ON c.set_id = sp.set_id
+             LEFT JOIN woodpecker_attempt a ON a.cycle_id = c.id AND a.puzzle_id = sp.puzzle_id AND a.status != 'pending'
+             WHERE sp.set_id = :set
+             GROUP BY sp.position, sp.puzzle_id
+             ORDER BY sp.position",
+            ['set' => $set->getId()->toBinary()],
+        );
+
+        return array_map(static fn (array $row): array => [
+            'position' => self::int($row['position']),
+            'puzzleId' => self::int($row['puzzle_id']),
+            'played' => self::int($row['played']),
+            'failed' => self::int($row['failed']),
+        ], $rows);
+    }
+
+    /**
      * @return list<int> the set's puzzle ids
      */
     public function findPuzzleIds(Set $set): array
@@ -134,5 +187,10 @@ class SetPuzzleRepository extends ServiceEntityRepository
              WHERE sp.puzzle_id = :puzzle AND s.user_id = :user LIMIT 1',
             ['puzzle' => $puzzle->getId(), 'user' => $user->getId()->toBinary()],
         );
+    }
+
+    private static function int(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 }

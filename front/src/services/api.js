@@ -314,7 +314,26 @@ export const woodpeckerApi = {
         `/api/woodpecker/sets/${encodeURIComponent(setId)}/stubborn`,
         JSON_LD
       )
-      .then(r => r.data.member)
+      .then(r => r.data.member),
+  /** The set's list in its order, with each puzzle's played and failed counts. */
+  puzzles: setId =>
+    http
+      .get(`/api/woodpecker/sets/${encodeURIComponent(setId)}/puzzles`, JSON_LD)
+      .then(r => r.data.member),
+  /**
+   * Swaps a puzzle of the set for another one of the same profile, at the same position.
+   *
+   * @param {string} setId
+   * @param {string} puzzleId Lichess id
+   */
+  replacePuzzle: (setId, puzzleId) =>
+    http
+      .post(
+        `/api/woodpecker/sets/${encodeURIComponent(setId)}/puzzles/${encodeURIComponent(puzzleId)}/replace`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data)
 }
 
 /** Timed runs of any module (docs/TRAINING.md). */

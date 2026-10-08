@@ -224,6 +224,25 @@ pas de Woodpecker. Deux sondes indexées par sélection : le set en cours via `a
 
 Transition interdite ⇒ 409.
 
+### Remplacer un puzzle
+
+Le joueur façonne son set à tout moment tant qu'il est en cours (actif ou en pause, au repos
+compris), depuis le jeu (libre ou en séance) ou depuis la liste des puzzles du set
+(`Woodpecker\Set\PuzzleReplacer`) :
+
+- un nouveau puzzle du même profil (fourchette de classement, thèmes ; `SetGenerator::extend`, hors
+  puzzles du set et hors l'ancien) prend **la même position** : la taille du set et l'ordre des
+  cycles ne bougent pas (classique : la position jouée à l'index *i* reste la même) ;
+- une tentative **en attente** sur l'ancien puzzle (cycle ouvert, jeu libre ou séance) est
+  supprimée : la requête suivante sert le nouveau puzzle à sa place, sans échec compté ;
+- déjà joué dans le cycle en cours : le résultat reste, le nouveau puzzle arrive au cycle suivant
+  (classique). En light, la manche en cours le sert encore (il n'y a pas encore été vu) ;
+- les essais passés sur l'ancien puzzle restent dans l'historique et les statistiques ; il sort de
+  la liste des récalcitrants (qui ne garde que les puzzles du set) ;
+- écrit en SQL brut (`SetPuzzleRepository::replaceAt`, entité `SetPuzzle` en lecture seule) ;
+- limite assumée : un puzzle retiré lors d'un remplacement ancien peut revenir lors d'un suivant
+  (exclusion du seul set actuel), improbable vu la taille du catalogue.
+
 ## 7. API
 
 Toutes les requêtes filtrent sur le propriétaire : le set ou la tentative d'un autre utilisateur
@@ -236,12 +255,14 @@ répond **404**. Préfixe `/api`.
 | `GET /woodpecker/sets/{id}` | Détail : mode, configuration, runs et statistiques, run en cours, jours restants, séances (`runs`), croissances (`growths`, light) | 404 |
 | `POST /woodpecker/sets/{id}/{pause,resume,abandon,archive}` | Cycle de vie | 404, 409 |
 | `GET /woodpecker/sets/{id}/stubborn` | Puzzles récalcitrants | 404 |
+| `GET /woodpecker/sets/{id}/puzzles` | Liste du set dans son ordre : position, classement, thèmes, essais joués et ratés | 404 |
+| `POST /woodpecker/sets/{id}/puzzles/{puzzleId}/replace` | Remplace un puzzle (id Lichess) par un autre du même profil, même position (limite du « puzzle suivant ») | 404 set ou puzzle hors du set, 409 set terminé ou abandonné, 422 plus aucun puzzle de ce profil |
 | `POST /woodpecker/sets/{id}/attempts` | Puzzle suivant du run, jeu libre (120 par 10 min) | 404, 409 set en pause, terminé, au repos, light, ou tenu par une séance |
 | `POST /woodpecker/attempts/{id}/submission` | Soumission (120 par 10 min) | 400 coups impossibles, 404, 409 déjà soumise, run terminé ou tentative d'une séance |
 
 Séances chronométrées (les deux modes) : `/training/runs…`, voir [TRAINING.md § 6](TRAINING.md#6-api).
 
-`shortName` : `WoodpeckerSet`, `WoodpeckerAttempt`, `WoodpeckerStubbornPuzzle`. Les routes d'item
+`shortName` : `WoodpeckerSet`, `WoodpeckerAttempt`, `WoodpeckerStubbornPuzzle`, `WoodpeckerSetPuzzle`. Les routes d'item
 ont un `requirements` UUID ; `tests/Functional/Woodpecker/RoutingTest.php` couvre chaque route sœur.
 
 ## 8. Front
@@ -250,11 +271,23 @@ ont un `requirements` UUID ; `tests/Functional/Woodpecker/RoutingTest.php` couvr
   `showSolution`.
 - `PuzzlePlayer.vue` : zone de jeu (échiquier, statut, indice, solution) extraite de
   `puzzle/(play).vue`, partagée par les deux pages.
+- Jeu libre (`[id]/play.vue`, `PuzzlePlayer` `skippable replaceable`) : **Passer** (après
+  confirmation) soumet un raté pour ce cycle (`solutionShown`) puis sert le puzzle suivant sans
+  feuille de résultat ; l'icône **Remplacer** (après confirmation) appelle `…/replace` puis sert le
+  remplaçant. En séance (`training/[id].vue`), l'icône Remplacer existe aussi pour un item
+  `woodpecker_puzzle` (le chronomètre continue). La chip « Un seul essai » n'apparaît que sur
+  mobile.
 - `utils/woodpeckerPace.js` : jours restants (miroir de `DeadlineCalculator::daysLeft()`) et rythme
   conseillé (puzzles par jour) dans le fuseau de l'utilisateur, pas celui du navigateur.
 - Pages `pages/index/woodpecker/` : liste par mode (`index.vue`), création avec choix du mode
-  (`new.vue`, `?mode=light`), détail (`[id]/index.vue`) : lancement d'une séance, tableau des
-  cycles (classique) ou taille, séances et croissance (light), puzzles récalcitrants ; jeu libre
+  (`new.vue`, `?mode=light`), détail (`[id]/index.vue`) : carte de l'état du set
+  (`CurrentCycleCard` : cycle en cours avec grande barre de progression, échéance « jusqu'au …
+  inclus » et rythme, bouton **Continuer le cycle**, séance chronométrée ; repos, pause avec
+  **Reprendre**, fin), menu ⋮ (pause, reprise, abandon, archivage), encart repliable « Comment
+  marchent les cycles ? » (`CycleExplainer`, texte tiré des réglages du set par
+  `utils/woodpecker.js`, `explainCycles` ; durées miroir de `DeadlineCalculator::cycleDays()`),
+  cycles et séances en lignes-cartes lisibles (`CycleTable`, `RunTable`), croissance (light), liste
+  des puzzles du set dépliable avec remplacement (`SetPuzzleList`), puzzles récalcitrants ; jeu libre
   classique avec progression (`124 / 300`), rythme et récapitulatif de fin de cycle
   (`[id]/play.vue`). Les séances se jouent sur `pages/index/training/[id].vue`.
 
@@ -266,7 +299,8 @@ ont un `requirements` UUID ; `tests/Functional/Woodpecker/RoutingTest.php` couvr
   récalcitrants et rejeu, archivage, journal d'activité, temps actif plafonné), `SetModeTest.php`
   (contrainte `CHECK`, un set en cours par mode, exclusion), `LightModeTest.php` (manche dans
   l'ordre sans répétition, croissance, plafond, vivier épuisé, reprise au premier puzzle, mélange,
-  récalcitrants) et `RoutingTest.php` (routes sœurs). Séances : [TRAINING.md § 8](TRAINING.md#8-tests).
+  récalcitrants), `ReplacePuzzleTest.php` (liste, remplacement en attente, déjà joué, en séance,
+  récalcitrants, refus) et `RoutingTest.php` (routes sœurs). Séances : [TRAINING.md § 8](TRAINING.md#8-tests).
 - Vitest : `woodpecker-pace.test.js` (fuseaux, changement d'heure, dernier jour, échéance dépassée),
   `woodpecker-store.test.js`, `use-puzzle.test.js` (`afterMistake`).
 - Playwright : `tests/e2e/woodpecker.spec.js` crée un set de 5 puzzles, termine un cycle et voit le

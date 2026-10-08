@@ -30,6 +30,13 @@ import { useAuthStore } from '@/stores/auth'
  * @property {boolean} archived
  * @property {number} puzzleCount grows in light mode
  * @property {number|null} cycleCount null in light mode
+ * @property {number|null} firstCycleDays null in light mode
+ * @property {number|null} reductionFactor null in light mode
+ * @property {number|null} minCycleDays null in light mode
+ * @property {number|null} restDays null in light mode
+ * @property {boolean} shuffle
+ * @property {string|null} completedAt
+ * @property {string|null} abandonedAt
  * @property {string} timezone
  * @property {CycleView|null} current
  * @property {CycleView[]} cycles rounds, in light mode

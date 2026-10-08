@@ -27,6 +27,8 @@ final class RoutingTest extends WoodpeckerWebTestCase
         yield ['POST', '/api/woodpecker/sets/'.self::UUID.'/abandon', 'woodpecker_set_abandon'];
         yield ['POST', '/api/woodpecker/sets/'.self::UUID.'/archive', 'woodpecker_set_archive'];
         yield ['GET', '/api/woodpecker/sets/'.self::UUID.'/stubborn', '_api_/woodpecker/sets/{setId}/stubborn_get_collection'];
+        yield ['GET', '/api/woodpecker/sets/'.self::UUID.'/puzzles', '_api_/woodpecker/sets/{setId}/puzzles_get_collection'];
+        yield ['POST', '/api/woodpecker/sets/'.self::UUID.'/puzzles/AbC12/replace', 'woodpecker_set_puzzle_replace'];
         yield ['POST', '/api/woodpecker/sets/'.self::UUID.'/attempts', '_api_/woodpecker/sets/{setId}/attempts_post'];
         yield ['POST', '/api/woodpecker/attempts/'.self::UUID.'/submission', '_api_/woodpecker/attempts/{id}/submission_post'];
     }
@@ -47,6 +49,8 @@ final class RoutingTest extends WoodpeckerWebTestCase
         self::assertSame(404, $this->api('GET', '/api/woodpecker/sets/not-a-uuid', $user)->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/woodpecker/sets/not-a-uuid/pause', $user)->getStatusCode());
         self::assertSame(404, $this->api('GET', '/api/woodpecker/sets/not-a-uuid/stubborn', $user)->getStatusCode());
+        self::assertSame(404, $this->api('GET', '/api/woodpecker/sets/not-a-uuid/puzzles', $user)->getStatusCode());
+        self::assertSame(404, $this->api('POST', '/api/woodpecker/sets/not-a-uuid/puzzles/AbC12/replace', $user)->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/woodpecker/attempts/not-a-uuid/submission', $user, ['moves' => []])->getStatusCode());
     }
 }

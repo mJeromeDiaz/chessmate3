@@ -72,6 +72,18 @@
         @click="confirmSkip"
       />
       <q-btn
+        v-if="replaceable"
+        unelevated
+        class="play-btn play-btn--icon"
+        icon="swap_horiz"
+        aria-label="Remplacer ce puzzle"
+        :disable="game.phase.value === 'idle'"
+        data-testid="puzzle-replace"
+        @click="confirmReplace"
+      >
+        <q-tooltip>Remplacer ce puzzle</q-tooltip>
+      </q-btn>
+      <q-btn
         v-if="withSettings"
         unelevated
         class="play-btn play-btn--icon"
@@ -121,11 +133,11 @@
 <script setup>
 /**
  * One puzzle being played (design "Animation Puzzle", PlayLayout): the module's professor talking
- * (instruction, hint, then their reaction), the board, the Aide / Solution buttons (and Passer,
- * the settings icon in free play), and the result sheet at the end. Shared by the rated puzzles,
- * Woodpecker, the timed runs and the replay at a run's end; the page owns the API calls (through
- * `resolve`), gives the XP and rating change the server announced and the sheet's buttons, and
- * fills the `header`, `chips`, `result` and `footer` slots.
+ * (instruction, hint, then their reaction), the board, the Aide / Solution buttons (Passer, the
+ * settings and replace icons when the page asks), and the result sheet at the end. Shared by the
+ * rated puzzles, Woodpecker, the timed runs and the replay at a run's end; the page owns the API
+ * calls (through `resolve`), gives the XP and rating change the server announced and the sheet's
+ * buttons, and fills the `header`, `chips`, `result` and `footer` slots.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
@@ -165,6 +177,8 @@ const props = defineProps({
   stacked: { type: Boolean, default: false },
   /** Free play: "Passer" gives up (a failure, after confirmation) and asks for the next puzzle. */
   skippable: { type: Boolean, default: false },
+  /** Woodpecker: swap the puzzle for another of the set's profile (after confirmation). */
+  replaceable: { type: Boolean, default: false },
   /** Free play: the settings icon (themes, difficulty). */
   withSettings: { type: Boolean, default: false },
   /** A dot on the settings icon: filters other than the defaults. */
@@ -180,7 +194,9 @@ const emit = defineEmits({
   /** "Passer" confirmed: the failure is reported through `resolve`, show the next puzzle. */
   skip: null,
   /** The settings icon. */
-  settings: null
+  settings: null,
+  /** "Remplacer" confirmed: the page swaps the puzzle and loads the new one. */
+  replace: null
 })
 
 const $q = useQuasar()
@@ -283,6 +299,17 @@ function confirmSkip() {
     game.skip()
     emit('skip')
   })
+}
+
+/** The puzzle leaves the set for good: say so before. */
+function confirmReplace() {
+  $q.dialog({
+    title: 'Remplacer ce puzzle ?',
+    message:
+      'Il quitte le set pour de bon : un autre puzzle du même niveau prend sa place.',
+    cancel: { label: 'Annuler', flat: true, noCaps: true },
+    ok: { label: 'Remplacer', unelevated: true, noCaps: true }
+  }).onOk(() => emit('replace'))
 }
 
 /** @param {{uci: string}} move */

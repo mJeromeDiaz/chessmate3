@@ -102,7 +102,9 @@ test('light: a run stopped early shows its recap and joins the set history', asy
   await expect(page.getByTestId('run-failures')).toHaveText('1')
 
   await page.getByTestId('run-back').click()
-  await expect(page.getByTestId('run-table').locator('tbody tr')).toHaveCount(1)
+  await expect(
+    page.getByTestId('run-table').getByTestId('run-row')
+  ).toHaveCount(1)
 })
 
 test('classic: a run ends at its expiry and does not count the puzzle on screen', async ({
@@ -138,6 +140,14 @@ test('classic: a run ends at its expiry and does not count the puzzle on screen'
 
   // The set page: the run is in the history, the cycle moved on by one puzzle only.
   await page.getByTestId('run-back').click()
-  await expect(page.getByTestId('run-table').locator('tbody tr')).toHaveCount(1)
-  await expect(page.getByText(/Cycle 1 \/ \d+ : 1 \/ 5\./)).toBeVisible()
+  await expect(
+    page.getByTestId('run-table').getByTestId('run-row')
+  ).toHaveCount(1)
+  await expect(page.getByTestId('current-cycle')).toContainText(
+    /CYCLE 1 \/ \d+/
+  )
+  await expect(page.getByTestId('cycle-progress')).toHaveAttribute(
+    'aria-valuenow',
+    '1'
+  )
 })

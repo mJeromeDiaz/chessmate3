@@ -190,7 +190,9 @@
       :xp="runner.xp.value"
       :rating-delta="runner.result.value?.data?.ratingDelta ?? null"
       :actions="missActions"
+      :replaceable="runner.item.value?.type === 'woodpecker_puzzle'"
       @resolve="onResolve"
+      @replace="onReplace"
     >
       <template #header>
         <RunHeader
@@ -209,7 +211,7 @@
       </template>
 
       <template #chips>
-        <span class="play-chip"
+        <span class="play-chip lt-md"
           >Un seul essai<q-tooltip
             >En cas d’erreur, la solution s’affiche.</q-tooltip
           ></span
@@ -255,7 +257,7 @@ import RunResult from '@/components/training/RunResult.vue'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
-import { sessionApi } from '@/services/api'
+import { sessionApi, woodpeckerApi } from '@/services/api'
 import { useGamificationStore } from '@/stores/gamification'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -396,6 +398,24 @@ async function onResolve(_outcome, report) {
   } catch (e) {
     error.value = apiErrorMessage(e)
   }
+}
+
+/** Woodpecker: the puzzle leaves the set, the run serves its replacement (the clock runs on). */
+async function onReplace() {
+  const subjectId = runner.run.value?.subjectId
+  const current = puzzle.value
+  if (!subjectId || !current) return
+  error.value = ''
+  try {
+    await woodpeckerApi.replacePuzzle(subjectId, current.id)
+  } catch (e) {
+    error.value = apiErrorMessage(e, {
+      409: 'Ce set est terminé : son contenu ne change plus.',
+      422: 'Plus aucun autre puzzle ne correspond à ce set.'
+    })
+    return
+  }
+  await next()
 }
 
 /**

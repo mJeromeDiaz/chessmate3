@@ -139,7 +139,8 @@ class AttemptRepository extends ServiceEntityRepository
     }
 
     /**
-     * Puzzles failed in at least $minCycles distinct cycle numbers of the set (lost runs included).
+     * Puzzles failed in at least $minCycles distinct cycle numbers of the set (lost runs included),
+     * among those still in its list (a replaced puzzle is gone).
      *
      * @return list<array{puzzleId: int, failedCycles: int}> most failed first
      */
@@ -148,6 +149,7 @@ class AttemptRepository extends ServiceEntityRepository
         $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
             "SELECT a.puzzle_id, COUNT(DISTINCT c.number) AS failed_cycles
              FROM woodpecker_attempt a JOIN woodpecker_cycle c ON c.id = a.cycle_id
+             JOIN woodpecker_set_puzzle sp ON sp.set_id = c.set_id AND sp.puzzle_id = a.puzzle_id
              WHERE c.set_id = :set AND a.status = 'failed'
              GROUP BY a.puzzle_id HAVING failed_cycles >= :min
              ORDER BY failed_cycles DESC, a.puzzle_id",
