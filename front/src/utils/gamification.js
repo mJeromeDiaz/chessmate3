@@ -1,5 +1,6 @@
 import { profImage } from '@/utils/prof/images'
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
+import { STREAK_BADGES } from '@/utils/streak'
 
 /**
  * Display helpers of the gamification (docs/GAMIFICATION.md): level bar, trophies, weekly quest.
@@ -80,15 +81,26 @@ export function moduleLevel(summary, catalogId) {
   return summary.modules[apiModule]?.level ?? 1
 }
 
-/** The trophies' look, in the API's order (docs/GAMIFICATION.md § 4 bis). */
+/** The streak badges' look: the number of days in an orange disc (docs/GAMIFICATION.md § 4). */
+const STREAK_TROPHIES = Object.fromEntries(
+  STREAK_BADGES.map(badge => [
+    badge.key,
+    {
+      icon: String(badge.goal),
+      name: badge.name,
+      desc: `${badge.goal} jours d’affilée`,
+      bg: '#FFEBDD',
+      ink: '#B84A0E',
+      streak: badge.goal
+    }
+  ])
+)
+
+/**
+ * The trophies' look (docs/GAMIFICATION.md § 4 bis): the trophies in the API's order, then the 12
+ * streak badges (7 and 30 days are the older "En feu" and "Inarrêtable"), shortest first.
+ */
 export const TROPHIES = {
-  on_fire: {
-    icon: '🔥︎',
-    name: 'En feu',
-    desc: '7 jours d’affilée',
-    bg: '#FFEBDD',
-    ink: '#B84A0E'
-  },
   woodpecker: {
     icon: '♝︎',
     name: 'Pivert',
@@ -117,13 +129,6 @@ export const TROPHIES = {
     bg: '#EEE9FF',
     ink: '#4A2FE0'
   },
-  unstoppable: {
-    icon: '☄︎',
-    name: 'Inarrêtable',
-    desc: '30 jours d’affilée',
-    bg: '#FFEBDD',
-    ink: '#B84A0E'
-  },
   steel_woodpecker: {
     icon: '♛︎',
     name: 'Pic d’acier',
@@ -151,17 +156,21 @@ export const TROPHIES = {
     desc: '50 h d’entraînement',
     bg: '#E2F2FF',
     ink: '#0F6BBA'
-  }
+  },
+  ...STREAK_TROPHIES
 }
 
 /**
- * The trophy cards: look, progress label, date of the feat.
+ * The trophy cards: look, progress label, date of the feat. The streak badges come last, by length.
  *
  * @param {Trophy[]} trophies
  */
 export function trophyCards(trophies) {
   return trophies
     .filter(t => TROPHIES[t.key])
+    .sort(
+      (a, b) => (TROPHIES[a.key].streak ?? 0) - (TROPHIES[b.key].streak ?? 0)
+    )
     .map(t => ({
       ...TROPHIES[t.key],
       key: t.key,
@@ -170,7 +179,9 @@ export function trophyCards(trophies) {
         ? `Le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(t.unlockedAt ?? ''))}`
         : t.key === 'iron_memory' && t.ratio !== null
           ? `${t.current}/${t.goal} tests · ${Math.round(t.ratio * 100)} %`
-          : `${number.format(t.current)}/${number.format(t.goal)}`,
+          : TROPHIES[t.key].streak
+            ? `${number.format(t.current)}/${number.format(t.goal)} jours`
+            : `${number.format(t.current)}/${number.format(t.goal)}`,
       percent: t.goal > 0 ? Math.min(100, (t.current / t.goal) * 100) : 0
     }))
 }

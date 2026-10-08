@@ -97,8 +97,10 @@ Douze paliers : **3, 7, 14, 30, 50, 100, 200, 300, 365, 450, 500, 1000** jours. 
 (§ 4 bis : même table, même évaluation à la lecture, même date d'exploit = premier exercice du jour où
 la série atteint sa longueur, même recalcul), gagnés pour toujours même si la série casse ensuite ;
 7 et 30 sont « En feu » et « Inarrêtable », les autres les cas `streak_<n>` de l'enum
-(`Trophy::isStreak()`, `Trophy::streaks()`, `Trophy::forStreak()`). Le front les montre dans la carte
-« Série » du dashboard, pas dans la grille des trophées.
+(`Trophy::isStreak()`, `Trophy::streaks()`, `Trophy::forStreak()`). Le front les montre dans la
+grille « Trophées » du dashboard (2026-10-08), après les autres trophées, du plus court au plus long :
+le nombre de jours dans un disque orange, la progression en jours (meilleure série). La carte
+« Série » ne garde que la série du jour, le record et la semaine.
 
 ### Annonce de la série (2026-10-07)
 

@@ -17,7 +17,6 @@ const { gamificationApi } = await import('@/services/api')
 const { useGamificationStore } = await import('@/stores/gamification')
 const {
   STREAK_BADGES,
-  badgeTrack,
   localToday,
   nextMilestoneText,
   streakBadge,
@@ -50,34 +49,6 @@ describe('streak badges', () => {
     expect(streakBadge('on_fire')?.name).toBe('En feu')
     expect(streakBadge('streak_1000')?.name).toBe('Légende')
     expect(streakBadge(null)).toBeNull()
-  })
-
-  it('tracks the won badges and the next one to win', () => {
-    const track = badgeTrack(
-      [
-        {
-          key: 'streak_3',
-          goal: 3,
-          current: 3,
-          unlocked: true,
-          unlockedAt: '2026-10-01T08:00:00+00:00',
-          ratio: null
-        },
-        {
-          key: 'on_fire',
-          goal: 7,
-          current: 5,
-          unlocked: false,
-          unlockedAt: null,
-          ratio: null
-        }
-      ],
-      5
-    )
-    expect(track[0]).toMatchObject({ unlocked: true, next: false })
-    expect(track[0].date).toContain('2026')
-    expect(track[1]).toMatchObject({ unlocked: false, next: true, left: 2 })
-    expect(track.filter(b => b.next)).toHaveLength(1)
   })
 })
 

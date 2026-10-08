@@ -22,6 +22,7 @@
       >
         <div
           class="trophies__icon"
+          :class="{ 'trophies__icon--days': card.streak }"
           :style="{ background: card.bg, color: card.ink }"
         >
           {{ card.icon }}
@@ -40,7 +41,7 @@
 <script setup>
 /**
  * The trophies (docs/GAMIFICATION.md): won ones with the date of the feat, locked ones dimmed with
- * their progress.
+ * their progress; the 12 streak badges come last, shortest first.
  */
 import { computed } from 'vue'
 import { useGamificationStore } from '@/stores/gamification'
@@ -109,6 +110,15 @@ const error = computed(() => gamification.errors.trophies ?? '')
   height: 44px;
   border-radius: 14px;
   font-size: 24px;
+
+  // A streak badge shows its number of days.
+  &--days {
+    border-radius: 50%;
+    font-family: var(--cm-heading);
+    font-weight: 800;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 .trophies__name {

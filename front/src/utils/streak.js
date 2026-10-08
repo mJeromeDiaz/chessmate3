@@ -136,31 +136,3 @@ export function weekRow(week, today) {
     future: i > t
   }))
 }
-
-/**
- * The badge track of the streak card: every badge, won (with its date), the next one to win
- * (with what is left), the others locked.
- *
- * @param {import('@/utils/gamification').Trophy[]} trophies
- * @param {number} streak the current streak
- */
-export function badgeTrack(trophies, streak) {
-  const byKey = Object.fromEntries(trophies.map(t => [t.key, t]))
-  const next = STREAK_BADGES.find(b => !byKey[b.key]?.unlocked)
-  return STREAK_BADGES.map(badge => {
-    const trophy = byKey[badge.key]
-    const unlocked = !!trophy?.unlocked
-    return {
-      ...badge,
-      unlocked,
-      next: badge === next,
-      left: unlocked ? 0 : Math.max(0, badge.goal - streak),
-      date:
-        unlocked && trophy?.unlockedAt
-          ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
-              new Date(trophy.unlockedAt)
-            )
-          : null
-    }
-  })
-}

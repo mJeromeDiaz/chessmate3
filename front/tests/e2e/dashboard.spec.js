@@ -168,18 +168,13 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
   await expect(page.getByTestId('level-xp')).toHaveText(
     '2\u202f340 / 3\u202f000 XP'
   )
-  // The streak: in the header, and its card (streak badges there, not in the trophy grid).
+  // The streak: in the header and its card; its badges are in the trophy grid.
   await expect(page.getByTestId('streak-count')).toHaveText('3')
   await expect(page.getByTestId('streak-card-count')).toHaveText('3')
   await expect(page.getByTestId('streak-card-best')).toHaveText(
     'Record : 21 jours'
   )
-  await expect(page.getByTestId('streak-badges-count')).toHaveText('1 / 12')
-  await expect(page.getByTestId('streak-badge-3')).toHaveAttribute(
-    'data-unlocked',
-    'true'
-  )
-  await expect(page.getByTestId('streak-badge-7')).toContainText('encore 4 j')
+  await expect(page.getByTestId('streak-badges-count')).toHaveCount(0)
   await expect(page.getByTestId('best-streak')).toHaveText('Record 21 jours')
   await expect(
     page.getByTestId('module-row-puzzles').getByTestId('module-level')
@@ -187,7 +182,11 @@ test('with history: heatmap, rating curve, modules, gamification, and the Liches
   await expect(
     page.getByTestId('module-row-finales').getByTestId('module-level')
   ).toHaveCount(0)
-  await expect(page.getByTestId('trophies-count')).toHaveText('1 / 2 débloqués')
+  await expect(page.getByTestId('trophies-count')).toHaveText('2 / 3 débloqués')
+  await expect(page.getByTestId('trophy-streak_3')).toHaveAttribute(
+    'data-unlocked',
+    'true'
+  )
   await expect(page.getByTestId('trophy-first_step')).toHaveAttribute(
     'data-unlocked',
     'true'

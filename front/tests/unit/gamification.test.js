@@ -142,6 +142,38 @@ describe('trophyCards', () => {
       percent: 60
     })
   })
+
+  it('puts the streak badges last, shortest first, counted in days', () => {
+    const trophy = (key, goal, current, unlocked = false) => ({
+      key,
+      goal,
+      current,
+      unlocked,
+      unlockedAt: unlocked ? '2026-10-01T08:00:00+00:00' : null,
+      ratio: null
+    })
+    const cards = trophyCards([
+      trophy('on_fire', 7, 3),
+      trophy('first_step', 1, 1, true),
+      trophy('streak_14', 14, 3),
+      trophy('streak_3', 3, 3, true),
+      trophy('marathon', 50, 2)
+    ])
+    expect(cards.map(c => c.key)).toEqual([
+      'first_step',
+      'marathon',
+      'streak_3',
+      'on_fire',
+      'streak_14'
+    ])
+    expect(cards[3]).toMatchObject({
+      name: 'En feu',
+      icon: '7',
+      desc: '7 jours d’affilée',
+      progress: '3/7 jours'
+    })
+    expect(cards[2]).toMatchObject({ name: 'Étincelle', unlocked: true })
+  })
 })
 
 describe('questText', () => {

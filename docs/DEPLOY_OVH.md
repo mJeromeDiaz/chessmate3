@@ -60,8 +60,13 @@ Il commence par réinitialiser les services, car l'entity manager de la requête
 fermé. Un échec est journalisé et n'affecte jamais la requête : le message reste en file pour le
 tick.
 
-Ce mécanisme est activé par `OPS_DRAIN_ON_TERMINATE=1`, en production sur le mutualisé
-seulement. Il reste coupé en dev, en test, en e2e et sur un VPS, où un worker tourne.
+Ce mécanisme est activé par `OPS_DRAIN_ON_TERMINATE=1`, en production sur le mutualisé. Il
+reste coupé en test, en e2e (les tests vident eux-mêmes la file) et sur un VPS, où un worker tourne.
+En dev, sans worker lancé, rien n'arrive dans le journal d'activité (série, carte d'activité, temps
+d'entraînement vides) : soit lancer `bin/console messenger:consume activity async`, soit mettre
+`OPS_DRAIN_ON_TERMINATE=1` dans `api/.env.dev.local` (lu en dev seulement), comme en production.
+Sans PHP-FPM (serveur intégré), la vidange se fait avant la fin de la réponse : jusqu'à 2 s de plus
+sur une requête d'écriture.
 
 ### Garanties
 
