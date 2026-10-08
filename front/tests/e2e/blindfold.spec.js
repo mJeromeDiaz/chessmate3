@@ -152,16 +152,14 @@ test('blindfold puzzles: open without coordinates, solved from memory, with a pe
   await page.getByRole('button', { name: 'OK' }).click()
 
   const end = page.getByTestId('run-end')
-  await expect(end).toBeVisible()
-  await expect(end).toContainText('2 puzzles en')
-  await expect(
-    end.getByTestId('run-end-stat').filter({ hasText: 'Avec coup d’œil' })
-  ).toContainText('1')
-  await expect(
-    end.getByTestId('run-end-grid').locator('[data-status]')
-  ).toHaveCount(2)
-  await expect(end.getByTestId('run-end-missed-item')).toHaveCount(1)
-  await end.getByTestId('run-end-close').click()
+  // 1 solved from memory out of 2 (a peek is not a success): a failed lesson, one to correct.
+  const result = end.getByTestId('run-result')
+  await expect(result).toHaveAttribute('data-kind', 'fail')
+  await expect(result.getByTestId('run-result-score')).toHaveText('50')
+  await end.getByTestId('run-end-fix').click()
+  await expect(end.getByTestId('run-fix-count')).toHaveText('1')
+  await end.getByTestId('run-fix-later').click()
+  await expect(end).toBeHidden()
 
   await expect(page.getByTestId('run-recap')).toContainText(
     'Résolus de mémoire : 1 · avec un coup d’œil : 1 · ratés : 0.'

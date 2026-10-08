@@ -232,27 +232,38 @@ Woodpecker liste ses séances (`runs`).
   le temps libre n'échoue jamais), `success3.mp3` sinon ; pour une étape de session, la page recharge
   la session et, si elle est désormais `completed`, joue `success.mp3` à la place. Ces sons, comme
   ceux des puzzles et des unités de répertoire, suivent le réglage « Sons » du profil (`moveSound`).
-- `RunEndDialog` (design « Fin de séance ») : bilan qui s'ouvre sur la page dès que la séance est
-  close, aussi pour une séance rouverte une fois finie. Il contient :
-  - un bandeau du prof du module (content, ou pensif si le module est en échec selon la règle de
-    `moduleEndSound`), avec des confettis (`ConfettiBurst`) seulement pour une fin vécue sur la page
-    et réussie ;
-  - le message du prof, composé côté client : taux de réussite, thème ou ouverture le plus raté ;
-  - quatre chiffres selon le module, dont l'XP gagnée dans la séance (`xp` de la revue, écrit par
-    le worker : redemandée une fois 3 s plus tard si elle arrive trop tôt) et le niveau atteint ;
-  - la grille des éléments (Réussi / Avec aide / Raté) et la liste « À revoir », dont chaque élément
-    se rejoue dans le bilan (`RunEndReplay`, colonne de droite ; toute la feuille sur un téléphone),
-    **côté client seul** : rien n'est envoyé (ni classement, ni cycle, ni carte FSRS, ni activité, ni
-    temps de session ; une étape de session affiche « Session en pause le temps de la révision »).
-    Un puzzle se rejoue avec `PuzzlePlayer` (indices et solution, son `resolve` ignoré) ; une unité
-    de répertoire depuis sa position de départ (`start_fen`) avec `composables/repertoire/useLineReplay.js`
-    (coups adverses joués seuls, mauvais coup repris et bon coup fléché, seul accepté ensuite) ; une
-    unité présentée avant `start_fen` est « non rejouable ». « Raté suivant → » enchaîne, l'élément
-    rejoué jusqu'au bout est coché « revu » (en mémoire seulement) ;
-  - les boutons « Module suivant → » (étape de session), « Bilan de la session → » ou le retour au
-    sujet, et « Fermer », qui laisse le récapitulatif avec un bouton « Voir le bilan ».
+- `RunResult` (designs « Résultat de leçon » et « Corriger ses erreurs », 2026-10-08) : écran plein
+  écran qui s'ouvre sur la page dès que la séance est close (après la célébration de série), aussi
+  pour une séance rouverte une fois finie (bouton « Voir le résultat » du récapitulatif) ; aucun
+  écran pour une séance close sans élément joué. Selon la part réussie (`successCount / itemCount`,
+  « avec aide » n'est pas réussi) :
+  - **100 %** « Leçon parfaite ! » (vert, confettis seulement pour une fin vécue sur la page, une
+    fois), **80 à 99 %** « Presque parfait ! » (jaune, le compteur monte à 96 puis redescend),
+    **moins de 80 %** « Raté total ! » (rose, secousse) ; le temps libre : « Séance terminée ! » et
+    ses minutes. Le seuil de 80 % est celui du son d'échec (`MODULE_FAIL_RATE`).
+  - Le prof du module dans la pose du verdict (`RESULT_POSES` : Albert `albert-v2-*`, Aaron, Lizy ;
+    un module sans fiche prof montre son glyphe), sur un disque à anneaux ; le titre tombe lettre
+    par lettre, le score se compte dans son anneau, puis les boutons. Mouvement réduit : l'état final
+    d'emblée.
+  - Boutons : parfait « Continuer » (ferme) et « Leçon suivante → » ; presque « Continuer » et
+    « Revoir mes erreurs » ; raté « Recommencer la leçon » (= corriger les erreurs) et « Plus tard ».
+    Sans erreur rejouable (évaluation, coordonnées, unités sans `start_fen`), « Leçon suivante → »
+    remplace le bouton des erreurs. « Leçon suivante → » lance le module suivant de la session,
+    sinon ouvre le bilan de la session, sinon revient au sujet (`subjectPath`).
+  - « Corriger ses erreurs » (`RunFixErrors`) : les éléments ratés rejouables distribués en cartes
+    (sept au plus, leur numéro), leur nombre (« N PUZZLES / TRONÇONS / LIGNES À REVOIR »), puis
+    « Corriger mes erreurs » les enchaîne dans `RunEndReplay` (« Raté suivant → », puis retour au
+    résultat), **côté client seul** : rien n'est envoyé (ni classement, ni cycle, ni carte FSRS, ni
+    activité, ni temps de session ; une étape de session affiche « Session en pause le temps de la
+    révision »). Un puzzle se rejoue avec `PuzzlePlayer` (indices et solution, son `resolve` ignoré) ;
+    une unité de répertoire depuis sa position de départ (`start_fen`) avec
+    `composables/repertoire/useLineReplay.js`.
 
-  Calculs purs dans `utils/runEnd.js` ; données de `GET /training/runs/{id}/review` (§ 5 quater).
+  Calculs purs dans `utils/runResult.js` (et `missedItems` de `utils/runEnd.js`) ; étapes de
+  l'animation : `composables/training/useResultSteps.js` ; données de
+  `GET /training/runs/{id}/review` (§ 5 quater). L'ancien bilan détaillé (`RunEndDialog`, design
+  « Fin de séance » : message du prof, XP, grille, liste « À revoir ») est gardé dans le code mais
+  n'est plus affiché.
 - `RunRecap` : récapitulatif normalisé et lignes du module ; `RunTable` : historique avec l'évolution
   des puzzles par minute d'une séance à l'autre.
 
@@ -263,9 +274,9 @@ Woodpecker liste ses séances (`runs`).
   événements, temps actif plafonné), `ClassicRunTest.php` (cycle qui avance et set tenu, repos,
   enchaînement sans repos, set terminé, pause pendant la séance, cycle perdu pendant la séance) et `RoutingTest.php`.
 - Vitest : `use-timeboxed-run.test.js` (décalage d'horloge, phases, fin de temps),
-  `training-store.test.js`, `run-end.test.js` (bilan), `use-line-replay.test.js` (rejeu d'une unité).
+  `training-store.test.js`, `run-end.test.js` (ratés, ancien bilan), `run-result.test.js` (écrans de résultat), `use-line-replay.test.js` (rejeu d'une unité).
 - Playwright : `tests/e2e/training.spec.js` : une séance light d'1 min terminée avec « Terminer »
-  (1 réussi, 1 échoué, bilan et rejeu du raté sans requête à l'API, récapitulatif, historique) et une séance classique d'1 min menée **jusqu'à son
+  (1 réussi, 1 échoué, écran « Raté total », correction et rejeu du raté sans requête à l'API, récapitulatif, historique) et une séance classique d'1 min menée **jusqu'à son
   expiration réelle** (puzzle à l'écran non compté, cycle avancé d'un seul puzzle). Environ 75 s.
   Le test des répertoires a le sien (dont le rejeu d'un tronçon raté depuis le bilan) : `tests/e2e/repertoire-test.spec.js` ([REPERTOIRE.md § 16](REPERTOIRE.md#16-tests)).
 - Puzzles et Libre : `tests/Functional/Training/{PuzzleRunTest, FreeRunTest}.php` (puzzles classés

@@ -76,17 +76,12 @@ test('coordinates: answers judged at once, sent before "Terminer", ribbon at the
       answerCount: 5,
       successCount: 4
     })
-  await expect(end.getByTestId('run-end-title')).toBeVisible()
-  await expect(end).toContainText('SÉRIE TERMINÉE · NOIRS')
-  await expect(end.getByTestId('coordinate-cell')).toHaveCount(5)
-  await expect(
-    end.locator('[data-testid="coordinate-cell"][data-status="fail"]')
-  ).toHaveCount(1)
-  await end.getByTestId('coordinate-cell').nth(2).click()
-  await expect(end.getByTestId('coordinate-picked')).toContainText(
-    `#3 · ${squares[2]} → ${wrong(squares[2])}`
-  )
-  await expect(end.getByTestId('run-end-square')).toContainText(squares[2])
+  // 4 out of 5: "Presque parfait"; a square has nothing to replay, the next lesson is offered.
+  const result = end.getByTestId('run-result')
+  await expect(result).toHaveAttribute('data-kind', 'close')
+  await expect(result.getByTestId('run-result-score')).toHaveText('80')
+  await expect(end.getByTestId('run-end-fix')).toHaveCount(0)
+  await expect(end.getByTestId('run-end-next')).toHaveText('Leçon suivante →')
   await end.getByTestId('run-end-close').click()
 
   await expect(page.getByTestId('run-recap')).toContainText(

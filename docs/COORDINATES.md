@@ -114,9 +114,10 @@ orientation ([GAMIFICATION.md](GAMIFICATION.md)). Source du bonus : `coordinates
   clôture grâce à `useTimeboxedRun().beforeClose()` (attendu avant « Terminer » et avant la requête
   qui laisse le serveur clore la série à zéro). Un onglet fermé perd les réponses pas encore
   envoyées (3 s au plus).
-- Fin de série : `RunEndDialog` montre `components/coordinates/CoordinateRibbon.vue` (une cellule
-  par réponse, verte ou rouge ; infobulle ou toucher : « #3 · e4 → d4 · 1,2 s » ; totaux) à la
-  place de la grille, et « Cases à retravailler » (les plus ratées) à la place du rejeu. Calculs
+- Fin de série : l'écran de résultat commun ([TRAINING.md](TRAINING.md), `RunResult`) ; une case
+  n'a rien à rejouer, il propose « Leçon suivante → » au lieu de corriger les erreurs. Le ruban
+  `components/coordinates/CoordinateRibbon.vue` (une cellule par réponse, verte ou rouge ; infobulle
+  ou toucher : « #3 · e4 → d4 · 1,2 s » ; totaux) reste dans l'historique de la page. Calculs
   purs dans `utils/coordinates.js` ; un taux s'affiche arrondi vers le bas (`formatRate` de
   `utils/format.js`) : 94,6 % ne se lit jamais « 95 % ».
 

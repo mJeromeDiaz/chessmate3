@@ -101,7 +101,7 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
     'aucun plan choisi'
   )
 
-  // Third and last position: two notches off. Its correction stays until "Voir le bilan".
+  // Third and last position: two notches off. Its correction stays until "Voir le résultat".
   served = page.waitForResponse(isRunNext)
   await page.getByTestId('run-next').click()
   item = (await (await served).json()).item
@@ -113,15 +113,17 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
   await expect(page.getByTestId('result-title')).toHaveText('Pas cette fois')
   await expect(page.getByTestId('result-xp')).toHaveText('+1 XP')
   await expect(page.getByTestId('run-end')).toBeHidden()
-  await expect(page.getByTestId('run-next')).toHaveText('Voir le bilan')
+  await expect(page.getByTestId('run-next')).toHaveText('Voir le résultat')
   await page.getByTestId('run-next').click()
 
   const end = page.getByTestId('run-end')
   await expect(end).toBeVisible()
-  await expect(end).toContainText('3 positions en')
-  await expect(
-    end.getByTestId('run-end-grid').locator('[data-status]')
-  ).toHaveCount(3)
+  // 1 exact out of 3: a failed lesson; a position has nothing to replay, no mistakes to correct.
+  const result = end.getByTestId('run-result')
+  await expect(result).toHaveAttribute('data-kind', 'fail')
+  await expect(result.getByTestId('run-result-score')).toHaveText('33')
+  await expect(end.getByTestId('run-end-fix')).toHaveCount(0)
+  await expect(end.getByTestId('run-end-close')).toHaveText('Continuer')
   await end.getByTestId('run-end-close').click()
 
   const recap = page.getByTestId('run-recap')

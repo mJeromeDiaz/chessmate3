@@ -7,7 +7,7 @@
         data-testid="run-end-replay-back"
         @click="emit('back')"
       >
-        ← Retour au bilan
+        ← {{ backLabel }}
       </button>
       <span class="run-end-replay__muted">#{{ missed.number }}</span>
     </div>
@@ -68,7 +68,7 @@
         data-testid="run-end-replay-done"
         @click="emit('back')"
       >
-        Retour au bilan
+        {{ backLabel }}
       </button>
     </footer>
   </div>
@@ -93,7 +93,9 @@ const props = defineProps({
   /** Another missed item comes after this one. */
   hasNext: { type: Boolean, default: false },
   /** The run is a session step: say the session waits. */
-  paused: { type: Boolean, default: false }
+  paused: { type: Boolean, default: false },
+  /** Where "back" goes, in words. */
+  backLabel: { type: String, default: 'Retour au bilan' }
 })
 
 const emit = defineEmits({

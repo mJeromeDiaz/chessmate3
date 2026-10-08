@@ -176,7 +176,9 @@ test('a one-minute test: a failed segment comes back, the end of time cuts a seg
   // The failed segment played again from the review, from its start position.
   const end = page.getByTestId('run-end')
   await expect(end).toBeVisible({ timeout: 70_000 })
-  await end.getByTestId('run-end-missed-item').first().click()
+  await end.getByTestId('run-end-fix').click()
+  await expect(end.getByTestId('run-fix')).toContainText('À REVOIR')
+  await end.getByTestId('run-fix-start').click()
   const replay = end.getByTestId('run-end-replay')
   const status = replay.getByTestId('run-end-replay-status')
   // A wrong move first: the right one is shown, then accepted.
@@ -191,10 +193,7 @@ test('a one-minute test: a failed segment comes back, the end of time cuts a seg
   await replayLine(replay)
   await expect(status).toHaveText('Ligne terminée, 1 erreur.')
   await replay.getByTestId('run-end-replay-back').click()
-  await expect(end.getByTestId('run-end-missed-item').first()).toHaveAttribute(
-    'data-reviewed',
-    'true'
-  )
+  await expect(end.getByTestId('run-result')).toBeVisible()
 
   await closeRunEnd(page)
   await expect(page.getByTestId('run-recap')).toBeVisible()

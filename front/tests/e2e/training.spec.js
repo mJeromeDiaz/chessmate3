@@ -57,21 +57,24 @@ test('light: a run stopped early shows its recap and joins the set history', asy
   await page.getByTestId('run-stop').click()
   await page.getByRole('button', { name: 'OK' }).click()
 
-  // The end-of-run review: both puzzles in the grid, the failed one to review again.
+  // The result: 1 solved out of 2, a failed lesson, its mistake to correct.
   const end = page.getByTestId('run-end')
-  await expect(
-    end.getByTestId('run-end-grid').locator('[data-status]')
-  ).toHaveCount(2)
-  await expect(end.getByTestId('run-end-missed-item')).toHaveCount(1)
-  await expect(end.getByTestId('run-end-back')).toHaveText('Retour au set')
+  const result = end.getByTestId('run-result')
+  await expect(result).toHaveAttribute('data-kind', 'fail')
+  await expect(result.getByTestId('run-result-score')).toHaveText('50')
+  await expect(end.getByTestId('run-end-close')).toHaveText('Plus tard')
 
-  // Played again from the review, client side only: nothing reaches the API.
+  // Played again from the result, client side only: nothing reaches the API.
   /** @type {string[]} */
   const sent = []
   page.on('request', request => {
     if (request.method() !== 'GET') sent.push(request.url())
   })
-  await end.getByTestId('run-end-missed-item').click()
+  await end.getByTestId('run-end-fix').click()
+  const fix = end.getByTestId('run-fix')
+  await expect(fix.getByTestId('run-fix-count')).toHaveText('1')
+  await expect(fix).toContainText('PUZZLE À REVOIR')
+  await fix.getByTestId('run-fix-start').click()
   const replay = end.getByTestId('run-end-replay')
   await expect(replay).toBeVisible()
   // Not a session step: no pause message.
@@ -83,10 +86,7 @@ test('light: a run stopped early shows its recap and joins the set history', asy
   // The only missed puzzle: no next one.
   await expect(replay.getByTestId('run-end-replay-next')).toHaveCount(0)
   await replay.getByTestId('run-end-replay-done').click()
-  await expect(end.getByTestId('run-end-missed-item')).toHaveAttribute(
-    'data-reviewed',
-    'true'
-  )
+  await expect(result).toBeVisible()
   expect(sent).toEqual([])
   await closeRunEnd(page)
   await page.getByTestId('run-end-open').click()

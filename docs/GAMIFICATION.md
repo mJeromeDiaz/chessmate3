@@ -37,7 +37,7 @@ S2 rappel, S3 front, S4 documentation.
 | Comptage commun (N-ième élément) | `App\Gamification\Progress\Counter` |
 | API | `App\ApiResource\Gamification\{Summary, Trophies, WeeklyQuest}`, `App\State\Gamification\SummaryProvider` |
 | Fixtures | `App\DataFixtures\Gamification\GamificationFixtures` (XP du compte démo, par le recalcul) |
-| Front | `front/src/services/api.js` (`gamificationApi`), `stores/gamification.js`, `utils/gamification.js`, `utils/streak.js` ; blocs `components/dashboard/{LevelBanner, StreakCard, TrophyGrid, WeeklyQuest, ModuleProgress, ActivityHeatmap}.vue`, XP de fin de séance dans `components/training/RunEndDialog.vue` ; série : `components/gamification/{StreakCelebration, StreakChip}.vue` (célébration, flamme de l'en-tête et du menu), réglage du rappel `components/profile/StreakReminderSection.vue` |
+| Front | `front/src/services/api.js` (`gamificationApi`), `stores/gamification.js`, `utils/gamification.js`, `utils/streak.js` ; blocs `components/dashboard/{LevelBanner, StreakCard, TrophyGrid, WeeklyQuest, ModuleProgress, ActivityHeatmap}.vue`, XP de fin de séance dans `components/training/RunEndDialog.vue` (gardé, plus affiché depuis l'écran `RunResult`) ; série : `components/gamification/{StreakCelebration, StreakChip}.vue` (célébration, flamme de l'en-tête et du menu), réglage du rappel `components/profile/StreakReminderSection.vue` |
 
 ## 2. Règles (`XpRules`)
 

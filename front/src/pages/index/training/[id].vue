@@ -7,10 +7,11 @@
       <RunRecap :run="runner.run.value">
         <template #actions>
           <q-btn
+            v-if="hasResult"
             outline
             no-caps
             icon="emoji_events"
-            label="Voir le bilan"
+            label="Voir le résultat"
             data-testid="run-end-open"
             @click="endOpen = true"
           />
@@ -55,7 +56,8 @@
         :run-id="runner.run.value.id"
         class="q-mt-md"
       />
-      <RunEndDialog
+      <RunResult
+        v-if="hasResult"
         v-model="endOpen"
         :run="runner.run.value"
         :live="seenRunning.has(runner.run.value.id)"
@@ -245,8 +247,8 @@ import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
 import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
 import RunHeader from '@/components/training/RunHeader.vue'
-import RunEndDialog from '@/components/training/RunEndDialog.vue'
 import RunRecap from '@/components/training/RunRecap.vue'
+import RunResult from '@/components/training/RunResult.vue'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
@@ -255,6 +257,7 @@ import { useGamificationStore } from '@/stores/gamification'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
 import { stepModule } from '@/utils/session/steps'
+import { resultKind } from '@/utils/runResult'
 import { backLabel, subjectPath } from '@/utils/training'
 
 definePage({ meta: { auth: 'required' } })
@@ -325,7 +328,7 @@ const isRepertoire = computed(() => runner.run.value?.module === 'repertoire')
 
 /**
  * The position being evaluated, kept once the run closed on the last one: its correction stays on
- * screen (`holdEnd`) until "Voir le bilan".
+ * screen (`holdEnd`) until "Voir le résultat".
  *
  * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
  */
@@ -349,7 +352,7 @@ const evalResult = computed(() =>
 const evaluationActions = computed(() => [
   {
     label:
-      runner.phase.value === 'running' ? 'Position suivante →' : 'Voir le bilan',
+      runner.phase.value === 'running' ? 'Position suivante →' : 'Voir le résultat',
     primary: true,
     disable: loading.value,
     testid: 'run-next',
@@ -441,12 +444,19 @@ const nextStep = computed(() => {
   return step && step.status === 'pending' ? step : null
 })
 
-/** The end-of-run review dialog: opens when the run is over (also on a run reopened once over). */
+/**
+ * The end-of-run result (`RunResult`): opens when the run is over (also on a run reopened once
+ * over), unless nothing was played.
+ */
 const endOpen = ref(false)
+const hasResult = computed(
+  () => !!runner.run.value && resultKind(runner.run.value) !== null
+)
 /** The review waits for the last correction to be left (`holdEnd`). */
 let endWaiting = false
 
 function openEnd() {
+  if (!hasResult.value) return
   if (holdEnd.value) {
     endWaiting = true
     return
