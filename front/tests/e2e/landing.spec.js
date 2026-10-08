@@ -94,13 +94,21 @@ test('404: an unknown page, back to the landing page for a visitor, to the dashb
   await expect(notFound.getByTestId('not-found-home')).toHaveText(
     'Retour à l’accueil'
   )
-  await expect(notFound.getByRole('link', { name: 'Se venger sur un puzzle' })).toHaveCount(0)
+  // The dashboard and the puzzles are for signed-in users only.
+  await expect(notFound.getByTestId('not-found-dashboard')).toHaveCount(0)
+  await expect(notFound.getByTestId('not-found-puzzle')).toHaveCount(0)
 
+  // Signed in: the same URL reloaded (a hash-only goto would keep the visitor's session state).
   await signIn(context)
-  await page.goto('/#/nowhere/at-all')
-  await expect(page.getByTestId('not-found-home')).toHaveText(
+  await page.reload()
+  await expect(notFound.getByTestId('not-found-dashboard')).toHaveText(
     'Retour au tableau de bord'
   )
-  await page.getByTestId('not-found-home').click()
+  await expect(notFound.getByTestId('not-found-home')).toHaveCount(0)
+  await expect(notFound.getByTestId('not-found-puzzle')).toHaveAttribute(
+    'href',
+    '#/puzzle'
+  )
+  await notFound.getByTestId('not-found-dashboard').click()
   await expect(page.getByTestId('dashboard')).toBeVisible()
 })

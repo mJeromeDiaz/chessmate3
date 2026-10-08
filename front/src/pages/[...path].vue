@@ -89,14 +89,26 @@
           class="nf__actions"
           :style="{ opacity: f.endOp, transform: f.endTf }"
         >
-          <router-link to="/" class="nf__btn nf__btn--primary" data-testid="not-found-home">{{
-            auth.isAuthenticated ? 'Retour au tableau de bord' : 'Retour à l’accueil'
-          }}</router-link>
+          <template v-if="auth.isAuthenticated">
+            <router-link
+              to="/"
+              class="nf__btn nf__btn--primary"
+              data-testid="not-found-dashboard"
+              >Retour au tableau de bord</router-link
+            >
+            <router-link
+              to="/puzzle"
+              class="nf__btn nf__btn--soft"
+              data-testid="not-found-puzzle"
+              >Se venger sur un puzzle</router-link
+            >
+          </template>
           <router-link
-            v-if="auth.isAuthenticated"
-            to="/puzzle"
-            class="nf__btn nf__btn--soft"
-            >Se venger sur un puzzle</router-link
+            v-else
+            to="/"
+            class="nf__btn nf__btn--primary"
+            data-testid="not-found-home"
+            >Retour à l’accueil</router-link
           >
         </div>
       </div>
