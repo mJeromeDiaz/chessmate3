@@ -211,6 +211,9 @@ final readonly class DataExport
             'boardTheme' => $user->getBoardTheme()->value,
             'moveSound' => $user->hasMoveSound(),
             'publicProfile' => $user->isPublicProfile(),
+            // The guided tour's answers (docs/ONBOARDING.md).
+            'onboarding' => $this->rows('SELECT level, goal, updated_at AS updatedAt FROM onboarding_answer WHERE user_id = ?', $user->getId()->toBinary())[0]
+                ?? ['level' => null, 'goal' => null, 'updatedAt' => null],
             'deletionScheduledAt' => $user->getDeletionScheduledAt()?->format(\DATE_ATOM),
             'linkedAccounts' => array_values(array_map(static fn (AuthIdentity $identity): array => [
                 'provider' => $identity->getProvider()->value,

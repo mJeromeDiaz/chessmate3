@@ -126,8 +126,10 @@ export const WELCOME_PATH = '/bienvenue'
 export const AUTO_REPERTOIRE_PATH = '/repertoire/auto'
 /** The tailored session (docs/COACH.md). */
 export const COACH_PATH = '/session/auto'
+/** The guided tour (docs/ONBOARDING.md). */
+export const TOUR_PATH = '/visite'
 /** The only pages a link may come back to (never another site). */
-const LINK_RETURNS = [WELCOME_PATH, AUTO_REPERTOIRE_PATH, COACH_PATH]
+const LINK_RETURNS = [WELCOME_PATH, AUTO_REPERTOIRE_PATH, COACH_PATH, TOUR_PATH]
 /** The only pages a provider sign-in may lead to, past the dashboard (never another site). */
 const AFTER_SIGN_IN = [AUTO_REPERTOIRE_PATH, COACH_PATH]
 

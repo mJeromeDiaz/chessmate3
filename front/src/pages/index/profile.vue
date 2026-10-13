@@ -16,6 +16,7 @@
         </div>
         <div class="profile__col">
           <PreferencesCard :profile="profile" class="profile__preferences" />
+          <TourCard class="profile__tour" />
           <section
             class="cm-card profile-card profile__notifications"
             data-testid="profile-notifications"
@@ -52,6 +53,7 @@ import ProfileFooter from '@/components/profile/ProfileFooter.vue'
 import ProfileHero from '@/components/profile/ProfileHero.vue'
 import SecurityCard from '@/components/profile/SecurityCard.vue'
 import StreakReminderSection from '@/components/profile/StreakReminderSection.vue'
+import TourCard from '@/components/profile/TourCard.vue'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -123,6 +125,9 @@ const linkedNotice = computed(() =>
   order: 3;
 }
 .profile__preferences {
+  order: 4;
+}
+.profile__tour {
   order: 4;
 }
 .profile__notifications {

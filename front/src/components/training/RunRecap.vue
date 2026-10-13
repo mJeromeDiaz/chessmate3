@@ -144,13 +144,10 @@ const details = computed(() => {
     if ((m.streaks?.length ?? 0) > 1)
       lines.push(`Streaks : ${m.streaks.join(', ')}.`)
     for (const badge of wonBadges(m))
-      lines.push(
-        `Badge débloqué : ${badge.name} (${streakText(badge.goal)}).`
-      )
+      lines.push(`Badge débloqué : ${badge.name} (${streakText(badge.goal)}).`)
     if (m.hardestRating)
       lines.push(`Puzzle le plus dur réussi : ${m.hardestRating}.`)
-    if (m.extensions)
-      lines.push(`Prolongé ${m.extensions} fois de 5 minutes.`)
+    if (m.extensions) lines.push(`Prolongé ${m.extensions} fois de 5 minutes.`)
     return lines
   }
   if (props.run.module === 'evaluation') {

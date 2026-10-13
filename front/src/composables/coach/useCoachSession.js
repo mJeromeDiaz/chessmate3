@@ -107,8 +107,7 @@ export function useCoachSession() {
   )
   const composed = computed(
     () =>
-      !!composition.value &&
-      revealed.value >= composition.value.modules.length
+      !!composition.value && revealed.value >= composition.value.modules.length
   )
 
   function save() {
@@ -196,10 +195,7 @@ export function useCoachSession() {
         const pace = feedPace(next.maxGames)
         reveal(next.batch ?? [], id, pace)
         await sleep(
-          Math.max(
-            0,
-            (next.batch?.length ?? 0) * pace - (Date.now() - started)
-          )
+          Math.max(0, (next.batch?.length ?? 0) * pace - (Date.now() - started))
         )
       } catch (e) {
         if (id !== run) return
@@ -243,7 +239,10 @@ export function useCoachSession() {
       value.modules.forEach((_, i) => {
         timers.push(setTimeout(() => (current.value = i), i * REVEAL_MS))
         timers.push(
-          setTimeout(() => (revealed.value = i + 1), i * REVEAL_MS + REVEAL_MS * 0.7)
+          setTimeout(
+            () => (revealed.value = i + 1),
+            i * REVEAL_MS + REVEAL_MS * 0.7
+          )
         )
       })
     } catch (e) {

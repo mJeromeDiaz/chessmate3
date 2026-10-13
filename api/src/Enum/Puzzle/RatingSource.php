@@ -11,4 +11,6 @@ enum RatingSource: string
 {
     case Default = 'default';
     case Lichess = 'lichess';
+    /** The level declared in the guided tour (docs/ONBOARDING.md). */
+    case Declared = 'declared';
 }

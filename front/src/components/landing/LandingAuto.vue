@@ -33,8 +33,8 @@
               >Génère ton répertoire</h3
             >
             <p class="landing-auto__card-text">
-              On garde les coups que tu joues vraiment, ouverture par
-              ouverture, et on te montre où tu gagnes et où tu perds.
+              On garde les coups que tu joues vraiment, ouverture par ouverture,
+              et on te montre où tu gagnes et où tu perds.
             </p>
             <ul class="landing-auto__points">
               <li v-for="point in REPERTOIRE_POINTS" :key="point">

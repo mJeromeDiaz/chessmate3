@@ -5,6 +5,7 @@ import {
   INVITATION_REASONS,
   KEY_ERRORS,
   PASSWORD_MIN_LENGTH,
+  TOUR_PATH,
   dropLetters,
   isEmail,
   keyFormatError,
@@ -101,6 +102,9 @@ describe('auth flow', () => {
     expect(takeAfterSignIn()).toBe('/session/auto')
     markLinkReturn(COACH_PATH)
     expect(takeLinkReturn()).toBe('/session/auto')
+    // The guided tour comes back to itself (docs/ONBOARDING.md).
+    markLinkReturn(TOUR_PATH)
+    expect(takeLinkReturn()).toBe('/visite')
 
     markAfterSignIn('/bienvenue')
     expect(takeAfterSignIn()).toBeNull()

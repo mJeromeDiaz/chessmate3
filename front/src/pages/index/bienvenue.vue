@@ -67,10 +67,11 @@
           <img v-if="albert" :src="albert" alt="" class="welcome__albert" />
         </div>
         <router-link
-          to="/session/new"
+          :to="TOUR_PATH"
           class="auth-btn"
-          data-testid="welcome-first-session"
-          >Créer ma première session →</router-link
+          data-testid="welcome-tour"
+          @click="restartTour"
+          >Faire la visite guidée (2 min) →</router-link
         >
         <router-link to="/" class="auth-btn auth-btn--ghost"
           >Aller au tableau de bord</router-link
@@ -85,14 +86,15 @@ import { computed, onMounted, ref } from 'vue'
 import AuthShell from '@/components/auth/AuthShell.vue'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/utils/apiError'
-import { markLinkFromWelcome } from '@/utils/auth/authFlow'
+import { TOUR_PATH, markLinkFromWelcome } from '@/utils/auth/authFlow'
+import { TOUR_STEP_KEY } from '@/utils/onboarding'
 import { LICHESS_PERKS } from '@/utils/landing/content'
 import { profImage } from '@/utils/prof/images'
 
 /**
  * The first screen of a new account (design "Connexion", end of the flow): link Lichess, or later;
- * then "C'est parti !". Opened after a sign-up with Google or Lichess, and after the first sign-in
- * that follows the email verification. A link started here comes back here (OAuth callback).
+ * then "C'est parti !", which leads to the guided tour (docs/ONBOARDING.md). Opened after a
+ * sign-up with Google or Lichess, and after the first sign-in that follows the email verification. A link started here comes back here (OAuth callback).
  */
 definePage({ meta: { auth: 'required' } })
 
@@ -118,6 +120,15 @@ onMounted(async () => {
   step.value = linked.value ? 'done' : 'link'
   ready.value = true
 })
+
+/** A new account's tour starts from its first screen (another account may have left a step). */
+function restartTour() {
+  try {
+    localStorage.setItem(TOUR_STEP_KEY, '0')
+  } catch {
+    // Storage unavailable: the tour starts from the first screen anyway.
+  }
+}
 
 async function link() {
   linking.value = true

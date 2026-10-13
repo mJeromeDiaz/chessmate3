@@ -20,7 +20,7 @@ Become the King !". One git repository (monorepo) at the root:
   editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics, repertoire built from the user's Lichess games), `DASHBOARD.md`
   (home dashboard: endpoints, local days, Lichess rating history, showcase values), `NOTIFICATIONS.md`
   (Web Push, VAPID keys, session reminders and their cron), `GAMIFICATION.md` (XP rules and ledger,
-  levels, ranks, streaks, rebuild), `DEPLOY_OVH.md` (OVH shared hosting: tick instead of worker and cron, configuration, two databases), `EARLY_ACCESS.md` (invitation keys and key sign-up, early access screen, waiting list, admins, their dashboard and statistics, account suspension), `COORDINATES.md` (coordinates series: rules, timed module, validation per orientation as a goal, XP), `BLINDFOLD.md` (blindfold puzzles, no prerequisite: levels, lengths, peek, unrated), `EVALUATION.md` (position evaluation: admin-written catalogue, Lichess check, five categories, runs of 1, 2, 5 or 10 min, plan bonus, XP), `COACH.md` (tailored session: 200 Lichess games, endgame diagnosis, fixed composition, opening Woodpecker sets, coach plan), `PUZZLE_STREAK.md` (puzzle streak: ladder or tiers, topics and the user's openings, no help, unrated, records and XP, single streak or timed streaks, overtime). Code paths quoted in them (`src/...`, `config/...`,
+  levels, ranks, streaks, rebuild), `DEPLOY_OVH.md` (OVH shared hosting: tick instead of worker and cron, configuration, two databases), `EARLY_ACCESS.md` (invitation keys and key sign-up, early access screen, waiting list, admins, their dashboard and statistics, account suspension), `COORDINATES.md` (coordinates series: rules, timed module, validation per orientation as a goal, XP), `BLINDFOLD.md` (blindfold puzzles, no prerequisite: levels, lengths, peek, unrated), `EVALUATION.md` (position evaluation: admin-written catalogue, Lichess check, five categories, runs of 1, 2, 5 or 10 min, plan bonus, XP), `COACH.md` (tailored session: 200 Lichess games, endgame diagnosis, fixed composition, opening Woodpecker sets, coach plan), `PUZZLE_STREAK.md` (puzzle streak: ladder or tiers, topics and the user's openings, no help, unrated, records and XP, single streak or timed streaks, overtime, badges), `ONBOARDING.md` (guided tour: declared level seeding the puzzle rating, one goal, the professors and Ray, mobile and desktop views). Code paths quoted in them (`src/...`, `config/...`,
   `bin/console`) are relative to `api/` unless they name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
@@ -37,7 +37,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification, EarlyAccess, Coordinates, Blindfold, Evaluation, Coach, PuzzleStreak today) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification, EarlyAccess, Coordinates, Blindfold, Evaluation, Coach, PuzzleStreak, Onboarding today) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Attempt`, never `PuzzleAttempt`.
 
 | Layer | Location |

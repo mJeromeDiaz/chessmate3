@@ -106,6 +106,8 @@ Constantes :
 Initialisation depuis Lichess : proposée (bannière) si l'utilisateur a lié son compte Lichess et n'a
 encore aucune tentative classée ; `perfs.puzzle` de `GET https://lichess.org/api/user/{id}` (API
 publique). Une ligne `puzzle_rating_change` (raison `lichess_import`) garde la trace.
+Aussi par-dessus un niveau déclaré dans la visite guidée ([ONBOARDING.md](ONBOARDING.md) : source
+`declared`, raison `level_declared`, RD 250), jamais l'inverse.
 
 ## 4. Sélection adaptative
 

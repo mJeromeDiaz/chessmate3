@@ -54,7 +54,6 @@ export const STEP_LABELS = {
   tree: 'Répertoire'
 }
 
-
 /**
  * The score of a set of games: wins plus half the draws, in whole percents.
  *
@@ -471,7 +470,9 @@ export function uciToSan(fen, uci) {
 export function gameStatFacts(stat, color) {
   const facts = []
   if (stat.thinkCs !== null && stat.thinkCs !== undefined) {
-    facts.push(`Tu réfléchis ${formatThink(stat.thinkCs)} en moyenne sur ce coup.`)
+    facts.push(
+      `Tu réfléchis ${formatThink(stat.thinkCs)} en moyenne sur ce coup.`
+    )
   }
   if (stat.moveAnalysed > 0) {
     const errors = stat.moveErrors
@@ -494,7 +495,10 @@ export function gameStatFacts(stat, color) {
   return {
     games: stat.games,
     score: score(stat),
-    outcomes: OUTCOMES.map(o => ({ ...o, share: percent(stat[o.key], stat.games) })),
+    outcomes: OUTCOMES.map(o => ({
+      ...o,
+      share: percent(stat[o.key], stat.games)
+    })),
     facts
   }
 }

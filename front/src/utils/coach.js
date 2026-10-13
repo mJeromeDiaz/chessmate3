@@ -137,16 +137,20 @@ export function needText(module, composition) {
   const f = module.facts
   switch (module.module) {
     case 'woodpecker':
-      if (!f.opening) return `Aucune partie avec ${side(f.color)} : pas de Woodpecker de ce côté.`
+      if (!f.opening)
+        return `Aucune partie avec ${side(f.color)} : pas de Woodpecker de ce côté.`
       return `${f.opening.family} : ta n°1 avec ${side(f.color)}, ${count(f.opening.games, 'partie')}.`
     case 'repertoire':
-      return {
-        existing: `Tes répertoires : ${count(f.repertoires?.length ?? 0, 'répertoire')} à réviser.`,
-        generated: `Ton répertoire, tiré de tes parties : ${count(f.repertoires?.length ?? 0, 'ouverture')}.`,
-        not_asked: 'Pas encore de répertoire : il te manque.',
-        no_opening: 'Aucune ouverture jouée assez souvent pour un répertoire.',
-        failed: 'Le répertoire n’a pas pu être créé.'
-      }[module.missing ?? composition.repertoire.status] ?? 'Ton répertoire.'
+      return (
+        {
+          existing: `Tes répertoires : ${count(f.repertoires?.length ?? 0, 'répertoire')} à réviser.`,
+          generated: `Ton répertoire, tiré de tes parties : ${count(f.repertoires?.length ?? 0, 'ouverture')}.`,
+          not_asked: 'Pas encore de répertoire : il te manque.',
+          no_opening:
+            'Aucune ouverture jouée assez souvent pour un répertoire.',
+          failed: 'Le répertoire n’a pas pu être créé.'
+        }[module.missing ?? composition.repertoire.status] ?? 'Ton répertoire.'
+      )
     case 'blindfold':
       return f.weakest
         ? `Finales de type « ${f.weakest.label.toLowerCase()} » : ${slipText(f.weakest)}.`

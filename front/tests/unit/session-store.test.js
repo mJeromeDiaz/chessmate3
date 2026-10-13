@@ -367,7 +367,10 @@ describe('session store', () => {
     await store.fetchSubjects()
 
     expect(store.items[0].values.duree).toBe(2)
-    expect(store.add('coordonnees', { duree: 10, orientation: 'Noirs', notes: '' })?.values.duree).toBe(10)
+    expect(
+      store.add('coordonnees', { duree: 10, orientation: 'Noirs', notes: '' })
+        ?.values.duree
+    ).toBe(10)
     expect(store.totalMinutes).toBe(12)
     expect(store.canSave).toBe(true)
   })
@@ -384,7 +387,14 @@ describe('session store', () => {
     await store.fetchSubjects()
 
     expect(store.items[0].values.duree).toBe(2)
-    expect(store.add('evaluation', { duree: 5, elo: 1500, couleur: 'Blancs', notes: '' })?.values.duree).toBe(5)
+    expect(
+      store.add('evaluation', {
+        duree: 5,
+        elo: 1500,
+        couleur: 'Blancs',
+        notes: ''
+      })?.values.duree
+    ).toBe(5)
     expect(store.totalMinutes).toBe(7)
     expect(store.canSave).toBe(true)
   })
@@ -392,9 +402,20 @@ describe('session store', () => {
   it('keeps the opening sets of the tailored session apart from the light set', async () => {
     api.repertoireApi.list.mockResolvedValue([])
     api.puzzleApi.themes.mockResolvedValue([])
-    const ongoing = { archived: false, status: 'active', puzzleCount: 100, runs: [] }
+    const ongoing = {
+      archived: false,
+      status: 'active',
+      puzzleCount: 100,
+      runs: []
+    }
     api.woodpeckerApi.sets.mockResolvedValue([
-      { ...ongoing, id: 'o1', name: 'Italian Game · Blancs', mode: 'light', opening: { family: 'Italian_Game', color: 'white', bothColors: false } },
+      {
+        ...ongoing,
+        id: 'o1',
+        name: 'Italian Game · Blancs',
+        mode: 'light',
+        opening: { family: 'Italian_Game', color: 'white', bothColors: false }
+      },
       { ...ongoing, id: 'l1', name: 'Light', mode: 'light', opening: null }
     ])
     const store = useSessionStore()
@@ -403,7 +424,13 @@ describe('session store', () => {
 
     expect(store.context.lightSet?.id).toBe('l1')
     expect(store.context.openingSets).toEqual([
-      { id: 'o1', name: 'Italian Game · Blancs', status: 'active', puzzleCount: 100, color: 'white' }
+      {
+        id: 'o1',
+        name: 'Italian Game · Blancs',
+        status: 'active',
+        puzzleCount: 100,
+        color: 'white'
+      }
     ])
   })
 

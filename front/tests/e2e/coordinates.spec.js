@@ -34,10 +34,9 @@ test('coordinates: answers judged at once, sent before "Terminer", ribbon at the
     '5 min',
     '10 min'
   ])
-  await expect(durations.getByRole('button', { name: '2 min' })).toHaveAttribute(
-    'aria-pressed',
-    'true'
-  )
+  await expect(
+    durations.getByRole('button', { name: '2 min' })
+  ).toHaveAttribute('aria-pressed', 'true')
   await durations.getByRole('button', { name: '1 min' }).click()
   const served = page.waitForResponse(isRunNext)
   await page.getByTestId('run-start').click()

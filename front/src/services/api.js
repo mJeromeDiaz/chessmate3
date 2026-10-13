@@ -940,6 +940,19 @@ export const gamificationApi = {
       .then(r => r.data)
 }
 
+/** The guided tour (docs/ONBOARDING.md): the declared level and goal. */
+export const onboardingApi = {
+  /** `{level, goal, suggestedLevel, lichess: {linked, perf, rating}, canSeedRating, puzzleRating}` */
+  get: () => http.get('/api/onboarding', JSON_LD).then(r => r.data),
+  /**
+   * Replaces the answers; a level sets the starting puzzle rating while it still can.
+   *
+   * @param {{level: string|null, goal: string|null}} answers
+   */
+  save: answers =>
+    http.put('/api/onboarding', answers, JSON_LD).then(r => r.data)
+}
+
 /**
  * Administration (docs/EARLY_ACCESS.md): ROLE_ADMIN only. Invitation keys, statistics, players.
  *

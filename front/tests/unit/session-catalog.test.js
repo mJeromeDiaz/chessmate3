@@ -53,12 +53,7 @@ describe('session catalogue', () => {
       'notes'
     ])
     // The evaluation lasts one of the API's lengths, like a coordinates series.
-    expect(keys('evaluation')).toEqual([
-      'duree',
-      'elo',
-      'couleur',
-      'notes'
-    ])
+    expect(keys('evaluation')).toEqual(['duree', 'elo', 'couleur', 'notes'])
     expect(MODULES_BY_ID.libre.fields[1].options).toContain('Autre')
     for (const m of MODULES.filter(m => m.available)) {
       if (m.fields[0].key === 'duree' && m.fields[0].type === 'slider')
@@ -189,12 +184,30 @@ describe('session catalogue', () => {
     ).toMatch('en pause')
     // An opening set of the tailored session: that set, not the light set.
     const openingSets = [
-      { id: 's1', name: 'Italian Game · Blancs', status: 'active', puzzleCount: 100, color: 'white' },
-      { id: 's2', name: 'Sicilian Defense · Noirs', status: 'paused', puzzleCount: 40, color: 'black' }
+      {
+        id: 's1',
+        name: 'Italian Game · Blancs',
+        status: 'active',
+        puzzleCount: 100,
+        color: 'white'
+      },
+      {
+        id: 's2',
+        name: 'Sicilian Defense · Noirs',
+        status: 'paused',
+        puzzleCount: 40,
+        color: 'black'
+      }
     ]
-    expect(itemIssue(woodpecker, { set: 's1' }, { ...context, openingSets })).toBeNull()
-    expect(itemIssue(woodpecker, { set: 's2' }, { ...context, openingSets })).toMatch('en pause')
-    expect(itemIssue(woodpecker, { set: 's9' }, { ...context, openingSets })).toMatch('plus en cours')
+    expect(
+      itemIssue(woodpecker, { set: 's1' }, { ...context, openingSets })
+    ).toBeNull()
+    expect(
+      itemIssue(woodpecker, { set: 's2' }, { ...context, openingSets })
+    ).toMatch('en pause')
+    expect(
+      itemIssue(woodpecker, { set: 's9' }, { ...context, openingSets })
+    ).toMatch('plus en cours')
     // Subjects not loaded yet: only what the settings themselves say.
     expect(itemIssue(woodpecker, {})).toBeNull()
     expect(itemIssue(repertoire, { repertoires: ['r9'] })).toBeNull()

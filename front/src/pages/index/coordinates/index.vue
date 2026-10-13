@@ -6,8 +6,8 @@
         Connais l’échiquier par cœur : trouve les cases sur un échiquier vide,
         sans coordonnées. Une série dure
         {{ state ? durationsText(state.rules) : '…' }} ; elle valide son
-        orientation avec {{ state ? rulesText(state.rules) : '…' }}.
-        Valide les Blancs et les Noirs !
+        orientation avec {{ state ? rulesText(state.rules) : '…' }}. Valide les
+        Blancs et les Noirs !
       </p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{

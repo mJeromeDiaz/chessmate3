@@ -28,8 +28,12 @@ const diagnosis = (over = {}) => ({
   games: 200,
   analysed: 40,
   rating: 1800,
-  white: [{ family: 'Italian Game', games: 38, wins: 20, draws: 2, losses: 16 }],
-  black: [{ family: 'Sicilian Defense', games: 46, wins: 20, draws: 6, losses: 20 }],
+  white: [
+    { family: 'Italian Game', games: 38, wins: 20, draws: 2, losses: 16 }
+  ],
+  black: [
+    { family: 'Sicilian Defense', games: 46, wins: 20, draws: 6, losses: 20 }
+  ],
   endgames: { games: 30, advantages: 12, lost: 7, types: [rook] },
   weakest: rook,
   ...over
@@ -83,7 +87,10 @@ describe('tailored session words', () => {
     expect(
       scanSays(
         1,
-        diagnosis({ weakest: null, endgames: { games: 0, advantages: 0, lost: 0, types: [] } })
+        diagnosis({
+          weakest: null,
+          endgames: { games: 0, advantages: 0, lost: 0, types: [] }
+        })
       )
     ).toMatch('Peu de finales')
     expect(scanSays(1, diagnosis({ games: 0 }))).toMatch('aucune partie')
@@ -97,7 +104,9 @@ describe('tailored session words', () => {
       glyph: '♔︎'
     })
     expect(
-      moduleCard(woodpecker('black', { included: false, missing: 'no_puzzles' })).text
+      moduleCard(
+        woodpecker('black', { included: false, missing: 'no_puzzles' })
+      ).text
     ).toMatch('Pas assez de puzzles')
     expect(
       moduleCard(
@@ -119,9 +128,9 @@ describe('tailored session words', () => {
     expect(moduleCard(blindfold).text).toBe(
       'Pour mieux visualiser, et calculer jusqu’au bout. Tes finales de type « tours » : 4 avantages laissés filer sur 6.'
     )
-    expect(
-      moduleCard({ ...blindfold, facts: { weakest: null } }).text
-    ).toMatch('de mémoire')
+    expect(moduleCard({ ...blindfold, facts: { weakest: null } }).text).toMatch(
+      'de mémoire'
+    )
 
     const repertoire = {
       module: 'repertoire',
@@ -165,7 +174,13 @@ describe('tailored session words', () => {
     )
     expect(
       needText(
-        { module: 'repertoire', minutes: 10, included: false, missing: 'not_asked', facts: {} },
+        {
+          module: 'repertoire',
+          minutes: 10,
+          included: false,
+          missing: 'not_asked',
+          facts: {}
+        },
         composition(modules)
       )
     ).toMatch('Pas encore de répertoire')
@@ -173,17 +188,19 @@ describe('tailored session words', () => {
       'On commence par tes deux ouvertures phares. Ensuite, cap sur tes finales de type « tours » : c’est là que tu laisses filer le plus d’avantages.'
     )
     const one = [woodpecker('white'), woodpecker('black', { included: false })]
-    expect(sessionSays(composition(one, { diagnosis: diagnosis({ weakest: null }) }))).toBe(
+    expect(
+      sessionSays(composition(one, { diagnosis: diagnosis({ weakest: null }) }))
+    ).toBe(
       'On commence par ton ouverture phare. Ensuite, on entretient ta vision et ton jugement.'
     )
     expect(playedModules(composition(one))).toHaveLength(1)
   })
 
   it('colours the steps and keeps the three reasons', () => {
-    expect([moduleColor(woodpecker('white')), moduleColor(woodpecker('black'))]).toEqual([
-      '#FFD43B',
-      '#FFE27A'
-    ])
+    expect([
+      moduleColor(woodpecker('white')),
+      moduleColor(woodpecker('black'))
+    ]).toEqual(['#FFD43B', '#FFE27A'])
     expect(WOODPECKER_REASONS.map(r => r.title)).toEqual([
       'Automatiser la reconnaissance des motifs',
       'Améliorer la vitesse de calcul',
@@ -193,10 +210,14 @@ describe('tailored session words', () => {
 
   it('words the refusals', () => {
     expect(
-      coachErrorText({ response: { status: 422, data: { detail: 'limit_plans' } } })
+      coachErrorText({
+        response: { status: 422, data: { detail: 'limit_plans' } }
+      })
     ).toMatch('50 sessions')
     expect(
-      coachErrorText({ response: { status: 409, data: { detail: 'not_ready' } } })
+      coachErrorText({
+        response: { status: 409, data: { detail: 'not_ready' } }
+      })
     ).toMatch('pas finie')
   })
 })

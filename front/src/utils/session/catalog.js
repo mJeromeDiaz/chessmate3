@@ -754,7 +754,8 @@ export function fromStep(step) {
     values.couleur = labelOf(EVALUATION_SIDES, settings.side) ?? values.couleur
   }
   if (step.module === 'puzzle_streak') {
-    values.difficulte = labelOf(STREAK_RAMPS, settings.ramp) ?? values.difficulte
+    values.difficulte =
+      labelOf(STREAK_RAMPS, settings.ramp) ?? values.difficulte
     if (typeof settings.topic === 'string') values.thematique = settings.topic
   }
   return { moduleId, values }

@@ -17,6 +17,10 @@
           <q-item-section avatar><q-icon name="person" /></q-item-section>
           <q-item-section>Profil</q-item-section>
         </q-item>
+        <q-item v-close-popup clickable :to="TOUR_PATH" data-testid="nav-tour">
+          <q-item-section avatar><q-icon name="tour" /></q-item-section>
+          <q-item-section>Visite guidée</q-item-section>
+        </q-item>
         <q-item
           v-if="auth.isAdmin"
           v-close-popup
@@ -76,6 +80,7 @@ import UserAvatar from '@/components/layout/UserAvatar.vue'
 import { useLogout } from '@/composables/layout/useLogout'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import { TOUR_PATH } from '@/utils/auth/authFlow'
 import { profileName } from '@/utils/profile'
 import { THEME_OPTIONS } from '@/utils/theme'
 

@@ -43,8 +43,8 @@
             </ol>
             <div class="cs-text cs-text--on-night">
               {{ module.facts.puzzleCount }} puzzles tirés de parties jouées
-              dans ton ouverture, toujours les mêmes : tu les reconnais de
-              plus en plus vite.
+              dans ton ouverture, toujours les mêmes : tu les reconnais de plus
+              en plus vite.
             </div>
           </div>
           <div class="cs-card">
@@ -69,7 +69,9 @@
     </div>
 
     <div v-if="counting" class="cs-count" data-testid="coach-countdown">
-      <div class="cs-count__label">MODULE 1 · {{ card.title.toUpperCase() }}</div>
+      <div class="cs-count__label"
+        >MODULE 1 · {{ card.title.toUpperCase() }}</div
+      >
       <div class="cs-count__ring">
         <svg viewBox="0 0 220 220">
           <circle cx="110" cy="110" r="98" class="cs-count__track" />
@@ -81,9 +83,12 @@
             pathLength="1"
           />
         </svg>
-        <div :key="count" class="cs-count__n" :class="{ 'cs-count__n--go': !count }">{{
-          count || 'Go !'
-        }}</div>
+        <div
+          :key="count"
+          class="cs-count__n"
+          :class="{ 'cs-count__n--go': !count }"
+          >{{ count || 'Go !' }}</div
+        >
       </div>
       <div class="cs-count__sub">{{ countSub }}</div>
     </div>

@@ -277,7 +277,22 @@ describe('repertoire from my games: wording', () => {
     expect(uciToSan(fen, 'f1c4')).toBe('Bc4')
     expect(uciToSan(fen, 'a1a8')).toBe('a1a8')
     const summary = gameStatFacts(
-      { fen, uci: 'f1b5', games: 10, wins: 5, draws: 2, losses: 3, analysed: 4, errored: 1, thinkCs: 4500, moveAnalysed: 4, moveErrors: 1, bestUci: 'f1c4', evalCp: 60, evalMate: null },
+      {
+        fen,
+        uci: 'f1b5',
+        games: 10,
+        wins: 5,
+        draws: 2,
+        losses: 3,
+        analysed: 4,
+        errored: 1,
+        thinkCs: 4500,
+        moveAnalysed: 4,
+        moveErrors: 1,
+        bestUci: 'f1c4',
+        evalCp: 60,
+        evalMate: null
+      },
       'black'
     )
     expect([summary.games, summary.score]).toEqual([10, 60])

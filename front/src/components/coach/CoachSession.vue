@@ -122,9 +122,8 @@ const played = computed(() => playedModules(props.composition))
 
 /** @param {number} index a module's index among all: its number among those played */
 function number(index) {
-  return props.composition.modules
-    .slice(0, index + 1)
-    .filter(m => m.included).length
+  return props.composition.modules.slice(0, index + 1).filter(m => m.included)
+    .length
 }
 </script>
 

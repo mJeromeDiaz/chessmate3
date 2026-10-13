@@ -463,8 +463,7 @@ const streakResult = computed(() =>
 )
 /** Puzzles solved in the streak in progress (the broken one's length after a miss). */
 const streakNow = computed(
-  () =>
-    streakResult.value?.data?.streak ?? streakItem.value?.data?.streak ?? 0
+  () => streakResult.value?.data?.streak ?? streakItem.value?.data?.streak ?? 0
 )
 /** The run's best streak so far. */
 const streakBest = computed(() =>

@@ -446,7 +446,9 @@ const editor = useRepertoireEditor(store)
 const currentGameStat = computed(() => {
   const move = editor.currentMove.value
   const from = move ? store.graph?.positions[move.from] : null
-  return from ? (store.graph?.gameStats?.[`${from.fen} ${move.uci}`] ?? null) : null
+  return from
+    ? (store.graph?.gameStats?.[`${from.fen} ${move.uci}`] ?? null)
+    : null
 })
 
 /** "Depuis tes parties · 200 parties": where a repertoire built from the user's games came from. */

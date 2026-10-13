@@ -33,10 +33,14 @@ final class LichessRatingImporter
     ) {
     }
 
+    /**
+     * Over the default rating or a declared level (docs/ONBOARDING.md: the Lichess puzzle rating is
+     * the better guess), never once a rated puzzle was played.
+     */
     public function canImport(User $user, ?Rating $rating): bool
     {
         return null !== $this->lichessIdentity($user)
-            && (null === $rating || (0 === $rating->getRatedCount() && RatingSource::Default === $rating->getSource()));
+            && (null === $rating || (0 === $rating->getRatedCount() && RatingSource::Lichess !== $rating->getSource()));
     }
 
     /**

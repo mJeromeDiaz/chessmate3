@@ -42,7 +42,11 @@
     </template>
 
     <template
-      v-if="puzzle && game.phase.value !== 'complete' && (help || skippable || replaceable || withSettings)"
+      v-if="
+        puzzle &&
+        game.phase.value !== 'complete' &&
+        (help || skippable || replaceable || withSettings)
+      "
       #controls
     >
       <q-btn

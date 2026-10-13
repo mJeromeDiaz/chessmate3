@@ -10,10 +10,7 @@
 
 <script setup>
 import { authApi } from '@/services/api'
-import {
-  AUTO_REPERTOIRE_PATH,
-  markAfterSignIn
-} from '@/utils/auth/authFlow'
+import { AUTO_REPERTOIRE_PATH, markAfterSignIn } from '@/utils/auth/authFlow'
 
 /**
  * The landing page's "from my games" call to action: a Lichess sign-in (or sign-up, through the

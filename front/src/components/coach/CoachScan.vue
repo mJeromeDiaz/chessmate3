@@ -125,10 +125,11 @@
           </div>
         </div>
         <p v-if="done && diagnosis" class="cs-footnote">
-          Avantage : +2 selon l’analyse Lichess quand la partie en a une
-          ({{ diagnosis.analysed }} sur {{ diagnosis.games }}), sinon 2 points
-          de matériel de plus à l’entrée en finale. Laissé filer : la partie
-          n’a pas été gagnée.
+          Avantage : +2 selon l’analyse Lichess quand la partie en a une ({{
+            diagnosis.analysed
+          }}
+          sur {{ diagnosis.games }}), sinon 2 points de matériel de plus à
+          l’entrée en finale. Laissé filer : la partie n’a pas été gagnée.
         </p>
       </div>
     </div>
@@ -162,10 +163,7 @@ const props = defineProps({
 const emit = defineEmits(['compose', 'restart'])
 
 const digits = computed(() =>
-  String(Math.min(999, props.shown))
-    .padStart(3, '0')
-    .split('')
-    .map(Number)
+  String(Math.min(999, props.shown)).padStart(3, '0').split('').map(Number)
 )
 const firstSignificant = computed(() => {
   const i = digits.value.findIndex(d => d > 0)
@@ -181,7 +179,9 @@ const openingRows = computed(() =>
         ? props.diagnosis[color]
         : Object.entries(props.openings[color] ?? {})
             .map(([family, games]) => ({ family, games }))
-            .sort((a, b) => b.games - a.games || a.family.localeCompare(b.family))
+            .sort(
+              (a, b) => b.games - a.games || a.family.localeCompare(b.family)
+            )
             .slice(0, 3)
   }))
 )

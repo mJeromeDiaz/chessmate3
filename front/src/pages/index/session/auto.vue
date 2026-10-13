@@ -1,5 +1,9 @@
 <template>
-  <q-page class="cs" :class="`cs--${coach.step.value}`" data-testid="coach-page">
+  <q-page
+    class="cs"
+    :class="`cs--${coach.step.value}`"
+    data-testid="coach-page"
+  >
     <div class="cs__column">
       <CoachHeader :step="coach.step.value" :dark="dark" @back="back" />
 
@@ -157,7 +161,8 @@ function back() {
 }
 
 async function launch() {
-  if (coach.composition.value) await launcher.launch(coach.composition.value.planId)
+  if (coach.composition.value)
+    await launcher.launch(coach.composition.value.planId)
 }
 </script>
 

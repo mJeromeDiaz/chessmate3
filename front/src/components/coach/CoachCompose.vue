@@ -110,9 +110,13 @@
           <span class="cs-mod__n">{{ i + 1 }}</span>
           <span class="cs-mod__text">
             <b>{{ moduleCard(m).title }}</b>
-            <span>{{ m.included ? needText(m, composition) : 'Pas cette fois' }}</span>
+            <span>{{
+              m.included ? needText(m, composition) : 'Pas cette fois'
+            }}</span>
           </span>
-          <span class="cs-mod__min">{{ m.included ? `${m.minutes}′` : '—' }}</span>
+          <span class="cs-mod__min">{{
+            m.included ? `${m.minutes}′` : '—'
+          }}</span>
         </div>
         <div v-if="!composed && !error" class="cs-slot">
           <span class="cs-spinner" />{{

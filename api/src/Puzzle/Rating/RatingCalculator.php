@@ -30,6 +30,11 @@ final class RatingCalculator
      * differ, so the imported value is a good starting point, not a settled rating.
      */
     public const MIN_IMPORTED_DEVIATION = 150.0;
+    /**
+     * RD of a rating seeded from the level the player declared (docs/ONBOARDING.md): a rough guess,
+     * it moves fast with the first puzzles.
+     */
+    public const DECLARED_DEVIATION = 250.0;
 
     private readonly Glicko2 $glicko;
 
@@ -50,6 +55,11 @@ final class RatingCalculator
             min(self::MAX_DEVIATION, max(self::MIN_IMPORTED_DEVIATION, $deviation)),
             self::DEFAULT_VOLATILITY,
         );
+    }
+
+    public static function declared(int $rating): RatingState
+    {
+        return new RatingState((float) $rating, self::DECLARED_DEVIATION, self::DEFAULT_VOLATILITY);
     }
 
     public function afterAttempt(

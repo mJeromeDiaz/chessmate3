@@ -212,10 +212,7 @@ export function useAutoBuild() {
         reveal(next.batch ?? [], id, pace)
         // Let the feed play before the next batch.
         await sleep(
-          Math.max(
-            0,
-            (next.batch?.length ?? 0) * pace - (Date.now() - started)
-          )
+          Math.max(0, (next.batch?.length ?? 0) * pace - (Date.now() - started))
         )
       } catch (e) {
         if (id !== run) return

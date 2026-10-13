@@ -119,6 +119,12 @@ class Rating
         $this->source = RatingSource::Lichess;
     }
 
+    public function seedFromDeclaration(RatingState $state, \DateTimeImmutable $at): void
+    {
+        $this->apply($state, $at);
+        $this->source = RatingSource::Declared;
+    }
+
     private function apply(RatingState $state, \DateTimeImmutable $at): void
     {
         $this->rating = $state->rating;
