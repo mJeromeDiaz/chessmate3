@@ -29,7 +29,7 @@
       >
         <div
           class="trophies__icon"
-          :class="{ 'trophies__icon--days': card.streak }"
+          :class="{ 'trophies__icon--days': card.streak || card.puzzles }"
           :style="{ background: card.bg, color: card.ink }"
         >
           {{ card.icon }}
@@ -45,7 +45,7 @@
 <script setup>
 /**
  * The trophies (docs/GAMIFICATION.md): only the won ones, with the date of the feat (the streak
- * badges last, shortest first); the others stay hidden, only counted.
+ * badges last, shortest first, then the puzzle streak badges); the others stay hidden, only counted.
  */
 import { computed } from 'vue'
 import { useGamificationStore } from '@/stores/gamification'

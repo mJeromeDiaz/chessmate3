@@ -174,6 +174,37 @@ describe('trophyCards', () => {
     })
     expect(cards[2]).toMatchObject({ name: 'Étincelle', unlocked: true })
   })
+
+  it('puts the puzzle streak badges after the streak badges, counted in puzzles', () => {
+    const trophy = (key, goal, current, unlocked = false) => ({
+      key,
+      goal,
+      current,
+      unlocked,
+      unlockedAt: unlocked ? '2026-10-01T08:00:00+00:00' : null,
+      ratio: null
+    })
+    const cards = trophyCards([
+      trophy('streak_puzzles_20', 20, 14),
+      trophy('streak_1000', 1000, 3),
+      trophy('streak_puzzles_10', 10, 10, true),
+      trophy('first_step', 1, 1, true)
+    ])
+    expect(cards.map(c => c.key)).toEqual([
+      'first_step',
+      'streak_1000',
+      'streak_puzzles_10',
+      'streak_puzzles_20'
+    ])
+    expect(cards[3]).toMatchObject({
+      name: 'Rafale',
+      icon: '20',
+      desc: '20 puzzles d’affilée',
+      progress: '14/20 puzzles',
+      puzzles: 20
+    })
+    expect(cards[2]).toMatchObject({ name: 'Enchaînement', unlocked: true })
+  })
 })
 
 describe('questText', () => {

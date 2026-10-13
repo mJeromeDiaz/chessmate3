@@ -13,6 +13,7 @@ use App\Entity\PuzzleStreak\Streak;
 use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
+use App\Enum\Gamification\Trophy;
 use App\Enum\PuzzleStreak\AttemptStatus;
 use App\Enum\PuzzleStreak\PlayMode;
 use App\Enum\PuzzleStreak\Ramp;
@@ -231,6 +232,7 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
         $lengths = array_map(static fn (Streak $s): int => $s->getLength(), $streaks);
         $ratings = array_filter(array_map(static fn (Streak $s): ?int => $s->getBestRating(), $streaks), static fn (?int $r): bool => null !== $r);
         $played = $solved + $failed;
+        $best = [] === $lengths ? 0 : max($lengths);
 
         return new Summary(
             durationMs: max(0, (int) round(((float) $closedAt->format('U.u') - (float) $run->getStartedAt()->format('U.u')) * 1000)),
@@ -240,10 +242,12 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
                 'mode' => $config['mode'] ?? null,
                 'ramp' => $ramp->value,
                 'topic' => $topic,
-                'bestStreak' => [] === $lengths ? 0 : max($lengths),
+                'bestStreak' => $best,
                 'streaks' => $lengths,
                 'recordBefore' => $this->streaks->bestOutside($run, $ramp, $topic),
                 'record' => [] !== array_filter($streaks, static fn (Streak $s): bool => $s->isRecord()),
+                // The puzzle streak trophies this run won (shortest first).
+                'badges' => array_map(static fn (Trophy $t): string => $t->value, Trophy::puzzleStreaksBetween($this->streaks->bestEverOutside($run), $best)),
                 'hardestRating' => [] === $ratings ? null : max($ratings),
                 'solved' => $solved,
                 'failed' => $failed,

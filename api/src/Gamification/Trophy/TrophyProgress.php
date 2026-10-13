@@ -7,6 +7,7 @@ namespace App\Gamification\Trophy;
 use App\Entity\User;
 use App\Enum\Gamification\Trophy;
 use App\Enum\Puzzle\AttemptStatus;
+use App\Enum\PuzzleStreak\AttemptStatus as StreakAttemptStatus;
 use App\Enum\Repertoire\PresentationStatus;
 use App\Enum\Training\SessionStatus;
 use App\Enum\Woodpecker\CycleStatus;
@@ -49,6 +50,9 @@ final readonly class TrophyProgress
 
         if ($trophy->isStreak()) {
             return $this->streak($id, $trophy->goal());
+        }
+        if ($trophy->isPuzzleStreak()) {
+            return $this->puzzleStreak($id, $trophy->goal());
         }
 
         return match ($trophy) {
@@ -114,6 +118,26 @@ final readonly class TrophyProgress
             [$userId, $day],
             [ParameterType::BINARY],
         );
+
+        return ['current' => min($best, $goal), 'reachedAt' => Counter::instant($at)];
+    }
+
+    /**
+     * Puzzles solved in a row in a puzzle streak, any ramp and topic: reached when the goal-th
+     * puzzle of a streak was solved.
+     *
+     * @return Progress
+     */
+    private function puzzleStreak(string $userId, int $goal): array
+    {
+        $best = $this->connection->fetchOne('SELECT COALESCE(MAX(length), 0) FROM puzzle_streak WHERE user_id = ?', [$userId], [ParameterType::BINARY]);
+        $best = is_numeric($best) ? (int) $best : 0;
+        // Its position: the puzzles solved before it in the streak.
+        $at = $best >= $goal ? $this->connection->fetchOne(
+            'SELECT MIN(submitted_at) FROM puzzle_streak_attempt WHERE user_id = ? AND position = ? AND status = ?',
+            [$userId, $goal - 1, StreakAttemptStatus::Solved->value],
+            [ParameterType::BINARY, ParameterType::INTEGER, ParameterType::STRING],
+        ) : null;
 
         return ['current' => min($best, $goal), 'reachedAt' => Counter::instant($at)];
     }

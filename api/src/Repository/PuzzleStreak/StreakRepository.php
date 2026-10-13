@@ -60,6 +60,20 @@ class StreakRepository extends ServiceEntityRepository
     }
 
     /**
+     * The user's longest streak in other runs, any ramp and topic (0: none).
+     */
+    public function bestEverOutside(Run $run): int
+    {
+        $best = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT MAX(length) FROM puzzle_streak WHERE user_id = ? AND run_id <> ?',
+            [$run->getUser()->getId()->toBinary(), $run->getId()->toBinary()],
+            [ParameterType::BINARY, ParameterType::BINARY],
+        );
+
+        return is_numeric($best) ? (int) $best : 0;
+    }
+
+    /**
      * The user's longest streak of this ramp and topic in other runs (0: none).
      */
     public function bestOutside(Run $run, Ramp $ramp, string $topic): int

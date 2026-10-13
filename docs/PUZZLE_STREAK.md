@@ -77,8 +77,8 @@ avec au moins `RECORD_MIN` (5) puzzles, est marqué `record` et publie `RecordBe
   `ended`.
 - **Récapitulatif** `metrics` : `mode`, `ramp`, `topic`, `bestStreak`, `streaks` (longueurs dans
   l'ordre), `recordBefore` (record de la difficulté et de la thématique hors de cette séance),
-  `record` (un streak de la séance l'a battu), `hardestRating`, `solved`, `failed`, `activeMs`,
-  `averageMs`, `extensions`. Bilan (`review`) : `ok` / `fail`, le puzzle complet, `streakNumber`,
+  `record` (un streak de la séance l'a battu), `badges` (badges gagnés par cette séance, § 4 bis),
+  `hardestRating`, `solved`, `failed`, `activeMs`, `averageMs`, `extensions`. Bilan (`review`) : `ok` / `fail`, le puzzle complet, `streakNumber`,
   `position`, `targetRating`.
 - **Prolongation** ([TRAINING.md § 2](TRAINING.md#2-règles-validées)) : `StreakModule` implémente
   `OvertimeModuleInterface` ; `canExtend` = un streak en cours d'au moins un puzzle. Le temps écoulé,
@@ -95,6 +95,21 @@ avec au moins `RECORD_MIN` (5) puzzles, est marqué `record` et publie `RecordBe
   par `app:gamification:rebuild` (`puzzle_streak.record`).
 - Chaque puzzle est un `ExerciseCompleted` `streak_puzzle` (source `puzzle_streak_attempt`) : il
   compte pour la série du jour.
+
+## 4 bis. Badges (2026-10-13)
+
+Quatre trophées ([GAMIFICATION.md § 4 bis](GAMIFICATION.md#4-bis-trophées)), sans XP, pour
+**10, 20, 30 et 50 puzzles d'affilée** : Enchaînement, Rafale, Déferlante, Imparable
+(`streak_puzzles_<n>`, `Trophy::isPuzzleStreak()`, `puzzleStreaks()`, `puzzleStreaksBetween()`).
+
+- **Tout compte** : toutes les difficultés, toutes les thématiques, la page Streak comme les
+  séances ; la progression est le plus long streak de l'utilisateur.
+- **Date de l'exploit** : le N-ième puzzle résolu du premier streak qui a atteint N
+  (`position` = N - 1) ; le recalcul retrouve les mêmes dates.
+- **Annonce** : `metrics.badges` liste les seuils franchis entre le meilleur streak d'avant la
+  séance (toutes thématiques, `StreakRepository::bestEverOutside()`) et le meilleur de la séance ;
+  l'écran de fin les montre (« Badge débloqué : Rafale · 20 puzzles d'affilée »), le bilan aussi. Le
+  trophée lui-même est enregistré à la lecture des trophées, comme les autres.
 
 ## 5. API
 
@@ -129,7 +144,8 @@ Exportés avec le compte (`entrainement.json` : `puzzleStreaks`, `puzzleStreakAt
   termine la séance.
 - Fin : écran « Meilleur streak ! » ou « Nouveau record ! » (confettis) ; le score est le meilleur
   streak, l'anneau le compare au record d'avant, une ligne dit le record (`streakRing`,
-  `streakNote` de `utils/runResult.js`) ; « Revoir mes erreurs » rejoue les puzzles qui ont cassé
+  `streakNote` de `utils/runResult.js`), puis les badges gagnés (`wonBadges`, pastille violette) ;
+  « Revoir mes erreurs » rejoue les puzzles qui ont cassé
   les streaks. Jamais de son ni d'écran d'échec (un streak finit toujours sur une erreur).
 - Session Builder : carte « Puzzle streak » (prof Albert) : durée (5 à 60 min), difficulté,
   thématique (champ `streakTopic`, mêmes choix) ; `toStep` → `{ramp, topic}`.
@@ -138,10 +154,11 @@ Exportés avec le compte (`entrainement.json` : `puzzleStreaks`, `puzzleStreakAt
 
 `tests/Unit/PuzzleStreak/StreakRulesTest.php` (difficultés, thématiques, XP),
 `tests/Functional/PuzzleStreak/StreakRunTest.php` (streak seul jusqu'à l'erreur, jamais classé, XP
-et recalcul, record et son bonus, streaks enchaînés en séance, aide = erreur, thème, ouverture et
+et recalcul, record et son bonus, badge annoncé une seule fois, streaks enchaînés en séance, aide = erreur, thème, ouverture et
 ouvertures proposées, réglages, étape de session ; prolongation : sans streak, deux prolongations
-puis l'erreur, « Achever », sans réponse), `RoutingTest.php` ; Vitest `puzzle-streak.test.js`,
+puis l'erreur, « Achever », sans réponse), `RoutingTest.php`, `Gamification/TrophyTest.php`
+(badges : toutes thématiques, date de l'exploit) ; Vitest `puzzle-streak.test.js`,
 `use-timeboxed-run.test.js` (décision, prolongation), `run-result.test.js`,
-`session-catalog.test.js` ; Playwright `tests/e2e/puzzle-streak.spec.js` (un streak seul jusqu'à
-l'erreur et son record, une séance d'une minute **jusqu'à son expiration réelle** avec prolongation,
+`session-catalog.test.js`, `gamification.test.js` (cartes des badges) ; Playwright `tests/e2e/puzzle-streak.spec.js` (un streak seul jusqu'à
+l'erreur, son record et un badge annoncé (réponse de l'API complétée par `page.route`), une séance d'une minute **jusqu'à son expiration réelle** avec prolongation,
 la carte du Session Builder ; environ 80 s).

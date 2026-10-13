@@ -41,6 +41,11 @@ enum Trophy: string
     case Streak450 = 'streak_450';
     case Streak500 = 'streak_500';
     case Streak1000 = 'streak_1000';
+    /** Puzzle streak badges (docs/PUZZLE_STREAK.md, "Badges"): puzzles solved in a row, any ramp and topic. */
+    case PuzzleStreak10 = 'streak_puzzles_10';
+    case PuzzleStreak20 = 'streak_puzzles_20';
+    case PuzzleStreak30 = 'streak_puzzles_30';
+    case PuzzleStreak50 = 'streak_puzzles_50';
 
     /** The threshold, in the unit of its progress. */
     public function goal(): int
@@ -66,6 +71,11 @@ enum Trophy: string
             self::Streak450 => 450,
             self::Streak500 => 500,
             self::Streak1000 => 1000,
+            // Puzzles in a row.
+            self::PuzzleStreak10 => 10,
+            self::PuzzleStreak20 => 20,
+            self::PuzzleStreak30 => 30,
+            self::PuzzleStreak50 => 50,
         };
     }
 
@@ -102,5 +112,37 @@ enum Trophy: string
         }
 
         return null;
+    }
+
+    /** Whether it is won by a puzzle streak of goal() puzzles. */
+    public function isPuzzleStreak(): bool
+    {
+        return match ($this) {
+            self::PuzzleStreak10, self::PuzzleStreak20, self::PuzzleStreak30, self::PuzzleStreak50 => true,
+            default => false,
+        };
+    }
+
+    /**
+     * The puzzle streak badges, shortest first.
+     *
+     * @return list<self>
+     */
+    public static function puzzleStreaks(): array
+    {
+        $badges = array_values(array_filter(self::cases(), static fn (self $trophy): bool => $trophy->isPuzzleStreak()));
+        usort($badges, static fn (self $a, self $b): int => $a->goal() <=> $b->goal());
+
+        return $badges;
+    }
+
+    /**
+     * The puzzle streak badges a best streak going from $from to $to puzzles wins.
+     *
+     * @return list<self>
+     */
+    public static function puzzleStreaksBetween(int $from, int $to): array
+    {
+        return array_values(array_filter(self::puzzleStreaks(), static fn (self $trophy): bool => $trophy->goal() > $from && $trophy->goal() <= $to));
     }
 }

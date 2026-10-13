@@ -114,6 +114,21 @@
           data-testid="run-result-note"
           >{{ note }}</div
         >
+        <div
+          v-for="badge in badges"
+          :key="badge.key"
+          class="rr__badge"
+          :class="{ 'rr__badge--shown': step >= 5 }"
+          :data-testid="`run-result-badge-${badge.key}`"
+        >
+          <span class="rr__badge-disc" aria-hidden="true">{{
+            badge.goal
+          }}</span>
+          <span
+            >Badge débloqué : <strong>{{ badge.name }}</strong> ·
+            {{ badge.goal }} puzzles d’affilée</span
+          >
+        </div>
       </div>
 
       <div class="rr__spacer" />
@@ -193,6 +208,12 @@ const props = defineProps({
   ring: { type: Number, default: null },
   /** A line under the caption (a puzzle streak's record). */
   note: { type: String, default: '' },
+  /**
+   * The badges the run won (a puzzle streak's), shown under the note.
+   *
+   * @type {import('vue').PropType<import('@/utils/puzzleStreak').PuzzleStreakBadge[]>}
+   */
+  badges: { type: Array, default: () => [] },
   /** Missed items that can be corrected. */
   fixable: { type: Number, default: 0 },
   confetti: { type: Boolean, default: false },
@@ -437,6 +458,41 @@ defineExpose({ play })
 .rr__note {
   font-size: 14px;
   font-weight: 700;
+}
+
+.rr__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1b1530;
+  font-size: 14px;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 0.3s ease,
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rr__badge--shown {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.rr__badge-disc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eee9ff;
+  color: #4a2fe0;
+  font-weight: 800;
+  font-size: 14px;
 }
 
 .rr__spacer {

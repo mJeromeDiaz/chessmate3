@@ -221,3 +221,28 @@ export function recordOf(records, ramp, topic) {
 export function streakText(count) {
   return `${count} puzzle${count > 1 ? 's' : ''} d’affilée`
 }
+
+/**
+ * The puzzle streak badges (trophies, docs/PUZZLE_STREAK.md): puzzles solved in a row, any ramp
+ * and topic, shortest first.
+ *
+ * @typedef {{key: string, goal: number, name: string}} PuzzleStreakBadge
+ * @type {PuzzleStreakBadge[]}
+ */
+export const PUZZLE_STREAK_BADGES = [
+  { key: 'streak_puzzles_10', goal: 10, name: 'Enchaînement' },
+  { key: 'streak_puzzles_20', goal: 20, name: 'Rafale' },
+  { key: 'streak_puzzles_30', goal: 30, name: 'Déferlante' },
+  { key: 'streak_puzzles_50', goal: 50, name: 'Imparable' }
+]
+
+/**
+ * The badges a run won (its summary's `metrics.badges`), shortest first.
+ *
+ * @param {Record<string, any>|null|undefined} metrics
+ * @returns {PuzzleStreakBadge[]}
+ */
+export function wonBadges(metrics) {
+  const keys = metrics?.badges ?? []
+  return PUZZLE_STREAK_BADGES.filter(b => keys.includes(b.key))
+}

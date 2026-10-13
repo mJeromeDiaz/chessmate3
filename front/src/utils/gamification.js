@@ -1,5 +1,6 @@
 import { profImage } from '@/utils/prof/images'
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
+import { PUZZLE_STREAK_BADGES } from '@/utils/puzzleStreak'
 import { STREAK_BADGES } from '@/utils/streak'
 
 /**
@@ -96,9 +97,25 @@ const STREAK_TROPHIES = Object.fromEntries(
   ])
 )
 
+/** The puzzle streak badges' look: the number of puzzles in a violet disc (docs/PUZZLE_STREAK.md). */
+const PUZZLE_STREAK_TROPHIES = Object.fromEntries(
+  PUZZLE_STREAK_BADGES.map(badge => [
+    badge.key,
+    {
+      icon: String(badge.goal),
+      name: badge.name,
+      desc: `${badge.goal} puzzles d’affilée`,
+      bg: '#EEE9FF',
+      ink: '#4A2FE0',
+      puzzles: badge.goal
+    }
+  ])
+)
+
 /**
  * The trophies' look (docs/GAMIFICATION.md § 4 bis): the trophies in the API's order, then the 12
- * streak badges (7 and 30 days are the older "En feu" and "Inarrêtable"), shortest first.
+ * streak badges (7 and 30 days are the older "En feu" and "Inarrêtable"), shortest first, then the
+ * puzzle streak badges.
  */
 export const TROPHIES = {
   woodpecker: {
@@ -157,20 +174,32 @@ export const TROPHIES = {
     bg: '#E2F2FF',
     ink: '#0F6BBA'
   },
-  ...STREAK_TROPHIES
+  ...STREAK_TROPHIES,
+  ...PUZZLE_STREAK_TROPHIES
 }
 
 /**
- * The trophy cards: look, progress label, date of the feat. The streak badges come last, by length.
+ * Where a trophy goes in the grid: the others, then the streak badges by days, then the puzzle
+ * streak badges by puzzles.
+ *
+ * @param {string} key
+ */
+function trophyRank(key) {
+  const look = TROPHIES[key]
+  if (look.puzzles) return 100_000 + look.puzzles
+  return look.streak ?? 0
+}
+
+/**
+ * The trophy cards: look, progress label, date of the feat. The streak badges come last, by length,
+ * then the puzzle streak badges.
  *
  * @param {Trophy[]} trophies
  */
 export function trophyCards(trophies) {
   return trophies
     .filter(t => TROPHIES[t.key])
-    .sort(
-      (a, b) => (TROPHIES[a.key].streak ?? 0) - (TROPHIES[b.key].streak ?? 0)
-    )
+    .sort((a, b) => trophyRank(a.key) - trophyRank(b.key))
     .map(t => ({
       ...TROPHIES[t.key],
       key: t.key,
@@ -181,7 +210,9 @@ export function trophyCards(trophies) {
           ? `${t.current}/${t.goal} tests · ${Math.round(t.ratio * 100)} %`
           : TROPHIES[t.key].streak
             ? `${number.format(t.current)}/${number.format(t.goal)} jours`
-            : `${number.format(t.current)}/${number.format(t.goal)}`,
+            : TROPHIES[t.key].puzzles
+              ? `${number.format(t.current)}/${number.format(t.goal)} puzzles`
+              : `${number.format(t.current)}/${number.format(t.goal)}`,
       percent: t.goal > 0 ? Math.min(100, (t.current / t.goal) * 100) : 0
     }))
 }

@@ -146,17 +146,19 @@ Catalogue validé le 2026-10-05, limité à ce qui est atteignable avec les modu
 | `centurion` | Centurion | 1 000 puzzles résolus (classés, rejoués, Woodpecker ; aide comprise) | puzzles |
 | `conductor` | Chef d'orchestre | 10 sessions menées au bout | sessions |
 | `marathon` | Marathonien | 50 h d'entraînement (durées du journal d'activité) | heures |
+| `streak_puzzles_10`, `_20`, `_30`, `_50` | Enchaînement, Rafale, Déferlante, Imparable | 10, 20, 30, 50 puzzles d'affilée dans un puzzle streak, toutes difficultés et thématiques ([PUZZLE_STREAK.md § 4 bis](PUZZLE_STREAK.md#4-bis-badges-2026-10-13)) | plus long streak |
 
 - **Évalués à la lecture** (`TrophyEvaluator`, comme la clôture paresseuse des séances) : un trophée
   atteint est enregistré une fois (`gamification_trophy`, unique par utilisateur et trophée) ; un
   trophée déjà gagné n'est plus calculé.
 - **Date de l'exploit**, pas de sa découverte (`TrophyProgress`) : l'instant du N-ième élément (le
-  100e puzzle de fourchette, la 10e session…), le premier exercice du jour où la série atteint sa
+  100e puzzle de fourchette, la 10e session, le 20e puzzle d'un streak…), le premier exercice du jour où la série atteint sa
   longueur, l'exercice qui fait passer les 50 h, le test après lequel la fenêtre de 30 jours remplit
   la condition.
 - Le recalcul (`app:gamification:rebuild`) les oublie et les réévalue : mêmes trophées, mêmes dates.
 - Le front garde le nom, l'icône et les couleurs de chaque trophée ; l'API donne la clé, le seuil,
-  la progression et la date.
+  la progression et la date. Grille : les trophées, puis les badges de série (jours, disque orange),
+  puis ceux du puzzle streak (puzzles, disque violet).
 
 ## 4 ter. Défi de la semaine
 

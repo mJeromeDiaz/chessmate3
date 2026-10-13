@@ -133,6 +133,18 @@ final class StreakRunTest extends WoodpeckerWebTestCase
         self::assertSame($total, $this->xpOf($alice), 'The rebuild finds the record bonus.');
     }
 
+    public function testABadgeIsAnnouncedByTheRunThatWinsIt(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $short = $this->playSingle($alice, 9);
+        self::assertSame([], $this->getRun($alice, $short['runId'])['summary']['metrics']['badges'] ?? null);
+        $first = $this->playSingle($alice, 11);
+        self::assertSame(['streak_puzzles_10'], $this->getRun($alice, $first['runId'])['summary']['metrics']['badges'] ?? null);
+        // A longer streak, but no new threshold: no badge again.
+        $second = $this->playSingle($alice, 12);
+        self::assertSame([], $this->getRun($alice, $second['runId'])['summary']['metrics']['badges'] ?? null);
+    }
+
     public function testATimedRunPlaysStreaksOneAfterTheOtherAndKeepsTheBest(): void
     {
         $alice = $this->createUserIn('alice@example.com');

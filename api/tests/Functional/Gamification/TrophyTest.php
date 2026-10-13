@@ -8,6 +8,7 @@ use App\Activity\Event\ExerciseCompleted;
 use App\Entity\Activity\LogEntry;
 use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt;
+use App\Entity\Training\Run;
 use App\Entity\Training\Session;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
@@ -86,7 +87,8 @@ final class TrophyTest extends WebTestCase
 
         $trophies = $this->trophies($alice);
         self::assertSame(['on_fire', 'woodpecker', 'golden_fork', 'iron_memory', 'first_step', 'unstoppable', 'steel_woodpecker', 'centurion', 'conductor', 'marathon',
-            'streak_3', 'streak_14', 'streak_50', 'streak_100', 'streak_200', 'streak_300', 'streak_365', 'streak_450', 'streak_500', 'streak_1000'], array_column($trophies, 'key'));
+            'streak_3', 'streak_14', 'streak_50', 'streak_100', 'streak_200', 'streak_300', 'streak_365', 'streak_450', 'streak_500', 'streak_1000',
+            'streak_puzzles_10', 'streak_puzzles_20', 'streak_puzzles_30', 'streak_puzzles_50'], array_column($trophies, 'key'));
         $byKey = array_column($trophies, null, 'key');
         self::assertSame([true, '2026-10-03T08:00:00+00:00'], [$byKey['on_fire']['unlocked'], $byKey['on_fire']['unlockedAt']], 'the first exercise of the 7th day');
         self::assertSame('2026-09-27T08:00:00+00:00', $byKey['first_step']['unlockedAt']);
@@ -112,6 +114,46 @@ final class TrophyTest extends WebTestCase
         self::assertStringContainsString('4 trophies', $command->getDisplay());
         $rebuilt = array_column($this->trophies($alice), null, 'key');
         self::assertSame($byKey['iron_memory']['unlockedAt'], $rebuilt['iron_memory']['unlockedAt']);
+    }
+
+    public function testPuzzleStreakBadgesCountEveryRampAndTopic(): void
+    {
+        $alice = $this->createUser();
+        $run = new Run($alice, Module::PuzzleStreak, 'puzzle_streak', Uuid::v7(), 3600, ['ramp' => 'ladder', 'topic' => 'general', 'mode' => 'timed'], new \DateTimeImmutable('2026-10-01 08:00:00'));
+        $this->entityManager->persist($run);
+        $this->entityManager->flush();
+        // 11 mates in a row on the 1st, then 23 puzzles of the general topic on the 2nd.
+        $this->puzzleStreak($run, 'tiers', 'mate', '2026-10-01 08:00:00', 11);
+        $this->puzzleStreak($run, 'ladder', 'general', '2026-10-02 09:00:00', 23);
+
+        $byKey = array_column($this->trophies($alice), null, 'key');
+        self::assertSame([true, '2026-10-01T08:10:00+00:00'], [$byKey['streak_puzzles_10']['unlocked'], $byKey['streak_puzzles_10']['unlockedAt']], 'the 10th mate, the first streak to reach 10');
+        self::assertSame([true, '2026-10-02T09:20:00+00:00'], [$byKey['streak_puzzles_20']['unlocked'], $byKey['streak_puzzles_20']['unlockedAt']]);
+        self::assertSame([23, 30, false], [$byKey['streak_puzzles_30']['current'], $byKey['streak_puzzles_30']['goal'], $byKey['streak_puzzles_30']['unlocked']]);
+        self::assertSame([23, 50], [$byKey['streak_puzzles_50']['current'], $byKey['streak_puzzles_50']['goal']]);
+    }
+
+    /**
+     * A streak over: $length puzzles solved a minute apart from $start, then a miss.
+     */
+    private function puzzleStreak(Run $run, string $ramp, string $topic, string $start, int $length): void
+    {
+        $connection = $this->connection();
+        $user = $run->getUser()->getId()->toBinary();
+        $streak = Uuid::v7()->toBinary();
+        $at = new \DateTimeImmutable($start);
+        $connection->executeStatement(
+            "INSERT INTO puzzle_streak (id, ramp, topic, length, status, record, started_at, ended_at, user_id, run_id) VALUES (?, ?, ?, ?, 'broken', 0, ?, ?, ?, ?)",
+            [$streak, $ramp, $topic, $length, $at->format('Y-m-d H:i:s'), $at->modify(\sprintf('+%d minutes', $length + 1))->format('Y-m-d H:i:s'), $user, $run->getId()->toBinary()],
+        );
+        for ($position = 0; $position <= $length; ++$position) {
+            $connection->executeStatement(
+                'INSERT INTO puzzle_streak_attempt (id, puzzle_id, puzzle_rating, position, target_rating, status, started_at, submitted_at, user_id, run_id, streak_id)
+                 VALUES (?, ?, 1000, ?, 1000, ?, ?, ?, ?, ?, ?)',
+                [Uuid::v7()->toBinary(), ++$this->sequence, $position, $position < $length ? 'solved' : 'failed', $at->format('Y-m-d H:i:s'),
+                    $at->modify(\sprintf('+%d minutes', $position + 1))->format('Y-m-d H:i:s'), $user, $run->getId()->toBinary(), $streak],
+            );
+        }
     }
 
     private function createUser(): User

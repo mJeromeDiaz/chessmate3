@@ -6,7 +6,8 @@ import {
   recordOf,
   streakText,
   topicLabel,
-  topicOptions
+  topicOptions,
+  wonBadges
 } from '@/utils/puzzleStreak'
 
 const RULES = {
@@ -106,5 +107,17 @@ describe('puzzle streak', () => {
     expect(recordOf(records, 'tiers', 'general')).toBe(0)
     expect(streakText(1)).toBe('1 puzzle d’affilée')
     expect(streakText(12)).toBe('12 puzzles d’affilée')
+  })
+
+  it('names the badges a run won, shortest first', () => {
+    expect(
+      wonBadges({ badges: ['streak_puzzles_30', 'streak_puzzles_20'] })
+    ).toEqual([
+      { key: 'streak_puzzles_20', goal: 20, name: 'Rafale' },
+      { key: 'streak_puzzles_30', goal: 30, name: 'Déferlante' }
+    ])
+    expect(wonBadges({ badges: [] })).toEqual([])
+    expect(wonBadges({})).toEqual([])
+    expect(wonBadges(null)).toEqual([])
   })
 })

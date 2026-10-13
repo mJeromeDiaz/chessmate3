@@ -14,6 +14,7 @@
         :score="score"
         :ring="streak ? streakRing(run) : null"
         :note="streak ? streakNote(run) : ''"
+        :badges="streak ? wonBadges(run.summary?.metrics) : []"
         :fixable="fixable.length"
         :confetti="confetti"
         :busy="starting"
@@ -60,6 +61,7 @@ import RunFixErrors from '@/components/training/result/RunFixErrors.vue'
 import RunResultScreen from '@/components/training/result/RunResultScreen.vue'
 import { trainingApi } from '@/services/api'
 import { usePuzzleStore } from '@/stores/puzzle'
+import { wonBadges } from '@/utils/puzzleStreak'
 import { missedItems } from '@/utils/runEnd'
 import {
   fixableItems,

@@ -87,7 +87,18 @@ test('streak: one streak from the page, no help, ends at the first miss, its res
   expect(item.data.streak).toBe(1)
   await expect(page.getByTestId('run-progress')).toHaveText('Streak : 1')
 
-  // A miss: the streak breaks, the solution plays, the run is over.
+  // A miss: the streak breaks, the solution plays, the run is over. The closed run is given a
+  // badge, as if this streak had reached 10 puzzles (the API's rule: PHPUnit StreakRunTest).
+  await page.route(/\/api\/training\/runs\/[^/]+\/submission$/, async route => {
+    const response = await route.fetch()
+    const body = await response.json()
+    if (body.run?.status === 'closed' && body.run.summary)
+      body.run.summary.metrics = {
+        ...body.run.summary.metrics,
+        badges: ['streak_puzzles_10']
+      }
+    await route.fulfill({ response, json: body })
+  })
   const puzzle = item.data.puzzle
   const board = page.getByTestId('chess-board')
   await expect(board).toHaveAttribute('data-fen', fenAfter(puzzle, 1))
@@ -106,11 +117,17 @@ test('streak: one streak from the page, no help, ends at the first miss, its res
   const screen = end.getByTestId('run-result')
   await expect(screen).toHaveAttribute('data-kind', 'streak')
   await expect(screen.getByTestId('run-result-score')).toHaveText('1')
+  await expect(
+    screen.getByTestId('run-result-badge-streak_puzzles_10')
+  ).toContainText('Badge débloqué : Enchaînement · 10 puzzles d’affilée')
   await end.getByTestId('run-end-close').click()
   await expect(end).toBeHidden()
 
   await expect(page.getByTestId('run-recap')).toContainText(
     'Meilleur streak : 1 puzzle d’affilée.'
+  )
+  await expect(page.getByTestId('run-recap')).toContainText(
+    'Badge débloqué : Enchaînement (10 puzzles d’affilée).'
   )
   await expect(page.getByTestId('run-back')).toHaveText('Retour au streak')
   await page.getByTestId('run-back').click()

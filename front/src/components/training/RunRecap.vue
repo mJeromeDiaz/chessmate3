@@ -33,7 +33,7 @@ import {
   formatRatingDelta
 } from '@/utils/format'
 import { LEVELS } from '@/utils/blindfold'
-import { RAMPS, streakText, topicLabel } from '@/utils/puzzleStreak'
+import { RAMPS, streakText, topicLabel, wonBadges } from '@/utils/puzzleStreak'
 import {
   ORIENTATIONS,
   formatAnswerTime,
@@ -143,6 +143,10 @@ const details = computed(() => {
     )
     if ((m.streaks?.length ?? 0) > 1)
       lines.push(`Streaks : ${m.streaks.join(', ')}.`)
+    for (const badge of wonBadges(m))
+      lines.push(
+        `Badge débloqué : ${badge.name} (${streakText(badge.goal)}).`
+      )
     if (m.hardestRating)
       lines.push(`Puzzle le plus dur réussi : ${m.hardestRating}.`)
     if (m.extensions)
