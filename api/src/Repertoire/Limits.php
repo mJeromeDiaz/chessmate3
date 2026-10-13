@@ -28,6 +28,30 @@ final readonly class Limits
         public int $syncImportPositions = 500,
         /** An import not applied is forgotten after this many hours. */
         public int $importTtlHours = 24,
+        /** Repertoire from my games: an opponent's reply kept (and the line followed) if played this often. */
+        public int $autoMinGames = 2,
+        /** Repertoire from my games: an opening family offered if played this often. */
+        public int $autoFamilyMinGames = 3,
+        /** Repertoire from my games: plies read in each game, and depth of the lines. */
+        public int $autoMaxPlies = 40,
+        /** Repertoire from my games: the user's other moves offered instead of the most played one when played this often. */
+        public int $autoAlternativeMinGames = 2,
+        /** Repertoire from my games: games asked of Lichess per request (keeps its application-wide lock short). */
+        public int $autoBatchGames = 50,
+        /** Repertoire from my games: games a build may read, and the choices offered. */
+        public int $autoMaxGames = 2000,
+        /** Repertoire from my games: a build not applied is forgotten after this many hours. */
+        public int $autoTtlHours = 24,
+        /** Repertoire from my games: lines shown in full without a subscription; null = no lock (no subscription exists yet). */
+        public ?int $autoFreeLines = null,
+        /** Repertoire from my games: line ends evaluated by the Lichess cloud per request (each one may call Lichess). */
+        public int $autoEvaluationsPerRequest = 5,
+        /** Line tags: "at risk" below this score (%) or at this evaluation or worse (centipawns, the user's point of view)... */
+        public int $autoRiskScore = 40,
+        public int $autoRiskEval = -100,
+        /** ...a "weapon" from this score (%) with an evaluation not below 0, "draws" from this share of draws (%). */
+        public int $autoWeaponScore = 60,
+        public int $autoDrawShare = 30,
     ) {
     }
 }

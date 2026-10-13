@@ -183,6 +183,16 @@ posé avant de partir chez le fournisseur), et après la première connexion qui
 de l'email (`#/login?verified=1`), le SPA ouvre `#/bienvenue` : lier Lichess (ou plus tard), puis
 « C'est parti ! ». Une liaison lancée de là y revient (drapeau `dontstayrooky.linkReturn`).
 
+Depuis la landing, les boutons de l'encart « Depuis tes parties Lichess »
+(`components/landing/{AutoRepertoireButton, LandingAuto}.vue`) lancent une connexion Lichess qui
+mène à `#/repertoire/auto` ou `#/session/auto` (drapeau `dontstayrooky.afterSignIn`, limité à ces
+pages). Le bouton principal du hero, « Générer ma session d'entraînement personnalisée », ouvre
+directement `#/session/auto`, page publique qui propose elle-même la connexion Lichess. Un compte
+déjà lié à Lichess y arrive directement ; sans compte, le drapeau survit au détour par l'écran
+« Accès anticipé » (la clé reste exigée) et le nouveau compte, lié à Lichess, y arrive à la place de
+`#/bienvenue`. Tout autre échec du callback oublie le drapeau. Une connexion par mot de passe ne le
+lit pas (tableau de bord).
+
 ## Liste d'attente
 
 Code : `App\Entity\EarlyAccess\AccessRequest` (table `early_access_request`),

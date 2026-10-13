@@ -10,7 +10,7 @@ use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\InvalidSessionException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
-use App\Training\Module\FixedBudgetInterface;
+use App\Training\Module\BudgetChoicesInterface;
 use App\Training\Module\ModuleRegistry;
 use App\Training\Module\PreparedStep;
 use App\Training\Run\TimeboxRunner;
@@ -39,8 +39,9 @@ final class StepChecker
                 throw new InvalidSessionException(sprintf('Step %d: 1 to %d minutes.', $i + 1, intdiv(TimeboxRunner::MAX_BUDGET_SECONDS, 60)));
             }
             $implementation = $this->modules->for($step['module']);
-            if ($implementation instanceof FixedBudgetInterface && $step['minutes'] * 60 !== $implementation->fixedBudgetSeconds()) {
-                throw new InvalidSessionException(sprintf('Step %d: exactly %d minutes.', $i + 1, intdiv($implementation->fixedBudgetSeconds(), 60)));
+            if ($implementation instanceof BudgetChoicesInterface && !\in_array($step['minutes'] * 60, $implementation->allowedBudgetSeconds(), true)) {
+                $minutes = array_map(static fn (int $seconds): int => intdiv($seconds, 60), $implementation->allowedBudgetSeconds());
+                throw new InvalidSessionException(sprintf('Step %d: %s minutes.', $i + 1, implode(', ', $minutes)));
             }
             try {
                 $this->prepare($user, $step['module'], $step['settings'], $step['notes']);

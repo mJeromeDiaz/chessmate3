@@ -5,8 +5,8 @@
       <p class="text-body2 text-grey-8">
         Connais l’échiquier par cœur : trouve les cases sur un échiquier vide,
         sans coordonnées. Une série dure
-        {{ state ? formatMinutes(state.rules.seriesSeconds / 60) : '…' }} ; elle
-        valide son orientation avec {{ state ? rulesText(state.rules) : '…' }}.
+        {{ state ? durationsText(state.rules) : '…' }} ; elle valide son
+        orientation avec {{ state ? rulesText(state.rules) : '…' }}.
         Valide les Blancs et les Noirs !
       </p>
 
@@ -75,7 +75,8 @@
               module="coordinates"
               :subject-id="subjectId"
               :config="{ orientation }"
-              :fixed-minutes="state.rules.seriesSeconds / 60"
+              :durations="state.rules.seriesMinutes"
+              :default-minutes="state.rules.defaultMinutes"
               label="Lancer la série"
             />
           </q-card-section>
@@ -141,9 +142,8 @@ import RunLauncher from '@/components/training/RunLauncher.vue'
 import { coordinatesApi, trainingApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/utils/apiError'
-import { ORIENTATIONS, rulesText } from '@/utils/coordinates'
+import { ORIENTATIONS, durationsText, rulesText } from '@/utils/coordinates'
 import { formatDate, formatRate } from '@/utils/format'
-import { formatMinutes } from '@/utils/session/catalog'
 
 definePage({ meta: { auth: 'required' } })
 

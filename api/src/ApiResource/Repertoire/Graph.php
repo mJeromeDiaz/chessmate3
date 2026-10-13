@@ -7,6 +7,7 @@ namespace App\ApiResource\Repertoire;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use App\Repertoire\Auto\GameStatReader;
 use App\Repertoire\Graph\GraphReader;
 use App\State\Repertoire\GraphProvider;
 
@@ -14,11 +15,13 @@ use App\State\Repertoire\GraphProvider;
  * The whole graph of a repertoire, for the editor (docs/REPERTOIRE.md): positions (normalized FEN,
  * side to move, depth, opening name when the position is a named one), moves (role, order,
  * comment as plain text, NAGs, canonical flag, segment) and active segments. One request, plain
- * arrays: a large repertoire has thousands of positions.
+ * arrays: a large repertoire has thousands of positions. A repertoire built from the user's
+ * games also carries its origin and what the games said of each move (by position and UCI).
  *
  * @phpstan-import-type PositionRow from GraphReader
  * @phpstan-import-type MoveRow from GraphReader
  * @phpstan-import-type SegmentRow from GraphReader
+ * @phpstan-import-type GameStatRow from GameStatReader
  */
 #[ApiResource(
     shortName: 'RepertoireGraph',
@@ -42,4 +45,8 @@ final class Graph
     public array $moves = [];
     /** @var list<SegmentRow> */
     public array $segments = [];
+    /** @var array<string, mixed>|null where it came from (built from the user's Lichess games: source, username, games, perfs, builtAt), null when built by hand */
+    public ?array $origin = null;
+    /** @var list<GameStatRow> what the games said of its moves (built from the user's games only) */
+    public array $gameStats = [];
 }

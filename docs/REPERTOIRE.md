@@ -241,6 +241,11 @@ tronçons est en SQL et n'écrit que ce qui change (hydrater les 2 672 tronçons
 | Import analysé pendant la requête (au-delà : worker) | 100 Ko |
 | Import appliqué pendant la requête (au-delà : worker) | 500 nouvelles positions |
 | Durée de vie d'un import non appliqué | 24 h |
+| Depuis mes parties : parties lues par analyse (choix 50, 100, 200, 500, 1000, 2000) ; par paquet | 2000 ; 50 |
+| Depuis mes parties : parties pour garder une réponse adverse ; pour proposer un autre coup ; pour proposer une ouverture | 2 ; 2 ; 3 |
+| Depuis mes parties : demi-coups lus par partie (longueur des lignes) | 40 |
+| Depuis mes parties : fins de ligne évaluées par appel ; durée de vie d'une analyse | 5 ; 24 h |
+| Depuis mes parties : lignes gratuites (verrou d'abonnement) | aucune limite (`null`) |
 
 Un seul endroit, prévu pour recevoir plus tard des limites freemium par utilisateur.
 
@@ -430,6 +435,79 @@ Sauvegarde d'[OpenBook](https://openbookchess.com), importée et exportée (`Imp
   du chemin canonique ; l'autre camp vide ; `user` = le nom du compte Lichess lié, sinon vide.
   Réimporter l'export redonne le même répertoire (test : la sauvegarde d'exemple ressort à
   l'identique).
+
+## 12 bis. Répertoire depuis mes parties (Lichess)
+
+Design « Repertoire auto » (2026-10-09). Albert lit les parties du **compte Lichess lié** et construit
+un répertoire **par ouverture**, tiré de ce que l'utilisateur joue vraiment. Page `/repertoire/auto`
+(bouton « Depuis mes parties » et encart de la liste des répertoires ; pour un visiteur, « Générer mon
+répertoire » de la landing, qui l'inscrit par Lichess, docs/EARLY_ACCESS.md), code serveur
+`App\Repertoire\Auto\`, front `components/repertoire/auto/`, `composables/repertoire/useAutoBuild.js`,
+`utils/repertoireAuto.js`.
+
+### Déroulé et API
+
+| Étape | Appel | Rôle |
+|---|---|---|
+| Compte | `POST /repertoires/auto-builds` `{maxGames: 50\|100\|200\|500\|1000\|2000, perfs: [bullet, blitz, rapid, classical]}` | Crée l'**analyse** (`repertoire_auto_build`), une par utilisateur (la nouvelle remplace l'ancienne), oubliée après 24 h. 409 `lichess_not_linked`, 422 `invalid_settings`. |
+| Analyse | `POST …/{id}/fetch`, répété jusqu'à `status: ready` | Un **paquet de 50 parties** (`GamesClient`, `GET /api/games/user/{id}` en ndjson, avec le jeton de l'utilisateur : 60 parties/s pour ses propres parties ; anonyme après un 401). Le paquet garde le verrou Lichess de l'application environ 1 s : pas de worker, compatible avec le mutualisé. Renvoie les parties gardées (`batch`) pour le flux en direct. 503 + `X-Lichess-Unavailable` : le front attend `Retry-After` et reprend. |
+| Sélection | `GET …/{id}` (synthèse), puis `POST …/{id}/selection` `{families, choices, removed}` | Synthèse par **famille d'ouverture et couleur** (nom Lichess avant le « : », « white:Italian Game »), familles jouées au moins 3 fois (`Limits::$autoFamilyMinGames`) ; l'écran coche d'abord la plus jouée avec les blancs et la plus jouée avec les noirs. La sélection remplace la précédente et renvoie les arbres (`trees`) des familles gardées. 409 `not_ready`/`already_applied`, 422 `invalid_selection`. |
+| Génération | `POST …/{id}/evaluate`, répété tant que `pendingEvaluations > 0` | Évaluation du nuage Lichess de la fin de chaque ligne (5 par appel, cache de 7 jours). Ce qui est appris est gardé si Lichess décroche en route. |
+| Validation | `POST …/{id}/apply` | Un **nouveau répertoire par famille gardée**, « Italian Game (auto) » (daté si le nom est pris), par le chemin d'import (une modification, annulable), tous dans une transaction ; limite de 50 répertoires vérifiée avant toute écriture (422 `limit_repertoires`). |
+
+Les parties sont relues de l'export (`GameReader`) : variante standard, partie terminée, ouverture
+nommée ; coups rejoués et gardés en UCI sur 40 demi-coups ; **temps de réflexion** de l'utilisateur
+d'après les horloges (horloge précédente − horloge après le coup + incrément ; rien sur le premier coup
+de chaque camp) ; **jugements Lichess** (Inaccuracy, Mistake, Blunder, et le meilleur coup) des coups
+de l'utilisateur dans les parties analysées. Gardées compactes en JSON avec l'analyse
+(`GameRecord`).
+
+### Arbre (`TreeBuilder`, pur)
+
+- Les parties d'une famille fusionnent coup par coup (un nœud = le chemin UCI depuis la position
+  initiale, coups séparés par des espaces).
+- Là où l'**adversaire** a le trait : chaque réponse jouée au moins **2 fois** (`Limits::$autoMinGames`)
+  ouvre une branche (3 jusqu'au 2026-10-09 : sur 500 parties, les lignes s'arrêtaient après 4 à 7 coups,
+  d'où aussi les analyses de 1000 et 2000 parties). Là où l'**utilisateur** a le trait : **un seul coup** (règle du répertoire), son plus
+  joué (à égalité, l'ordre UCI), ou celui qu'il a choisi dans la fiche de la ligne parmi ses autres coups
+  (joués au moins 2 fois) et les meilleurs coups donnés par Lichess à la place de ses erreurs (la ligne
+  s'arrête alors après ce coup, jamais joué). 40 demi-coups au plus ; un coup qui ramène à une position de
+  la ligne l'arrête.
+- **Ligne** = le chemin complet, du premier coup à une feuille ; les lignes d'une ouverture partagent un
+  début commun (`trunk`) et se séparent en **tronçons** là où au moins 2 parties dévient (validé avec
+  l'utilisateur le 2026-10-09 : pas de prolongement par la théorie, pas de longueur minimale). Son nom :
+  la variante Lichess la plus fréquente de ses parties. Retirer une ligne retire son `cut` (la réponse
+  où elle quitte les autres) et ce qui suit ; le toast « Annuler » renvoie la sélection précédente.
+- **Étiquettes** (`LineTag`, seuils dans `Limits`) depuis le score (victoires + ½ nulles) et l'éval de
+  fin de ligne, du point de vue de l'utilisateur : `risk` (score < 40 % ou éval ≤ −1, ou mat contre lui),
+  `weapon` (score ≥ 60 % et éval ≥ 0 ou inconnue), `draws` (≥ 30 % de nulles), `solid` sinon.
+- **Verrou** d'abonnement prévu (`Limits::$autoFreeLines`, `locked` sur chaque ligne) mais désactivé
+  (`null`) : il n'y a pas d'abonnement.
+
+### Statistiques gardées
+
+`repertoire_game_stat` (entité en lecture seule `Repertoire\GameStat`, écrite par
+`RepertoireWriter`) : une ligne par coup du répertoire créé, identifiée comme une carte par la position
+(FEN normalisée et son empreinte) et l'UCI, donc elle suit les modifications du répertoire. Parties,
+V/N/D, parties analysées et celles avec une erreur sur le chemin, temps de réflexion moyen, jugements du
+coup et meilleur coup Lichess, éval du nuage sur les fins de ligne (point de vue des blancs).
+`repertoire.origin` (JSON) : `source: lichess_games`, pseudo, parties, cadences, date. Figées à la
+construction. L'éditeur les reçoit avec le graphe (`origin`, `gameStats`) : badge « Depuis tes
+parties » et carte « Dans tes parties » sous le coup sélectionné. Exportées avec le compte
+(`repertoires.json` : `origin`, `gameStats`).
+
+### Front
+
+Six écrans (Compte, Analyse, Sélection, Génération, Répertoire, Validé) aux couleurs du design, accent
+vert d'eau `#5EE6B0`, deux colonnes à partir de 1024 px, thème sombre. Le flux et le compteur suivent
+les vraies parties de chaque paquet ; les phases de la génération suivent le vrai travail (sélection,
+évaluations), chacune affichée au moins 1,3 s. Une nouvelle analyse (ou le retour en arrière) arrête la
+lecture en cours ; si Lichess sert encore la précédente, la page attend et le dit. L'analyse de l'onglet
+est reprise au rechargement (`sessionStorage`). La liaison Lichess depuis la page y revient après
+l'OAuth (`markLinkReturn`, pages autorisées seulement). Fiche d'une ligne : plein écran sur mobile,
+fenêtre à deux colonnes sur PC (échiquier entier, coups, fréquence, score, V/N/D, erreurs, éval,
+« ce qui s'est passé », autres coups à jouer, retrait). « S'entraîner » ouvre le test sur les répertoires
+créés.
 
 ## 13. Données de démonstration
 
@@ -653,6 +731,9 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
 - Import, export, Lichess : `tests/Unit/Repertoire/Import/{PgnAnalyzerTest, ImportPlannerTest, OpenBookReaderTest}.php`,
   `tests/Functional/Repertoire/{ImportApplierTest, ImportApiTest, StudyImportTest, ExportTest,
   LichessProxyTest, RepertoireApiTest, RoutingTest}.php`, `tests/Unit/DataFixtures/RepertoireFixturesDataTest.php`,
+  répertoire depuis mes parties : `tests/Unit/Repertoire/Auto/{GameReaderTest, TreeBuilderTest,
+  LineTagAndSelectionTest}.php`, `tests/Functional/Repertoire/{AutoBuildApiTest, AutoBuildFlowTest}.php`
+  (fixture `tests/Fixtures/Repertoire/lichess-games.ndjson`),
   `tests/Functional/Auth/LichessOAuthTest.php` (flux `grant`). **Acceptation** : le PGN OpenBook
   importé donne exactement 3 lignes et 5 tronçons (analyse, application, API, Playwright). Lichess
   n'est jamais appelé : `MockHttpClient` en PHPUnit, `page.route` en Playwright.
@@ -674,14 +755,17 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
   aujourd'hui), `UnitBuilderTest` (libellés), `tests/Functional/Repertoire/StatsApiTest.php` (vue
   d'ensemble et prévision dans un fuseau qui change la date, tests au rang 1 seulement, tronçons
   fragiles, historique avec retours puis fusion non agrégée, détail d'une séance, 404).
-- Vitest : `normalize-fen`, `move-tree`, `repertoire-store` (second coup préparé refusé,
+- Vitest : `repertoire-auto` (libellés, moments critiques, événements d'une ligne, carte de
+  l'éditeur, lecture par paquets avec attente, génération, retrait annulé, reprise), `normalize-fen`, `move-tree`, `repertoire-store` (second coup préparé refusé,
   remplacement, restauration), `use-explorer`, `lichess-format`, `repertoire-import` (aperçu
   redemandé avec les choix), `use-repertoire-drill` (contexte non demandé, déviation différée,
   temps de réflexion hors animations, coup faux puis coup imposé, unité ratée ou réussie, reprise
   au milieu d'une unité noire, refus, unité abandonnée, « Revoir les coups », libellés).
 - Playwright : `repertoire.spec.js` (construction coup par coup, variante, clavier, annotation,
   suppression, annulation, nom d'ouverture ; exploration sans enregistrer, remplacement, restauration
-  depuis la corbeille, suppression définitive ; panneaux Lichess), `repertoire-import.spec.js` (import
+  depuis la corbeille, suppression définitive ; panneaux Lichess), `repertoire-auto.spec.js`
+  (répertoire depuis mes parties, API simulée : compte non lié, lecture, sélection, génération, ligne
+  complète, fiche, retrait annulé, validation), `repertoire-import.spec.js` (import
   du PGN OpenBook, export, fusion avec conflit (coup remplacé à la corbeille), annulation de l'import,
   sauvegarde OpenBook importée puis exportée à l'identique, étude privée, PGN illisible),
   `repertoire-test.spec.js` : une séance d'**1 minute menée jusqu'à son expiration réelle** (un

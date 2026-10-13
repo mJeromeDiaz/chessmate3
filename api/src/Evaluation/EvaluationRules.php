@@ -21,22 +21,33 @@ final class EvaluationRules
     /** A won position (mate, theoretical win) is stored as this many centipawns or more. */
     public const WON_CP = 10_000;
 
-    public const MIN_COUNT = 3;
-    public const MAX_COUNT = 20;
-    /** Seconds per position the player may choose. */
-    public const SECONDS = [30, 45, 60, 75, 90, 105, 120];
+    /** The lengths a run may last, in minutes (sessions count in minutes)... */
+    public const RUN_MINUTES = [1, 2, 5, 10];
+    /** ...the one offered first. */
+    public const DEFAULT_MINUTES = 2;
     public const MIN_ELO = 800;
     public const MAX_ELO = 2600;
     /** Positions within this many points of the chosen Elo first, then twice as far, then any. */
     public const ELO_WINDOW = 300;
-    /** An answer this late after the position's time is still on time (the network). */
-    public const TOLERANCE_MS = 2_000;
     /** Ideas per position, at most. */
     public const IDEAS = 3;
     /** A position's difficulty when the admin gives none. */
     public const DEFAULT_RATING = 1500;
     /** An evaluation this close to a category's border is flagged to the admin (a coin toss). */
     public const BORDER_MARGIN_CP = 20;
+
+    /**
+     * @return list<int> the lengths a run may last, in seconds
+     */
+    public static function budgets(): array
+    {
+        return array_map(static fn (int $minutes): int => $minutes * 60, self::RUN_MINUTES);
+    }
+
+    public static function allows(int $seconds): bool
+    {
+        return \in_array($seconds, self::budgets(), true);
+    }
 
     /**
      * The category of an engine evaluation (centipawns, White's point of view).
@@ -80,14 +91,6 @@ final class EvaluationRules
     }
 
     /**
-     * Exact in less than half the position's time.
-     */
-    public static function fast(AttemptStatus $status, int $durationMs, int $seconds): bool
-    {
-        return AttemptStatus::Exact === $status && $durationMs * 2 < $seconds * 1000;
-    }
-
-    /**
      * The engine's evaluation as shown: "+1,4", "−0,3", "0,0"; a won position "+−" / "−+".
      */
     public static function label(int $cp): string
@@ -107,14 +110,13 @@ final class EvaluationRules
     /**
      * The settings' bounds, for the front.
      *
-     * @return array{minCount: int, maxCount: int, seconds: list<int>, minElo: int, maxElo: int, advantageCp: int, winningCp: int}
+     * @return array{runMinutes: list<int>, defaultMinutes: int, minElo: int, maxElo: int, advantageCp: int, winningCp: int}
      */
     public static function toArray(): array
     {
         return [
-            'minCount' => self::MIN_COUNT,
-            'maxCount' => self::MAX_COUNT,
-            'seconds' => self::SECONDS,
+            'runMinutes' => self::RUN_MINUTES,
+            'defaultMinutes' => self::DEFAULT_MINUTES,
             'minElo' => self::MIN_ELO,
             'maxElo' => self::MAX_ELO,
             'advantageCp' => self::ADVANTAGE_CP,

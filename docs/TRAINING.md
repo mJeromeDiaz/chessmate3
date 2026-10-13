@@ -24,9 +24,9 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Module Répertoire | `App\Repertoire\Training\RepertoireModule` |
 | Module Puzzles | `App\Puzzle\Training\PuzzleModule` |
 | Module Libre | `App\Training\Free\FreeModule` |
-| Module Coordonnées | `App\Coordinates\Training\CoordinatesModule` (durée fixe : `Training\Module\FixedBudgetInterface`) |
+| Module Coordonnées | `App\Coordinates\Training\CoordinatesModule` (durées permises : `Training\Module\BudgetChoicesInterface`) |
 | Module Aveugle | `App\Blindfold\Training\PuzzleModule` (puzzles à l'aveugle) |
-| Module Évaluation | `App\Evaluation\Training\EvaluationModule` (un temps par position) |
+| Module Évaluation | `App\Evaluation\Training\EvaluationModule` (durées permises : `Training\Module\BudgetChoicesInterface`) |
 | API | `App\ApiResource\Training\*`, `App\State\Training\*` |
 | Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable, FreeRunPanel}.vue`, `components/puzzle/PuzzleRunDialog.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
 
@@ -326,7 +326,7 @@ Réglages d'une étape, vérifiés par le module au lancement **et** au démarra
 | Module | `settings` | Sujet de la séance |
 |---|---|---|
 | `puzzles` | `{themes?: string[]}` | l'utilisateur |
-| `woodpecker` | `{}` | son set light en cours **au démarrage de l'étape** (actif, sinon bloquée) |
+| `woodpecker` | `{}` ou `{setId}` | son set light en cours **au démarrage de l'étape** (actif, sinon bloquée) ; avec `setId`, ce set light de l'utilisateur (un set d'ouverture de la séance sur mesure, [COACH.md](COACH.md)) |
 | `repertoire` | `{repertoireIds: string[]}` (tronçons) | l'utilisateur |
 | `free` | `{format}` ; les `notes` de l'étape deviennent celles de la séance | l'utilisateur |
 
@@ -342,6 +342,13 @@ Réglages d'une étape, vérifiés par le module au lancement **et** au démarra
   (elle compte comme jouée), idempotent.
 - À la clôture, `SessionClosed` (même transaction) : `status`, étapes, faites, passées, temps joué
   (somme des `durationMs` de ses séances).
+- **Rejouer** (front seulement, 2026-10-11) : une session se rejoue depuis son écran de fin, depuis
+  « Dernières sessions » du tableau de bord, ou pendant qu'elle est en cours (« Recommencer la
+  session » : après confirmation, elle est abandonnée puis rejouée depuis le premier module).
+  Lancée d'une session enregistrée qui existe encore (`planId`) : celle-ci est relancée **telle
+  qu'elle est aujourd'hui** ; sinon le programme joué est recréé à l'identique (`POST
+  /training/sessions`, `replayProgram()` de `utils/session/steps.js`). Une autre session en cours :
+  la reprendre, ou l'abandonner et rejouer (`usePlanLaunch().replay`).
 
 ### API
 
@@ -382,6 +389,10 @@ Règles validées (2026-10-04) :
   exiger qu'elle soit jouable maintenant (un set light en pause est accepté) ; au lancement, oui
   (`StepChecker`, 422 avec le numéro de l'étape).
 - 50 sessions enregistrées par utilisateur au plus (409 au-delà).
+- `origin` : une session que l'application tient à jour elle-même, une par utilisateur et origine
+  (`uniq_training_session_plan_origin`). Seule origine : `coach`, la séance sur mesure
+  ([COACH.md](COACH.md)), remplacée à chaque analyse par `PlanManager::saveForOrigin` (horaire et
+  rappel gardés) ; badge « Sur mesure » dans « Mes sessions ».
 
 | Couche | Emplacement |
 |---|---|

@@ -25,7 +25,7 @@ function known(item) {
   return position
 }
 
-test('position evaluation: exact with the plan, one notch off, a miss, recap and results', async ({
+test('position evaluation: exact with the plan, one notch off, a miss, no position left, recap and results', async ({
   page,
   context
 }) => {
@@ -37,36 +37,34 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
     'Aucune position jouée.'
   )
 
-  // 3 positions of 30 s, White to move: the run lasts 3 × (30 + 5) s, 2 minutes.
-  await card.getByTestId('evaluation-count').focus()
-  for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowLeft')
-  await expect(card).toContainText('Positions : 3')
-  await card
-    .getByTestId('evaluation-seconds')
-    .getByRole('button', { name: '30 s', exact: true })
-    .click()
+  // 1, 2, 5 or 10 minutes, 2 first; White to move (three positions in the fixtures).
+  const durations = card.getByTestId('run-duration-choice')
+  await expect(durations.getByRole('button')).toHaveText([
+    '1 min',
+    '2 min',
+    '5 min',
+    '10 min'
+  ])
+  await expect(
+    durations.getByRole('button', { name: '2 min', exact: true })
+  ).toHaveAttribute('aria-pressed', 'true')
   await card
     .getByTestId('evaluation-side')
     .getByRole('button', { name: /^Blancs/ })
     .click()
-  await expect(card.getByTestId('run-start')).toContainText('(2 min)')
 
   let served = page.waitForResponse(isRunNext)
   await card.getByTestId('run-start').click()
   await expect(page).toHaveURL(/#\/training\/[^/]+$/)
   let item = (await (await served).json()).item
   expect(item.type).toBe('evaluation_position')
-  expect(item.data).toMatchObject({
-    seconds: 30,
-    index: 1,
-    count: 3,
-    askPlan: true
-  })
-  // Nothing of the answer is sent with the position.
+  expect(item.data).toMatchObject({ index: 1, askPlan: true })
+  // No time per position, and nothing of the answer is sent with the position.
+  expect(item.data).not.toHaveProperty('seconds')
   expect(item.data).not.toHaveProperty('evalCp')
   expect(item.data).not.toHaveProperty('ideas')
 
-  // First position: exact, right plan, fast: 15 + 5 + 3 XP.
+  // First position: exact, right plan: 15 + 5 XP (no bonus for speed).
   const player = page.getByTestId('evaluation-player')
   await expect(player.getByTestId('evaluation-turn')).toHaveText(
     'Trait aux Blancs'
@@ -80,7 +78,7 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
     'data-kind',
     'win'
   )
-  await expect(page.getByTestId('result-xp')).toHaveText('+23 XP')
+  await expect(page.getByTestId('result-xp')).toHaveText('+20 XP')
   await expect(player.getByTestId('evaluation-verdict')).toHaveText('Bien vu !')
   await expect(player.getByTestId('evaluation-plan-result')).toContainText(
     '✓ bien trouvé (+5 XP)'
@@ -88,7 +86,7 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
   await expect(
     player.getByTestId('evaluation-ideas').locator('li')
   ).not.toHaveCount(0)
-  await expect(page.getByTestId('run-progress')).toContainText('Position 1 / 3')
+  await expect(page.getByTestId('run-progress')).toContainText('Position 1 ·')
 
   // Second position: one notch off, no plan: "Presque !".
   served = page.waitForResponse(isRunNext)
@@ -108,7 +106,7 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
     'aucun plan choisi'
   )
 
-  // Third and last position: two notches off. Its correction stays until "Voir le résultat".
+  // Third position: two notches off.
   served = page.waitForResponse(isRunNext)
   await page.getByTestId('run-next').click()
   item = (await (await served).json()).item
@@ -120,7 +118,7 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
   await expect(page.getByTestId('result-title')).toHaveText('Pas cette fois')
   await expect(page.getByTestId('result-xp')).toHaveText('+1 XP')
   await expect(page.getByTestId('run-end')).toBeHidden()
-  await expect(page.getByTestId('run-next')).toHaveText('Voir le résultat')
+  // No fourth position with White to move: the run closes before its time.
   await page.getByTestId('run-next').click()
 
   const end = page.getByTestId('run-end')
@@ -134,7 +132,9 @@ test('position evaluation: exact with the plan, one notch off, a miss, recap and
   await end.getByTestId('run-end-close').click()
 
   const recap = page.getByTestId('run-recap')
-  await expect(recap).toContainText('Toutes les positions sont évaluées !')
+  await expect(recap).toContainText(
+    'Plus aucune position pour ces réglages : séance close.'
+  )
   await expect(recap).toContainText(
     'Justes : 1 · à un cran : 1 · ratées : 1 · temps écoulé : 0.'
   )
@@ -156,6 +156,13 @@ test('position evaluation: the session builder card is available', async ({
   await page.getByTestId('module-card-evaluation').click()
   const settings = page.getByTestId('module-settings')
   await expect(settings.getByTestId('field-couleur')).toBeVisible()
+  // Its length: one of the API's, 2 minutes first.
+  await expect(settings.getByTestId('duration-2')).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  await expect(settings.getByTestId('duration-1')).toBeVisible()
+  await expect(settings.getByTestId('duration-10')).toBeVisible()
   await expect(page.getByTestId('module-issue')).toHaveCount(0)
   await settings.getByTestId('module-save').click()
   await expect(settings).toBeHidden()

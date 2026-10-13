@@ -14,7 +14,7 @@ import {
   settingChips,
   fromStep,
   toStep,
-  withFixedDuration
+  withDurationChoice
 } from '@/utils/session/catalog'
 import { PROFS, PROF_SLUGS } from '@/utils/prof/profs'
 
@@ -45,10 +45,9 @@ describe('session catalogue', () => {
       'memorisation',
       'notes'
     ])
-    // The evaluation's length follows from its positions: no duration field.
+    // The evaluation lasts one of the API's lengths, like a coordinates series.
     expect(keys('evaluation')).toEqual([
-      'nombre',
-      'chrono',
+      'duree',
       'elo',
       'couleur',
       'notes'
@@ -92,12 +91,8 @@ describe('session catalogue', () => {
     expect(defaultValues(puzzles).themes).toEqual([])
   })
 
-  it('computes durations, the evaluation one from its positions', () => {
-    const evaluation = MODULES_BY_ID.evaluation
-    // 6 positions × (120 s + 5 s of margin) = 12.5 min, rounded up.
-    expect(moduleMinutes(evaluation, defaultValues(evaluation))).toBe(13)
-    // 5 × (45 + 5) s = 4 min 10 s.
-    expect(moduleMinutes(evaluation, { nombre: 5, chrono: 45 })).toBe(5)
+  it('computes durations', () => {
+    expect(moduleMinutes(MODULES_BY_ID.evaluation, { duree: 5 })).toBe(5)
     expect(
       sessionMinutes([
         { uid: 1, moduleId: 'puzzles', values: { duree: 20 } },
@@ -185,6 +180,14 @@ describe('session catalogue', () => {
     expect(
       itemIssue(woodpecker, {}, { ...context, lightSet: { status: 'paused' } })
     ).toMatch('en pause')
+    // An opening set of the tailored session: that set, not the light set.
+    const openingSets = [
+      { id: 's1', name: 'Italian Game · Blancs', status: 'active', puzzleCount: 100, color: 'white' },
+      { id: 's2', name: 'Sicilian Defense · Noirs', status: 'paused', puzzleCount: 40, color: 'black' }
+    ]
+    expect(itemIssue(woodpecker, { set: 's1' }, { ...context, openingSets })).toBeNull()
+    expect(itemIssue(woodpecker, { set: 's2' }, { ...context, openingSets })).toMatch('en pause')
+    expect(itemIssue(woodpecker, { set: 's9' }, { ...context, openingSets })).toMatch('plus en cours')
     // Subjects not loaded yet: only what the settings themselves say.
     expect(itemIssue(woodpecker, {})).toBeNull()
     expect(itemIssue(repertoire, { repertoires: ['r9'] })).toBeNull()
@@ -235,12 +238,20 @@ describe('session catalogue', () => {
         values: { duree: 15, set: null, notes: '' }
       })
     ).toEqual({ module: 'woodpecker', minutes: 15, notes: '', settings: {} })
+    // An opening set (the tailored session) keeps its id, both ways.
+    const opening = toStep({
+      uid: 6,
+      moduleId: 'woodpecker',
+      values: { duree: 10, set: 's1', notes: '' }
+    })
+    expect(opening.settings).toEqual({ setId: 's1' })
+    expect(fromStep(opening)?.values.set).toBe('s1')
     expect(() =>
       toStep({ uid: 5, moduleId: 'finales', values: { duree: 5 } })
     ).toThrow()
   })
 
-  it('gives a coordinates series the length of the API and its orientation', () => {
+  it('gives a coordinates series one of the API lengths and its orientation', () => {
     const module = MODULES_BY_ID.coordonnees
     const values = defaultValues(module)
     const context = {
@@ -248,34 +259,39 @@ describe('session catalogue', () => {
       repertoires: [],
       lightSet: null,
       themeLabel: key => key,
-      fixedMinutes: { coordonnees: 5 }
+      durationChoices: { coordonnees: { minutes: [1, 2, 5, 10], default: 2 } }
     }
     expect(itemIssue(module, values)).toBe('Chargement de la durée…')
-    expect(withFixedDuration(module, values)).toBe(values)
+    expect(withDurationChoice(module, values)).toBe(values)
 
-    const fixed = withFixedDuration(module, values, context)
-    expect(fixed.duree).toBe(5)
-    expect(itemIssue(module, fixed, context)).toBeNull()
-    expect(moduleMinutes(module, fixed)).toBe(5)
-    expect(withFixedDuration(module, fixed, context)).toBe(fixed)
+    const chosen = withDurationChoice(module, values, context)
+    expect(chosen.duree).toBe(2)
+    expect(itemIssue(module, chosen, context)).toBeNull()
+    expect(moduleMinutes(module, chosen)).toBe(2)
+    expect(withDurationChoice(module, chosen, context)).toBe(chosen)
+    const ten = { ...chosen, duree: 10 }
+    expect(withDurationChoice(module, ten, context)).toBe(ten)
     expect(
-      withFixedDuration(MODULES_BY_ID.libre, { duree: 30 }, context)
+      withDurationChoice(module, { ...chosen, duree: 3 }, context).duree
+    ).toBe(2)
+    expect(
+      withDurationChoice(MODULES_BY_ID.libre, { duree: 30 }, context)
     ).toEqual({ duree: 30 })
 
     const step = toStep({
       uid: 6,
       moduleId: 'coordonnees',
-      values: { ...fixed, orientation: 'Noirs' }
+      values: { ...ten, orientation: 'Noirs' }
     })
     expect(step).toEqual({
       module: 'coordinates',
-      minutes: 5,
+      minutes: 10,
       notes: '',
       settings: { orientation: 'black' }
     })
     expect(fromStep(step)).toEqual({
       moduleId: 'coordonnees',
-      values: { duree: 5, orientation: 'Noirs', notes: '' }
+      values: { duree: 10, orientation: 'Noirs', notes: '' }
     })
   })
 
@@ -287,7 +303,7 @@ describe('session catalogue', () => {
       repertoires: [],
       lightSet: null,
       themeLabel: key => key,
-      fixedMinutes: {}
+      durationChoices: {}
     }
     expect(itemIssue(module, values, context)).toBeNull()
     expect(itemIssue(module, values)).toBeNull()
@@ -323,6 +339,24 @@ describe('session catalogue', () => {
       level: 'easy',
       length: 2,
       visibleSeconds: 10
+    })
+  })
+
+  it('gives an evaluation run one of the API lengths, its level and side, nothing per position', () => {
+    const step = toStep({
+      uid: 9,
+      moduleId: 'evaluation',
+      values: { duree: 5, elo: 1600, couleur: 'Noirs', notes: '' }
+    })
+    expect(step).toEqual({
+      module: 'evaluation',
+      minutes: 5,
+      notes: '',
+      settings: { elo: 1600, side: 'black' }
+    })
+    expect(fromStep(step)).toEqual({
+      moduleId: 'evaluation',
+      values: { duree: 5, elo: 1600, couleur: 'Noirs', notes: '' }
     })
   })
 })

@@ -9,11 +9,11 @@ import { PROFS } from '@/utils/prof/profs'
  *
  * Field types beyond the generic ones: `themes` (puzzle theme keys, picked in a second panel),
  * `repertoire` (ids of the user's repertoires, at least one) and `lightSet` (the user's Woodpecker light
- * set: shown, not chosen, as there is at most one; no value) and `fixedDuration` (the length of a
- * module whose runs all last the same time, the coordinates series: shown, not chosen, set from the
- * API's rules in `context.fixedMinutes`).
+ * set: shown, not chosen, as there is at most one; no value) and `durationChoice` (the length of a
+ * module whose runs last one of a few lengths only, the coordinates series and the evaluation: picked among the API's
+ * lengths in `context.durationChoices`, its default from there too).
  *
- * @typedef {'slider'|'one'|'many'|'toggle'|'text'|'themes'|'repertoire'|'lightSet'|'fixedDuration'} FieldType
+ * @typedef {'slider'|'one'|'many'|'toggle'|'text'|'themes'|'repertoire'|'lightSet'|'durationChoice'} FieldType
  *
  * @typedef {object} Field
  * @property {string} key value key in the module's settings
@@ -179,22 +179,8 @@ const BLINDFOLD_LEVELS = { Facile: 'easy', Moyen: 'medium', Difficile: 'hard' }
 const BLINDFOLD_LENGTHS = { '2 coups': 2, '3 coups': 3, '4 coups et +': 4 }
 const BLINDFOLD_VISIBLE = ['5 s', '10 s', '15 s', '20 s', '30 s']
 
-/**
- * The position evaluation (App\Evaluation\EvaluationRules, docs/EVALUATION.md): the side to move
- * asked, and the seconds a run adds to each position's time (asking for the next one), so that the
- * run's time never cuts the last position.
- */
+/** The position evaluation (docs/EVALUATION.md): the side to move asked. */
 const EVALUATION_SIDES = { Blancs: 'white', Noirs: 'black', 'Les deux': 'both' }
-export const EVALUATION_MARGIN_SECONDS = 5
-
-/**
- * Minutes of an evaluation run: its positions, each with its time and the margin.
- *
- * @param {number} count
- * @param {number} seconds
- */
-export const evaluationMinutes = (count, seconds) =>
-  Math.ceil((count * (seconds + EVALUATION_MARGIN_SECONDS)) / 60)
 
 /** @type {Module[]} */
 export const MODULES = [
@@ -312,7 +298,7 @@ export const MODULES = [
   {
     id: 'evaluation',
     title: 'Évaluation de position',
-    desc: 'Juger une position en 2 minutes maximum.',
+    desc: 'Juger des positions, en 1 à 10 minutes.',
     ...byProf('aaron'),
     glyph: glyph('♟'),
     available: true,
@@ -322,23 +308,17 @@ export const MODULES = [
     deep: '#E0AE00',
     accentInk: '#8A6A00',
     fields: [
-      count('Positions', 3, 20, 6, 'positions'),
       {
-        key: 'chrono',
-        label: 'Temps par position',
-        type: 'slider',
-        min: 30,
-        max: 120,
-        step: 15,
-        default: 120,
-        format: formatSeconds,
-        hint: '2 minutes maximum.'
+        key: 'duree',
+        label: 'Durée',
+        type: 'durationChoice',
+        default: 0,
+        hint: 'Une séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent jusqu’au bout.'
       },
       elo(1500),
       one('couleur', 'Trait', ['Blancs', 'Noirs', 'Les deux'], 'Les deux'),
       notes()
-    ],
-    duration: v => evaluationMinutes(v.nombre, v.chrono)
+    ]
   },
   {
     id: 'analyse',
@@ -381,9 +361,9 @@ export const MODULES = [
       {
         key: 'duree',
         label: 'Durée',
-        type: 'fixedDuration',
+        type: 'durationChoice',
         default: 0,
-        hint: 'Une série dure toujours le même temps.'
+        hint: 'Une série dure 1, 2, 5 ou 10 minutes.'
       },
       one('orientation', 'Orientation', ['Blancs', 'Noirs'], 'Blancs'),
       notes()
@@ -485,9 +465,12 @@ export function sessionMinutes(items) {
  * @property {{id: string, name: string, color: 'white'|'black'}[]} repertoires
  * @property {{id: string, name: string, status: string, puzzleCount: number, runCount: number}|null} lightSet the
  *   ongoing (active or paused) light set
+ * @property {{id: string, name: string, status: string, puzzleCount: number, color: string}[]} openingSets
+ *   the ongoing opening sets of the tailored session (docs/COACH.md): a Woodpecker step may play
+ *   one of them (its `set` value: the set id; null: the light set)
  * @property {(key: string) => string} themeLabel
- * @property {Record<string, number>} fixedMinutes the length of each fixed-length module (catalogue
- *   id), from the API
+ * @property {Record<string, {minutes: number[], default: number}>} durationChoices the lengths a
+ *   module's runs may last and the one offered first (catalogue id: the coordinates, the evaluation), from the API
  */
 
 /** @type {SubjectContext} */
@@ -495,24 +478,27 @@ const NO_CONTEXT = {
   loaded: false,
   repertoires: [],
   lightSet: null,
+  openingSets: [],
   themeLabel: key => key,
-  fixedMinutes: {}
+  durationChoices: {}
 }
 
 /**
- * The settings with the length of a fixed-length module set from the API (unchanged when it is
- * not known yet, or for another module).
+ * The settings of a module with lengths of its own, its length set to the API's default when it is
+ * not one of them (unchanged when they are not known yet, or for another module).
  *
  * @param {Module} module
  * @param {Record<string, any>} values
  * @param {SubjectContext} [context]
  * @returns {Record<string, any>}
  */
-export function withFixedDuration(module, values, context = NO_CONTEXT) {
-  const minutes = context.fixedMinutes?.[module.id]
-  const field = module.fields.find(f => f.type === 'fixedDuration')
-  if (!field || !minutes || values[field.key] === minutes) return values
-  return { ...values, [field.key]: minutes }
+export function withDurationChoice(module, values, context = NO_CONTEXT) {
+  const choices = context.durationChoices?.[module.id]
+  const field = module.fields.find(f => f.type === 'durationChoice')
+  if (!field || !choices || choices.minutes.includes(values[field.key])) {
+    return values
+  }
+  return { ...values, [field.key]: choices.default }
 }
 
 /**
@@ -563,10 +549,12 @@ export function settingChips(module, values, context = NO_CONTEXT) {
               context.repertoires.find(r => r.id === id)?.name ?? []
           )
         )
-      case 'lightSet':
-        return context.lightSet
-          ? [`${context.lightSet.puzzleCount} puzzles`]
-          : []
+      case 'lightSet': {
+        const set = v
+          ? context.openingSets?.find(s => s.id === v)
+          : context.lightSet
+        return set ? [`${set.puzzleCount} puzzles`] : []
+      }
       default:
         return []
     }
@@ -600,8 +588,14 @@ export function itemIssue(module, values, context = NO_CONTEXT) {
         return 'Un répertoire choisi n’existe plus.'
       }
     }
-    if (f.type === 'fixedDuration' && !(v > 0)) {
+    if (f.type === 'durationChoice' && !(v > 0)) {
       return 'Chargement de la durée…'
+    }
+    if (f.type === 'lightSet' && context.loaded && v) {
+      const set = context.openingSets?.find(s => s.id === v)
+      if (!set) return 'Ce set d’ouverture n’est plus en cours.'
+      if (set.status === 'paused') return 'Ce set d’ouverture est en pause.'
+      continue
     }
     if (f.type === 'lightSet' && context.loaded) {
       if (!context.lightSet) return 'Tu n’as pas de set light en cours.'
@@ -647,6 +641,7 @@ export function toStep(item) {
   let settings = {}
   if (module === 'free') settings = { format: FREE_FORMATS[v.type] ?? 'other' }
   if (module === 'puzzles') settings = { themes: [...(v.themes ?? [])] }
+  if (module === 'woodpecker' && v.set) settings = { setId: v.set }
   if (module === 'repertoire')
     settings = { repertoireIds: [...(v.repertoires ?? [])] }
   if (module === 'coordinates')
@@ -659,8 +654,6 @@ export function toStep(item) {
     }
   if (module === 'evaluation')
     settings = {
-      count: v.nombre,
-      seconds: v.chrono,
       elo: v.elo,
       side: EVALUATION_SIDES[v.couleur] ?? 'both'
     }
@@ -699,6 +692,7 @@ export function fromStep(step) {
       )?.[0] ?? 'Autre'
   }
   if (step.module === 'puzzles') values.themes = [...(settings.themes ?? [])]
+  if (step.module === 'woodpecker') values.set = settings.setId ?? null
   if (step.module === 'repertoire')
     values.repertoires = [...(settings.repertoireIds ?? [])]
   if (step.module === 'coordinates')
@@ -711,8 +705,6 @@ export function fromStep(step) {
       values.memorisation = `${settings.visibleSeconds} s`
   }
   if (step.module === 'evaluation') {
-    if (Number.isInteger(settings.count)) values.nombre = settings.count
-    if (Number.isInteger(settings.seconds)) values.chrono = settings.seconds
     if (Number.isInteger(settings.elo)) values.elo = settings.elo
     values.couleur = labelOf(EVALUATION_SIDES, settings.side) ?? values.couleur
   }

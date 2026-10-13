@@ -7,7 +7,6 @@ namespace App\Woodpecker\Set;
 use App\Entity\User;
 use App\Entity\Woodpecker\Set;
 use App\Enum\Woodpecker\SetMode;
-use App\Repository\Catalog\ThemeRepository;
 use App\Repository\Puzzle\RatingRepository;
 use App\Repository\Woodpecker\SetPuzzleRepository;
 use App\Repository\Woodpecker\SetRepository;
@@ -41,7 +40,7 @@ final class SetManager
         private readonly EntityManagerInterface $entityManager,
         private readonly SetRepository $sets,
         private readonly SetPuzzleRepository $setPuzzles,
-        private readonly ThemeRepository $themes,
+        private readonly PoolFactory $pools,
         private readonly RatingRepository $ratings,
         private readonly SetGenerator $generator,
         private readonly CycleRunner $runner,
@@ -77,23 +76,22 @@ final class SetManager
             $policy->check($user, $config);
         }
         $mode = $config instanceof LightConfig ? SetMode::Light : SetMode::Classic;
-        if (null !== $this->sets->findOngoing($user, $mode)) {
+        $opening = $config instanceof LightConfig ? $config->opening : null;
+        $ongoing = null === $opening ? $this->sets->findOngoing($user, $mode) : $this->sets->findOngoingOpening($user, $opening->color);
+        if (null !== $ongoing) {
             throw new OngoingSetExistsException();
         }
 
-        $themes = $this->themes->findByKeys($config->themes);
-        if (\count($themes) !== \count(array_unique($config->themes))) {
-            throw new \InvalidArgumentException('Unknown theme.');
-        }
+        $pool = null === $opening ? $this->pools->ofThemes($config->themes) : Pool::opening($opening);
         // Outside the transaction: read-only index scans, no lock held meanwhile.
-        $puzzleIds = $this->generator->generate($config->puzzleCount, $config->ratingMin, $config->ratingMax, array_map(static fn ($theme): int => (int) $theme->getId(), $themes));
+        $puzzleIds = $this->generator->generate($config->puzzleCount, $config->ratingMin, $config->ratingMax, $pool);
 
         try {
             return $this->entityManager->wrapInTransaction(function () use ($user, $name, $config, $puzzleIds): Set {
                 $now = $this->now();
                 $set = new Set($user, $name, $config, $now);
                 $this->entityManager->persist($set);
-                // The unique index on active_user_id rejects a concurrent second creation here.
+                // The unique index on active_user_id (mode, opening slot) rejects a concurrent second creation here.
                 $this->entityManager->flush();
                 $this->setPuzzles->insertList($set, $puzzleIds);
                 $this->progressions->for($set)->start($set, $now);

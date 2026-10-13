@@ -252,6 +252,10 @@ sequenceDiagram
     S->>A: POST /api/auth/refresh ⇒ AT (aucun jeton n'a transité par l'URL)
 ```
 
+Page suivante côté SPA : `#/repertoire/auto` si la connexion vient de « Générer mon répertoire » de
+la landing (drapeau `dontstayrooky.afterSignIn`, voir `EARLY_ACCESS.md`), sinon `#/bienvenue` après
+une inscription, sinon le tableau de bord.
+
 ## Liaison d'un compte depuis le profil
 
 ```mermaid

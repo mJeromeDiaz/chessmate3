@@ -36,7 +36,8 @@ final readonly class DataExport
         - puzzles.json : votre classement, son historique et chacune de vos tentatives (le puzzle est
           désigné par son identifiant Lichess : https://lichess.org/training/<identifiant>).
         - woodpecker.json : vos sets, leurs puzzles, cycles, tentatives et agrandissements.
-        - repertoires.json : vos répertoires, leurs cartes de révision (FSRS), vos réponses et vos tests ;
+        - repertoires.json : vos répertoires (et leur origine quand ils viennent de vos parties Lichess),
+          leurs cartes de révision (FSRS), vos réponses, vos tests et les statistiques de vos parties ;
           repertoires/*.pgn : chaque répertoire au format PGN.
         - entrainement.json : vos séances chronométrées, sessions, sessions enregistrées, séries
           de coordonnées et puzzles à l'aveugle.
@@ -136,7 +137,7 @@ final readonly class DataExport
             ),
             'plans' => $this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, title, description, steps, repetition, time, weekdays, public, reminder_enabled, reminder_channels,
-                        reminder_minutes, calendar_enabled, created_at, updated_at
+                        reminder_minutes, calendar_enabled, origin, created_at, updated_at
                    FROM training_session_plan WHERE user_id = ? ORDER BY created_at',
                 $id,
                 ['steps', 'weekdays', 'reminder_channels'],
@@ -225,7 +226,7 @@ final readonly class DataExport
         }
         $repertoires = array_map(
             static fn (array $row): array => [...$row, 'pgn' => \is_string($row['id']) ? ($files[$row['id']] ?? null) : null],
-            $this->rows('SELECT BIN_TO_UUID(id) AS id, name, color, created_at, updated_at FROM repertoire WHERE user_id = ? ORDER BY created_at', $id),
+            $this->rows('SELECT BIN_TO_UUID(id) AS id, name, color, origin, created_at, updated_at FROM repertoire WHERE user_id = ? ORDER BY created_at', $id, ['origin']),
         );
 
         $zip->addFromString('repertoires.json', self::json([
@@ -251,6 +252,13 @@ final readonly class DataExport
                    FROM repertoire_presentation WHERE user_id = ? ORDER BY started_at',
                 $id,
                 ['moves', 'label'],
+            ),
+            'gameStats' => $this->rows(
+                'SELECT BIN_TO_UUID(s.repertoire_id) AS repertoire_id, s.fen, s.uci, s.games, s.wins, s.draws, s.losses, s.analysed, s.errored,
+                        s.think_cs, s.move_analysed, s.move_errors, s.best_uci, s.eval_cp, s.eval_mate, s.created_at
+                   FROM repertoire_game_stat s JOIN repertoire r ON r.id = s.repertoire_id
+                  WHERE r.user_id = ? ORDER BY s.created_at',
+                $id,
             ),
         ]));
     }

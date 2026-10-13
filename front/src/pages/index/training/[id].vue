@@ -139,7 +139,6 @@
       :item="evalItem"
       :result="evalResult"
       :xp="runner.xp.value"
-      :offset-ms="runner.offsetMs.value"
       :actions="evaluationActions"
       @resolve="onEvaluationResolve"
     >
@@ -150,7 +149,7 @@
           @stop="confirmStop"
         >
           <div class="text-subtitle2" data-testid="run-progress">
-            Position {{ evalItem.data.index }} / {{ evalItem.data.count }} ·
+            Position {{ evalItem.data.index }} ·
             {{ runner.solved.value }} juste{{
               runner.solved.value > 1 ? 's' : ''
             }}

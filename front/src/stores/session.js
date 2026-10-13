@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import {
   coordinatesApi,
+  evaluationApi,
   planApi,
   repertoireApi,
   woodpeckerApi
@@ -17,7 +18,7 @@ import {
   move as moveItem,
   sessionMinutes,
   toStep,
-  withFixedDuration
+  withDurationChoice
 } from '@/utils/session/catalog'
 import {
   normalizeSettings,
@@ -139,40 +140,52 @@ export const useSessionStore = defineStore('session', () => {
   const repertoires = ref([])
   /** @type {import('vue').Ref<SubjectContext['lightSet']>} */
   const lightSet = ref(null)
-  /** @type {import('vue').Ref<Record<string, number>>} */
-  const fixedMinutes = ref({})
+  /** @type {import('vue').Ref<SubjectContext['durationChoices']>} */
+  const durationChoices = ref({})
+  /** @type {import('vue').Ref<SubjectContext['openingSets']>} */
+  const openingSets = ref([])
 
   /** @type {import('vue').ComputedRef<SubjectContext>} */
   const context = computed(() => ({
     loaded: subjectsLoaded.value,
     repertoires: repertoires.value,
     lightSet: lightSet.value,
+    openingSets: openingSets.value,
     themeLabel: key => puzzles.themeLabel(key),
-    fixedMinutes: fixedMinutes.value
+    durationChoices: durationChoices.value
   }))
 
   /**
    * Fetches what the modules play on: the user's repertoires, their ongoing light set, the
-   * puzzle themes and the length of a coordinates series (the program's items follow it). Fetched
-   * again on each call (the user may have created one meanwhile).
+   * puzzle themes and the lengths of a coordinates series and of an evaluation run (the program's
+   * items follow them). Fetched again on each call (the user may have created one meanwhile).
    */
   async function fetchSubjects() {
     subjectsLoading.value = true
     subjectsError.value = ''
     try {
-      const [repertoireList, sets, , coordinates] = await Promise.all([
-        repertoireApi.list(),
-        woodpeckerApi.sets(),
-        puzzles.fetchThemes(),
-        coordinatesApi.overview()
-      ])
-      fixedMinutes.value = {
-        coordonnees: Math.round(coordinates.rules.seriesSeconds / 60)
+      const [repertoireList, sets, , coordinates, evaluation] =
+        await Promise.all([
+          repertoireApi.list(),
+          woodpeckerApi.sets(),
+          puzzles.fetchThemes(),
+          coordinatesApi.overview(),
+          evaluationApi.overview()
+        ])
+      durationChoices.value = {
+        coordonnees: {
+          minutes: coordinates.rules.seriesMinutes,
+          default: coordinates.rules.defaultMinutes
+        },
+        evaluation: {
+          minutes: evaluation.rules.runMinutes,
+          default: evaluation.rules.defaultMinutes
+        }
       }
       items.value = items.value.map(item => {
         const module = MODULES_BY_ID[item.moduleId]
         if (!module) return item
-        const values = withFixedDuration(module, item.values, context.value)
+        const values = withDurationChoice(module, item.values, context.value)
         return values === item.values ? item : { ...item, values }
       })
       repertoires.value = repertoireList.map((/** @type {any} */ r) => ({
@@ -180,12 +193,28 @@ export const useSessionStore = defineStore('session', () => {
         name: r.name,
         color: r.color
       }))
+      // The usual light set: the opening sets of the tailored session are played by their id.
       const light = sets.find(
         (/** @type {any} */ s) =>
           s.mode === 'light' &&
+          !s.opening &&
           !s.archived &&
           (s.status === 'active' || s.status === 'paused')
       )
+      openingSets.value = sets
+        .filter(
+          (/** @type {any} */ s) =>
+            s.opening &&
+            !s.archived &&
+            (s.status === 'active' || s.status === 'paused')
+        )
+        .map((/** @type {any} */ s) => ({
+          id: s.id,
+          name: s.name,
+          status: s.status,
+          puzzleCount: s.puzzleCount,
+          color: s.opening.color
+        }))
       lightSet.value = light
         ? {
             id: light.id,
@@ -236,7 +265,8 @@ export const useSessionStore = defineStore('session', () => {
         reset()
         repertoires.value = []
         lightSet.value = null
-        fixedMinutes.value = {}
+        openingSets.value = []
+        durationChoices.value = {}
         subjectsLoaded.value = false
       }
     }
@@ -322,7 +352,7 @@ export const useSessionStore = defineStore('session', () => {
       uid: ++lastUid,
       moduleId,
       values: clone(
-        withFixedDuration(
+        withDurationChoice(
           module,
           values ?? defaultValues(module),
           context.value

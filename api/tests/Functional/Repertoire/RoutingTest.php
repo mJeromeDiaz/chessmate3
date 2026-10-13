@@ -40,6 +40,12 @@ final class RoutingTest extends RepertoireWebTestCase
         yield ['POST', '/api/repertoires/imports', '_api_/repertoires/imports_post'];
         yield ['GET', '/api/repertoires/imports/'.self::UUID, '_api_/repertoires/imports/{id}_get'];
         yield ['POST', '/api/repertoires/imports/'.self::UUID.'/apply', 'repertoire_import_apply'];
+        yield ['POST', '/api/repertoires/auto-builds', '_api_/repertoires/auto-builds_post'];
+        yield ['GET', '/api/repertoires/auto-builds/'.self::UUID, '_api_/repertoires/auto-builds/{id}_get'];
+        yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/fetch', 'repertoire_auto_build_fetch'];
+        yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/selection', 'repertoire_auto_build_select'];
+        yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/evaluate', 'repertoire_auto_build_evaluate'];
+        yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/apply', 'repertoire_auto_build_apply'];
         yield ['GET', '/api/repertoires/explorer/masters', '_api_/repertoires/explorer/{source}_get'];
         yield ['GET', '/api/repertoires/explorer/lichess', '_api_/repertoires/explorer/{source}_get'];
         yield ['GET', '/api/repertoires/cloud-eval', '_api_/repertoires/cloud-eval_get'];

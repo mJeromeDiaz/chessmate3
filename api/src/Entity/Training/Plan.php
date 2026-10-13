@@ -18,6 +18,9 @@ use Symfony\Component\Uid\Uuid;
  * flag, reminder, calendar). Launching it creates a played {@see Session} with a frozen copy of the
  * program: changing or deleting the plan only changes the future.
  *
+ * `origin` marks a plan the app keeps up to date itself, one per user and origin: ORIGIN_COACH, the
+ * tailored session (docs/COACH.md), replaced at each analysis of the user's games.
+ *
  * @phpstan-type PlanStep array{module: string, minutes: int, notes: string, settings: array<string, mixed>}
  */
 #[ORM\Entity(repositoryClass: PlanRepository::class)]
@@ -25,12 +28,14 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Index(name: 'idx_training_session_plan_user_updated', columns: ['user_id', 'updated_at'])]
 #[ORM\Index(name: 'idx_training_session_plan_user', columns: ['user_id'])]
 #[ORM\Index(name: 'idx_training_session_plan_reminder', columns: ['reminder_enabled'])]
+#[ORM\UniqueConstraint(name: 'uniq_training_session_plan_origin', columns: ['user_id', 'origin'])]
 class Plan
 {
     public const MAX_PER_USER = 50;
     /** Reminder delays offered, in minutes before the session. */
     public const REMINDER_MINUTES = [10, 30, 60, 1440];
     public const REMINDER_CHANNELS = ['email', 'push'];
+    public const ORIGIN_COACH = 'coach';
 
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
@@ -79,16 +84,21 @@ class Plan
     #[ORM\Column(options: ['default' => false])]
     private bool $calendarEnabled = false;
 
+    /** Null for the user's own plans (see the class comment). */
+    #[ORM\Column(length: 16, nullable: true)]
+    private ?string $origin;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column]
     private \DateTimeImmutable $updatedAt;
 
-    public function __construct(User $user, \DateTimeImmutable $now)
+    public function __construct(User $user, \DateTimeImmutable $now, ?string $origin = null)
     {
         $this->id = Uuid::v7();
         $this->user = $user;
+        $this->origin = $origin;
         $this->createdAt = $now;
         $this->updatedAt = $now;
     }
@@ -143,6 +153,11 @@ class Plan
     public function getUser(): User
     {
         return $this->user;
+    }
+
+    public function getOrigin(): ?string
+    {
+        return $this->origin;
     }
 
     public function getTitle(): string

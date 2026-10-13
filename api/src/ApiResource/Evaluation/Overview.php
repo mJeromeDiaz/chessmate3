@@ -21,7 +21,7 @@ use App\State\Evaluation\OverviewProvider;
 )]
 final class Overview
 {
-    /** @var array{minCount: int, maxCount: int, seconds: list<int>, minElo: int, maxElo: int, advantageCp: int, winningCp: int} */
+    /** @var array{runMinutes: list<int>, defaultMinutes: int, minElo: int, maxElo: int, advantageCp: int, winningCp: int} */
     public array $rules;
 
     /** @var array{white: int, black: int} active positions by side to move */

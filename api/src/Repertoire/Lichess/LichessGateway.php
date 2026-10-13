@@ -45,13 +45,14 @@ final class LichessGateway
 
     /**
      * @param array<string, scalar> $query
+     * @param array<string, string> $headers added to the client's (Accept: application/x-ndjson for a stream of games)
      *
      * @return array{status: int, body: array<mixed>|null, text: string|null} status 2xx or 4xx (except 429);
-     *                                                                     body when JSON, text of a 200 otherwise
+     *                                                                     body when JSON, text of a 200 otherwise (ndjson included)
      *
      * @throws LichessUnavailableException
      */
-    public function get(HttpClientInterface $client, string $path, array $query, #[\SensitiveParameter] ?string $token): array
+    public function get(HttpClientInterface $client, string $path, array $query, #[\SensitiveParameter] ?string $token, array $headers = []): array
     {
         $pausedUntil = $this->pausedUntil();
         if (null !== $pausedUntil) {
@@ -64,7 +65,7 @@ final class LichessGateway
         try {
             $response = $client->request('GET', $path, [
                 'query' => $query,
-                'headers' => null === $token ? [] : ['Authorization' => 'Bearer '.$token],
+                'headers' => null === $token ? $headers : [...$headers, 'Authorization' => 'Bearer '.$token],
             ]);
             $status = $response->getStatusCode();
             if (429 === $status) {
@@ -78,7 +79,8 @@ final class LichessGateway
             $body = $text = null;
             if (200 === $status) {
                 $content = $response->getContent(false);
-                $decoded = str_contains($response->getHeaders(false)['content-type'][0] ?? '', 'json') ? json_decode($content, true) : null;
+                $type = $response->getHeaders(false)['content-type'][0] ?? '';
+                $decoded = str_contains($type, 'json') && !str_contains($type, 'ndjson') ? json_decode($content, true) : null;
                 $body = \is_array($decoded) ? $decoded : null;
                 $text = null === $body ? $content : null;
             }

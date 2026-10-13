@@ -24,7 +24,7 @@ use App\State\Coordinates\OverviewProvider;
 )]
 final class Overview
 {
-    /** @var array{seriesSeconds: int, minAnswers: int, minSuccessRate: float} */
+    /** @var array{seriesMinutes: list<int>, defaultMinutes: int, minAnswersPerMinute: int, minSuccessRate: float} */
     public array $rules;
 
     /** @var list<OrientationView> white, then black */

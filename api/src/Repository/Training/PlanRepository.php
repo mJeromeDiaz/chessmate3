@@ -33,6 +33,12 @@ class PlanRepository extends ServiceEntityRepository
         return $this->findBy(['user' => $user], ['updatedAt' => 'DESC'], Plan::MAX_PER_USER);
     }
 
+    /** The user's plan the app keeps up to date for this origin ({@see Plan::ORIGIN_COACH}). */
+    public function findByOrigin(User $user, string $origin): ?Plan
+    {
+        return $this->findOneBy(['user' => $user, 'origin' => $origin]);
+    }
+
     public function countByUser(User $user): int
     {
         return $this->count(['user' => $user]);

@@ -46,6 +46,15 @@ class Repertoire
     #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true, 'default' => 0])]
     private int $version = 0;
 
+    /**
+     * Where it came from, when built from the user's games (App\Repertoire\Auto): {source:
+     * "lichess_games", username, games, perfs, builtAt}. Null for a repertoire built by hand.
+     *
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $origin = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -125,5 +134,21 @@ class Repertoire
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getOrigin(): ?array
+    {
+        return $this->origin;
+    }
+
+    /**
+     * @param array<string, mixed>|null $origin
+     */
+    public function setOrigin(?array $origin): void
+    {
+        $this->origin = $origin;
     }
 }

@@ -37,7 +37,7 @@ final class XpRules
     public const EVALUATION_MISS = 1;
     /** The right plan, whatever the category. */
     public const EVALUATION_PLAN = 5;
-    /** Exact in less than half the position's time. */
+    /** Exact in less than half the position's time: runs before 2026-10-11 only (no time per position since). */
     public const EVALUATION_FAST = 3;
 
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */

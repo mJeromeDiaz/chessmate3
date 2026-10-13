@@ -7,6 +7,7 @@ namespace App\Woodpecker\Set;
 /**
  * The parameters of a light set (validated by the API input before reaching here). The set has
  * no schedule; $puzzleCount is its initial size, it then grows ({@see \App\Woodpecker\Light\SetGrower}).
+ * An opening set (the tailored session, docs/COACH.md) draws from an opening, without themes.
  */
 final readonly class LightConfig
 {
@@ -19,6 +20,7 @@ final readonly class LightConfig
         public int $ratingMax,
         public array $themes,
         public bool $shuffle,
+        public ?OpeningPool $opening = null,
     ) {
     }
 }

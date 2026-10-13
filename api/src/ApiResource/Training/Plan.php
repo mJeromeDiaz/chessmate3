@@ -57,6 +57,8 @@ final class Plan
     public array $reminderChannels;
     public int $reminderMinutes;
     public bool $calendarEnabled;
+    /** coach: the tailored session (docs/COACH.md), kept up to date by the app; null otherwise. */
+    public ?string $origin;
     /** The next occurrence (UTC), null on demand. */
     public ?\DateTimeImmutable $nextAt;
     public \DateTimeImmutable $createdAt;
@@ -78,6 +80,7 @@ final class Plan
         $view->reminderChannels = $plan->getReminderChannels();
         $view->reminderMinutes = $plan->getReminderMinutes();
         $view->calendarEnabled = $plan->isCalendarEnabled();
+        $view->origin = $plan->getOrigin();
         $view->nextAt = $plan->schedule()->nextAfter($now);
         $view->createdAt = $plan->getCreatedAt();
         $view->updatedAt = $plan->getUpdatedAt();

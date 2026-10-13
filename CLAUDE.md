@@ -17,10 +17,10 @@ Become the King !". One git repository (monorepo) at the root:
   `PUZZLE_IMPORT.md`, `ACTIVITY.md` (timezone, domain events, activity log), `WOODPECKER.md`
   (classic and light modes), `TRAINING.md` (timed runs, module contract, sessions, saved sessions, iCal calendar feed), `REPERTOIRE.md`
   (opening repertoires: normalized FEN, graph, one prepared move per position, trash, segments,
-  editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics), `DASHBOARD.md`
+  editor, PGN and OpenBook import/export, FSRS cards, timed test, statistics, repertoire built from the user's Lichess games), `DASHBOARD.md`
   (home dashboard: endpoints, local days, Lichess rating history, showcase values), `NOTIFICATIONS.md`
   (Web Push, VAPID keys, session reminders and their cron), `GAMIFICATION.md` (XP rules and ledger,
-  levels, ranks, streaks, rebuild), `DEPLOY_OVH.md` (OVH shared hosting: tick instead of worker and cron, configuration, two databases), `EARLY_ACCESS.md` (invitation keys and key sign-up, early access screen, waiting list, admins, their dashboard and statistics, account suspension), `COORDINATES.md` (coordinates series: rules, timed module, validation per orientation as a goal, XP), `BLINDFOLD.md` (blindfold puzzles, no prerequisite: levels, lengths, peek, unrated), `EVALUATION.md` (position evaluation: admin-written catalogue, Lichess check, five categories, per-position deadline, plan bonus, XP). Code paths quoted in them (`src/...`, `config/...`,
+  levels, ranks, streaks, rebuild), `DEPLOY_OVH.md` (OVH shared hosting: tick instead of worker and cron, configuration, two databases), `EARLY_ACCESS.md` (invitation keys and key sign-up, early access screen, waiting list, admins, their dashboard and statistics, account suspension), `COORDINATES.md` (coordinates series: rules, timed module, validation per orientation as a goal, XP), `BLINDFOLD.md` (blindfold puzzles, no prerequisite: levels, lengths, peek, unrated), `EVALUATION.md` (position evaluation: admin-written catalogue, Lichess check, five categories, runs of 1, 2, 5 or 10 min, plan bonus, XP), `COACH.md` (tailored session: 200 Lichess games, endgame diagnosis, fixed composition, opening Woodpecker sets, coach plan). Code paths quoted in them (`src/...`, `config/...`,
   `bin/console`) are relative to `api/` unless they name `front/`.
 
 Each app keeps its own `.gitignore` (`api/.gitignore`, `front/.gitignore`); the root one only covers
@@ -37,7 +37,7 @@ editor and OS files.
 
 ## Code organisation: by domain, short class names
 
-Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification, EarlyAccess, Coordinates, Blindfold, Evaluation today) gets a sub-namespace in every
+Each business domain (Puzzle, Activity, Woodpecker, Training, Repertoire, Dashboard, Notification, Gamification, EarlyAccess, Coordinates, Blindfold, Evaluation, Coach today) gets a sub-namespace in every
 layer, and classes inside it keep short names: `App\Entity\Puzzle\Attempt`, never `PuzzleAttempt`.
 
 | Layer | Location |
@@ -52,7 +52,7 @@ layer, and classes inside it keep short names: `App\Entity\Puzzle\Attempt`, neve
 | Tests | `tests/{Unit,Functional}/<Domain>/` |
 | Front | `src/components/<domain>/`, `src/composables/<domain>/`, `src/stores/<domain>.js`, `src/pages/index/<domain>/` (pages live under the `index` layout) |
 | Front, cross-domain | `src/components/chess/` (the chessboard, reused by every training mode) |
-| Server, cross-domain | `src/Chess/` → `App\Chess\Rules` (legal moves, UCI, lenient SAN, normalized FEN), `App\Chess\Position\{FenNormalizer, PositionKey}`, `App\Chess\Pgn\{Parser, Writer}`; front twin of the normalizer: `src/utils/chess/normalizeFen.js` |
+| Server, cross-domain | `src/Chess/` → `App\Chess\Rules` (legal moves, UCI, lenient SAN, normalized FEN), `App\Chess\Position\{FenNormalizer, PositionKey}`, `App\Chess\Pgn\{Parser, Writer}`, `App\Chess\Endgame\{Material, EndgameScanner}`; front twin of the normalizer: `src/utils/chess/normalizeFen.js` |
 
 Directories and namespaces are PascalCase and singular (PSR-4). Transverse entities stay at the root:
 `App\Entity\User` and the Phase 1 auth entities are not moved. Exception: the puzzle catalogue

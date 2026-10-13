@@ -6,16 +6,16 @@
     <LandingSteps />
     <LandingProfs />
     <LandingWoodpecker />
-    <LandingLichess />
+    <LandingAuto />
     <LandingCta />
   </q-page>
 </template>
 
 <script setup>
+import LandingAuto from '@/components/landing/LandingAuto.vue'
 import LandingCta from '@/components/landing/LandingCta.vue'
 import LandingHeader from '@/components/landing/LandingHeader.vue'
 import LandingHero from '@/components/landing/LandingHero.vue'
-import LandingLichess from '@/components/landing/LandingLichess.vue'
 import LandingModules from '@/components/landing/LandingModules.vue'
 import LandingProfs from '@/components/landing/LandingProfs.vue'
 import LandingSteps from '@/components/landing/LandingSteps.vue'

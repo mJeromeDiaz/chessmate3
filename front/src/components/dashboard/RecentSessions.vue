@@ -18,42 +18,75 @@
         label="Préparer une session"
       />
     </div>
-    <router-link
-      v-for="session in sessions"
-      :key="session.id"
-      :to="`/session/${session.id}`"
-      class="sessions__row"
-      data-testid="recent-session"
-    >
-      <div class="sessions__main">
-        <div class="sessions__title">{{
-          session.title || 'Session sans titre'
-        }}</div>
-        <div class="sessions__meta"
-          >{{ formatDate(session.startedAt) }} ·
-          {{ sessionProgressText(session) }} ·
-          {{ formatDuration(session.durationMs) }}</div
-        >
-      </div>
-      <span
-        class="sessions__status"
-        :class="`sessions__status--${session.status}`"
-        >{{
-          session.status === 'active'
-            ? 'Reprendre →'
-            : sessionStatusText(session)
-        }}</span
+    <div v-for="session in sessions" :key="session.id" class="sessions__item">
+      <router-link
+        :to="`/session/${session.id}`"
+        class="sessions__row"
+        data-testid="recent-session"
       >
-    </router-link>
+        <div class="sessions__main">
+          <div class="sessions__title">{{
+            session.title || 'Session sans titre'
+          }}</div>
+          <div class="sessions__meta"
+            >{{ formatDate(session.startedAt) }} ·
+            {{ sessionProgressText(session) }} ·
+            {{ formatDuration(session.durationMs) }}</div
+          >
+        </div>
+        <span
+          class="sessions__status"
+          :class="`sessions__status--${session.status}`"
+          >{{
+            session.status === 'active'
+              ? 'Reprendre →'
+              : sessionStatusText(session)
+          }}</span
+        >
+      </router-link>
+      <q-btn
+        v-if="session.status !== 'active'"
+        flat
+        round
+        dense
+        color="primary"
+        icon="replay"
+        :loading="launcher.launching.value === session.id"
+        :aria-label="`Rejouer ${session.title || 'la session'}`"
+        data-testid="recent-session-replay"
+        @click="launcher.replay(session)"
+      >
+        <q-tooltip>Rejouer la session</q-tooltip>
+      </q-btn>
+    </div>
+    <div v-if="launcher.inProgress.value" class="sessions__notice">
+      Une session est déjà en cours :
+      <router-link :to="`/session/${launcher.inProgress.value.id}`"
+        >la reprendre</router-link
+      >
+      ou
+      <button
+        type="button"
+        class="sessions__link"
+        @click="launcher.abandonAndLaunch()"
+        >l’abandonner et rejouer</button
+      >.
+    </div>
+    <div
+      v-else-if="launcher.error.value"
+      class="sessions__notice text-negative"
+      >{{ launcher.error.value }}</div
+    >
   </section>
 </template>
 
 <script setup>
 /**
  * The latest training sessions (design "Dashboard"): title, day, modules played, time; the active
- * one can be resumed.
+ * one can be resumed, the others played again.
  */
 import { onMounted, ref } from 'vue'
+import { usePlanLaunch } from '@/composables/session/usePlanLaunch'
 import { sessionApi } from '@/services/api'
 import { formatDate, formatDuration } from '@/utils/format'
 import { sessionProgressText, sessionStatusText } from '@/utils/session/steps'
@@ -68,6 +101,7 @@ const LIMIT = 5
 
 /** @type {import('vue').Ref<import('@/utils/session/steps').TrainingSession[]>} */
 const sessions = ref([])
+const launcher = usePlanLaunch()
 const loaded = ref(false)
 
 onMounted(async () => {
@@ -111,6 +145,32 @@ onMounted(async () => {
   background: var(--cm-page);
   color: var(--cm-ink);
   text-decoration: none;
+}
+
+.sessions__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .sessions__row {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.sessions__notice {
+  font-size: 13px;
+  color: var(--cm-ink-soft);
+}
+
+.sessions__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--cm-brand);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .sessions__main {

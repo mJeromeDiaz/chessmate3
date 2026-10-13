@@ -9,7 +9,17 @@ const api = vi.hoisted(() => ({
   puzzleApi: { themes: vi.fn() },
   coordinatesApi: {
     overview: vi.fn(async () => ({
-      rules: { seriesSeconds: 300, minAnswers: 50, minSuccessRate: 0.95 }
+      rules: {
+        seriesMinutes: [1, 2, 5, 10],
+        defaultMinutes: 2,
+        minAnswersPerMinute: 10,
+        minSuccessRate: 0.95
+      }
+    }))
+  },
+  evaluationApi: {
+    overview: vi.fn(async () => ({
+      rules: { runMinutes: [1, 2, 5, 10], defaultMinutes: 2 }
     }))
   }
 }))
@@ -329,7 +339,7 @@ describe('session store', () => {
     expect(stored()).toBeNull()
   })
 
-  it('gives a coordinates series the length of the API, before or after the load', async () => {
+  it('gives a coordinates series the default length of the API, before or after the load', async () => {
     api.repertoireApi.list.mockResolvedValue([])
     api.woodpeckerApi.sets.mockResolvedValue([])
     api.puzzleApi.themes.mockResolvedValue([])
@@ -341,10 +351,45 @@ describe('session store', () => {
 
     await store.fetchSubjects()
 
-    expect(store.items[0].values.duree).toBe(5)
-    expect(store.add('coordonnees')?.values.duree).toBe(5)
-    expect(store.totalMinutes).toBe(10)
+    expect(store.items[0].values.duree).toBe(2)
+    expect(store.add('coordonnees', { duree: 10, orientation: 'Noirs', notes: '' })?.values.duree).toBe(10)
+    expect(store.totalMinutes).toBe(12)
     expect(store.canSave).toBe(true)
+  })
+
+  it('gives an evaluation run the default length of the API, without positions nor time per position', async () => {
+    api.repertoireApi.list.mockResolvedValue([])
+    api.woodpeckerApi.sets.mockResolvedValue([])
+    api.puzzleApi.themes.mockResolvedValue([])
+    const store = useSessionStore()
+    store.title = 'Évaluation'
+    store.add('evaluation')
+    expect(store.canSave).toBe(false)
+
+    await store.fetchSubjects()
+
+    expect(store.items[0].values.duree).toBe(2)
+    expect(store.add('evaluation', { duree: 5, elo: 1500, couleur: 'Blancs', notes: '' })?.values.duree).toBe(5)
+    expect(store.totalMinutes).toBe(7)
+    expect(store.canSave).toBe(true)
+  })
+
+  it('keeps the opening sets of the tailored session apart from the light set', async () => {
+    api.repertoireApi.list.mockResolvedValue([])
+    api.puzzleApi.themes.mockResolvedValue([])
+    const ongoing = { archived: false, status: 'active', puzzleCount: 100, runs: [] }
+    api.woodpeckerApi.sets.mockResolvedValue([
+      { ...ongoing, id: 'o1', name: 'Italian Game · Blancs', mode: 'light', opening: { family: 'Italian_Game', color: 'white', bothColors: false } },
+      { ...ongoing, id: 'l1', name: 'Light', mode: 'light', opening: null }
+    ])
+    const store = useSessionStore()
+
+    await store.fetchSubjects()
+
+    expect(store.context.lightSet?.id).toBe('l1')
+    expect(store.context.openingSets).toEqual([
+      { id: 'o1', name: 'Italian Game · Blancs', status: 'active', puzzleCount: 100, color: 'white' }
+    ])
   })
 
   it('saves blindfold puzzles without any coordinates series', async () => {

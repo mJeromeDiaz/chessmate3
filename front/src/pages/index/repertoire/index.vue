@@ -23,6 +23,15 @@
           data-testid="repertoire-import"
         />
         <q-btn
+          flat
+          no-caps
+          icon="auto_awesome"
+          label="Depuis mes parties"
+          to="/repertoire/auto"
+          class="q-mr-sm"
+          data-testid="repertoire-auto"
+        />
+        <q-btn
           color="primary"
           no-caps
           icon="add"
@@ -35,6 +44,28 @@
         Construisez vos ouvertures coup par coup sur l’échiquier, avec vos
         réponses aux coups de l’adversaire.
       </p>
+
+      <router-link
+        to="/repertoire/auto"
+        class="auto-entry"
+        data-testid="repertoire-auto-card"
+      >
+        <img
+          :src="profImage('albert-v2-pointer')"
+          alt=""
+          class="auto-entry__albert"
+        />
+        <span class="auto-entry__text">
+          <span class="auto-entry__title"
+            >Ton répertoire, tiré de tes vraies parties</span
+          >
+          <span class="auto-entry__sub"
+            >Albert lit tes parties Lichess et construit un répertoire par
+            ouverture, avec ce qui te coûte des points.</span
+          >
+        </span>
+        <q-icon name="arrow_forward" size="22px" class="auto-entry__arrow" />
+      </router-link>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
         error
@@ -91,7 +122,10 @@
       >
         <q-icon name="menu_book" size="48px" color="grey-5" />
         <div class="q-mt-sm">
-          Aucun répertoire. Créez votre premier répertoire, ou
+          Aucun répertoire. Créez votre premier répertoire,
+          <router-link to="/repertoire/auto"
+            >construisez-le depuis vos parties Lichess</router-link
+          >, ou
           <router-link to="/repertoire/import">importez un PGN</router-link>.
         </div>
       </div>
@@ -188,6 +222,7 @@ import { useRepertoireStore } from '@/stores/repertoire'
 import { apiErrorMessage } from '@/utils/apiError'
 import { repertoireApi } from '@/services/api'
 import { downloadText } from '@/utils/download'
+import { profImage } from '@/utils/prof/images'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -307,5 +342,60 @@ onMounted(async () => {
 .repertoire-page {
   max-width: 800px;
   margin: 0 auto;
+}
+
+/* The way into "repertoire from my games" (design "Repertoire auto"). */
+.auto-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px 0 10px;
+  border-radius: 22px;
+  background: var(--cm-brand-soft);
+  color: var(--cm-ink);
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 0.15s;
+}
+
+.auto-entry:hover {
+  transform: translateY(-2px);
+}
+
+.auto-entry__albert {
+  width: 84px;
+  height: 92px;
+  object-fit: contain;
+  object-position: center bottom;
+  flex: none;
+  align-self: flex-end;
+}
+
+.auto-entry__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 10px;
+}
+
+.auto-entry__title {
+  font-family: var(--cm-heading);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.auto-entry__sub {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--cm-muted);
+}
+
+.auto-entry__arrow {
+  flex: none;
+  color: var(--cm-brand);
+  padding-bottom: 10px;
 }
 </style>

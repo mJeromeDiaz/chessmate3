@@ -187,6 +187,49 @@ describe('createHttpClient', () => {
     expect(handlers.onAuthFailure).not.toHaveBeenCalled()
   })
 
+  it('sends no access token on public auth calls (an expired one would make the API refuse the refresh)', async () => {
+    const server = fakeServer(() => [200, {}])
+    const { client } = setup({ refresh: async () => 'new', server })
+
+    await client.post('/api/auth/refresh', null, { skipAuthRefresh: true })
+    await client.get('/x')
+
+    expect(server.calls).toEqual([
+      { url: '/api/auth/refresh', auth: null },
+      { url: '/x', auth: 'Bearer old' }
+    ])
+  })
+
+  it('renews an expired session: the refresh goes out without the expired token', async () => {
+    const state = { validToken: 'new' }
+    const server = fakeServer(config => {
+      const auth = config.headers.get('Authorization')
+      if (config.url === '/api/auth/refresh') {
+        // As the API does: an expired Bearer is refused before the cookie is read.
+        return auth ? [401, {}] : [200, { token: 'new' }]
+      }
+      return auth === `Bearer ${state.validToken}`
+        ? [200, { ok: true }]
+        : [401, {}]
+    })
+    let client
+    const result = setup({
+      refresh: async () =>
+        (
+          await client.post('/api/auth/refresh', null, {
+            skipAuthRefresh: true
+          })
+        ).data.token,
+      server
+    })
+    client = result.client
+
+    await expect(client.get('/x')).resolves.toMatchObject({
+      data: { ok: true }
+    })
+    expect(result.handlers.onAuthFailure).not.toHaveBeenCalled()
+  })
+
   it('leaves other errors alone', async () => {
     const server = fakeServer(() => [403, {}])
     const { client, handlers } = setup({ refresh: async () => 'new', server })

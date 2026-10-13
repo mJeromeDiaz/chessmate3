@@ -32,6 +32,7 @@
             :src="prof.full"
             :alt="prof.name"
             class="landing-prof__img"
+            :class="{ 'landing-prof__img--long': prof.slug === 'aaron' }"
           />
           <span class="landing-prof__link">Voir le profil →</span>
         </router-link>
@@ -136,6 +137,12 @@ import { LANDING_PROFS, profRole } from '@/utils/landing/content'
   right: -6px;
   bottom: -24px;
   height: 280px;
+
+  // Long legs (Aaron): taller and sunk so the card's edge cuts him at the thighs.
+  &--long {
+    bottom: -110px;
+    height: 370px;
+  }
 }
 
 .landing-prof__link {

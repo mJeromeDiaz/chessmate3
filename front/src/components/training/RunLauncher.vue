@@ -11,7 +11,6 @@
     />
     <div class="row items-center q-gutter-sm">
       <q-btn-toggle
-        v-if="!fixedMinutes"
         v-model="choice"
         no-caps
         unelevated
@@ -68,8 +67,9 @@
 /**
  * Picks a duration (5 to 30 minutes, or custom) and starts a timed run on a subject; only one
  * run at a time: when one is in progress, offers to resume or end it. A module's options go in
- * `config`; the repertoire test adds its unit (segments or whole lines) with `showUnit`; a module of
- * fixed length (`fixedMinutes`) offers no choice.
+ * `config`; the repertoire test adds its unit (segments or whole lines) with `showUnit`; a module
+ * with lengths of its own (`durations`: the coordinates series, the evaluation) offers those only,
+ * no "Autre".
  */
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -89,8 +89,10 @@ const props = defineProps({
   /** Offer the repertoire test's unit: segments (default) or whole lines. */
   showUnit: { type: Boolean, default: false },
   disable: { type: Boolean, default: false },
-  /** A module whose runs all last this long (the coordinates series): no duration to pick. */
-  fixedMinutes: { type: Number, default: null },
+  /** @type {import('vue').PropType<number[]|null>} The only lengths a module's runs may last (the coordinates series, the evaluation), in minutes. */
+  durations: { type: Array, default: null },
+  /** The length chosen first, in minutes. */
+  defaultMinutes: { type: Number, default: 20 },
   label: { type: String, default: 'Lancer la séance' }
 })
 
@@ -131,24 +133,24 @@ const MESSAGES = {
 
 const router = useRouter()
 const store = useTrainingStore()
-const choice = ref(20)
+const choice = ref(props.defaultMinutes)
 const custom = ref(20)
 const starting = ref(false)
 const error = ref('')
 const inProgress = ref(null)
 const unit = ref('segment')
 
-const options = [
-  ...RUN_DURATIONS.map(m => ({ label: `${m} min`, value: m })),
-  { label: 'Autre', value: 'custom' }
-]
+const options = computed(() =>
+  props.durations
+    ? props.durations.map(m => ({ label: `${m} min`, value: m }))
+    : [
+        ...RUN_DURATIONS.map(m => ({ label: `${m} min`, value: m })),
+        { label: 'Autre', value: 'custom' }
+      ]
+)
 
 const minutes = computed(() =>
-  props.fixedMinutes
-    ? props.fixedMinutes
-    : choice.value === 'custom'
-      ? Number(custom.value)
-      : Number(choice.value)
+  choice.value === 'custom' ? Number(custom.value) : Number(choice.value)
 )
 const valid = computed(
   () =>

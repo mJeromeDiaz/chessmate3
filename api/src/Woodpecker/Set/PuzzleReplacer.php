@@ -8,7 +8,6 @@ use App\Entity\User;
 use App\Entity\Woodpecker\Set;
 use App\Enum\Woodpecker\SetStatus;
 use App\Repository\Catalog\PuzzleRepository;
-use App\Repository\Catalog\ThemeRepository;
 use App\Repository\Woodpecker\AttemptRepository;
 use App\Repository\Woodpecker\CycleRepository;
 use App\Repository\Woodpecker\SetPuzzleRepository;
@@ -23,7 +22,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Swaps a puzzle of an ongoing set for another one of the same profile (rating range, themes), at
+ * Swaps a puzzle of an ongoing set for another one of the same profile (rating range, themes or opening), at
  * the same position (docs/WOODPECKER.md, "Remplacer un puzzle"): the player shapes the set to
  * taste. The cycle order does not move; the attempts already played on the old puzzle stay in the
  * history and the statistics. A pending attempt on it (untimed or in a timed run) is dropped: the
@@ -38,7 +37,7 @@ final class PuzzleReplacer
         private readonly CycleRepository $cycles,
         private readonly AttemptRepository $attempts,
         private readonly PuzzleRepository $puzzles,
-        private readonly ThemeRepository $themes,
+        private readonly PoolFactory $pools,
         private readonly SetGenerator $generator,
         private readonly CycleRunner $runner,
         private readonly ClockInterface $clock,
@@ -90,15 +89,12 @@ final class PuzzleReplacer
      */
     private function pick(Set $set, int $oldId): int
     {
-        $themeIds = array_map(static fn ($theme): int => (int) $theme->getId(), $this->themes->findByKeys($set->getThemes()));
-        if ([] === $themeIds && [] !== $set->getThemes()) {
-            // Themes gone since the creation: never widen to "any theme" silently.
-            throw new NotEnoughPuzzlesException(0, 1);
-        }
+        // Null: themes gone since the creation, never widen to "any theme" silently.
+        $pool = $this->pools->ofSet($set) ?? throw new NotEnoughPuzzlesException(0, 1);
         $exclude = $this->setPuzzles->findPuzzleIds($set);
         $exclude[] = $oldId;
 
-        return $this->generator->extend(1, $set->getRatingMin(), $set->getRatingMax(), $themeIds, $exclude)[0]
+        return $this->generator->extend(1, $set->getRatingMin(), $set->getRatingMax(), $pool, $exclude)[0]
             ?? throw new NotEnoughPuzzlesException(0, 1);
     }
 }

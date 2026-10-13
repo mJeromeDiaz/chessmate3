@@ -21,7 +21,7 @@ use App\Training\Exception\InvalidItemSubmissionException;
 use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
-use App\Training\Module\FixedBudgetInterface;
+use App\Training\Module\BudgetChoicesInterface;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
@@ -34,13 +34,13 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * The coordinates series in timed runs (docs/COORDINATES.md). The subject is the user; config
- * `orientation` (white or black). The run lasts {@see CoordinateRules::SERIES_SECONDS}, its squares
- * are drawn at the start and served as one item: the client judges each click at once for its
+ * `orientation` (white or black). The run lasts one of {@see CoordinateRules::SERIES_MINUTES}, its
+ * squares are drawn at the start and served as one item: the client judges each click at once for its
  * feedback and sends the answers in batches, which the server judges again (answer i is about
  * square i; times capped by the server's clock). Closing validates the orientation or not, and
  * logs the series as one `coordinates_series` exercise.
  */
-final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableModuleInterface, FixedBudgetInterface
+final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableModuleInterface, BudgetChoicesInterface
 {
     public const SUBJECT_TYPE = 'coordinates_player';
     public const ITEM_TYPE = 'coordinates_series';
@@ -65,9 +65,9 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
         return self::SUBJECT_TYPE;
     }
 
-    public function fixedBudgetSeconds(): int
+    public function allowedBudgetSeconds(): array
     {
-        return CoordinateRules::SERIES_SECONDS;
+        return CoordinateRules::budgets();
     }
 
     public function prepare(User $user, array $settings, string $notes): PreparedStep
@@ -82,11 +82,11 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
         if (!$run->getSubjectId()->equals($run->getUser()->getId())) {
             throw new SubjectNotFoundException();
         }
-        if (CoordinateRules::SERIES_SECONDS !== $run->getBudgetSeconds()) {
-            throw new InvalidRunConfigException(sprintf('A coordinates series lasts %d seconds.', CoordinateRules::SERIES_SECONDS));
+        if (!CoordinateRules::allows($run->getBudgetSeconds())) {
+            throw new InvalidRunConfigException(sprintf('A coordinates series lasts %s minutes.', implode(', ', CoordinateRules::SERIES_MINUTES)));
         }
         $orientation = self::check($run->getConfig());
-        $this->entityManager->persist(new Series($run, $orientation, $this->drawer->draw(CoordinateRules::SQUARES_PER_SERIES)));
+        $this->entityManager->persist(new Series($run, $orientation, $this->drawer->draw(CoordinateRules::squares($run->getBudgetSeconds()))));
     }
 
     public function next(Run $run, \DateTimeImmutable $now): Item
@@ -99,7 +99,7 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
             // A reload goes on from there.
             'answered' => $series->getAnswerCount(),
             'successCount' => $series->getSuccessCount(),
-            'rules' => CoordinateRules::toArray(),
+            'rules' => CoordinateRules::ofSeries($run->getBudgetSeconds()),
         ]);
     }
 
@@ -146,7 +146,7 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
         // The runner closes a run whose time is up at its expiry, whenever that is noticed.
         $closedAt = CloseReason::TimeUp === $reason ? min($now, $run->getExpiresAt()) : $now;
         $playedToTheEnd = \in_array($reason, [CloseReason::TimeUp, CloseReason::SubjectFinished], true);
-        $validated = CoordinateRules::validates($series->getAnswerCount(), $series->getSuccessCount(), $playedToTheEnd);
+        $validated = CoordinateRules::validates($run->getBudgetSeconds(), $series->getAnswerCount(), $series->getSuccessCount(), $playedToTheEnd);
         $series->close($validated, $closedAt);
         if (0 === $series->getAnswerCount()) {
             return;
@@ -198,7 +198,7 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
                 'validated' => $series->isValidated(),
                 'answeredMs' => $series->getAnsweredMs(),
                 'averageMs' => $count > 0 ? intdiv($series->getAnsweredMs(), $count) : null,
-                'rules' => CoordinateRules::toArray(),
+                'rules' => CoordinateRules::ofSeries($run->getBudgetSeconds()),
             ],
         );
     }

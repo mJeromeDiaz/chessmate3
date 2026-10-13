@@ -84,15 +84,30 @@ final class WoodpeckerModule implements TimeboxedModuleInterface, ReviewableModu
 
     /**
      * A session step plays the user's ongoing light set (no settings): the one ongoing when the
-     * step starts.
+     * step starts; or, with `setId`, that light set of the user (an opening set of the tailored
+     * session, docs/COACH.md), while it is ongoing.
      */
     public function prepare(User $user, array $settings, string $notes): PreparedStep
     {
-        if ([] !== $settings) {
-            throw new InvalidRunConfigException('A Woodpecker step has no settings.');
+        if ([] !== array_diff(array_keys($settings), ['setId'])) {
+            throw new InvalidRunConfigException('A Woodpecker step has no settings but setId.');
         }
-        $set = $this->sets->findOngoing($user, SetMode::Light)
-            ?? throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_light_set'], 'No light set in progress.');
+        if (\array_key_exists('setId', $settings)) {
+            $setId = $settings['setId'];
+            if (!\is_string($setId) || !Uuid::isValid($setId)) {
+                throw new InvalidRunConfigException('setId must be a set id.');
+            }
+            $set = $this->sets->find(Uuid::fromString($setId));
+            if (null === $set || !$set->getUser()->getId()->equals($user->getId()) || SetMode::Light !== $set->getMode()) {
+                throw new SubjectNotFoundException();
+            }
+            if (!\in_array($set->getStatus(), [SetStatus::Active, SetStatus::Paused], true)) {
+                throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_light_set'], 'This light set is no longer in progress.');
+            }
+        } else {
+            $set = $this->sets->findOngoing($user, SetMode::Light)
+                ?? throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_light_set'], 'No light set in progress.');
+        }
         if (SetStatus::Active !== $set->getStatus()) {
             throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'light_set_paused', 'setStatus' => $set->getStatus()->value], 'The light set is paused.');
         }

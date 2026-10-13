@@ -120,6 +120,28 @@
           >
         </div>
         <div
+          v-else-if="field.type === 'durationChoice'"
+          class="module-settings__options"
+          role="group"
+          :aria-labelledby="`${uid}-${field.key}`"
+        >
+          <button
+            v-for="minutes in durationChoices"
+            :key="minutes"
+            type="button"
+            class="module-settings__option"
+            :aria-pressed="values[field.key] === minutes"
+            :data-testid="`duration-${minutes}`"
+            :style="
+              values[field.key] === minutes
+                ? { background: module.soft, borderColor: module.deep }
+                : {}
+            "
+            @click="values[field.key] = minutes"
+            >{{ formatMinutes(minutes) }}</button
+          >
+        </div>
+        <div
           v-else-if="field.type === 'themes'"
           class="module-settings__options"
         >
@@ -195,6 +217,28 @@
             data-testid="session-repertoire-create"
             >+ Créer un répertoire</router-link
           >
+        </template>
+        <template v-else-if="field.type === 'lightSet' && values[field.key]">
+          <div
+            class="module-settings__card"
+            :style="{ background: module.soft }"
+            data-testid="opening-set"
+          >
+            <div class="module-settings__card-title">{{
+              openingSet(values[field.key])?.name ?? 'Set d’ouverture'
+            }}</div>
+            <div class="module-settings__card-meta">{{
+              openingSet(values[field.key])
+                ? `Set d’ouverture · ${openingSet(values[field.key]).puzzleCount} puzzles`
+                : 'Ce set d’ouverture n’est plus en cours.'
+            }}</div>
+            <router-link
+              :to="`/woodpecker/${values[field.key]}`"
+              class="module-settings__link"
+              :style="{ color: module.accentInk }"
+              >Voir le set →</router-link
+            >
+          </div>
         </template>
         <template v-else-if="field.type === 'lightSet'">
           <div v-if="!context.loaded" class="module-settings__hint">{{
@@ -298,7 +342,7 @@ import {
   formatMinutes,
   itemIssue,
   moduleMinutes,
-  withFixedDuration
+  withDurationChoice
 } from '@/utils/session/catalog'
 
 /**
@@ -347,15 +391,28 @@ watch(
   { immediate: true }
 )
 
-// A fixed-length module takes its length from the API, once known.
+// A module with lengths of its own takes them (and its default) from the API, once known.
 watch(
-  () => context.value.fixedMinutes,
+  () => context.value.durationChoices,
   () =>
     Object.assign(
       values,
-      withFixedDuration(props.module, values, context.value)
+      withDurationChoice(props.module, values, context.value)
     ),
   { immediate: true }
+)
+/** The lengths a duration choice offers (none until the API answered). */
+/**
+ * An ongoing opening set of the tailored session (docs/COACH.md), by id.
+ *
+ * @param {string} id
+ */
+function openingSet(id) {
+  return context.value.openingSets?.find(set => set.id === id) ?? null
+}
+
+const durationChoices = computed(
+  () => context.value.durationChoices?.[props.module.id]?.minutes ?? []
 )
 
 const kicker = computed(
@@ -370,7 +427,7 @@ const kicker = computed(
 function display(field) {
   const v = values[field.key]
   if (field.type === 'slider') return field.format ? field.format(v) : String(v)
-  if (field.type === 'fixedDuration') return v > 0 ? formatMinutes(v) : '…'
+  if (field.type === 'durationChoice') return v > 0 ? formatMinutes(v) : '…'
   if ((field.type === 'many' || field.type === 'repertoire') && v.length) {
     return `${v.length} choisi${v.length > 1 ? 's' : ''}`
   }

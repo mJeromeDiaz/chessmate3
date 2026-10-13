@@ -9,8 +9,9 @@
         jusqu’à {{ overview ? pawns(overview.rules.winningCp) : '…' }} pions,
         gain au-delà (un mat ou une finale gagnée compte comme un gain). Quand
         la position en a un, trouve aussi le plan (facultatif, en bonus). Chaque
-        position a son temps ; une réponse en retard compte comme un temps
-        écoulé.
+        séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent, prends
+        le temps qu’il faut sur chacune ; celle à l’écran à la fin ne compte
+        pas.
       </p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -29,24 +30,6 @@
             >{{ resultsText(overview.results) }}</p
           >
 
-          <div class="text-subtitle2">Positions : {{ count }}</div>
-          <q-slider
-            v-model="count"
-            :min="overview.rules.minCount"
-            :max="overview.rules.maxCount"
-            markers
-            snap
-            data-testid="evaluation-count"
-          />
-          <div class="text-subtitle2">Temps par position</div>
-          <q-btn-toggle
-            v-model="seconds"
-            no-caps
-            unelevated
-            toggle-color="primary"
-            :options="secondsOptions"
-            data-testid="evaluation-seconds"
-          />
           <div class="text-subtitle2">Niveau des positions : {{ elo }}</div>
           <q-slider
             v-model="elo"
@@ -66,24 +49,20 @@
             data-testid="evaluation-side"
           />
           <p
-            v-if="available < count"
+            v-if="!available"
             class="text-caption text-warning q-mb-none"
             data-testid="evaluation-short"
           >
-            {{
-              available
-                ? `Seulement ${available} position${available > 1 ? 's' : ''} pour ce trait : la séance s’arrêtera avant.`
-                : 'Aucune position pour ce trait pour l’instant.'
-            }}
+            Aucune position pour ce trait pour l’instant.
           </p>
           <RunLauncher
             v-if="subjectId"
             module="evaluation"
             :subject-id="subjectId"
-            :config="{ count, seconds, elo, side }"
-            :fixed-minutes="evaluationMinutes(count, seconds)"
+            :config="{ elo, side }"
+            :durations="overview.rules.runMinutes"
+            :default-minutes="overview.rules.defaultMinutes"
             :disable="!available"
-            :label="`Lancer la séance (${evaluationMinutes(count, seconds)} min)`"
           />
         </q-card-section>
       </q-card>
@@ -93,9 +72,8 @@
 
 <script setup>
 /**
- * Position evaluation (docs/EVALUATION.md): the run's settings (positions, time per position,
- * level, side to move) and the results so far. The rules and the catalogue's size come from the
- * API; a run lasts its positions' time plus a margin each (`evaluationMinutes`).
+ * Position evaluation (docs/EVALUATION.md): the run's settings (length, level, side to move) and
+ * the results so far. The rules (lengths, level bounds) and the catalogue's size come from the API.
  */
 import { computed, onMounted, ref } from 'vue'
 import RunLauncher from '@/components/training/RunLauncher.vue'
@@ -108,7 +86,6 @@ import {
   positionsFor,
   resultsText
 } from '@/utils/evaluation'
-import { evaluationMinutes } from '@/utils/session/catalog'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -116,19 +93,11 @@ const auth = useAuthStore()
 /** @type {import('vue').Ref<any>} GET /evaluation */
 const overview = ref(null)
 const error = ref('')
-const count = ref(6)
-const seconds = ref(120)
 const elo = ref(1500)
 const side = ref('both')
 
 const subjectId = computed(() => /** @type {any} */ (auth.profile)?.id ?? null)
 
-const secondsOptions = computed(() =>
-  (overview.value?.rules.seconds ?? []).map((/** @type {number} */ s) => ({
-    value: s,
-    label: s % 60 ? `${s} s` : `${s / 60} min`
-  }))
-)
 const sideOptions = computed(() =>
   SIDE_OPTIONS.map(o => ({
     ...o,
@@ -145,8 +114,6 @@ onMounted(async () => {
     const value = await evaluationApi.overview()
     overview.value = value
     const r = value.rules
-    if (!r.seconds.includes(seconds.value)) seconds.value = r.seconds.at(-1)
-    count.value = Math.min(Math.max(count.value, r.minCount), r.maxCount)
     elo.value = Math.min(Math.max(elo.value, r.minElo), r.maxElo)
   } catch (e) {
     error.value = apiErrorMessage(e)

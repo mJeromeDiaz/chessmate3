@@ -7,6 +7,7 @@ namespace App\Training\Plan;
 use App\Entity\Training\Plan;
 use App\Entity\Training\Session;
 use App\Entity\User;
+use App\Enum\Training\Module;
 use App\Repository\Training\PlanRepository;
 use App\Training\Exception\InvalidSessionException;
 use App\Training\Exception\PlanLimitException;
@@ -47,6 +48,45 @@ final class PlanManager
         $plan = new Plan($user, $this->now());
         $this->apply($plan, $settings);
         $this->entityManager->persist($plan);
+        $this->entityManager->flush();
+
+        return $plan;
+    }
+
+    /**
+     * Creates or replaces the program of the user's plan of this origin ({@see Plan::ORIGIN_COACH}):
+     * a new one is played on demand; an existing one keeps its schedule, reminder and calendar.
+     *
+     * @param list<array{module: Module, minutes: int, notes: string, settings: array<string, mixed>}> $steps
+     *
+     * @throws InvalidSessionException
+     * @throws PlanLimitException
+     */
+    public function saveForOrigin(User $user, string $origin, string $title, string $description, array $steps): Plan
+    {
+        $this->checker->check($user, $steps, false);
+        $plan = $this->plans->findByOrigin($user, $origin);
+        if (null === $plan) {
+            if ($this->plans->countByUser($user) >= Plan::MAX_PER_USER) {
+                throw new PlanLimitException();
+            }
+            $plan = new Plan($user, $this->now(), $origin);
+            $this->entityManager->persist($plan);
+        }
+        $plan->update(
+            $title,
+            $description,
+            $steps,
+            $plan->getRepetition(),
+            $plan->getTime(),
+            $plan->getWeekdays(),
+            $plan->isPublic(),
+            $plan->isReminderEnabled(),
+            $plan->getReminderChannels(),
+            $plan->getReminderMinutes(),
+            $plan->isCalendarEnabled(),
+            $this->now(),
+        );
         $this->entityManager->flush();
 
         return $plan;

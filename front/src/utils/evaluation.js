@@ -17,7 +17,6 @@
  * @property {string[]} ideas
  * @property {string|null} source
  * @property {number|null} durationMs
- * @property {boolean} fast
  */
 
 import { formatRate } from '@/utils/format'

@@ -68,6 +68,8 @@ final class Set
     public ?int $minCycleDays;
     public ?int $restDays;
     public bool $shuffle;
+    /** @var array{family: string, color: string, bothColors: bool}|null an opening set of the tailored session (docs/COACH.md) */
+    public ?array $opening;
     public \DateTimeImmutable $createdAt;
     public ?\DateTimeImmutable $pausedAt;
     public ?\DateTimeImmutable $completedAt;
@@ -107,6 +109,8 @@ final class Set
         $view->ratingMin = $set->getRatingMin();
         $view->ratingMax = $set->getRatingMax();
         $view->themes = $set->getThemes();
+        $opening = $set->getOpening();
+        $view->opening = null === $opening ? null : ['family' => $opening->family, 'color' => $opening->color->value, 'bothColors' => $opening->bothColors];
         $view->cycleCount = $config?->cycleCount;
         $view->firstCycleDays = $config?->firstCycleDays;
         $view->reductionFactor = $config?->reductionFactor;

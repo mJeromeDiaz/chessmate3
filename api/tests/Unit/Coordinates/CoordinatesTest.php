@@ -23,16 +23,28 @@ final class CoordinatesTest extends TestCase
 {
     public function testAValidatingSeriesIsLongEnoughAccurateEnoughAndPlayedToItsEnd(): void
     {
-        $min = CoordinateRules::MIN_ANSWERS;
+        $min = CoordinateRules::minAnswers(300);
         $atTheRate = (int) ceil($min * CoordinateRules::MIN_SUCCESS_RATE);
 
-        self::assertTrue(CoordinateRules::validates($min, $atTheRate, true), 'exactly at both thresholds');
-        self::assertFalse(CoordinateRules::validates($min, $atTheRate - 1, true), 'below the rate');
-        self::assertFalse(CoordinateRules::validates($min - 1, $min - 1, true), 'too few answers');
-        self::assertFalse(CoordinateRules::validates($min, $min, false), 'stopped');
-        self::assertTrue(CoordinateRules::validates(60, 57, true), '95 % of 60');
-        self::assertFalse(CoordinateRules::validates(60, 56, true));
-        self::assertSame(0, CoordinateRules::SERIES_SECONDS % 60, 'Sessions count in minutes.');
+        self::assertSame(50, $min, '10 answers a minute');
+        self::assertTrue(CoordinateRules::validates(300, $min, $atTheRate, true), 'exactly at both thresholds');
+        self::assertFalse(CoordinateRules::validates(300, $min, $atTheRate - 1, true), 'below the rate');
+        self::assertFalse(CoordinateRules::validates(300, $min - 1, $min - 1, true), 'too few answers');
+        self::assertFalse(CoordinateRules::validates(300, $min, $min, false), 'stopped');
+        self::assertTrue(CoordinateRules::validates(300, 60, 57, true), '95 % of 60');
+        self::assertFalse(CoordinateRules::validates(300, 60, 56, true));
+    }
+
+    public function testTheLengthOfASeriesSetsItsThresholdAndItsSquares(): void
+    {
+        self::assertSame([60, 120, 300, 600], CoordinateRules::budgets(), 'whole minutes: sessions count in minutes');
+        self::assertContains(CoordinateRules::DEFAULT_MINUTES, CoordinateRules::SERIES_MINUTES);
+        self::assertSame([10, 20, 50, 100], array_map(CoordinateRules::minAnswers(...), CoordinateRules::budgets()));
+        self::assertTrue(CoordinateRules::validates(60, 10, 10, true), '1 min: 10 answers are enough');
+        self::assertFalse(CoordinateRules::validates(600, 99, 99, true), '10 min: 100 answers needed');
+        self::assertSame([180, CoordinateRules::MAX_SQUARES], [CoordinateRules::squares(60), CoordinateRules::squares(600)]);
+        self::assertFalse(CoordinateRules::allows(180));
+        self::assertSame(['seriesSeconds' => 120, 'minAnswers' => 20, 'minSuccessRate' => 0.95], CoordinateRules::ofSeries(120));
     }
 
     public function testTheDrawCoversTheBoardWithoutRepeatingASquareAtOnce(): void
@@ -70,6 +82,6 @@ final class CoordinatesTest extends TestCase
         $user = new User();
         $user->setEmail('alice@example.com');
 
-        return new Run($user, Module::Coordinates, 'coordinates_player', Uuid::v7(), CoordinateRules::SERIES_SECONDS, ['orientation' => 'black'], new \DateTimeImmutable('2026-10-07 10:00:00'));
+        return new Run($user, Module::Coordinates, 'coordinates_player', Uuid::v7(), 300, ['orientation' => 'black'], new \DateTimeImmutable('2026-10-07 10:00:00'));
     }
 }

@@ -120,6 +120,61 @@ test('a session can be resumed, a module passed and the session abandoned', asyn
   )
 })
 
+test('a session is played again: restarted on the way, replayed at its end and from the dashboard', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/session/new')
+  await page.getByTestId('session-title').fill('Rejouable')
+  await addModule(page, 'libre', 5)
+  await addModule(page, 'libre', 5)
+  await page.getByTestId('session-launch').click()
+  await expect(page.getByTestId('free-run')).toBeVisible()
+  await stopRun(page)
+
+  // On the way: the session is abandoned and starts over from its first module.
+  await page.goto('/#/')
+  await page.getByTestId('recent-session').first().click()
+  await expect(page.getByTestId('session-step-status').nth(0)).toContainText(
+    'Fait'
+  )
+  await page.getByTestId('session-restart').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(page).toHaveURL(/#\/training\/[^/]+$/)
+  await expect(page.getByTestId('free-run')).toBeVisible()
+  await stopRun(page)
+
+  // At its end: the same program again.
+  await page.goto('/#/')
+  await expect(page.getByTestId('recent-session')).toHaveCount(2)
+  await expect(page.getByTestId('recent-session').nth(1)).toContainText(
+    'Abandonnée'
+  )
+  await page.getByTestId('recent-session').first().click()
+  await page.getByTestId('session-abandon').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(page.getByTestId('session-end')).toBeVisible()
+  await page.getByTestId('session-replay').click()
+  await expect(page).toHaveURL(/#\/training\/[^/]+$/)
+  await expect(page.getByTestId('free-run')).toBeVisible()
+
+  // From the dashboard, while that replay is on: abandon it and replay the chosen one.
+  await page.goto('/#/')
+  const rows = page.getByTestId('recent-session')
+  await expect(rows).toHaveCount(3)
+  await expect(rows.first()).toContainText('Reprendre')
+  await expect(page.getByTestId('recent-session-replay')).toHaveCount(2)
+  await page.getByTestId('recent-session-replay').first().click()
+  await page.getByRole('button', { name: 'l’abandonner et rejouer' }).click()
+  await expect(page).toHaveURL(/#\/training\/[^/]+$/)
+  await page.goto('/#/')
+  await expect(rows).toHaveCount(4)
+  await expect(rows.first()).toContainText('Rejouable')
+  await expect(rows.first()).toContainText('Reprendre')
+  await expect(rows.nth(1)).toContainText('Abandonnée')
+})
+
 test('saved sessions: settings kept, listed, edited, launched from the dashboard, deleted', async ({
   page,
   context

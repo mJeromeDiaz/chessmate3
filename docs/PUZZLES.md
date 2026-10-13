@@ -41,8 +41,9 @@ MySQL n'a ni tableau ni GIN. Son équivalent, l'index multi-valué sur JSON (`ME
 - `puzzle_theme_membership` est un **index dérivé** dont la clé clusterisée rend « un puzzle du thème T
   autour du classement R » contigu sur disque : une seule lecture par plage, quelle que soit la
   fréquence du thème ;
-- les tags d'ouverture restent en JSON non indexé (aucun filtre ne les utilise ; même schéma de table
-  de sélection le jour où il en faudra un).
+- les tags d'ouverture restent en JSON ; seul le premier (la famille) est exposé, avec la couleur du
+  joueur, par les colonnes générées VIRTUAL `opening_family` et `solver_color` indexées par
+  `idx_puzzle_opening`, pour les sets d'ouverture de la séance sur mesure ([COACH.md](COACH.md)).
 
 Reconstruction (`SelectionRebuilder::rebuildAll`), **en place** : la table est vidée et perd sa PK,
 remplie en ajout séquentiel, puis la PK est construite en une passe triée. Une insertion directe dans

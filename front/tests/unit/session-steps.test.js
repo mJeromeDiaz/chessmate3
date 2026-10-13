@@ -3,6 +3,7 @@ import {
   blockedText,
   nextErrorText,
   sessionProgressText,
+  replayProgram,
   sessionStatusText,
   stepModule,
   stepStatusText
@@ -67,5 +68,61 @@ describe('session steps', () => {
       nextErrorText(conflict('The light set is paused. (light_set_paused)'))
     ).toContain('ne peut pas démarrer')
     expect(nextErrorText({ response: { status: 500 } })).toBe('')
+  })
+})
+
+describe('replayProgram', () => {
+  it('keeps the program of a played session, not what became of it', () => {
+    const session = {
+      id: 's1',
+      title: 'Matin',
+      description: 'Ouvertures',
+      status: 'completed',
+      currentIndex: 1,
+      planId: null,
+      steps: [
+        {
+          index: 0,
+          module: 'woodpecker',
+          minutes: 10,
+          notes: '',
+          settings: { setId: 'set-1' },
+          status: 'done',
+          runId: 'r1',
+          blocked: null,
+          summary: { solved: 12 }
+        },
+        {
+          index: 1,
+          module: 'free',
+          minutes: 5,
+          notes: 'Livre',
+          settings: { format: 'Livre' },
+          status: 'skipped',
+          runId: null,
+          blocked: null,
+          summary: null
+        }
+      ]
+    }
+
+    expect(replayProgram(session)).toEqual({
+      title: 'Matin',
+      description: 'Ouvertures',
+      steps: [
+        {
+          module: 'woodpecker',
+          minutes: 10,
+          notes: '',
+          settings: { setId: 'set-1' }
+        },
+        {
+          module: 'free',
+          minutes: 5,
+          notes: 'Livre',
+          settings: { format: 'Livre' }
+        }
+      ]
+    })
   })
 })

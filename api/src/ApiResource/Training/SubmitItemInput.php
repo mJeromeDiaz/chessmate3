@@ -36,7 +36,7 @@ final class SubmitItemInput
     /** @var list<array{index: int, square: string, ms: int}> coordinates series: squares clicked, judged by the server (docs/COORDINATES.md) */
     #[Assert\Count(max: CoordinateRules::MAX_ANSWERS_PER_SUBMISSION)]
     #[Assert\All([new Assert\Collection(fields: [
-        'index' => [new Assert\NotNull(), new Assert\Type('int'), new Assert\Range(min: 0, max: CoordinateRules::SQUARES_PER_SERIES - 1)],
+        'index' => [new Assert\NotNull(), new Assert\Type('int'), new Assert\Range(min: 0, max: CoordinateRules::MAX_SQUARES - 1)],
         'square' => [new Assert\NotNull(), new Assert\Type('string'), new Assert\Regex('/^[a-h][1-8]$/')],
         'ms' => [new Assert\NotNull(), new Assert\Type('int'), new Assert\Range(min: 0, max: 3_600_000)],
     ])])]

@@ -38,31 +38,6 @@
 
       <div
         v-if="!result"
-        class="eval-player__clock"
-        data-testid="evaluation-clock"
-      >
-        <div
-          class="eval-player__ring"
-          :style="{
-            background: `conic-gradient(${clockColor} ${clockDeg}deg, #FFF5D1 0)`
-          }"
-        >
-          <span>⏱︎</span>
-        </div>
-        <div>
-          <div class="eval-player__clock-label"
-            >Temps restant · {{ data.seconds }} s max</div
-          >
-          <div
-            class="eval-player__clock-value"
-            :class="{ 'eval-player__clock-value--low': remainingMs <= 20_000 }"
-            >{{ clock(remainingMs) }}</div
-          >
-        </div>
-      </div>
-
-      <div
-        v-if="!result"
         class="eval-player__card"
         data-testid="evaluation-ask"
       >
@@ -160,15 +135,6 @@
         }}</div>
       </div>
 
-      <div class="eval-player__dots" aria-hidden="true">
-        <span
-          v-for="n in data.count"
-          :key="n"
-          class="eval-player__step"
-          :class="{ 'eval-player__step--on': n === data.index }"
-        />
-      </div>
-
       <ResultSheet
         v-if="result && timeline.kind.value"
         :kind="timeline.kind.value"
@@ -189,11 +155,11 @@
 <script setup>
 /**
  * A position to evaluate in a timed run (design "Évaluation", docs/EVALUATION.md): who stands
- * better (five answers) and, when the position has one, the plan, before the position's own
- * deadline on the server's clock. At zero, "no answer" is sent. Then the correction: the gauge
- * "you / the engine", the key ideas, the best plan, and the result sheet.
+ * better (five answers) and, when the position has one, the plan, with no time per position (the
+ * run's clock is in the header). Then the correction: the gauge "you / the engine", the key ideas,
+ * the best plan, and the result sheet.
  */
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
@@ -204,7 +170,6 @@ import {
   EVAL_CHOICES,
   VERDICTS,
   choiceLabel,
-  clock,
   evaluationFeedback,
   gaugeX,
   guessX,
@@ -218,14 +183,12 @@ const props = defineProps({
   result: { type: Object, default: null },
   /** The submission's `xp` (undefined until it answered). */
   xp: { type: [Number, null], default: undefined },
-  /** Server clock minus local clock, ms. */
-  offsetMs: { type: Number, default: 0 },
   /** @type {import('vue').PropType<import('@/components/feedback/ResultSheet.vue').SheetAction[]>} the result sheet's buttons */
   actions: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits({
-  /** The answer: the category (null: none in time) and the plan. */
+  /** The answer: the category and the plan. */
   resolve: answer => typeof answer === 'object'
 })
 
@@ -235,33 +198,12 @@ const guess = ref(null)
 /** @type {import('vue').Ref<string|null>} */
 const plan = ref(null)
 const sending = ref(false)
-const now = ref(Date.now())
 const timeline = useFeedbackTimeline()
 
-const timer = setInterval(() => {
-  now.value = Date.now()
-  if (!props.result && !sending.value && remainingMs.value <= 0) send(null)
-}, 250)
-onBeforeUnmount(() => clearInterval(timer))
-
-const remainingMs = computed(() =>
-  Math.max(0, Date.parse(data.value.deadlineAt) - (now.value + props.offsetMs))
-)
-const clockDeg = computed(
-  () => (remainingMs.value / (data.value.seconds * 1000)) * 360
-)
-const clockColor = computed(() =>
-  remainingMs.value <= 20_000
-    ? '#FF6FAE'
-    : remainingMs.value <= 60_000
-      ? '#FF8A3D'
-      : '#FFD43B'
-)
-
-/** @param {number|null} value the category, null when time is up */
+/** @param {number} value the category */
 function send(value) {
   sending.value = true
-  emit('resolve', { guess: value, plan: value === null ? null : plan.value })
+  emit('resolve', { guess: value, plan: plan.value })
 }
 
 watch(
@@ -377,55 +319,10 @@ const bubble = computed(() =>
   padding-bottom: 8px;
 }
 
-.eval-player__clock,
 .eval-player__card {
   background: var(--cm-surface);
   border-radius: 18px;
   padding: 14px;
-}
-
-.eval-player__clock {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.eval-player__ring {
-  position: relative;
-  width: 52px;
-  height: 52px;
-  flex: none;
-  border-radius: 50%;
-
-  span {
-    position: absolute;
-    inset: 6px;
-    border-radius: 50%;
-    background: var(--cm-surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 17px;
-  }
-}
-
-.eval-player__clock-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--cm-muted);
-  text-transform: uppercase;
-}
-
-.eval-player__clock-value {
-  font-family: var(--cm-heading);
-  font-weight: 800;
-  font-size: 26px;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-
-  &--low {
-    color: #c02670;
-  }
 }
 
 .eval-player__card {
@@ -630,24 +527,6 @@ const bubble = computed(() =>
 
   b {
     color: var(--cm-ink);
-  }
-}
-
-.eval-player__dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-}
-
-.eval-player__step {
-  width: 8px;
-  height: 8px;
-  border-radius: 8px;
-  background: var(--cm-line);
-
-  &--on {
-    width: 24px;
-    background: var(--cm-ink);
   }
 }
 </style>

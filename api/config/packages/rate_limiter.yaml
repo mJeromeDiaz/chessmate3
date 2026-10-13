@@ -177,6 +177,27 @@ framework:
             policy: sliding_window
             limit: 120
             interval: '10 minutes'
+        # Repertoire from my games: builds started (each one reads up to 500 games from Lichess)...
+        repertoire_auto_build:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+        # ...their batches of games (40 for 2000 games, plus retries after a Lichess pause)...
+        repertoire_auto_fetch:
+            policy: sliding_window
+            limit: 120
+            interval: '10 minutes'
+        # ...and the changes of selection, cloud evaluations of the line ends and applications.
+        repertoire_auto_edit:
+            policy: sliding_window
+            limit: 300
+            interval: '10 minutes'
+        # Tailored session (docs/COACH.md): sessions composed (opening sets drawn, the repertoire
+        # possibly generated, the coach plan replaced); the games come through the builds above.
+        coach_compose:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
 
         # Early access (identifier = the admin's id): invitation keys created or resent, each one an email.
         early_access_invitation_write:

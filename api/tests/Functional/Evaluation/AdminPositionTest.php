@@ -70,7 +70,7 @@ final class AdminPositionTest extends WoodpeckerWebTestCase
         self::assertSame(404, $this->api('GET', '/api/admin/evaluation/positions/'.$secondId, $this->admin)->getStatusCode());
 
         // Played (served in a run): deactivate it instead.
-        $run = $this->api('POST', '/api/training/runs', $this->admin, ['module' => 'evaluation', 'subjectId' => $this->admin->getId()->toRfc4122(), 'budgetSeconds' => 600, 'config' => ['count' => 3, 'seconds' => 60, 'elo' => 1500, 'side' => 'both']]);
+        $run = $this->api('POST', '/api/training/runs', $this->admin, ['module' => 'evaluation', 'subjectId' => $this->admin->getId()->toRfc4122(), 'budgetSeconds' => 600, 'config' => ['elo' => 1500, 'side' => 'both']]);
         self::assertSame(201, $run->getStatusCode(), (string) $run->getContent());
         self::assertSame(1, $this->json($this->api('GET', '/api/admin/evaluation/positions/'.$createdId, $this->admin))['played'] ?? null);
         self::assertSame(409, $this->api('DELETE', '/api/admin/evaluation/positions/'.$createdId, $this->admin)->getStatusCode());

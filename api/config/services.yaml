@@ -47,6 +47,7 @@ when@test:
         App\Repertoire\Graph\SegmentReconciler: { autowire: true, public: true }
         App\Repertoire\Graph\RowStore: { autowire: true, public: true }
         App\Repertoire\Graph\TrashBin: { autowire: true, public: true }
+        App\Woodpecker\Set\OpeningSets: { autowire: true, public: true }
         App\Repertoire\Graph\RestorePlanner: { autowire: true, public: true }
         App\Repertoire\Transaction: { autowire: true, public: true }
         App\Repertoire\Opening\OpeningSynchronizer: { autowire: true, public: true }

@@ -117,10 +117,19 @@ export function dropLetters(text, offset = 0) {
 
 /** Set before leaving for a provider to sign up: the callback then opens the welcome screen. */
 const WELCOME_KEY = 'dontstayrooky.welcome'
-/** Set before linking Lichess from the welcome screen: the callback comes back to it. */
+/** Set before linking Lichess from a page that wants the user back (welcome screen, repertoire from my games). */
 const LINK_RETURN_KEY = 'dontstayrooky.linkReturn'
+/** Set by a landing call to action: where a provider sign-in (or sign-up) leads. */
+const AFTER_SIGN_IN_KEY = 'dontstayrooky.afterSignIn'
 
 export const WELCOME_PATH = '/bienvenue'
+export const AUTO_REPERTOIRE_PATH = '/repertoire/auto'
+/** The tailored session (docs/COACH.md). */
+export const COACH_PATH = '/session/auto'
+/** The only pages a link may come back to (never another site). */
+const LINK_RETURNS = [WELCOME_PATH, AUTO_REPERTOIRE_PATH, COACH_PATH]
+/** The only pages a provider sign-in may lead to, past the dashboard (never another site). */
+const AFTER_SIGN_IN = [AUTO_REPERTOIRE_PATH, COACH_PATH]
 
 /**
  * @param {string} key
@@ -162,12 +171,47 @@ export function takeWelcome() {
 
 /** Linking Lichess from the welcome screen. */
 export function markLinkFromWelcome() {
-  remember(LINK_RETURN_KEY, WELCOME_PATH)
+  markLinkReturn(WELCOME_PATH)
 }
 
 /**
  * @returns {boolean} whether the link was started from the welcome screen (forgotten once read)
  */
 export function takeLinkFromWelcome() {
-  return takeBack(LINK_RETURN_KEY) === WELCOME_PATH
+  return takeLinkReturn() === WELCOME_PATH
+}
+
+/**
+ * Linking Lichess from a page the callback comes back to.
+ *
+ * @param {string} path one of the allowed pages
+ */
+export function markLinkReturn(path) {
+  if (LINK_RETURNS.includes(path)) remember(LINK_RETURN_KEY, path)
+}
+
+/**
+ * @returns {string|null} the page that started the link, if allowed (forgotten once read)
+ */
+export function takeLinkReturn() {
+  const path = takeBack(LINK_RETURN_KEY)
+  return path !== null && LINK_RETURNS.includes(path) ? path : null
+}
+
+/**
+ * A provider sign-in started from a landing call to action: the callback leads to this page, also
+ * after the early access screen's second round trip (same tab).
+ *
+ * @param {string} path one of the allowed pages
+ */
+export function markAfterSignIn(path) {
+  if (AFTER_SIGN_IN.includes(path)) remember(AFTER_SIGN_IN_KEY, path)
+}
+
+/**
+ * @returns {string|null} the page a provider sign-in leads to, if allowed (forgotten once read)
+ */
+export function takeAfterSignIn() {
+  const path = takeBack(AFTER_SIGN_IN_KEY)
+  return path !== null && AFTER_SIGN_IN.includes(path) ? path : null
 }

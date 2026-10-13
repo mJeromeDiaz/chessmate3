@@ -124,6 +124,15 @@
         <q-btn
           flat
           no-caps
+          icon="replay"
+          label="Recommencer la session"
+          :loading="!!launcher.launching.value"
+          data-testid="session-restart"
+          @click="confirmRestart"
+        />
+        <q-btn
+          flat
+          no-caps
           color="negative"
           label="Abandonner la session"
           :loading="acting === 'abandon'"
@@ -132,11 +141,28 @@
         />
       </div>
       <div
-        v-if="step.error.value || error"
+        v-if="step.error.value || launcher.error.value || error"
         class="session-page__error text-negative"
         data-testid="session-action-error"
-        >{{ step.error.value || error }}</div
+        >{{ step.error.value || launcher.error.value || error }}</div
       >
+      <div
+        v-if="launcher.inProgress.value"
+        class="session-page__error"
+        data-testid="session-replay-in-progress"
+      >
+        Une autre session est en cours aujourd’hui :
+        <router-link :to="`/session/${launcher.inProgress.value.id}`"
+          >la reprendre</router-link
+        >
+        ou
+        <button
+          type="button"
+          class="session-page__link"
+          @click="launcher.abandonAndLaunch()"
+          >l’abandonner et rejouer celle-ci</button
+        >.
+      </div>
 
       <div v-if="session.status !== 'active'" class="session-page__end">
         <div class="session-page__end-text" data-testid="session-end">{{
@@ -146,6 +172,16 @@
           color="primary"
           no-caps
           unelevated
+          icon="replay"
+          label="Rejouer la session"
+          :loading="!!launcher.launching.value"
+          data-testid="session-replay"
+          @click="launcher.replay(session)"
+        />
+        <q-btn
+          outline
+          color="primary"
+          no-caps
           label="Composer une nouvelle session"
           to="/session/new"
         />
@@ -158,12 +194,14 @@
 <script setup>
 /**
  * A training session (docs/TRAINING.md): its frozen program, the state of each step, and what
- * comes next: start (or retry) the current module, resume its run, pass it, or abandon the session.
+ * comes next: start (or retry) the current module, resume its run, pass it, abandon the session,
+ * or play it again (from the start, its saved session as it is now when it has one).
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { sessionApi } from '@/services/api'
+import { usePlanLaunch } from '@/composables/session/usePlanLaunch'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatDuration } from '@/utils/format'
@@ -186,6 +224,7 @@ const error = ref('')
 const acting = ref(null)
 
 const step = useSessionStep({ onRefused: () => load() })
+const launcher = usePlanLaunch()
 
 const current = computed(
   () => session.value?.steps[session.value.currentIndex] ?? null
@@ -240,6 +279,27 @@ function confirmAbandon() {
     cancel: true
   }).onOk(() => act('abandon'))
 }
+
+function confirmRestart() {
+  $q.dialog({
+    title: 'Recommencer la session ?',
+    message:
+      'Celle-ci est abandonnée (ce qui est fait reste compté) et la session repart du premier module.',
+    cancel: true
+  }).onOk(async () => {
+    await act('abandon')
+    if (session.value?.status === 'abandoned')
+      await launcher.replay(session.value)
+  })
+}
+
+// Another session (a replay) opens on this same page: load it.
+watch(
+  () => route.params.id,
+  (id, previous) => {
+    if (id && id !== previous) load()
+  }
+)
 
 onMounted(load)
 </script>
@@ -392,6 +452,16 @@ onMounted(load)
 
 .session-page__error {
   margin-top: 10px;
+}
+
+.session-page__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--cm-brand);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .session-page__end {

@@ -1,10 +1,41 @@
 <template>
-  <div
+  <PlayLayout
     class="drill-player"
     data-testid="drill-player"
     :data-fen="drill.fen.value"
   >
-    <div class="drill-player__board">
+    <template v-if="$slots.header" #header>
+      <slot name="header" />
+    </template>
+
+    <template #prof>
+      <ProfBubble
+        large
+        :prof="prof"
+        :kicker="bubble.kicker"
+        :text="bubble.text"
+        :kind="timeline.kind.value"
+        :step="timeline.step.value"
+        :hint="drill.phase.value === 'correcting'"
+        text-testid="drill-status"
+      />
+    </template>
+
+    <template #chips>
+      <span class="play-chip play-chip--accent" data-testid="drill-label">{{
+        labelText(drill.start.value?.label)
+      }}</span>
+      <span class="play-chip" data-testid="drill-score"
+        >{{ unitWord(unit, drill.succeeded.value) }} réussi{{
+          drill.succeeded.value > 1 ? 's' : ''
+        }}
+        · {{ unitWord(unit, drill.failed.value) }} raté{{
+          drill.failed.value > 1 ? 's' : ''
+        }}</span
+      >
+    </template>
+
+    <template #board>
       <ChessBoard
         ref="board"
         :fen="drill.fen.value"
@@ -14,24 +45,24 @@
         :arrows="drill.arrows.value"
         @move="onMove"
       />
-    </div>
+    </template>
 
-    <div class="drill-player__panel column q-gutter-sm">
-      <slot name="header" />
+    <template v-if="drill.moves.value.length > 0" #controls>
+      <q-btn
+        unelevated
+        no-caps
+        icon="replay"
+        class="play-btn play-btn--replay"
+        label="Revoir les coups"
+        :disable="
+          drill.phase.value !== 'playing' && drill.phase.value !== 'unitDone'
+        "
+        data-testid="drill-replay"
+        @click="drill.replay()"
+      />
+    </template>
 
-      <div class="text-subtitle2" data-testid="drill-score">
-        {{ unitWord(unit, drill.succeeded.value) }} réussi{{
-          drill.succeeded.value > 1 ? 's' : ''
-        }}
-        · {{ unitWord(unit, drill.failed.value) }} raté{{
-          drill.failed.value > 1 ? 's' : ''
-        }}
-      </div>
-
-      <div class="text-h6" data-testid="drill-label">{{
-        labelText(drill.start.value?.label)
-      }}</div>
-
+    <div class="drill-player__info">
       <q-banner
         v-if="drill.stale.value"
         dense
@@ -78,34 +109,11 @@
           :class="`drill-move drill-move--${move.kind}`"
           >{{ numbered(i, move.san) }}</span
         >
-        <q-btn
-          v-if="drill.moves.value.length > 0"
-          flat
-          dense
-          no-caps
-          size="sm"
-          icon="replay"
-          label="Revoir les coups"
-          :disable="
-            drill.phase.value !== 'playing' && drill.phase.value !== 'unitDone'
-          "
-          data-testid="drill-replay"
-          @click="drill.replay()"
-        />
       </div>
 
-      <ProfBubble
-        :prof="prof"
-        :kicker="bubble.kicker"
-        :text="bubble.text"
-        :kind="timeline.kind.value"
-        :step="timeline.step.value"
-        :hint="drill.phase.value === 'correcting'"
-        text-testid="drill-status"
-      />
       <div
         v-if="drill.comment.value"
-        class="text-body2 cm-muted"
+        class="drill-player__comment cm-muted"
         data-testid="drill-comment"
         >{{ drill.comment.value }}</div
       >
@@ -123,7 +131,7 @@
       />
       <div v-if="error" class="text-negative">{{ error }}</div>
     </div>
-  </div>
+  </PlayLayout>
 </template>
 
 <script setup>
@@ -131,10 +139,12 @@
  * The repertoire test in a timed run (docs/REPERTOIRE.md § 15): the board and the unit's moves,
  * driven by `useRepertoireDrill`; the API calls go through the run (`useTimeboxedRun`). Aaron,
  * the module's professor, talks and reacts, and the result sheet closes each unit (design
- * "Animation Puzzle"): a unit succeeded moves on by itself, a failed one waits for "Suivant".
+ * "Animation Puzzle", PlayLayout like the puzzles: big board, big bubble and buttons on a wide
+ * screen): a unit succeeded moves on by itself, a failed one waits for "Suivant".
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import PlayLayout from '@/components/chess/PlayLayout.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
@@ -323,37 +333,56 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
-.drill-player {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: minmax(0, 560px) minmax(260px, 1fr);
-  align-items: start;
-  max-width: 1000px;
-  margin: 0 auto;
+<style scoped lang="scss">
+.drill-player__info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-@media (max-width: 800px) {
-  .drill-player {
-    grid-template-columns: 1fr;
+
+.drill-player__moves {
+  font-size: 16px;
+  line-height: 1.8;
+
+  @media (min-width: 1024px) {
+    font-size: 18px;
   }
 }
-.drill-player__moves {
-  line-height: 1.8;
+
+.drill-player__comment {
+  font-size: 15px;
+
+  @media (min-width: 1024px) {
+    font-size: 16px;
+  }
 }
+
+.drill-player .play-btn--replay {
+  flex: none;
+  padding: 0 20px;
+  background: var(--cm-subtle);
+  color: var(--cm-ink);
+}
+
 .drill-move {
   margin-right: 0.4em;
 }
+
 .drill-move--context {
-  color: #9e9e9e;
+  color: var(--cm-faint);
 }
+
 .drill-move--opponent {
-  color: #424242;
+  color: var(--cm-ink-soft);
 }
+
 .drill-move--user {
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--cm-ink);
 }
+
 .drill-move--corrected {
-  font-weight: 600;
-  color: #c10015;
+  font-weight: 700;
+  color: var(--cm-danger);
 }
 </style>

@@ -6,6 +6,7 @@ namespace App\Repository\Woodpecker;
 
 use App\Entity\User;
 use App\Entity\Woodpecker\Set;
+use App\Enum\Repertoire\Color;
 use App\Enum\Woodpecker\SetMode;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\LockMode;
@@ -45,21 +46,34 @@ class SetRepository extends ServiceEntityRepository
     }
 
     /**
-     * The active or paused set of this mode: at most one, by the unique index on the generated
-     * active_user_id and the mode.
+     * The active or paused set of this mode, opening sets aside: at most one, by the unique index
+     * on the generated active_user_id, the mode and opening_slot.
      */
     public function findOngoing(User $user, SetMode $mode): ?Set
     {
+        return $this->findOngoingIn($user, $mode, '');
+    }
+
+    /**
+     * The active or paused opening set of this colour (docs/COACH.md): at most one.
+     */
+    public function findOngoingOpening(User $user, Color $color): ?Set
+    {
+        return $this->findOngoingIn($user, SetMode::Light, $color->value);
+    }
+
+    private function findOngoingIn(User $user, SetMode $mode, string $slot): ?Set
+    {
         $id = $this->getEntityManager()->getConnection()->fetchOne(
-            'SELECT id FROM woodpecker_set WHERE active_user_id = :user AND mode = :mode',
-            ['user' => $user->getId()->toBinary(), 'mode' => $mode->value],
+            'SELECT id FROM woodpecker_set WHERE active_user_id = :user AND mode = :mode AND opening_slot = :slot',
+            ['user' => $user->getId()->toBinary(), 'mode' => $mode->value, 'slot' => $slot],
         );
 
         return \is_string($id) ? $this->find(Uuid::fromBinary($id)) : null;
     }
 
     /**
-     * The active or paused sets: at most one per mode.
+     * The active or paused sets: at most one per mode, plus the opening sets (one per colour).
      *
      * @return list<Set>
      */

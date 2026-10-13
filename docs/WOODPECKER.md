@@ -207,6 +207,14 @@ supprimée, non comptée).
 Récalcitrants : même règle qu'en classique, les manches tenant lieu de cycles (échoué dans au moins
 2 manches).
 
+### Sets d'ouverture
+
+La séance sur mesure ([COACH.md](COACH.md)) ajoute **un set light par couleur**, tiré des puzzles de
+l'ouverture la plus jouée de l'utilisateur (`OpeningSets`, vivier `OpeningPool`), à côté du set light
+habituel : colonnes `opening_family`, `opening_color`, `opening_both_colors`, colonne générée
+`opening_slot` dans l'index unique des sets en cours. `findOngoing` les ignore ; une étape de session
+les vise par `settings.setId`. Ils grandissent et se remplacent comme tout set light.
+
 ### Exclusion de la sélection classée
 
 `ActiveSetExclusion` implémente `Puzzle\Selection\ExclusionProviderInterface` : la phase 2 ne dépend

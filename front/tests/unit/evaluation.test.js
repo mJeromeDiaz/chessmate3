@@ -25,7 +25,6 @@ const result = (/** @type {object} */ over = {}) => ({
   ideas: ['Le roi noir est exposé.'],
   source: null,
   durationMs: 65_000,
-  fast: false,
   ...over
 })
 

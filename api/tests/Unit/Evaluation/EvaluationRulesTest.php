@@ -33,9 +33,14 @@ final class EvaluationRulesTest extends TestCase
         self::assertSame(AttemptStatus::Close, EvaluationRules::status(0, -1));
         self::assertSame(AttemptStatus::Miss, EvaluationRules::status(-1, 1));
         self::assertSame(AttemptStatus::Timeout, EvaluationRules::status(null, 0));
-        self::assertTrue(EvaluationRules::fast(AttemptStatus::Exact, 29_999, 60));
-        self::assertFalse(EvaluationRules::fast(AttemptStatus::Exact, 30_000, 60));
-        self::assertFalse(EvaluationRules::fast(AttemptStatus::Close, 1_000, 60));
+    }
+
+    public function testRunLengths(): void
+    {
+        self::assertSame([60, 120, 300, 600], EvaluationRules::budgets());
+        self::assertTrue(EvaluationRules::allows(120));
+        self::assertFalse(EvaluationRules::allows(780));
+        self::assertContains(EvaluationRules::DEFAULT_MINUTES, EvaluationRules::RUN_MINUTES);
     }
 
     public function testLabels(): void
@@ -47,6 +52,8 @@ final class EvaluationRulesTest extends TestCase
     {
         $xp = static fn (array $metadata): int => XpRules::exercise(ExerciseType::PositionEvaluation, 'exact' === $metadata['status'], 30_000, 1, $metadata);
         self::assertSame(15, $xp(['status' => 'exact', 'planOk' => null, 'fast' => false]));
+        self::assertSame(20, $xp(['status' => 'exact', 'planOk' => true, 'fast' => false]));
+        // The speed bonus of the runs before 2026-10-11 stays theirs (a rebuild keeps it).
         self::assertSame(23, $xp(['status' => 'exact', 'planOk' => true, 'fast' => true]));
         self::assertSame(11, $xp(['status' => 'close', 'planOk' => true, 'fast' => false]));
         self::assertSame(1, $xp(['status' => 'miss', 'planOk' => false, 'fast' => false]));

@@ -19,12 +19,12 @@
           Compose ton entraînement d’échecs, coup par coup.
         </p>
         <div class="landing-actions">
-          <LichessButton />
           <router-link
-            to="/session/new"
-            class="landing-btn landing-btn--light"
-            data-testid="landing-see-session"
-            >Voir une session</router-link
+            to="/session/auto"
+            class="landing-btn landing-btn--dark landing-hero__coach"
+            data-testid="landing-coach"
+            ><span class="landing-btn__knight" aria-hidden="true">♞︎</span
+            >Générer ma session d’entraînement personnalisée</router-link
           >
         </div>
       </div>
@@ -59,7 +59,6 @@ import {
   HERO_SLOGAN_INTERVAL_MS,
   LANDING_IMAGES
 } from '@/utils/landing/content'
-import LichessButton from '@/components/landing/LichessButton.vue'
 
 /**
  * The landing page's hero: the slogans in turn, the pitch and the three professors. Both slogans
@@ -115,6 +114,15 @@ const hasCast = Boolean(
 </script>
 
 <style scoped lang="scss">
+// The long label wraps on a phone instead of overflowing.
+.landing-hero__coach {
+  height: auto;
+  min-height: 56px;
+  padding-block: 10px;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
 .landing-hero {
   padding: 24px 16px 0;
 }
@@ -215,10 +223,12 @@ const hasCast = Boolean(
     right: 0;
   }
 
+  // Aaron is drawn full-length with long legs: taller and sunk so the edge cuts him at the
+  // thighs, like the short-legged Lizy and Albert.
   &--center {
     left: 50%;
-    bottom: -30px;
-    height: 92%;
+    bottom: -36%;
+    height: 120%;
     transform: translateX(-50%);
   }
 }

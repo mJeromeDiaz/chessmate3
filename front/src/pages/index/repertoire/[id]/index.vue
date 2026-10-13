@@ -48,6 +48,12 @@
           :text-color="store.graph.color === 'white' ? 'grey-9' : 'white'"
           :label="store.graph.color === 'white' ? 'Blancs' : 'Noirs'"
         />
+        <q-badge
+          v-if="store.graph.origin"
+          class="q-ml-xs editor__origin"
+          :label="originLabel"
+          data-testid="editor-origin"
+        />
         <q-space />
         <span
           class="text-caption text-grey q-mr-sm"
@@ -292,6 +298,12 @@
                 :move="editor.currentMove.value"
                 class="q-mb-sm"
               />
+              <GameStatCard
+                v-if="currentGameStat"
+                :stat="currentGameStat"
+                :color="store.graph.color"
+                class="q-mb-sm"
+              />
               <div v-else class="text-caption text-grey q-mb-sm">
                 Jouez un coup sur l’échiquier pour l’ajouter au répertoire. Un
                 seul coup vous est préparé par position ; l’adversaire peut
@@ -402,6 +414,7 @@ import { useQuasar } from 'quasar'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import MoveTree from '@/components/chess/MoveTree.vue'
 import MoveActions from '@/components/repertoire/MoveActions.vue'
+import GameStatCard from '@/components/repertoire/GameStatCard.vue'
 import ShortcutsHelp from '@/components/repertoire/ShortcutsHelp.vue'
 import ExplorerPanel from '@/components/repertoire/ExplorerPanel.vue'
 import CloudEvalPanel from '@/components/repertoire/CloudEvalPanel.vue'
@@ -428,6 +441,22 @@ const router = useRouter()
 const $q = useQuasar()
 const store = useRepertoireStore()
 const editor = useRepertoireEditor(store)
+
+/** What the user's games said of the selected move (a repertoire built from them). */
+const currentGameStat = computed(() => {
+  const move = editor.currentMove.value
+  const from = move ? store.graph?.positions[move.from] : null
+  return from ? (store.graph?.gameStats?.[`${from.fen} ${move.uci}`] ?? null) : null
+})
+
+/** "Depuis tes parties · 200 parties": where a repertoire built from the user's games came from. */
+const originLabel = computed(() => {
+  const origin = store.graph?.origin
+  if (!origin) return ''
+  return origin.games
+    ? `Depuis tes parties · ${origin.games} parties`
+    : 'Depuis tes parties'
+})
 
 const testOpen = ref(false)
 /** @type {import('vue').Ref<{title: string, caption: string, config: Record<string, any>}|null>} */
@@ -787,5 +816,11 @@ onBeforeUnmount(() => {
 .move-tree__move--unanswered {
   text-decoration: underline wavy #ef6c00;
   text-underline-offset: 3px;
+}
+
+.editor__origin {
+  background: var(--cm-brand-soft);
+  color: var(--cm-brand);
+  font-weight: 600;
 }
 </style>

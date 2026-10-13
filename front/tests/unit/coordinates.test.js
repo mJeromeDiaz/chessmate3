@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  durationsText,
   formatAnswerTime,
   missedSquares,
   ribbonCells,
@@ -10,6 +11,13 @@ import {
 import { formatRate } from '@/utils/format'
 
 const RULES = { seriesSeconds: 300, minAnswers: 50, minSuccessRate: 0.95 }
+/** The rules before a series (GET /coordinates). */
+const OVERVIEW_RULES = {
+  seriesMinutes: [1, 2, 5, 10],
+  defaultMinutes: 2,
+  minAnswersPerMinute: 10,
+  minSuccessRate: 0.95
+}
 
 /**
  * @param {number} index
@@ -126,8 +134,12 @@ describe('formats', () => {
   })
 
   it('states the rules from the API', () => {
-    expect(rulesText(RULES)).toBe(
-      'au moins 50 réponses et 95 % de réussite en 5 min, sans arrêter la série'
+    expect(rulesText(OVERVIEW_RULES)).toBe(
+      'au moins 10 réponses par minute et 95 % de réussite, sans arrêter la série'
+    )
+    expect(durationsText(OVERVIEW_RULES)).toBe('1, 2, 5 ou 10 min')
+    expect(durationsText({ ...OVERVIEW_RULES, seriesMinutes: [5] })).toBe(
+      '5 min'
     )
   })
 })

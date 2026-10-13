@@ -24,6 +24,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class CoordinatesRunTest extends WoodpeckerWebTestCase
 {
+    /** The series of these tests: 5 minutes. */
+    private const SECONDS = 300;
+
     public function testASeriesPlayedToItsEndValidatesItsOrientationOnce(): void
     {
         $alice = $this->createUserIn('alice@example.com');
@@ -31,9 +34,9 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         $item = $this->item($alice, $run['id']);
 
         self::assertSame(['coordinates_series', 'white', 0], [$item['type'], $item['data']['orientation'], $item['data']['answered']]);
-        self::assertSame(CoordinateRules::toArray(), $item['data']['rules']);
+        self::assertSame(CoordinateRules::ofSeries(self::SECONDS), $item['data']['rules']);
         $squares = $item['data']['squares'];
-        self::assertCount(CoordinateRules::SQUARES_PER_SERIES, $squares);
+        self::assertCount(CoordinateRules::squares(self::SECONDS), $squares);
         foreach ($squares as $i => $square) {
             self::assertMatchesRegularExpression('/^[a-h][1-8]$/', $square);
             self::assertNotSame($squares[$i - 1] ?? null, $square, 'Never the same square twice in a row.');
@@ -99,7 +102,7 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
     {
         $alice = $this->createUserIn('alice@example.com');
 
-        $tooFew = $this->playFullSeries($alice, 'white', CoordinateRules::MIN_ANSWERS - 1);
+        $tooFew = $this->playFullSeries($alice, 'white', CoordinateRules::minAnswers(self::SECONDS) - 1);
         // 56 / 60 = 93 %.
         $tooManyMistakes = $this->playFullSeries($alice, 'white', 60, [3, 10, 20, 30]);
 
@@ -122,6 +125,18 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         $state = $this->coordinates($alice);
         self::assertSame([false, false], array_column($state['orientations'], 'validated'));
         self::assertSame(4, $state['orientations'][0]['seriesCount']);
+    }
+
+    public function testAOneMinuteSeriesValidatesWithTenAnswers(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $runId = $this->playFullSeries($alice, 'black', 10, [], 60);
+
+        $closed = $this->getRun($alice, $runId);
+        self::assertTrue($closed['summary']['metrics']['validated'] ?? null);
+        // The summary is stored as JSON: MySQL sorts its keys.
+        self::assertEquals(CoordinateRules::ofSeries(60), $closed['summary']['metrics']['rules'] ?? null);
+        self::assertCount(10, $this->review($alice, $runId)['items']);
     }
 
     public function testTheServerJudgesTheAnswersAgain(): void
@@ -149,7 +164,7 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
             'not in order' => [400, $item['id'], [...self::answers($squares, 3, 1), ...self::answers($squares, 5, 1)]],
             'nothing' => [400, $item['id'], []],
             'not a square' => [422, $item['id'], [['index' => 3, 'square' => 'z9', 'ms' => 1_000]]],
-            'beyond the squares drawn' => [422, $item['id'], [['index' => CoordinateRules::SQUARES_PER_SERIES, 'square' => 'a1', 'ms' => 1_000]]],
+            'beyond the squares drawn' => [422, $item['id'], [['index' => CoordinateRules::MAX_SQUARES, 'square' => 'a1', 'ms' => 1_000]]],
             'too many' => [422, $item['id'], self::answers($squares, 3, CoordinateRules::MAX_ANSWERS_PER_SUBMISSION + 1)],
             'another item' => [404, $run['id'], self::answers($squares, 3, 1)],
         ];
@@ -184,27 +199,28 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         self::assertSame(['time_up', 10, '2026-09-28T10:05:00+00:00'], [$closed['closeReason'], $closed['summary']['itemCount'] ?? null, $closed['closedAt']]);
     }
 
-    public function testASeriesLastsItsFixedTimeAndItsOptionsAreChecked(): void
+    public function testASeriesLastsOneOfItsLengthsAndItsOptionsAreChecked(): void
     {
         $alice = $this->createUserIn('alice@example.com');
         $bob = $this->createUserIn('bob@example.com');
         $refused = [
-            'too long' => [422, $alice, 600, ['orientation' => 'white']],
-            'too short' => [422, $alice, 60, ['orientation' => 'white']],
-            'no orientation' => [422, $alice, CoordinateRules::SERIES_SECONDS, []],
-            'unknown orientation' => [422, $alice, CoordinateRules::SERIES_SECONDS, ['orientation' => 'red']],
-            'unknown option' => [422, $alice, CoordinateRules::SERIES_SECONDS, ['orientation' => 'white', 'speed' => 2]],
-            "another user's subject" => [404, $bob, CoordinateRules::SERIES_SECONDS, ['orientation' => 'white']],
+            'too long' => [422, $alice, 1200, ['orientation' => 'white']],
+            'not offered' => [422, $alice, 180, ['orientation' => 'white']],
+            'too short' => [422, $alice, 30, ['orientation' => 'white']],
+            'no orientation' => [422, $alice, self::SECONDS, []],
+            'unknown orientation' => [422, $alice, self::SECONDS, ['orientation' => 'red']],
+            'unknown option' => [422, $alice, self::SECONDS, ['orientation' => 'white', 'speed' => 2]],
+            "another user's subject" => [404, $bob, self::SECONDS, ['orientation' => 'white']],
         ];
         foreach ($refused as $case => [$status, $subject, $budget, $config]) {
             $response = $this->api('POST', '/api/training/runs', $alice, ['module' => 'coordinates', 'subjectId' => $subject->getId()->toRfc4122(), 'budgetSeconds' => $budget, 'config' => $config]);
             self::assertSame($status, $response->getStatusCode(), $case);
         }
 
-        // In a session: exactly the series' length.
-        $step = ['module' => 'coordinates', 'minutes' => 10, 'settings' => ['orientation' => 'black']];
+        // In a session: one of the series' lengths.
+        $step = ['module' => 'coordinates', 'minutes' => 3, 'settings' => ['orientation' => 'black']];
         self::assertSame(422, $this->api('POST', '/api/training/sessions', $alice, ['steps' => [$step]])->getStatusCode());
-        $step['minutes'] = intdiv(CoordinateRules::SERIES_SECONDS, 60);
+        $step['minutes'] = CoordinateRules::DEFAULT_MINUTES;
         $session = $this->api('POST', '/api/training/sessions', $alice, ['steps' => [$step]]);
         self::assertSame(201, $session->getStatusCode(), (string) $session->getContent());
         $sessionId = $this->json($session)['id'] ?? null;
@@ -235,11 +251,11 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
      *
      * @return string the run id
      */
-    private function playFullSeries(User $user, string $orientation, int $count, array $wrongAt = []): string
+    private function playFullSeries(User $user, string $orientation, int $count, array $wrongAt = [], int $seconds = self::SECONDS): string
     {
-        $run = $this->startSeries($user, $orientation);
+        $run = $this->startSeries($user, $orientation, $seconds);
         $item = $this->item($user, $run['id']);
-        $this->travel('+150 seconds');
+        $this->travel(sprintf('+%d seconds', intdiv($seconds, 2)));
         $answers = array_map(
             static fn (array $answer): array => \in_array($answer['index'], $wrongAt, true) ? ['index' => $answer['index'], 'square' => self::wrong($answer['square']), 'ms' => $answer['ms']] : $answer,
             self::answers($item['data']['squares'], 0, $count),
@@ -247,7 +263,7 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         if ([] !== $answers) {
             $this->submitOk($user, $run['id'], $item['id'], $answers);
         }
-        $this->travel('+160 seconds');
+        $this->travel(sprintf('+%d seconds', intdiv($seconds, 2) + 10));
         self::assertSame('time_up', $this->getRun($user, $run['id'])['closeReason']);
 
         return $run['id'];
@@ -256,12 +272,12 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
     /**
      * @return RunJson
      */
-    private function startSeries(User $user, string $orientation): array
+    private function startSeries(User $user, string $orientation, int $seconds = self::SECONDS): array
     {
         $response = $this->api('POST', '/api/training/runs', $user, [
             'module' => 'coordinates',
             'subjectId' => $user->getId()->toRfc4122(),
-            'budgetSeconds' => CoordinateRules::SERIES_SECONDS,
+            'budgetSeconds' => $seconds,
             'config' => ['orientation' => $orientation],
         ]);
         self::assertSame(201, $response->getStatusCode(), (string) $response->getContent());

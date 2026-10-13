@@ -26,7 +26,8 @@ import { useAuthStore } from '@/stores/auth'
 import {
   INVITATION_REASONS,
   WELCOME_PATH,
-  takeLinkFromWelcome,
+  takeAfterSignIn,
+  takeLinkReturn,
   takeWelcome
 } from '@/utils/auth/authFlow'
 
@@ -96,16 +97,18 @@ onMounted(async () => {
 
   // A sign-up or a link started from the welcome screen: read once, whatever the outcome.
   const welcome = takeWelcome()
-  const linkFromWelcome = isLink.value && takeLinkFromWelcome()
+  const linkReturn = isLink.value ? takeLinkReturn() : null
 
   if (status !== 'success') {
     if (isGrant.value) grantReturn()
     // No account for this provider account, or a refused key: the early access screen, which
     // sends the visitor back to the provider with a key (docs/EARLY_ACCESS.md).
+    // A landing call to action's destination survives that detour (same tab), not a failure.
     if (!isLink.value && INVITATION_REASONS.includes(String(reason))) {
       router.replace({ path: '/register', query: { provider, reason } })
       return
     }
+    if (!isLink.value && !isGrant.value) takeAfterSignIn()
     error.value = REASONS[reason] ?? 'La connexion a échoué.'
     return
   }
@@ -119,9 +122,7 @@ onMounted(async () => {
   if (isLink.value) {
     await auth.fetchProfile().catch(() => {})
     router.replace(
-      linkFromWelcome
-        ? WELCOME_PATH
-        : { path: '/profile', query: { linked: provider } }
+      linkReturn ?? { path: '/profile', query: { linked: provider } }
     )
     return
   }
@@ -132,7 +133,9 @@ onMounted(async () => {
     if (!auth.isAuthenticated) {
       await auth.startSession(await auth.refresh())
     }
-    router.replace(welcome ? WELCOME_PATH : '/')
+    // A landing call to action (repertoire from my games) first: the account is linked to
+    // Lichess already, the welcome screen would only offer that.
+    router.replace(takeAfterSignIn() ?? (welcome ? WELCOME_PATH : '/'))
   } catch {
     error.value = 'La session n’a pas pu être ouverte. Réessayez.'
   }

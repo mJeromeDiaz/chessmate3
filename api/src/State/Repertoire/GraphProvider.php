@@ -7,6 +7,7 @@ namespace App\State\Repertoire;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Repertoire\Graph;
+use App\Repertoire\Auto\GameStatReader;
 use App\Repertoire\Graph\GraphReader;
 use App\Repository\Repertoire\RepertoireRepository;
 use App\Security\AuthenticatedUser;
@@ -21,6 +22,7 @@ final class GraphProvider implements ProviderInterface
     public function __construct(
         private readonly RepertoireRepository $repertoires,
         private readonly GraphReader $reader,
+        private readonly GameStatReader $gameStats,
         private readonly AuthenticatedUser $authenticatedUser,
     ) {
     }
@@ -42,6 +44,10 @@ final class GraphProvider implements ProviderInterface
         $graph->positions = $this->reader->positions($repertoire);
         $graph->moves = $this->reader->moves($repertoire);
         $graph->segments = $this->reader->segments($repertoire);
+        $graph->origin = $repertoire->getOrigin();
+        if (null !== $graph->origin) {
+            $graph->gameStats = $this->gameStats->rows($repertoire);
+        }
 
         return $graph;
     }

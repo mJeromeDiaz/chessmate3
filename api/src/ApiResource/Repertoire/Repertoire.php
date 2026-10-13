@@ -45,6 +45,8 @@ final class Repertoire
     public int $version;
     public \DateTimeImmutable $createdAt;
     public \DateTimeImmutable $updatedAt;
+    /** @var array<string, mixed>|null where it came from (built from the user's Lichess games), null when built by hand */
+    public ?array $origin = null;
 
     public static function from(RepertoireEntity $repertoire, int $segmentCount): self
     {
@@ -57,6 +59,7 @@ final class Repertoire
         $view->version = $repertoire->getVersion();
         $view->createdAt = $repertoire->getCreatedAt();
         $view->updatedAt = $repertoire->getUpdatedAt();
+        $view->origin = $repertoire->getOrigin();
 
         return $view;
     }

@@ -14,8 +14,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * A position served in a timed run (docs/EVALUATION.md), with its own deadline on the server's
- * clock, then judged: the player's category against the engine's, the plan, the time.
+ * A position served in a timed run (docs/EVALUATION.md), then judged: the player's category against
+ * the engine's, the plan, the time.
  */
 #[ORM\Entity(repositoryClass: AttemptRepository::class)]
 #[ORM\Table(name: 'evaluation_attempt')]
@@ -43,7 +43,7 @@ class Attempt
     #[ORM\Column]
     private \DateTimeImmutable $servedAt;
 
-    /** Seconds the player has for it. */
+    /** Seconds the player had for it: the rest of the run (before 2026-10-11: a time per position). */
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
     private int $seconds;
 
@@ -63,7 +63,7 @@ class Attempt
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $submittedAt = null;
 
-    /** Time taken, capped by the position's time. */
+    /** Time taken, capped by `seconds`. */
     #[ORM\Column(nullable: true, options: ['unsigned' => true])]
     private ?int $durationMs = null;
 
@@ -90,14 +90,6 @@ class Attempt
         $this->submittedAt = $at;
         $elapsed = (int) round(((float) $at->format('U.u') - (float) $this->servedAt->format('U.u')) * 1000);
         $this->durationMs = max(0, min($this->seconds * 1000, $elapsed));
-    }
-
-    /**
-     * The instant after which no answer is on time (the network tolerance included).
-     */
-    public function deadline(int $toleranceMs): \DateTimeImmutable
-    {
-        return $this->servedAt->modify(\sprintf('+%d milliseconds', $this->seconds * 1000 + $toleranceMs));
     }
 
     public function getId(): Uuid

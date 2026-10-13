@@ -22,12 +22,6 @@
           data-testid="landing-login"
           >Connexion</router-link
         >
-        <router-link
-          to="/register"
-          class="landing-header__btn landing-header__btn--dark"
-          data-testid="landing-start"
-          >Commencer</router-link
-        >
       </div>
     </div>
   </header>
@@ -124,15 +118,6 @@ function scrollToSection(id) {
   &--soft {
     background: var(--cm-brand-soft);
     color: var(--cm-brand-deep);
-  }
-
-  &--dark {
-    background: #1b1530;
-    color: #fff;
-
-    &:hover {
-      color: #fff;
-    }
   }
 }
 </style>

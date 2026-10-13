@@ -2,7 +2,13 @@
  * The coordinates series (docs/COORDINATES.md), what the pages show. Pure. The thresholds are never
  * written here: they come from the API (`rules`).
  *
- * @typedef {object} CoordinateRules
+ * @typedef {object} CoordinateRules the rules before a series (GET /coordinates)
+ * @property {number[]} seriesMinutes the lengths a series may last
+ * @property {number} defaultMinutes the one offered first
+ * @property {number} minAnswersPerMinute answers needed to validate, per minute of the series
+ * @property {number} minSuccessRate 0..1
+ *
+ * @typedef {object} SeriesRules the rules of one series (its item, its summary)
  * @property {number} seriesSeconds
  * @property {number} minAnswers
  * @property {number} minSuccessRate 0..1
@@ -116,7 +122,7 @@ export function validationText(run) {
   const m = s?.metrics ?? {}
   const orientation = ORIENTATIONS[m.orientation] ?? ''
   if (m.validated) return `${orientation} validés !`
-  /** @type {CoordinateRules|undefined} */
+  /** @type {SeriesRules|undefined} */
   const rules = m.rules
   if (!s || !rules) return 'Série non validante.'
   if (run.closeReason === 'stopped')
@@ -128,12 +134,23 @@ export function validationText(run) {
 }
 
 /**
- * The validation threshold as a sentence: "50 réponses et 95 % de réussite en 5 min".
+ * The validation threshold as a sentence: "au moins 10 réponses par minute et 95 % de réussite…".
  *
  * @param {CoordinateRules} rules
  * @returns {string}
  */
 export function rulesText(rules) {
-  const minutes = Math.round(rules.seriesSeconds / 60)
-  return `au moins ${rules.minAnswers} réponses et ${Math.round(rules.minSuccessRate * 100)} % de réussite en ${minutes} min, sans arrêter la série`
+  return `au moins ${rules.minAnswersPerMinute} réponses par minute et ${Math.round(rules.minSuccessRate * 100)} % de réussite, sans arrêter la série`
+}
+
+/**
+ * The lengths of a series as words: "1, 2, 5 ou 10 min".
+ *
+ * @param {CoordinateRules} rules
+ * @returns {string}
+ */
+export function durationsText(rules) {
+  const minutes = rules.seriesMinutes
+  if (minutes.length < 2) return `${minutes[0] ?? '?'} min`
+  return `${minutes.slice(0, -1).join(', ')} ou ${minutes[minutes.length - 1]} min`
 }

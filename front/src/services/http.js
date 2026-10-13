@@ -18,7 +18,9 @@ import axios from 'axios'
  * - If the refresh fails, every waiting request is rejected and `onAuthFailure` runs once.
  *
  * Requests sent with `skipAuthRefresh: true` in their config (login, refresh itself, public auth
- * endpoints) never trigger a refresh: their 401 means what it says.
+ * endpoints) never trigger a refresh: their 401 means what it says. They carry no access token
+ * either: the API's JWT authenticator refuses an expired Bearer with a 401 on any route, public
+ * ones included, so a refresh sent with the token it replaces would always fail.
  *
  * @param {AuthHandlers} handlers
  * @param {import('axios').CreateAxiosDefaults} [config]
@@ -57,8 +59,10 @@ export function createHttpClient(handlers, config = {}) {
   }
 
   client.interceptors.request.use(async request => {
+    if (request.skipAuthRefresh) return request
+
     // A request started while a refresh runs waits for it, instead of failing with the old token.
-    if (refreshInFlight && !request.skipAuthRefresh) {
+    if (refreshInFlight) {
       await refreshInFlight.catch(() => {})
     }
 

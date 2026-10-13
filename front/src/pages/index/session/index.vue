@@ -3,14 +3,24 @@
     <div class="plans-page__inner">
       <header class="plans-page__head">
         <h1 class="plans-page__title cm-heading">Mes sessions</h1>
-        <q-btn
-          unelevated
-          no-caps
-          color="dark"
-          label="+ Nouvelle session"
-          to="/session/new"
-          data-testid="plans-new"
-        />
+        <div class="plans-page__head-actions">
+          <q-btn
+            unelevated
+            no-caps
+            class="plans-page__coach"
+            label="♞ Séance sur mesure"
+            to="/session/auto"
+            data-testid="plans-coach"
+          />
+          <q-btn
+            unelevated
+            no-caps
+            color="dark"
+            label="+ Nouvelle session"
+            to="/session/new"
+            data-testid="plans-new"
+          />
+        </div>
       </header>
 
       <router-link
@@ -75,6 +85,12 @@
             <h2 class="plans-page__card-title">{{
               plan.title || 'Session sans titre'
             }}</h2>
+            <span
+              v-if="plan.origin === 'coach'"
+              class="plans-page__badge plans-page__badge--coach"
+              title="Tirée de tes parties Lichess, mise à jour à chaque analyse"
+              >Sur mesure</span
+            >
             <span v-if="plan.public" class="plans-page__badge">Publique</span>
           </div>
           <div class="plans-page__glyphs" aria-hidden="true">
@@ -281,6 +297,18 @@ onMounted(async () => {
   margin-bottom: 16px;
 }
 
+.plans-page__head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plans-page__coach {
+  background: #5ee6b0;
+  color: #0b3b29;
+  font-weight: 700;
+}
+
 .plans-page__title {
   margin: 0;
   font-size: 28px;
@@ -381,6 +409,11 @@ onMounted(async () => {
   color: var(--cm-brand-deep);
   font-size: 11px;
   font-weight: 700;
+
+  &--coach {
+    background: #5ee6b0;
+    color: #0b3b29;
+  }
 }
 
 .plans-page__glyphs {

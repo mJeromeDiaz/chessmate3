@@ -24,6 +24,7 @@ use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
+use App\Training\Module\BudgetChoicesInterface;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
@@ -36,16 +37,16 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Position evaluation in timed runs (docs/EVALUATION.md). The subject is the user; config `count`
- * (positions), `seconds` (per position), `elo` and `side` (white, black or both: the side to
- * move). Each position has its own deadline on the server's clock: an answer after it (network
- * tolerance aside) is "time up", and a position left past it is judged so when the next one is
- * asked. The correction (engine, plan, ideas) only comes with the verdict. The run closes after
- * `count` positions; its budget must leave each of them its time.
+ * Position evaluation in timed runs (docs/EVALUATION.md). The subject is the user; config `elo`
+ * and `side` (white, black or both: the side to move). A run lasts one of
+ * {@see EvaluationRules::RUN_MINUTES}; positions follow one another until its time is up (the
+ * runner's clock, no time per position) or none is left for these settings. The correction
+ * (engine, plan, ideas) only comes with the verdict; the position on screen at the end is not
+ * counted.
  *
- * @phpstan-type Config array{count: int, seconds: int, elo: int, side: string}
+ * @phpstan-type Config array{elo: int, side: string}
  */
-final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModuleInterface
+final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModuleInterface, BudgetChoicesInterface
 {
     public const SUBJECT_TYPE = 'evaluation_player';
     public const ITEM_TYPE = 'evaluation_position';
@@ -70,6 +71,11 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
         return self::SUBJECT_TYPE;
     }
 
+    public function allowedBudgetSeconds(): array
+    {
+        return EvaluationRules::budgets();
+    }
+
     public function prepare(User $user, array $settings, string $notes): PreparedStep
     {
         return new PreparedStep($user->getId(), self::check($settings));
@@ -80,28 +86,20 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
         if (!$run->getSubjectId()->equals($run->getUser()->getId())) {
             throw new SubjectNotFoundException();
         }
-        $config = self::check($run->getConfig());
-        if ($run->getBudgetSeconds() < $config['count'] * $config['seconds']) {
-            throw new InvalidRunConfigException(\sprintf('The run must last at least %d seconds (%d positions of %d seconds).', $config['count'] * $config['seconds'], $config['count'], $config['seconds']));
+        if (!EvaluationRules::allows($run->getBudgetSeconds())) {
+            throw new InvalidRunConfigException(\sprintf('A run lasts %s minutes.', implode(', ', EvaluationRules::RUN_MINUTES)));
         }
+        $config = self::check($run->getConfig());
         // Served now: an empty catalogue refuses the run instead of opening an empty one.
         $this->serve($run, $config, $now);
     }
 
     public function next(Run $run, \DateTimeImmutable $now): Item
     {
-        $config = self::check($run->getConfig());
-        $attempt = $this->attempts->findPendingOfRun($run);
-        if (null !== $attempt && $now > $attempt->deadline(EvaluationRules::TOLERANCE_MS)) {
-            // Left on screen past its time (a reload, a lost connection): judged as time up.
-            $this->judge($run, $attempt, null, null, $now);
-            $attempt = null;
-        }
-        if (null === $attempt && $this->attempts->countResolvedOfRun($run) >= $config['count']) {
-            throw new SubjectUnavailableException(CloseReason::SubjectFinished, [], 'Every position of the run was evaluated.');
-        }
+        // A reload gives the same position back.
+        $attempt = $this->attempts->findPendingOfRun($run) ?? $this->serve($run, self::runConfig($run), $now);
 
-        return $this->item($attempt ?? $this->serve($run, $config, $now), $config['count']);
+        return $this->item($attempt);
     }
 
     public function submit(Run $run, ItemSubmission $submission, \DateTimeImmutable $now): ItemResult
@@ -113,30 +111,22 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
         if (!$attempt->isPending()) {
             throw new ItemAlreadySubmittedException();
         }
+        // On time: the runner refuses an answer after the run's end (its network tolerance aside).
         [$guess, $plan] = self::answer($submission->evaluation);
-        $late = $now > $attempt->deadline(EvaluationRules::TOLERANCE_MS);
-        $this->judge($run, $attempt, $late ? null : $guess, $late ? null : $plan, $now);
-        $config = self::check($run->getConfig());
-        $finished = $this->attempts->countResolvedOfRun($run) >= $config['count'];
+        $this->judge($run, $attempt, $guess, $plan, $now);
 
         return new ItemResult(
             itemId: $attempt->getId()->toRfc4122(),
             success: AttemptStatus::Exact === $attempt->getStatus(),
             data: self::correction($attempt),
-            closes: $finished ? CloseReason::SubjectFinished : null,
         );
     }
 
     public function close(Run $run, CloseReason $reason, \DateTimeImmutable $now): void
     {
+        // The position on screen at the end is not counted.
         $pending = $this->attempts->findPendingOfRun($run);
-        if (null === $pending) {
-            return;
-        }
-        // Its time was over: judged. Otherwise the position on screen at the end is not counted.
-        if ($now > $pending->deadline(EvaluationRules::TOLERANCE_MS)) {
-            $this->judge($run, $pending, null, null, $now);
-        } else {
+        if (null !== $pending) {
             $this->entityManager->remove($pending);
         }
     }
@@ -154,15 +144,12 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
             $stats['activeMs'] += $attempt->getDurationMs() ?? 0;
         }
         $played = \count($attempts);
-        $config = $run->getConfig();
 
         return new Summary(
             durationMs: max(0, (int) round(((float) $closedAt->format('U.u') - (float) $run->getStartedAt()->format('U.u')) * 1000)),
             itemCount: $played,
             successCount: $stats['exact'],
             metrics: [
-                'count' => $config['count'] ?? null,
-                'seconds' => $config['seconds'] ?? null,
                 'exact' => $stats['exact'],
                 'close' => $stats['close'],
                 'miss' => $stats['miss'],
@@ -207,7 +194,9 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
         if (null === $position) {
             throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_position'], 'No position left for these settings.');
         }
-        $attempt = new Attempt($run, $position, $config['seconds'], $now);
+        // The position may take the rest of the run.
+        $left = (int) ceil((float) $run->getExpiresAt()->format('U.u') - (float) $now->format('U.u'));
+        $attempt = new Attempt($run, $position, max(1, $left), $now);
         $this->entityManager->persist($attempt);
         $this->entityManager->flush();
 
@@ -236,7 +225,8 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
             metadata: [
                 'status' => $status->value,
                 'planOk' => $attempt->isPlanOk(),
-                'fast' => EvaluationRules::fast($status, $attempt->getDurationMs() ?? 0, $attempt->getSeconds()),
+                // No bonus for speed any more (2026-10-11): kept, as events never lose a field.
+                'fast' => false,
                 'position' => $position->getId()->toRfc4122(),
                 'guess' => $guess,
                 'category' => EvaluationRules::category($position->getEvalCp()),
@@ -249,18 +239,15 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
     /**
      * The position to evaluate: no evaluation, no plan, no idea.
      */
-    private function item(Attempt $attempt, int $count): Item
+    private function item(Attempt $attempt): Item
     {
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, [
             'position' => self::position($attempt),
             'tip' => $attempt->getPosition()->getTip(),
             // The plan is asked only for a position that has one.
             'askPlan' => null !== $attempt->getPosition()->getPlan(),
-            'seconds' => $attempt->getSeconds(),
             'servedAt' => $attempt->getServedAt()->format(\DATE_ATOM),
-            'deadlineAt' => $attempt->deadline(0)->format(\DATE_ATOM),
             'index' => $this->attempts->countResolvedOfRun($attempt->getRun()) + 1,
-            'count' => $count,
             'plans' => array_map(static fn (Plan $plan): array => ['value' => $plan->value, 'label' => $plan->label()], Plan::cases()),
         ]);
     }
@@ -302,7 +289,6 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
             'ideas' => $position->getIdeas(),
             'source' => $position->getSource(),
             'durationMs' => $attempt->getDurationMs(),
-            'fast' => EvaluationRules::fast($attempt->getStatus(), $attempt->getDurationMs() ?? 0, $attempt->getSeconds()),
         ];
     }
 
@@ -331,6 +317,20 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
     }
 
     /**
+     * The config of a started run: one started before 2026-10-11 also holds `count` and
+     * `seconds` (positions, time per position), now ignored.
+     *
+     * @return Config
+     */
+    private static function runConfig(Run $run): array
+    {
+        $config = $run->getConfig();
+        unset($config['count'], $config['seconds']);
+
+        return self::check($config);
+    }
+
+    /**
      * @param array<string, mixed> $config
      *
      * @return Config
@@ -339,16 +339,8 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
      */
     private static function check(array $config): array
     {
-        if ([] !== array_diff(array_keys($config), ['count', 'seconds', 'elo', 'side'])) {
-            throw new InvalidRunConfigException('Unknown option: only count, seconds, elo and side are accepted.');
-        }
-        $count = $config['count'] ?? null;
-        if (!\is_int($count) || $count < EvaluationRules::MIN_COUNT || $count > EvaluationRules::MAX_COUNT) {
-            throw new InvalidRunConfigException(\sprintf('count must be %d to %d.', EvaluationRules::MIN_COUNT, EvaluationRules::MAX_COUNT));
-        }
-        $seconds = $config['seconds'] ?? null;
-        if (!\is_int($seconds) || !\in_array($seconds, EvaluationRules::SECONDS, true)) {
-            throw new InvalidRunConfigException(\sprintf('seconds must be one of %s.', implode(', ', EvaluationRules::SECONDS)));
+        if ([] !== array_diff(array_keys($config), ['elo', 'side'])) {
+            throw new InvalidRunConfigException('Unknown option: only elo and side are accepted.');
         }
         $elo = $config['elo'] ?? null;
         if (!\is_int($elo) || $elo < EvaluationRules::MIN_ELO || $elo > EvaluationRules::MAX_ELO) {
@@ -359,6 +351,6 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
             throw new InvalidRunConfigException(\sprintf('side must be one of %s.', implode(', ', self::SIDES)));
         }
 
-        return ['count' => $count, 'seconds' => $seconds, 'elo' => $elo, 'side' => $side];
+        return ['elo' => $elo, 'side' => $side];
     }
 }

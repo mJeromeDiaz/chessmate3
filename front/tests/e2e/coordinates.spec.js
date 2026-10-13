@@ -10,8 +10,8 @@ const isRunSubmission = r =>
 /** A square other than `square`. */
 const wrong = square => (square === 'a1' ? 'h8' : 'a1')
 
-// A whole series lasts 5 minutes: its validation is covered by PHPUnit
-// (tests/Functional/Blindfold/CoordinatesRunTest.php). Here, a series stopped early.
+// A series lasts 1, 2, 5 or 10 minutes: its validation is covered by PHPUnit
+// (tests/Functional/Coordinates/CoordinatesRunTest.php). Here, a series stopped early.
 test('coordinates: answers judged at once, sent before "Terminer", ribbon at the end', async ({
   page,
   context
@@ -26,14 +26,32 @@ test('coordinates: answers judged at once, sent before "Terminer", ribbon at the
     .getByTestId('coordinates-orientation')
     .getByRole('button', { name: 'Noirs' })
     .click()
-  await expect(page.getByTestId('run-duration-choice')).toHaveCount(0)
+  // The series' own lengths only, 2 minutes first.
+  const durations = page.getByTestId('run-duration-choice')
+  await expect(durations.getByRole('button')).toHaveText([
+    '1 min',
+    '2 min',
+    '5 min',
+    '10 min'
+  ])
+  await expect(durations.getByRole('button', { name: '2 min' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  await durations.getByRole('button', { name: '1 min' }).click()
   const served = page.waitForResponse(isRunNext)
   await page.getByTestId('run-start').click()
   await expect(page).toHaveURL(/#\/training\/[^/]+$/)
   const item = (await (await served).json()).item
   expect(item.type).toBe('coordinates_series')
   expect(item.data.orientation).toBe('black')
+  expect(item.data.rules).toEqual({
+    seriesSeconds: 60,
+    minAnswers: 10,
+    minSuccessRate: 0.95
+  })
   const squares = item.data.squares
+  expect(squares).toHaveLength(180)
 
   // Batches leave every 3 s and before "Terminer": the last verdict covers every answer.
   /** @type {{data: {answerCount: number, successCount: number}}[]} */

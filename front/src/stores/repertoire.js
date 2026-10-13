@@ -30,6 +30,8 @@ import { indexGraph, reaches, removal } from '@/components/chess/moveTree'
  * @property {Record<string, Position>} positions
  * @property {Record<string, Move>} moves
  * @property {Record<string, Segment>} segments
+ * @property {Record<string, any>|null} origin where it came from (built from the user's Lichess games), null when built by hand
+ * @property {Record<string, import('@/utils/repertoireAuto').GameStat>} gameStats what the games said of a move, by "normalized FEN + space + UCI"
  *
  * @typedef {object} Change the server's answer to a change (RepertoireChange)
  * @property {number} version
@@ -598,6 +600,10 @@ function toEditorGraph(data) {
     rootId: data.rootPositionId,
     positions: Object.fromEntries(data.positions.map(p => [p.id, p])),
     moves: Object.fromEntries(data.moves.map(m => [m.id, m])),
-    segments: Object.fromEntries(data.segments.map(s => [s.id, s]))
+    segments: Object.fromEntries(data.segments.map(s => [s.id, s])),
+    origin: data.origin ?? null,
+    gameStats: Object.fromEntries(
+      (data.gameStats ?? []).map(stat => [`${stat.fen} ${stat.uci}`, stat])
+    )
   }
 }

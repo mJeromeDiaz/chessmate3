@@ -38,6 +38,8 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['puzzle', 'lichess_id'],
             ['puzzle', 'fen'],
             ['puzzle', 'moves'],
+            ['puzzle', 'opening_family'],
+            ['puzzle', 'solver_color'],
             ['puzzle_theme', 'theme_key'],
             ['activity_log_entry', 'source_type'],
             ['activity_log_entry', 'source_id'],
@@ -68,11 +70,15 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['repertoire_card', 'uci'],
             ['repertoire_review', 'played_uci'],
             ['repertoire_presentation', 'start_fen'],
+            ['repertoire_game_stat', 'fen'],
+            ['repertoire_game_stat', 'uci'],
+            ['repertoire_game_stat', 'best_uci'],
             ['training_calendar_feed', 'token_hash'],
             ['training_calendar_feed', 'encrypted_token'],
             ['early_access_invitation_key', 'key_hash'],
             ['early_access_invitation_key', 'key_hint'],
             ['evaluation_position', 'fen'],
+            ['woodpecker_set', 'opening_family'],
         ] as [$table, $column]) {
             yield "$table.$column" => [$table, $column];
         }

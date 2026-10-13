@@ -1,17 +1,23 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  AUTO_REPERTOIRE_PATH,
+  COACH_PATH,
   INVITATION_REASONS,
   KEY_ERRORS,
   PASSWORD_MIN_LENGTH,
   dropLetters,
   isEmail,
   keyFormatError,
+  markAfterSignIn,
   markLinkFromWelcome,
+  markLinkReturn,
   markWelcome,
   normalizeKey,
   passwordStrength,
   providerById,
+  takeAfterSignIn,
   takeLinkFromWelcome,
+  takeLinkReturn,
   takeWelcome
 } from '@/utils/auth/authFlow'
 
@@ -73,5 +79,34 @@ describe('auth flow', () => {
     markLinkFromWelcome()
     expect(takeLinkFromWelcome()).toBe(true)
     expect(takeLinkFromWelcome()).toBe(false)
+  })
+
+  it('comes back after a link to allowed pages only', () => {
+    markLinkReturn(AUTO_REPERTOIRE_PATH)
+    expect(takeLinkReturn()).toBe('/repertoire/auto')
+    expect(takeLinkReturn()).toBeNull()
+
+    markLinkReturn('https://evil.example')
+    expect(takeLinkReturn()).toBeNull()
+    sessionStorage.setItem('dontstayrooky.linkReturn', '/admin')
+    expect(takeLinkReturn()).toBeNull()
+  })
+
+  it('leads a provider sign-in to allowed pages only', () => {
+    markAfterSignIn(AUTO_REPERTOIRE_PATH)
+    expect(takeAfterSignIn()).toBe('/repertoire/auto')
+    expect(takeAfterSignIn()).toBeNull()
+    // The tailored session too (docs/COACH.md), for a link as well.
+    markAfterSignIn(COACH_PATH)
+    expect(takeAfterSignIn()).toBe('/session/auto')
+    markLinkReturn(COACH_PATH)
+    expect(takeLinkReturn()).toBe('/session/auto')
+
+    markAfterSignIn('/bienvenue')
+    expect(takeAfterSignIn()).toBeNull()
+    markAfterSignIn('https://evil.example')
+    expect(takeAfterSignIn()).toBeNull()
+    sessionStorage.setItem('dontstayrooky.afterSignIn', '/admin')
+    expect(takeAfterSignIn()).toBeNull()
   })
 })

@@ -24,6 +24,12 @@ test('landing: a visitor sees the landing page with its own header', async ({
     'Bientôt'
   )
 
+  // The hero's call to action: the tailored session, which offers the Lichess sign-in itself.
+  await expect(page.getByTestId('landing-coach')).toHaveAttribute(
+    'href',
+    '#/session/auto'
+  )
+
   // Lichess sign-in goes to the API's OAuth start.
   await expect(page.getByTestId('landing-lichess').first()).toHaveAttribute(
     'href',
@@ -35,8 +41,68 @@ test('landing: a visitor sees the landing page with its own header', async ({
   await expect(page).toHaveURL(/#\/$/)
   await expect(page.getByTestId('landing-prof-lizy')).toBeInViewport()
 
-  await page.getByTestId('landing-start').click()
+  // The "from my games" section: a Lichess sign-in too.
+  for (const id of ['landing-auto-card', 'landing-auto-session-btn']) {
+    await expect(page.getByTestId(id)).toHaveAttribute(
+      'href',
+      /\/api\/auth\/oauth\/lichess\/redirect$/
+    )
+  }
+  await page.getByRole('button', { name: 'Lichess', exact: true }).click()
+  await expect(page.getByTestId('landing-auto')).toBeInViewport()
+})
+
+/** The page a landing call to action noted for after the Lichess sign-in. */
+const afterSignIn = page =>
+  page.evaluate(() => sessionStorage.getItem('dontstayrooky.afterSignIn'))
+
+test('landing: "Générer mon répertoire" signs up through the early access screen, then opens the repertoire from my games', async ({
+  page,
+  context,
+  baseURL
+}) => {
+  // Lichess is never reached: the API's OAuth start answers as its callback does for a Lichess
+  // account linked to no account.
+  await page.route(/\/api\/auth\/oauth\/lichess\/redirect$/, route =>
+    route.fulfill({
+      status: 302,
+      headers: {
+        location: `${baseURL}/#/oauth/callback?status=error&mode=login&provider=lichess&reason=invitation_required`
+      }
+    })
+  )
+  await page.goto('/#/')
+  await page.getByTestId('landing-auto-card').click()
+
+  // The key is asked for; the destination survives that detour.
   await expect(page).toHaveURL(/#\/register$/)
+  await expect(page.getByTestId('access-provider-note')).toBeVisible()
+  expect(await afterSignIn(page)).toBe('/repertoire/auto')
+
+  // Back from Lichess with the key: signed up, straight to the repertoire from my games.
+  await signIn(context)
+  await page.goto(
+    '/#/oauth/callback?status=success&mode=login&provider=lichess'
+  )
+  await expect(page).toHaveURL(/#\/repertoire\/auto$/)
+  await expect(page.getByTestId('auto-link')).toBeVisible()
+  expect(await afterSignIn(page)).toBeNull()
+})
+
+test('landing: a failed Lichess sign-in forgets where the call to action led', async ({
+  page
+}) => {
+  await page.goto('/#/')
+  // The app started first: a hash change during its first navigation is lost.
+  await expect(page.getByTestId('landing')).toBeVisible()
+  await page.evaluate(() =>
+    sessionStorage.setItem('dontstayrooky.afterSignIn', '/repertoire/auto')
+  )
+  await page.goto(
+    '/#/oauth/callback?status=error&mode=login&provider=lichess&reason=cancelled'
+  )
+  await expect(page.getByText('Connexion annulée.')).toBeVisible()
+  expect(await afterSignIn(page)).toBeNull()
 })
 
 test('landing: professor cards are public', async ({ page }) => {

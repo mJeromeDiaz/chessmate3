@@ -23,6 +23,7 @@ import { formatDuration } from '@/utils/format'
  * @property {string} expiresAt
  * @property {string|null} closedAt
  * @property {number} durationMs
+ * @property {string|null} planId the saved session it was launched from (null once deleted)
  * @property {SessionStep[]} steps
  */
 
@@ -124,4 +125,24 @@ export function nextErrorText(error) {
     return 'Une autre séance chronométrée est en cours : termine-la avant de continuer.'
   if (detail.includes('session is over')) return 'Cette session est terminée.'
   return 'Ce module ne peut pas démarrer pour l’instant.'
+}
+
+/**
+ * What `POST /training/sessions` needs to play a session's program again (title, description,
+ * each step's module, minutes, notes and settings), without what it became when played.
+ *
+ * @param {TrainingSession} session
+ * @returns {{title: string, description: string, steps: {module: string, minutes: number, notes: string, settings: Record<string, any>}[]}}
+ */
+export function replayProgram(session) {
+  return {
+    title: session.title,
+    description: session.description,
+    steps: session.steps.map(step => ({
+      module: step.module,
+      minutes: step.minutes,
+      notes: step.notes,
+      settings: step.settings
+    }))
+  }
 }

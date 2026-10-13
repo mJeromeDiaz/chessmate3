@@ -688,6 +688,71 @@ export const repertoireApi = {
       )
       .then(r => r.data),
   /**
+   * Starts a repertoire from the user's Lichess games (replaces their previous build).
+   *
+   * @param {{maxGames: number, perfs: string[]}} settings
+   */
+  createAutoBuild: settings =>
+    http
+      .post('/api/repertoires/auto-builds', settings, JSON_LD)
+      .then(r => r.data),
+  /** @param {string} id */
+  getAutoBuild: id =>
+    http
+      .get(`/api/repertoires/auto-builds/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Reads the next batch of games (the games kept in `batch`).
+   *
+   * @param {string} id
+   */
+  fetchAutoBuild: id =>
+    http
+      .post(
+        `/api/repertoires/auto-builds/${encodeURIComponent(id)}/fetch`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * @param {string} id
+   * @param {{families: string[], choices: Record<string, Record<string, string>>, removed: Record<string, string[]>}} selection
+   */
+  selectAutoBuild: (id, selection) =>
+    http
+      .post(
+        `/api/repertoires/auto-builds/${encodeURIComponent(id)}/selection`,
+        selection,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Asks the Lichess cloud about a few more line ends.
+   *
+   * @param {string} id
+   */
+  evaluateAutoBuild: id =>
+    http
+      .post(
+        `/api/repertoires/auto-builds/${encodeURIComponent(id)}/evaluate`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Creates one repertoire per opening kept.
+   *
+   * @param {string} id
+   */
+  applyAutoBuild: id =>
+    http
+      .post(
+        `/api/repertoires/auto-builds/${encodeURIComponent(id)}/apply`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
    * Lichess opening explorer, through the API (which holds the token and caches the answers).
    *
    * @param {'masters'|'lichess'} source
@@ -792,6 +857,35 @@ export const coordinatesApi = {
 }
 
 /** Blindfold puzzles (docs/BLINDFOLD.md). */
+/**
+ * The tailored session (docs/COACH.md), from a build of the user's Lichess games
+ * (repertoireApi.createAutoBuild / fetchAutoBuild).
+ */
+export const coachApi = {
+  /** @param {string} buildId */
+  diagnosis: buildId =>
+    http
+      .get(
+        `/api/coach/builds/${encodeURIComponent(buildId)}/diagnosis`,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Composes the session and saves it as the coach plan.
+   *
+   * @param {string} buildId
+   * @param {{withRepertoire: boolean}} payload
+   */
+  compose: (buildId, payload) =>
+    http
+      .post(
+        `/api/coach/builds/${encodeURIComponent(buildId)}/session`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data)
+}
+
 /** Position evaluation (docs/EVALUATION.md): the settings' bounds, the catalogue's size, my results. */
 export const evaluationApi = {
   overview: () => http.get('/api/evaluation', JSON_LD).then(r => r.data)
