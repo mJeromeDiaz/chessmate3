@@ -30,6 +30,8 @@ export function moduleEndSound(run) {
   const summary = run.summary
   if (
     run.module !== 'free' &&
+    // A puzzle streak always ends on a miss: never a failed module.
+    run.module !== 'puzzle_streak' &&
     summary &&
     summary.itemCount >= MODULE_FAIL_MIN_ITEMS &&
     summary.successCount < summary.itemCount * MODULE_FAIL_RATE

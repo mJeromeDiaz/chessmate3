@@ -33,6 +33,7 @@ import {
   formatRatingDelta
 } from '@/utils/format'
 import { LEVELS } from '@/utils/blindfold'
+import { RAMPS, streakText, topicLabel } from '@/utils/puzzleStreak'
 import {
   ORIENTATIONS,
   formatAnswerTime,
@@ -83,7 +84,7 @@ const stats = computed(() => {
   ]
 })
 
-/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles, position evaluation). */
+/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles, position evaluation, puzzle streak). */
 const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
@@ -131,6 +132,21 @@ const details = computed(() => {
     )
     if (m.averageMs)
       lines.push(`Temps moyen par puzzle : ${formatDuration(m.averageMs)}`)
+    return lines
+  }
+  if (props.run.module === 'puzzle_streak') {
+    lines.push(
+      `${RAMPS[m.ramp] ?? m.ramp} · ${topicLabel(m.topic ?? 'general')}.`
+    )
+    lines.push(
+      `Meilleur streak : ${streakText(m.bestStreak ?? 0)}${m.record ? ' (nouveau record !)' : ''}.`
+    )
+    if ((m.streaks?.length ?? 0) > 1)
+      lines.push(`Streaks : ${m.streaks.join(', ')}.`)
+    if (m.hardestRating)
+      lines.push(`Puzzle le plus dur réussi : ${m.hardestRating}.`)
+    if (m.extensions)
+      lines.push(`Prolongé ${m.extensions} fois de 5 minutes.`)
     return lines
   }
   if (props.run.module === 'evaluation') {

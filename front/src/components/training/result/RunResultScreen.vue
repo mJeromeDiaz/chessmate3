@@ -107,6 +107,13 @@
         <div class="rr__caption" :style="{ color: screen.ink }">{{
           screen.caption
         }}</div>
+        <div
+          v-if="note"
+          class="rr__note"
+          :style="{ color: screen.ink }"
+          data-testid="run-result-note"
+          >{{ note }}</div
+        >
       </div>
 
       <div class="rr__spacer" />
@@ -180,8 +187,12 @@ const props = defineProps({
   kind: { type: String, required: true },
   /** The API's module (its professor). */
   module: { type: String, required: true },
-  /** Percent solved, or minutes of free study. */
+  /** Percent solved, minutes of free study, or a puzzle streak's best streak. */
   score: { type: Number, required: true },
+  /** How full the ring is, in percent, when the score is not a share (a puzzle streak). */
+  ring: { type: Number, default: null },
+  /** A line under the caption (a puzzle streak's record). */
+  note: { type: String, default: '' },
   /** Missed items that can be corrected. */
   fixable: { type: Number, default: 0 },
   confetti: { type: Boolean, default: false },
@@ -210,8 +221,10 @@ const line1 = computed(() => fallingLetters(screen.value.line1, step.value))
 const line2 = computed(() =>
   fallingLetters(screen.value.line2, step.value, screen.value.line1.length)
 )
-/** Free study's minutes are a count, not a share: the ring is full. */
-const percent = computed(() => (props.kind === 'done' ? 100 : props.score))
+/** Free study's minutes are a count, not a share: the ring is full; a streak's ring says its own. */
+const percent = computed(() =>
+  props.kind === 'done' ? 100 : (props.ring ?? props.score)
+)
 const shownCount = computed(() => countAt(props.kind, props.score, k.value))
 const dash = computed(
   () =>
@@ -419,6 +432,11 @@ defineExpose({ play })
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.06em;
+}
+
+.rr__note {
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .rr__spacer {

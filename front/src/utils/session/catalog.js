@@ -1,4 +1,5 @@
 import { PROFS } from '@/utils/prof/profs'
+import { GENERAL, RAMPS, topicLabel } from '@/utils/puzzleStreak'
 
 /**
  * The training-session builder's module catalogue (design "Session Builder"). Each module has a
@@ -11,9 +12,11 @@ import { PROFS } from '@/utils/prof/profs'
  * `repertoire` (ids of the user's repertoires, at least one) and `lightSet` (the user's Woodpecker light
  * set: shown, not chosen, as there is at most one; no value) and `durationChoice` (the length of a
  * module whose runs last one of a few lengths only, the coordinates series and the evaluation: picked among the API's
- * lengths in `context.durationChoices`, its default from there too).
+ * lengths in `context.durationChoices`, its default from there too) and `streakTopic` (a puzzle
+ * streak's topic, docs/PUZZLE_STREAK.md: its key, picked among `context.streakRules` and
+ * `context.streakOpenings`).
  *
- * @typedef {'slider'|'one'|'many'|'toggle'|'text'|'themes'|'repertoire'|'lightSet'|'durationChoice'} FieldType
+ * @typedef {'slider'|'one'|'many'|'toggle'|'text'|'themes'|'repertoire'|'lightSet'|'durationChoice'|'streakTopic'} FieldType
  *
  * @typedef {object} Field
  * @property {string} key value key in the module's settings
@@ -179,6 +182,11 @@ const BLINDFOLD_LEVELS = { Facile: 'easy', Moyen: 'medium', Difficile: 'hard' }
 const BLINDFOLD_LENGTHS = { '2 coups': 2, '3 coups': 3, '4 coups et +': 4 }
 const BLINDFOLD_VISIBLE = ['5 s', '10 s', '15 s', '20 s', '30 s']
 
+/** The puzzle streak's ramps (docs/PUZZLE_STREAK.md), labels to API values. */
+const STREAK_RAMPS = Object.fromEntries(
+  Object.entries(RAMPS).map(([value, label]) => [label, value])
+)
+
 /** The position evaluation (docs/EVALUATION.md): the side to move asked. */
 const EVALUATION_SIDES = { Blancs: 'white', Noirs: 'black', 'Les deux': 'both' }
 
@@ -246,6 +254,31 @@ export const MODULES = [
     deep: '#E03C86',
     accentInk: '#C02670',
     fields: [duration(20, MAX_RUN_MINUTES), themes, notes()]
+  },
+  {
+    id: 'streak',
+    title: 'Puzzle streak',
+    desc: 'Du plus facile au plus dur : une erreur et tu repars de zéro. Ton meilleur streak compte.',
+    ...byProf('albert-stein'),
+    glyph: glyph('♛'),
+    available: true,
+    bg: '#FF5A36',
+    ink: '#FFFFFF',
+    soft: '#FFE7E1',
+    deep: '#D93A16',
+    accentInk: '#B8300F',
+    fields: [
+      duration(10, MAX_RUN_MINUTES),
+      one('difficulte', 'Difficulté', Object.keys(STREAK_RAMPS), 'Échelle'),
+      {
+        key: 'thematique',
+        label: 'Thématique',
+        type: 'streakTopic',
+        default: GENERAL,
+        hint: 'Si le temps finit pendant un streak, tu pourras le prolonger de 5 minutes.'
+      },
+      notes()
+    ]
   },
   {
     id: 'woodpecker',
@@ -471,6 +504,8 @@ export function sessionMinutes(items) {
  * @property {(key: string) => string} themeLabel
  * @property {Record<string, {minutes: number[], default: number}>} durationChoices the lengths a
  *   module's runs may last and the one offered first (catalogue id: the coordinates, the evaluation), from the API
+ * @property {import('@/utils/puzzleStreak').StreakRules|null} [streakRules] the puzzle streak's rules
+ * @property {import('@/utils/puzzleStreak').StreakOpenings|null} [streakOpenings] the openings a streak can draw from
  */
 
 /** @type {SubjectContext} */
@@ -480,7 +515,9 @@ const NO_CONTEXT = {
   lightSet: null,
   openingSets: [],
   themeLabel: key => key,
-  durationChoices: {}
+  durationChoices: {},
+  streakRules: null,
+  streakOpenings: null
 }
 
 /**
@@ -555,6 +592,8 @@ export function settingChips(module, values, context = NO_CONTEXT) {
           : context.lightSet
         return set ? [`${set.puzzleCount} puzzles`] : []
       }
+      case 'streakTopic':
+        return [topicLabel(v ?? GENERAL, context.streakOpenings ?? null)]
       default:
         return []
     }
@@ -614,7 +653,8 @@ export const API_MODULES = {
   repertoire: 'repertoire',
   coordonnees: 'coordinates',
   aveugle: 'blindfold',
-  evaluation: 'evaluation'
+  evaluation: 'evaluation',
+  streak: 'puzzle_streak'
 }
 
 /** Free study formats: the catalogue's labels, as the API names them. */
@@ -656,6 +696,11 @@ export function toStep(item) {
     settings = {
       elo: v.elo,
       side: EVALUATION_SIDES[v.couleur] ?? 'both'
+    }
+  if (module === 'puzzle_streak')
+    settings = {
+      ramp: STREAK_RAMPS[v.difficulte] ?? 'ladder',
+      topic: v.thematique || GENERAL
     }
   return {
     module,
@@ -707,6 +752,10 @@ export function fromStep(step) {
   if (step.module === 'evaluation') {
     if (Number.isInteger(settings.elo)) values.elo = settings.elo
     values.couleur = labelOf(EVALUATION_SIDES, settings.side) ?? values.couleur
+  }
+  if (step.module === 'puzzle_streak') {
+    values.difficulte = labelOf(STREAK_RAMPS, settings.ramp) ?? values.difficulte
+    if (typeof settings.topic === 'string') values.thematique = settings.topic
   }
   return { moduleId, values }
 }

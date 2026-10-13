@@ -11,6 +11,7 @@
     />
     <div class="row items-center q-gutter-sm">
       <q-btn-toggle
+        v-if="!fixedMinutes"
         v-model="choice"
         no-caps
         unelevated
@@ -33,7 +34,7 @@
       <q-btn
         color="primary"
         no-caps
-        icon="timer"
+        :icon="icon"
         :label="label"
         :loading="starting"
         :disable="disable || !valid"
@@ -69,7 +70,7 @@
  * run at a time: when one is in progress, offers to resume or end it. A module's options go in
  * `config`; the repertoire test adds its unit (segments or whole lines) with `showUnit`; a module
  * with lengths of its own (`durations`: the coordinates series, the evaluation) offers those only,
- * no "Autre".
+ * no "Autre"; one with a length of its own (`fixedMinutes`: a single puzzle streak) offers none.
  */
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -93,7 +94,10 @@ const props = defineProps({
   durations: { type: Array, default: null },
   /** The length chosen first, in minutes. */
   defaultMinutes: { type: Number, default: 20 },
-  label: { type: String, default: 'Lancer la séance' }
+  /** The only length, not offered (a single puzzle streak), in minutes. */
+  fixedMinutes: { type: Number, default: null },
+  label: { type: String, default: 'Lancer la séance' },
+  icon: { type: String, default: 'timer' }
 })
 
 const UNIT_OPTIONS = [
@@ -124,6 +128,10 @@ const MESSAGES = {
     409: 'Aucune position disponible pour ces réglages.',
     422: 'Réglages invalides.'
   },
+  puzzle_streak: {
+    409: 'Aucun puzzle disponible dans cette thématique.',
+    422: 'Réglages invalides.'
+  },
   repertoire: {
     409: 'Rien à tester dans cette sélection : ajoutez vos coups au répertoire.',
     404: 'Répertoire introuvable.',
@@ -150,7 +158,11 @@ const options = computed(() =>
 )
 
 const minutes = computed(() =>
-  choice.value === 'custom' ? Number(custom.value) : Number(choice.value)
+  props.fixedMinutes
+    ? props.fixedMinutes
+    : choice.value === 'custom'
+      ? Number(custom.value)
+      : Number(choice.value)
 )
 const valid = computed(
   () =>

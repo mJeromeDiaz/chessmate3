@@ -26,6 +26,9 @@ import { trainingApi } from '@/services/api'
  * @property {string} serverNow the server's clock when it answered
  * @property {RunSummary|null} summary
  * @property {string|null} [parentId] the training session it is a step of
+ * @property {string|null} [decisionUntil] overtime: time is up and the run waits until then for
+ *   the player to extend it or end it (docs/TRAINING.md, "Prolongation")
+ * @property {number} [extensions] how many times it was extended
  *
  * @typedef {object} RunItem
  * @property {string} id
@@ -47,6 +50,11 @@ import { trainingApi } from '@/services/api'
  * server answered). There is no grace period: at zero no item is played any more. A submission
  * already on its way is still sent (the server accepts it within 2 s), then the client asks for the
  * next item, which closes the run on the server and brings the recap.
+ *
+ * Overtime (the puzzle streak): at zero, the server may keep the run waiting for the player's
+ * decision (`decisionUntil`): the phase is then `decision`, the item on screen stays, and
+ * `extend()` gives 5 more minutes on it; `stop()` ends the run. Past the decision time, the next
+ * request closes it.
  *
  * @param {object} [options]
  * @param {typeof trainingApi} [options.api]
@@ -100,14 +108,26 @@ export function useTimeboxedRun(options = {}) {
       : 0
   )
 
+  /** Overtime: ms left to decide (0 when the run does not wait for a decision). */
+  const decisionMs = computed(() =>
+    run.value?.status === 'active' && run.value.decisionUntil
+      ? Math.max(
+          0,
+          Date.parse(run.value.decisionUntil) - (clock.value + offsetMs.value)
+        )
+      : 0
+  )
+
   /**
-   * idle: no run; running: time left; timeUp: zero on this clock, the server has not closed the
-   * run yet; ended: closed (recap in `run.summary`).
+   * idle: no run; running: time left; decision: time is up and the server waits for the player to
+   * extend the run or end it; timeUp: zero on this clock, the server has not closed the run yet;
+   * ended: closed (recap in `run.summary`).
    */
   const phase = computed(() => {
     if (!run.value) return 'idle'
     if (run.value.status === 'closed') return 'ended'
-    return remainingMs.value > 0 ? 'running' : 'timeUp'
+    if (remainingMs.value > 0) return 'running'
+    return decisionMs.value > 0 ? 'decision' : 'timeUp'
   })
 
   const summary = computed(() => run.value?.summary ?? null)
@@ -280,10 +300,24 @@ export function useTimeboxedRun(options = {}) {
         api.next(/** @type {TrainingRun} */ (run.value).id)
       )
       applyRun(step.run)
-      item.value = step.item
+      // Waiting for the decision: the item on screen stays, to go on with it.
+      if (!(step.run.status === 'active' && step.run.decisionUntil))
+        item.value = step.item
     } finally {
       expiring = false
     }
+  }
+
+  /**
+   * Overtime: 5 more minutes, on the item on screen (the one waiting on the server after a reload).
+   */
+  async function extend() {
+    if (!run.value || phase.value !== 'decision') return
+    applyRun(
+      await call(() => api.extend(/** @type {TrainingRun} */ (run.value).id))
+    )
+    // Nothing left to play on screen (a reload, or the last puzzle already answered): the next one.
+    if (!item.value || result.value?.itemId === item.value.id) await next()
   }
 
   function tick() {
@@ -321,6 +355,7 @@ export function useTimeboxedRun(options = {}) {
     submitting,
     phase,
     remainingMs,
+    decisionMs,
     offsetMs,
     summary,
     start,
@@ -328,6 +363,7 @@ export function useTimeboxedRun(options = {}) {
     next,
     submit,
     stop,
+    extend,
     beforeClose,
     dispose: stopTicking
   }

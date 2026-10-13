@@ -20,7 +20,7 @@ import { MODULE_FAIL_MIN_ITEMS, MODULE_FAIL_RATE } from '@/utils/sounds'
  *
  * @typedef {object} ReviewItem
  * @property {number} index 1-based, in the order played
- * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'} type
+ * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'|'streak_puzzle'} type
  * @property {ItemStatus} status
  * @property {number|null} durationMs
  * @property {Record<string, any>} data
@@ -53,6 +53,7 @@ export function isFailedRun(run) {
   const s = run.summary
   return (
     run.module !== 'free' &&
+    run.module !== 'puzzle_streak' &&
     !!s &&
     s.itemCount >= MODULE_FAIL_MIN_ITEMS &&
     s.successCount < s.itemCount * MODULE_FAIL_RATE

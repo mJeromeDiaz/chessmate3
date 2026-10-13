@@ -21,6 +21,21 @@ const api = vi.hoisted(() => ({
     overview: vi.fn(async () => ({
       rules: { runMinutes: [1, 2, 5, 10], defaultMinutes: 2 }
     }))
+  },
+  puzzleStreakApi: {
+    overview: vi.fn(async () => ({
+      rules: {
+        ladder: { start: 600, step: 30, max: 3000 },
+        tiers: { start: 600, width: 200, size: 5, last: 2600 },
+        topics: [{ key: 'rookEndgame', category: 'endgame' }],
+        minOpeningPuzzles: 30,
+        singleBudgetSeconds: 3600,
+        recordMin: 5
+      },
+      records: [],
+      total: { solved: 0, failed: 0 }
+    })),
+    openings: vi.fn(async () => ({ mine: [], all: [] }))
   }
 }))
 

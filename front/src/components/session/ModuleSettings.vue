@@ -281,6 +281,18 @@
             >
           </template>
         </template>
+        <template v-else-if="field.type === 'streakTopic'">
+          <TopicSelect
+            v-if="context.streakRules"
+            v-model="values[field.key]"
+            :rules="context.streakRules"
+            :openings="context.streakOpenings ?? null"
+            data-testid="streak-topic"
+          />
+          <div v-else class="module-settings__hint">{{
+            session.subjectsError || 'Chargement des thématiques…'
+          }}</div>
+        </template>
         <textarea
           v-else-if="field.type === 'text'"
           :id="`${uid}-${field.key}-input`"
@@ -332,6 +344,7 @@
 
 <script setup>
 import { computed, reactive, ref, useId, watch } from 'vue'
+import TopicSelect from '@/components/puzzleStreak/TopicSelect.vue'
 import ProfAvatar from '@/components/session/ProfAvatar.vue'
 import ThemePicker from '@/components/session/ThemePicker.vue'
 import { usePuzzleStore } from '@/stores/puzzle'

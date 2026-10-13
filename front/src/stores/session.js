@@ -4,6 +4,7 @@ import {
   coordinatesApi,
   evaluationApi,
   planApi,
+  puzzleStreakApi,
   repertoireApi,
   woodpeckerApi
 } from '@/services/api'
@@ -144,6 +145,10 @@ export const useSessionStore = defineStore('session', () => {
   const durationChoices = ref({})
   /** @type {import('vue').Ref<SubjectContext['openingSets']>} */
   const openingSets = ref([])
+  /** @type {import('vue').Ref<import('@/utils/puzzleStreak').StreakRules|null>} */
+  const streakRules = ref(null)
+  /** @type {import('vue').Ref<import('@/utils/puzzleStreak').StreakOpenings|null>} */
+  const streakOpenings = ref(null)
 
   /** @type {import('vue').ComputedRef<SubjectContext>} */
   const context = computed(() => ({
@@ -152,7 +157,9 @@ export const useSessionStore = defineStore('session', () => {
     lightSet: lightSet.value,
     openingSets: openingSets.value,
     themeLabel: key => puzzles.themeLabel(key),
-    durationChoices: durationChoices.value
+    durationChoices: durationChoices.value,
+    streakRules: streakRules.value,
+    streakOpenings: streakOpenings.value
   }))
 
   /**
@@ -163,6 +170,16 @@ export const useSessionStore = defineStore('session', () => {
   async function fetchSubjects() {
     subjectsLoading.value = true
     subjectsError.value = ''
+    // The puzzle streak's topics only add choices: the builder works without them.
+    Promise.all([
+      Promise.resolve().then(() => puzzleStreakApi.overview()),
+      Promise.resolve().then(() => puzzleStreakApi.openings())
+    ])
+      .then(([overview, openings]) => {
+        streakRules.value = overview.rules
+        streakOpenings.value = openings
+      })
+      .catch(() => {})
     try {
       const [repertoireList, sets, , coordinates, evaluation] =
         await Promise.all([

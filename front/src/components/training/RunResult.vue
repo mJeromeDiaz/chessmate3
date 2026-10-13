@@ -12,6 +12,8 @@
         :kind="kind"
         :module="run.module"
         :score="score"
+        :ring="streak ? streakRing(run) : null"
+        :note="streak ? streakNote(run) : ''"
         :fixable="fixable.length"
         :confetti="confetti"
         :busy="starting"
@@ -48,7 +50,8 @@
  * then, for a run with mistakes that can be played again, the screen that deals them and their
  * replay one after the other, client side only (`RunEndReplay`). The next lesson is the session's
  * next module, the session's review, or the module's page. Confetti only for a perfect run whose
- * end was seen on the page, once.
+ * end was seen on the page, once. A puzzle streak shows its best streak and its record instead of a
+ * share (every streak ends on a miss); confetti for a record.
  */
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -58,7 +61,13 @@ import RunResultScreen from '@/components/training/result/RunResultScreen.vue'
 import { trainingApi } from '@/services/api'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { missedItems } from '@/utils/runEnd'
-import { fixableItems, resultKind, resultScore } from '@/utils/runResult'
+import {
+  fixableItems,
+  resultKind,
+  resultScore,
+  streakNote,
+  streakRing
+} from '@/utils/runResult'
 import { subjectPath } from '@/utils/training'
 
 const props = defineProps({
@@ -94,6 +103,8 @@ const confetti = ref(false)
 
 const kind = computed(() => resultKind(props.run))
 const score = computed(() => resultScore(props.run))
+/** A puzzle streak: its record on the ring and under it. */
+const streak = computed(() => props.run.module === 'puzzle_streak')
 const themeLabel = (/** @type {string} */ key) => puzzles.themeLabel(key)
 const fixable = computed(() =>
   fixableItems(missedItems(items.value, themeLabel))
@@ -161,7 +172,9 @@ watch(
     load()
     confetti.value =
       props.live &&
-      (kind.value === 'perfect' || kind.value === 'done') &&
+      (kind.value === 'perfect' ||
+        kind.value === 'done' ||
+        kind.value === 'record') &&
       !celebrated.has(props.run.id)
     if (confetti.value) celebrated.add(props.run.id)
   },

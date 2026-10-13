@@ -11,7 +11,9 @@ import {
   resultButtons,
   resultKind,
   resultProf,
-  resultScore
+  resultScore,
+  streakNote,
+  streakRing
 } from '@/utils/runResult'
 import { MODULE_FAIL_RATE } from '@/utils/sounds'
 
@@ -39,6 +41,34 @@ describe('run result', () => {
     expect(resultKind(run('puzzles', 0, 0))).toBeNull()
     expect(resultKind({ module: 'puzzles', summary: null })).toBeNull()
     expect(resultKind(run('free', 0, 0))).toBe('done')
+  })
+
+  it('ends a puzzle streak on its best streak and its record', () => {
+    const streak = metrics =>
+      run('puzzle_streak', 6, 4, {
+        metrics: { bestStreak: 3, recordBefore: 6, record: false, ...metrics }
+      })
+    // Every streak ends on a miss: never a share solved.
+    expect(resultKind(streak())).toBe('streak')
+    expect(resultScore(streak())).toBe(3)
+    expect(streakRing(streak())).toBe(50)
+    expect(streakNote(streak())).toBe('Ton record : 6')
+    expect(streakNote(streak({ bestStreak: 6 }))).toBe('Record égalé : 6')
+
+    const record = streak({ bestStreak: 9, record: true })
+    expect(resultKind(record)).toBe('record')
+    expect(streakRing(record)).toBe(100)
+    expect(streakNote(record)).toBe('Ancien record : 6')
+    expect(
+      streakNote(streak({ bestStreak: 5, recordBefore: 0, record: true }))
+    ).toBe('Ton premier record !')
+    expect(streakRing(streak({ recordBefore: 0 }))).toBe(100)
+
+    expect(resultButtons('streak', 1).secondary.action).toBe('fix')
+    expect(resultButtons('record', 0).secondary.action).toBe('next')
+    expect(resultProf('puzzle_streak', 'record').name).toBe(
+      resultProf('puzzle_streak', 'perfect').name
+    )
   })
 
   it('scores in whole percent rounded down, free study in minutes', () => {

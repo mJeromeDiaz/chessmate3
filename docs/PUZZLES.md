@@ -43,7 +43,8 @@ MySQL n'a ni tableau ni GIN. Son équivalent, l'index multi-valué sur JSON (`ME
   fréquence du thème ;
 - les tags d'ouverture restent en JSON ; seul le premier (la famille) est exposé, avec la couleur du
   joueur, par les colonnes générées VIRTUAL `opening_family` et `solver_color` indexées par
-  `idx_puzzle_opening`, pour les sets d'ouverture de la séance sur mesure ([COACH.md](COACH.md)).
+  `idx_puzzle_opening`, pour les sets d'ouverture de la séance sur mesure ([COACH.md](COACH.md)) et
+  le puzzle streak sur une ouverture ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)).
 
 Reconstruction (`SelectionRebuilder::rebuildAll`), **en place** : la table est vidée et perd sa PK,
 remplie en ajout séquentiel, puis la PK est construite en une passe triée. Une insertion directe dans

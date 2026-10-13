@@ -23,6 +23,7 @@ describe('session catalogue', () => {
     expect(MODULES.filter(m => m.available).map(m => m.id)).toEqual([
       'libre',
       'puzzles',
+      'streak',
       'woodpecker',
       'repertoire',
       'evaluation',
@@ -38,6 +39,12 @@ describe('session catalogue', () => {
     expect(keys('repertoire')).toEqual(['duree', 'repertoires', 'notes'])
     expect(keys('libre')).toEqual(['duree', 'type', 'notes'])
     expect(keys('coordonnees')).toEqual(['duree', 'orientation', 'notes'])
+    expect(keys('streak')).toEqual([
+      'duree',
+      'difficulte',
+      'thematique',
+      'notes'
+    ])
     expect(keys('aveugle')).toEqual([
       'duree',
       'niveau',
@@ -340,6 +347,62 @@ describe('session catalogue', () => {
       length: 2,
       visibleSeconds: 10
     })
+  })
+
+  it('plays timed puzzle streaks, their ramp and topic as API values', () => {
+    const module = MODULES_BY_ID.streak
+    const values = defaultValues(module)
+    expect(values.thematique).toBe('general')
+    expect(itemIssue(module, values)).toBeNull()
+    expect(toStep({ uid: 1, moduleId: 'streak', values })).toEqual({
+      module: 'puzzle_streak',
+      minutes: 10,
+      notes: '',
+      settings: { ramp: 'ladder', topic: 'general' }
+    })
+
+    const step = toStep({
+      uid: 2,
+      moduleId: 'streak',
+      values: {
+        ...values,
+        duree: 20,
+        difficulte: 'Paliers',
+        thematique: 'opening:Italian_Game:w'
+      }
+    })
+    expect(step.settings).toEqual({
+      ramp: 'tiers',
+      topic: 'opening:Italian_Game:w'
+    })
+    expect(fromStep(step)).toEqual({
+      moduleId: 'streak',
+      values: {
+        duree: 20,
+        difficulte: 'Paliers',
+        thematique: 'opening:Italian_Game:w',
+        notes: ''
+      }
+    })
+    const openings = {
+      mine: [],
+      all: [{ tag: 'Italian_Game', name: 'Italian Game', white: 40, black: 3 }]
+    }
+    expect(
+      settingChips(module, fromStep(step).values, {
+        loaded: true,
+        repertoires: [],
+        lightSet: null,
+        openingSets: [],
+        themeLabel: key => key,
+        durationChoices: {},
+        streakRules: null,
+        streakOpenings: openings
+      })
+    ).toEqual(['Paliers', 'Italian Game (Blancs)'])
+    expect(
+      settingChips(module, { ...values, thematique: 'theme:rookEndgame' })
+    ).toEqual(['Échelle', 'Finales de tours'])
   })
 
   it('gives an evaluation run one of the API lengths, its level and side, nothing per position', () => {

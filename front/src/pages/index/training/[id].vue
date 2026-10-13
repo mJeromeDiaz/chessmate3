@@ -181,6 +181,60 @@
     </FreeRunPanel>
 
     <PuzzlePlayer
+      v-else-if="streakItem && (streakLive || holdEnd)"
+      :puzzle="streakItem.data.puzzle"
+      :loading="loading"
+      after-mistake="showSolution"
+      module="puzzle_streak"
+      :help="false"
+      :xp="runner.xp.value"
+      :actions="streakActions"
+      @resolve="onStreakResolve"
+    >
+      <template #header>
+        <RunHeader
+          v-if="streakItem.data.mode === 'timed'"
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">
+            Streak {{ streakNow }} · meilleur {{ streakBest }}
+          </div>
+        </RunHeader>
+        <div v-else class="row items-center q-gutter-sm">
+          <div class="text-h5 text-weight-medium" data-testid="run-progress"
+            >Streak : {{ streakNow }}</div
+          >
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            label="Terminer"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+
+      <template #chips>
+        <span class="play-chip" data-testid="streak-level">{{
+          streakLevel
+        }}</span>
+        <span class="play-chip lt-md"
+          >Sans aide<q-tooltip
+            >Une erreur et le streak s’arrête.</q-tooltip
+          ></span
+        >
+      </template>
+    </PuzzlePlayer>
+
+    <PuzzlePlayer
       v-else-if="runner.phase.value === 'running' && puzzle"
       :puzzle="puzzle"
       :loading="loading"
@@ -229,6 +283,16 @@
       >
       <div v-if="error" class="text-negative">{{ error }}</div>
     </div>
+
+    <OvertimeDialog
+      :model-value="runner.phase.value === 'decision'"
+      :streak="streakNow"
+      :decision-ms="runner.decisionMs.value"
+      :busy="extending"
+      :error="overtimeError"
+      @extend="onExtend"
+      @end="onEndOvertime"
+    />
   </q-page>
 </template>
 
@@ -237,8 +301,9 @@
  * A timed run (docs/TRAINING.md): countdown on the server's clock, items one after the other,
  * recap at the end. Reloading or coming back before the end resumes the same run and item. The
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
- * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series, blindfold puzzles (docs/BLINDFOLD.md) or
- * positions to evaluate (docs/EVALUATION.md).
+ * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series, blindfold puzzles (docs/BLINDFOLD.md),
+ * positions to evaluate (docs/EVALUATION.md) or a puzzle streak (docs/PUZZLE_STREAK.md: no help, its
+ * overtime asked in `OvertimeDialog`).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -247,6 +312,7 @@ import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.
 import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
+import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
 import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
 import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
@@ -256,10 +322,11 @@ import RunResult from '@/components/training/RunResult.vue'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
-import { sessionApi, woodpeckerApi } from '@/services/api'
+import { puzzleStreakApi, sessionApi, woodpeckerApi } from '@/services/api'
 import { useGamificationStore } from '@/stores/gamification'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
+import { levelAt } from '@/utils/puzzleStreak'
 import { stepModule } from '@/utils/session/steps'
 import { resultKind } from '@/utils/runResult'
 import { backLabel, subjectPath } from '@/utils/training'
@@ -285,7 +352,9 @@ const STOP_MESSAGES = {
   coordinates:
     'Tes réponses seront comptées, mais une série arrêtée avant la fin ne valide pas.',
   blindfold: 'Le puzzle en cours ne sera pas compté.',
-  evaluation: 'La position à l’écran ne sera pas comptée.'
+  evaluation: 'La position à l’écran ne sera pas comptée.',
+  puzzle_streak:
+    'Le puzzle en cours ne sera pas compté : ton streak s’arrête là.'
 }
 const route = useRoute()
 const $q = useQuasar()
@@ -368,6 +437,125 @@ const evaluationActions = computed(() => [
     }
   }
 ])
+
+/**
+ * The puzzle streak's puzzle on screen, kept once the run closed on a miss: its solution stays on
+ * screen (`holdEnd`) until "Voir le résultat"; also while the run waits for the overtime decision.
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const streakItem = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'streak_puzzle') streakItem.value = item
+    else if (item) streakItem.value = null
+  }
+)
+const streakLive = computed(() =>
+  ['running', 'timeUp', 'decision'].includes(runner.phase.value)
+)
+/** The verdict on the streak's puzzle on screen, once answered. */
+const streakResult = computed(() =>
+  streakItem.value && runner.result.value?.itemId === streakItem.value.id
+    ? runner.result.value
+    : null
+)
+/** Puzzles solved in the streak in progress (the broken one's length after a miss). */
+const streakNow = computed(
+  () =>
+    streakResult.value?.data?.streak ?? streakItem.value?.data?.streak ?? 0
+)
+/** The run's best streak so far. */
+const streakBest = computed(() =>
+  Math.max(
+    streakNow.value,
+    streakResult.value?.data?.best ?? 0,
+    streakItem.value?.data?.best ?? 0
+  )
+)
+/** The streak's rules, for the difficulty shown (fetched once per page). */
+/** @type {import('vue').Ref<import('@/utils/puzzleStreak').StreakRules|null>} */
+const streakRules = ref(null)
+watch(streakItem, item => {
+  if (item && !streakRules.value)
+    puzzleStreakApi
+      .overview()
+      .then(o => (streakRules.value = o.rules))
+      .catch(() => {})
+})
+const streakLevel = computed(() => {
+  const item = streakItem.value
+  if (!item) return ''
+  return streakRules.value
+    ? levelAt(item.data.ramp, item.data.streak, streakRules.value)
+    : `≈ ${item.data.targetRating}`
+})
+/** After a miss: a new streak (session step), or the result (the streak page, or overtime). */
+const streakActions = computed(() =>
+  (streakResult.value && !streakResult.value.success) || error.value
+    ? [
+        {
+          label:
+            runner.phase.value === 'ended'
+              ? 'Voir le résultat'
+              : error.value
+                ? 'Suivant →'
+                : 'Nouveau streak →',
+          primary: true,
+          disable: loading.value,
+          testid: 'run-next',
+          onClick: async () => {
+            holdEnd.value = false
+            if (runner.phase.value === 'running') await next()
+          }
+        }
+      ]
+    : []
+)
+
+/**
+ * A streak's puzzle answered: solved, the next one comes by itself; missed, its solution stays
+ * (held when the miss ended the run).
+ *
+ * @param {string} _outcome
+ * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
+ */
+async function onStreakResolve(_outcome, report) {
+  holdEnd.value = true
+  try {
+    const result = await runner.submit(report)
+    if (!result || result.success) holdEnd.value = false
+    if (result?.success) setTimeout(next, AUTO_NEXT_MS)
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+  }
+}
+
+const extending = ref(false)
+const overtimeError = ref('')
+
+/** Overtime: 5 more minutes on the streak in progress. */
+async function onExtend() {
+  extending.value = true
+  overtimeError.value = ''
+  try {
+    await runner.extend()
+  } catch (e) {
+    overtimeError.value = apiErrorMessage(e, {
+      409: 'Trop tard : le temps de décider est passé.'
+    })
+    await runner.resume(String(route.params.id)).catch(() => {})
+  } finally {
+    extending.value = false
+  }
+}
+
+/** Overtime refused: the run ends at its time, the streak counted. */
+function onEndOvertime() {
+  runner.stop().catch(e => (overtimeError.value = apiErrorMessage(e)))
+}
 
 /** @param {{guess: number|null, plan: string|null}} answer */
 async function onEvaluationResolve(answer) {
@@ -532,6 +720,7 @@ watch(
     endOpen.value = false
     holdEnd.value = false
     evalItem.value = null
+    streakItem.value = null
     try {
       await runner.resume(String(id))
     } catch (e) {

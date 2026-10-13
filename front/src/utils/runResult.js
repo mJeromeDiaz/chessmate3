@@ -8,7 +8,8 @@ import { catalogModule } from '@/utils/runEnd'
  * buttons, the animation's steps; then the screen that deals the mistakes to correct. Pure, so that
  * it can be tested alone.
  *
- * @typedef {'perfect'|'close'|'fail'|'done'} ResultKind `done`: free study, no score
+ * @typedef {'perfect'|'close'|'fail'|'done'|'streak'|'record'} ResultKind `done`: free study, no
+ *   score; `streak` and `record`: a puzzle streak (docs/PUZZLE_STREAK.md), its best streak as score
  *
  * @typedef {'close'|'next'|'fix'} ResultAction close the screen, the next lesson, correct the mistakes
  *
@@ -31,6 +32,9 @@ export function resultKind(run) {
   if (run.module === 'free') return 'done'
   const s = run.summary
   if (!s || !s.itemCount) return null
+  // Every streak ends on a miss: no share solved, the best streak counts.
+  if (run.module === 'puzzle_streak')
+    return /** @type {any} */ (s).metrics?.record ? 'record' : 'streak'
   if (s.successCount >= s.itemCount) return 'perfect'
   return s.successCount >= s.itemCount * CLOSE_RATE ? 'close' : 'fail'
 }
@@ -39,11 +43,12 @@ export function resultKind(run) {
  * The share solved, in whole percent rounded down (99.5 % never reads as a perfect 100); free
  * study: its minutes.
  *
- * @param {{module: string, summary: {itemCount: number, successCount: number, durationMs?: number}|null}} run
+ * @param {{module: string, summary: {itemCount: number, successCount: number, durationMs?: number, metrics?: Record<string, any>}|null}} run
  */
 export function resultScore(run) {
   const s = run.summary
   if (run.module === 'free') return Math.floor((s?.durationMs ?? 0) / 60_000)
+  if (run.module === 'puzzle_streak') return s?.metrics?.bestStreak ?? 0
   if (!s || !s.itemCount) return 0
   return Math.floor((s.successCount / s.itemCount) * 100 + 1e-9)
 }
@@ -97,7 +102,59 @@ export const RESULT_SCREENS = {
     fill: '#0B5E4A',
     unit: 'min',
     caption: 'D’ÉTUDE'
+  },
+  streak: {
+    line1: 'Meilleur',
+    line2: 'streak !',
+    bg: '#FF5A36',
+    deep: '#D93A16',
+    ink: '#5E1606',
+    accentInk: '#FFFFFF',
+    track: '#FFE7E1',
+    fill: '#B8300F',
+    unit: '',
+    caption: 'D’AFFILÉE'
+  },
+  record: {
+    line1: 'Nouveau',
+    line2: 'record !',
+    bg: '#FFD43B',
+    deep: '#E0AE00',
+    ink: '#6B5200',
+    accentInk: '#B8300F',
+    track: '#FFF5D1',
+    fill: '#B8300F',
+    unit: '',
+    caption: 'D’AFFILÉE'
   }
+}
+
+/**
+ * How full a streak's ring is: the best streak against the record before the run (full when it
+ * matches or beats it, or when there was none).
+ *
+ * @param {{summary: {metrics?: Record<string, any>}|null}} run
+ * @returns {number} percent
+ */
+export function streakRing(run) {
+  const best = run.summary?.metrics?.bestStreak ?? 0
+  const before = run.summary?.metrics?.recordBefore ?? 0
+  return before > 0 ? Math.min(100, Math.round((best / before) * 100)) : 100
+}
+
+/**
+ * The line under a streak's score: the record, beaten or to beat.
+ *
+ * @param {{summary: {metrics?: Record<string, any>}|null}} run
+ */
+export function streakNote(run) {
+  const m = run.summary?.metrics ?? {}
+  const before = m.recordBefore ?? 0
+  if (m.record)
+    return before > 0 ? `Ancien record : ${before}` : 'Ton premier record !'
+  if ((m.bestStreak ?? 0) >= before && before > 0)
+    return `Record égalé : ${before}`
+  return before > 0 ? `Ton record : ${before}` : ''
 }
 
 /** Confetti of a perfect lesson. */
@@ -149,7 +206,13 @@ export const RESULT_POSES = {
 export function resultProf(module, pose) {
   const m = catalogModule(module)
   const poses = m?.profSlug ? RESULT_POSES[m.profSlug] : null
-  const name = poses ? poses[pose === 'done' ? 'perfect' : pose] : ''
+  const key =
+    pose === 'done' || pose === 'record'
+      ? 'perfect'
+      : pose === 'streak'
+        ? 'close'
+        : pose
+  const name = poses ? poses[key] : ''
   return {
     name: m?.prof ?? 'Ton prof',
     image: name ? profImage(name) : '',
@@ -170,7 +233,7 @@ export function resultButtons(kind, fixable) {
   const next = { label: 'Leçon suivante →', action: 'next' }
   /** @type {ResultButton} */
   const carryOn = { label: 'Continuer', action: 'close' }
-  if (kind === 'close')
+  if (kind === 'close' || kind === 'streak' || kind === 'record')
     return {
       primary: carryOn,
       secondary: fixable ? { label: 'Revoir mes erreurs', action: 'fix' } : next

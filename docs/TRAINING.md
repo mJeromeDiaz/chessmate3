@@ -7,7 +7,7 @@ Une **séance** (*run*) est un temps d'entraînement fixé à l'avance (5 à 30 
 modes ([WOODPECKER.md](WOODPECKER.md)), le test des répertoires d'ouvertures
 ([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)), les puzzles
 classés (§ 5 bis), le temps libre (§ 5 ter), les séries de coordonnées
-([COORDINATES.md](COORDINATES.md)) les puzzles à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)) et l'évaluation de position ([EVALUATION.md](EVALUATION.md)). Le socle est générique : un module
+([COORDINATES.md](COORDINATES.md)) les puzzles à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)), l'évaluation de position ([EVALUATION.md](EVALUATION.md)) et le puzzle streak ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)). Le socle est générique : un module
 implémente un contrat et hérite du chronomètre, des règles de fin et du récapitulatif. Événements et
 journal : [ACTIVITY.md](ACTIVITY.md).
 
@@ -26,6 +26,7 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Module Libre | `App\Training\Free\FreeModule` |
 | Module Coordonnées | `App\Coordinates\Training\CoordinatesModule` (durées permises : `Training\Module\BudgetChoicesInterface`) |
 | Module Aveugle | `App\Blindfold\Training\PuzzleModule` (puzzles à l'aveugle) |
+| Module Streak | `App\PuzzleStreak\Training\StreakModule` (prolongation : `Training\Module\OvertimeModuleInterface`) |
 | Module Évaluation | `App\Evaluation\Training\EvaluationModule` (durées permises : `Training\Module\BudgetChoicesInterface`) |
 | API | `App\ApiResource\Training\*`, `App\State\Training\*` |
 | Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable, FreeRunPanel}.vue`, `components/puzzle/PuzzleRunDialog.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
@@ -341,6 +342,7 @@ Réglages d'une étape, vérifiés par le module au lancement **et** au démarra
 | `woodpecker` | `{}` ou `{setId}` | son set light en cours **au démarrage de l'étape** (actif, sinon bloquée) ; avec `setId`, ce set light de l'utilisateur (un set d'ouverture de la séance sur mesure, [COACH.md](COACH.md)) |
 | `repertoire` | `{repertoireIds: string[]}` (tronçons) | l'utilisateur |
 | `free` | `{format}` ; les `notes` de l'étape deviennent celles de la séance | l'utilisateur |
+| `puzzle_streak` | `{ramp, topic}` ; la séance est en mode `timed` ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) | l'utilisateur |
 
 ### Déroulé (`SessionManager`)
 

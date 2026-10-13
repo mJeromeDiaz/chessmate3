@@ -41,8 +41,12 @@
       </div>
     </template>
 
-    <template v-if="puzzle && game.phase.value !== 'complete'" #controls>
+    <template
+      v-if="puzzle && game.phase.value !== 'complete' && (help || skippable || replaceable || withSettings)"
+      #controls
+    >
       <q-btn
+        v-if="help"
         unelevated
         no-caps
         class="play-btn play-btn--hint"
@@ -53,6 +57,7 @@
         @click="game.hint()"
       />
       <q-btn
+        v-if="help"
         unelevated
         no-caps
         class="play-btn play-btn--solution"
@@ -181,6 +186,8 @@ const props = defineProps({
   replaceable: { type: Boolean, default: false },
   /** Free play: the settings icon (themes, difficulty). */
   withSettings: { type: Boolean, default: false },
+  /** The Aide and Solution buttons; false: no help at all (the puzzle streak). */
+  help: { type: Boolean, default: true },
   /** A dot on the settings icon: filters other than the defaults. */
   settingsActive: { type: Boolean, default: false }
 })

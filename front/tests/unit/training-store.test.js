@@ -158,6 +158,17 @@ describe('training utils', () => {
     expect(subjectPath({ subjectType: 'free_owner', subjectId: 'u' })).toBe('/')
     expect(backLabel({ module: 'puzzles' })).toBe('Retour aux puzzles')
     expect(backLabel({ module: 'free' })).toBe('Retour à l’accueil')
+    expect(
+      subjectPath({ subjectType: 'puzzle_streak_player', subjectId: 'u' })
+    ).toBe('/streak')
+    expect(backLabel({ module: 'puzzle_streak' })).toBe('Retour au streak')
+    expect(
+      closeReasonText({
+        closeReason: 'subject_finished',
+        module: 'puzzle_streak',
+        summary: { context: { reason: 'no_puzzle' } }
+      })
+    ).toContain('Plus aucun puzzle à ce niveau')
   })
 
   it('knows the blindfold puzzles', () => {

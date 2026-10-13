@@ -380,6 +380,15 @@ export const trainingApi = {
   stop: id =>
     http
       .post(`/api/training/runs/${encodeURIComponent(id)}/stop`, null, JSON_LD)
+      .then(r => r.data),
+  /** Overtime: the run waiting for the player's decision goes on for 5 more minutes. */
+  extend: id =>
+    http
+      .post(
+        `/api/training/runs/${encodeURIComponent(id)}/extend`,
+        null,
+        JSON_LD
+      )
       .then(r => r.data)
 }
 
@@ -894,6 +903,15 @@ export const evaluationApi = {
 export const blindfoldApi = {
   /** The rules (levels, lengths, times) and the results so far, by level and by length. */
   puzzles: () => http.get('/api/blindfold/puzzles', JSON_LD).then(r => r.data)
+}
+
+/** Puzzle streak (docs/PUZZLE_STREAK.md): the rules, my records, the openings to draw from. */
+export const puzzleStreakApi = {
+  /** The rules (ramps, topics), the records by ramp and topic, the puzzles solved and missed. */
+  overview: () => http.get('/api/puzzle-streak', JSON_LD).then(r => r.data),
+  /** My openings (repertoires, games already read), then every family with enough puzzles. */
+  openings: () =>
+    http.get('/api/puzzle-streak/openings', JSON_LD).then(r => r.data)
 }
 
 /** Gamification (docs/GAMIFICATION.md): XP, level, streaks, trophies, the weekly quest. */

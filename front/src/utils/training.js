@@ -22,6 +22,10 @@ export function closeReasonText(run) {
     case 'stopped':
       return 'Séance terminée avant la fin du temps.'
     case 'subject_finished':
+      if (run.module === 'puzzle_streak')
+        return run.summary?.context?.reason === 'no_puzzle'
+          ? 'Plus aucun puzzle à ce niveau dans cette thématique : streak terminé.'
+          : 'Streak terminé.'
       if (run.module === 'coordinates')
         return 'Toutes les cases de la série sont faites !'
       if (run.module === 'evaluation')
@@ -38,6 +42,8 @@ export function closeReasonText(run) {
         return 'Plus aucun puzzle à l’aveugle à ce niveau et de cette longueur : séance close.'
       if (run.module === 'evaluation')
         return 'Plus aucune position pour ces réglages : séance close.'
+      if (run.module === 'puzzle_streak')
+        return 'La sélection des puzzles est en cours de mise à jour : séance close.'
       return 'Le set a été mis en pause ou abandonné : séance close.'
     default:
       return ''
@@ -58,6 +64,7 @@ export function subjectPath(run) {
   if (run.subjectType === 'coordinates_player') return '/coordinates'
   if (run.subjectType === 'blindfold_player') return '/blindfold'
   if (run.subjectType === 'evaluation_player') return '/evaluation'
+  if (run.subjectType === 'puzzle_streak_player') return '/streak'
   return '/'
 }
 
@@ -81,6 +88,8 @@ export function backLabel(run) {
       return 'Retour au jeu à l’aveugle'
     case 'evaluation':
       return 'Retour à l’évaluation'
+    case 'puzzle_streak':
+      return 'Retour au streak'
     default:
       return 'Retour à l’accueil'
   }

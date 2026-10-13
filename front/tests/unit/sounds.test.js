@@ -36,6 +36,8 @@ describe('moduleEndSound', () => {
     expect(moduleEndSound(run(2, 0))).toBe('moduleDone')
     expect(moduleEndSound(run(0, 0))).toBe('moduleDone')
     expect(moduleEndSound(run(5, 0, 'free'))).toBe('moduleDone')
+    // Every puzzle streak ends on a miss.
+    expect(moduleEndSound(run(4, 1, 'puzzle_streak'))).toBe('moduleDone')
     expect(moduleEndSound({ module: 'puzzles', summary: null })).toBe(
       'moduleDone'
     )

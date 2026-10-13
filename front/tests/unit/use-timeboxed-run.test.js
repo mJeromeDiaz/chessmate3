@@ -10,7 +10,8 @@ function runJson({
   expiresAt,
   serverNow,
   summary = null,
-  closeReason = null
+  closeReason = null,
+  decisionUntil = null
 }) {
   return {
     id: 'r1',
@@ -24,7 +25,8 @@ function runJson({
     expiresAt: iso(expiresAt),
     closedAt: status === 'closed' ? iso(expiresAt) : null,
     serverNow: iso(serverNow),
-    summary
+    summary,
+    decisionUntil: decisionUntil === null ? null : iso(decisionUntil)
   }
 }
 const item = id => ({
@@ -56,6 +58,7 @@ function mockApi() {
     next: vi.fn(),
     submit: vi.fn(),
     stop: vi.fn(),
+    extend: vi.fn(),
     current: vi.fn()
   }
 }
@@ -135,6 +138,65 @@ describe('useTimeboxedRun', () => {
     await pending
     expect(runner.offsetMs.value).toBe(0)
     runner.dispose()
+  })
+
+  it('overtime: waits for the decision with the item on screen, then extends it', async () => {
+    const api = mockApi()
+    const { runner, expiresAt } = await started(api)
+    const decisionUntil = expiresAt + 60_000
+    // Answered on the server's clock at the time of the request (it measures the offset).
+    api.next.mockImplementation(async () => ({
+      run: runJson({ expiresAt, serverNow: Date.now(), decisionUntil }),
+      item: null
+    }))
+
+    await vi.advanceTimersByTimeAsync(121_000)
+    expect(runner.phase.value).toBe('decision')
+    expect(runner.item.value.id).toBe('a1')
+    expect(runner.decisionMs.value).toBeGreaterThan(58_000)
+    // Nothing asked while the player decides.
+    const calls = api.next.mock.calls.length
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(api.next.mock.calls.length).toBe(calls)
+
+    const extendedTo = Date.now() + 300_000
+    api.extend.mockImplementation(async () =>
+      runJson({ expiresAt: extendedTo, serverNow: Date.now() })
+    )
+    await runner.extend()
+    expect(api.extend).toHaveBeenCalledWith('r1')
+    expect(runner.phase.value).toBe('running')
+    // The same puzzle goes on: not asked again.
+    expect(runner.item.value.id).toBe('a1')
+    expect(api.next.mock.calls.length).toBe(calls)
+    runner.dispose()
+  })
+
+  it('overtime: past the decision time, lets the server close the run', async () => {
+    const api = mockApi()
+    const { runner, expiresAt } = await started(api)
+    const decisionUntil = expiresAt + 60_000
+    // Answered on the server's clock at the time of the request (it measures the offset).
+    api.next.mockImplementation(async () => ({
+      run: runJson({ expiresAt, serverNow: Date.now(), decisionUntil }),
+      item: null
+    }))
+    await vi.advanceTimersByTimeAsync(121_000)
+    expect(runner.phase.value).toBe('decision')
+
+    api.next.mockImplementation(async () => ({
+      run: runJson({
+        status: 'closed',
+        closeReason: 'time_up',
+        expiresAt,
+        serverNow: Date.now(),
+        summary: SUMMARY
+      }),
+      item: null
+    }))
+    await vi.advanceTimersByTimeAsync(61_000)
+    expect(runner.phase.value).toBe('ended')
+    expect(runner.item.value).toBeNull()
   })
 
   it('at zero, lets the server close the run and shows the recap', async () => {
