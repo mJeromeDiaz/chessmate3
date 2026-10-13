@@ -27,6 +27,7 @@ final class RoutingTest extends WoodpeckerWebTestCase
         yield ['POST', '/api/training/runs/'.self::UUID.'/next', 'training_run_next'];
         yield ['POST', '/api/training/runs/'.self::UUID.'/submission', 'training_run_submission'];
         yield ['POST', '/api/training/runs/'.self::UUID.'/stop', 'training_run_stop'];
+        yield ['POST', '/api/training/runs/'.self::UUID.'/extend', 'training_run_extend'];
         yield ['GET', '/api/training/runs/'.self::UUID.'/review', 'training_run_review'];
         yield ['POST', '/api/training/sessions', '_api_/training/sessions_post'];
         yield ['GET', '/api/training/sessions', '_api_/training/sessions_get_collection'];
@@ -68,6 +69,7 @@ final class RoutingTest extends WoodpeckerWebTestCase
         self::assertSame(404, $this->api('GET', '/api/training/runs/not-a-uuid', $user)->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/training/runs/not-a-uuid/next', $user)->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/training/runs/not-a-uuid/stop', $user)->getStatusCode());
+        self::assertSame(404, $this->api('POST', '/api/training/runs/not-a-uuid/extend', $user)->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/training/runs/not-a-uuid/submission', $user, ['itemId' => 'x'])->getStatusCode());
         foreach (['GET /api/training/sessions/not-a-uuid', 'POST /api/training/sessions/not-a-uuid/next', 'POST /api/training/sessions/not-a-uuid/skip', 'POST /api/training/sessions/not-a-uuid/abandon', 'GET /api/training/sessions/'.self::UUID] as $request) {
             [$method, $path] = explode(' ', $request);

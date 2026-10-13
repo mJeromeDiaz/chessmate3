@@ -21,8 +21,8 @@ use Symfony\Component\Uid\Uuid;
 /**
  * Recomputes the XP of a user from what they played (docs/GAMIFICATION.md): the activity log in
  * chronological order (the daily cap applied on each `local_date` written with the entry), the
- * completed sessions, Woodpecker cycles and sets, and the first validation of each orientation of
- * the coordinates. Quest rewards are kept. One transaction per
+ * completed sessions, Woodpecker cycles and sets, the first validation of each orientation of
+ * the coordinates and the puzzle streak records. Quest rewards are kept. One transaction per
  * user; the same rows as the handlers would have written, under the same sources.
  */
 final readonly class XpRebuilder
@@ -149,6 +149,15 @@ final readonly class XpRebuilder
             $validated[$orientation] = true;
             $source = AwardBonusXp::validationSource($user->getId()->toRfc4122(), $orientation);
             $rows[] = [XpKind::Validation, Module::Coordinates->value, XpRules::COORDINATES_VALIDATED, AwardBonusXp::VALIDATION_SOURCE, $source, self::string($row['run_id']), null, self::string($row['closed_at'])];
+        }
+        // The puzzle streak records, flagged when the streak ended.
+        foreach ($this->connection->fetchAllAssociative(
+            'SELECT BIN_TO_UUID(id) AS id, run_id, ended_at FROM puzzle_streak
+              WHERE user_id = ? AND record = 1 AND ended_at IS NOT NULL',
+            [$id],
+            [ParameterType::BINARY],
+        ) as $row) {
+            $rows[] = [XpKind::Record, Module::PuzzleStreak->value, XpRules::STREAK_RECORD, AwardBonusXp::RECORD_SOURCE, self::string($row['id']), self::string($row['run_id']), null, self::string($row['ended_at'])];
         }
         // The local day of each bonus, in the user's timezone.
         foreach ($rows as $i => $row) {

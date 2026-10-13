@@ -40,6 +40,17 @@ final class XpRules
     /** Exact in less than half the position's time: runs before 2026-10-11 only (no time per position since). */
     public const EVALUATION_FAST = 3;
 
+    /**
+     * Puzzle streak: a puzzle solved gains by its rating, STREAK_MIN under STREAK_FROM + STREAK_BAND,
+     * one more every STREAK_BAND points, STREAK_MAX at most; a miss gains nothing.
+     */
+    public const STREAK_MIN = 2;
+    public const STREAK_MAX = 12;
+    public const STREAK_FROM = 600;
+    public const STREAK_BAND = 200;
+    /** Bonus: a streak record beaten (docs/PUZZLE_STREAK.md). */
+    public const STREAK_RECORD = 25;
+
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
     public const MODULE_STEP = 100;
@@ -57,7 +68,7 @@ final class XpRules
     /**
      * XP of one exercise, before the daily cap.
      *
-     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status, an evaluation's status and bonuses)
+     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status, an evaluation's status and bonuses, a streak puzzle's rating)
      */
     public static function exercise(ExerciseType $type, bool $success, int $durationMs, int $itemCount = 1, array $metadata = []): int
     {
@@ -79,7 +90,16 @@ final class XpRules
                 default => self::EVALUATION_MISS,
             } + (true === ($metadata['planOk'] ?? null) ? self::EVALUATION_PLAN : 0)
               + (true === ($metadata['fast'] ?? null) ? self::EVALUATION_FAST : 0),
+            ExerciseType::StreakPuzzle => $success ? self::streakPuzzle(\is_int($metadata['rating'] ?? null) ? $metadata['rating'] : 0) : 0,
         };
+    }
+
+    /**
+     * XP of a streak puzzle solved, by its rating: 2 under 800, 3 from 800, ..., 12 from 2600.
+     */
+    public static function streakPuzzle(int $rating): int
+    {
+        return min(self::STREAK_MAX, self::STREAK_MIN + intdiv(max(0, $rating - self::STREAK_FROM), self::STREAK_BAND));
     }
 
     /**
@@ -95,6 +115,7 @@ final class XpRules
             ExerciseType::CoordinatesSeries => Module::Coordinates,
             ExerciseType::BlindfoldPuzzle => Module::Blindfold,
             ExerciseType::PositionEvaluation => Module::Evaluation,
+            ExerciseType::StreakPuzzle => Module::PuzzleStreak,
         };
     }
 

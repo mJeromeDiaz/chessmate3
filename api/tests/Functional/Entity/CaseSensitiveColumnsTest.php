@@ -78,6 +78,7 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['early_access_invitation_key', 'key_hash'],
             ['early_access_invitation_key', 'key_hint'],
             ['evaluation_position', 'fen'],
+            ['puzzle_streak', 'topic'],
             ['woodpecker_set', 'opening_family'],
         ] as [$table, $column]) {
             yield "$table.$column" => [$table, $column];

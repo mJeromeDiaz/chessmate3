@@ -11,6 +11,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use App\ApiResource\Woodpecker\Set;
 use App\Entity\Training\Run as RunEntity;
+use App\State\Training\ExtendRunProcessor;
 use App\State\Training\RunProvider;
 use App\State\Training\StartRunProcessor;
 use App\State\Training\StopRunProcessor;
@@ -18,6 +19,8 @@ use App\State\Training\StopRunProcessor;
 /**
  * A timed run of the current user (docs/TRAINING.md). `serverNow` lets the client measure its
  * clock offset; the server alone decides when time is up. Another user's run answers 404.
+ * `decisionUntil`: overtime (docs/TRAINING.md, "Prolongation"), the run's time is up and it waits
+ * until then for the player to extend it (POST .../extend) or end it (POST .../stop).
  */
 #[ApiResource(
     shortName: 'TrainingRun',
@@ -41,6 +44,16 @@ use App\State\Training\StopRunProcessor;
             processor: StopRunProcessor::class,
             name: 'training_run_stop',
         ),
+        new Post(
+            uriTemplate: '/training/runs/{id}/extend',
+            requirements: ['id' => Set::UUID_PATTERN],
+            status: 200,
+            openapi: new Operation(summary: 'Overtime: the run waiting for a decision goes on for 5 more minutes.'),
+            input: false,
+            read: false,
+            processor: ExtendRunProcessor::class,
+            name: 'training_run_extend',
+        ),
     ],
 )]
 final class Run
@@ -63,6 +76,10 @@ final class Run
     /** @var array<string, mixed>|null the normalized recap, once closed */
     public ?array $summary;
     public ?string $parentId;
+    /** Overtime: the run's time is up and it waits until then for the player's decision. */
+    public ?\DateTimeImmutable $decisionUntil;
+    /** How many times the run was extended (overtime). */
+    public int $extensions;
 
     public static function from(RunEntity $run, \DateTimeImmutable $now): self
     {
@@ -80,6 +97,8 @@ final class Run
         $view->serverNow = $now;
         $view->summary = $run->getSummary();
         $view->parentId = $run->getParentId()?->toRfc4122();
+        $view->decisionUntil = $run->isActive() ? $run->getDecisionUntil() : null;
+        $view->extensions = $run->getExtensions();
 
         return $view;
     }

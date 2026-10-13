@@ -85,6 +85,17 @@ class Run
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $summary = null;
 
+    /**
+     * Overtime (docs/TRAINING.md, "Prolongation"): until when the expired run waits for the
+     * player to extend it or end it; null when it does not.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $decisionUntil = null;
+
+    /** How many times the run was extended. */
+    #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 0])]
+    private int $extensions = 0;
+
     /** The training session this run is a step of ({@see Session}), if any. */
     #[ORM\Column(type: 'uuid', nullable: true)]
     private ?Uuid $parentId = null;
@@ -190,6 +201,37 @@ class Run
     public function getParentId(): ?Uuid
     {
         return $this->parentId;
+    }
+
+    public function getDecisionUntil(): ?\DateTimeImmutable
+    {
+        return $this->decisionUntil;
+    }
+
+    public function getExtensions(): int
+    {
+        return $this->extensions;
+    }
+
+    /**
+     * Its time is up: it waits for the player's decision until $until.
+     */
+    public function awaitDecision(\DateTimeImmutable $until): void
+    {
+        $this->decisionUntil = $until;
+    }
+
+    /**
+     * Overtime granted: the run goes on until $expiresAt.
+     */
+    public function extend(\DateTimeImmutable $expiresAt): void
+    {
+        if (!$this->isActive() || $expiresAt <= $this->expiresAt) {
+            throw new \DomainException('Only an active run is extended, and only later.');
+        }
+        $this->expiresAt = $expiresAt;
+        $this->decisionUntil = null;
+        ++$this->extensions;
     }
 
     /**

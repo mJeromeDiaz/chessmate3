@@ -48,6 +48,17 @@ journal : [ACTIVITY.md](ACTIVITY.md).
   pas.
 - Le temps appartient au **serveur** : expiration, durées et verdicts sont calculés côté API ; le
   front ne fait qu'afficher un compte à rebours recalé sur l'horloge serveur.
+- **Prolongation** (validée 2026-10-13, seule exception à « pas de grâce », module streak
+  seulement : [PUZZLE_STREAK.md](PUZZLE_STREAK.md)) : un module qui implémente
+  `Training\Module\OvertimeModuleInterface` peut, quand le temps est écoulé alors que quelque
+  chose mérite de continuer (`canExtend` : un streak d'au moins un puzzle), faire **attendre** la
+  séance `TimeboxRunner::DECISION_SECONDS` (60 s, comptées depuis l'expiration ; `decisionUntil`
+  dans la vue de la séance). Rien n'est servi ni accepté pendant ce temps ; le puzzle à l'écran
+  reste en attente. « Continuer » (`POST /training/runs/{id}/extend`) repousse l'expiration de
+  `EXTENSION_SECONDS` (5 min) **à partir de maintenant** (`extensions` + 1), et la question revient
+  à la fin ; « Achever » (`stop`) clôt `time_up` à l'expiration ; sans réponse (onglet fermé), la
+  clôture paresseuse fait de même une fois les 60 s passées. Le module décide de la suite (le
+  streak : la séance finit avec le streak prolongé).
 
 ## 3. Modèle de données
 
@@ -187,6 +198,7 @@ Préfixe `/api`, utilisateur authentifié ; une séance d'un autre utilisateur r
 | `POST /training/runs/{id}/next` | `{run, item}` : élément à jouer, `item: null` une fois close (600 par 10 min) | 404 |
 | `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown, thinkMs?, answers?}` → `{run, result}` (600 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis ou séance close |
 | `POST /training/runs/{id}/stop` | Termine la séance | 404 |
+| `POST /training/runs/{id}/extend` | Prolongation : la séance qui attend la décision repart pour 5 min (§ 2) | 404, 409 séance close ou n'attendant pas de décision |
 | `GET /training/runs/{id}/review` | Bilan d'une séance close, élément par élément (§ 5 quater) | 404, 409 séance encore active |
 
 L'identifiant de l'élément est dans le corps, pas dans l'URL : une seule route de soumission quel que

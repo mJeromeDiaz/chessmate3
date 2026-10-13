@@ -11,6 +11,7 @@ use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
 use App\Repository\Training\RunRepository;
 use App\Training\Event\RunCompleted;
+use App\Training\Exception\ExtensionRefusedException;
 use App\Training\Exception\RunClosedException;
 use App\Training\Exception\RunInProgressException;
 use App\Training\Exception\RunNotFoundException;
@@ -18,6 +19,7 @@ use App\Training\Exception\SubjectUnavailableException;
 use App\Training\Exception\SubmissionTooLateException;
 use App\Training\Module\ItemSubmission;
 use App\Training\Module\ModuleRegistry;
+use App\Training\Module\OvertimeModuleInterface;
 use App\Training\Module\TimeboxedModuleInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,7 +35,12 @@ use Symfony\Component\Uid\Uuid;
  *   expiry (network latency, not a grace period: nothing can be served meanwhile), else rejected;
  * - a run left behind (tab closed) is closed lazily, at the user's next training request, with
  *   its expiry as closing instant;
- * - one active run per user (database), a second start is refused.
+ * - one active run per user (database), a second start is refused;
+ * - overtime, for a module that has it ({@see OvertimeModuleInterface}): a run whose time is up
+ *   while something is worth going on with waits {@see self::DECISION_SECONDS} for the player to
+ *   extend it by {@see self::EXTENSION_SECONDS} ({@see self::extend()}) or to end it
+ *   ({@see self::stop()}); nothing is served meanwhile, and without an answer it closes at its
+ *   expiry as any other.
  *
  * Every operation locks the run first, then the module locks its subject.
  */
@@ -42,6 +49,8 @@ final class TimeboxRunner
     public const SUBMISSION_TOLERANCE_MS = 2_000;
     public const MIN_BUDGET_SECONDS = 60;
     public const MAX_BUDGET_SECONDS = 3_600;
+    public const DECISION_SECONDS = 60;
+    public const EXTENSION_SECONDS = 300;
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -124,7 +133,10 @@ final class TimeboxRunner
                 return new Step($run);
             }
             if ($run->isExpired($now)) {
-                $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
+                // Waiting for the player's decision (overtime): nothing served, the run stays.
+                if (!$this->awaitsDecision($run, $now)) {
+                    $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
+                }
 
                 return new Step($run);
             }
@@ -159,7 +171,9 @@ final class TimeboxRunner
                 return RunClosedException::class;
             }
             if ($now > $run->getExpiresAt()->modify(sprintf('+%d milliseconds', self::SUBMISSION_TOLERANCE_MS))) {
-                $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
+                if (!$this->awaitsDecision($run, $now)) {
+                    $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
+                }
 
                 return SubmissionTooLateException::class;
             }
@@ -172,7 +186,7 @@ final class TimeboxRunner
             }
             if (null !== $result->closes) {
                 $this->close($run, $result->closes, $now, $now, $result->context);
-            } elseif ($run->isExpired($now)) {
+            } elseif ($run->isExpired($now) && !$this->awaitsDecision($run, $now)) {
                 $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
             }
 
@@ -216,10 +230,72 @@ final class TimeboxRunner
         $this->entityManager->wrapInTransaction(function () use ($user): void {
             $now = $this->now();
             $run = $this->runs->lockActiveOf($user);
-            if (null !== $run && $now > $run->getExpiresAt()->modify(sprintf('+%d milliseconds', self::SUBMISSION_TOLERANCE_MS))) {
+            if (null !== $run && $now > $run->getExpiresAt()->modify(sprintf('+%d milliseconds', self::SUBMISSION_TOLERANCE_MS)) && !$this->awaitsDecision($run, $now)) {
                 $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
             }
         });
+    }
+
+    /**
+     * Overtime: the run, waiting for the player's decision, goes on for EXTENSION_SECONDS from
+     * now (the puzzle on screen included); at the end, the same question again.
+     *
+     * @throws RunNotFoundException
+     * @throws RunClosedException         the run is over (also when the decision time ran out)
+     * @throws ExtensionRefusedException  no overtime for this module, time not up, or nothing to go on with
+     */
+    public function extend(User $user, Uuid $runId): Run
+    {
+        $outcome = $this->entityManager->wrapInTransaction(function () use ($user, $runId): Run|string {
+            $now = $this->now();
+            $run = $this->runs->lockOwned($runId, $user) ?? throw new RunNotFoundException();
+            if (!$run->isActive()) {
+                return RunClosedException::class;
+            }
+            if (!$run->isExpired($now)) {
+                return ExtensionRefusedException::class;
+            }
+            if (!$this->awaitsDecision($run, $now)) {
+                if ($now > $run->getExpiresAt()->modify(sprintf('+%d milliseconds', self::SUBMISSION_TOLERANCE_MS))) {
+                    $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
+
+                    return RunClosedException::class;
+                }
+
+                return ExtensionRefusedException::class;
+            }
+            $run->extend($now->modify(sprintf('+%d seconds', self::EXTENSION_SECONDS)));
+            $this->entityManager->flush();
+
+            return $run;
+        });
+
+        return match ($outcome) {
+            RunClosedException::class => throw new RunClosedException(),
+            ExtensionRefusedException::class => throw new ExtensionRefusedException(),
+            default => $outcome,
+        };
+    }
+
+    /**
+     * Whether the expired run waits for the player's decision (overtime): its module has
+     * overtime, something is worth going on with, and its decision time (from the expiry) is not
+     * over. Marks the run the first time (its view tells the player until when).
+     */
+    private function awaitsDecision(Run $run, \DateTimeImmutable $now): bool
+    {
+        $module = $this->module($run);
+        $until = $run->getExpiresAt()->modify(sprintf('+%d seconds', self::DECISION_SECONDS));
+        // Checked each time: a submission within the tolerance may have ended what was going on.
+        if (!$module instanceof OvertimeModuleInterface || $now > $until || !$module->canExtend($run)) {
+            return false;
+        }
+        if (null === $run->getDecisionUntil()) {
+            $run->awaitDecision($until);
+            $this->entityManager->flush();
+        }
+
+        return true;
     }
 
     /**

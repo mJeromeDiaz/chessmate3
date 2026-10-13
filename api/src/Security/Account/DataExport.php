@@ -156,6 +156,19 @@ final readonly class DataExport
                 $id,
                 ['moves'],
             )),
+            'puzzleStreaks' => $this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, ramp, topic, length, best_rating, status, record,
+                        started_at, ended_at
+                   FROM puzzle_streak WHERE user_id = ? ORDER BY started_at',
+                $id,
+            ),
+            'puzzleStreakAttempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(streak_id) AS streak_id, puzzle_id AS puzzle, puzzle_rating, position, target_rating,
+                        status, started_at, submitted_at, duration_ms, moves, mistakes
+                   FROM puzzle_streak_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['moves'],
+            )),
         ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(

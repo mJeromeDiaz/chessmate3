@@ -21,4 +21,6 @@ enum XpKind: string
     case Quest = 'quest';
     /** An orientation of the coordinates series validated for the first time. */
     case Validation = 'validation';
+    /** A puzzle streak record beaten (docs/PUZZLE_STREAK.md). */
+    case Record = 'record';
 }

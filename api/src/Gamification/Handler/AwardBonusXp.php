@@ -10,6 +10,7 @@ use App\Enum\Training\Module;
 use App\Enum\Training\SessionStatus;
 use App\Gamification\Xp\XpLedger;
 use App\Gamification\Xp\XpRules;
+use App\PuzzleStreak\Event\RecordBeaten;
 use App\Training\Event\SessionClosed;
 use App\Woodpecker\Event\CycleCompleted;
 use App\Woodpecker\Event\SetCompleted;
@@ -19,12 +20,14 @@ use Symfony\Component\Uid\Uuid;
 /**
  * The bonuses (docs/GAMIFICATION.md): a session completed to its end, a Woodpecker cycle
  * completed in time, a Woodpecker set completed, an orientation of the coordinates validated for
- * the first time. Idempotent on their source (the cycle by set, number and run, the validation by
- * user and orientation, as {@see \App\Gamification\Xp\XpRebuilder} keys them).
+ * the first time, a puzzle streak record beaten. Idempotent on their source (the cycle by set,
+ * number and run, the validation by user and orientation, the record by streak, as
+ * {@see \App\Gamification\Xp\XpRebuilder} keys them).
  */
 final class AwardBonusXp
 {
     public const VALIDATION_SOURCE = 'coordinates_validation';
+    public const RECORD_SOURCE = 'puzzle_streak';
 
     public function __construct(private readonly XpLedger $ledger)
     {
@@ -69,6 +72,21 @@ final class AwardBonusXp
             XpRules::COORDINATES_VALIDATED,
             self::VALIDATION_SOURCE,
             self::validationSource($event->userId, $event->orientation),
+            $event->occurredAt,
+            Uuid::isValid($event->runId) ? Uuid::fromString($event->runId) : null,
+        );
+    }
+
+    #[AsMessageHandler]
+    public function onRecordBeaten(RecordBeaten $event): void
+    {
+        $this->ledger->awardBonus(
+            $event->userId,
+            XpKind::Record,
+            Module::PuzzleStreak->value,
+            XpRules::STREAK_RECORD,
+            self::RECORD_SOURCE,
+            $event->streakId,
             $event->occurredAt,
             Uuid::isValid($event->runId) ? Uuid::fromString($event->runId) : null,
         );

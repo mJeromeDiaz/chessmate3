@@ -25,4 +25,9 @@ enum ExerciseType: string
      * `metadata.planOk`, `metadata.fast`.
      */
     case PositionEvaluation = 'position_evaluation';
+    /**
+     * A puzzle of a streak (docs/PUZZLE_STREAK.md); `metadata.status` (solved, failed),
+     * `metadata.rating` (the puzzle's: the XP depends on it).
+     */
+    case StreakPuzzle = 'streak_puzzle';
 }

@@ -21,6 +21,8 @@ enum Module: string
     case Blindfold = 'blindfold';
     /** Position evaluation: who stands better, and the plan (docs/EVALUATION.md). */
     case Evaluation = 'evaluation';
+    /** Puzzle streak: easy to hard, one miss breaks it (docs/PUZZLE_STREAK.md). */
+    case PuzzleStreak = 'puzzle_streak';
 
     /** Its name for the user (emails, calendar). */
     public function label(): string
@@ -33,6 +35,7 @@ enum Module: string
             self::Coordinates => 'Coordonnées',
             self::Blindfold => 'Aveugle',
             self::Evaluation => 'Évaluation',
+            self::PuzzleStreak => 'Streak',
         };
     }
 

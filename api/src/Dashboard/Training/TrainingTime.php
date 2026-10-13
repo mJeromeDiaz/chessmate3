@@ -33,6 +33,7 @@ final class TrainingTime
         ExerciseType::CoordinatesSeries->value => Module::Coordinates,
         ExerciseType::BlindfoldPuzzle->value => Module::Blindfold,
         ExerciseType::PositionEvaluation->value => Module::Evaluation,
+        ExerciseType::StreakPuzzle->value => Module::PuzzleStreak,
     ];
 
     public function __construct(private readonly Connection $connection)
