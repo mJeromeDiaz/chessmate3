@@ -5,6 +5,7 @@ import {
   defaultFamilies,
   feedPace
 } from '@/utils/repertoireAuto'
+import { t } from '@/i18n'
 
 /** The build in progress, kept for a reload of the page (same tab). */
 export const STORAGE_KEY = 'dontstayrooky.autoBuild'
@@ -221,7 +222,9 @@ export function useAutoBuild() {
           return
         }
         const delay = retryDelay(e)
-        waiting.value = `Lichess finit de traiter une demande précédente : patiente quelques secondes, je reprends dans ${Math.round(delay / 1000)} s…`
+        waiting.value = t('repertoireAuto.build.waiting', {
+          n: Math.round(delay / 1000)
+        })
         await sleep(delay)
       }
     }
@@ -340,7 +343,10 @@ export function useAutoBuild() {
     const next = currentSelection()
     next.removed[familyKey] = [...(next.removed[familyKey] ?? []), line.cut]
     if (await send(next)) {
-      toast.value = { text: `« ${line.name} » retirée`, undo: before }
+      toast.value = {
+        text: t('repertoireAuto.build.removed', { name: line.name }),
+        undo: before
+      }
       const shownToast = toast.value
       timers.push(
         setTimeout(() => {

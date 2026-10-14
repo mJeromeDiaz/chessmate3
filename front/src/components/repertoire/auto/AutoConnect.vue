@@ -9,11 +9,10 @@
             class="ra-albert__img ra-bob"
           />
           <div class="ra-bubble">
-            Montre-moi tes parties. J’observe ce que tu joues vraiment, puis je
-            te construis un répertoire qui te ressemble.
+            {{ $t('repertoireAuto.connect.bubble') }}
           </div>
         </div>
-        <h1 class="ra-title">Ton répertoire, tiré de tes vraies parties</h1>
+        <h1 class="ra-title">{{ $t('repertoireAuto.connect.title') }}</h1>
         <div class="ra-actions">
           <button
             type="button"
@@ -21,14 +20,18 @@
             :disabled="!identity || !settings.perfs.length || busy"
             data-testid="auto-start"
             @click="emit('start')"
-            >Analyser mes {{ settings.count }} parties</button
+            >{{
+              $t('repertoireAuto.connect.start', { n: settings.count })
+            }}</button
           >
         </div>
       </div>
 
       <div class="ra-cols__main">
         <div class="ra-card">
-          <div class="ra-kicker">COMPTE LICHESS</div>
+          <div class="ra-kicker">{{
+            $t('repertoireAuto.connect.account')
+          }}</div>
           <div
             v-if="identity"
             class="ra-account ra-fade"
@@ -40,13 +43,14 @@
               <span v-if="ratings" class="ra-account__sub">{{ ratings }}</span>
             </div>
             <span class="ra-account__on"
-              ><span class="ra-account__dot" />Connecté</span
+              ><span class="ra-account__dot" />{{
+                $t('repertoireAuto.connect.connected')
+              }}</span
             >
           </div>
           <template v-else>
             <div class="ra-text">
-              Connecte ton compte pour que je puisse lire tes parties. Je ne
-              publie rien.
+              {{ $t('repertoireAuto.connect.linkHint') }}
             </div>
             <button
               type="button"
@@ -56,13 +60,17 @@
               @click="emit('link')"
             >
               <span class="ra-glyph">♞︎</span
-              >{{ linking ? 'Connexion à Lichess…' : 'Connecter Lichess' }}
+              >{{
+                linking
+                  ? $t('repertoireAuto.connect.linking')
+                  : $t('repertoireAuto.connect.link')
+              }}
             </button>
           </template>
         </div>
 
         <div class="ra-card" :class="{ 'ra-card--off': !identity }">
-          <div class="ra-kicker">PARTIES À ANALYSER</div>
+          <div class="ra-kicker">{{ $t('repertoireAuto.connect.games') }}</div>
           <div class="ra-segment">
             <button
               v-for="n in GAME_COUNTS"
@@ -75,7 +83,9 @@
               >{{ n }}</button
             >
           </div>
-          <div class="ra-kicker q-mt-xs">CADENCES</div>
+          <div class="ra-kicker q-mt-xs">{{
+            $t('repertoireAuto.connect.speeds')
+          }}</div>
           <div class="ra-chips">
             <button
               v-for="speed in SPEEDS"
@@ -106,6 +116,7 @@
 import { computed } from 'vue'
 import { profImage } from '@/utils/prof/images'
 import { GAME_COUNTS, SPEEDS } from '@/utils/repertoireAuto'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** The user's Lichess identity (profile), or null when none is linked. */
@@ -130,8 +141,11 @@ const ratings = computed(() => {
   const labels = Object.fromEntries(SPEEDS.map(s => [s.value, s.label]))
   return Object.entries(props.identity?.ratings ?? {})
     .filter(([perf]) => labels[perf])
-    .map(
-      ([perf, r]) => `${labels[perf]} ${r.rating}${r.provisional ? '?' : ''}`
+    .map(([perf, r]) =>
+      t('repertoireAuto.connect.rating', {
+        speed: labels[perf],
+        rating: `${r.rating}${r.provisional ? '?' : ''}`
+      })
     )
     .join(' · ')
 })

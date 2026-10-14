@@ -1,4 +1,5 @@
 import { Chess } from 'chess.js'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * Repertoire from my games (design "Repertoire auto", docs/REPERTOIRE.md): the wording and the
@@ -19,40 +20,62 @@ import { Chess } from 'chess.js'
 export const GAME_COUNTS = [50, 100, 200, 500, 1000, 2000]
 
 /** Lichess speeds offered. */
-export const SPEEDS = [
-  { value: 'bullet', label: 'Bullet' },
-  { value: 'blitz', label: 'Blitz' },
-  { value: 'rapid', label: 'Rapide' },
-  { value: 'classical', label: 'Classique' }
-]
+export const SPEEDS = ['bullet', 'blitz', 'rapid', 'classical'].map(value => ({
+  value,
+  get label() {
+    return t(`repertoireAuto.speeds.${value}`)
+  }
+}))
 
 /** The page's accent, aqua green (buttons, choices on, the "weapon" tag, wins). */
 export const ACCENT = '#5EE6B0'
 
 /** Tags of a line: label and colour (design). */
 export const TAGS = {
-  risk: { label: 'À risque', color: '#FF6FAE' },
-  weapon: { label: 'Arme', color: ACCENT },
-  draws: { label: 'Nulles', color: '#DCD8E8' },
-  solid: { label: 'Solide', color: '#4FB2FF' }
+  risk: tag('risk', '#FF6FAE'),
+  weapon: tag('weapon', ACCENT),
+  draws: tag('draws', '#DCD8E8'),
+  solid: tag('solid', '#4FB2FF')
+}
+
+/**
+ * @param {Tag} key
+ * @param {string} color
+ * @returns {{label: string, color: string}}
+ */
+function tag(key, color) {
+  return {
+    get label() {
+      return t(`repertoireAuto.tags.${key}`)
+    },
+    color
+  }
 }
 
 /** Wins, draws and losses: label and colour (the line sheet's bar). */
 export const OUTCOMES = [
-  { key: 'wins', label: 'Victoires', color: ACCENT },
-  { key: 'draws', label: 'Nulles', color: '#B4AFC6' },
-  { key: 'losses', label: 'Défaites', color: '#FF6FAE' }
-]
+  ['wins', ACCENT],
+  ['draws', '#B4AFC6'],
+  ['losses', '#FF6FAE']
+].map(([key, color]) => ({
+  key,
+  get label() {
+    return t(`repertoireAuto.outcomes.${key}`)
+  },
+  color
+}))
 
 /** Steps of the page, with the header's labels. */
 export const STEPS = ['connect', 'scan', 'select', 'gen', 'tree']
-export const STEP_LABELS = {
-  connect: 'Compte',
-  scan: 'Analyse',
-  select: 'Sélection',
-  gen: 'Génération',
-  tree: 'Répertoire'
-}
+export const STEP_LABELS = Object.defineProperties(
+  {},
+  Object.fromEntries(
+    STEPS.map(step => [
+      step,
+      { get: () => t(`repertoireAuto.steps.${step}`), enumerable: true }
+    ])
+  )
+)
 
 /**
  * The score of a set of games: wins plus half the draws, in whole percents.
@@ -106,9 +129,11 @@ export function sequence(nodes) {
  * @returns {{letter: string, color: string}}
  */
 export function resultBadge(result) {
-  if (result > 0) return { letter: 'V', color: ACCENT }
-  if (result === 0) return { letter: 'N', color: '#B4AFC6' }
-  return { letter: 'D', color: '#FF6FAE' }
+  if (result > 0)
+    return { letter: t('repertoireAuto.letters.win'), color: ACCENT }
+  if (result === 0)
+    return { letter: t('repertoireAuto.letters.draw'), color: '#B4AFC6' }
+  return { letter: t('repertoireAuto.letters.loss'), color: '#FF6FAE' }
 }
 
 /**
@@ -120,12 +145,15 @@ export function resultBadge(result) {
 export function formatThink(centiseconds) {
   if (centiseconds === null || centiseconds === undefined) return ''
   const seconds = Math.round(centiseconds / 100)
-  if (seconds < 60) return `${seconds} s`
+  if (seconds < 60) return t('repertoireAuto.think.seconds', { n: seconds })
   const minutes = Math.floor(seconds / 60)
   const rest = seconds % 60
   return rest
-    ? `${minutes} min ${String(rest).padStart(2, '0')}`
-    : `${minutes} min`
+    ? t('repertoireAuto.think.minutesSeconds', {
+        m: minutes,
+        s: String(rest).padStart(2, '0')
+      })
+    : t('repertoireAuto.think.minutes', { m: minutes })
 }
 
 /**
@@ -135,16 +163,20 @@ export function formatThink(centiseconds) {
  * @returns {string}
  */
 export function evalText(line) {
-  if (!line.evaluated) return 'pas encore évaluée'
+  const e = 'repertoireAuto.eval.'
+  if (!line.evaluated) return t(`${e}pending`)
   if (line.evalMate !== null) {
     return line.evalMate > 0
-      ? `mat en ${line.evalMate} pour toi`
-      : `mat en ${-line.evalMate} contre toi`
+      ? t(`${e}mateFor`, { n: line.evalMate })
+      : t(`${e}mateAgainst`, { n: -line.evalMate })
   }
-  if (line.evalCp === null) return 'non évaluée par Lichess'
-  const pawns = (Math.abs(line.evalCp) / 100).toFixed(1).replace('.', ',')
-  if (Math.abs(line.evalCp) < 20) return 'égalité'
-  return line.evalCp > 0 ? `+${pawns} pour toi` : `−${pawns} pour toi`
+  if (line.evalCp === null) return t(`${e}none`)
+  const pawns = (Math.abs(line.evalCp) / 100).toLocaleString(intlLocale(), {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  })
+  if (Math.abs(line.evalCp) < 20) return t(`${e}equal`)
+  return t(line.evalCp > 0 ? `${e}plus` : `${e}minus`, { n: pawns })
 }
 
 /**
@@ -193,18 +225,14 @@ export function feedPace(count) {
  */
 export function scanSay(progress, done, games, families) {
   if (done) {
-    if (games === 0) {
-      return 'Je n’ai trouvé aucune partie à lire avec ces réglages. Essaie d’autres cadences.'
-    }
+    if (games === 0) return t('repertoireAuto.scan.none')
     return families > 0
-      ? `${games} parties lues. Tu as un style bien à toi : ${families} ouverture${families > 1 ? 's reviennent' : ' revient'} sans cesse.`
-      : `${games} parties lues, mais aucune ouverture ne revient au moins 3 fois. Essaie avec plus de parties.`
+      ? t('repertoireAuto.scan.found', { games, n: families }, families)
+      : t('repertoireAuto.scan.noFamily', { games })
   }
-  if (progress < 0.35) {
-    return 'Je lis tes parties une par une… il faut être patient.'
-  }
-  if (progress < 0.75) return 'Je repère tes habitudes dans les premiers coups…'
-  return 'Presque fini, je compte les ouvertures…'
+  if (progress < 0.35) return t('repertoireAuto.scan.reading')
+  if (progress < 0.75) return t('repertoireAuto.scan.habits')
+  return t('repertoireAuto.scan.counting')
 }
 
 /**
@@ -216,15 +244,16 @@ export function scanSay(progress, done, games, families) {
  * @returns {string}
  */
 export function familyNote(family, synthesis) {
-  const side = family.color === 'white' ? 'les blancs' : 'les noirs'
-  const sameColor = synthesis.families.filter(f => f.color === family.color)
-  if (sameColor[0]?.key === family.key) return `Ton ouverture n°1 avec ${side}`
-  const best = [...synthesis.families].sort((a, b) => score(b) - score(a))[0]
-  if (best?.key === family.key) return 'Ton meilleur score'
+  const f = 'repertoireAuto.family.'
+  const sameColor = synthesis.families.filter(x => x.color === family.color)
+  if (sameColor[0]?.key === family.key)
+    return t(family.color === 'white' ? `${f}firstWhite` : `${f}firstBlack`)
+  const best = [...synthesis.families].sort((x, y) => score(y) - score(x))[0]
+  if (best?.key === family.key) return t(`${f}best`)
   const value = score(family)
-  if (value < 40) return 'Score fragile : elle te coûte des points'
-  if (percent(family.draws, family.games) >= 30) return 'Beaucoup de nulles'
-  return `Jouée dans ${percent(family.games, synthesis.games)} % de tes parties`
+  if (value < 40) return t(`${f}fragile`)
+  if (percent(family.draws, family.games) >= 30) return t(`${f}draws`)
+  return t(`${f}share`, { n: percent(family.games, synthesis.games) })
 }
 
 /**
@@ -238,10 +267,12 @@ export function selectSay(synthesis) {
   const white = first('white')
   const black = first('black')
   const parts = []
-  if (white) parts.push(`Avec les blancs, c’est surtout ${white.family}`)
-  if (black) parts.push(`avec les noirs, ${black.family}`)
-  if (!parts.length) return 'Garde ce qui te sert.'
-  return `${parts.join(' ; ')}. Garde ce qui te sert.`
+  if (white)
+    parts.push(t('repertoireAuto.select.white', { family: white.family }))
+  if (black)
+    parts.push(t('repertoireAuto.select.black', { family: black.family }))
+  if (!parts.length) return t('repertoireAuto.select.keep')
+  return t('repertoireAuto.select.summary', { parts: parts.join(' ; ') })
 }
 
 /**
@@ -254,14 +285,21 @@ export function tickerPhrases(trees) {
   const phrases = []
   for (const tree of trees) {
     phrases.push(
-      `${tree.family} : ${tree.games} parties, score ${score(tree)} %.`
+      t('repertoireAuto.ticker.family', {
+        family: tree.family,
+        games: tree.games,
+        score: score(tree)
+      })
     )
     const worst = [...tree.lines].sort(
       (a, b) => b.losses / b.games - a.losses / a.games
     )[0]
     if (worst && worst.losses > 0) {
       phrases.push(
-        `${worst.name} : tu perds ${percent(worst.losses, worst.games)} % de ces parties.`
+        t('repertoireAuto.ticker.worst', {
+          name: worst.name,
+          n: percent(worst.losses, worst.games)
+        })
       )
     }
     const best = [...tree.lines].sort(
@@ -269,11 +307,14 @@ export function tickerPhrases(trees) {
     )[0]
     if (best && best !== worst && best.wins > 0) {
       phrases.push(
-        `${best.name} : ${percent(best.wins, best.games)} % de victoires.`
+        t('repertoireAuto.ticker.best', {
+          name: best.name,
+          n: percent(best.wins, best.games)
+        })
       )
     }
   }
-  return phrases.length ? phrases : ['Je reconstruis tes lignes…']
+  return phrases.length ? phrases : [t('repertoireAuto.ticker.rebuilding')]
 }
 
 /**
@@ -287,12 +328,17 @@ export function treeSay(lines, games) {
   const risk = lines.filter(l => l.tag === 'risk').length
   const weapons = lines.filter(l => l.tag === 'weapon').length
   const riskText = risk
-    ? `${risk} ${risk > 1 ? 'te coûtent' : 'te coûte'} des points`
-    : 'aucune ne te coûte vraiment de points'
+    ? t('repertoireAuto.tree.risk', { n: risk }, risk)
+    : t('repertoireAuto.tree.noRisk')
   const weaponText = weapons
-    ? `${weapons} ${weapons > 1 ? 'sont de vraies armes' : 'est une vraie arme'}`
-    : 'aucune n’est encore une arme'
-  return `J’ai tiré ${lines.length} ligne${lines.length > 1 ? 's' : ''} de tes ${games} parties. ${riskText.charAt(0).toUpperCase()}${riskText.slice(1)}, ${weaponText}.`
+    ? t('repertoireAuto.tree.weapon', { n: weapons }, weapons)
+    : t('repertoireAuto.tree.noWeapon')
+  return t('repertoireAuto.tree.say', {
+    lines: t('repertoireAuto.tree.lines', { n: lines.length }, lines.length),
+    games,
+    risk: `${riskText.charAt(0).toUpperCase()}${riskText.slice(1)}`,
+    weapon: weaponText
+  })
 }
 
 /**
@@ -311,9 +357,12 @@ export function criticalMoments(lines) {
   if (worst && worst.losses > 0) {
     moments.push({
       kind: 'risk',
-      title: 'À RISQUE',
+      title: t('repertoireAuto.moments.risk'),
       line: worst,
-      text: `${percent(worst.losses, worst.games)} % de défaites sur ${worst.games} parties.`
+      text: t('repertoireAuto.moments.riskText', {
+        n: percent(worst.losses, worst.games),
+        games: worst.games
+      })
     })
   }
   const best = [...open].sort(
@@ -322,18 +371,21 @@ export function criticalMoments(lines) {
   if (best && best !== worst && best.wins > 0) {
     moments.push({
       kind: 'weapon',
-      title: 'TON ARME',
+      title: t('repertoireAuto.moments.weapon'),
       line: best,
-      text: `${percent(best.wins, best.games)} % de victoires sur ${best.games} parties.`
+      text: t('repertoireAuto.moments.weaponText', {
+        n: percent(best.wins, best.games),
+        games: best.games
+      })
     })
   }
   const played = [...open].sort((a, b) => b.games - a.games)[0]
   if (played && played !== worst && played !== best) {
     moments.push({
       kind: 'played',
-      title: 'LA PLUS JOUÉE',
+      title: t('repertoireAuto.moments.played'),
       line: played,
-      text: `${played.games} parties.`
+      text: t('repertoireAuto.moments.playedText', { games: played.games })
     })
   }
   return moments
@@ -361,44 +413,64 @@ export function lineEvents(nodes) {
       events.push({
         kind: 'good',
         ply: node.depth,
-        text: `${label} : le coup conseillé par Lichess, que tu n’as pas encore joué. La ligne s’arrête ici : prolonge-la dans l’éditeur.`
+        text: t('repertoireAuto.events.suggested', { move: label })
       })
       continue
     }
     if (node.moveErrors > 0) {
       const advice = node.suggestion
-        ? ` Lichess conseille ${moveLabel(node.depth, node.suggestion.san, true)}.`
+        ? t('repertoireAuto.events.advice', {
+            move: moveLabel(node.depth, node.suggestion.san, true)
+          })
         : ''
       events.push({
         kind: 'error',
         ply: node.depth,
-        text: `${label} : une erreur dans ${node.moveErrors} partie${node.moveErrors > 1 ? 's' : ''} analysée${node.moveErrors > 1 ? 's' : ''} sur ${node.moveAnalysed}.${advice}`
+        text: t(
+          'repertoireAuto.events.error',
+          {
+            move: label,
+            n: node.moveErrors,
+            analysed: node.moveAnalysed,
+            advice
+          },
+          node.moveErrors
+        )
       })
     } else if (node.moveAnalysed >= 3) {
       events.push({
         kind: 'good',
         ply: node.depth,
-        text: `${label} : jamais une erreur dans ${node.moveAnalysed} parties analysées.`
+        text: t('repertoireAuto.events.clean', {
+          move: label,
+          n: node.moveAnalysed
+        })
       })
     }
     if (node.think !== null && node.think >= 3000 && node.think >= 2 * median) {
       events.push({
         kind: 'key',
         ply: node.depth,
-        text: `${label} : tu réfléchis ${formatThink(node.think)} en moyenne ici, la position te surprend encore.`
+        text: t('repertoireAuto.events.think', {
+          move: label,
+          time: formatThink(node.think)
+        })
       })
     }
     if (node.alternatives.length) {
       const others = node.alternatives
-        .map(
-          a =>
-            `${moveLabel(node.depth, a.san, true)} (${a.games} parties, score ${score(a)} %)`
+        .map(alt =>
+          t('repertoireAuto.events.alternative', {
+            move: moveLabel(node.depth, alt.san, true),
+            games: alt.games,
+            score: score(alt)
+          })
         )
         .join(', ')
       events.push({
         kind: 'alt',
         ply: node.depth,
-        text: `Tu as aussi joué ${others}.`
+        text: t('repertoireAuto.events.alternatives', { list: others })
       })
     }
   }
@@ -414,29 +486,23 @@ export function lineEvents(nodes) {
 export function autoErrorText(error) {
   const response = error?.response
   const detail = response?.data?.detail
-  const texts = {
-    lichess_not_linked: 'Lie d’abord ton compte Lichess.',
-    invalid_settings: 'Choisis un nombre de parties et au moins une cadence.',
-    invalid_selection:
-      'Cette sélection ne correspond plus à tes parties : recharge la page.',
-    not_ready: 'La lecture de tes parties n’est pas finie.',
-    already_applied: 'Ces répertoires sont déjà créés.',
-    nothing_selected: 'Garde au moins une ouverture qui donne une ligne.',
-    limit_repertoires:
-      'Tu as atteint la limite de 50 répertoires : supprimes-en avant de continuer.'
-  }
-  if (typeof detail === 'string' && texts[detail]) return texts[detail]
-  if (response?.status === 404) {
-    return 'Cette analyse a expiré (24 h) : recommence.'
-  }
-  if (response?.status === 429) {
-    return 'Trop de demandes en peu de temps : patiente quelques minutes.'
-  }
-  if (response?.status === 503) {
-    return 'Lichess ne répond pas pour le moment : réessaie dans un instant.'
-  }
-  if (!response) return 'Le serveur est injoignable. Vérifie ta connexion.'
-  return 'Quelque chose s’est mal passé. Réessaie.'
+  const e = 'repertoireAuto.errors.'
+  const known = [
+    'lichess_not_linked',
+    'invalid_settings',
+    'invalid_selection',
+    'not_ready',
+    'already_applied',
+    'nothing_selected',
+    'limit_repertoires'
+  ]
+  if (typeof detail === 'string' && known.includes(detail))
+    return t(`${e}${detail}`)
+  if (response?.status === 404) return t(`${e}expired`)
+  if (response?.status === 429) return t(`${e}tooMany`)
+  if (response?.status === 503) return t(`${e}lichess`)
+  if (!response) return t(`${e}offline`)
+  return t(`${e}generic`)
 }
 
 /**
@@ -471,32 +537,47 @@ export function gameStatFacts(stat, color) {
   const facts = []
   if (stat.thinkCs !== null && stat.thinkCs !== undefined) {
     facts.push(
-      `Tu réfléchis ${formatThink(stat.thinkCs)} en moyenne sur ce coup.`
+      t('repertoireAuto.facts.think', { time: formatThink(stat.thinkCs) })
     )
   }
   if (stat.moveAnalysed > 0) {
     const errors = stat.moveErrors
     facts.push(
       errors > 0
-        ? `Une erreur dans ${errors} des ${stat.moveAnalysed} parties analysées par Lichess${stat.bestUci ? `, qui conseille ${uciToSan(stat.fen, stat.bestUci)}` : ''}.`
-        : `Jamais une erreur dans les ${stat.moveAnalysed} parties analysées par Lichess.`
+        ? stat.bestUci
+          ? t('repertoireAuto.facts.errorsAdvice', {
+              n: errors,
+              analysed: stat.moveAnalysed,
+              move: uciToSan(stat.fen, stat.bestUci)
+            })
+          : t('repertoireAuto.facts.errors', {
+              n: errors,
+              analysed: stat.moveAnalysed
+            })
+        : t('repertoireAuto.facts.clean', { analysed: stat.moveAnalysed })
     )
   }
   if (stat.evalCp !== null || stat.evalMate !== null) {
     const sign = color === 'white' ? 1 : -1
     facts.push(
-      `Fin de ligne : ${evalText({
-        evaluated: true,
-        evalCp: stat.evalCp === null ? null : sign * stat.evalCp,
-        evalMate: stat.evalMate === null ? null : sign * stat.evalMate
-      })} (nuage Lichess).`
+      t('repertoireAuto.facts.end', {
+        value: evalText(
+          /** @type {any} */ ({
+            evaluated: true,
+            evalCp: stat.evalCp === null ? null : sign * stat.evalCp,
+            evalMate: stat.evalMate === null ? null : sign * stat.evalMate
+          })
+        )
+      })
     )
   }
   return {
     games: stat.games,
     score: score(stat),
     outcomes: OUTCOMES.map(o => ({
-      ...o,
+      key: o.key,
+      label: o.label,
+      color: o.color,
       share: percent(stat[o.key], stat.games)
     })),
     facts

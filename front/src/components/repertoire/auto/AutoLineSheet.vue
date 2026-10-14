@@ -16,10 +16,16 @@
       <div class="ra-sheet__grip" />
       <div class="ra-sheet__head">
         <div class="ra-sheet__titles">
-          <span class="ra-sheet__sub"
-            >Ligne {{ line.number }} · {{ tree.family }} ·
-            {{ tree.color === 'white' ? 'blancs' : 'noirs' }}</span
-          >
+          <span class="ra-sheet__sub">{{
+            $t('repertoireAuto.sheet.sub', {
+              n: line.number,
+              family: tree.family,
+              side:
+                tree.color === 'white'
+                  ? $t('repertoireAuto.sheet.white')
+                  : $t('repertoireAuto.sheet.black')
+            })
+          }}</span>
           <span class="ra-sheet__name">{{ line.name }}</span>
         </div>
         <span
@@ -30,7 +36,7 @@
         <button
           type="button"
           class="ra-sheet__close"
-          aria-label="Fermer"
+          :aria-label="$t('common.actions.close')"
           @click="emit('close')"
           >✕</button
         >
@@ -51,14 +57,14 @@
             <button
               type="button"
               class="ra-nav"
-              aria-label="Début"
+              :aria-label="$t('repertoireAuto.sheet.first')"
               @click="go(0)"
               >⏮</button
             >
             <button
               type="button"
               class="ra-nav"
-              aria-label="Précédent"
+              :aria-label="$t('repertoireAuto.sheet.previous')"
               @click="go(ply - 1)"
               >◀</button
             >
@@ -68,14 +74,14 @@
             <button
               type="button"
               class="ra-nav ra-nav--night"
-              aria-label="Suivant"
+              :aria-label="$t('repertoireAuto.sheet.next')"
               @click="go(ply + 1)"
               >▶</button
             >
             <button
               type="button"
               class="ra-nav ra-nav--night"
-              aria-label="Fin"
+              :aria-label="$t('repertoireAuto.sheet.last')"
               @click="go(nodes.length)"
               >⏭</button
             >
@@ -106,24 +112,39 @@
         <div class="ra-sheet__details">
           <div class="ra-sheet__tiles">
             <div class="ra-stat">
-              <span class="ra-stat__label">Fréquence</span>
-              <span class="ra-stat__value"
-                >{{ percent(line.games, tree.games) }} %</span
-              >
-              <span class="ra-stat__sub"
-                >{{ line.games }} parties sur {{ tree.games }} en
-                {{ tree.family }}</span
-              >
+              <span class="ra-stat__label">{{
+                $t('repertoireAuto.sheet.frequency')
+              }}</span>
+              <span class="ra-stat__value">{{
+                $t('repertoireAuto.sheet.percent', {
+                  n: percent(line.games, tree.games)
+                })
+              }}</span>
+              <span class="ra-stat__sub">{{
+                $t('repertoireAuto.sheet.frequencySub', {
+                  games: line.games,
+                  total: tree.games,
+                  family: tree.family
+                })
+              }}</span>
             </div>
             <div class="ra-stat">
-              <span class="ra-stat__label">Score</span>
-              <span class="ra-stat__value">{{ score(line) }} %</span>
-              <span class="ra-stat__sub">victoires + ½ nulles</span>
+              <span class="ra-stat__label">{{
+                $t('repertoireAuto.sheet.score')
+              }}</span>
+              <span class="ra-stat__value">{{
+                $t('repertoireAuto.sheet.percent', { n: score(line) })
+              }}</span>
+              <span class="ra-stat__sub">{{
+                $t('repertoireAuto.sheet.scoreSub')
+              }}</span>
             </div>
           </div>
 
           <div class="ra-sheet__section">
-            <span class="ra-kicker">ISSUES DE TES PARTIES</span>
+            <span class="ra-kicker">{{
+              $t('repertoireAuto.sheet.outcomes')
+            }}</span>
             <div class="ra-outcomes">
               <div
                 v-for="o in OUTCOMES"
@@ -141,28 +162,32 @@
                   :style="{ background: o.color }"
                 />
                 <span class="ra-legend__label">{{ o.label }}</span>
-                <b>{{ percent(line[o.key], line.games) }} %</b>
+                <b>{{
+                  $t('repertoireAuto.sheet.percent', {
+                    n: percent(line[o.key], line.games)
+                  })
+                }}</b>
               </div>
             </div>
             <div class="ra-sheet__facts">
-              <span v-if="line.analysed > 0"
-                >Erreur dans la ligne : {{ line.errored }} sur
-                {{ line.analysed }} partie{{
-                  line.analysed > 1 ? 's' : ''
-                }}
-                analysée{{ line.analysed > 1 ? 's' : '' }} par Lichess.</span
-              >
-              <span v-else
-                >Aucune de ces parties n’a été analysée par Lichess.</span
-              >
-              <span data-testid="auto-sheet-eval"
-                >Fin de ligne : {{ evalText(line) }}.</span
-              >
+              <span v-if="line.analysed > 0">{{
+                $t(
+                  'repertoireAuto.sheet.errors',
+                  { n: line.errored, analysed: line.analysed },
+                  line.analysed
+                )
+              }}</span>
+              <span v-else>{{ $t('repertoireAuto.sheet.notAnalysed') }}</span>
+              <span data-testid="auto-sheet-eval">{{
+                $t('repertoireAuto.sheet.end', { value: evalText(line) })
+              }}</span>
             </div>
           </div>
 
           <div v-if="events.length" class="ra-sheet__section">
-            <span class="ra-kicker">CE QUI S’EST PASSÉ</span>
+            <span class="ra-kicker">{{
+              $t('repertoireAuto.sheet.events')
+            }}</span>
             <button
               v-for="(ev, i) in events"
               :key="i"
@@ -181,7 +206,9 @@
           </div>
 
           <div v-if="choices.length" class="ra-sheet__section">
-            <span class="ra-kicker">JOUER AUTRE CHOSE</span>
+            <span class="ra-kicker">{{
+              $t('repertoireAuto.sheet.other')
+            }}</span>
             <button
               v-for="c in choices"
               :key="`${c.parent}|${c.uci}`"
@@ -208,7 +235,7 @@
             :disabled="busy"
             data-testid="auto-remove"
             @click="emit('remove', { treeKey: tree.key, line })"
-            >Retirer cette ligne du répertoire</button
+            >{{ $t('repertoireAuto.sheet.remove') }}</button
           >
         </div>
       </div>
@@ -234,14 +261,30 @@ import {
   percent,
   score
 } from '@/utils/repertoireAuto'
+import { t } from '@/i18n'
+
+/**
+ * A kind of event along a line, its label read when shown.
+ *
+ * @param {string} kind
+ * @param {string} color
+ */
+function eventKind(kind, color) {
+  return {
+    get label() {
+      return t(`repertoireAuto.sheet.kinds.${kind}`)
+    },
+    color
+  }
+}
 
 const INITIAL_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
 const EVENT_KINDS = {
-  error: { label: 'Erreur', color: TAGS.risk.color },
-  key: { label: 'Moment clé', color: '#CBBEFF' },
-  good: { label: 'Bien joué', color: TAGS.weapon.color },
-  alt: { label: 'Autre coup', color: TAGS.solid.color }
+  error: eventKind('error', TAGS.risk.color),
+  key: eventKind('key', '#CBBEFF'),
+  good: eventKind('good', TAGS.weapon.color),
+  alt: eventKind('alt', TAGS.solid.color)
 }
 
 const props = defineProps({
@@ -296,7 +339,7 @@ const highlights = computed(() =>
 const currentLabel = computed(() =>
   current.value
     ? moveLabel(current.value.depth, current.value.san, true)
-    : 'Départ'
+    : t('repertoireAuto.sheet.start')
 )
 
 const events = computed(() => lineEvents(nodes.value))
@@ -324,16 +367,22 @@ const choices = computed(() =>
       ...n.alternatives.map(a => ({
         parent: n.parent,
         uci: a.uci,
-        label: `${moveLabel(n.depth, a.san, true)} au lieu de ${moveLabel(n.depth, n.san, true)}`,
-        why: `Tu l’as joué ${a.games} fois · score ${score(a)} %`
+        label: t('repertoireAuto.sheet.insteadOf', {
+          move: moveLabel(n.depth, a.san, true),
+          played: moveLabel(n.depth, n.san, true)
+        }),
+        why: t('repertoireAuto.sheet.played', { n: a.games, score: score(a) })
       })),
       ...(n.suggestion
         ? [
             {
               parent: n.parent,
               uci: n.suggestion.uci,
-              label: `${moveLabel(n.depth, n.suggestion.san, true)} au lieu de ${moveLabel(n.depth, n.san, true)}`,
-              why: 'Conseillé par Lichess : la ligne s’arrêtera là'
+              label: t('repertoireAuto.sheet.insteadOf', {
+                move: moveLabel(n.depth, n.suggestion.san, true),
+                played: moveLabel(n.depth, n.san, true)
+              }),
+              why: t('repertoireAuto.sheet.advised')
             }
           ]
         : [])

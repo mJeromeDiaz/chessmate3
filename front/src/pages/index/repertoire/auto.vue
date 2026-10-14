@@ -90,17 +90,17 @@
     <transition name="ra-toast">
       <div v-if="auto.toast.value" class="ra-toast" data-testid="auto-toast">
         <span>{{ auto.toast.value.text }}</span>
-        <button type="button" class="ra-toast__undo" @click="auto.undo"
-          >Annuler</button
-        >
+        <button type="button" class="ra-toast__undo" @click="auto.undo">{{
+          $t('common.actions.cancel')
+        }}</button>
       </div>
     </transition>
 
     <RepertoireTestDialog
       v-if="auto.build.value?.repertoireIds.length"
       v-model="testOpen"
-      title="Tester mes nouveaux répertoires"
-      caption="Les lignes tirées de tes parties, une par une."
+      :title="$t('repertoireAuto.page.testTitle')"
+      :caption="$t('repertoireAuto.page.testCaption')"
       :config="{ repertoireIds: auto.build.value.repertoireIds }"
     />
   </q-page>
@@ -128,6 +128,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useRepertoireStore } from '@/stores/repertoire'
 import { AUTO_REPERTOIRE_PATH, markLinkReturn } from '@/utils/auth/authFlow'
 import { autoErrorText } from '@/utils/repertoireAuto'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -160,7 +161,9 @@ const created = computed(() => {
   const ids = auto.build.value?.repertoireIds ?? []
   return ids.map(id => ({
     id,
-    name: repertoires.repertoires.find(r => r.id === id)?.name ?? 'Répertoire'
+    name:
+      repertoires.repertoires.find(r => r.id === id)?.name ??
+      t('repertoireAuto.page.repertoire')
   }))
 })
 

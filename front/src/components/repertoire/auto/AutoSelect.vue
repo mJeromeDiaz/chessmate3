@@ -2,19 +2,29 @@
   <div class="ra-screen ra-up">
     <div class="ra-cols">
       <div class="ra-cols__side">
-        <h1 class="ra-title ra-title--small">Voilà ce que tu joues</h1>
+        <h1 class="ra-title ra-title--small">{{
+          $t('repertoireAuto.selectScreen.title')
+        }}</h1>
         <div class="ra-tiles">
           <div class="ra-tile">
             <span class="ra-tile__value">{{ synthesis.games }}</span
-            ><span class="ra-tile__label">parties lues</span>
+            ><span class="ra-tile__label">{{
+              $t('repertoireAuto.selectScreen.games')
+            }}</span>
           </div>
           <div class="ra-tile">
             <span class="ra-tile__value">{{ synthesis.families.length }}</span
-            ><span class="ra-tile__label">ouvertures</span>
+            ><span class="ra-tile__label">{{
+              $t('repertoireAuto.selectScreen.families')
+            }}</span>
           </div>
           <div class="ra-tile ra-tile--accent">
-            <span class="ra-tile__value">{{ score(synthesis) }} %</span
-            ><span class="ra-tile__label">score global</span>
+            <span class="ra-tile__value">{{
+              $t('repertoireAuto.selectScreen.percent', { n: score(synthesis) })
+            }}</span
+            ><span class="ra-tile__label">{{
+              $t('repertoireAuto.selectScreen.score')
+            }}</span>
           </div>
         </div>
 
@@ -38,8 +48,10 @@
             @click="emit('generate')"
             >{{
               selected.length
-                ? `Construire mon répertoire · ${selected.length}`
-                : 'Choisis au moins une ouverture'
+                ? $t('repertoireAuto.selectScreen.build', {
+                    n: selected.length
+                  })
+                : $t('repertoireAuto.selectScreen.pickOne')
             }}</button
           >
         </div>
@@ -47,13 +59,19 @@
 
       <div class="ra-cols__main">
         <div class="ra-select__head">
-          <span class="ra-kicker">CHOISIS TES OUVERTURES</span>
+          <span class="ra-kicker">{{
+            $t('repertoireAuto.selectScreen.choose')
+          }}</span>
           <button
             type="button"
             class="ra-link"
             data-testid="auto-toggle-all"
             @click="emit('toggleAll')"
-            >{{ allSelected ? 'Tout retirer' : 'Tout garder' }}</button
+            >{{
+              allSelected
+                ? $t('repertoireAuto.selectScreen.removeAll')
+                : $t('repertoireAuto.selectScreen.keepAll')
+            }}</button
           >
         </div>
 
@@ -78,18 +96,21 @@
             >
             <span class="ra-family__text">
               <span class="ra-family__name">{{ family.family }}</span>
-              <span class="ra-family__sub"
-                >{{
-                  family.color === 'white'
-                    ? 'Avec les blancs'
-                    : 'Avec les noirs'
-                }}
-                · {{ family.games }} parties</span
-              >
+              <span class="ra-family__sub">{{
+                $t('repertoireAuto.selectScreen.familyGames', {
+                  side:
+                    family.color === 'white'
+                      ? $t('repertoireAuto.selectScreen.withWhite')
+                      : $t('repertoireAuto.selectScreen.withBlack'),
+                  n: family.games
+                })
+              }}</span>
             </span>
-            <span class="ra-family__freq"
-              >{{ percent(family.games, synthesis.games) }} %</span
-            >
+            <span class="ra-family__freq">{{
+              $t('repertoireAuto.selectScreen.percent', {
+                n: percent(family.games, synthesis.games)
+              })
+            }}</span>
           </div>
           <div class="ra-family__track">
             <div
@@ -108,7 +129,11 @@
                 }"
               />
             </div>
-            <span class="ra-family__score">Score {{ score(family) }} %</span>
+            <span class="ra-family__score">{{
+              $t('repertoireAuto.selectScreen.familyScore', {
+                n: score(family)
+              })
+            }}</span>
           </div>
           <span class="ra-family__note">{{
             familyNote(family, synthesis)

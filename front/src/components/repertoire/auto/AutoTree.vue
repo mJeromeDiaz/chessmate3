@@ -4,7 +4,9 @@
       <div class="ra-cols__side">
         <div class="ra-tree__head">
           <div class="ra-tree__intro">
-            <h1 class="ra-title ra-title--small">Ton répertoire</h1>
+            <h1 class="ra-title ra-title--small">{{
+              $t('repertoireAuto.treeScreen.title')
+            }}</h1>
             <div class="ra-text ra-text--small" data-testid="auto-tree-say">{{
               treeSay(lines, games)
             }}</div>
@@ -17,19 +19,21 @@
         </div>
 
         <div class="ra-tree__chips">
-          <span class="ra-pill"
-            >{{ lines.length }} ligne{{ lines.length > 1 ? 's' : '' }}</span
-          >
+          <span class="ra-pill">{{
+            $t('repertoireAuto.treeScreen.lines', lines.length)
+          }}</span>
           <span
             class="ra-pill ra-pill--tag"
             :style="{ background: TAGS.risk.color }"
-            >{{ count('risk') }} à risque</span
+            >{{
+              $t('repertoireAuto.treeScreen.risk', { n: count('risk') })
+            }}</span
           >
           <span
             class="ra-pill ra-pill--tag"
             :style="{ background: TAGS.weapon.color }"
-            >{{ count('weapon') }} arme{{
-              count('weapon') > 1 ? 's' : ''
+            >{{
+              $t('repertoireAuto.treeScreen.weapons', count('weapon'))
             }}</span
           >
         </div>
@@ -40,7 +44,7 @@
             class="ra-cta ra-cta--card"
             data-testid="auto-back-select"
             @click="emit('select')"
-            >↺ Sélection</button
+            >{{ $t('repertoireAuto.treeScreen.select') }}</button
           >
           <button
             type="button"
@@ -48,32 +52,30 @@
             :disabled="busy || !lines.length"
             data-testid="auto-validate"
             @click="emit('validate')"
-            >Valider</button
+            >{{ $t('repertoireAuto.treeScreen.validate') }}</button
           >
         </div>
 
         <div v-if="pending > 0" class="ra-notice" data-testid="auto-pending">
-          <span v-if="evaluationFailed"
-            >Lichess n’a pas évalué {{ pending }} fin{{
-              pending > 1 ? 's' : ''
-            }}
-            de ligne.</span
-          >
-          <span v-else
-            >Évaluation de {{ pending }} fin{{ pending > 1 ? 's' : '' }} de
-            ligne par Lichess…</span
-          >
+          <span v-if="evaluationFailed">{{
+            $t('repertoireAuto.treeScreen.notEvaluated', pending)
+          }}</span>
+          <span v-else>{{
+            $t('repertoireAuto.treeScreen.evaluating', pending)
+          }}</span>
           <button
             v-if="evaluationFailed"
             type="button"
             class="ra-link"
             @click="emit('evaluate')"
-            >Réessayer</button
+            >{{ $t('common.actions.retry') }}</button
           >
         </div>
 
         <template v-if="moments.length">
-          <div class="ra-kicker">MOMENTS CRITIQUES</div>
+          <div class="ra-kicker">{{
+            $t('repertoireAuto.treeScreen.moments')
+          }}</div>
           <div class="ra-moments">
             <button
               v-for="m in moments"
@@ -96,7 +98,9 @@
       </div>
 
       <div class="ra-cols__main">
-        <div class="ra-kicker">ARBRE DES VARIANTES</div>
+        <div class="ra-kicker">{{
+          $t('repertoireAuto.treeScreen.variations')
+        }}</div>
         <div v-for="tree in trees" :key="tree.key" class="ra-group">
           <button
             type="button"
@@ -114,11 +118,9 @@
               <span class="ra-group__name">{{ tree.family }}</span>
               <span class="ra-group__base">{{ trunk(tree) }}</span>
             </span>
-            <span class="ra-group__count"
-              >{{ tree.lines.length }} ligne{{
-                tree.lines.length > 1 ? 's' : ''
-              }}</span
-            >
+            <span class="ra-group__count">{{
+              $t('repertoireAuto.treeScreen.lines', tree.lines.length)
+            }}</span>
             <span
               class="ra-group__caret"
               :style="{
@@ -168,10 +170,17 @@
                   >
                 </span>
                 <span v-if="!line.locked" class="ra-row__figures">
-                  <span class="ra-row__score">{{ score(line) }} %</span>
-                  <span class="ra-row__games">{{ line.games }} parties</span>
+                  <span class="ra-row__score">{{
+                    $t('repertoireAuto.treeScreen.percent', { n: score(line) })
+                  }}</span>
+                  <span class="ra-row__games">{{
+                    $t('repertoireAuto.treeScreen.games', { n: line.games })
+                  }}</span>
                 </span>
-                <span v-else class="ra-lock" aria-label="Verrouillée"
+                <span
+                  v-else
+                  class="ra-lock"
+                  :aria-label="$t('repertoireAuto.treeScreen.locked')"
                   ><span class="ra-lock__arc" /><span class="ra-lock__body"
                 /></span>
               </button>
@@ -180,15 +189,12 @@
         </div>
 
         <div v-if="locked.length" class="ra-locked" data-testid="auto-locked">
-          <div class="ra-locked__title"
-            >+{{ locked.length }} ligne{{ locked.length > 1 ? 's' : '' }} déjà
-            analysée{{ locked.length > 1 ? 's' : '' }}</div
-          >
-          <div class="ra-locked__text"
-            >La version gratuite affiche les {{ freeLines }} premières lignes.
-            Débloque l’arbre complet, les échiquiers et les moments
-            critiques.</div
-          >
+          <div class="ra-locked__title">{{
+            $t('repertoireAuto.treeScreen.lockedTitle', locked.length)
+          }}</div>
+          <div class="ra-locked__text">{{
+            $t('repertoireAuto.treeScreen.lockedText', { n: freeLines })
+          }}</div>
         </div>
 
         <div v-if="error" class="ra-error" data-testid="auto-error">{{

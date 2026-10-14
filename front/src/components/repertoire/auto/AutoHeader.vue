@@ -3,17 +3,23 @@
     <button
       type="button"
       class="ra-header__back"
-      aria-label="Retour"
+      :aria-label="$t('repertoireAuto.header.back')"
       data-testid="auto-back"
       @click="emit('back')"
       >←</button
     >
     <div class="ra-header__main">
       <div class="ra-header__row">
-        <span class="ra-header__title">Répertoire auto</span>
-        <span class="ra-header__step" data-testid="auto-step"
-          >{{ index + 1 }}/{{ STEPS.length }} · {{ STEP_LABELS[step] }}</span
-        >
+        <span class="ra-header__title">{{
+          $t('repertoireAuto.header.title')
+        }}</span>
+        <span class="ra-header__step" data-testid="auto-step">{{
+          $t('repertoireAuto.header.step', {
+            n: index + 1,
+            total: STEPS.length,
+            label: STEP_LABELS[step]
+          })
+        }}</span>
       </div>
       <div class="ra-header__bars">
         <div

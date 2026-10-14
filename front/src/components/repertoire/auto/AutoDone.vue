@@ -7,22 +7,24 @@
           alt="Albert"
           class="ra-done__albert ra-bob ra-bob--fast"
         />
-        <div class="ra-done__stamp">ENREGISTRÉ ✓</div>
+        <div class="ra-done__stamp">{{ $t('repertoireAuto.done.stamp') }}</div>
       </div>
-      <h1 class="ra-done__title"
-        >Répertoire{{ count > 1 ? 's' : '' }} prêt{{
-          count > 1 ? 's' : ''
-        }}
-        !</h1
-      >
+      <h1 class="ra-done__title">{{
+        $t('repertoireAuto.done.title', count)
+      }}</h1>
       <div class="ra-done__text" data-testid="auto-done-text">
-        {{ lines }} ligne{{ lines > 1 ? 's' : '' }} prête{{
-          lines > 1 ? 's' : ''
+        {{
+          $t(
+            lines > 1
+              ? 'repertoireAuto.done.text'
+              : 'repertoireAuto.done.textOne',
+            {
+              lines: $t('repertoireAuto.done.lines', lines),
+              games,
+              repertoires: $t('repertoireAuto.done.repertoires', count)
+            }
+          )
         }}
-        à l’entraînement, tirée{{ lines > 1 ? 's' : '' }} de
-        {{ games }} parties, dans {{ count }} répertoire{{
-          count > 1 ? 's' : ''
-        }}. Commence par celles qui te coûtent des points.
       </div>
     </div>
     <button
@@ -30,14 +32,14 @@
       class="ra-cta ra-cta--night ra-cta--big"
       data-testid="auto-train"
       @click="emit('train')"
-      >S’entraîner sur mes lignes</button
+      >{{ $t('repertoireAuto.done.train') }}</button
     >
     <q-btn-dropdown
       v-if="count > 1"
       unelevated
       no-caps
       class="ra-cta ra-cta--outline"
-      label="Enrichir manuellement un répertoire"
+      :label="$t('repertoireAuto.done.enrichOne')"
       data-testid="auto-enrich"
     >
       <q-list>
@@ -57,10 +59,10 @@
       class="ra-cta ra-cta--outline"
       :to="`/repertoire/${repertoires[0].id}`"
       data-testid="auto-enrich"
-      >＋ Enrichir manuellement le répertoire</router-link
+      >{{ $t('repertoireAuto.done.enrich') }}</router-link
     >
     <button type="button" class="ra-cta ra-cta--ghost" @click="emit('review')">
-      Revoir le répertoire
+      {{ $t('repertoireAuto.done.review') }}
     </button>
   </div>
 </template>

@@ -9,7 +9,9 @@
             class="ra-albert__img ra-bob"
           />
           <div class="ra-bubble ra-gen__bubble">
-            <span class="ra-gen__kicker">J’OBSERVE</span>
+            <span class="ra-gen__kicker">{{
+              $t('repertoireAuto.gen.kicker')
+            }}</span>
             <span
               :key="tick"
               class="ra-gen__ticker ra-in"
@@ -32,14 +34,14 @@
             <span class="ra-gen__mark">{{
               phase > i + 1 || phase >= 5 ? '✓' : ''
             }}</span
-            >{{ p }}
+            >{{ $t(`repertoireAuto.gen.phases.${p}`) }}
           </div>
         </div>
 
         <div class="ra-gen__title" data-testid="auto-gen-title">{{
           phase >= 5
-            ? 'Ton répertoire est prêt'
-            : 'Je construis ton répertoire…'
+            ? $t('repertoireAuto.gen.ready')
+            : $t('repertoireAuto.gen.building')
         }}</div>
       </div>
 
@@ -63,6 +65,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import AutoGenTree from '@/components/repertoire/auto/AutoGenTree.vue'
 import { profImage } from '@/utils/prof/images'
 import { tickerPhrases } from '@/utils/repertoireAuto'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/utils/repertoireAuto').Tree[]>} */
@@ -71,12 +74,8 @@ const props = defineProps({
   phase: { type: Number, required: true }
 })
 
-const PHASES = [
-  'Reconstruction de l’arbre des coups',
-  'Fusion des lignes les plus jouées',
-  'Évaluation des fins de ligne par Lichess',
-  'Détection des moments critiques'
-]
+/** The four phases (their words: repertoireAuto.gen.phases). */
+const PHASES = [0, 1, 2, 3]
 
 const tick = ref(0)
 const timer = setInterval(() => tick.value++, 1300)
@@ -84,9 +83,9 @@ onBeforeUnmount(() => clearInterval(timer))
 
 const ticker = computed(() => {
   if (props.phase >= 5) {
-    const lines = props.trees.flatMap(t => t.lines)
+    const lines = props.trees.flatMap(tree => tree.lines)
     const risk = lines.filter(l => l.tag === 'risk').length
-    return `${lines.length} ligne${lines.length > 1 ? 's' : ''} construite${lines.length > 1 ? 's' : ''}, ${risk} à surveiller.`
+    return t('repertoireAuto.gen.done', { n: lines.length, risk }, lines.length)
   }
   const phrases = tickerPhrases(props.trees)
   return phrases[tick.value % phrases.length]

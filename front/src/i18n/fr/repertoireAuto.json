@@ -1,0 +1,247 @@
+{
+  "speeds": {
+    "bullet": "Bullet",
+    "blitz": "Blitz",
+    "rapid": "Rapide",
+    "classical": "Classique"
+  },
+  "tags": {
+    "risk": "À risque",
+    "weapon": "Arme",
+    "draws": "Nulles",
+    "solid": "Solide"
+  },
+  "outcomes": {
+    "wins": "Victoires",
+    "draws": "Nulles",
+    "losses": "Défaites"
+  },
+  "steps": {
+    "connect": "Compte",
+    "scan": "Analyse",
+    "select": "Sélection",
+    "gen": "Génération",
+    "tree": "Répertoire"
+  },
+  "letters": {
+    "win": "V",
+    "draw": "N",
+    "loss": "D"
+  },
+  "think": {
+    "seconds": "{n} s",
+    "minutesSeconds": "{m} min {s}",
+    "minutes": "{m} min"
+  },
+  "eval": {
+    "pending": "pas encore évaluée",
+    "mateFor": "mat en {n} pour toi",
+    "mateAgainst": "mat en {n} contre toi",
+    "none": "non évaluée par Lichess",
+    "equal": "égalité",
+    "plus": "+{n} pour toi",
+    "minus": "−{n} pour toi"
+  },
+  "scan": {
+    "none": "Je n’ai trouvé aucune partie à lire avec ces réglages. Essaie d’autres cadences.",
+    "found": "{games} parties lues. Tu as un style bien à toi : {n} ouverture revient sans cesse. | {games} parties lues. Tu as un style bien à toi : {n} ouvertures reviennent sans cesse.",
+    "noFamily": "{games} parties lues, mais aucune ouverture ne revient au moins 3 fois. Essaie avec plus de parties.",
+    "reading": "Je lis tes parties une par une… il faut être patient.",
+    "habits": "Je repère tes habitudes dans les premiers coups…",
+    "counting": "Presque fini, je compte les ouvertures…"
+  },
+  "family": {
+    "firstWhite": "Ton ouverture n°1 avec les blancs",
+    "firstBlack": "Ton ouverture n°1 avec les noirs",
+    "best": "Ton meilleur score",
+    "fragile": "Score fragile : elle te coûte des points",
+    "draws": "Beaucoup de nulles",
+    "share": "Jouée dans {n} % de tes parties"
+  },
+  "select": {
+    "white": "Avec les blancs, c’est surtout {family}",
+    "black": "avec les noirs, {family}",
+    "keep": "Garde ce qui te sert.",
+    "summary": "{parts}. Garde ce qui te sert."
+  },
+  "ticker": {
+    "family": "{family} : {games} parties, score {score} %.",
+    "worst": "{name} : tu perds {n} % de ces parties.",
+    "best": "{name} : {n} % de victoires.",
+    "rebuilding": "Je reconstruis tes lignes…"
+  },
+  "tree": {
+    "risk": "{n} te coûte des points | {n} te coûtent des points",
+    "noRisk": "aucune ne te coûte vraiment de points",
+    "weapon": "{n} est une vraie arme | {n} sont de vraies armes",
+    "noWeapon": "aucune n’est encore une arme",
+    "say": "J’ai tiré {lines} de tes {games} parties. {risk}, {weapon}.",
+    "lines": "{n} ligne | {n} lignes"
+  },
+  "moments": {
+    "risk": "À RISQUE",
+    "riskText": "{n} % de défaites sur {games} parties.",
+    "weapon": "TON ARME",
+    "weaponText": "{n} % de victoires sur {games} parties.",
+    "played": "LA PLUS JOUÉE",
+    "playedText": "{games} parties."
+  },
+  "events": {
+    "suggested": "{move} : le coup conseillé par Lichess, que tu n’as pas encore joué. La ligne s’arrête ici : prolonge-la dans l’éditeur.",
+    "error": "{move} : une erreur dans {n} partie analysée sur {analysed}.{advice} | {move} : une erreur dans {n} parties analysées sur {analysed}.{advice}",
+    "advice": " Lichess conseille {move}.",
+    "clean": "{move} : jamais une erreur dans {n} parties analysées.",
+    "think": "{move} : tu réfléchis {time} en moyenne ici, la position te surprend encore.",
+    "alternative": "{move} ({games} parties, score {score} %)",
+    "alternatives": "Tu as aussi joué {list}."
+  },
+  "errors": {
+    "lichess_not_linked": "Lie d’abord ton compte Lichess.",
+    "invalid_settings": "Choisis un nombre de parties et au moins une cadence.",
+    "invalid_selection": "Cette sélection ne correspond plus à tes parties : recharge la page.",
+    "not_ready": "La lecture de tes parties n’est pas finie.",
+    "already_applied": "Ces répertoires sont déjà créés.",
+    "nothing_selected": "Garde au moins une ouverture qui donne une ligne.",
+    "limit_repertoires": "Tu as atteint la limite de 50 répertoires : supprimes-en avant de continuer.",
+    "expired": "Cette analyse a expiré (24 h) : recommence.",
+    "tooMany": "Trop de demandes en peu de temps : patiente quelques minutes.",
+    "lichess": "Lichess ne répond pas pour le moment : réessaie dans un instant.",
+    "offline": "Le serveur est injoignable. Vérifie ta connexion.",
+    "generic": "Quelque chose s’est mal passé. Réessaie."
+  },
+  "facts": {
+    "think": "Tu réfléchis {time} en moyenne sur ce coup.",
+    "errors": "Une erreur dans {n} des {analysed} parties analysées par Lichess.",
+    "errorsAdvice": "Une erreur dans {n} des {analysed} parties analysées par Lichess, qui conseille {move}.",
+    "clean": "Jamais une erreur dans les {analysed} parties analysées par Lichess.",
+    "end": "Fin de ligne : {value} (nuage Lichess)."
+  },
+  "build": {
+    "waiting": "Lichess finit de traiter une demande précédente : patiente quelques secondes, je reprends dans {n} s…",
+    "removed": "« {name} » retirée"
+  },
+  "header": {
+    "back": "Retour",
+    "title": "Répertoire auto",
+    "step": "{n}/{total} · {label}"
+  },
+  "connect": {
+    "bubble": "Montre-moi tes parties. J’observe ce que tu joues vraiment, puis je te construis un répertoire qui te ressemble.",
+    "title": "Ton répertoire, tiré de tes vraies parties",
+    "start": "Analyser mes {n} parties",
+    "account": "COMPTE LICHESS",
+    "connected": "Connecté",
+    "linkHint": "Connecte ton compte pour que je puisse lire tes parties. Je ne publie rien.",
+    "linking": "Connexion à Lichess…",
+    "link": "Connecter Lichess",
+    "games": "PARTIES À ANALYSER",
+    "speeds": "CADENCES",
+    "rating": "{speed} {rating}"
+  },
+  "scanScreen": {
+    "toSelect": "Voir la synthèse",
+    "restart": "Changer de réglages",
+    "analysed": "{n} parties analysées",
+    "legend": "parties analysées",
+    "count": "{shown} sur {max}",
+    "found": "OUVERTURES REPÉRÉES · {n}",
+    "live": "EN DIRECT DE LICHESS",
+    "versus": "vs {name}",
+    "anonymous": "Anonyme"
+  },
+  "selectScreen": {
+    "title": "Voilà ce que tu joues",
+    "games": "parties lues",
+    "families": "ouvertures",
+    "score": "score global",
+    "percent": "{n} %",
+    "build": "Construire mon répertoire · {n}",
+    "pickOne": "Choisis au moins une ouverture",
+    "choose": "CHOISIS TES OUVERTURES",
+    "removeAll": "Tout retirer",
+    "keepAll": "Tout garder",
+    "withWhite": "Avec les blancs",
+    "withBlack": "Avec les noirs",
+    "familyGames": "{side} · {n} parties",
+    "familyScore": "Score {n} %"
+  },
+  "gen": {
+    "kicker": "J’OBSERVE",
+    "ready": "Ton répertoire est prêt",
+    "building": "Je construis ton répertoire…",
+    "phases": [
+      "Reconstruction de l’arbre des coups",
+      "Fusion des lignes les plus jouées",
+      "Évaluation des fins de ligne par Lichess",
+      "Détection des moments critiques"
+    ],
+    "done": "{n} ligne construite, {risk} à surveiller. | {n} lignes construites, {risk} à surveiller.",
+    "treeLabel": "{n} lignes dans {families} ouverture | {n} lignes dans {families} ouvertures",
+    "root": "tes parties"
+  },
+  "done": {
+    "stamp": "ENREGISTRÉ ✓",
+    "title": "Répertoire prêt ! | Répertoires prêts !",
+    "text": "{lines} à l’entraînement, tirées de {games} parties, dans {repertoires}. Commence par celles qui te coûtent des points.",
+    "textOne": "{lines} à l’entraînement, tirée de {games} parties, dans {repertoires}. Commence par celles qui te coûtent des points.",
+    "lines": "{n} ligne prête | {n} lignes prêtes",
+    "repertoires": "{n} répertoire | {n} répertoires",
+    "train": "S’entraîner sur mes lignes",
+    "enrichOne": "Enrichir manuellement un répertoire",
+    "enrich": "＋ Enrichir manuellement le répertoire",
+    "review": "Revoir le répertoire"
+  },
+  "treeScreen": {
+    "title": "Ton répertoire",
+    "lines": "{n} ligne | {n} lignes",
+    "risk": "{n} à risque",
+    "weapons": "{n} arme | {n} armes",
+    "select": "↺ Sélection",
+    "validate": "Valider",
+    "notEvaluated": "Lichess n’a pas évalué {n} fin de ligne. | Lichess n’a pas évalué {n} fins de ligne.",
+    "evaluating": "Évaluation de {n} fin de ligne par Lichess… | Évaluation de {n} fins de ligne par Lichess…",
+    "moments": "MOMENTS CRITIQUES",
+    "variations": "ARBRE DES VARIANTES",
+    "percent": "{n} %",
+    "games": "{n} parties",
+    "locked": "Verrouillée",
+    "lockedTitle": "+{n} ligne déjà analysée | +{n} lignes déjà analysées",
+    "lockedText": "La version gratuite affiche les {n} premières lignes. Débloque l’arbre complet, les échiquiers et les moments critiques."
+  },
+  "sheet": {
+    "sub": "Ligne {n} · {family} · {side}",
+    "white": "blancs",
+    "black": "noirs",
+    "first": "Début",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "last": "Fin",
+    "frequency": "Fréquence",
+    "percent": "{n} %",
+    "frequencySub": "{games} parties sur {total} en {family}",
+    "score": "Score",
+    "scoreSub": "victoires + ½ nulles",
+    "outcomes": "ISSUES DE TES PARTIES",
+    "errors": "Erreur dans la ligne : {n} sur {analysed} partie analysée par Lichess. | Erreur dans la ligne : {n} sur {analysed} parties analysées par Lichess.",
+    "notAnalysed": "Aucune de ces parties n’a été analysée par Lichess.",
+    "end": "Fin de ligne : {value}.",
+    "events": "CE QUI S’EST PASSÉ",
+    "other": "JOUER AUTRE CHOSE",
+    "remove": "Retirer cette ligne du répertoire",
+    "start": "Départ",
+    "kinds": {
+      "error": "Erreur",
+      "key": "Moment clé",
+      "good": "Bien joué",
+      "alt": "Autre coup"
+    },
+    "insteadOf": "{move} au lieu de {played}",
+    "played": "Tu l’as joué {n} fois · score {score} %",
+    "advised": "Conseillé par Lichess : la ligne s’arrêtera là"
+  },
+  "page": {
+    "testTitle": "Tester mes nouveaux répertoires",
+    "testCaption": "Les lignes tirées de tes parties, une par une.",
+    "repertoire": "Répertoire"
+  }
+}

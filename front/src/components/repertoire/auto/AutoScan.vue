@@ -18,7 +18,7 @@
             class="ra-cta ra-cta--accent ra-cta--big ra-up"
             data-testid="auto-to-select"
             @click="emit('next')"
-            >Voir la synthèse</button
+            >{{ $t('repertoireAuto.scanScreen.toSelect') }}</button
           >
           <button
             v-else
@@ -26,14 +26,14 @@
             class="ra-cta ra-cta--accent ra-cta--big ra-up"
             data-testid="auto-restart"
             @click="emit('restart')"
-            >Changer de réglages</button
+            >{{ $t('repertoireAuto.scanScreen.restart') }}</button
           >
         </div>
 
         <div class="ra-odo">
           <div
             class="ra-odo__digits"
-            :aria-label="`${shown} parties analysées`"
+            :aria-label="$t('repertoireAuto.scanScreen.analysed', { n: shown })"
           >
             <div v-for="(digit, i) in digits" :key="i" class="ra-odo__wheel">
               <div
@@ -51,10 +51,10 @@
             </div>
           </div>
           <div class="ra-odo__legend">
-            <span>parties analysées</span>
-            <span class="ra-odo__of" data-testid="auto-scan-count"
-              >{{ shown }} sur {{ maxGames }}</span
-            >
+            <span>{{ $t('repertoireAuto.scanScreen.legend') }}</span>
+            <span class="ra-odo__of" data-testid="auto-scan-count">{{
+              $t('repertoireAuto.scanScreen.count', { shown, max: maxGames })
+            }}</span>
           </div>
           <div class="ra-odo__track">
             <div
@@ -67,9 +67,9 @@
 
       <div class="ra-cols__main">
         <div>
-          <div class="ra-kicker ra-kicker--light"
-            >OUVERTURES REPÉRÉES · {{ tags.length }}</div
-          >
+          <div class="ra-kicker ra-kicker--light">{{
+            $t('repertoireAuto.scanScreen.found', { n: tags.length })
+          }}</div>
           <div class="ra-found">
             <span
               v-for="tag in tags"
@@ -82,7 +82,9 @@
 
         <div class="ra-feed">
           <div class="ra-kicker ra-kicker--light ra-feed__title"
-            ><span class="ra-feed__live" />EN DIRECT DE LICHESS</div
+            ><span class="ra-feed__live" />{{
+              $t('repertoireAuto.scanScreen.live')
+            }}</div
           >
           <div
             v-for="(game, i) in reversed"
@@ -98,7 +100,11 @@
             >
             <span class="ra-feed__text">
               <span class="ra-feed__who"
-                >vs {{ game.opponent ?? 'Anonyme'
+                >{{
+                  $t('repertoireAuto.scanScreen.versus', {
+                    name:
+                      game.opponent ?? $t('repertoireAuto.scanScreen.anonymous')
+                  })
                 }}{{ game.rating ? ` · ${game.rating}` : '' }}</span
               >
               <span class="ra-feed__opening">{{ game.family }}</span>

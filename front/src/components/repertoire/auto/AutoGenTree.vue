@@ -3,7 +3,13 @@
     class="ra-gentree"
     :viewBox="`0 0 ${W} 246`"
     role="img"
-    :aria-label="`${lineCount} lignes dans ${trees.length} ouverture${trees.length > 1 ? 's' : ''}`"
+    :aria-label="
+      $t(
+        'repertoireAuto.gen.treeLabel',
+        { n: lineCount, families: trees.length },
+        trees.length
+      )
+    "
   >
     <path
       v-for="(op, i) in ops"
@@ -73,7 +79,7 @@
     </template>
     <circle :cx="W / 2" :cy="ROOT_Y" r="12" fill="#fff" />
     <text :x="W / 2 + 20" :y="ROOT_Y + 4" class="ra-gentree__root">
-      tes parties
+      {{ $t('repertoireAuto.gen.root') }}
     </text>
   </svg>
 </template>
