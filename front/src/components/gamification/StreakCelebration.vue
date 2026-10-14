@@ -57,17 +57,19 @@
           }}</div>
         </div>
         <h2 id="streak-title" class="streak__label"
-          >{{ notice.streak > 1 ? 'jours' : 'jour' }} de série !</h2
+          >{{
+            $t('gamification.celebration.label', notice.streak > 1 ? 2 : 1)
+          }}</h2
         >
         <div
           v-if="badge"
           class="streak__badge"
           data-testid="streak-celebration-badge"
-          >Nouveau badge : {{ badge.name }}</div
+          >{{ $t('gamification.celebration.badge', { name: badge.name }) }}</div
         >
       </div>
 
-      <div class="streak__week" aria-label="Ta semaine">
+      <div class="streak__week" :aria-label="$t('gamification.card.week')">
         <div
           v-for="(day, i) in week"
           :key="i"
@@ -97,7 +99,7 @@
           class="streak__cta"
           data-testid="streak-celebration-continue"
           @click="gamification.closeCelebration()"
-          >Continuer</button
+          >{{ $t('common.actions.continue') }}</button
         >
       </div>
 

@@ -1,0 +1,178 @@
+{
+  "modules": {
+    "soon": "Bientôt",
+    "percent": "{pct} %",
+    "puzzles": {
+      "solved": "{n} résolus",
+      "elo": " · Elo {rating}",
+      "none": "Aucun puzzle joué",
+      "rate": "Réussite {pct}"
+    },
+    "evaluation": {
+      "none": "Aucune position jouée",
+      "stat": "{n} positions · {pct} justes",
+      "rate": "Justes {pct}"
+    },
+    "woodpecker": {
+      "none": "Aucun set en cours",
+      "light": "Light · tour {n}",
+      "cycle": "Cycle {n}",
+      "cycleOf": "Cycle {n}/{total}",
+      "accuracy": " · précision {pct}",
+      "rate": "Cycle {pct}"
+    },
+    "repertoire": {
+      "none": "Aucun répertoire",
+      "moves": "{n} coups",
+      "due": "{n} à revoir",
+      "nothingDue": "rien à revoir",
+      "rate30": "{pct} sur 30 j",
+      "rateLabel": "Réussite 30 j {pct}"
+    },
+    "title": "Progression par module",
+    "level": "Niv. {n}"
+  },
+  "stats": {
+    "periods": {
+      "7": "7 j",
+      "30": "30 j",
+      "90": "90 j",
+      "365": "1 an"
+    },
+    "chart": {
+      "puzzles": "Puzzles",
+      "repertoire": "Répertoire",
+      "woodpecker": "Woodpecker",
+      "free": "Libre"
+    },
+    "minutes": "{n} min",
+    "hours": "{h} h",
+    "hoursMinutes": "{h} h {m}",
+    "sessions": {
+      "completed": "Terminées",
+      "abandoned": "Abandonnées",
+      "expired": "Expirées",
+      "average": "Temps moyen"
+    },
+    "home": "Accueil",
+    "title": "Mes statistiques"
+  },
+  "loadError": "Impossible de charger ces données. Réessayez.",
+  "period": "Période",
+  "shop": {
+    "title": "En ce moment à la boutique",
+    "link": "Voir la boutique →"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "played": "{n} jouée · {time} | {n} jouées · {time}",
+    "none": "Aucune sur la période"
+  },
+  "welcome": {
+    "kicker": "Bienvenue sur Don't Stay Rooky",
+    "title": "Ton tableau de bord se remplira dès ton premier exercice.",
+    "text": "Compose une session sur mesure ou commence par quelques puzzles : ta régularité, ton classement et ta progression s’afficheront ici.",
+    "compose": "Composer ma première session",
+    "puzzles": "Résoudre des puzzles"
+  },
+  "weak": {
+    "kicker": "À TRAVAILLER · {days} JOURS",
+    "rate": "{pct} de réussite",
+    "train": "S’entraîner",
+    "stats": "Mes statistiques →"
+  },
+  "quest": {
+    "kicker": "{prof} · DÉFI DE LA SEMAINE",
+    "done": "✓ RÉUSSI",
+    "progress": "{current}/{goal}",
+    "reward": "+{xp} XP"
+  },
+  "level": {
+    "hello": "Bonjour 👋︎",
+    "title": "Niveau {n}",
+    "loading": "Niveau…"
+  },
+  "trophies": {
+    "title": "Trophées",
+    "count": "{won} / {total} débloqués",
+    "empty": "Aucun trophée pour l’instant : ils se débloquent en jouant, la surprise est au bout."
+  },
+  "plans": {
+    "title": "Mes sessions",
+    "all": "Toutes →",
+    "empty": "Enregistre une session pour la retrouver ici.",
+    "compose": "Composer une session"
+  },
+  "recent": {
+    "title": "Dernières sessions",
+    "empty": "Tes sessions jouées apparaîtront ici.",
+    "prepare": "Préparer une session"
+  },
+  "rating": {
+    "tabs": {
+      "puzzles": "Puzzles",
+      "blitz": "Blitz",
+      "rapid": "Rapide",
+      "classical": "Classique"
+    },
+    "kickers": {
+      "puzzles": "CLASSEMENT PUZZLES",
+      "blitz": "ELO LICHESS · BLITZ",
+      "rapid": "ELO LICHESS · RAPIDE",
+      "classical": "ELO LICHESS · CLASSIQUE"
+    },
+    "kicker": "{tab} · {days} JOURS",
+    "min": "{n} min",
+    "max": "Record {n}",
+    "today": "Aujourd’hui",
+    "noPuzzles": "Joue des puzzles classés pour voir ton classement évoluer.",
+    "solve": "Résoudre des puzzles",
+    "linkLichess": "Lie ton compte Lichess pour suivre ton Elo en partie.",
+    "link": "Lier Lichess",
+    "noGames": "Aucune partie classée dans cette cadence sur Lichess."
+  },
+  "health": {
+    "title": "Répertoires",
+    "empty": "Aucun répertoire pour l’instant.",
+    "create": "Créer un répertoire →",
+    "due": "Positions dues",
+    "new": "Jamais vues",
+    "success": "Réussite ({n} test) | Réussite ({n} tests)",
+    "fragileTitle": "Tronçons fragiles",
+    "noFragile": "Aucun : rien ne flanche dans tes derniers tests.",
+    "fragileMeta": "{name} · {n} tests",
+    "failures": "{pct} ratés",
+    "note": "Fragile : au moins 3 tests et des échecs parmi les 10 derniers, sur toute l’histoire."
+  },
+  "themes": {
+    "title": "Thèmes de puzzles",
+    "summary": "{pct} sur {n} puzzles",
+    "empty": "Aucun puzzle classé sur la période.",
+    "play": "Jouer des puzzles →",
+    "few": "Pas encore assez d’essais par thème ({n} minimum).",
+    "strong": "Points forts",
+    "weak": "À travailler",
+    "nothing": "Rien à signaler.",
+    "ratio": "{done} / {total}",
+    "train": "S’entraîner ›",
+    "note": "Puzzles classés résolus sans aide (ni erreur, ni indice, ni solution) ; {n} essais minimum par thème."
+  },
+  "time": {
+    "title": "Temps d’entraînement",
+    "empty": "Aucun exercice sur la période.",
+    "week": "Semaine du {date}",
+    "weekHeader": "Semaine du",
+    "total": "Total",
+    "chart": "Voir le graphique",
+    "table": "Voir le tableau",
+    "barLabel": "Semaine du {date} : {parts}",
+    "nothing": "rien"
+  },
+  "home": {
+    "hello": "Bonjour 👋︎",
+    "title": "Ta progression",
+    "stats": "Mes statistiques →",
+    "newSession": "+ Nouvelle session",
+    "sectionError": "Certaines statistiques des modules n’ont pas pu être chargées."
+  }
+}

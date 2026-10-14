@@ -23,7 +23,7 @@
         unelevated
         no-caps
         class="profile-hero__edit gt-sm"
-        label="✎ Modifier"
+        :label="$t('profile.hero.edit')"
         data-testid="profile-edit-open"
         @click="editing = true"
       />
@@ -31,7 +31,7 @@
     <template v-if="bar">
       <div class="profile-hero__level">
         <span class="profile-hero__title" data-testid="profile-level"
-          >Niveau {{ bar.level }}</span
+          >{{ $t('profile.hero.level', { level: bar.level }) }}</span
         >
         <span class="profile-hero__rank">{{ bar.rank }}</span>
         <span class="profile-hero__xp"
@@ -46,7 +46,7 @@
       unelevated
       no-caps
       class="profile-hero__edit profile-hero__edit--wide lt-md"
-      label="✎ Modifier le profil"
+      :label="$t('profile.hero.editWide')"
       data-testid="profile-edit-open-mobile"
       @click="editing = true"
     />
@@ -68,6 +68,7 @@ import ProfileEditDialog from '@/components/profile/ProfileEditDialog.vue'
 import { useGamificationStore } from '@/stores/gamification'
 import { levelBar } from '@/utils/gamification'
 import { avatarTile, formatMonth, profileName } from '@/utils/profile'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** The /api/profile payload. */
@@ -87,9 +88,13 @@ const fallbackName = computed(() =>
   profileName({ ...props.profile, displayName: null })
 )
 const tile = computed(() => avatarTile(props.profile, name.value))
-const since = computed(
-  () =>
-    `${props.profile.handle ? 'membre' : 'Membre'} depuis ${formatMonth(props.profile.createdAt)}`
+const since = computed(() =>
+  t(
+    props.profile.handle
+      ? 'profile.hero.memberSinceAfter'
+      : 'profile.hero.memberSince',
+    { month: formatMonth(props.profile.createdAt) }
+  )
 )
 </script>
 

@@ -1,6 +1,6 @@
 <template>
   <section class="cm-card profile-card" data-testid="profile-sessions">
-    <h2 class="cm-card__title q-mb-xs">Dernières connexions</h2>
+    <h2 class="cm-card__title q-mb-xs">{{ $t('profile.sessions.title') }}</h2>
 
     <q-spinner v-if="loading" class="q-my-sm" />
     <div
@@ -21,14 +21,14 @@
         v-if="session.current"
         class="session__current"
         data-testid="session-current"
-        >Cet appareil</span
+        >{{ $t('profile.sessions.current') }}</span
       >
       <q-btn
         v-else
         unelevated
         no-caps
         class="profile-btn"
-        label="Fermer"
+        :label="$t('profile.sessions.close')"
         :loading="busy === session.id"
         data-testid="session-close"
         @click="close(session)"
@@ -51,6 +51,7 @@ import { useQuasar } from 'quasar'
 import { profileApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { sessionLine } from '@/utils/profile'
+import { t } from '@/i18n'
 
 const $q = useQuasar()
 /** @type {import('vue').Ref<Awaited<ReturnType<typeof profileApi.sessions>>>} */
@@ -75,8 +76,8 @@ async function load() {
 
 function close(session) {
   $q.dialog({
-    title: 'Fermer cette session ?',
-    message: `${session.line.device} devra se reconnecter.`,
+    title: t('profile.sessions.closeTitle'),
+    message: t('profile.sessions.closeMessage', { device: session.line.device }),
     cancel: true
   }).onOk(async () => {
     busy.value = session.id
@@ -86,8 +87,8 @@ function close(session) {
       raw.value = raw.value.filter(s => s.id !== session.id)
     } catch (e) {
       error.value = apiErrorMessage(e, {
-        404: 'Cette session est déjà fermée.',
-        409: 'Pour fermer cette session, déconnecte-toi.'
+        404: t('profile.sessions.alreadyClosed'),
+        409: t('profile.sessions.signOutInstead')
       })
     } finally {
       busy.value = null

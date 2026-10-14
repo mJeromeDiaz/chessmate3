@@ -3,7 +3,7 @@
     <div
       class="tour-end__choices"
       role="radiogroup"
-      aria-label="Par où commencer"
+      :aria-label="$t('onboarding.end.aria')"
       data-testid="tour-end-choices"
     >
       <button
@@ -42,6 +42,7 @@
  * repertoire need Lichess.
  */
 import { END_CHOICES } from '@/utils/onboarding'
+import { t } from '@/i18n'
 
 const props = defineProps({
   modelValue: { type: String, required: true },
@@ -55,8 +56,8 @@ const emit = defineEmits({
 
 /** @param {(typeof END_CHOICES)[number]} choice */
 function tagOf(choice) {
-  if (choice.id === 'coach' && props.linked) return 'Conseillé'
-  return choice.lichess && !props.linked ? 'Lichess requis' : ''
+  if (choice.id === 'coach' && props.linked) return t('onboarding.end.advised')
+  return choice.lichess && !props.linked ? t('onboarding.end.lichessRequired') : ''
 }
 </script>
 

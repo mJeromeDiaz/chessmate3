@@ -5,9 +5,9 @@
     data-testid="dashboard-shop"
   >
     <div class="spotlight__head">
-      <h2 class="cm-card__title">En ce moment à la boutique</h2>
+      <h2 class="cm-card__title">{{ $t('dashboard.shop.title') }}</h2>
       <router-link to="/boutique" class="spotlight__link"
-        >Voir la boutique →</router-link
+        >{{ $t('dashboard.shop.link') }}</router-link
       >
     </div>
     <ShopCarousel :slides="slides" @open="open" />

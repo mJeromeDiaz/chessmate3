@@ -1,6 +1,8 @@
 <template>
   <section class="cm-card" data-testid="profile-connections">
-    <h2 class="cm-card__title q-mb-xs">Connexions</h2>
+    <h2 class="cm-card__title q-mb-xs">
+      {{ $t('profile.connections.title') }}
+    </h2>
 
     <div
       v-for="row in rows"
@@ -27,17 +29,23 @@
             identityDetail(row.identity)
           }}</div>
           <div class="profile-row__sub"
-            >Lié le {{ formatDay(row.identity.linkedAt) }}</div
+            >{{
+              $t('profile.connections.linkedOn', {
+                date: formatDay(row.identity.linkedAt)
+              })
+            }}</div
           >
         </template>
-        <div v-else class="profile-row__sub">Non lié</div>
+        <div v-else class="profile-row__sub">{{
+          $t('profile.connections.notLinked')
+        }}</div>
       </div>
       <q-btn
         v-if="row.identity"
         unelevated
         no-caps
         class="profile-btn"
-        label="Déconnecter"
+        :label="$t('profile.connections.unlink')"
         :disable="!row.identity.removable"
         :loading="busy === row.identity.id"
         :data-testid="`connection-${row.provider}-unlink`"
@@ -48,7 +56,7 @@
         unelevated
         no-caps
         class="profile-btn profile-btn--strong"
-        label="Lier"
+        :label="$t('profile.connections.link')"
         :loading="busy === row.provider"
         :data-testid="`connection-${row.provider}-link`"
         @click="link(row.provider)"
@@ -56,7 +64,7 @@
     </div>
 
     <div v-if="locked" class="profile-note" data-testid="connection-lock-note">
-      Garde au moins une méthode de connexion active.
+      {{ $t('profile.connections.lockNote') }}
     </div>
 
     <q-banner v-if="error" class="profile-error q-mt-sm" rounded>{{
@@ -76,7 +84,7 @@ import { useAuthStore } from '@/stores/auth'
 import { providerLabel } from '@/utils/format'
 import { apiErrorMessage } from '@/utils/apiError'
 import { connectionRows, identityDetail } from '@/utils/profile'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 const props = defineProps({
   /** The /api/profile payload. */
@@ -116,9 +124,10 @@ async function link(provider) {
 
 function unlink(identity) {
   $q.dialog({
-    title: `Déconnecter ${providerLabel(identity.provider)} ?`,
-    message:
-      "Tu ne pourras plus te connecter avec ce compte. Tes autres sessions seront fermées. Tes données Don't Stay Rooky restent sauvegardées.",
+    title: t('profile.connections.unlinkTitle', {
+      provider: providerLabel(identity.provider)
+    }),
+    message: t('profile.connections.unlinkMessage'),
     cancel: true
   }).onOk(async () => {
     busy.value = identity.id
@@ -128,7 +137,7 @@ function unlink(identity) {
       await auth.unlinkIdentity(identity.id)
     } catch (e) {
       error.value = apiErrorMessage(e, {
-        409: "C'est ton seul moyen de connexion : il ne peut pas être retiré."
+        409: t('profile.connections.lastMethod')
       })
     } finally {
       busy.value = null

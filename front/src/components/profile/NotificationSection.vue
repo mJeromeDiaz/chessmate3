@@ -1,10 +1,7 @@
 <template>
   <div class="profile-block">
-    <div class="profile-row__title">Notifications du navigateur</div>
-    <div class="profile-row__sub">
-      Pour recevoir les rappels de tes sessions et de ta série sur cet appareil,
-      même quand Don't Stay Rooky est fermé. À activer sur chaque appareil.
-    </div>
+    <div class="profile-row__title">{{ $t('profile.push.title') }}</div>
+    <div class="profile-row__sub">{{ $t('profile.push.hint') }}</div>
     <PushToggle />
   </div>
 </template>

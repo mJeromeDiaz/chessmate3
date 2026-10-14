@@ -1,11 +1,11 @@
 <template>
   <div class="level-banner" data-testid="level-banner">
     <div class="level-banner__shade" />
-    <div class="level-banner__hello gt-sm"> Bonjour 👋&#xFE0E; </div>
+    <div class="level-banner__hello gt-sm">{{ $t('dashboard.level.hello') }}</div>
     <template v-if="bar">
       <div class="level-banner__level">
         <span class="level-banner__title" data-testid="level-title"
-          >Niveau {{ bar.level }}</span
+          >{{ $t('dashboard.level.title', { n: bar.level }) }}</span
         >
         <span class="level-banner__rank">{{ bar.rank }}</span>
       </div>
@@ -18,7 +18,9 @@
       </div>
     </template>
     <div v-else class="level-banner__level">
-      <span class="level-banner__title">Niveau…</span>
+      <span class="level-banner__title">{{
+        $t('dashboard.level.loading')
+      }}</span>
     </div>
     <img :src="mascot" alt="" class="level-banner__mascot" />
   </div>

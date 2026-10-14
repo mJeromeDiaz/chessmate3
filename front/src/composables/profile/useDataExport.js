@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { profileApi } from '@/services/api'
 import { downloadBlob } from '@/utils/download'
+import { t } from '@/i18n'
 
 /**
  * Downloads the export of every data of the account (a ZIP, docs/AUTH.md), from the profile or
@@ -20,8 +21,8 @@ export function useDataExport() {
     } catch (e) {
       error.value =
         /** @type {any} */ (e)?.response?.status === 429
-          ? 'Trois exports par jour au plus : réessaie demain.'
-          : 'L’export n’a pas pu être préparé. Réessaie.'
+          ? t('profile.export.tooMany')
+          : t('profile.export.failed')
     } finally {
       exporting.value = false
     }

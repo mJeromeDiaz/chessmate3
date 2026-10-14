@@ -1,41 +1,47 @@
 <template>
   <section class="cm-card health-card" data-testid="repertoire-health">
-    <h2 class="cm-card__title">Répertoires</h2>
+    <h2 class="cm-card__title">{{ $t('dashboard.health.title') }}</h2>
 
     <p
       v-if="!health.repertoires"
       class="cm-muted q-my-md"
       data-testid="health-empty"
     >
-      Aucun répertoire pour l’instant.
-      <router-link to="/repertoire">Créer un répertoire →</router-link>
+      {{ $t('dashboard.health.empty') }}
+      <router-link to="/repertoire">{{
+        $t('dashboard.health.create')
+      }}</router-link>
     </p>
 
     <template v-else>
       <div class="health-card__figures">
         <div class="health-card__figure" data-testid="health-due">
           <div class="health-card__value">{{ health.cards.due }}</div>
-          <div class="health-card__label">Positions dues</div>
+          <div class="health-card__label">{{ $t('dashboard.health.due') }}</div>
         </div>
         <div class="health-card__figure" data-testid="health-new">
           <div class="health-card__value">{{ health.cards.new }}</div>
-          <div class="health-card__label">Jamais vues</div>
+          <div class="health-card__label">{{ $t('dashboard.health.new') }}</div>
         </div>
         <div class="health-card__figure" data-testid="health-success">
           <div class="health-card__value">{{
             formatPercent(health.tests.successRate)
           }}</div>
           <div class="health-card__label"
-            >Réussite ({{ health.tests.total }} test{{
-              health.tests.total > 1 ? 's' : ''
-            }})</div
+            >{{
+              $t(
+                'dashboard.health.success',
+                { n: health.tests.total },
+                health.tests.total > 1 ? 2 : 1
+              )
+            }}</div
           >
         </div>
       </div>
 
-      <h3 class="health-card__h3">Tronçons fragiles</h3>
+      <h3 class="health-card__h3">{{ $t('dashboard.health.fragileTitle') }}</h3>
       <p v-if="!health.fragile.length" class="cm-muted q-mb-none">
-        Aucun : rien ne flanche dans tes derniers tests.
+        {{ $t('dashboard.health.noFragile') }}
       </p>
       <router-link
         v-for="f in health.fragile"
@@ -47,16 +53,24 @@
         <div class="health-card__row-main">
           <div class="health-card__row-title">{{ labelText(f.label) }}</div>
           <div class="cm-muted"
-            >{{ f.repertoireName }} · {{ f.tests }} tests</div
+            >{{
+              $t('dashboard.health.fragileMeta', {
+                name: f.repertoireName,
+                n: f.tests
+              })
+            }}</div
           >
         </div>
         <strong class="health-card__rate"
-          >{{ formatPercent(f.recentFailureRate) }} ratés</strong
+          >{{
+            $t('dashboard.health.failures', {
+              pct: formatPercent(f.recentFailureRate)
+            })
+          }}</strong
         >
       </router-link>
       <p class="health-card__note">
-        Fragile : au moins 3 tests et des échecs parmi les 10 derniers, sur
-        toute l’histoire.
+        {{ $t('dashboard.health.note') }}
       </p>
     </template>
   </section>

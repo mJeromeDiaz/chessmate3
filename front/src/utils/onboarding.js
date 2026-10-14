@@ -4,7 +4,7 @@ import {
   TOUR_PATH
 } from '@/utils/auth/authFlow'
 import { profImage } from '@/utils/prof/images'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * The guided tour (design "Visite guidée", docs/ONBOARDING.md): its screens, the professors' lines
@@ -64,12 +64,17 @@ export const STEPS = [
 
 /** The progress bar's segments, and the screens each one holds. */
 export const SEGMENTS = [
-  { label: 'Accueil', steps: ['hello'] },
-  { label: 'Niveau', steps: ['level'] },
-  { label: 'Objectif', steps: ['goal'] },
-  { label: 'Les profs', steps: ['albert', 'aaron', 'lizy', 'ray'] },
-  { label: 'Ton plan', steps: ['end'] }
-]
+  ['hello', ['hello']],
+  ['level', ['level']],
+  ['goal', ['goal']],
+  ['profs', ['albert', 'aaron', 'lizy', 'ray']],
+  ['end', ['end']]
+].map(([key, steps]) => ({
+  get label() {
+    return t(`onboarding.segments.${key}`)
+  },
+  steps
+}))
 
 /** Albert's violet, the tour's own screens. */
 const VIOLET = {
@@ -84,120 +89,186 @@ const VIOLET = {
 export const MODULES = {
   woodpecker: {
     id: 'woodpecker',
-    title: 'Woodpecker',
-    badge: 'Méthode phare',
+    get title() {
+      return t('onboarding.modules.woodpecker.title')
+    },
+    get badge() {
+      return t('onboarding.modules.woodpecker.badge')
+    },
     glyph: '♝︎',
     bg: '#C6F432',
     soft: '#F0FBCF',
     accent: '#5A7A00',
     ink: '#1B1530',
-    desc: 'Le même set de puzzles, en cycles de plus en plus rapides.',
-    why: 'À force de revoir les mêmes motifs, ils deviennent des réflexes : tu calcules moins, tu vois plus. C’est comme apprendre une langue : au début on traduit, ensuite on parle.'
+    get desc() {
+      return t('onboarding.modules.woodpecker.desc')
+    },
+    get why() {
+      return t('onboarding.modules.woodpecker.why')
+    },
   },
   puzzles: {
     id: 'puzzles',
-    title: 'Puzzles',
+    get title() {
+      return t('onboarding.modules.puzzles.title')
+    },
     glyph: '♞︎',
     bg: '#FF6FAE',
     soft: '#FFE6F1',
     accent: '#C02670',
     ink: '#1B1530',
-    desc: 'Des tactiques à ton niveau, par thème quand tu veux cibler.',
-    why: 'Tu repères une fourchette en 2 secondes au lieu de la chercher 2 minutes. Et ton adversaire, lui, n’aura pas cette chance.'
+    get desc() {
+      return t('onboarding.modules.puzzles.desc')
+    },
+    get why() {
+      return t('onboarding.modules.puzzles.why')
+    },
   },
   streak: {
     id: 'streak',
-    title: 'Puzzle streak',
+    get title() {
+      return t('onboarding.modules.streak.title')
+    },
     glyph: '⚡︎',
     bg: '#FFD43B',
     soft: '#FFF5D1',
     accent: '#8A6A00',
     ink: '#1B1530',
-    desc: 'Du plus facile au plus dur : une erreur et tu repars de zéro.',
-    why: 'La pression monte à chaque puzzle. Rester lucide quand tout se joue sur un coup, c’est exactement ce qui manque en partie.'
+    get desc() {
+      return t('onboarding.modules.streak.desc')
+    },
+    get why() {
+      return t('onboarding.modules.streak.why')
+    },
   },
   repertoire: {
     id: 'repertoire',
-    title: 'Répertoire',
-    badge: 'Indispensable',
+    get title() {
+      return t('onboarding.modules.repertoire.title')
+    },
+    get badge() {
+      return t('onboarding.modules.repertoire.badge')
+    },
     glyph: '♜︎',
     bg: '#4FB2FF',
     soft: '#E2F2FF',
     accent: '#0F6BBA',
     ink: '#1B1530',
-    desc: 'Tes ouvertures, révisées coup par coup jusqu’à ce qu’elles sortent toutes seules.',
-    why: 'Fini les dix premiers coups au feeling : tu arrives au milieu de partie en terrain connu, avec du temps à la pendule.'
+    get desc() {
+      return t('onboarding.modules.repertoire.desc')
+    },
+    get why() {
+      return t('onboarding.modules.repertoire.why')
+    },
   },
   evaluation: {
     id: 'evaluation',
-    title: 'Évaluation de position',
+    get title() {
+      return t('onboarding.modules.evaluation.title')
+    },
     glyph: '♟︎',
     bg: '#FFD43B',
     soft: '#FFF5D1',
     accent: '#8A6A00',
     ink: '#1B1530',
-    desc: 'Qui est mieux, et de combien ? Juger d’un coup d’œil.',
-    why: 'Savoir où tu en es avant de calculer, c’est choisir les bonnes variantes au lieu de toutes les essayer.'
+    get desc() {
+      return t('onboarding.modules.evaluation.desc')
+    },
+    get why() {
+      return t('onboarding.modules.evaluation.why')
+    },
   },
   analyse: {
     id: 'analyse',
-    title: 'Analyse de parties',
+    get title() {
+      return t('onboarding.modules.analyse.title')
+    },
     soon: true,
     glyph: '♔︎',
     bg: '#2ED3A8',
     soft: '#DAF8EF',
     accent: '#0B7D62',
     ink: '#1B1530',
-    desc: 'Revenir sur tes parties, surtout les défaites.',
-    why: 'Tes erreurs deviennent ton programme, au lieu de se répéter partie après partie.'
+    get desc() {
+      return t('onboarding.modules.analyse.desc')
+    },
+    get why() {
+      return t('onboarding.modules.analyse.why')
+    },
   },
   coach: {
     id: 'coach',
-    title: 'Séance sur mesure',
+    get title() {
+      return t('onboarding.modules.coach.title')
+    },
     glyph: '✦',
     bg: '#FF8A3D',
     soft: '#FFEBDD',
     accent: '#B84A0E',
     ink: '#1B1530',
-    desc: 'Je lis tes 200 dernières parties Lichess, je repère les finales qui te coûtent des points et je compose ta séance.',
-    why: 'Tu travailles ce qui te fait perdre, pas ce que tu sais déjà. Le temps d’entraînement est rare : autant viser juste.'
+    get desc() {
+      return t('onboarding.modules.coach.desc')
+    },
+    get why() {
+      return t('onboarding.modules.coach.why')
+    },
   },
   finales: {
     id: 'finales',
-    title: 'Finales',
+    get title() {
+      return t('onboarding.modules.finales.title')
+    },
     soon: true,
     glyph: '♚︎',
     bg: '#FF8A3D',
     soft: '#FFEBDD',
     accent: '#B84A0E',
     ink: '#1B1530',
-    desc: 'Tours, pions, pièces mineures : les finales essentielles.',
-    why: 'Un pion de plus ne vaut rien si tu ne sais pas l’emmener à dame.'
+    get desc() {
+      return t('onboarding.modules.finales.desc')
+    },
+    get why() {
+      return t('onboarding.modules.finales.why')
+    },
   },
   aveugle: {
     id: 'aveugle',
-    title: 'Jeu à l’aveugle',
-    badge: 'Super-pouvoir',
+    get title() {
+      return t('onboarding.modules.aveugle.title')
+    },
+    get badge() {
+      return t('onboarding.modules.aveugle.badge')
+    },
     glyph: '♘︎',
     bg: '#2B2250',
     soft: '#E7E4F2',
     accent: '#4A3D86',
     darkAccent: '#B3A1FF',
     ink: '#FFFFFF',
-    desc: 'La position s’affiche, disparaît, puis tu joues de mémoire sur un échiquier vide.',
-    why: 'Ta visualisation s’entraîne : tu calcules plus loin, même avec les pièces sous les yeux.'
+    get desc() {
+      return t('onboarding.modules.aveugle.desc')
+    },
+    get why() {
+      return t('onboarding.modules.aveugle.why')
+    },
   },
   coordonnees: {
     id: 'coordonnees',
-    title: 'Coordonnées',
+    get title() {
+      return t('onboarding.modules.coordonnees.title')
+    },
     glyph: 'e4',
     bg: '#2B2250',
     soft: '#E7E4F2',
     accent: '#4A3D86',
     darkAccent: '#B3A1FF',
     ink: '#FFFFFF',
-    desc: 'Trouver e4 sans réfléchir, sur un échiquier sans lettres ni chiffres.',
-    why: 'Une case qu’on nomme vite, c’est une variante qu’on calcule sans se perdre en route.'
+    get desc() {
+      return t('onboarding.modules.coordonnees.desc')
+    },
+    get why() {
+      return t('onboarding.modules.coordonnees.why')
+    },
   }
 }
 
@@ -208,43 +279,63 @@ export const MODULES = {
  */
 export const PROF_SCREENS = {
   albert: {
-    title: ['Albert', 'Stein'],
+    get title() {
+      return [0, 1].map(n => t(`onboarding.profScreens.albert.title.${n}`))
+    },
     image: 'albert-v2-idea',
     bg: '#FF6FAE',
     deep: '#E03C86',
     accent: '#C02670',
     line1: '#1B1530',
     line2: '#FFFFFF',
-    kicker: 'ALBERT · PUZZLES, WOODPECKER & STREAK',
-    line: 'Le Fou de la tactique, c’est moi : je vois les diagonales avant que tu voies le piège. Et je les vois en diagonale, évidemment.',
+    get kicker() {
+      return t('onboarding.profScreens.albert.kicker')
+    },
+    get line() {
+      return t('onboarding.profScreens.albert.line')
+    },
     modules: ['woodpecker', 'puzzles', 'streak']
   },
   aaron: {
-    title: ['Aaron,', 'le Roi'],
+    get title() {
+      return [0, 1].map(n => t(`onboarding.profScreens.aaron.title.${n}`))
+    },
     image: 'aaron-wink',
     bg: '#4FB2FF',
     deep: '#1C86E0',
     accent: '#0F6BBA',
     line1: '#1B1530',
     line2: '#FFFFFF',
-    kicker: 'AARON · RÉPERTOIRE & ÉVALUATION',
-    line: 'Je prends l’initiative dès le premier coup et je ne la rends jamais. Même au dîner, demande à Lizy.',
+    get kicker() {
+      return t('onboarding.profScreens.aaron.kicker')
+    },
+    get line() {
+      return t('onboarding.profScreens.aaron.line')
+    },
     modules: ['repertoire', 'evaluation', 'analyse']
   },
   lizy: {
-    title: ['Lizy,', 'la Reine'],
+    get title() {
+      return [0, 1].map(n => t(`onboarding.profScreens.lizy.title.${n}`))
+    },
     image: 'lizy-cool',
     bg: '#FF8A3D',
     deep: '#E0601A',
     accent: '#B84A0E',
     line1: '#1B1530',
     line2: '#FFFFFF',
-    kicker: 'LIZY · FINALES & SÉANCE SUR MESURE',
-    line: 'Ton petit avantage, je le transforme en point entier. Sans trembler, et sans demander l’avis d’Aaron.',
+    get kicker() {
+      return t('onboarding.profScreens.lizy.kicker')
+    },
+    get line() {
+      return t('onboarding.profScreens.lizy.line')
+    },
     modules: ['coach', 'finales']
   },
   ray: {
-    title: ['Ray,', 'le mystère'],
+    get title() {
+      return [0, 1].map(n => t(`onboarding.profScreens.ray.title.${n}`))
+    },
     image: '',
     glyph: '♘︎',
     bg: '#2B2250',
@@ -253,8 +344,12 @@ export const PROF_SCREENS = {
     darkAccent: '#C6F432',
     line1: '#FFFFFF',
     line2: '#C6F432',
-    kicker: 'ALBERT · UN PROF DANS L’OMBRE',
-    line: 'Ray joue les yeux fermés. Il se présentera lui-même… dès qu’il aura trouvé la porte.',
+    get kicker() {
+      return t('onboarding.profScreens.ray.kicker')
+    },
+    get line() {
+      return t('onboarding.profScreens.ray.line')
+    },
     modules: ['aveugle', 'coordonnees']
   }
 }
@@ -263,43 +358,73 @@ export const PROF_SCREENS = {
 export const LEVELS = [
   {
     id: 'beginner',
-    name: 'Débutant',
+    get name() {
+      return t('onboarding.levels.beginner.name')
+    },
     glyph: '♙︎',
-    hint: 'Le fou et la tour, je les confonds parfois.',
+    get hint() {
+      return t('onboarding.levels.beginner.hint')
+    },
     seed: 1000,
-    line: 'Parfait : aucune mauvaise habitude à déloger. Enfin, presque.'
+    get line() {
+      return t('onboarding.levels.beginner.line')
+    },
   },
   {
     id: 'amateur',
-    name: 'Amateur',
+    get name() {
+      return t('onboarding.levels.amateur.name')
+    },
     glyph: '♘︎',
-    hint: 'Je connais le mat du berger. Des deux côtés.',
+    get hint() {
+      return t('onboarding.levels.amateur.hint')
+    },
     seed: 1400,
-    line: 'Le niveau idéal : assez fort pour gaffer avec style, assez curieux pour arrêter.'
+    get line() {
+      return t('onboarding.levels.amateur.line')
+    },
   },
   {
     id: 'confirmed',
-    name: 'Confirmé',
+    get name() {
+      return t('onboarding.levels.confirmed.name')
+    },
     glyph: '♗︎',
-    hint: 'Ma Najdorf tient sans antisèche.',
+    get hint() {
+      return t('onboarding.levels.confirmed.hint')
+    },
     seed: 1800,
-    line: 'Joli. On va polir ce qui coince, sans te refaire le coup du berger.'
+    get line() {
+      return t('onboarding.levels.confirmed.line')
+    },
   },
   {
     id: 'expert',
-    name: 'Expert',
+    get name() {
+      return t('onboarding.levels.expert.name')
+    },
     glyph: '♕︎',
-    hint: 'Je corrige les commentateurs en direct.',
+    get hint() {
+      return t('onboarding.levels.expert.hint')
+    },
     seed: 2200,
-    line: 'Ah. Je vais devoir réviser mes notes, moi.'
+    get line() {
+      return t('onboarding.levels.expert.line')
+    },
   },
   {
     id: 'pro',
-    name: 'Pro',
+    get name() {
+      return t('onboarding.levels.pro.name')
+    },
     glyph: '♔︎',
-    hint: 'On m’appelle « Maître », et ce n’est pas ironique.',
+    get hint() {
+      return t('onboarding.levels.pro.hint')
+    },
     seed: 2500,
-    line: 'Un pro ici ? Les puzzles vont transpirer. Moi aussi.'
+    get line() {
+      return t('onboarding.levels.pro.line')
+    },
   }
 ]
 
@@ -308,32 +433,52 @@ export const GOALS = [
   {
     id: 'rating',
     glyph: '▲',
-    label: 'Gagner des Elo',
-    line: 'Des Elo, c’est noté. On commence par arrêter de les offrir.'
+    get label() {
+      return t('onboarding.goals.rating.label')
+    },
+    get line() {
+      return t('onboarding.goals.rating.line')
+    },
   },
   {
     id: 'blunders',
     glyph: '♛︎',
-    label: 'Ne plus offrir ma dame',
-    line: 'Une dame offerte, c’est un cadeau que personne n’a demandé. On va apprendre à la garder.'
+    get label() {
+      return t('onboarding.goals.blunders.label')
+    },
+    get line() {
+      return t('onboarding.goals.blunders.line')
+    },
   },
   {
     id: 'fun',
     glyph: '♟︎',
-    label: 'M’amuser',
-    line: 'Excellent choix. Personne n’a jamais progressé en s’ennuyant.'
+    get label() {
+      return t('onboarding.goals.fun.label')
+    },
+    get line() {
+      return t('onboarding.goals.fun.line')
+    },
   },
   {
     id: 'understanding',
     glyph: '◉',
-    label: 'Comprendre ce que je joue',
-    line: 'La plus belle ambition : un coup qu’on comprend vaut dix coups qu’on récite.'
+    get label() {
+      return t('onboarding.goals.understanding.label')
+    },
+    get line() {
+      return t('onboarding.goals.understanding.line')
+    },
   },
   {
     id: 'kasparov',
     glyph: '♚︎',
-    label: 'Arracher une nulle à Kasparov',
-    line: 'Une nulle contre Garry ? Il va falloir du Woodpecker. Beaucoup de Woodpecker.'
+    get label() {
+      return t('onboarding.goals.kasparov.label')
+    },
+    get line() {
+      return t('onboarding.goals.kasparov.line')
+    },
   }
 ]
 
@@ -346,31 +491,43 @@ export const END_CHOICES = [
   {
     id: 'coach',
     glyph: '✦',
-    title: 'Séance sur mesure',
-    desc: 'Lizy lit tes parties Lichess et compose ta séance : finales, ouvertures, tactique.',
+    get title() {
+      return t('onboarding.endChoices.coach.title')
+    },
+    get desc() {
+      return t('onboarding.endChoices.coach.desc')
+    },
     path: COACH_PATH,
     lichess: true
   },
   {
     id: 'repertoire',
     glyph: '♜︎',
-    title: 'Répertoire automatique',
-    desc: 'Aaron construit ton répertoire avec les ouvertures que tu joues déjà.',
+    get title() {
+      return t('onboarding.endChoices.repertoire.title')
+    },
+    get desc() {
+      return t('onboarding.endChoices.repertoire.desc')
+    },
     path: AUTO_REPERTOIRE_PATH,
     lichess: true
   },
   {
     id: 'builder',
     glyph: '♞︎',
-    title: 'Je compose ma séance',
-    desc: 'Tu choisis les modules et les durées. Pour les maniaques du contrôle.',
+    get title() {
+      return t('onboarding.endChoices.builder.title')
+    },
+    get desc() {
+      return t('onboarding.endChoices.builder.desc')
+    },
     path: '/session/new',
     lichess: false
   }
 ]
 
 /** Lichess' speeds, as said on the level screen. */
-const PERFS = { rapid: 'rapide', blitz: 'blitz', classical: 'classique' }
+const PERFS = ['rapid', 'blitz', 'classical']
 
 /** Numbers in the current language (docs/I18N.md). */
 const number = { format: n => new Intl.NumberFormat(intlLocale()).format(n) }
@@ -415,8 +572,11 @@ export function chipOf(step) {
   const segment = SEGMENTS[i]
   const count =
     segment.steps.length > 1
-      ? `PROF ${segment.steps.indexOf(step) + 1} / ${segment.steps.length}`
-      : `${i + 1} / ${SEGMENTS.length}`
+      ? t('onboarding.chip.prof', {
+          n: segment.steps.indexOf(step) + 1,
+          total: segment.steps.length
+        })
+      : t('onboarding.chip.step', { n: i + 1, total: SEGMENTS.length })
   return { name: segment.label.toUpperCase(), count }
 }
 
@@ -462,12 +622,10 @@ export function themeOf(step) {
  */
 export function titleOf(step) {
   if (PROF_SCREENS[step]) return PROF_SCREENS[step].title
-  return /** @type {Record<string, [string, string]>} */ ({
-    hello: ['Bonjour,', 'champion !'],
-    level: ['Ton niveau,', 'sans tricher'],
-    goal: ['Ton grand', 'objectif ?'],
-    end: ['À toi', 'de jouer !']
-  })[step]
+  return /** @type {[string, string]} */ ([
+    t(`onboarding.titles.${step}.0`),
+    t(`onboarding.titles.${step}.1`)
+  ])
 }
 
 /**
@@ -477,12 +635,7 @@ export function titleOf(step) {
  */
 export function kickerOf(step) {
   if (PROF_SCREENS[step]) return PROF_SCREENS[step].kicker
-  return /** @type {Record<string, string>} */ ({
-    hello: 'ALBERT · TON PROF PRINCIPAL',
-    level: 'ALBERT · FAISONS CONNAISSANCE',
-    goal: 'ALBERT · TES AMBITIONS',
-    end: 'ALBERT · ON S’Y MET ?'
-  })[step]
+  return t(`onboarding.kickers.${step}`)
 }
 
 /**
@@ -493,9 +646,9 @@ export function kickerOf(step) {
  */
 export function lineOf(step, { level, goal, answers, linking = false }) {
   if (step === 'hello')
-    return 'Bonjour, je suis Albert Stein, ton prof principal. Promis, je serai plus patient que ton adversaire quand tu laisses ta dame en prise.'
+    return t('onboarding.lines.hello')
   if (step === 'level') {
-    if (linking) return 'Je file sur Lichess voir tes parties… Ne bouge pas.'
+    if (linking) return t('onboarding.lines.linking')
     const chosen = levelOf(level)
     const lichess = answers?.lichess
     if (
@@ -504,20 +657,26 @@ export function lineOf(step, { level, goal, answers, linking = false }) {
       level === answers?.suggestedLevel &&
       lichess.perf
     )
-      return `${number.format(lichess.rating)} en ${PERFS[lichess.perf] ?? lichess.perf}, d’après Lichess. ${chosen.line}`
+      return t('onboarding.lines.lichess', {
+        rating: number.format(lichess.rating),
+        perf: PERFS.includes(lichess.perf)
+          ? t(`onboarding.perfs.${lichess.perf}`)
+          : lichess.perf,
+        line: chosen.line
+      })
     return chosen
       ? chosen.line
-      : 'Lie ton Lichess, ou avoue ton niveau. Je ne juge pas… pas encore.'
+      : t('onboarding.lines.noLevel')
   }
   if (step === 'goal')
     return (
       goalOf(goal)?.line ??
-      'Qu’est-ce qui t’amène ? Un seul choix : le plus sincère, pas le plus raisonnable.'
+      t('onboarding.lines.noGoal')
     )
   if (PROF_SCREENS[step]) return PROF_SCREENS[step].line
   return answers?.lichess.linked
-    ? 'Assez de théorie ! Choisis par où commencer, je m’occupe du reste.'
-    : 'Assez de théorie ! Pour le sur-mesure, il me faudra ton Lichess. Sinon, compose ta séance toi-même.'
+    ? t('onboarding.lines.endLinked')
+    : t('onboarding.lines.endUnlinked')
 }
 
 /**
@@ -550,10 +709,12 @@ export function poseOf(step, { level, goal, linking = false }) {
 export function ratingNote(level, answers) {
   if (!answers) return ''
   if (!answers.canSeedRating)
-    return `Ton classement puzzle (${number.format(answers.puzzleRating ?? 1500)}) est déjà établi : il ne bouge plus qu’en jouant.`
+    return t('onboarding.rating.fixed', {
+      rating: number.format(answers.puzzleRating ?? 1500)
+    })
   const chosen = levelOf(level)
   return chosen
-    ? `Tes puzzles classés démarreront vers ${number.format(chosen.seed)}. Ensuite, c’est toi qui décides.`
+    ? t('onboarding.rating.seed', { rating: number.format(chosen.seed) })
     : ''
 }
 
@@ -574,21 +735,16 @@ export function defaultEndChoice(linked) {
  * @returns {{label: string, ok: boolean}}
  */
 export function ctaOf(step, { level, goal, end, linked, linking = false }) {
-  if (step === 'hello') return { label: 'Enchanté, Albert', ok: true }
+  const cta = (key, ok = true) => ({ label: t(`onboarding.cta.${key}`), ok })
+  if (step === 'hello') return cta('hello')
   if (step === 'level')
-    return level && !linking
-      ? { label: 'C’est bien moi', ok: true }
-      : { label: 'Choisis ton niveau', ok: false }
-  if (step === 'goal')
-    return goal
-      ? { label: 'Voilà mon objectif', ok: true }
-      : { label: 'Choisis ton objectif', ok: false }
-  if (step === 'ray') return { label: 'Voir mon plan', ok: true }
-  if (PROF_SCREENS[step]) return { label: 'Prof suivant', ok: true }
+    return level && !linking ? cta('levelOk') : cta('level', false)
+  if (step === 'goal') return goal ? cta('goalOk') : cta('goal', false)
+  if (step === 'ray') return cta('ray')
+  if (PROF_SCREENS[step]) return cta('nextProf')
   const choice = END_CHOICES.find(c => c.id === end)
-  if (choice?.lichess && !linked)
-    return { label: 'Lier Lichess et continuer', ok: true }
-  return { label: 'C’est parti !', ok: true }
+  if (choice?.lichess && !linked) return cta('linkLichess')
+  return cta('go')
 }
 
 /**
@@ -598,10 +754,9 @@ export function ctaOf(step, { level, goal, end, linked, linking = false }) {
  */
 export function footOf(step) {
   if (step === 'hello')
-    return 'Tu pourras revoir cette visite depuis ton profil'
-  if (PROF_SCREENS[step])
-    return 'Touche « Pourquoi ça aide » pour en savoir plus'
-  if (step === 'end') return 'Visite à revoir dans Profil › Visite guidée'
+    return t('onboarding.foot.hello')
+  if (PROF_SCREENS[step]) return t('onboarding.foot.prof')
+  if (step === 'end') return t('onboarding.foot.end')
   return ''
 }
 

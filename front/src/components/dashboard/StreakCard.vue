@@ -1,9 +1,9 @@
 <template>
   <section v-if="streak" class="cm-card streak-card" data-testid="streak-card">
     <div class="streak-card__head">
-      <h2 class="cm-card__title">Série</h2>
+      <h2 class="cm-card__title">{{ $t('gamification.card.title') }}</h2>
       <span class="streak-card__best" data-testid="streak-card-best"
-        >Record : {{ days(streak.best) }}</span
+        >{{ $t('gamification.card.best', { days: days(streak.best) }) }}</span
       >
     </div>
 
@@ -30,12 +30,12 @@
         </div>
       </div>
       <div class="streak-card__unit">{{
-        streak.current > 1 ? 'jours d’affilée' : 'jour d’affilée'
+        $t('gamification.card.unit', streak.current > 1 ? 2 : 1)
       }}</div>
       <p class="streak-card__hint">{{ hint }}</p>
     </div>
 
-    <div class="streak-card__week" aria-label="Ta semaine">
+    <div class="streak-card__week" :aria-label="$t('gamification.card.week')">
       <div
         v-for="(day, i) in week"
         :key="i"
@@ -48,7 +48,7 @@
         :data-testid="`streak-day-${i}`"
         :data-done="day.done || undefined"
         :data-frozen="day.frozen || undefined"
-        :title="day.frozen ? 'Gelé : ta série a tenu sans toi' : undefined"
+        :title="day.frozen ? $t('gamification.card.frozen') : undefined"
       >
         <span class="streak-card__day-label">{{ day.label }}</span>
         <span class="streak-card__day-dot">{{
@@ -70,6 +70,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGamificationStore } from '@/stores/gamification'
 import { days, flameScale, localToday, weekRow } from '@/utils/streak'
+import { t } from '@/i18n'
 
 const auth = useAuthStore()
 const gamification = useGamificationStore()
@@ -96,14 +97,16 @@ const hint = computed(() => {
   const s = streak.value
   if (!s) return ''
   if (!playedToday.value && s.protected)
-    return 'Un gel protège ta série. Joue aujourd’hui pour ne pas l’entamer.'
+    return t('gamification.card.protected')
   if (!playedToday.value)
     return s.current > 0
-      ? 'Un exercice aujourd’hui et ta série continue.'
-      : 'Un exercice aujourd’hui pour lancer une série.'
+      ? t('gamification.card.keep')
+      : t('gamification.card.start')
   return s.nextMilestone
-    ? `Prochain badge dans ${days(s.nextMilestone - s.current)}.`
-    : 'Tous les badges sont à toi.'
+    ? t('gamification.card.nextBadge', {
+        days: days(s.nextMilestone - s.current)
+      })
+    : t('gamification.card.allBadges')
 })
 </script>
 

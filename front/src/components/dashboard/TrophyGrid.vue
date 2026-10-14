@@ -1,12 +1,17 @@
 <template>
   <section class="cm-card trophies" data-testid="trophies">
     <div class="trophies__head">
-      <h2 class="cm-card__title">Trophées</h2>
+      <h2 class="cm-card__title">{{ $t('dashboard.trophies.title') }}</h2>
       <span
         v-if="cards.length"
         class="trophies__count"
         data-testid="trophies-count"
-        >{{ won.length }} / {{ cards.length }} débloqués</span
+        >{{
+          $t('dashboard.trophies.count', {
+            won: won.length,
+            total: cards.length
+          })
+        }}</span
       >
     </div>
     <p v-if="error" class="cm-muted q-my-none">{{ error }}</p>
@@ -15,8 +20,7 @@
       class="cm-muted q-my-none"
       data-testid="trophies-empty"
     >
-      Aucun trophée pour l’instant : ils se débloquent en jouant, la surprise
-      est au bout.
+      {{ $t('dashboard.trophies.empty') }}
     </p>
     <div v-else class="trophies__grid">
       <div

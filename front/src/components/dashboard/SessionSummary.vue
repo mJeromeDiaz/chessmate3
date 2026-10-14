@@ -1,11 +1,15 @@
 <template>
   <section class="cm-card session-summary" data-testid="session-summary">
     <div class="session-summary__head">
-      <h2 class="cm-card__title">Sessions</h2>
+      <h2 class="cm-card__title">{{ $t('dashboard.sessions.title') }}</h2>
       <span class="cm-muted">{{
         sessions.closed
-          ? `${sessions.closed} jouée${sessions.closed > 1 ? 's' : ''} · ${formatHours(sessions.playedMs)}`
-          : 'Aucune sur la période'
+          ? $t(
+              'dashboard.sessions.played',
+              { n: sessions.closed, time: formatHours(sessions.playedMs) },
+              sessions.closed
+            )
+          : $t('dashboard.sessions.none')
       }}</span>
     </div>
     <div class="session-summary__figures">

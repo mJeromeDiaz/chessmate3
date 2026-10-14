@@ -3,14 +3,14 @@
     <div class="dashboard__inner">
       <header class="dashboard__head">
         <div>
-          <div class="dashboard__hello lt-md">Bonjour 👋&#xFE0E;</div>
-          <h1 class="dashboard__title">Ta progression</h1>
+          <div class="dashboard__hello lt-md">{{ $t('dashboard.home.hello') }}</div>
+          <h1 class="dashboard__title">{{ $t('dashboard.home.title') }}</h1>
           <router-link
             v-if="!store.isNewUser"
             to="/stats"
             class="dashboard__stats-link"
             data-testid="dashboard-stats"
-            >Mes statistiques →</router-link
+            >{{ $t('dashboard.home.stats') }}</router-link
           >
         </div>
         <div class="dashboard__head-actions">
@@ -19,7 +19,7 @@
             no-caps
             class="dashboard__new cm-btn-create"
             to="/session/new"
-            label="+ Nouvelle session"
+            :label="$t('dashboard.home.newSession')"
             data-testid="dashboard-new-session"
           />
         </div>
@@ -73,7 +73,7 @@
             flat
             no-caps
             color="primary"
-            label="Réessayer"
+            :label="$t('common.actions.retry')"
             @click="store.load()"
           />
         </template>
@@ -102,6 +102,7 @@ import WeakThemeTip from '@/components/dashboard/WeakThemeTip.vue'
 import WeeklyQuest from '@/components/dashboard/WeeklyQuest.vue'
 import WelcomeCard from '@/components/dashboard/WelcomeCard.vue'
 import LandingPage from '@/components/landing/LandingPage.vue'
+import { t } from '@/i18n'
 
 /**
  * Home: the dashboard once signed in (design "Dashboard", docs/DASHBOARD.md), the landing page
@@ -126,7 +127,7 @@ const moduleRows = computed(() =>
 /** Module figures that could not be loaded (their row then reads as empty; activity: the totals). */
 const sectionError = computed(() =>
   ['activity', 'puzzle', 'woodpecker', 'repertoire'].some(s => store.errors[s])
-    ? 'Certaines statistiques des modules n’ont pas pu être chargées.'
+    ? t('dashboard.home.sectionError')
     : ''
 )
 

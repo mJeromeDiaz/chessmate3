@@ -1,7 +1,7 @@
 <template>
   <section class="cm-card time-chart" data-testid="training-time">
     <div class="time-chart__head">
-      <h2 class="cm-card__title">Temps d’entraînement</h2>
+      <h2 class="cm-card__title">{{ $t('dashboard.time.title') }}</h2>
       <span class="time-chart__total" data-testid="training-total">{{
         formatHours(total)
       }}</span>
@@ -23,7 +23,7 @@
     </ul>
 
     <p v-if="total === 0" class="cm-muted q-my-md" data-testid="training-empty">
-      Aucun exercice sur la période.
+      {{ $t('dashboard.time.empty') }}
     </p>
 
     <template v-else-if="!table">
@@ -74,7 +74,7 @@
           data-testid="training-tip"
         >
           <div class="time-chart__tip-title"
-            >Semaine du {{ tip.bar.label }}</div
+            >{{ $t('dashboard.time.week', { date: tip.bar.label }) }}</div
           >
           <div
             v-for="segment in [...tip.bar.segments].reverse()"
@@ -86,7 +86,7 @@
             <strong>{{ formatHours(segment.ms) }}</strong>
           </div>
           <div class="time-chart__tip-row time-chart__tip-total">
-            <span>Total</span>
+            <span>{{ $t('dashboard.time.total') }}</span>
             <strong>{{ formatHours(tip.bar.total) }}</strong>
           </div>
         </div>
@@ -109,7 +109,7 @@
       <table class="time-chart__table" data-testid="training-table">
         <thead>
           <tr>
-            <th scope="col">Semaine du</th>
+            <th scope="col">{{ $t('dashboard.time.weekHeader') }}</th>
             <th v-for="m in CHART_MODULES" :key="m.id" scope="col">{{
               m.label
             }}</th>
@@ -135,7 +135,7 @@
       no-caps
       color="primary"
       class="q-mt-sm"
-      :label="table ? 'Voir le graphique' : 'Voir le tableau'"
+      :label="table ? $t('dashboard.time.chart') : $t('dashboard.time.table')"
       data-testid="training-table-toggle"
       @click="table = !table"
     />
@@ -150,6 +150,7 @@ import {
   labelledBars,
   weekChart
 } from '@/utils/dashboard/stats'
+import { t } from '@/i18n'
 
 /**
  * Training time by week (statistics page, docs/DASHBOARD.md): one bar per local week, stacked by
@@ -206,7 +207,10 @@ function barLabel(bar) {
   const parts = bar.segments.map(
     s => `${moduleLabel(s.module)} ${formatHours(s.ms)}`
   )
-  return `Semaine du ${bar.label} : ${bar.total ? parts.join(', ') : 'rien'}`
+  return t('dashboard.time.barLabel', {
+    date: bar.label,
+    parts: bar.total ? parts.join(', ') : t('dashboard.time.nothing')
+  })
 }
 </script>
 

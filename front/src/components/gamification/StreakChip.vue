@@ -23,6 +23,7 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useGamificationStore } from '@/stores/gamification'
 import { days, localToday } from '@/utils/streak'
+import { t } from '@/i18n'
 
 defineProps({
   /** Two chips at once (header, drawer): distinct test ids. */
@@ -44,10 +45,13 @@ const title = computed(() => {
   const s = streak.value
   if (!s) return ''
   if (playedToday.value)
-    return `Série : ${days(s.current)} · record ${days(s.best)}`
+    return t('gamification.chip.played', {
+      days: days(s.current),
+      best: days(s.best)
+    })
   return s.current > 0
-    ? `Série : ${days(s.current)} · joue aujourd’hui pour la garder`
-    : 'Joue aujourd’hui pour lancer une série'
+    ? t('gamification.chip.waiting', { days: days(s.current) })
+    : t('gamification.chip.start')
 })
 
 function refresh() {

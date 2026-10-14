@@ -1,7 +1,7 @@
 <template>
   <q-page class="profile" data-testid="profile-page">
     <div v-if="profile" class="profile__inner">
-      <h1 class="profile__title">Profil</h1>
+      <h1 class="profile__title">{{ $t('profile.title') }}</h1>
 
       <q-banner v-if="linkedNotice" class="profile-success q-mb-md" rounded>{{
         linkedNotice
@@ -21,7 +21,9 @@
             class="cm-card profile-card profile__notifications"
             data-testid="profile-notifications"
           >
-            <h2 class="cm-card__title">Notifications et calendrier</h2>
+            <h2 class="cm-card__title">
+              {{ $t('profile.notificationsTitle') }}
+            </h2>
             <NotificationSection />
             <StreakReminderSection />
             <CalendarSection />
@@ -43,6 +45,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { providerLabel } from '@/utils/format'
+import { t } from '@/i18n'
 import ActiveSessions from '@/components/profile/ActiveSessions.vue'
 import CalendarSection from '@/components/profile/CalendarSection.vue'
 import DataCard from '@/components/profile/DataCard.vue'
@@ -63,7 +66,7 @@ const route = useRoute()
 const profile = computed(() => auth.profile)
 const linkedNotice = computed(() =>
   typeof route.query.linked === 'string'
-    ? `Compte ${providerLabel(route.query.linked)} lié.`
+    ? t('profile.linked', { provider: providerLabel(route.query.linked) })
     : ''
 )
 </script>

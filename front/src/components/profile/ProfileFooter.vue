@@ -1,9 +1,15 @@
 <template>
   <footer class="profile-footer" data-testid="profile-footer">
     <nav class="profile-footer__links">
-      <router-link to="/conditions">Conditions d’utilisation</router-link>
-      <router-link to="/confidentialite">Confidentialité</router-link>
-      <router-link to="/contact">Contact</router-link>
+      <router-link to="/conditions">{{
+        $t('profile.footer.terms')
+      }}</router-link>
+      <router-link to="/confidentialite">{{
+        $t('profile.footer.privacy')
+      }}</router-link>
+      <router-link to="/contact">{{
+        $t('profile.footer.contact')
+      }}</router-link>
     </nav>
     <div>Don't Stay Rooky v{{ version }}</div>
   </footer>

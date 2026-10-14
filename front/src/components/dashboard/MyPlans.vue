@@ -5,12 +5,14 @@
     data-testid="my-plans"
   >
     <div class="my-plans__head">
-      <h2 class="cm-card__title">Mes sessions</h2>
-      <router-link to="/session" class="my-plans__all">Toutes →</router-link>
+      <h2 class="cm-card__title">{{ $t('dashboard.plans.title') }}</h2>
+      <router-link to="/session" class="my-plans__all">{{
+        $t('dashboard.plans.all')
+      }}</router-link>
     </div>
     <div v-if="!plans.length" class="my-plans__empty">
       <span>{{
-        loaded ? 'Enregistre une session pour la retrouver ici.' : 'Chargement…'
+        loaded ? $t('dashboard.plans.empty') : $t('common.loading')
       }}</span>
       <q-btn
         flat
@@ -18,7 +20,7 @@
         no-caps
         color="primary"
         to="/session/new"
-        label="Composer une session"
+        :label="$t('dashboard.plans.compose')"
       />
     </div>
     <div
@@ -29,7 +31,7 @@
     >
       <div class="my-plans__main">
         <div class="my-plans__title">{{
-          plan.title || 'Session sans titre'
+          plan.title || $t('session.untitled')
         }}</div>
         <div class="my-plans__meta">{{
           plan.nextAt ? nextText(plan) : repetitionText(plan)
@@ -41,7 +43,7 @@
         no-caps
         color="primary"
         icon="play_arrow"
-        label="Lancer"
+        :label="$t('session.launch')"
         class="my-plans__launch"
         :loading="launcher.launching.value === plan.id"
         data-testid="my-plan-launch"
@@ -49,10 +51,13 @@
       />
     </div>
     <div v-if="launcher.inProgress.value" class="my-plans__error">
-      Une session est déjà en cours :
-      <router-link :to="`/session/${launcher.inProgress.value.id}`"
-        >la reprendre</router-link
-      >.
+      <i18n-t keypath="session.inProgress" scope="global">
+        <template #resume
+          ><router-link :to="`/session/${launcher.inProgress.value.id}`">{{
+            $t('session.resume')
+          }}</router-link></template
+        >
+      </i18n-t>
     </div>
     <div v-else-if="launcher.error.value" class="my-plans__error">{{
       launcher.error.value

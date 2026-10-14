@@ -1,22 +1,25 @@
 <template>
   <div class="profile-block">
-    <div class="profile-row__title">Appareils de confiance</div>
+    <div class="profile-row__title">{{ $t('profile.devices.title') }}</div>
     <p class="profile-row__sub q-mb-sm"
-      >Sur ces appareils, la connexion par mot de passe ne demande pas de code
-      pendant 30 jours.</p
+      >{{ $t('profile.devices.intro') }}</p
     >
 
     <q-spinner v-if="loading" />
-    <p v-else-if="devices.length === 0">Aucun appareil de confiance.</p>
+    <p v-else-if="devices.length === 0">{{ $t('profile.devices.none') }}</p>
 
     <q-list v-else separator>
       <q-item v-for="device in devices" :key="device.id">
         <q-item-section>
           <q-item-label>{{ device.label }}</q-item-label>
           <q-item-label caption>
-            Ajouté le {{ formatDate(device.createdAt) }} · dernière utilisation
-            {{ formatDate(device.lastUsedAt) }} · expire le
-            {{ formatDate(device.expiresAt) }}
+            {{
+              $t('profile.devices.dates', {
+                added: formatDate(device.createdAt),
+                used: formatDate(device.lastUsedAt),
+                expires: formatDate(device.expiresAt)
+              })
+            }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>
@@ -24,7 +27,7 @@
             flat
             no-caps
             color="negative"
-            label="Révoquer"
+            :label="$t('profile.devices.revoke')"
             :loading="busy === device.id"
             @click="revoke(device)"
           />

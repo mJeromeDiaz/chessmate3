@@ -4,10 +4,10 @@
     class="cm-card sessions"
     data-testid="recent-sessions"
   >
-    <h2 class="cm-card__title">Dernières sessions</h2>
+    <h2 class="cm-card__title">{{ $t('dashboard.recent.title') }}</h2>
     <div v-if="!sessions.length" class="sessions__empty">
       <span>{{
-        loaded ? 'Tes sessions jouées apparaîtront ici.' : 'Chargement…'
+        loaded ? $t('dashboard.recent.empty') : $t('common.loading')
       }}</span>
       <q-btn
         flat
@@ -15,7 +15,7 @@
         no-caps
         color="primary"
         to="/session/new"
-        label="Préparer une session"
+        :label="$t('dashboard.recent.prepare')"
       />
     </div>
     <div v-for="session in sessions" :key="session.id" class="sessions__item">
@@ -26,7 +26,7 @@
       >
         <div class="sessions__main">
           <div class="sessions__title">{{
-            session.title || 'Session sans titre'
+            session.title || $t('session.untitled')
           }}</div>
           <div class="sessions__meta"
             >{{ formatDate(session.startedAt) }} ·
@@ -39,7 +39,7 @@
           :class="`sessions__status--${session.status}`"
           >{{
             session.status === 'active'
-              ? 'Reprendre →'
+              ? $t('session.resumeArrow')
               : sessionStatusText(session)
           }}</span
         >
@@ -52,25 +52,33 @@
         color="primary"
         icon="replay"
         :loading="launcher.launching.value === session.id"
-        :aria-label="`Rejouer ${session.title || 'la session'}`"
+        :aria-label="
+          $t('session.replayNamed', {
+            title: session.title || $t('session.replayThis')
+          })
+        "
         data-testid="recent-session-replay"
         @click="launcher.replay(session)"
       >
-        <q-tooltip>Rejouer la session</q-tooltip>
+        <q-tooltip>{{ $t('session.replay') }}</q-tooltip>
       </q-btn>
     </div>
     <div v-if="launcher.inProgress.value" class="sessions__notice">
-      Une session est déjà en cours :
-      <router-link :to="`/session/${launcher.inProgress.value.id}`"
-        >la reprendre</router-link
-      >
-      ou
-      <button
-        type="button"
-        class="sessions__link"
-        @click="launcher.abandonAndLaunch()"
-        >l’abandonner et rejouer</button
-      >.
+      <i18n-t keypath="session.inProgressOr" scope="global">
+        <template #resume
+          ><router-link :to="`/session/${launcher.inProgress.value.id}`">{{
+            $t('session.resume')
+          }}</router-link></template
+        >
+        <template #abandon
+          ><button
+            type="button"
+            class="sessions__link"
+            @click="launcher.abandonAndLaunch()"
+            >{{ $t('session.abandonAndReplay') }}</button
+          ></template
+        >
+      </i18n-t>
     </div>
     <div
       v-else-if="launcher.error.value"

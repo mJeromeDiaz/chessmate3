@@ -1,12 +1,7 @@
 <template>
   <div class="profile-block" data-testid="calendar-section">
-    <div class="profile-row__title">Calendrier</div>
-    <p class="profile-row__sub q-mb-sm">
-      Une adresse privée à ajouter à ton agenda (Google Agenda, Apple
-      Calendrier, Outlook…) : il affiche tes sessions marquées « Intégrer à mon
-      calendrier » et suit leurs changements. Garde-la pour toi : qui la connaît
-      voit tes sessions.
-    </p>
+    <div class="profile-row__title">{{ $t('profile.calendar.title') }}</div>
+    <p class="profile-row__sub q-mb-sm">{{ $t('profile.calendar.intro') }}</p>
 
     <q-spinner v-if="loading" />
     <template v-else-if="address.url">
@@ -15,7 +10,7 @@
         readonly
         dense
         outlined
-        label="Adresse de ton calendrier"
+        :label="$t('profile.calendar.address')"
         data-testid="calendar-url"
         @focus="$event.target.select()"
       >
@@ -25,15 +20,14 @@
             round
             dense
             icon="content_copy"
-            aria-label="Copier l'adresse"
+            :aria-label="$t('profile.calendar.copy')"
             data-testid="calendar-copy"
             @click="copy"
           />
         </template>
       </q-input>
       <p class="profile-row__sub q-mt-xs q-mb-sm">
-        Google Agenda : « Autres agendas » → « À partir de l'URL ». Sur Apple ou
-        Outlook, le bouton « S'abonner » ouvre l'application.
+        {{ $t('profile.calendar.howTo') }}
       </p>
       <div class="row q-gutter-sm">
         <q-btn
@@ -41,14 +35,14 @@
           unelevated
           no-caps
           icon="event"
-          label="S'abonner"
+          :label="$t('profile.calendar.subscribe')"
           :href="address.webcalUrl"
           data-testid="calendar-subscribe"
         />
         <q-btn
           flat
           no-caps
-          label="Nouvelle adresse"
+          :label="$t('profile.calendar.regenerate')"
           :loading="busy === 'regenerate'"
           data-testid="calendar-regenerate"
           @click="confirmRegenerate"
@@ -57,7 +51,7 @@
           flat
           no-caps
           color="negative"
-          label="Désactiver"
+          :label="$t('profile.calendar.revoke')"
           :loading="busy === 'revoke'"
           data-testid="calendar-revoke"
           @click="confirmRevoke"
@@ -70,7 +64,7 @@
       unelevated
       no-caps
       icon="event"
-      label="Créer mon adresse de calendrier"
+      :label="$t('profile.calendar.create')"
       :loading="busy === 'regenerate'"
       data-testid="calendar-create"
       @click="regenerate"
@@ -91,6 +85,7 @@ import { onMounted, ref } from 'vue'
 import { copyToClipboard, useQuasar } from 'quasar'
 import { calendarApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
 const $q = useQuasar()
 /** @type {import('vue').Ref<{url: string|null, webcalUrl: string|null}>} */
@@ -114,18 +109,16 @@ async function regenerate() {
 
 function confirmRegenerate() {
   $q.dialog({
-    title: 'Créer une nouvelle adresse ?',
-    message:
-      "L'adresse actuelle cessera de fonctionner : il faudra ajouter la nouvelle à ton agenda.",
+    title: t('profile.calendar.regenerateTitle'),
+    message: t('profile.calendar.regenerateMessage'),
     cancel: true
   }).onOk(regenerate)
 }
 
 function confirmRevoke() {
   $q.dialog({
-    title: 'Désactiver ton calendrier ?',
-    message:
-      "L'adresse cessera de fonctionner et ton agenda n'affichera plus tes sessions.",
+    title: t('profile.calendar.revokeTitle'),
+    message: t('profile.calendar.revokeMessage'),
     cancel: true
   }).onOk(async () => {
     busy.value = 'revoke'
@@ -144,9 +137,9 @@ function confirmRevoke() {
 async function copy() {
   try {
     await copyToClipboard(address.value.url ?? '')
-    $q.notify({ message: 'Adresse copiée', timeout: 1500 })
+    $q.notify({ message: t('profile.calendar.copied'), timeout: 1500 })
   } catch {
-    error.value = "La copie a échoué : sélectionne l'adresse pour la copier."
+    error.value = t('profile.calendar.copyFailed')
   }
 }
 

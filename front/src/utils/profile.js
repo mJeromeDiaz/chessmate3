@@ -1,4 +1,4 @@
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * Display helpers of the profile page (design "Profil").
@@ -20,7 +20,7 @@ export function profileName(profile) {
     if (name) return name
   }
 
-  return 'Joueur'
+  return t('profile.player')
 }
 
 /**
@@ -30,12 +30,54 @@ export function profileName(profile) {
  * @type {Array<{value: string, glyph: string, color: string, label: string}>}
  */
 export const AVATARS = [
-  { value: 'knight', glyph: '♞\uFE0E', color: '#FF8A3D', label: 'Cavalier' },
-  { value: 'bishop', glyph: '♝\uFE0E', color: '#C6F432', label: 'Fou' },
-  { value: 'queen', glyph: '♛\uFE0E', color: '#FF6FAE', label: 'Dame' },
-  { value: 'rook', glyph: '♜\uFE0E', color: '#4FB2FF', label: 'Tour' },
-  { value: 'king', glyph: '♚\uFE0E', color: '#FFD43B', label: 'Roi' },
-  { value: 'pawn', glyph: '♟\uFE0E', color: '#2ED3A8', label: 'Pion' }
+  {
+    value: 'knight',
+    glyph: '♞\uFE0E',
+    color: '#FF8A3D',
+    get label() {
+      return t('profile.avatars.knight')
+    }
+  },
+  {
+    value: 'bishop',
+    glyph: '♝\uFE0E',
+    color: '#C6F432',
+    get label() {
+      return t('profile.avatars.bishop')
+    }
+  },
+  {
+    value: 'queen',
+    glyph: '♛\uFE0E',
+    color: '#FF6FAE',
+    get label() {
+      return t('profile.avatars.queen')
+    }
+  },
+  {
+    value: 'rook',
+    glyph: '♜\uFE0E',
+    color: '#4FB2FF',
+    get label() {
+      return t('profile.avatars.rook')
+    }
+  },
+  {
+    value: 'king',
+    glyph: '♚\uFE0E',
+    color: '#FFD43B',
+    get label() {
+      return t('profile.avatars.king')
+    }
+  },
+  {
+    value: 'pawn',
+    glyph: '♟\uFE0E',
+    color: '#2ED3A8',
+    get label() {
+      return t('profile.avatars.pawn')
+    }
+  }
 ]
 
 /**
@@ -68,9 +110,15 @@ export function cleanHandle(value) {
 
 /** The answer of the availability check that blocks saving, by reason. */
 const REFUSALS = {
-  invalid: '3 caractères minimum · lettres, chiffres, _',
-  reserved: 'Ce pseudo est réservé.',
-  taken: 'Ce pseudo est déjà pris.'
+  get invalid() {
+    return t('profile.handle.invalid')
+  },
+  get reserved() {
+    return t('profile.handle.reserved')
+  },
+  get taken() {
+    return t('profile.handle.taken')
+  }
 }
 
 /**
@@ -85,7 +133,7 @@ const REFUSALS = {
 export function handleStatus(handle, current, check) {
   if (handle === '') {
     return {
-      text: 'Facultatif · 3 à 20 caractères : lettres, chiffres, _',
+      text: t('profile.handle.optional'),
       tone: 'muted',
       savable: true
     }
@@ -94,10 +142,10 @@ export function handleStatus(handle, current, check) {
     return { text: REFUSALS.invalid, tone: 'error', savable: false }
   }
   if (handle === current) {
-    return { text: 'Ton pseudo actuel', tone: 'ok', savable: true }
+    return { text: t('profile.handle.current'), tone: 'ok', savable: true }
   }
   if (check === null || check === 'checking' || check.handle !== handle) {
-    return { text: 'Vérification…', tone: 'muted', savable: false }
+    return { text: t('profile.handle.checking'), tone: 'muted', savable: false }
   }
   if (!check.available) {
     return {
@@ -107,7 +155,11 @@ export function handleStatus(handle, current, check) {
     }
   }
 
-  return { text: `✓ @${handle} est disponible`, tone: 'ok', savable: true }
+  return {
+    text: t('profile.handle.available', { handle }),
+    tone: 'ok',
+    savable: true
+  }
 }
 
 /**
@@ -175,13 +227,16 @@ const SESSION_ICONS = { phone: '▯', tablet: '▭', desktop: '▢' }
 export function sessionLine(session, now = new Date()) {
   const device =
     [session.browser, session.os].filter(Boolean).join(' · ') ||
-    'Appareil inconnu'
+    t('profile.sessions.unknownDevice')
   const when = session.current
-    ? 'maintenant'
+    ? t('profile.sessions.now')
     : session.lastActiveAt
       ? relativeDay(new Date(session.lastActiveAt), now)
       : null
-  const meta = [session.ip ? `réseau ${session.ip}` : null, when]
+  const meta = [
+    session.ip ? t('profile.sessions.network', { ip: session.ip }) : null,
+    when
+  ]
     .filter(Boolean)
     .join(' · ')
 
@@ -203,8 +258,8 @@ export function relativeDay(date, now) {
   const day = d =>
     new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
   const days = Math.round((day(now) - day(date)) / 86_400_000)
-  if (days === 0) return `aujourd’hui, ${time}`
-  if (days === 1) return `hier, ${time}`
+  if (days === 0) return t('profile.sessions.today', { time })
+  if (days === 1) return t('profile.sessions.yesterday', { time })
 
   const dayLabel = new Intl.DateTimeFormat(intlLocale(), {
     day: 'numeric',
@@ -212,7 +267,7 @@ export function relativeDay(date, now) {
     ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' })
   }).format(date)
 
-  return `${dayLabel}, ${time}`
+  return t('profile.sessions.day', { day: dayLabel, time })
 }
 
 /**
@@ -238,33 +293,36 @@ export function deletionRefusal(error) {
   const code = error?.response?.data?.error
   switch (code) {
     case 'invalid_code':
-      return { message: 'Code incorrect.', signInAgain: false }
+      return {
+        message: t('profile.deletionRefusals.invalid_code'),
+        signInAgain: false
+      }
     case 'code_expired':
       return {
-        message: 'Ce code n’est plus valable : demande-en un nouveau.',
+        message: t('profile.deletionRefusals.code_expired'),
         signInAgain: false
       }
     case 'resend_too_soon':
       return {
-        message: 'Patiente quelques secondes avant de redemander un code.',
+        message: t('profile.deletionRefusals.resend_too_soon'),
         signInAgain: false
       }
     case 'recent_sign_in_required':
       return {
-        message: 'Reconnecte-toi pour confirmer la suppression.',
+        message: t('profile.deletionRefusals.recent_sign_in_required'),
         signInAgain: true
       }
     case 'deletion_scheduled':
       return {
-        message: 'La suppression est déjà programmée.',
+        message: t('profile.deletionRefusals.deletion_scheduled'),
         signInAgain: false
       }
     default:
       return {
         message:
           error?.response?.status === 429
-            ? 'Trop de tentatives. Patiente un peu avant de réessayer.'
-            : 'Une erreur est survenue. Réessaie.',
+            ? t('profile.deletionRefusals.tooMany')
+            : t('profile.deletionRefusals.generic'),
         signInAgain: false
       }
   }

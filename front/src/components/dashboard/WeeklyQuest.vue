@@ -3,12 +3,12 @@
     <img v-if="prof.image" :src="prof.image" alt="" class="quest__prof" />
     <div class="quest__bubble">
       <div class="quest__kicker">
-        {{ prof.name.toUpperCase() }} · DÉFI DE LA SEMAINE
+        {{ $t('dashboard.quest.kicker', { prof: prof.name.toUpperCase() }) }}
         <span
           v-if="quest.completed"
           class="quest__done"
           data-testid="quest-done"
-          >✓ RÉUSSI</span
+          >{{ $t('dashboard.quest.done') }}</span
         >
       </div>
       <div class="quest__text" data-testid="quest-text">{{ text }}</div>
@@ -17,9 +17,16 @@
           <div :style="{ width: `${percent}%` }" />
         </div>
         <span data-testid="quest-progress"
-          >{{ quest.current }}/{{ quest.goal }}</span
+          >{{
+            $t('dashboard.quest.progress', {
+              current: quest.current,
+              goal: quest.goal
+            })
+          }}</span
         >
-        <span class="quest__reward">+{{ quest.reward }} XP</span>
+        <span class="quest__reward">{{
+          $t('dashboard.quest.reward', { xp: quest.reward })
+        }}</span>
       </div>
     </div>
   </div>

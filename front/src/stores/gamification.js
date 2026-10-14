@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { gamificationApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { localToday } from '@/utils/streak'
+import { t } from '@/i18n'
 
 /**
  * The gamification (docs/GAMIFICATION.md): summary (level, XP, streaks), trophies and the weekly
@@ -60,7 +61,7 @@ export const useGamificationStore = defineStore('gamification', () => {
    * @returns {Promise<void>}
    */
   async function load(parts = ['summary', 'trophies', 'quest']) {
-    const message = 'Impossible de charger ces données. Réessayez.'
+    const message = t('dashboard.loadError')
     /** @type {Record<Part, () => Promise<void>>} */
     const loaders = {
       summary: async () => {

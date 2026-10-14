@@ -1,3 +1,21 @@
+import { t } from '@/i18n'
+
+/**
+ * @param {string} value
+ * @param {string} light
+ * @param {string} dark
+ */
+function theme(value, light, dark) {
+  return {
+    value,
+    get label() {
+      return t(`profile.preferences.boards.${value}`)
+    },
+    light,
+    dark
+  }
+}
+
 /**
  * The chessboard colours offered on the profile (design "Profil"). Keys are the API's values
  * (`boardTheme`); `light` and `dark` are the square colours.
@@ -5,11 +23,11 @@
  * @type {Array<{value: string, label: string, light: string, dark: string}>}
  */
 export const BOARD_THEMES = [
-  { value: 'wood', label: 'Bois', light: '#F0D9B5', dark: '#B58863' },
-  { value: 'glass', label: 'Verre', light: '#E4EEF8', dark: '#9DB8D6' },
-  { value: 'pastel', label: 'Pastel', light: '#FFE6F1', dark: '#C9B8FF' },
-  { value: 'tournament', label: 'Tournoi', light: '#EEEED2', dark: '#769656' },
-  { value: 'slate', label: 'Ardoise', light: '#D7D4E2', dark: '#5E5878' }
+  theme('wood', '#F0D9B5', '#B58863'),
+  theme('glass', '#E4EEF8', '#9DB8D6'),
+  theme('pastel', '#FFE6F1', '#C9B8FF'),
+  theme('tournament', '#EEEED2', '#769656'),
+  theme('slate', '#D7D4E2', '#5E5878')
 ]
 
 export const DEFAULT_BOARD_THEME = 'wood'

@@ -1,10 +1,10 @@
 <template>
   <section class="cm-card profile-card" data-testid="profile-preferences">
-    <h2 class="cm-card__title">Préférences</h2>
+    <h2 class="cm-card__title">{{ $t('profile.preferences.title') }}</h2>
 
     <div class="profile-block">
       <div class="profile-row__title">
-        Échiquier
+        {{ $t('profile.preferences.board') }}
         <span class="profile-boards__current">{{ current.label }}</span>
       </div>
       <div class="profile-boards">
@@ -34,15 +34,17 @@
 
     <div class="profile-row">
       <div class="profile-row__text">
-        <div class="profile-row__title">Sons</div>
+        <div class="profile-row__title">{{
+          $t('profile.preferences.sounds')
+        }}</div>
         <div class="profile-row__sub"
-          >Coups, fin de puzzle, de module et de session</div
+          >{{ $t('profile.preferences.soundsHint') }}</div
         >
       </div>
       <q-toggle
         :model-value="profile.moveSound"
         color="primary"
-        aria-label="Sons"
+        :aria-label="$t('profile.preferences.sounds')"
         data-testid="move-sound-toggle"
         @update:model-value="choose({ moveSound: $event })"
       />
@@ -54,18 +56,20 @@
     <div class="profile-row">
       <div class="profile-row__text">
         <div class="profile-row__title">{{
-          profile.publicProfile ? 'Profil public' : 'Profil privé'
+          profile.publicProfile
+            ? $t('profile.preferences.public')
+            : $t('profile.preferences.private')
         }}</div>
         <div class="profile-row__sub">{{
           profile.publicProfile
-            ? 'Les autres joueurs pourront voir ton niveau et tes stats.'
-            : 'Ton niveau et tes stats ne sont visibles que par toi.'
+            ? $t('profile.preferences.publicHint')
+            : $t('profile.preferences.privateHint')
         }}</div>
       </div>
       <q-toggle
         :model-value="profile.publicProfile"
         color="primary"
-        aria-label="Profil public"
+        :aria-label="$t('profile.preferences.public')"
         data-testid="public-profile-toggle"
         @update:model-value="choose({ publicProfile: $event })"
       />
@@ -81,7 +85,7 @@
 /**
  * Profile: the "Préférences" card. Board colours, move sounds and the public flag are saved at
  * once (the boards follow the profile); the public flag is stored only, no page shows a profile
- * to other players yet. Language is shown disabled ("Bientôt"): the app is French only.
+ * to other players yet.
  */
 import { computed, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
@@ -103,7 +107,13 @@ const props = defineProps({
 const auth = useAuthStore()
 const error = ref('')
 
-const boards = BOARD_THEMES.map(t => ({ ...t, squares: previewSquares(t) }))
+const boards = BOARD_THEMES.map(theme => ({
+  value: theme.value,
+  get label() {
+    return theme.label
+  },
+  squares: previewSquares(theme)
+}))
 const current = computed(() => boardTheme(props.profile.boardTheme))
 
 /** @param {Partial<{boardTheme: string, moveSound: boolean, publicProfile: boolean}>} changes */

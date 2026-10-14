@@ -71,12 +71,12 @@
         <div class="rating-card__dot" :style="{ top: `${curve.dotTop}%` }" />
       </div>
       <div class="rating-card__ticks lt-md">
-        <span>{{ curve.min }} min</span>
-        <span>Record {{ curve.max }}</span>
+        <span>{{ $t('dashboard.rating.min', { n: curve.min }) }}</span>
+        <span>{{ $t('dashboard.rating.max', { n: curve.max }) }}</span>
       </div>
       <div class="rating-card__ticks gt-sm">
         <span v-for="tick in ticks" :key="tick.label">{{ tick.label }}</span>
-        <span>Aujourd’hui</span>
+        <span>{{ $t('dashboard.rating.today') }}</span>
       </div>
     </template>
   </section>
@@ -87,18 +87,22 @@ import { computed, ref } from 'vue'
 import { useDashboardStore, CURVE_DAYS } from '@/stores/dashboard'
 import { buildCurve, monthTicks } from '@/utils/dashboard/curve'
 import { formatRatingDelta } from '@/utils/format'
+import { t } from '@/i18n'
 
 /**
  * The rating curve over 90 days (design "Dashboard"): the puzzle rating, or the blitz / rapid /
  * classical rating of the linked Lichess account, asked on the first click on one of those tabs.
  */
 
-const TABS = [
-  { id: 'puzzles', label: 'Puzzles', kicker: 'CLASSEMENT PUZZLES' },
-  { id: 'blitz', label: 'Blitz', kicker: 'ELO LICHESS · BLITZ' },
-  { id: 'rapid', label: 'Rapide', kicker: 'ELO LICHESS · RAPIDE' },
-  { id: 'classical', label: 'Classique', kicker: 'ELO LICHESS · CLASSIQUE' }
-]
+const TABS = ['puzzles', 'blitz', 'rapid', 'classical'].map(id => ({
+  id,
+  get label() {
+    return t(`dashboard.rating.tabs.${id}`)
+  },
+  get kicker() {
+    return t(`dashboard.rating.kickers.${id}`)
+  }
+}))
 
 const store = useDashboardStore()
 /** @type {import('vue').Ref<'puzzles'|'blitz'|'rapid'|'classical'>} */
@@ -106,7 +110,10 @@ const selected = ref('puzzles')
 
 const kicker = computed(
   () =>
-    `${TABS.find(t => t.id === selected.value)?.kicker} · ${CURVE_DAYS} JOURS`
+    t('dashboard.rating.kicker', {
+      tab: TABS.find(tab => tab.id === selected.value)?.kicker,
+      days: CURVE_DAYS
+    })
 )
 
 /** The period and points of the selected tab, null while unknown. */
@@ -145,12 +152,12 @@ const notice = computed(() => {
     if (store.errors.rating)
       return {
         text: store.errors.rating,
-        action: { label: 'Réessayer', click: () => store.load() }
+        action: { label: t('common.actions.retry'), click: () => store.load() }
       }
     if (store.rating && !store.rating.points.length) {
       return {
-        text: 'Joue des puzzles classés pour voir ton classement évoluer.',
-        action: { label: 'Résoudre des puzzles', to: '/puzzle' }
+        text: t('dashboard.rating.noPuzzles'),
+        action: { label: t('dashboard.rating.solve'), to: '/puzzle' }
       }
     }
     return null
@@ -158,17 +165,20 @@ const notice = computed(() => {
   if (store.lichessError)
     return {
       text: store.lichessError,
-      action: { label: 'Réessayer', click: () => store.loadLichess() }
+      action: {
+        label: t('common.actions.retry'),
+        click: () => store.loadLichess()
+      }
     }
   if (store.lichess && !store.lichess.linked) {
     return {
-      text: 'Lie ton compte Lichess pour suivre ton Elo en partie.',
-      action: { label: 'Lier Lichess', to: '/profile' }
+      text: t('dashboard.rating.linkLichess'),
+      action: { label: t('dashboard.rating.link'), to: '/profile' }
     }
   }
   if (store.lichess && !curve.value) {
     return {
-      text: 'Aucune partie classée dans cette cadence sur Lichess.',
+      text: t('dashboard.rating.noGames'),
       action: null
     }
   }

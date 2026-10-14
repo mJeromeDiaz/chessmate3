@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * Display helpers of the streaks (docs/GAMIFICATION.md, § 4): badges, the professor's words on the
  * celebration screen, the week row. Pure, so that they can be tested alone.
@@ -20,22 +22,95 @@
 
 /** @type {StreakBadge[]} the streak badges, shortest first (7 and 30 are the older trophies) */
 export const STREAK_BADGES = [
-  { key: 'streak_3', goal: 3, name: 'Étincelle' },
-  { key: 'on_fire', goal: 7, name: 'En feu' },
-  { key: 'streak_14', goal: 14, name: 'Feu de camp' },
-  { key: 'unstoppable', goal: 30, name: 'Inarrêtable' },
-  { key: 'streak_50', goal: 50, name: 'Brasier' },
-  { key: 'streak_100', goal: 100, name: 'Centenaire' },
-  { key: 'streak_200', goal: 200, name: 'Fournaise' },
-  { key: 'streak_300', goal: 300, name: 'Volcan' },
-  { key: 'streak_365', goal: 365, name: 'Une année' },
-  { key: 'streak_450', goal: 450, name: 'Phénix' },
-  { key: 'streak_500', goal: 500, name: 'Soleil' },
-  { key: 'streak_1000', goal: 1000, name: 'Légende' }
+  {
+    key: 'streak_3',
+    goal: 3,
+    get name() {
+      return t('gamification.streakBadges.streak_3')
+    }
+  },
+  {
+    key: 'on_fire',
+    goal: 7,
+    get name() {
+      return t('gamification.streakBadges.on_fire')
+    }
+  },
+  {
+    key: 'streak_14',
+    goal: 14,
+    get name() {
+      return t('gamification.streakBadges.streak_14')
+    }
+  },
+  {
+    key: 'unstoppable',
+    goal: 30,
+    get name() {
+      return t('gamification.streakBadges.unstoppable')
+    }
+  },
+  {
+    key: 'streak_50',
+    goal: 50,
+    get name() {
+      return t('gamification.streakBadges.streak_50')
+    }
+  },
+  {
+    key: 'streak_100',
+    goal: 100,
+    get name() {
+      return t('gamification.streakBadges.streak_100')
+    }
+  },
+  {
+    key: 'streak_200',
+    goal: 200,
+    get name() {
+      return t('gamification.streakBadges.streak_200')
+    }
+  },
+  {
+    key: 'streak_300',
+    goal: 300,
+    get name() {
+      return t('gamification.streakBadges.streak_300')
+    }
+  },
+  {
+    key: 'streak_365',
+    goal: 365,
+    get name() {
+      return t('gamification.streakBadges.streak_365')
+    }
+  },
+  {
+    key: 'streak_450',
+    goal: 450,
+    get name() {
+      return t('gamification.streakBadges.streak_450')
+    }
+  },
+  {
+    key: 'streak_500',
+    goal: 500,
+    get name() {
+      return t('gamification.streakBadges.streak_500')
+    }
+  },
+  {
+    key: 'streak_1000',
+    goal: 1000,
+    get name() {
+      return t('gamification.streakBadges.streak_1000')
+    }
+  }
 ]
 
 /** The week row's labels, Monday first. */
-export const WEEK_DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+/** The days' initials, Monday first, in the current language. */
+const weekDays = () => [0, 1, 2, 3, 4, 5, 6].map(i => t(`gamification.weekDays.${i}`))
 
 /**
  * @param {string|null|undefined} key
@@ -51,7 +126,7 @@ export function streakBadge(key) {
  * @param {number} n
  */
 export function days(n) {
-  return `${n} jour${n > 1 ? 's' : ''}`
+  return t('gamification.days', { n }, n)
 }
 
 /**
@@ -84,21 +159,25 @@ export function localToday(timezone, now = new Date()) {
 export function streakMessage(notice, name = null) {
   const n = notice.streak
   if (n === 1 && notice.previousStreak > 1)
-    return `Ta série de ${days(notice.previousStreak)} s’est arrêtée, mais une nouvelle commence aujourd’hui. Reviens demain pour la faire grandir !`
+    return t('gamification.streak.restarted', {
+      days: days(notice.previousStreak)
+    })
   if (n === 1)
-    return 'Une série est née ! Reviens demain pour un deuxième jour : c’est là que l’habitude commence.'
+    return t('gamification.streak.born')
   if (n === 7)
-    return 'Une semaine complète, sans un trou. Les grands joueurs sont faits de semaines comme celle-là.'
+    return t('gamification.streak.week')
   if (n === 30)
-    return 'Un mois entier ! Ton œil tactique n’est plus le même qu’au premier jour, je te le garantis.'
+    return t('gamification.streak.month')
   if (n === 100)
-    return `Cent jours. Je n’ai rien à ajouter, à part : chapeau bas${name ? `, ${name}` : ''}.`
+    return name
+      ? t('gamification.streak.hundredNamed', { name })
+      : t('gamification.streak.hundred')
   if (n === 365)
-    return 'Un an, chaque jour. Plus aucun « rooky » ici : te voilà roi de ta propre régularité.'
+    return t('gamification.streak.year')
   const badge = streakBadge(notice.badge)
   if (badge)
-    return `${days(n)} d’affilée : le badge « ${badge.name} » est à toi. Continue, le prochain t’attend !`
-  return `${days(n)} d’affilée ! Chaque séance compte, même les courtes. Continue comme ça.`
+    return t('gamification.streak.badge', { days: days(n), badge: badge.name })
+  return t('gamification.streak.keepGoing', { days: days(n) })
 }
 
 /**
@@ -109,8 +188,11 @@ export function streakMessage(notice, name = null) {
  */
 export function nextMilestoneText(streak, nextMilestone) {
   return nextMilestone
-    ? `Prochain palier : ${days(nextMilestone)} · encore ${nextMilestone - streak}`
-    : 'Tu es une légende.'
+    ? t('gamification.streak.nextMilestone', {
+        days: days(nextMilestone),
+        left: nextMilestone - streak
+      })
+    : t('gamification.streak.legend')
 }
 
 /**
@@ -132,7 +214,7 @@ export function weekIndex(date) {
  */
 export function weekRow(week, today, frozen = []) {
   const t = weekIndex(today)
-  return WEEK_DAYS.map((label, i) => ({
+  return weekDays().map((label, i) => ({
     label,
     done: !!week[i],
     frozen: !week[i] && !!frozen[i],

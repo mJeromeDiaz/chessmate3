@@ -2,10 +2,10 @@
   <div
     class="tour-goals"
     role="radiogroup"
-    aria-label="Ton objectif"
+    :aria-label="$t('onboarding.goal.aria')"
     data-testid="tour-goals"
   >
-    <div class="tour-goals__hint">Un seul choix</div>
+    <div class="tour-goals__hint">{{ $t('onboarding.goal.hint') }}</div>
     <button
       v-for="(goal, i) in GOALS"
       :key="goal.id"

@@ -1,0 +1,12 @@
+{
+  "untitled": "Session sans titre",
+  "inProgress": "Une session est déjà en cours : {resume}.",
+  "inProgressOr": "Une session est déjà en cours : {resume} ou {abandon}.",
+  "resume": "la reprendre",
+  "abandonAndReplay": "l’abandonner et rejouer",
+  "replay": "Rejouer la session",
+  "replayNamed": "Rejouer {title}",
+  "replayThis": "la session",
+  "launch": "Lancer",
+  "resumeArrow": "Reprendre →"
+}

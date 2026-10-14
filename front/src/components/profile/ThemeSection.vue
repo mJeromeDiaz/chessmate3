@@ -1,10 +1,7 @@
 <template>
   <div class="profile-block">
-    <div class="profile-row__title">Apparence</div>
-    <div class="profile-row__sub">
-      Automatique suit le réglage de ton appareil. Ton choix est gardé sur ton
-      compte et s’applique sur tes autres appareils.
-    </div>
+    <div class="profile-row__title">{{ $t('profile.appearance.title') }}</div>
+    <div class="profile-row__sub">{{ $t('profile.appearance.hint') }}</div>
     <q-btn-toggle
       :model-value="theme.theme"
       :options="options"
@@ -20,15 +17,15 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useThemeStore } from '@/stores/theme'
 import { THEME_OPTIONS } from '@/utils/theme'
 
 /** Profile: the colour theme (same choice as the header menu). */
 const theme = useThemeStore()
 
-const options = THEME_OPTIONS.map(o => ({
-  value: o.value,
-  label: o.label,
-  icon: o.icon
-}))
+/** Computed: the labels follow the language. */
+const options = computed(() =>
+  THEME_OPTIONS.map(o => ({ value: o.value, label: o.label, icon: o.icon }))
+)
 </script>

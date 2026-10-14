@@ -1,0 +1,210 @@
+{
+  "player": "Joueur",
+  "avatars": {
+    "knight": "Cavalier",
+    "bishop": "Fou",
+    "queen": "Dame",
+    "rook": "Tour",
+    "king": "Roi",
+    "pawn": "Pion"
+  },
+  "handle": {
+    "invalid": "3 caractères minimum · lettres, chiffres, _",
+    "reserved": "Ce pseudo est réservé.",
+    "taken": "Ce pseudo est déjà pris.",
+    "optional": "Facultatif · 3 à 20 caractères : lettres, chiffres, _",
+    "current": "Ton pseudo actuel",
+    "checking": "Vérification…",
+    "available": "✓ {'@'}{handle} est disponible"
+  },
+  "sessions": {
+    "unknownDevice": "Appareil inconnu",
+    "now": "maintenant",
+    "network": "réseau {ip}",
+    "today": "aujourd’hui, {time}",
+    "yesterday": "hier, {time}",
+    "day": "{day}, {time}",
+    "title": "Dernières connexions",
+    "current": "Cet appareil",
+    "close": "Fermer",
+    "closeTitle": "Fermer cette session ?",
+    "closeMessage": "{device} devra se reconnecter.",
+    "alreadyClosed": "Cette session est déjà fermée.",
+    "signOutInstead": "Pour fermer cette session, déconnecte-toi."
+  },
+  "deletionRefusals": {
+    "invalid_code": "Code incorrect.",
+    "code_expired": "Ce code n’est plus valable : demande-en un nouveau.",
+    "resend_too_soon": "Patiente quelques secondes avant de redemander un code.",
+    "recent_sign_in_required": "Reconnecte-toi pour confirmer la suppression.",
+    "deletion_scheduled": "La suppression est déjà programmée.",
+    "tooMany": "Trop de tentatives. Patiente un peu avant de réessayer.",
+    "generic": "Une erreur est survenue. Réessaie."
+  },
+  "export": {
+    "tooMany": "Trois exports par jour au plus : réessaie demain.",
+    "failed": "L’export n’a pas pu être préparé. Réessaie."
+  },
+  "title": "Profil",
+  "linked": "Compte {provider} lié.",
+  "notificationsTitle": "Notifications et calendrier",
+  "hero": {
+    "edit": "✎ Modifier",
+    "editWide": "✎ Modifier le profil",
+    "level": "Niveau {level}",
+    "memberSince": "Membre depuis {month}",
+    "memberSinceAfter": "membre depuis {month}"
+  },
+  "security": {
+    "title": "Sécurité",
+    "email": "Email",
+    "noEmail": "Aucun",
+    "pendingEmail": "En attente de confirmation : {email} (ouvre le lien reçu par email)"
+  },
+  "password": {
+    "title": "Mot de passe",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "newHint": "12 caractères minimum. Vos autres sessions et appareils de confiance seront révoqués.",
+    "min": "12 caractères minimum",
+    "change": "Changer le mot de passe",
+    "addIntro": "Ajoutez un mot de passe pour vous connecter aussi avec votre email. Un code de vérification vous sera envoyé par email à chaque connexion.",
+    "emailHint": "Nous vous enverrons un lien pour la confirmer.",
+    "password": "Mot de passe",
+    "minHint": "12 caractères minimum.",
+    "add": "Ajouter un mot de passe",
+    "required": "Champ requis",
+    "changed": "Mot de passe modifié. Vos autres sessions ont été fermées.",
+    "wrongCurrent": "Mot de passe actuel incorrect.",
+    "added": "Mot de passe ajouté.",
+    "pending": "Si cette adresse peut être utilisée, un lien de confirmation vient de lui être envoyé. Votre mot de passe fonctionnera une fois l’adresse confirmée.",
+    "already": "Ce compte a déjà un mot de passe."
+  },
+  "devices": {
+    "title": "Appareils de confiance",
+    "intro": "Sur ces appareils, la connexion par mot de passe ne demande pas de code pendant 30 jours.",
+    "none": "Aucun appareil de confiance.",
+    "dates": "Ajouté le {added} · dernière utilisation {used} · expire le {expires}",
+    "revoke": "Révoquer"
+  },
+  "connections": {
+    "title": "Connexions",
+    "linkedOn": "Lié le {date}",
+    "notLinked": "Non lié",
+    "unlink": "Déconnecter",
+    "link": "Lier",
+    "lockNote": "Garde au moins une méthode de connexion active.",
+    "unlinkTitle": "Déconnecter {provider} ?",
+    "unlinkMessage": "Tu ne pourras plus te connecter avec ce compte. Tes autres sessions seront fermées. Tes données Don't Stay Rooky restent sauvegardées.",
+    "lastMethod": "C'est ton seul moyen de connexion : il ne peut pas être retiré."
+  },
+  "timezone": {
+    "title": "Fuseau horaire",
+    "intro": "Sert à calculer vos journées d’activité et les échéances Woodpecker. Les journées déjà enregistrées ne changent pas.",
+    "use": "Utiliser {timezone}",
+    "saved": "Fuseau horaire enregistré.",
+    "unknown": "Fuseau horaire inconnu."
+  },
+  "preferences": {
+    "title": "Préférences",
+    "board": "Échiquier",
+    "boards": {
+      "wood": "Bois",
+      "glass": "Verre",
+      "pastel": "Pastel",
+      "tournament": "Tournoi",
+      "slate": "Ardoise"
+    },
+    "sounds": "Sons",
+    "soundsHint": "Coups, fin de puzzle, de module et de session",
+    "public": "Profil public",
+    "private": "Profil privé",
+    "publicHint": "Les autres joueurs pourront voir ton niveau et tes stats.",
+    "privateHint": "Ton niveau et tes stats ne sont visibles que par toi."
+  },
+  "appearance": {
+    "title": "Apparence",
+    "hint": "Automatique suit le réglage de ton appareil. Ton choix est gardé sur ton compte et s’applique sur tes autres appareils."
+  },
+  "tour": {
+    "title": "Visite guidée",
+    "again": "Revoir la visite",
+    "againHint": "Albert, Aaron, Lizy et leurs modules, en deux minutes.",
+    "restart": "Revoir",
+    "level": "Mon niveau",
+    "goal": "Mon objectif"
+  },
+  "footer": {
+    "terms": "Conditions d’utilisation",
+    "privacy": "Confidentialité",
+    "contact": "Contact"
+  },
+  "data": {
+    "title": "Données",
+    "export": "Exporter mes données",
+    "exportHint": "Puzzles, répertoires, sessions et stats · ZIP (JSON + PGN)",
+    "exportButton": "Exporter",
+    "delete": "Supprimer mon compte",
+    "deleteHint": "Définitif après 30 jours",
+    "deleteButton": "Supprimer…"
+  },
+  "push": {
+    "title": "Notifications du navigateur",
+    "hint": "Pour recevoir les rappels de tes sessions et de ta série sur cet appareil, même quand Don't Stay Rooky est fermé. À activer sur chaque appareil."
+  },
+  "streakReminder": {
+    "title": "Rappel de série",
+    "hint": "Le soir, si tu n’as pas encore joué, une notification te prévient que ta série s’arrête à minuit.",
+    "hour": "Heure",
+    "hourOption": "{h} h",
+    "email": "Aussi par email",
+    "devices": "La notification arrive sur les appareils où tu as activé les notifications du navigateur."
+  },
+  "calendar": {
+    "title": "Calendrier",
+    "intro": "Une adresse privée à ajouter à ton agenda (Google Agenda, Apple Calendrier, Outlook…) : il affiche tes sessions marquées « Intégrer à mon calendrier » et suit leurs changements. Garde-la pour toi : qui la connaît voit tes sessions.",
+    "address": "Adresse de ton calendrier",
+    "copy": "Copier l'adresse",
+    "howTo": "Google Agenda : « Autres agendas » → « À partir de l'URL ». Sur Apple ou Outlook, le bouton « S'abonner » ouvre l'application.",
+    "subscribe": "S'abonner",
+    "regenerate": "Nouvelle adresse",
+    "revoke": "Désactiver",
+    "create": "Créer mon adresse de calendrier",
+    "regenerateTitle": "Créer une nouvelle adresse ?",
+    "regenerateMessage": "L'adresse actuelle cessera de fonctionner : il faudra ajouter la nouvelle à ton agenda.",
+    "revokeTitle": "Désactiver ton calendrier ?",
+    "revokeMessage": "L'adresse cessera de fonctionner et ton agenda n'affichera plus tes sessions.",
+    "copied": "Adresse copiée",
+    "copyFailed": "La copie a échoué : sélectionne l'adresse pour la copier."
+  },
+  "edit": {
+    "title": "Modifier le profil",
+    "avatar": "Avatar",
+    "displayName": "Nom affiché",
+    "handle": "Nom d’utilisateur",
+    "saved": "Profil mis à jour",
+    "taken": "Ce pseudo vient d’être pris : choisis-en un autre.",
+    "unusable": "Ce pseudo ne peut pas être utilisé."
+  },
+  "deletion": {
+    "title": "Supprimer mon compte",
+    "erased": "Seront effacés définitivement :",
+    "items": {
+      "puzzles": "ton classement, tes puzzles et tes sets Woodpecker ;",
+      "repertoires": "tes répertoires et leurs révisions ;",
+      "sessions": "tes séances, sessions et statistiques ;",
+      "profile": "ton profil et tes comptes liés."
+    },
+    "frozen": "Ton compte sera {frozen} : tu seras déconnecté partout, et pourras annuler en te reconnectant. Ensuite, la suppression est définitive.",
+    "frozenDays": "gelé pendant 30 jours",
+    "exportFirst": "Pense à exporter tes données d’abord (bouton « Exporter »).",
+    "understood": "Je comprends que mes données seront supprimées",
+    "codeSent": "Un code à 6 chiffres vient d’être envoyé à {email}. Il est valable 10 minutes.",
+    "code": "Code reçu par email",
+    "resend": "Renvoyer le code",
+    "recent": "Ton compte n’a pas d’adresse email : ta connexion récente suffit à confirmer.",
+    "relogin": "Ton compte n’a pas d’adresse email : pour confirmer, reconnecte-toi (avec Lichess), puis reviens supprimer ton compte depuis ton profil dans les 10 minutes.",
+    "confirm": "Supprimer mon compte",
+    "signIn": "Me reconnecter"
+  }
+}

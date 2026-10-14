@@ -1,10 +1,14 @@
 <template>
   <section class="cm-card themes-card" data-testid="theme-strengths">
     <div class="themes-card__head">
-      <h2 class="cm-card__title">Thèmes de puzzles</h2>
+      <h2 class="cm-card__title">{{ $t('dashboard.themes.title') }}</h2>
       <span v-if="themes.attempts" class="cm-muted"
-        >{{ formatPercent(themes.successCount / themes.attempts) }} sur
-        {{ themes.attempts }} puzzles</span
+        >{{
+          $t('dashboard.themes.summary', {
+            pct: formatPercent(themes.successCount / themes.attempts),
+            n: themes.attempts
+          })
+        }}</span
       >
     </div>
 
@@ -13,20 +17,20 @@
       class="cm-muted q-my-md"
       data-testid="themes-empty"
     >
-      Aucun puzzle classé sur la période.
-      <router-link to="/puzzle">Jouer des puzzles →</router-link>
+      {{ $t('dashboard.themes.empty') }}
+      <router-link to="/puzzle">{{ $t('dashboard.themes.play') }}</router-link>
     </p>
     <p
       v-else-if="!themes.themes.length"
       class="cm-muted q-my-md"
       data-testid="themes-few"
     >
-      Pas encore assez d’essais par thème ({{ themes.minAttempts }} minimum).
+      {{ $t('dashboard.themes.few', { n: themes.minAttempts }) }}
     </p>
 
     <div v-else class="themes-card__columns">
       <div data-testid="themes-strong">
-        <h3 class="themes-card__h3">Points forts</h3>
+        <h3 class="themes-card__h3">{{ $t('dashboard.themes.strong') }}</h3>
         <div v-for="t in themes.strong" :key="t.key" class="themes-card__row">
           <div class="themes-card__line">
             <span class="themes-card__name">{{ label(t.key) }}</span>
@@ -39,13 +43,20 @@
             />
           </div>
           <div class="themes-card__meta"
-            >{{ t.successCount }} / {{ t.attempts }}</div
+            >{{
+              $t('dashboard.themes.ratio', {
+                done: t.successCount,
+                total: t.attempts
+              })
+            }}</div
           >
         </div>
       </div>
       <div data-testid="themes-weak">
-        <h3 class="themes-card__h3">À travailler</h3>
-        <p v-if="!themes.weak.length" class="cm-muted">Rien à signaler.</p>
+        <h3 class="themes-card__h3">{{ $t('dashboard.themes.weak') }}</h3>
+        <p v-if="!themes.weak.length" class="cm-muted">
+          {{ $t('dashboard.themes.nothing') }}
+        </p>
         <button
           v-for="t in themes.weak"
           :key="t.key"
@@ -65,16 +76,22 @@
             />
           </div>
           <div class="themes-card__meta">
-            {{ t.successCount }} / {{ t.attempts }}
-            <span class="themes-card__go">S’entraîner ›</span>
+            {{
+              $t('dashboard.themes.ratio', {
+                done: t.successCount,
+                total: t.attempts
+              })
+            }}
+            <span class="themes-card__go">{{
+              $t('dashboard.themes.train')
+            }}</span>
           </div>
         </button>
       </div>
     </div>
 
     <p class="themes-card__note">
-      Puzzles classés résolus sans aide (ni erreur, ni indice, ni solution) ;
-      {{ themes.minAttempts }} essais minimum par thème.
+      {{ $t('dashboard.themes.note', { n: themes.minAttempts }) }}
     </p>
   </section>
 </template>

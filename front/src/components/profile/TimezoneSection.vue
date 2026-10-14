@@ -1,10 +1,7 @@
 <template>
   <div class="profile-block">
-    <div class="profile-row__title">Fuseau horaire</div>
-    <p class="profile-row__sub q-mb-sm">
-      Sert à calculer vos journées d’activité et les échéances Woodpecker. Les
-      journées déjà enregistrées ne changent pas.
-    </p>
+    <div class="profile-row__title">{{ $t('profile.timezone.title') }}</div>
+    <p class="profile-row__sub q-mb-sm">{{ $t('profile.timezone.intro') }}</p>
     <div class="row items-center q-gutter-sm">
       <q-select
         v-model="selected"
@@ -20,7 +17,7 @@
       <q-btn
         color="primary"
         no-caps
-        label="Enregistrer"
+        :label="$t('common.actions.save')"
         :loading="saving"
         :disable="!selected || selected === profile.timezone"
         @click="save"
@@ -29,7 +26,7 @@
         v-if="detected && detected !== selected"
         flat
         no-caps
-        :label="`Utiliser ${detected}`"
+        :label="$t('profile.timezone.use', { timezone: detected })"
         @click="selected = detected"
       />
     </div>
@@ -47,6 +44,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { allTimezones, browserTimezone } from '@/utils/timezone'
 
 const props = defineProps({
@@ -82,10 +80,10 @@ async function save() {
   try {
     await auth.setTimezone(selected.value)
     error.value = false
-    message.value = 'Fuseau horaire enregistré.'
+    message.value = t('profile.timezone.saved')
   } catch (e) {
     error.value = true
-    message.value = apiErrorMessage(e, { 422: 'Fuseau horaire inconnu.' })
+    message.value = apiErrorMessage(e, { 422: t('profile.timezone.unknown') })
   } finally {
     saving.value = false
   }

@@ -25,7 +25,9 @@
             <span v-if="module.badge" class="tour-module__badge"
               >★ {{ module.badge }}</span
             >
-            <span v-if="module.soon" class="tour-module__soon">Bientôt</span>
+            <span v-if="module.soon" class="tour-module__soon">{{
+              $t('onboarding.module.soon')
+            }}</span>
           </div>
           <div class="tour-module__desc">{{ module.desc }}</div>
         </div>
@@ -37,7 +39,7 @@
         :data-testid="`tour-why-${module.id}`"
         @click="emit('toggle', module.id)"
       >
-        Pourquoi ça aide
+        {{ $t('onboarding.module.why') }}
         <span
           class="tour-module__chev"
           :class="{ 'tour-module__chev--open': open[module.id] }"

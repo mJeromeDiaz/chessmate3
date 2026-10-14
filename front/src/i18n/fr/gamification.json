@@ -1,0 +1,118 @@
+{
+  "trophies": {
+    "woodpecker": {
+      "name": "Pivert",
+      "desc": "Un cycle Woodpecker dans les temps"
+    },
+    "golden_fork": {
+      "name": "Fourchette d’or",
+      "desc": "100 fourchettes sans aide"
+    },
+    "iron_memory": {
+      "name": "Mémoire d’acier",
+      "desc": "95 % sur 50 tests de répertoire en 30 jours"
+    },
+    "first_step": {
+      "name": "Premier pas",
+      "desc": "Un premier exercice"
+    },
+    "steel_woodpecker": {
+      "name": "Pic d’acier",
+      "desc": "Un set Woodpecker terminé"
+    },
+    "centurion": {
+      "name": "Centurion",
+      "desc": "1 000 puzzles résolus"
+    },
+    "conductor": {
+      "name": "Chef d’orchestre",
+      "desc": "10 sessions menées au bout"
+    },
+    "marathon": {
+      "name": "Marathonien",
+      "desc": "50 h d’entraînement"
+    }
+  },
+  "level": {
+    "xp": "{xp} / {next} XP",
+    "nextRank": "Encore {left} XP avant le niveau {level} · « {rank} » au niveau {rankLevel}",
+    "next": "Encore {left} XP avant le niveau {level}"
+  },
+  "badges": {
+    "streakDesc": "{n} jour d’affilée | {n} jours d’affilée",
+    "puzzleStreakDesc": "{n} puzzle d’affilée | {n} puzzles d’affilée"
+  },
+  "progress": {
+    "unlockedOn": "Le {date}",
+    "tests": "{current}/{goal} tests · {pct} %",
+    "days": "{current}/{goal} jours",
+    "puzzles": "{current}/{goal} puzzles",
+    "plain": "{current}/{goal}"
+  },
+  "quests": {
+    "rated_puzzles": "Résous {n} puzzle classé cette semaine. | Résous {n} puzzles classés cette semaine.",
+    "weak_theme": "Résous {n} puzzle « {theme} » sans aide : c’est ton point faible du moment. | Résous {n} puzzles « {theme} » sans aide : c’est ton point faible du moment.",
+    "sessions": "Mène {n} session au bout cette semaine. | Mène {n} sessions au bout cette semaine.",
+    "woodpecker": "Joue {n} puzzle de ton set Woodpecker. | Joue {n} puzzles de ton set Woodpecker.",
+    "repertoire": "Réussis {n} tronçon de ton répertoire. | Réussis {n} tronçons de ton répertoire.",
+    "days": "Entraîne-toi {n} jour cette semaine. | Entraîne-toi {n} jours cette semaine."
+  },
+  "streakBadges": {
+    "streak_3": "Étincelle",
+    "on_fire": "En feu",
+    "streak_14": "Feu de camp",
+    "unstoppable": "Inarrêtable",
+    "streak_50": "Brasier",
+    "streak_100": "Centenaire",
+    "streak_200": "Fournaise",
+    "streak_300": "Volcan",
+    "streak_365": "Une année",
+    "streak_450": "Phénix",
+    "streak_500": "Soleil",
+    "streak_1000": "Légende"
+  },
+  "days": "{n} jour | {n} jours",
+  "streak": {
+    "restarted": "Ta série de {days} s’est arrêtée, mais une nouvelle commence aujourd’hui. Reviens demain pour la faire grandir !",
+    "born": "Une série est née ! Reviens demain pour un deuxième jour : c’est là que l’habitude commence.",
+    "week": "Une semaine complète, sans un trou. Les grands joueurs sont faits de semaines comme celle-là.",
+    "month": "Un mois entier ! Ton œil tactique n’est plus le même qu’au premier jour, je te le garantis.",
+    "hundred": "Cent jours. Je n’ai rien à ajouter, à part : chapeau bas.",
+    "hundredNamed": "Cent jours. Je n’ai rien à ajouter, à part : chapeau bas, {name}.",
+    "year": "Un an, chaque jour. Plus aucun « rooky » ici : te voilà roi de ta propre régularité.",
+    "badge": "{days} d’affilée : le badge « {badge} » est à toi. Continue, le prochain t’attend !",
+    "keepGoing": "{days} d’affilée ! Chaque séance compte, même les courtes. Continue comme ça.",
+    "nextMilestone": "Prochain palier : {days} · encore {left}",
+    "legend": "Tu es une légende."
+  },
+  "weekDays": [
+    "L",
+    "M",
+    "M",
+    "J",
+    "V",
+    "S",
+    "D"
+  ],
+  "card": {
+    "title": "Série",
+    "best": "Record : {days}",
+    "unit": "jour d’affilée | jours d’affilée",
+    "week": "Ta semaine",
+    "frozen": "Gelé : ta série a tenu sans toi",
+    "protected": "Un gel protège ta série. Joue aujourd’hui pour ne pas l’entamer.",
+    "keep": "Un exercice aujourd’hui et ta série continue.",
+    "start": "Un exercice aujourd’hui pour lancer une série.",
+    "nextBadge": "Prochain badge dans {days}.",
+    "allBadges": "Tous les badges sont à toi."
+  },
+  "chip": {
+    "played": "Série : {days} · record {best}",
+    "waiting": "Série : {days} · joue aujourd’hui pour la garder",
+    "start": "Joue aujourd’hui pour lancer une série"
+  },
+  "celebration": {
+    "label": "jour de série ! | jours de série !",
+    "badge": "Nouveau badge : {name}"
+  }
+}

@@ -2,17 +2,18 @@
   <div class="profile-block" data-testid="streak-reminder">
     <div class="profile-row">
       <div class="profile-row__text">
-        <div class="profile-row__title">Rappel de série</div>
+        <div class="profile-row__title">{{
+          $t('profile.streakReminder.title')
+        }}</div>
         <div class="profile-row__sub"
-          >Le soir, si tu n’as pas encore joué, une notification te prévient que
-          ta série s’arrête à minuit.</div
+          >{{ $t('profile.streakReminder.hint') }}</div
         >
       </div>
       <q-toggle
         :model-value="settings?.enabled ?? false"
         :disable="!settings || saving"
         color="primary"
-        aria-label="Rappel de série"
+        :aria-label="$t('profile.streakReminder.title')"
         data-testid="streak-reminder-toggle"
         @update:model-value="save({ enabled: $event })"
       />
@@ -25,7 +26,7 @@
         map-options
         dense
         outlined
-        label="Heure"
+        :label="$t('profile.streakReminder.hour')"
         :disable="saving"
         class="streak-reminder__hour"
         data-testid="streak-reminder-hour"
@@ -33,15 +34,14 @@
       />
       <q-checkbox
         :model-value="settings.email"
-        label="Aussi par email"
+        :label="$t('profile.streakReminder.email')"
         :disable="saving"
         data-testid="streak-reminder-email"
         @update:model-value="save({ email: $event })"
       />
     </div>
     <div v-if="settings?.enabled" class="profile-row__sub q-mt-xs"
-      >La notification arrive sur les appareils où tu as activé les
-      notifications du navigateur.</div
+      >{{ $t('profile.streakReminder.devices') }}</div
     >
     <q-banner v-if="error" class="profile-error q-mt-sm" rounded>{{
       error
@@ -57,8 +57,14 @@
 import { computed, onMounted, ref } from 'vue'
 import { useGamificationStore } from '@/stores/gamification'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
-const HOURS = [18, 19, 20, 21, 22, 23].map(h => ({ value: h, label: `${h} h` }))
+const HOURS = computed(() =>
+  [18, 19, 20, 21, 22, 23].map(h => ({
+    value: h,
+    label: t('profile.streakReminder.hourOption', { h })
+  }))
+)
 
 const gamification = useGamificationStore()
 const settings = computed(() => gamification.reminder)

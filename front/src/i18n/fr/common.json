@@ -18,5 +18,6 @@
     "offline": "Le serveur est injoignable. Vérifiez votre connexion.",
     "puzzleMaintenance": "Le catalogue de puzzles est en maintenance. Réessayez dans une minute.",
     "tooMany": "Trop de tentatives. Patientez quelques minutes avant de réessayer."
-  }
+  },
+  "loading": "Chargement…"
 }

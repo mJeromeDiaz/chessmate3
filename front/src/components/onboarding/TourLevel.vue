@@ -6,14 +6,18 @@
         data-testid="tour-lichess-rating"
       >
         <div class="tour-level__lichess-text">
-          <div class="tour-level__label">ÉLO LICHESS · {{ perfLabel }}</div>
+          <div class="tour-level__label">
+            {{ $t('onboarding.level.lichessElo', { perf: perfLabel }) }}
+          </div>
           <div class="tour-level__elo">{{ eloText }}</div>
         </div>
         <div v-if="suggested" class="tour-level__stamp">
           {{ suggested.name }} ✓
         </div>
       </div>
-      <div class="tour-level__hint">Pas d’accord ? Corrige-moi :</div>
+      <div class="tour-level__hint">
+        {{ $t('onboarding.level.disagree') }}
+      </div>
     </template>
     <template v-else-if="!lichess.linked">
       <button
@@ -24,15 +28,19 @@
         @click="emit('link')"
       >
         <span class="tour-level__knight" aria-hidden="true">♞︎</span>
-        {{ linking ? 'Direction Lichess…' : 'Lier mon compte Lichess' }}
+        {{
+          linking ? $t('onboarding.level.linking') : $t('onboarding.level.link')
+        }}
       </button>
-      <div class="tour-level__or"> <span />ou choisis ton niveau<span /> </div>
+      <div class="tour-level__or">
+        <span />{{ $t('onboarding.level.or') }}<span />
+      </div>
     </template>
 
     <div
       class="tour-level__grid"
       role="radiogroup"
-      aria-label="Ton niveau"
+      :aria-label="$t('onboarding.level.aria')"
       data-testid="tour-levels"
     >
       <button
@@ -67,7 +75,9 @@
  */
 import { computed } from 'vue'
 import { LEVELS, levelOf, ratingNote } from '@/utils/onboarding'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
+
+const PERFS = ['rapid', 'blitz', 'classical']
 
 const props = defineProps({
   /** The level chosen. */
@@ -84,14 +94,13 @@ const emit = defineEmits({
   link: () => true
 })
 
-const PERFS = { rapid: 'RAPIDE', blitz: 'BLITZ', classical: 'CLASSIQUE' }
-
 const lichess = computed(
   () => props.answers?.lichess ?? { linked: false, perf: null, rating: null }
 )
-const perfLabel = computed(
-  () => PERFS[lichess.value.perf ?? ''] ?? lichess.value.perf ?? ''
-)
+const perfLabel = computed(() => {
+  const perf = lichess.value.perf ?? ''
+  return (PERFS.includes(perf) ? t(`onboarding.perfs.${perf}`) : perf).toUpperCase()
+})
 const eloText = computed(() =>
   new Intl.NumberFormat(intlLocale()).format(lichess.value.rating ?? 0)
 )

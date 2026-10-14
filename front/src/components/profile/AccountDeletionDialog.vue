@@ -6,38 +6,35 @@
   >
     <q-card class="deletion" data-testid="deletion-dialog">
       <q-card-section>
-        <h2 class="cm-card__title">Supprimer mon compte</h2>
+        <h2 class="cm-card__title">{{ $t('profile.deletion.title') }}</h2>
       </q-card-section>
 
       <q-card-section v-if="step === 'intro'" class="q-pt-none">
-        <p>Seront effacés définitivement :</p>
+        <p>{{ $t('profile.deletion.erased') }}</p>
         <ul class="deletion__list">
-          <li>ton classement, tes puzzles et tes sets Woodpecker ;</li>
-          <li>tes répertoires et leurs révisions ;</li>
-          <li>tes séances, sessions et statistiques ;</li>
-          <li>ton profil et tes comptes liés.</li>
+          <li v-for="item in ITEMS" :key="item">{{
+            $t(`profile.deletion.items.${item}`)
+          }}</li>
         </ul>
-        <p>
-          Ton compte sera <strong>gelé pendant 30 jours</strong> : tu seras
-          déconnecté partout, et pourras annuler en te reconnectant. Ensuite, la
-          suppression est définitive.
-        </p>
-        <p class="cm-muted">
-          Pense à exporter tes données d’abord (bouton « Exporter »).
-        </p>
+        <i18n-t keypath="profile.deletion.frozen" tag="p" scope="global">
+          <template #frozen>
+            <strong>{{ $t('profile.deletion.frozenDays') }}</strong>
+          </template>
+        </i18n-t>
+        <p class="cm-muted">{{ $t('profile.deletion.exportFirst') }}</p>
         <q-checkbox
           v-model="understood"
-          label="Je comprends que mes données seront supprimées"
+          :label="$t('profile.deletion.understood')"
           data-testid="deletion-understood"
         />
       </q-card-section>
 
       <q-card-section v-else-if="step === 'code'" class="q-pt-none">
-        <p>
-          Un code à 6 chiffres vient d’être envoyé à
-          <strong>{{ auth.profile?.email }}</strong
-          >. Il est valable 10 minutes.
-        </p>
+        <i18n-t keypath="profile.deletion.codeSent" tag="p" scope="global">
+          <template #email>
+            <strong>{{ auth.profile?.email }}</strong>
+          </template>
+        </i18n-t>
         <q-input
           v-model="code"
           outlined
@@ -45,7 +42,7 @@
           inputmode="numeric"
           autocomplete="one-time-code"
           maxlength="6"
-          label="Code reçu par email"
+          :label="$t('profile.deletion.code')"
           data-testid="deletion-code"
           @keyup.enter="confirm"
         />
@@ -55,7 +52,7 @@
           no-caps
           color="primary"
           class="q-mt-sm"
-          label="Renvoyer le code"
+          :label="$t('profile.deletion.resend')"
           :disable="busy"
           data-testid="deletion-resend"
           @click="start"
@@ -63,18 +60,11 @@
       </q-card-section>
 
       <q-card-section v-else-if="step === 'recent'" class="q-pt-none">
-        <p>
-          Ton compte n’a pas d’adresse email : ta connexion récente suffit à
-          confirmer.
-        </p>
+        <p>{{ $t('profile.deletion.recent') }}</p>
       </q-card-section>
 
       <q-card-section v-else class="q-pt-none" data-testid="deletion-relogin">
-        <p>
-          Ton compte n’a pas d’adresse email : pour confirmer, reconnecte-toi
-          (avec Lichess), puis reviens supprimer ton compte depuis ton profil
-          dans les 10 minutes.
-        </p>
+        <p>{{ $t('profile.deletion.relogin') }}</p>
       </q-card-section>
 
       <q-card-section v-if="error" class="q-pt-none">
@@ -87,7 +77,7 @@
         <q-btn
           flat
           no-caps
-          label="Annuler"
+          :label="$t('common.actions.cancel')"
           :disable="busy"
           data-testid="deletion-close"
           @click="emit('update:modelValue', false)"
@@ -97,7 +87,7 @@
           unelevated
           no-caps
           color="negative"
-          label="Continuer"
+          :label="$t('common.actions.continue')"
           :loading="busy"
           :disable="!understood"
           data-testid="deletion-start"
@@ -108,7 +98,7 @@
           unelevated
           no-caps
           color="negative"
-          label="Supprimer mon compte"
+          :label="$t('profile.deletion.confirm')"
           :loading="busy"
           :disable="step === 'code' && !/^\d{6}$/.test(code)"
           data-testid="deletion-confirm"
@@ -119,7 +109,7 @@
           unelevated
           no-caps
           color="primary"
-          label="Me reconnecter"
+          :label="$t('profile.deletion.signIn')"
           data-testid="deletion-signin"
           @click="signInAgain"
         />
@@ -141,6 +131,9 @@ import { profileApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { deletionRefusal } from '@/utils/profile'
 import { FROZEN_PAGE } from '@/router/guards'
+
+/** The kinds of data erased (profile.deletion.items). */
+const ITEMS = ['puzzles', 'repertoires', 'sessions', 'profile']
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false }

@@ -1,18 +1,18 @@
 <template>
   <section class="cm-card profile-card" data-testid="profile-tour">
-    <h2 class="cm-card__title">Visite guidée</h2>
+    <h2 class="cm-card__title">{{ $t('profile.tour.title') }}</h2>
     <div class="profile-row profile-row--flat">
       <div class="profile-row__text">
-        <div class="profile-row__title">Revoir la visite</div>
+        <div class="profile-row__title">{{ $t('profile.tour.again') }}</div>
         <div class="profile-row__sub"
-          >Albert, Aaron, Lizy et leurs modules, en deux minutes.</div
+          >{{ $t('profile.tour.againHint') }}</div
         >
       </div>
       <q-btn
         unelevated
         no-caps
         class="profile-btn"
-        label="Revoir"
+        :label="$t('profile.tour.restart')"
         data-testid="profile-tour-restart"
         @click="restart"
       />
@@ -25,7 +25,7 @@
         map-options
         dense
         outlined
-        label="Mon niveau"
+        :label="$t('profile.tour.level')"
         :disable="!answers || saving"
         data-testid="profile-tour-level"
         @update:model-value="save({ level: $event })"
@@ -37,7 +37,7 @@
         map-options
         dense
         outlined
-        label="Mon objectif"
+        :label="$t('profile.tour.goal')"
         :disable="!answers || saving"
         data-testid="profile-tour-goal"
         @update:model-value="save({ goal: $event })"
@@ -73,8 +73,12 @@ const answers = computed(() => onboarding.answers)
 const saving = ref(false)
 const error = ref('')
 
-const levelOptions = LEVELS.map(l => ({ value: l.id, label: l.name }))
-const goalOptions = GOALS.map(g => ({ value: g.id, label: g.label }))
+const levelOptions = computed(() =>
+  LEVELS.map(l => ({ value: l.id, label: l.name }))
+)
+const goalOptions = computed(() =>
+  GOALS.map(g => ({ value: g.id, label: g.label }))
+)
 const note = computed(() =>
   answers.value?.level ? ratingNote(answers.value.level, answers.value) : ''
 )

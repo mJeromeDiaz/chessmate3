@@ -2,7 +2,7 @@
   <div
     class="period-picker"
     role="radiogroup"
-    aria-label="Période"
+    :aria-label="$t('dashboard.period')"
     data-testid="period-picker"
   >
     <button

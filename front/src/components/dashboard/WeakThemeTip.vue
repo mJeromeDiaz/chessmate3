@@ -1,21 +1,25 @@
 <template>
   <section v-if="weak" class="cm-card weak-tip" data-testid="weak-theme-tip">
-    <div class="weak-tip__kicker">À TRAVAILLER · {{ TIP_DAYS }} JOURS</div>
+    <div class="weak-tip__kicker">{{
+      $t('dashboard.weak.kicker', { days: TIP_DAYS })
+    }}</div>
     <div class="weak-tip__line">
       <span class="weak-tip__name">{{ puzzles.themeLabel(weak.key) }}</span>
-      <strong>{{ formatPercent(weak.successRate) }} de réussite</strong>
+      <strong>{{
+        $t('dashboard.weak.rate', { pct: formatPercent(weak.successRate) })
+      }}</strong>
     </div>
     <div class="weak-tip__actions">
       <q-btn
         unelevated
         no-caps
         color="primary"
-        label="S’entraîner"
+        :label="$t('dashboard.weak.train')"
         data-testid="weak-theme-train"
         @click="train"
       />
       <router-link to="/stats" class="weak-tip__link"
-        >Mes statistiques →</router-link
+        >{{ $t('dashboard.weak.stats') }}</router-link
       >
     </div>
   </section>

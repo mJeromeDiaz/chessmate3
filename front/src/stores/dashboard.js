@@ -9,6 +9,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { describeFailure } from '@/composables/repertoire/useExplorer'
 import { DEFAULT_PERIOD, validPeriod } from '@/utils/dashboard/stats'
+import { t } from '@/i18n'
 
 /**
  * @typedef {import('@/utils/dashboard/days').ActivityDay} ActivityDay
@@ -180,7 +181,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
   async function load() {
     loading.value = true
     errors.value = {}
-    const message = 'Impossible de charger ces données. Réessayez.'
+    const message = t('dashboard.loadError')
     /** @type {[Section, Promise<any>, (value: any) => void][]} */
     const sections = [
       [
@@ -243,7 +244,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const turn = ++statsRequest
     statsLoading.value = true
     statsErrors.value = {}
-    const message = 'Impossible de charger ces données. Réessayez.'
+    const message = t('dashboard.loadError')
     /** @type {[StatsSection, Promise<any>, (value: any) => void][]} */
     const sections = [
       [

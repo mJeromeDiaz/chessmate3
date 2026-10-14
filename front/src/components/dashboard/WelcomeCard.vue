@@ -1,13 +1,12 @@
 <template>
   <section class="welcome" data-testid="dashboard-welcome">
     <div class="welcome__text">
-      <div class="welcome__kicker">Bienvenue sur Don't Stay Rooky</div>
+      <div class="welcome__kicker">{{ $t('dashboard.welcome.kicker') }}</div>
       <h1 class="welcome__title"
-        >Ton tableau de bord se remplira dès ton premier exercice.</h1
+        >{{ $t('dashboard.welcome.title') }}</h1
       >
       <p>
-        Compose une session sur mesure ou commence par quelques puzzles : ta
-        régularité, ton classement et ta progression s’afficheront ici.
+        {{ $t('dashboard.welcome.text') }}
       </p>
       <div class="welcome__actions">
         <q-btn
@@ -15,7 +14,7 @@
           no-caps
           class="cm-btn-create"
           to="/session/new"
-          label="Composer ma première session"
+          :label="$t('dashboard.welcome.compose')"
           data-testid="welcome-session"
         />
         <q-btn
@@ -23,7 +22,7 @@
           no-caps
           color="primary"
           to="/puzzle"
-          label="Résoudre des puzzles"
+          :label="$t('dashboard.welcome.puzzles')"
         />
       </div>
     </div>

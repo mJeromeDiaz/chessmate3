@@ -7,7 +7,7 @@
       dense
       no-caps
       color="primary"
-      label="Réessayer"
+      :label="$t('common.actions.retry')"
       @click="emit('retry')"
     />
   </section>

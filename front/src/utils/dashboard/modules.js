@@ -1,6 +1,6 @@
 import { MODULES_BY_ID } from '@/utils/session/catalog'
 import { moduleLevel } from '@/utils/gamification'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * The dashboard's "Progression par module" rows (design "Dashboard"): the catalogue's look, the
@@ -41,7 +41,8 @@ const number = { format: n => new Intl.NumberFormat(intlLocale()).format(n) }
  * @param {number} ratio
  * @returns {string}
  */
-const percent = ratio => `${Math.round(ratio * 100)} %`
+const percent = ratio =>
+  t('dashboard.modules.percent', { pct: Math.round(ratio * 100) })
 
 /**
  * @param {ModuleSources} sources
@@ -52,7 +53,7 @@ export function buildModuleRows(sources) {
     const module = MODULES_BY_ID[id]
     const row = {
       module,
-      stat: 'Bientôt',
+      stat: t('dashboard.modules.soon'),
       ratio: 0,
       ratioLabel: '',
       level: moduleLevel(sources.gamification ?? null, id),
@@ -77,15 +78,20 @@ function puzzles({ totals, puzzleRating }) {
   const count = played.reduce((sum, t) => sum + t.count, 0)
   const solved = played.reduce((sum, t) => sum + t.successCount, 0)
   const rating = puzzleRating
-    ? ` · Elo ${puzzleRating.rating}${puzzleRating.provisional ? '?' : ''}`
+    ? t('dashboard.modules.puzzles.elo', {
+        rating: `${puzzleRating.rating}${puzzleRating.provisional ? '?' : ''}`
+      })
     : ''
   return {
     to: '/puzzle',
     stat: count
-      ? `${number.format(solved)} résolus${rating}`
-      : 'Aucun puzzle joué',
+      ? t('dashboard.modules.puzzles.solved', { n: number.format(solved) }) +
+        rating
+      : t('dashboard.modules.puzzles.none'),
     ratio: count ? solved / count : 0,
-    ratioLabel: count ? `Réussite ${percent(solved / count)}` : ''
+    ratioLabel: count
+      ? t('dashboard.modules.puzzles.rate', { pct: percent(solved / count) })
+      : ''
   }
 }
 
@@ -98,13 +104,16 @@ function puzzles({ totals, puzzleRating }) {
 function evaluation({ totals }) {
   const played = totals.position_evaluation
   if (!played?.count)
-    return { to: '/evaluation', stat: 'Aucune position jouée' }
+    return { to: '/evaluation', stat: t('dashboard.modules.evaluation.none') }
   const ratio = played.successCount / played.count
   return {
     to: '/evaluation',
-    stat: `${number.format(played.count)} positions · ${percent(ratio)} justes`,
+    stat: t('dashboard.modules.evaluation.stat', {
+      n: number.format(played.count),
+      pct: percent(ratio)
+    }),
     ratio,
-    ratioLabel: `Justes ${percent(ratio)}`
+    ratioLabel: t('dashboard.modules.evaluation.rate', { pct: percent(ratio) })
   }
 }
 
@@ -117,7 +126,8 @@ function evaluation({ totals }) {
 function woodpecker(sets) {
   const active = sets.filter(s => s.status === 'active' && !s.archived)
   const set = active.find(s => s.current?.status === 'active') ?? active[0]
-  if (!set) return { to: '/woodpecker', stat: 'Aucun set en cours' }
+  if (!set)
+    return { to: '/woodpecker', stat: t('dashboard.modules.woodpecker.none') }
   const cycle = set.current
   if (!cycle) {
     return { to: `/woodpecker/${set.id}`, stat: set.name }
@@ -127,15 +137,24 @@ function woodpecker(sets) {
     : 0
   const round =
     set.mode === 'light'
-      ? `Light · tour ${cycle.number}`
-      : `Cycle ${cycle.number}${set.cycleCount ? `/${set.cycleCount}` : ''}`
+      ? t('dashboard.modules.woodpecker.light', { n: cycle.number })
+      : set.cycleCount
+        ? t('dashboard.modules.woodpecker.cycleOf', {
+            n: cycle.number,
+            total: set.cycleCount
+          })
+        : t('dashboard.modules.woodpecker.cycle', { n: cycle.number })
   const accuracy =
-    cycle.accuracy === null ? '' : ` · précision ${percent(cycle.accuracy)}`
+    cycle.accuracy === null
+      ? ''
+      : t('dashboard.modules.woodpecker.accuracy', {
+          pct: percent(cycle.accuracy)
+        })
   return {
     to: `/woodpecker/${set.id}`,
     stat: `${round} · ${cycle.played}/${set.puzzleCount}${accuracy}`,
     ratio,
-    ratioLabel: `Cycle ${percent(ratio)}`
+    ratioLabel: t('dashboard.modules.woodpecker.rate', { pct: percent(ratio) })
   }
 }
 
@@ -145,7 +164,7 @@ function woodpecker(sets) {
  */
 function repertoire(overview) {
   if (!overview?.repertoires.length)
-    return { to: '/repertoire', stat: 'Aucun répertoire' }
+    return { to: '/repertoire', stat: t('dashboard.modules.repertoire.none') }
   const rates = overview.repertoires
     .map(r => r.successRate30)
     .filter(rate => rate !== null)
@@ -153,14 +172,22 @@ function repertoire(overview) {
     ? rates.reduce((a, b) => a + b, 0) / rates.length
     : null
   const parts = [
-    `${number.format(overview.cards.total)} coups`,
-    overview.cards.due ? `${overview.cards.due} à revoir` : 'rien à revoir'
+    t('dashboard.modules.repertoire.moves', {
+      n: number.format(overview.cards.total)
+    }),
+    overview.cards.due
+      ? t('dashboard.modules.repertoire.due', { n: overview.cards.due })
+      : t('dashboard.modules.repertoire.nothingDue')
   ]
-  if (rate !== null) parts.push(`${percent(rate)} sur 30 j`)
+  if (rate !== null)
+    parts.push(t('dashboard.modules.repertoire.rate30', { pct: percent(rate) }))
   return {
     to: '/repertoire',
     stat: parts.join(' · '),
     ratio: rate ?? 0,
-    ratioLabel: rate === null ? '' : `Réussite 30 j ${percent(rate)}`
+    ratioLabel:
+      rate === null
+        ? ''
+        : t('dashboard.modules.repertoire.rateLabel', { pct: percent(rate) })
   }
 }

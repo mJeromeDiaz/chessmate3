@@ -1,7 +1,7 @@
 <template>
   <section class="cm-card modules" data-testid="module-progress">
     <div class="modules__head">
-      <h2 class="cm-card__title">Progression par module</h2>
+      <h2 class="cm-card__title">{{ $t('dashboard.modules.title') }}</h2>
     </div>
     <div class="modules__grid">
       <component
@@ -30,7 +30,7 @@
               class="modules__level"
               :style="{ color: row.module.accentInk }"
               data-testid="module-level"
-              >Niv. {{ row.level }}</span
+              >{{ $t('dashboard.modules.level', { n: row.level }) }}</span
             >
           </div>
           <div

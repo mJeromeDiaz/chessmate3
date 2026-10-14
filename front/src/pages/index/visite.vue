@@ -51,7 +51,7 @@
             data-testid="tour-next"
             @click="next"
           >
-            {{ busy ? 'Un instant…' : cta.label }}
+            {{ busy ? $t('onboarding.wait') : cta.label }}
           </button>
           <div class="tour__foot">{{ footOf(step) }}</div>
         </div>

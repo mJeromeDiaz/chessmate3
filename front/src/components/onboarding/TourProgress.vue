@@ -5,7 +5,7 @@
         type="button"
         class="tour-progress__btn"
         :style="{ visibility: canBack ? 'visible' : 'hidden' }"
-        aria-label="Étape précédente"
+        :aria-label="$t('onboarding.progress.back')"
         data-testid="tour-back"
         @click="emit('back')"
       >
@@ -38,7 +38,7 @@
         data-testid="tour-skip"
         @click="emit('skip')"
       >
-        Passer
+        {{ $t('onboarding.progress.skip') }}
       </button>
     </div>
     <div class="tour-progress__chip" data-testid="tour-chip">

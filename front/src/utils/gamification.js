@@ -2,7 +2,8 @@ import { profImage } from '@/utils/prof/images'
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
 import { PUZZLE_STREAK_BADGES } from '@/utils/puzzleStreak'
 import { STREAK_BADGES } from '@/utils/streak'
-import { intlLocale } from '@/i18n'
+// `tr`: the trophy callbacks below name their trophy `t`.
+import { intlLocale, t, t as tr } from '@/i18n'
 
 /**
  * Display helpers of the gamification (docs/GAMIFICATION.md): level bar, trophies, weekly quest.
@@ -63,10 +64,21 @@ export function levelBar(summary) {
       summary.xpForNext > 0
         ? Math.min(100, (summary.xpInLevel / summary.xpForNext) * 100)
         : 0,
-    xpLabel: `${number.format(summary.xpInLevel)} / ${number.format(summary.xpForNext)} XP`,
+    xpLabel: t('gamification.level.xp', {
+      xp: number.format(summary.xpInLevel),
+      next: number.format(summary.xpForNext)
+    }),
     next: summary.nextRank
-      ? `Encore ${number.format(left)} XP avant le niveau ${summary.level + 1} · « ${summary.nextRank.rank} » au niveau ${summary.nextRank.level}`
-      : `Encore ${number.format(left)} XP avant le niveau ${summary.level + 1}`
+      ? t('gamification.level.nextRank', {
+          left: number.format(left),
+          level: summary.level + 1,
+          rank: summary.nextRank.rank,
+          rankLevel: summary.nextRank.level
+        })
+      : t('gamification.level.next', {
+          left: number.format(left),
+          level: summary.level + 1
+        })
   }
 }
 
@@ -91,8 +103,12 @@ const STREAK_TROPHIES = Object.fromEntries(
     badge.key,
     {
       icon: String(badge.goal),
-      name: badge.name,
-      desc: `${badge.goal} jours d’affilée`,
+      get name() {
+        return badge.name
+      },
+      get desc() {
+        return t('gamification.badges.streakDesc', badge.goal)
+      },
       bg: '#FFEBDD',
       ink: '#B84A0E',
       streak: badge.goal
@@ -106,8 +122,12 @@ const PUZZLE_STREAK_TROPHIES = Object.fromEntries(
     badge.key,
     {
       icon: String(badge.goal),
-      name: badge.name,
-      desc: `${badge.goal} puzzles d’affilée`,
+      get name() {
+        return badge.name
+      },
+      get desc() {
+        return t('gamification.badges.puzzleStreakDesc', badge.goal)
+      },
       bg: '#EEE9FF',
       ink: '#4A2FE0',
       puzzles: badge.goal
@@ -123,57 +143,89 @@ const PUZZLE_STREAK_TROPHIES = Object.fromEntries(
 export const TROPHIES = {
   woodpecker: {
     icon: '♝︎',
-    name: 'Pivert',
-    desc: 'Un cycle Woodpecker dans les temps',
+    get name() {
+      return t('gamification.trophies.woodpecker.name')
+    },
+    get desc() {
+      return t('gamification.trophies.woodpecker.desc')
+    },
     bg: '#F0FBCF',
     ink: '#5A7A00'
   },
   golden_fork: {
     icon: '♞︎',
-    name: 'Fourchette d’or',
-    desc: '100 fourchettes sans aide',
+    get name() {
+      return t('gamification.trophies.golden_fork.name')
+    },
+    get desc() {
+      return t('gamification.trophies.golden_fork.desc')
+    },
     bg: '#FFE6F1',
     ink: '#C02670'
   },
   iron_memory: {
     icon: '♜︎',
-    name: 'Mémoire d’acier',
-    desc: '95 % sur 50 tests de répertoire en 30 jours',
+    get name() {
+      return t('gamification.trophies.iron_memory.name')
+    },
+    get desc() {
+      return t('gamification.trophies.iron_memory.desc')
+    },
     bg: '#E2F2FF',
     ink: '#0F6BBA'
   },
   first_step: {
     icon: '♙︎',
-    name: 'Premier pas',
-    desc: 'Un premier exercice',
+    get name() {
+      return t('gamification.trophies.first_step.name')
+    },
+    get desc() {
+      return t('gamification.trophies.first_step.desc')
+    },
     bg: '#EEE9FF',
     ink: '#4A2FE0'
   },
   steel_woodpecker: {
     icon: '♛︎',
-    name: 'Pic d’acier',
-    desc: 'Un set Woodpecker terminé',
+    get name() {
+      return t('gamification.trophies.steel_woodpecker.name')
+    },
+    get desc() {
+      return t('gamification.trophies.steel_woodpecker.desc')
+    },
     bg: '#F0FBCF',
     ink: '#5A7A00'
   },
   centurion: {
     icon: '♚︎',
-    name: 'Centurion',
-    desc: '1 000 puzzles résolus',
+    get name() {
+      return t('gamification.trophies.centurion.name')
+    },
+    get desc() {
+      return t('gamification.trophies.centurion.desc')
+    },
     bg: '#FFE6F1',
     ink: '#C02670'
   },
   conductor: {
     icon: '♖︎',
-    name: 'Chef d’orchestre',
-    desc: '10 sessions menées au bout',
+    get name() {
+      return t('gamification.trophies.conductor.name')
+    },
+    get desc() {
+      return t('gamification.trophies.conductor.desc')
+    },
     bg: '#EEE9FF',
     ink: '#4A2FE0'
   },
   marathon: {
     icon: '⏱︎',
-    name: 'Marathonien',
-    desc: '50 h d’entraînement',
+    get name() {
+      return t('gamification.trophies.marathon.name')
+    },
+    get desc() {
+      return t('gamification.trophies.marathon.desc')
+    },
     bg: '#E2F2FF',
     ink: '#0F6BBA'
   },
@@ -208,14 +260,25 @@ export function trophyCards(trophies) {
       key: t.key,
       unlocked: t.unlocked,
       progress: t.unlocked
-        ? `Le ${new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'medium' }).format(new Date(t.unlockedAt ?? ''))}`
+        ? tr('gamification.progress.unlockedOn', {
+            date: new Intl.DateTimeFormat(intlLocale(), {
+              dateStyle: 'medium'
+            }).format(new Date(t.unlockedAt ?? ''))
+          })
         : t.key === 'iron_memory' && t.ratio !== null
-          ? `${t.current}/${t.goal} tests · ${Math.round(t.ratio * 100)} %`
-          : TROPHIES[t.key].streak
-            ? `${number.format(t.current)}/${number.format(t.goal)} jours`
-            : TROPHIES[t.key].puzzles
-              ? `${number.format(t.current)}/${number.format(t.goal)} puzzles`
-              : `${number.format(t.current)}/${number.format(t.goal)}`,
+          ? tr('gamification.progress.tests', {
+              current: t.current,
+              goal: t.goal,
+              pct: Math.round(t.ratio * 100)
+            })
+          : tr(
+              TROPHIES[t.key].streak
+                ? 'gamification.progress.days'
+                : TROPHIES[t.key].puzzles
+                  ? 'gamification.progress.puzzles'
+                  : 'gamification.progress.plain',
+              { current: number.format(t.current), goal: number.format(t.goal) }
+            ),
       percent: t.goal > 0 ? Math.min(100, (t.current / t.goal) * 100) : 0
     }))
 }
@@ -230,17 +293,18 @@ export function questText(quest, themeLabel) {
   const n = quest.goal
   switch (quest.template) {
     case 'rated_puzzles':
-      return `Résous ${n} puzzles classés cette semaine.`
-    case 'weak_theme':
-      return `Résous ${n} puzzles « ${themeLabel(quest.theme ?? '')} » sans aide : c’est ton point faible du moment.`
     case 'sessions':
-      return `Mène ${n} sessions au bout cette semaine.`
     case 'woodpecker':
-      return `Joue ${n} puzzles de ton set Woodpecker.`
     case 'repertoire':
-      return `Réussis ${n} tronçons de ton répertoire.`
+      return t(`gamification.quests.${quest.template}`, { n }, n)
+    case 'weak_theme':
+      return t(
+        'gamification.quests.weak_theme',
+        { n, theme: themeLabel(quest.theme ?? '') },
+        n
+      )
     default:
-      return `Entraîne-toi ${n} jours cette semaine.`
+      return t('gamification.quests.days', { n }, n)
   }
 }
 

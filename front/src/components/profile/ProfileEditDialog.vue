@@ -7,10 +7,10 @@
   >
     <div class="profile-edit" data-testid="profile-edit">
       <div class="profile-edit__grip lt-md" />
-      <h2 class="profile-edit__title">Modifier le profil</h2>
+      <h2 class="profile-edit__title">{{ $t('profile.edit.title') }}</h2>
 
       <div class="profile-edit__field">
-        <div class="profile-edit__label">Avatar</div>
+        <div class="profile-edit__label">{{ $t('profile.edit.avatar') }}</div>
         <div class="profile-edit__avatars">
           <button
             v-for="avatar in AVATARS"
@@ -31,7 +31,9 @@
       </div>
 
       <label class="profile-edit__field">
-        <span class="profile-edit__label">Nom affiché</span>
+        <span class="profile-edit__label">{{
+          $t('profile.edit.displayName')
+        }}</span>
         <input
           v-model="draft.displayName"
           class="profile-edit__input"
@@ -42,7 +44,9 @@
       </label>
 
       <label class="profile-edit__field">
-        <span class="profile-edit__label">Nom d’utilisateur</span>
+        <span class="profile-edit__label">{{
+          $t('profile.edit.handle')
+        }}</span>
         <input
           :value="draft.handle"
           class="profile-edit__input"
@@ -69,7 +73,7 @@
           type="button"
           class="profile-edit__btn"
           @click="emit('update:modelValue', false)"
-          >Annuler</button
+          >{{ $t('common.actions.cancel') }}</button
         >
         <button
           type="button"
@@ -77,7 +81,7 @@
           :disabled="!status.savable || saving"
           data-testid="profile-edit-save"
           @click="save"
-          >Enregistrer</button
+          >{{ $t('common.actions.save') }}</button
         >
       </div>
     </div>
@@ -96,6 +100,7 @@ import { useAuthStore } from '@/stores/auth'
 import { profileApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { AVATARS, cleanHandle, handleStatus } from '@/utils/profile'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** Shown or not (v-model). */
@@ -163,11 +168,11 @@ async function save() {
       avatar: draft.avatar
     })
     emit('update:modelValue', false)
-    $q.notify({ message: 'Profil mis à jour', timeout: 2000 })
+    $q.notify({ message: t('profile.edit.saved'), timeout: 2000 })
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Ce pseudo vient d’être pris : choisis-en un autre.',
-      422: 'Ce pseudo ne peut pas être utilisé.'
+      409: t('profile.edit.taken'),
+      422: t('profile.edit.unusable')
     })
   } finally {
     saving.value = false

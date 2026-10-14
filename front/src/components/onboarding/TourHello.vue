@@ -17,8 +17,7 @@
       </div>
     </div>
     <p class="tour-hello__note tour-in" style="animation-delay: 0.5s">
-      Cinq petites étapes, deux minutes. Tu peux revenir en arrière ou passer
-      quand tu veux : je ne compte pas les points… pas encore.
+      {{ $t('onboarding.hello.note') }}
     </p>
   </div>
 </template>

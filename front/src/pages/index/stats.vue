@@ -9,9 +9,9 @@
             dense
             icon="arrow_back"
             to="/"
-            aria-label="Accueil"
+            :aria-label="$t('dashboard.stats.home')"
           />
-          <h1 class="stats__title">Mes statistiques</h1>
+          <h1 class="stats__title">{{ $t('dashboard.stats.title') }}</h1>
         </div>
         <PeriodPicker
           :model-value="store.period"
@@ -32,7 +32,7 @@
           />
           <SectionError
             v-else-if="store.statsErrors.training"
-            title="Temps d’entraînement"
+            :title="$t('dashboard.time.title')"
             :message="store.statsErrors.training"
             @retry="store.loadStats()"
           />
@@ -54,7 +54,7 @@
           <ThemeStrengthsCard v-else-if="store.themes" :themes="store.themes" />
           <SectionError
             v-else-if="store.statsErrors.themes"
-            title="Thèmes de puzzles"
+            :title="$t('dashboard.themes.title')"
             :message="store.statsErrors.themes"
             @retry="store.loadStats()"
           />
@@ -72,7 +72,7 @@
           />
           <SectionError
             v-else-if="store.statsErrors.repertoire"
-            title="Répertoires"
+            :title="$t('dashboard.health.title')"
             :message="store.statsErrors.repertoire"
             @retry="store.loadStats()"
           />

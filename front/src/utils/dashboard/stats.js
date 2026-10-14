@@ -1,4 +1,4 @@
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * The statistics page (docs/DASHBOARD.md § 6, lot B): periods, the weekly training-time chart and
@@ -28,10 +28,12 @@ import { intlLocale } from '@/i18n'
 
 /** The period choices, in local days. */
 export const PERIODS = [
-  { days: 7, label: '7 j' },
-  { days: 30, label: '30 j' },
-  { days: 90, label: '90 j' },
-  { days: 365, label: '1 an' }
+  ...[7, 30, 90, 365].map(days => ({
+    days,
+    get label() {
+      return t(`dashboard.stats.periods.${days}`)
+    }
+  }))
 ]
 export const DEFAULT_PERIOD = 30
 
@@ -42,10 +44,12 @@ export const DEFAULT_PERIOD = 30
  * @type {{id: ChartModule, label: string}[]}
  */
 export const CHART_MODULES = [
-  { id: 'puzzles', label: 'Puzzles' },
-  { id: 'repertoire', label: 'Répertoire' },
-  { id: 'woodpecker', label: 'Woodpecker' },
-  { id: 'free', label: 'Libre' }
+  ...['puzzles', 'repertoire', 'woodpecker', 'free'].map(id => ({
+    id,
+    get label() {
+      return t(`dashboard.stats.chart.${id}`)
+    }
+  }))
 ]
 
 const MINUTE = 60_000
@@ -71,10 +75,12 @@ export function validPeriod(days) {
 export function formatHours(ms) {
   if (ms === null || ms === undefined) return '—'
   const minutes = Math.round(ms / MINUTE)
-  if (minutes < 60) return `${minutes} min`
+  if (minutes < 60) return t('dashboard.stats.minutes', { n: minutes })
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`
+  return m
+    ? t('dashboard.stats.hoursMinutes', { h, m: String(m).padStart(2, '0') })
+    : t('dashboard.stats.hours', { h })
 }
 
 /**
@@ -156,13 +162,25 @@ export function labelledBars(count) {
  */
 export function sessionFigures(s) {
   return [
-    { id: 'completed', value: String(s?.completed ?? 0), label: 'Terminées' },
-    { id: 'abandoned', value: String(s?.abandoned ?? 0), label: 'Abandonnées' },
-    { id: 'expired', value: String(s?.expired ?? 0), label: 'Expirées' },
+    {
+      id: 'completed',
+      value: String(s?.completed ?? 0),
+      label: t('dashboard.stats.sessions.completed')
+    },
+    {
+      id: 'abandoned',
+      value: String(s?.abandoned ?? 0),
+      label: t('dashboard.stats.sessions.abandoned')
+    },
+    {
+      id: 'expired',
+      value: String(s?.expired ?? 0),
+      label: t('dashboard.stats.sessions.expired')
+    },
     {
       id: 'average',
       value: s?.averageMs == null ? '—' : formatHours(s.averageMs),
-      label: 'Temps moyen'
+      label: t('dashboard.stats.sessions.average')
     }
   ]
 }
