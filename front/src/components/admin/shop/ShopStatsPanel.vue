@@ -29,6 +29,12 @@
           testid="shop-tile-spent"
         />
         <StatTile
+          label="Gagnées en session"
+          :value="crowns(stats.totals.earned ?? 0)"
+          :hint="`${stats.totals.rewarded ?? 0} session(s) récompensée(s)`"
+          testid="shop-tile-earned"
+        />
+        <StatTile
           label="Données"
           :value="crowns(stats.totals.granted)"
           :hint="`${crowns(stats.totals.revoked)} retirées`"

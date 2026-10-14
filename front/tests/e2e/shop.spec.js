@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { Chess } from 'chess.js'
-import { fenAfter, signIn } from './helpers.js'
+import { fenAfter, signIn, solve } from './helpers.js'
 
 const isRunNext = r =>
   /\/api\/training\/runs\/[^/]+\/next$/.test(r.url()) &&
@@ -202,4 +202,65 @@ test('blindfold: a pardon after a mistake, bought in place, the puzzle ends solv
     'win'
   )
   await expect(page.getByTestId('result-xp')).toHaveText('+12 XP')
+})
+
+test('a completed session opens a chest of crowns, then the results and the store', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/session/new')
+  await page.getByTestId('session-title').fill('Coffre')
+  await page.getByTestId('module-card-puzzles').click()
+  const settings = page.getByTestId('module-settings')
+  await settings.getByTestId('field-duree').locator('input').fill('5')
+  await settings.getByTestId('module-save').click()
+  await expect(settings).toBeHidden()
+
+  const served = page.waitForResponse(isRunNext)
+  await page.getByTestId('session-launch').click()
+  await expect(page).toHaveURL(/#\/training\/[^/]+$/)
+  const item = (await (await served).json()).item
+  await solve(page, item.data.puzzle)
+  await expect(page.getByTestId('run-progress')).toContainText('1 puzzles')
+  // At least 15 s for the puzzle: some crowns (1 minute per exercise at most, docs/SHOP.md).
+  await page.waitForTimeout(15_000)
+  await page.getByTestId('run-stop').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(page.getByRole('button', { name: 'OK' })).toBeHidden()
+
+  // The chest comes before the results: three taps open it.
+  const chest = page.getByTestId('treasure-chest')
+  await expect(chest).toBeVisible()
+  await expect(chest).toContainText('RÉCOMPENSE DE SESSION')
+  await expect(page.getByTestId('run-end')).toBeHidden()
+  const opened = page.waitForResponse(
+    r => /\/api\/shop\/rewards\/[^/]+\/open$/.test(r.url()) && r.request().method() === 'POST'
+  )
+  for (let i = 0; i < 3; i++) await chest.getByTestId('chest-hit').click({ force: true })
+  const reward = await (await opened).json()
+  expect(reward.crowns).toBeGreaterThan(0)
+  expect(reward.tier).toBe('perfect')
+  await expect(chest).toContainText('Quel')
+  await expect(chest).not.toContainText(/champion/i)
+  await expect(chest.getByTestId('chest-amount')).toHaveText(`+${reward.crowns}`)
+  await expect(chest.getByTestId('chest-wallet')).toHaveText(String(reward.balance))
+  expect(reward.balance).toBe(reward.crowns)
+
+  // "Voir mes résultats": the run's result.
+  await chest.getByTestId('chest-results').click()
+  await expect(chest).toBeHidden()
+  const result = page.getByTestId('run-end')
+  await expect(result).toBeVisible()
+  await result.getByTestId('run-end-close').click()
+
+  // The session's recap says it, without the chest again.
+  await page.getByTestId('session-open').click()
+  await expect(page.getByTestId('session-reward')).toContainText(`+${reward.crowns} couronnes`)
+  await expect(page.getByTestId('treasure-chest')).toHaveCount(0)
+
+  // The store tells how crowns are earned.
+  await page.goto('/#/boutique')
+  await expect(page.getByTestId('shop-balance')).toContainText(String(reward.crowns))
+  await expect(page.getByTestId('shop-earn')).toContainText('Gagner des couronnes')
 })

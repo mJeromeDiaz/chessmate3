@@ -11,18 +11,21 @@ use App\Enum\Shop\ItemType;
 use App\Repository\Shop\OfferRepository;
 use App\Repository\Shop\SlideRepository;
 use App\Shop\Inventory\Inventory;
+use App\Shop\Reward\RewardRules;
+use App\Shop\Reward\SessionRewarder;
 use App\Shop\Wallet\Wallets;
 use Psr\Clock\ClockInterface;
 
 /**
  * The store as a player sees it (docs/SHOP.md): the balance, the listed offers in order, the
- * carousel, what the player holds.
+ * carousel, what the player holds, how crowns are earned (§ 4 bis) and the paid minutes left today.
  *
  * @phpstan-import-type FreezeView from Inventory
  *
  * @phpstan-type OfferView array{id: string, slug: string, section: string, name: string, subtitle: string|null, description: string, items: list<array{item: string, quantity: int}>, module: string|null, price: int, wasPrice: int|null, comingSoon: bool, endsAt: string|null}
  * @phpstan-type SlideView array{id: string, offerId: string, tag: string, image: string}
- * @phpstan-type View array{balance: int, offers: list<OfferView>, slides: list<SlideView>, inventory: array<string, int>, freezes: list<FreezeView>}
+ * @phpstan-type EarningView array{crownsPerHour: int, perfectPercent: int, nearPercent: int, missedPercent: int, dailyMinutes: int, minutesLeftToday: int}
+ * @phpstan-type View array{balance: int, offers: list<OfferView>, slides: list<SlideView>, inventory: array<string, int>, freezes: list<FreezeView>, earning: EarningView}
  */
 final readonly class StoreView
 {
@@ -31,6 +34,8 @@ final readonly class StoreView
         private SlideRepository $slides,
         private Wallets $wallets,
         private Inventory $inventory,
+        private RewardRules $rules,
+        private SessionRewarder $rewards,
         private ClockInterface $clock,
     ) {
     }
@@ -54,6 +59,9 @@ final readonly class StoreView
             ], $this->slides->shown($now)),
             'inventory' => $this->inventory->items($userId),
             'freezes' => $this->inventory->freezes($userId),
+            'earning' => $this->rules->current()->toArray() + [
+                'minutesLeftToday' => $this->rewards->minutesLeftToday($userId, $user->getDateTimeZone(), $now),
+            ],
         ];
     }
 

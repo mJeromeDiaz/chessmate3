@@ -138,6 +138,42 @@
             </div>
           </section>
         </div>
+
+        <section
+          v-if="state.earning"
+          class="cm-card shop__section shop__earn"
+          data-testid="shop-earn"
+        >
+          <h2 class="shop__h2">Gagner des couronnes</h2>
+          <p class="shop__section-lead">
+            Termine une session : un coffre t’attend à la fin. Chaque minute
+            jouée rapporte, au plus une par exercice terminé (le temps libre ne
+            compte pas).
+          </p>
+          <ul class="shop__earn-rows">
+            <li v-for="row in earningRows(state.earning)" :key="row.label">
+              <span>{{ row.label }}</span>
+              <span class="shop__earn-value"
+                ><CrownCoin :size="18" />{{ crowns(row.value) }} / h</span
+              >
+            </li>
+          </ul>
+          <p class="shop__earn-day" data-testid="shop-earn-left">
+            Jusqu’à {{ state.earning.dailyMinutes }} min payées par jour ·
+            {{
+              state.earning.minutesLeftToday > 0
+                ? `encore ${state.earning.minutesLeftToday} min aujourd’hui`
+                : 'plafond atteint aujourd’hui'
+            }}
+          </p>
+          <q-btn
+            color="primary"
+            no-caps
+            unelevated
+            label="Lancer une session"
+            to="/session"
+          />
+        </section>
       </template>
       <div v-else-if="!loadError" class="shop__wait">
         <q-spinner size="32px" color="primary" />
@@ -166,7 +202,7 @@
 <script setup>
 /**
  * The store (design "Boutique", docs/SHOP.md): the balance, the offers of the moment, the freezes,
- * Puzzle Streak items, module aids, packs, cosmetics to come. A phone gets the design's single
+ * Puzzle Streak items, module aids, packs, cosmetics to come, and how to earn crowns (§ 4 bis). A phone gets the design's single
  * column; from 1024 px, wider grids. A purchase is paid at once, then celebrated while the
  * balance counts down.
  */
@@ -191,6 +227,7 @@ import {
   stockOf,
   tweenAt
 } from '@/utils/shop'
+import { earningRows } from '@/utils/shopReward'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -473,6 +510,48 @@ onBeforeUnmount(() => {
       grid-column: 1 / -1;
     }
   }
+}
+
+.shop__earn {
+  margin-top: 22px;
+  align-items: flex-start;
+
+  @media (min-width: $breakpoint-md-min) {
+    margin-top: 32px;
+  }
+}
+
+.shop__earn-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-weight: 600;
+  }
+}
+
+.shop__earn-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop__earn-day {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--cm-muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .shop__section-head {

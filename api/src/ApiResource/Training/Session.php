@@ -19,7 +19,10 @@ use App\State\Training\SessionProvider;
 
 /**
  * A training session of the current user (docs/TRAINING.md): its frozen program, where it stands
- * and the recap of each step played. Another user's session answers 404.
+ * and the recap of each step played, and the crowns it earned once completed (docs/SHOP.md,
+ * § 4 bis). Another user's session answers 404.
+ *
+ * @phpstan-import-type RewardView from \App\Training\Session\SessionRewardInterface
  */
 #[ApiResource(
     shortName: 'TrainingSession',
@@ -99,11 +102,18 @@ final class Session
     /** @var list<SessionStepView> */
     #[ApiProperty(genId: false)]
     public array $steps;
+    /**
+     * The crowns of a completed session (its chest, unless `opened`); null when it earned none.
+     *
+     * @var RewardView|null
+     */
+    public ?array $reward = null;
 
     /**
-     * @param list<RunEntity> $runs the session's runs
+     * @param list<RunEntity> $runs   the session's runs
+     * @param RewardView|null $reward
      */
-    public static function from(SessionEntity $session, array $runs): self
+    public static function from(SessionEntity $session, array $runs, ?array $reward = null): self
     {
         $byId = [];
         foreach ($runs as $run) {
@@ -119,6 +129,7 @@ final class Session
         $view->expiresAt = $session->getExpiresAt();
         $view->closedAt = $session->getClosedAt();
         $view->planId = $session->getPlan()?->getId()->toRfc4122();
+        $view->reward = $reward;
         $view->steps = [];
         $view->durationMs = 0;
         foreach ($session->getSteps() as $i => $step) {

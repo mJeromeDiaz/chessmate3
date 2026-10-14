@@ -53,7 +53,68 @@ export const SLIDE_IMAGES = [
 export const LEDGER_KINDS = {
   purchase: 'Achat',
   grant: 'Ajout',
-  revoke: 'Retrait'
+  revoke: 'Retrait',
+  reward: 'Session'
+}
+
+/**
+ * The reward rule's fields (docs/SHOP.md, § 4 bis): label, bounds, unit.
+ *
+ * @type {{key: 'crownsPerHour'|'perfectPercent'|'nearPercent'|'missedPercent'|'dailyMinutes', label: string, max: number, suffix: string, hint: string}[]}
+ */
+export const REWARD_RULE_FIELDS = [
+  {
+    key: 'crownsPerHour',
+    label: 'Couronnes par heure payée',
+    max: 10000,
+    suffix: '/ h',
+    hint: 'Au palier « presque » (coefficient 100 %).'
+  },
+  {
+    key: 'perfectPercent',
+    label: 'Session parfaite (100 %)',
+    max: 1000,
+    suffix: '%',
+    hint: 'Coefficient du palier.'
+  },
+  {
+    key: 'nearPercent',
+    label: 'Presque parfaite (80 à 99 %)',
+    max: 1000,
+    suffix: '%',
+    hint: 'Coefficient du palier.'
+  },
+  {
+    key: 'missedPercent',
+    label: 'En dessous de 80 %',
+    max: 1000,
+    suffix: '%',
+    hint: 'Coefficient du palier.'
+  },
+  {
+    key: 'dailyMinutes',
+    label: 'Minutes payées par jour',
+    max: 1440,
+    suffix: 'min',
+    hint: 'Par jour local du joueur.'
+  }
+]
+
+/**
+ * What a session earns under a rule, for the admin's preview: crowns for `minutes` paid minutes
+ * at each tier.
+ *
+ * @param {{crownsPerHour: number, perfectPercent: number, nearPercent: number, missedPercent: number}} rule
+ * @param {number} minutes
+ */
+export function rewardPreview(rule, minutes) {
+  const at = pct =>
+    Math.floor((minutes * 60 * rule.crownsPerHour * pct + 180000) / 360000)
+  return {
+    perfect: at(rule.perfectPercent),
+    near: at(rule.nearPercent),
+    missed: at(rule.missedPercent)
+  }
 }
 
 /**

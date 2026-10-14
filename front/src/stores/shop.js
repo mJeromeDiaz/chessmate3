@@ -10,11 +10,21 @@ import { useAuthStore } from '@/stores/auth'
 export const useShopStore = defineStore('shop', () => {
   /** @type {import('vue').Ref<import('@/utils/shop').ShopState|null>} */
   const state = ref(null)
+  /**
+   * Session rewards whose chest was seen in this tab (docs/SHOP.md, § 4 bis): not shown again
+   * while the server is still marking it.
+   *
+   * @type {import('vue').Ref<Set<string>>}
+   */
+  const seenChests = ref(new Set())
 
   watch(
     () => useAuthStore().isAuthenticated,
     signedIn => {
-      if (!signedIn) state.value = null
+      if (!signedIn) {
+        state.value = null
+        seenChests.value = new Set()
+      }
     }
   )
 
@@ -39,5 +49,18 @@ export const useShopStore = defineStore('shop', () => {
     return state.value
   }
 
-  return { state, load, loadOnce, buy }
+  /**
+   * Marks a session reward's chest seen (idempotent on the server), then reads the store again
+   * for the new balance.
+   *
+   * @param {string} rewardId
+   */
+  async function openChest(rewardId) {
+    if (seenChests.value.has(rewardId)) return
+    seenChests.value = new Set([...seenChests.value, rewardId])
+    await shopApi.openReward(rewardId)
+    await load()
+  }
+
+  return { state, seenChests, load, loadOnce, buy, openChest }
 })

@@ -986,9 +986,9 @@ export const gamificationApi = {
       .then(r => r.data)
 }
 
-/** The store (docs/SHOP.md): crowns, offers, carousel, inventory. */
+/** The store (docs/SHOP.md): crowns, offers, carousel, inventory, how to earn. */
 export const shopApi = {
-  /** `{balance, offers, slides, inventory, freezes}` */
+  /** `{balance, offers, slides, inventory, freezes, earning}` */
   get: () => http.get('/api/shop', JSON_LD).then(r => r.data),
   /**
    * Buys an offer `quantity` times (1 to 9); answers with the store after it. 409: `insufficient`
@@ -1000,6 +1000,20 @@ export const shopApi = {
   buy: (offerId, quantity) =>
     http
       .post('/api/shop/purchases', { offerId, quantity }, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Marks a session reward's chest opened (idempotent): `{id, crowns, paidMinutes, tier, capped,
+   * opened, balance}`. The crowns were credited when the session completed.
+   *
+   * @param {string} rewardId
+   */
+  openReward: rewardId =>
+    http
+      .post(
+        `/api/shop/rewards/${encodeURIComponent(rewardId)}/open`,
+        null,
+        JSON_LD
+      )
       .then(r => r.data)
 }
 
@@ -1254,6 +1268,18 @@ export const adminApi = {
   shopStats: (days = 30) =>
     http
       .get('/api/admin/shop/stats', { ...JSON_LD, params: { days } })
+      .then(r => r.data),
+  /** What sessions earn (docs/SHOP.md, § 4 bis), with who changed it last. */
+  shopRewardRule: () =>
+    http.get('/api/admin/shop/reward-rule', JSON_LD).then(r => r.data),
+  /**
+   * Replaces the reward rule; 422 `{violations}`.
+   *
+   * @param {{crownsPerHour: number, perfectPercent: number, nearPercent: number, missedPercent: number, dailyMinutes: number}} rule
+   */
+  saveShopRewardRule: rule =>
+    http
+      .put('/api/admin/shop/reward-rule', rule, JSON_LD)
       .then(r => r.data),
   /**
    * Checks a FEN and its evaluation against Lichess, nothing saved: `{verdict, source, lichess,

@@ -13,7 +13,10 @@ use App\Shop\Admin\Payload;
 use App\Shop\Admin\PlayerWallets;
 use App\Shop\Admin\ShopStats;
 use App\Shop\Admin\SlideEditor;
+use App\Shop\Reward\RewardRules;
+use App\Shop\Reward\Rule;
 use App\Shop\Wallet\CrownAdjustment;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,7 +30,8 @@ use Symfony\Component\Uid\Uuid;
 
 /**
  * The store's administration (docs/SHOP.md), admins only: the catalogue (offers, carousel), the
- * players' crowns (search, detail, give or take back with a reason), the figures. Writes within
+ * players' crowns (search, detail, give or take back with a reason), what sessions earn (§ 4 bis),
+ * the figures. Writes within
  * the admin's budget (admin_write); a form refused answers 422 `{violations}`.
  */
 #[Route('/api/admin/shop')]
@@ -43,6 +47,8 @@ final class AdminShopController extends AbstractController
         private readonly PlayerWallets $wallets,
         private readonly CrownAdjustment $crowns,
         private readonly ShopStats $stats,
+        private readonly RewardRules $rewardRules,
+        private readonly ClockInterface $clock,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.admin_write')]
         private readonly RateLimiterFactory $adminWriteLimiter,
@@ -139,6 +145,35 @@ final class AdminShopController extends AbstractController
             }
 
             return $this->json($this->wallets->detail($userId));
+        });
+    }
+
+    #[Route('/reward-rule', name: 'admin_shop_reward_rule', methods: ['GET'])]
+    public function rewardRule(): JsonResponse
+    {
+        return $this->json($this->rewardRules->view());
+    }
+
+    /**
+     * PUT {crownsPerHour, perfectPercent, nearPercent, missedPercent, dailyMinutes}: the rule of
+     * the next sessions (rewards already credited stay).
+     */
+    #[Route('/reward-rule', name: 'admin_shop_reward_rule_update', methods: ['PUT'])]
+    public function updateRewardRule(Request $request, #[CurrentUser] User $admin): JsonResponse
+    {
+        return $this->write($admin, function () use ($request, $admin): JsonResponse {
+            $payload = new Payload($request->toArray());
+            $rule = new Rule(
+                (int) $payload->int('crownsPerHour', 0, 10_000),
+                (int) $payload->int('perfectPercent', 0, 1_000),
+                (int) $payload->int('nearPercent', 0, 1_000),
+                (int) $payload->int('missedPercent', 0, 1_000),
+                (int) $payload->int('dailyMinutes', 0, 1_440),
+            );
+            $payload->done();
+            $this->rewardRules->save($rule, $admin->getId(), $this->clock->now());
+
+            return $this->json($this->rewardRules->view());
         });
     }
 

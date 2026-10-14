@@ -33,7 +33,7 @@ final class AdminShopTest extends WebTestCase
     public function testAdminsOnly(): void
     {
         $alice = $this->createUser('alice@example.com');
-        foreach ([['GET', '/api/admin/shop/catalog'], ['GET', '/api/admin/shop/players'], ['GET', '/api/admin/shop/stats'], ['POST', '/api/admin/shop/offers']] as [$method, $uri]) {
+        foreach ([['GET', '/api/admin/shop/catalog'], ['GET', '/api/admin/shop/players'], ['GET', '/api/admin/shop/stats'], ['POST', '/api/admin/shop/offers'], ['GET', '/api/admin/shop/reward-rule'], ['PUT', '/api/admin/shop/reward-rule']] as [$method, $uri]) {
             self::assertSame(403, $this->call($alice, $method, $uri, [])->getStatusCode(), $uri);
         }
     }
@@ -147,6 +147,28 @@ final class AdminShopTest extends WebTestCase
         self::assertCount(7, $this->listOf($stats['daily']));
         self::assertSame(['streak_freeze_7' => 1], $stats['held']);
         self::assertSame(7, $stats['freezeDays']);
+    }
+
+    public function testTheRewardRuleIsSetByAnAdmin(): void
+    {
+        self::assertSame(
+            ['crownsPerHour' => 120, 'perfectPercent' => 150, 'nearPercent' => 100, 'missedPercent' => 50, 'dailyMinutes' => 60, 'updatedAt' => null, 'updatedBy' => null],
+            $this->json($this->call($this->admin, 'GET', '/api/admin/shop/reward-rule')),
+        );
+
+        $refused = $this->call($this->admin, 'PUT', '/api/admin/shop/reward-rule', ['crownsPerHour' => -1, 'perfectPercent' => 150, 'nearPercent' => 100, 'missedPercent' => 50]);
+        self::assertSame(422, $refused->getStatusCode());
+        self::assertSame(['crownsPerHour', 'dailyMinutes'], array_column($this->listOf($this->json($refused)['violations']), 'propertyPath'));
+
+        $saved = $this->call($this->admin, 'PUT', '/api/admin/shop/reward-rule', ['crownsPerHour' => 90, 'perfectPercent' => 200, 'nearPercent' => 100, 'missedPercent' => 25, 'dailyMinutes' => 45]);
+        self::assertSame(200, $saved->getStatusCode(), (string) $saved->getContent());
+        $rule = $this->json($saved);
+        self::assertSame([90, 200, 25, 45, 'admin@example.com'], [$rule['crownsPerHour'], $rule['perfectPercent'], $rule['missedPercent'], $rule['dailyMinutes'], $rule['updatedBy']]);
+        self::assertIsString($rule['updatedAt']);
+
+        $earning = $this->json($this->call($this->createUser('alice@example.com'), 'GET', '/api/shop'))['earning'] ?? null;
+        self::assertIsArray($earning);
+        self::assertSame([90, 45, 45], [$earning['crownsPerHour'] ?? null, $earning['dailyMinutes'] ?? null, $earning['minutesLeftToday'] ?? null]);
     }
 
     private function createUser(string $email, bool $admin = false): User

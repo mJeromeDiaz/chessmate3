@@ -168,6 +168,13 @@
         <div class="session-page__end-text" data-testid="session-end">{{
           endText
         }}</div>
+        <div
+          v-if="session.reward"
+          class="session-page__reward"
+          data-testid="session-reward"
+        >
+          <CrownCoin :size="22" />{{ rewardLine(session.reward) }}
+        </div>
         <q-btn
           color="primary"
           no-caps
@@ -188,6 +195,14 @@
         <q-btn flat no-caps label="Tableau de bord" to="/" />
       </div>
     </div>
+    <TreasureChest
+      v-if="chestOpen && session?.reward"
+      :reward="session.reward"
+      results-label="Voir le bilan"
+      @results="chestOpen = false"
+      @close="chestOpen = false"
+      @shop="chestOpen = false"
+    />
   </q-page>
 </template>
 
@@ -195,16 +210,21 @@
 /**
  * A training session (docs/TRAINING.md): its frozen program, the state of each step, and what
  * comes next: start (or retry) the current module, resume its run, pass it, abandon the session,
- * or play it again (from the start, its saved session as it is now when it has one).
+ * or play it again (from the start, its saved session as it is now when it has one). A completed
+ * session shows its crowns, and its chest until opened (docs/SHOP.md, § 4 bis).
  */
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import CrownCoin from '@/components/shop/CrownCoin.vue'
+import TreasureChest from '@/components/shop/TreasureChest.vue'
 import { sessionApi } from '@/services/api'
+import { useShopStore } from '@/stores/shop'
 import { usePlanLaunch } from '@/composables/session/usePlanLaunch'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatDuration } from '@/utils/format'
+import { chestToOpen, rewardLine } from '@/utils/shopReward'
 import {
   blockedText,
   sessionProgressText,
@@ -217,6 +237,7 @@ definePage({ meta: { auth: 'required' } })
 
 const route = useRoute()
 const $q = useQuasar()
+const shop = useShopStore()
 /** @type {import('vue').Ref<import('@/utils/session/steps').TrainingSession|null>} */
 const session = ref(null)
 const error = ref('')
@@ -225,6 +246,12 @@ const acting = ref(null)
 
 const step = useSessionStep({ onRefused: () => load() })
 const launcher = usePlanLaunch()
+
+/** The chest of a session completed here (its last module passed) or not opened yet. */
+const chestOpen = ref(false)
+watch(session, s => {
+  if (chestToOpen(s, shop.seenChests)) chestOpen.value = true
+})
 
 const current = computed(
   () => session.value?.steps[session.value.currentIndex] ?? null
@@ -313,6 +340,14 @@ onMounted(load)
   @media (min-width: $breakpoint-md-min) {
     padding: 32px 40px 48px;
   }
+}
+
+.session-page__reward {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
 }
 
 .session-page__head {

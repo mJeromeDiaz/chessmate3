@@ -41,8 +41,8 @@ final readonly class DataExport
           repertoires/*.pgn : chaque répertoire au format PGN.
         - entrainement.json : vos séances chronométrées, sessions, sessions enregistrées, séries
           de coordonnées et puzzles à l'aveugle.
-        - boutique.json : vos couronnes (chaque mouvement), vos objets, vos gels de série et les jours
-          qu'ils ont couverts.
+        - boutique.json : vos couronnes (chaque mouvement, celles gagnées par vos sessions), vos
+          objets, vos gels de série et les jours qu'ils ont couverts.
         - activite.json : le journal de vos exercices terminés.
 
         Les dates sont en UTC (ISO 8601), les identifiants des UUID.
@@ -181,6 +181,10 @@ final readonly class DataExport
             'inventory' => $this->rows('SELECT item, quantity FROM shop_inventory_item WHERE user_id = ? AND quantity > 0 ORDER BY item', $id),
             'freezes' => $this->rows('SELECT item, days, days_left, acquired_at FROM shop_freeze WHERE user_id = ? ORDER BY acquired_at', $id),
             'frozenDays' => $this->rows('SELECT local_date, created_at FROM gamification_frozen_day WHERE user_id = ? ORDER BY local_date', $id),
+            'sessionRewards' => $this->rows(
+                'SELECT local_date, item_count, success_count, paid_seconds, capped, tier, crowns, created_at, opened_at FROM shop_session_reward WHERE user_id = ? ORDER BY created_at',
+                $id,
+            ),
         ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(

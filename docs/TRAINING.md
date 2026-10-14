@@ -358,6 +358,10 @@ Réglages d'une étape, vérifiés par le module au lancement **et** au démarra
   (elle compte comme jouée), idempotent.
 - À la clôture, `SessionClosed` (même transaction) : `status`, étapes, faites, passées, temps joué
   (somme des `durationMs` de ses séances).
+- Une session terminée (`completed`) rapporte des **couronnes**, créditées dans la même
+  transaction (`SessionRewardInterface`, implémentée par la boutique) et révélées par un coffre
+  avant le résultat du dernier module : [SHOP.md § 4 bis](SHOP.md). La vue de la session porte
+  `reward`.
 - **Rejouer** (front seulement, 2026-10-11) : une session se rejoue depuis son écran de fin, depuis
   « Dernières sessions » du tableau de bord, ou pendant qu'elle est en cours (« Recommencer la
   session » : après confirmation, elle est abandonnée puis rejouée depuis le premier module).

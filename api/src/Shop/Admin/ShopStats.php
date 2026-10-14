@@ -9,9 +9,10 @@ use Psr\Clock\ClockInterface;
 
 /**
  * The store's figures for the admin (docs/SHOP.md), over the last $days days (UTC): crowns given,
- * taken back and spent, sales by offer, crowns spent by day, what players hold now.
+ * taken back, earned by sessions (§ 4 bis) and spent, sales by offer, crowns spent and earned by
+ * day, what players hold now.
  *
- * @phpstan-type Stats array{days: int, totals: array{circulating: int, holders: int, granted: int, revoked: int, spent: int, purchases: int, buyers: int}, offers: list<array{offerName: string, purchases: int, quantity: int, crowns: int}>, daily: list<array{date: string, crowns: int}>, held: array<string, int>, freezeDays: int}
+ * @phpstan-type Stats array{days: int, totals: array{circulating: int, holders: int, granted: int, revoked: int, earned: int, rewarded: int, spent: int, purchases: int, buyers: int}, offers: list<array{offerName: string, purchases: int, quantity: int, crowns: int}>, daily: list<array{date: string, crowns: int, earned: int}>, held: array<string, int>, freezeDays: int}
  */
 final readonly class ShopStats
 {
@@ -36,6 +37,8 @@ final readonly class ShopStats
             "SELECT
                 COALESCE(SUM(CASE WHEN kind = 'grant' THEN delta END), 0) AS granted,
                 COALESCE(-SUM(CASE WHEN kind = 'revoke' THEN delta END), 0) AS revoked,
+                COALESCE(SUM(CASE WHEN kind = 'reward' THEN delta END), 0) AS earned,
+                COUNT(CASE WHEN kind = 'reward' THEN 1 END) AS rewarded,
                 COALESCE(-SUM(CASE WHEN kind = 'purchase' THEN delta END), 0) AS spent,
                 COUNT(CASE WHEN kind = 'purchase' THEN 1 END) AS purchases,
                 COUNT(DISTINCT CASE WHEN kind = 'purchase' THEN user_id END) AS buyers
@@ -56,20 +59,24 @@ final readonly class ShopStats
             [$since],
         ));
 
-        $spentByDay = [];
+        $spentByDay = $earnedByDay = [];
         foreach ($this->connection->fetchAllAssociative(
-            "SELECT DATE(created_at) AS day, -SUM(delta) AS crowns FROM shop_ledger_entry
-              WHERE kind = 'purchase' AND created_at >= ? GROUP BY DATE(created_at)",
+            "SELECT DATE(created_at) AS day,
+                    COALESCE(-SUM(CASE WHEN kind = 'purchase' THEN delta END), 0) AS crowns,
+                    COALESCE(SUM(CASE WHEN kind = 'reward' THEN delta END), 0) AS earned
+               FROM shop_ledger_entry
+              WHERE kind IN ('purchase', 'reward') AND created_at >= ? GROUP BY DATE(created_at)",
             [$since],
         ) as $row) {
             if (\is_string($row['day'])) {
                 $spentByDay[$row['day']] = self::int($row['crowns']);
+                $earnedByDay[$row['day']] = self::int($row['earned']);
             }
         }
         $daily = [];
         for ($day = $from; $day <= $today; $day = $day->modify('+1 day')) {
             $key = $day->format('Y-m-d');
-            $daily[] = ['date' => $key, 'crowns' => $spentByDay[$key] ?? 0];
+            $daily[] = ['date' => $key, 'crowns' => $spentByDay[$key] ?? 0, 'earned' => $earnedByDay[$key] ?? 0];
         }
 
         $held = [];
@@ -92,6 +99,8 @@ final readonly class ShopStats
                 'holders' => self::int($wallets['holders'] ?? 0),
                 'granted' => self::int($sums['granted'] ?? 0),
                 'revoked' => self::int($sums['revoked'] ?? 0),
+                'earned' => self::int($sums['earned'] ?? 0),
+                'rewarded' => self::int($sums['rewarded'] ?? 0),
                 'spent' => self::int($sums['spent'] ?? 0),
                 'purchases' => self::int($sums['purchases'] ?? 0),
                 'buyers' => self::int($sums['buyers'] ?? 0),

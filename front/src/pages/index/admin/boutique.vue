@@ -34,6 +34,7 @@
     >
       <q-tab name="offers" label="Offres" data-testid="shop-admin-offers" />
       <q-tab name="slides" label="Carrousel" data-testid="shop-admin-slides" />
+      <q-tab name="rewards" label="Gains" data-testid="shop-admin-rewards" />
       <q-tab name="players" label="Joueurs" data-testid="shop-admin-players" />
       <q-tab name="stats" label="Statistiques" data-testid="shop-admin-stats" />
     </q-tabs>
@@ -175,6 +176,7 @@
       </q-markup-table>
     </section>
 
+    <RewardRuleForm v-else-if="tab === 'rewards'" />
     <ShopPlayers v-else-if="tab === 'players'" />
     <ShopStatsPanel v-else />
 
@@ -197,12 +199,13 @@
 <script setup>
 /**
  * The store's administration (docs/SHOP.md): offers (create, change, suspend), the carousel,
- * players' crowns, figures.
+ * what sessions earn (docs/SHOP.md, § 4 bis), players' crowns, figures.
  */
 import { onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import AdminPage from '@/components/admin/AdminPage.vue'
 import OfferForm from '@/components/admin/shop/OfferForm.vue'
+import RewardRuleForm from '@/components/admin/shop/RewardRuleForm.vue'
 import ShopPlayers from '@/components/admin/shop/ShopPlayers.vue'
 import ShopStatsPanel from '@/components/admin/shop/ShopStatsPanel.vue'
 import SlideForm from '@/components/admin/shop/SlideForm.vue'

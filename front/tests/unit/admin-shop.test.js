@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   ITEM_OPTIONS,
+  LEDGER_KINDS,
+  REWARD_RULE_FIELDS,
+  rewardPreview,
   fromLocalInput,
   offerForm,
   offerPayload,
@@ -106,5 +109,26 @@ describe('store administration', () => {
     expect(violationOf(violations, 'slug')).toBe('Pris. Trop long.')
     expect(violationOf(violations, 'name')).toBe('')
     expect(violationsOf({ response: { status: 409, data: {} } })).toEqual([])
+  })
+})
+
+describe('the reward rule', () => {
+  it('previews what 20 paid minutes earn at each tier', () => {
+    const rule = {
+      crownsPerHour: 120,
+      perfectPercent: 150,
+      nearPercent: 100,
+      missedPercent: 50
+    }
+    expect(rewardPreview(rule, 20)).toEqual({ perfect: 60, near: 40, missed: 20 })
+    expect(rewardPreview({ ...rule, crownsPerHour: 0 }, 20).perfect).toBe(0)
+    expect(REWARD_RULE_FIELDS.map(f => f.key)).toEqual([
+      'crownsPerHour',
+      'perfectPercent',
+      'nearPercent',
+      'missedPercent',
+      'dailyMinutes'
+    ])
+    expect(LEDGER_KINDS.reward).toBe('Session')
   })
 })

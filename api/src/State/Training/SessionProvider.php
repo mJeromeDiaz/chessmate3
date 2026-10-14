@@ -36,7 +36,7 @@ final class SessionProvider implements ProviderInterface
     {
         $user = $this->authenticatedUser->get();
         if ($operation instanceof CollectionOperationInterface) {
-            return array_map($this->views->view(...), $this->sessions->recent($user, Session::RECENT_LIMIT));
+            return $this->views->views($this->sessions->recent($user, Session::RECENT_LIMIT));
         }
         if ('training_session_current' === $operation->getName()) {
             $session = $this->sessions->current($user);

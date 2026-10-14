@@ -30,12 +30,21 @@
  * @property {number} daysLeft
  * @property {string} acquiredAt
  *
+ * @typedef {object} ShopEarning what a completed session earns (docs/SHOP.md, § 4 bis)
+ * @property {number} crownsPerHour at the "near" tier
+ * @property {number} perfectPercent
+ * @property {number} nearPercent
+ * @property {number} missedPercent
+ * @property {number} dailyMinutes paid minutes a local day
+ * @property {number} minutesLeftToday
+ *
  * @typedef {object} ShopState
  * @property {number} balance
  * @property {ShopOffer[]} offers
  * @property {ShopSlide[]} slides
  * @property {Record<string, number>} inventory
  * @property {ShopFreeze[]} freezes
+ * @property {ShopEarning} earning
  *
  * @typedef {object} ItemLook
  * @property {string} glyph

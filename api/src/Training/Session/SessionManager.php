@@ -52,6 +52,7 @@ final class SessionManager
         private readonly StepChecker $checker,
         private readonly TimeboxRunner $runner,
         private readonly EventPublisher $events,
+        private readonly SessionRewardInterface $rewards,
         private readonly ClockInterface $clock,
     ) {
     }
@@ -307,7 +308,8 @@ final class SessionManager
         $now = $this->now();
         $session->close($status, $now);
         $durationMs = 0;
-        foreach ($this->runs->findByParent($session->getId()) as $run) {
+        $runs = $this->runs->findByParent($session->getId());
+        foreach ($runs as $run) {
             $summary = $run->getSummary();
             $durationMs += \is_int($summary['durationMs'] ?? null) ? $summary['durationMs'] : 0;
         }
@@ -324,6 +326,10 @@ final class SessionManager
             startedAt: $session->getStartedAt(),
             occurredAt: $now,
         ));
+        // Its crowns too (docs/SHOP.md, § 4 bis): only a session played to its end earns them.
+        if (SessionStatus::Completed === $status) {
+            $this->rewards->grant($session, $runs, $now);
+        }
     }
 
     private function now(): \DateTimeImmutable

@@ -11,13 +11,15 @@ use App\State\Shop\PurchaseProcessor;
 use App\State\Shop\StoreProvider;
 
 /**
- * The store (docs/SHOP.md): the signed-in player's crowns, the offers, the carousel, the inventory.
+ * The store (docs/SHOP.md): the signed-in player's crowns, the offers, the carousel, the inventory,
+ * how crowns are earned.
  * A purchase answers with the store as it stands after it.
  *
  * @phpstan-import-type View from \App\Shop\Catalog\StoreView
  * @phpstan-import-type OfferView from \App\Shop\Catalog\StoreView
  * @phpstan-import-type SlideView from \App\Shop\Catalog\StoreView
  * @phpstan-import-type FreezeView from \App\Shop\Inventory\Inventory
+ * @phpstan-import-type EarningView from \App\Shop\Catalog\StoreView
  */
 #[ApiResource(
     shortName: 'Shop',
@@ -38,6 +40,12 @@ final class Store
     public array $inventory = [];
     /** @var list<FreezeView> */
     public array $freezes = [];
+    /**
+     * The reward rule and the paid minutes left today (§ 4 bis).
+     *
+     * @var EarningView|null
+     */
+    public ?array $earning = null;
 
     /**
      * @param View $view
@@ -50,6 +58,7 @@ final class Store
         $store->slides = $view['slides'];
         $store->inventory = $view['inventory'];
         $store->freezes = $view['freezes'];
+        $store->earning = $view['earning'];
 
         return $store;
     }

@@ -131,14 +131,18 @@ export function fenAfter(puzzle, count) {
 
 /**
  * Closes the end-of-run review that opens over the page when a run is over (its own tests check
- * its content).
+ * its content), after the session's chest when one comes first.
  *
  * @param {import('@playwright/test').Page} page
  * @param {number} [timeout] how long the run may take to end
  */
 export async function closeRunEnd(page, timeout) {
   const dialog = page.getByTestId('run-end')
-  await expect(dialog).toBeVisible(timeout ? { timeout } : undefined)
+  // A session completed with crowns shows its chest first (docs/SHOP.md, § 4 bis): closed unopened.
+  const chest = page.getByTestId('treasure-chest')
+  await expect(dialog.or(chest)).toBeVisible(timeout ? { timeout } : undefined)
+  if (await chest.isVisible()) await chest.getByTestId('chest-close').click()
+  await expect(dialog).toBeVisible()
   await dialog.getByTestId('run-end-close').click()
   await expect(dialog).toBeHidden()
 }

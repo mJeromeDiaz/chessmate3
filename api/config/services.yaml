@@ -60,6 +60,7 @@ when@test:
         App\Repertoire\Import\Message\ApplyImportHandler: { autowire: true, autoconfigure: true, public: true }
         App\Ops\Queue\QueueDrainer: { autowire: true, public: true }
         App\Shop\Wallet\CrownAdjustment: { autowire: true, public: true }
+        App\Shop\Reward\RewardRules: { autowire: true, public: true }
     parameters:
         woodpecker.min_puzzles: 5
         woodpecker.light.initial_puzzles: 10
@@ -119,6 +120,8 @@ services:
     # And those of blindfold puzzles and coordinates series: each domain owns its interface.
     App\Blindfold\Pardon\PardonStockInterface: '@App\Shop\Pardon\BlindfoldPardons'
     App\Coordinates\Pardon\PardonStockInterface: '@App\Shop\Pardon\CoordinatesPardons'
+    # The crowns of a completed session come from the store (docs/SHOP.md, § 4 bis): Training owns the interface.
+    App\Training\Session\SessionRewardInterface: '@App\Shop\Reward\SessionRewarder'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

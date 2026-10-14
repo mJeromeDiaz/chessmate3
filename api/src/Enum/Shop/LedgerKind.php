@@ -15,4 +15,6 @@ enum LedgerKind: string
     case Grant = 'grant';
     /** Taken back by an admin. */
     case Revoke = 'revoke';
+    /** Earned at the end of a completed training session (its chest). */
+    case Reward = 'reward';
 }

@@ -66,6 +66,14 @@
         :next-error="sessionStep.error.value"
         @next="sessionStep.start(runner.run.value.parentId)"
       />
+      <TreasureChest
+        v-if="chestOpen && session?.reward"
+        :reward="session.reward"
+        :results-label="hasResult ? 'Voir mes résultats' : 'Voir le bilan'"
+        @results="leaveChest(true)"
+        @close="leaveChest(false)"
+        @shop="chestOpen = false"
+      />
     </div>
 
     <RepertoireDrillPlayer
@@ -323,7 +331,7 @@
  * `OvertimeDialog`).
  */
 import { computed, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.vue'
 import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
@@ -337,6 +345,7 @@ import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
 import RunHeader from '@/components/training/RunHeader.vue'
 import RunRecap from '@/components/training/RunRecap.vue'
 import RunResult from '@/components/training/RunResult.vue'
+import TreasureChest from '@/components/shop/TreasureChest.vue'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
@@ -354,6 +363,7 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { levelAt } from '@/utils/puzzleStreak'
 import { stepModule } from '@/utils/session/steps'
 import { resultKind } from '@/utils/runResult'
+import { chestToOpen } from '@/utils/shopReward'
 import { backLabel, subjectPath } from '@/utils/training'
 
 definePage({ meta: { auth: 'required' } })
@@ -382,6 +392,7 @@ const STOP_MESSAGES = {
     'Le puzzle en cours ne sera pas compté : ton streak s’arrête là.'
 }
 const route = useRoute()
+const router = useRouter()
 const $q = useQuasar()
 const store = useTrainingStore()
 const gamification = useGamificationStore()
@@ -878,17 +889,44 @@ const hasResult = computed(
 )
 /** The review waits for the last correction to be left (`holdEnd`). */
 let endWaiting = false
+/**
+ * The chest of the session this run completed (docs/SHOP.md, § 4 bis): between the streak
+ * celebration and the result, until opened.
+ */
+const chestOpen = ref(false)
+/** @type {Promise<unknown>|null} the session being read after the run's end */
+let sessionLoading = null
 
 function openEnd() {
-  if (!hasResult.value) return
   if (holdEnd.value) {
     endWaiting = true
     return
   }
+  const run = runner.run.value
+  if (!hasResult.value && !run?.parentId) return
   // The day's first exercise may have been in this run: its streak celebration comes first.
   gamification
     .celebrateStreak({ afterExercise: false })
-    .then(() => (endOpen.value = true))
+    .then(() => sessionLoading)
+    .catch(() => {})
+    .then(() => {
+      if (runner.run.value?.id !== run?.id) return
+      if (chestToOpen(session.value, shop.seenChests)) chestOpen.value = true
+      else if (hasResult.value) endOpen.value = true
+    })
+}
+
+/**
+ * Leaves the chest for the run's result (closed or "Voir mes résultats"); without a result, "Voir
+ * le bilan" goes to the session's recap.
+ *
+ * @param {boolean} toResults
+ */
+function leaveChest(toResults) {
+  chestOpen.value = false
+  if (hasResult.value) endOpen.value = true
+  else if (toResults && runner.run.value?.parentId)
+    router.push(`/session/${runner.run.value.parentId}`)
 }
 
 watch(holdEnd, held => {
@@ -908,15 +946,15 @@ watch(
     if (phase === 'running' && runner.run.value)
       seenRunning.add(runner.run.value.id)
     if (phase !== 'ended') return
-    openEnd()
     if (store.current?.id === runner.run.value?.id) store.current = null
     const parentId = runner.run.value?.parentId
-    if (parentId) {
-      sessionApi
-        .get(parentId)
-        .then(s => (session.value = s))
-        .catch(() => {})
-    }
+    sessionLoading = parentId
+      ? sessionApi
+          .get(parentId)
+          .then(s => (session.value = s))
+          .catch(() => {})
+      : null
+    openEnd()
   },
   { immediate: true }
 )
@@ -930,6 +968,7 @@ watch(
     error.value = ''
     session.value = null
     endOpen.value = false
+    chestOpen.value = false
     holdEnd.value = false
     evalItem.value = null
     streakItem.value = null

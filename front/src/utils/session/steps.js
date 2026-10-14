@@ -25,6 +25,8 @@ import { formatDuration } from '@/utils/format'
  * @property {number} durationMs
  * @property {string|null} planId the saved session it was launched from (null once deleted)
  * @property {SessionStep[]} steps
+ * @property {import('@/utils/shopReward').SessionReward|null} [reward] the crowns of a completed
+ *   session (docs/SHOP.md, § 4 bis)
  */
 
 /**
