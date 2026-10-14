@@ -16,7 +16,7 @@
     >
       <template #header>
         <div class="gt-sm row items-center q-gutter-sm puzzle-page__bar">
-          <div class="text-h6">Puzzles</div>
+          <div class="text-h6">{{ $t('puzzle.play.title') }}</div>
           <RatingBadge />
           <q-space />
           <q-btn
@@ -24,7 +24,7 @@
             dense
             no-caps
             icon="history"
-            label="Historique"
+            :label="$t('puzzle.settings.history')"
             to="/puzzle/history"
           />
         </div>
@@ -34,14 +34,13 @@
           rounded
           class="gt-sm cm-banner--info q-mt-sm"
         >
-          Vous avez lié votre compte Lichess : démarrer avec votre classement
-          puzzle Lichess ?
+          {{ $t('puzzle.play.lichessLinked') }}
           <template #action>
             <q-btn
               flat
               no-caps
               color="primary"
-              label="Importer"
+              :label="$t('puzzle.settings.import')"
               :loading="importing"
               @click="importLichess"
             />
@@ -60,7 +59,7 @@
               flat
               no-caps
               color="white"
-              label="Rejoindre la séance"
+              :label="$t('puzzle.play.joinRun')"
               :to="`/training/${heldBy}`"
               data-testid="puzzle-join-run"
             />
@@ -91,7 +90,7 @@
           dense
           no-caps
           icon="open_in_new"
-          label="Partie d'origine"
+          :label="$t('puzzle.play.sourceGame')"
           class="self-start"
           :href="attempt.puzzle.gameUrl"
           target="_blank"
@@ -104,7 +103,7 @@
           outline
           no-caps
           icon="timer"
-          label="Séance chronométrée"
+          :label="$t('puzzle.play.timedRun')"
           class="full-width puzzle-page__run"
           data-testid="puzzle-run-open"
           @click="runDialog = true"
@@ -141,6 +140,7 @@ import { useGamificationStore } from '@/stores/gamification'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import {
   DIFFICULTIES,
   LICHESS_IMPORT_ERRORS,
@@ -164,10 +164,6 @@ let submitting = Promise.resolve()
 const heldBy = ref(/** @type {string|null} */ (null))
 const training = useTrainingStore()
 
-/** Free play refused: the pending puzzle is being played in a timed run. */
-const HELD_BY_RUN =
-  'Votre puzzle en cours est joué dans une séance chronométrée.'
-
 /**
  * A 409 of free play means a timed run holds the pending puzzle: point to it.
  *
@@ -185,7 +181,8 @@ async function heldByRun(e) {
   const run = await training.fetchCurrent().catch(() => null)
   if (!run) return false
   heldBy.value = run.id
-  error.value = HELD_BY_RUN
+  // Free play refused: the pending puzzle is being played in a timed run.
+  error.value = t('puzzle.play.heldByRun')
   return true
 }
 
@@ -243,7 +240,7 @@ async function pardon() {
     pardons.value = await store.pardon()
     $q.notify({
       type: 'positive',
-      message: 'Pardonné : ton classement est revenu.'
+      message: t('puzzle.play.pardoned')
     })
   } catch (e) {
     const detail = String(/** @type {any} */ (e)?.response?.data?.detail ?? '')
@@ -255,8 +252,8 @@ async function pardon() {
       error.value = apiErrorMessage(e, {
         409:
           detail === 'too_late'
-            ? 'Trop tard : un autre puzzle a été joué depuis.'
-            : 'Ce puzzle ne peut pas être pardonné.'
+            ? t('puzzle.play.tooLate')
+            : t('puzzle.play.noPardon')
       })
     }
   } finally {
@@ -271,7 +268,7 @@ async function pardon() {
  */
 const actions = computed(() => {
   const next_ = {
-    label: replayId.value ? 'Retour aux puzzles' : 'Puzzle suivant →',
+    label: t(replayId.value ? 'puzzle.play.backToPuzzles' : 'puzzle.play.next'),
     primary: true,
     disable: !store.result && !error.value,
     testid: 'puzzle-next',
@@ -283,7 +280,7 @@ const actions = computed(() => {
     ...(pardonable.value
       ? [
           {
-            label: `Pardonner · ${pardons.value}`,
+            label: t('puzzle.play.pardon', { n: pardons.value }),
             loading: pardoning.value,
             testid: 'puzzle-pardon',
             onClick: pardon
@@ -291,7 +288,7 @@ const actions = computed(() => {
         ]
       : []),
     {
-      label: 'Réessayer',
+      label: t('puzzle.play.retry'),
       testid: 'puzzle-retry',
       onClick: afterStreak(() => replay(current.puzzle.id))
     },
@@ -315,8 +312,8 @@ function onResolve(_outcome, report) {
     .catch(async e => {
       if (await heldByRun(e)) return
       error.value = apiErrorMessage(e, {
-        409: 'Ce puzzle a déjà été soumis.',
-        404: 'Cette tentative est introuvable.'
+        409: t('puzzle.play.alreadySubmitted'),
+        404: t('puzzle.play.attemptNotFound')
       })
     })
 }
@@ -343,9 +340,9 @@ async function begin(request) {
     if (await heldByRun(e)) return
     error.value = apiErrorMessage(e, {
       404: replayId.value
-        ? 'Ce puzzle ne fait pas partie de votre historique.'
-        : 'Aucun puzzle ne correspond à ces critères. Essayez d’autres thèmes.',
-      422: 'Thème inconnu.'
+        ? t('puzzle.play.notInHistory')
+        : t('puzzle.play.noMatch'),
+      422: t('puzzle.play.unknownTheme')
     })
   } finally {
     loading.value = false

@@ -2,24 +2,31 @@
   <q-dialog :model-value="modelValue" persistent>
     <q-card class="overtime" data-testid="streak-overtime">
       <q-card-section class="q-gutter-y-sm">
-        <div class="text-h6">Temps écoulé !</div>
-        <div class="text-body1">
-          Ton streak est à <b>{{ streakText(streak) }}</b
-          >. Tu continues {{ extensionMinutes }} minutes de plus ?
-        </div>
-        <div class="text-caption text-grey" data-testid="streak-overtime-left">
-          Sans réponse dans {{ seconds }} s, le streak s’arrête là.
-        </div>
-        <div class="text-caption text-grey"
-          >En prolongation, la première erreur termine le module.</div
+        <div class="text-h6">{{ $t('puzzleStreak.overtime.title') }}</div>
+        <i18n-t
+          keypath="puzzleStreak.overtime.streak"
+          tag="div"
+          scope="global"
+          class="text-body1"
         >
+          <template #streak>
+            <b>{{ streakText(streak) }}</b>
+          </template>
+          <template #n>{{ extensionMinutes }}</template>
+        </i18n-t>
+        <div class="text-caption text-grey" data-testid="streak-overtime-left">
+          {{ $t('puzzleStreak.overtime.left', { n: seconds }) }}
+        </div>
+        <div class="text-caption text-grey">{{
+          $t('puzzleStreak.overtime.rule')
+        }}</div>
         <div v-if="error" class="text-negative">{{ error }}</div>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn
           flat
           no-caps
-          label="Achever le streak"
+          :label="$t('puzzleStreak.overtime.end')"
           :disable="busy"
           data-testid="streak-overtime-end"
           @click="emit('end')"
@@ -28,7 +35,7 @@
           unelevated
           no-caps
           color="primary"
-          :label="`Continuer (+${extensionMinutes} min)`"
+          :label="$t('puzzleStreak.overtime.extend', { n: extensionMinutes })"
           :loading="busy"
           data-testid="streak-overtime-extend"
           @click="emit('extend')"

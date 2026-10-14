@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   browserLocale,
   currentLocale,
+  frenchPlural,
   i18n,
   intlLocale,
   isLocale,
@@ -41,5 +42,13 @@ describe('languages (docs/I18N.md)', () => {
     expect(t('common.locale.menu', { name: 'English' })).toBe(
       'Langue : English'
     )
+  })
+
+  it('keeps 0 and 1 singular in French', () => {
+    expect([0, 1, 2, 5].map(n => frenchPlural(n, 2))).toEqual([0, 0, 1, 1])
+    expect([0, 1, 2, 5].map(n => frenchPlural(n, 3))).toEqual([0, 1, 2, 2])
+    expect(t('session.builder.modules', 0)).toBe('0 module')
+    expect(t('session.builder.modules', 1)).toBe('1 module')
+    expect(t('session.builder.modules', 3)).toBe('3 modules')
   })
 })

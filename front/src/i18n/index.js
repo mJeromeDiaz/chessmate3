@@ -37,6 +37,21 @@ function bundle(files) {
   )
 }
 
+/**
+ * French plural: 0 and 1 are singular ("0 module", "1 module", "2 modules"); vue-i18n's default
+ * rule gives 0 the plural, which is right in English only. With three choices ("aucun | un |
+ * {n}"), zero keeps its own.
+ *
+ * @param {number} choice
+ * @param {number} choicesLength
+ * @returns {number}
+ */
+export function frenchPlural(choice, choicesLength) {
+  const n = Math.abs(choice)
+  if (choicesLength === 2) return n > 1 ? 1 : 0
+  return n === 0 ? 0 : n === 1 ? 1 : Math.min(2, choicesLength - 1)
+}
+
 export const i18n = createI18n({
   legacy: false,
   globalInjection: true,
@@ -45,6 +60,7 @@ export const i18n = createI18n({
   // A key missing in English falls back to French on purpose: no console noise for it.
   missingWarn: false,
   fallbackWarn: false,
+  pluralRules: { fr: frenchPlural },
   messages: {
     fr: bundle(
       import.meta.glob('./fr/*.json', { eager: true, import: 'default' })

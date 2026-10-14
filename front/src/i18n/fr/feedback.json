@@ -1,0 +1,47 @@
+{
+  "kickers": {
+    "win": "BRAVO",
+    "help": "PAS MAL",
+    "miss": "CORRECTION"
+  },
+  "time": " · {time}",
+  "elo": " · Elo {delta}",
+  "puzzle": {
+    "winMotif": "{motif} !",
+    "win": "Bravo !",
+    "foundAlone": "{move} trouvé seul",
+    "foundAloneNoMove": "Trouvé seul",
+    "winBubbleMotif": "Impeccable. Le motif « {motif} » était là, et tu l’as vu sans moi.",
+    "winBubble": "Impeccable. Tu as vu le coup sans moi.",
+    "help": "Bien joué !",
+    "withHint": "Trouvé avec un indice",
+    "helpBubble": "Tu as eu le bon réflexe une fois mis sur la piste. La prochaine fois, seul !",
+    "miss": "Raté !",
+    "solution": "La solution : {move} !",
+    "seeSolution": "Regarde la solution.",
+    "missBubbleMotif": "Le motif à retenir : « {motif} ». Rejoue la solution dans ta tête.",
+    "missBubble": "Cherche d’abord les échecs, les prises et les menaces : la solution part souvent de là."
+  },
+  "blindfold": {
+    "win": "De mémoire !",
+    "found": "{move} trouvé à l’aveugle",
+    "foundNoMove": "Trouvé à l’aveugle",
+    "winBubble": "Tu as tout gardé en tête. Belle mémoire !",
+    "withPeek": "Trouvé avec un coup d’œil",
+    "helpBubble": "Un coup d’œil, et tu as retrouvé le fil. La prochaine fois, sans regarder !",
+    "missBubble": "La position t’a échappé. Mémorise-la pièce par pièce, en partant des rois."
+  },
+  "repertoire": {
+    "winLine": "Ligne réussie !",
+    "winSegment": "Tronçon réussi !",
+    "moves": "{n} coup préparé sans faute | {n} coups préparés sans faute",
+    "winBubble": "Ta préparation tient la route. On enchaîne !",
+    "expected": "Le coup préparé : {move}",
+    "missLine": "Ligne ratée",
+    "missSegment": "Tronçon raté",
+    "retryLine": "Ce coup-là, il faut le connaître par cœur. Elle revient plus tard dans la séance.",
+    "retrySegment": "Ce coup-là, il faut le connaître par cœur. Il revient plus tard dans la séance.",
+    "later": "Ce coup-là, il faut le connaître par cœur. Revois-le après la séance."
+  },
+  "xp": "+{n} XP"
+}

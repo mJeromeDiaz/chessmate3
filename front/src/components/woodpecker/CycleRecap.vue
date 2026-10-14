@@ -3,27 +3,42 @@
     <q-card-section>
       <div class="text-h6">
         {{
-          setCompleted ? 'Set terminé !' : `Cycle ${completed.number} terminé`
+          setCompleted
+            ? $t('woodpecker.recap.setDone')
+            : $t('woodpecker.recap.cycleDone', { n: completed.number })
         }}
       </div>
       <div class="q-mt-sm">
         <div
-          >Précision : {{ percent(completed.accuracy)
-          }}<span v-if="previous">
-            ({{ compare(completed.accuracy, previous.accuracy, true) }})</span
-          ></div
+          >{{
+            $t('woodpecker.recap.accuracy', {
+              value: percent(completed.accuracy)
+            })
+          }}<span v-if="previous">{{
+            $t('woodpecker.recap.compared', {
+              comparison: compare(completed.accuracy, previous.accuracy)
+            })
+          }}</span></div
         >
         <div
-          >Temps actif : {{ formatDuration(completed.activeMs)
-          }}<span v-if="previous">
-            ({{ compareTime(completed.activeMs, previous.activeMs) }})</span
-          ></div
+          >{{
+            $t('woodpecker.recap.active', {
+              value: formatDuration(completed.activeMs)
+            })
+          }}<span v-if="previous">{{
+            $t('woodpecker.recap.compared', {
+              comparison: compareTime(completed.activeMs, previous.activeMs)
+            })
+          }}</span></div
         >
-        <div
-          >Temps moyen par puzzle :
-          {{ formatDuration(completed.averageMs) }}</div
-        >
-        <div>Durée calendaire : {{ days(completed.calendarMs) }}</div>
+        <div>{{
+          $t('woodpecker.recap.average', {
+            value: formatDuration(completed.averageMs)
+          })
+        }}</div>
+        <div>{{
+          $t('woodpecker.recap.calendar', { value: days(completed.calendarMs) })
+        }}</div>
       </div>
     </q-card-section>
   </q-card>
@@ -31,6 +46,7 @@
 
 <script setup>
 import { formatDuration } from '@/utils/format'
+import { intlLocale, t } from '@/i18n'
 
 defineProps({
   /** @type {import('vue').PropType<import('@/stores/woodpecker').CycleView>} */
@@ -41,20 +57,33 @@ defineProps({
 })
 
 /** @param {number|null} ratio */
-const percent = ratio => (ratio === null ? '—' : `${Math.round(ratio * 100)} %`)
+const percent = ratio =>
+  ratio === null
+    ? '—'
+    : t('woodpecker.recap.percent', { n: Math.round(ratio * 100) })
 
 /** @param {number|null} ms */
 const days = ms =>
-  ms === null ? '—' : `${(ms / 86_400_000).toFixed(1)} jour(s)`
+  ms === null
+    ? '—'
+    : t('woodpecker.recap.days', {
+        n: (ms / 86_400_000).toLocaleString(intlLocale(), {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        })
+      })
 
 /**
  * @param {number|null} now
  * @param {number|null} before
  */
 function compare(now, before) {
-  if (now === null || before === null) return 'pas de comparaison'
+  if (now === null || before === null) return t('woodpecker.recap.noComparison')
   const diff = Math.round((now - before) * 100)
-  return `${diff >= 0 ? '+' : '−'}${Math.abs(diff)} points vs cycle précédent`
+  return t('woodpecker.recap.points', {
+    sign: diff >= 0 ? '+' : '−',
+    n: Math.abs(diff)
+  })
 }
 
 /**
@@ -62,8 +91,8 @@ function compare(now, before) {
  * @param {number} before
  */
 function compareTime(now, before) {
-  if (!before) return 'pas de comparaison'
+  if (!before) return t('woodpecker.recap.noComparison')
   const ratio = now / before
-  return `${Math.round(ratio * 100)} % du cycle précédent`
+  return t('woodpecker.recap.ofPrevious', { n: Math.round(ratio * 100) })
 }
 </script>

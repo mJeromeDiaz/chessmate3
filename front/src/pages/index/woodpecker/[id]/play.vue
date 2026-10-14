@@ -29,11 +29,20 @@
         </div>
         <div v-if="set?.current" data-testid="woodpecker-progress">
           <div class="text-subtitle2">
-            Cycle {{ set.current.number }} / {{ set.cycleCount
-            }}<span v-if="set.current.run > 1">
-              (essai {{ set.current.run }})</span
-            >
-            · {{ set.current.played }} / {{ set.puzzleCount }}
+            {{
+              $t('woodpecker.play.progress', {
+                n: set.current.number,
+                total: set.cycleCount
+              })
+            }}<span v-if="set.current.run > 1">{{
+              $t('woodpecker.play.attempt', { n: set.current.run })
+            }}</span
+            >{{
+              $t('woodpecker.play.count', {
+                played: set.current.played,
+                total: set.puzzleCount
+              })
+            }}
           </div>
           <q-linear-progress
             :value="set.current.played / set.puzzleCount"
@@ -52,9 +61,8 @@
 
       <template #chips>
         <span class="play-chip lt-md"
-          >Un seul essai<q-tooltip
-            >En cas d’erreur, la solution s’affiche.</q-tooltip
-          ></span
+          >{{ $t('training.page.oneTry')
+          }}<q-tooltip>{{ $t('training.page.oneTryTip') }}</q-tooltip></span
         >
       </template>
 
@@ -65,7 +73,7 @@
           dense
           no-caps
           icon="open_in_new"
-          label="Partie d'origine"
+          :label="$t('puzzle.play.sourceGame')"
           class="self-start"
           :href="store.attempt.puzzle.gameUrl"
           target="_blank"
@@ -83,7 +91,7 @@
       <q-btn
         color="primary"
         no-caps
-        label="Voir le set"
+        :label="$t('woodpecker.play.seeSet')"
         :to="`/woodpecker/${id}`"
         data-testid="woodpecker-set-link"
       />
@@ -103,6 +111,7 @@ import { woodpeckerApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
 import { pace } from '@/utils/woodpeckerPace'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -125,7 +134,9 @@ let submitting = Promise.resolve()
  */
 const actions = computed(() => [
   {
-    label: store.recap ? 'Continuer' : 'Puzzle suivant →',
+    label: store.recap
+      ? t('common.actions.continue')
+      : t('woodpecker.play.next'),
     primary: true,
     disable: !store.result && !error.value,
     testid: 'woodpecker-next',
@@ -158,8 +169,8 @@ function onResolve(_outcome, report) {
     .then(() => {})
     .catch(e => {
       error.value = apiErrorMessage(e, {
-        409: 'Ce cycle est terminé ou perdu : rechargez le set.',
-        404: 'Ce puzzle est introuvable.'
+        409: t('woodpecker.play.cycleOver'),
+        404: t('woodpecker.play.puzzleNotFound')
       })
     })
 }
@@ -189,8 +200,8 @@ async function onReplace() {
     await woodpeckerApi.replacePuzzle(id.value, current.puzzle.id)
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Ce set est terminé : son contenu ne change plus.',
-      422: 'Plus aucun autre puzzle ne correspond à ce set.'
+      409: t('training.page.setFinished'),
+      422: t('training.page.noOtherPuzzle')
     })
     loading.value = false
     return
@@ -210,7 +221,7 @@ async function next() {
       await training.fetchCurrent().catch(() => {})
       blocked.value = blockedReason()
     } else {
-      error.value = apiErrorMessage(e, { 404: 'Set introuvable.' })
+      error.value = apiErrorMessage(e, { 404: t('woodpecker.set.notFound') })
     }
   } finally {
     loading.value = false
@@ -219,16 +230,16 @@ async function next() {
 
 function blockedReason() {
   const s = set.value
-  if (!s) return 'Ce set ne peut pas être joué.'
-  if (training.current?.subjectId === s.id)
-    return 'Une séance chronométrée est en cours sur ce set.'
-  if (s.mode === 'light') return 'Ce set se joue en séances chronométrées.'
-  if (s.status === 'paused') return 'Ce set est en pause.'
-  if (s.status === 'completed') return 'Set terminé, bravo !'
-  if (s.status === 'abandoned') return 'Ce set a été abandonné.'
+  const b = 'woodpecker.play.blocked.'
+  if (!s) return t(`${b}cannot`)
+  if (training.current?.subjectId === s.id) return t(`${b}run`)
+  if (s.mode === 'light') return t(`${b}light`)
+  if (s.status === 'paused') return t(`${b}paused`)
+  if (s.status === 'completed') return t(`${b}completed`)
+  if (s.status === 'abandoned') return t(`${b}abandoned`)
   if (s.current?.status === 'resting')
-    return `Repos : prochain cycle le ${formatDate(s.current.availableAt)}.`
-  return 'Ce set ne peut pas être joué maintenant.'
+    return t(`${b}resting`, { date: formatDate(s.current.availableAt) })
+  return t(`${b}notNow`)
 }
 
 onMounted(next)

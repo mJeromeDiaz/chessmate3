@@ -3,7 +3,9 @@
     class="cycle-explainer"
     icon="help_outline"
     :label="
-      light ? 'Comment marche le mode light ?' : 'Comment marchent les cycles ?'
+      light
+        ? $t('woodpecker.explainer.light')
+        : $t('woodpecker.explainer.classic')
     "
     header-class="cycle-explainer__header"
     data-testid="cycle-explainer"

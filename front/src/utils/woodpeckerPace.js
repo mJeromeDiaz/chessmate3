@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * The calendar day of an instant in an IANA timezone, as "YYYY-MM-DD".
  *
@@ -60,10 +62,9 @@ export function pace({ remaining, deadlineAt, timeZone, now = new Date() }) {
  * @returns {string}
  */
 function paceText(remaining, left, perDay) {
-  const puzzles = n => `${n} puzzle${n > 1 ? 's' : ''}`
-  if (remaining === 0) return 'Cycle terminé.'
-  if (left === 0) return `Échéance dépassée : il restait ${puzzles(remaining)}.`
-  if (left === 1)
-    return `Dernier jour : encore ${puzzles(remaining)} aujourd’hui.`
-  return `Il reste ${puzzles(remaining)} et ${left} jours : environ ${perDay} par jour.`
+  const puzzles = t('woodpecker.pace.puzzles', { n: remaining }, remaining)
+  if (remaining === 0) return t('woodpecker.pace.done')
+  if (left === 0) return t('woodpecker.pace.overdue', { puzzles })
+  if (left === 1) return t('woodpecker.pace.lastDay', { puzzles })
+  return t('woodpecker.pace.left', { puzzles, days: left, perDay })
 }

@@ -55,7 +55,7 @@
           no-caps
           class="play-btn play-btn--hint"
           :class="{ 'play-btn--hint-used': game.hintShown.value > 0 }"
-          :label="`Aide · ${aids.help}`"
+          :label="$t('puzzle.player.helpCount', { n: aids.help })"
           :loading="aids.busy === 'help'"
           :disable="
             !!aids.busy ||
@@ -66,13 +66,13 @@
           data-testid="streak-help"
           @click="emit('aid', 'help')"
         >
-          <q-tooltip>La pièce à jouer s’illumine (boutique).</q-tooltip>
+          <q-tooltip>{{ $t('puzzle.player.helpTip') }}</q-tooltip>
         </q-btn>
         <q-btn
           unelevated
           no-caps
           class="play-btn play-btn--skip"
-          :label="`Pass · ${aids.pass}`"
+          :label="$t('puzzle.player.passCount', { n: aids.pass })"
           :loading="aids.busy === 'pass'"
           :disable="
             !!aids.busy ||
@@ -82,10 +82,7 @@
           data-testid="streak-pass"
           @click="emit('aid', 'pass')"
         >
-          <q-tooltip
-            >Avant ton premier coup : la solution s’affiche, ton streak continue
-            (boutique).</q-tooltip
-          >
+          <q-tooltip>{{ $t('puzzle.player.passTip') }}</q-tooltip>
         </q-btn>
       </template>
       <q-btn
@@ -94,7 +91,7 @@
         no-caps
         class="play-btn play-btn--hint"
         :class="{ 'play-btn--hint-used': game.hintLevel.value > 0 }"
-        label="Aide"
+        :label="$t('puzzle.player.help')"
         :disable="game.phase.value !== 'playing' || game.hintShown.value >= 2"
         data-testid="puzzle-hint"
         @click="game.hint()"
@@ -104,7 +101,7 @@
         unelevated
         no-caps
         class="play-btn play-btn--solution"
-        label="Solution"
+        :label="$t('puzzle.player.solution')"
         :disable="game.phase.value === 'idle' || game.solutionShown.value"
         data-testid="puzzle-solution"
         @click="game.showSolution()"
@@ -114,7 +111,7 @@
         unelevated
         no-caps
         class="play-btn play-btn--skip"
-        label="Passer"
+        :label="$t('puzzle.player.skip')"
         :disable="game.phase.value !== 'playing'"
         data-testid="puzzle-skip"
         @click="confirmSkip"
@@ -124,19 +121,19 @@
         unelevated
         class="play-btn play-btn--icon"
         icon="swap_horiz"
-        aria-label="Remplacer ce puzzle"
+        :aria-label="$t('puzzle.player.replace')"
         :disable="game.phase.value === 'idle'"
         data-testid="puzzle-replace"
         @click="confirmReplace"
       >
-        <q-tooltip>Remplacer ce puzzle</q-tooltip>
+        <q-tooltip>{{ $t('puzzle.player.replace') }}</q-tooltip>
       </q-btn>
       <q-btn
         v-if="withSettings"
         unelevated
         class="play-btn play-btn--icon"
         icon="tune"
-        aria-label="Réglages des puzzles"
+        :aria-label="$t('puzzle.player.settings')"
         data-testid="puzzle-settings"
         @click="emit('settings')"
       >
@@ -204,6 +201,7 @@ import {
   puzzleKind
 } from '@/utils/feedback'
 import { playOutcomeSound } from '@/utils/sounds'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<{fen: string, moves: string[], playerColor: 'white'|'black', themes?: string[]}|null>} A new object starts a new game. */
@@ -289,18 +287,26 @@ const game = usePuzzle({
 })
 
 const statusText = computed(() => {
-  const side = game.orientation.value === 'white' ? 'les Blancs' : 'les Noirs'
+  const side = t(
+    game.orientation.value === 'white'
+      ? 'puzzle.player.white'
+      : 'puzzle.player.black'
+  )
   switch (game.phase.value) {
     case 'intro':
-      if (game.passed.value) return 'Pass : voici la solution…'
-      return game.solutionShown.value ? 'Solution…' : 'Au tour de l’adversaire…'
+      if (game.passed.value) return t('puzzle.player.passIntro')
+      return t(
+        game.solutionShown.value
+          ? 'puzzle.player.solutionIntro'
+          : 'puzzle.player.opponent'
+      )
     case 'playing':
       return game.mistaken.value
-        ? 'Ce n’est pas le bon coup. Cherche encore !'
-        : `Trouve le meilleur coup pour ${side}.`
+        ? t('puzzle.player.wrong')
+        : t('puzzle.player.find', { side })
     case 'complete':
-      if (game.passed.value) return 'Puzzle passé : ton streak continue.'
-      return game.failed.value ? 'Puzzle terminé.' : 'Bravo !'
+      if (game.passed.value) return t('puzzle.player.passed')
+      return t(game.failed.value ? 'puzzle.player.done' : 'puzzle.player.bravo')
     default:
       return ''
   }
@@ -335,14 +341,15 @@ const bubble = computed(() => {
     return { kicker: copy.value.kicker, text: copy.value.bubble }
   if (game.phase.value === 'playing' && game.hintShown.value > 0) {
     return {
-      kicker: 'INDICE',
-      text:
+      kicker: t('puzzle.player.hintKicker'),
+      text: t(
         game.hintShown.value === 1
-          ? 'Indice : la pièce à jouer est en surbrillance.'
-          : 'Indice : suis la flèche.'
+          ? 'puzzle.player.hint1'
+          : 'puzzle.player.hint2'
+      )
     }
   }
-  return { kicker: 'À TOI', text: statusText.value }
+  return { kicker: t('puzzle.player.yourTurn'), text: statusText.value }
 })
 
 watch(
@@ -355,10 +362,10 @@ watch(
 /** "Passer" counts as a failure: say so before giving up. */
 function confirmSkip() {
   $q.dialog({
-    title: 'Passer ce puzzle ?',
-    message: 'Passer compte comme un échec.',
-    cancel: { label: 'Annuler', flat: true, noCaps: true },
-    ok: { label: 'Passer', unelevated: true, noCaps: true },
+    title: t('puzzle.player.skipTitle'),
+    message: t('puzzle.player.skipMessage'),
+    cancel: { label: t('common.actions.cancel'), flat: true, noCaps: true },
+    ok: { label: t('puzzle.player.skip'), unelevated: true, noCaps: true },
     persistent: false
   }).onOk(() => {
     if (game.phase.value !== 'playing') return
@@ -370,11 +377,10 @@ function confirmSkip() {
 /** The puzzle leaves the set for good: say so before. */
 function confirmReplace() {
   $q.dialog({
-    title: 'Remplacer ce puzzle ?',
-    message:
-      'Il quitte le set pour de bon : un autre puzzle du même niveau prend sa place.',
-    cancel: { label: 'Annuler', flat: true, noCaps: true },
-    ok: { label: 'Remplacer', unelevated: true, noCaps: true }
+    title: t('puzzle.player.replaceTitle'),
+    message: t('puzzle.player.replaceMessage'),
+    cancel: { label: t('common.actions.cancel'), flat: true, noCaps: true },
+    ok: { label: t('puzzle.player.replaceOk'), unelevated: true, noCaps: true }
   }).onOk(() => emit('replace'))
 }
 

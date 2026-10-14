@@ -37,48 +37,74 @@
  * @property {string} group
  */
 
-/** The ramps, as the API names them. */
-export const RAMPS = {
-  ladder: 'Échelle',
-  tiers: 'Paliers'
+import { t } from '@/i18n'
+
+/**
+ * Keys to their labels (messages under `prefix`), read when shown.
+ *
+ * @param {string} prefix
+ * @param {string[]} keys
+ * @returns {Record<string, string>}
+ */
+function labels(prefix, keys) {
+  return Object.defineProperties(
+    {},
+    Object.fromEntries(
+      keys.map(key => [
+        key,
+        { get: () => t(`${prefix}.${key}`), enumerable: true }
+      ])
+    )
+  )
 }
+
+/** The ramps, as the API names them. */
+export const RAMPS = labels('puzzleStreak.ramps', ['ladder', 'tiers'])
 
 /** The general topic: the whole catalogue. */
 export const GENERAL = 'general'
 
 /** The topics' categories, in the order offered. */
-export const CATEGORIES = {
-  endgame: 'Finales',
-  mate: 'Mats',
-  motif: 'Motifs tactiques'
-}
+export const CATEGORIES = labels('puzzleStreak.categories', [
+  'endgame',
+  'mate',
+  'motif'
+])
 
 /** The theme topics' labels (keys of `rules.topics`); an unknown one shows its key. */
-export const TOPICS = {
-  endgame: 'Toutes les finales',
-  pawnEndgame: 'Finales de pions',
-  rookEndgame: 'Finales de tours',
-  bishopEndgame: 'Finales de fous',
-  knightEndgame: 'Finales de cavaliers',
-  queenEndgame: 'Finales de dames',
-  queenRookEndgame: 'Finales dames et tours',
-  mate: 'Tous les mats',
-  mateIn1: 'Mat en 1',
-  mateIn2: 'Mat en 2',
-  mateIn3plus: 'Mat en 3 et plus',
-  fork: 'Fourchette',
-  pin: 'Clouage',
-  skewer: 'Enfilade',
-  discoveredAttack: 'Attaque à la découverte',
-  sacrifice: 'Sacrifice',
-  deflection: 'Déviation',
-  attraction: 'Attraction',
-  doubleCheck: 'Échec double',
-  hangingPiece: 'Pièce en prise',
-  trappedPiece: 'Pièce piégée'
-}
+export const TOPICS = labels('puzzleStreak.topics', [
+  'endgame',
+  'pawnEndgame',
+  'rookEndgame',
+  'bishopEndgame',
+  'knightEndgame',
+  'queenEndgame',
+  'queenRookEndgame',
+  'mate',
+  'mateIn1',
+  'mateIn2',
+  'mateIn3plus',
+  'fork',
+  'pin',
+  'skewer',
+  'discoveredAttack',
+  'sacrifice',
+  'deflection',
+  'attraction',
+  'doubleCheck',
+  'hangingPiece',
+  'trappedPiece'
+])
 
-const SIDES = { w: 'Blancs', b: 'Noirs', white: 'Blancs', black: 'Noirs' }
+/**
+ * A side, from the API's letter or word.
+ *
+ * @param {string} side w, b, white or black
+ */
+const sideLabel = side =>
+  t(
+    `puzzleStreak.sides.${side === 'w' || side === 'white' ? 'white' : 'black'}`
+  )
 
 /**
  * How a ramp climbs: "+30 points par puzzle réussi", "5 puzzles par palier de 200 points".
@@ -87,9 +113,8 @@ const SIDES = { w: 'Blancs', b: 'Noirs', white: 'Blancs', black: 'Noirs' }
  * @param {StreakRules} rules
  */
 export function rampText(ramp, rules) {
-  if (ramp === 'tiers')
-    return `${rules.tiers.size} puzzles par palier de ${rules.tiers.width} points, dès ${rules.tiers.start}`
-  return `Dès ${rules.ladder.start}, +${rules.ladder.step} points par puzzle réussi`
+  if (ramp === 'tiers') return t('puzzleStreak.rampText.tiers', rules.tiers)
+  return t('puzzleStreak.rampText.ladder', rules.ladder)
 }
 
 /**
@@ -114,13 +139,17 @@ export function familyName(tag, openings = null) {
  * @param {StreakOpenings|null} [openings]
  */
 export function topicLabel(key, openings = null) {
-  if (key === GENERAL) return 'Général'
+  if (key === GENERAL) return t('puzzleStreak.general')
   if (key.startsWith('theme:')) {
     const theme = key.slice(6)
     return TOPICS[theme] ?? theme
   }
   const match = /^opening:(.+):([wb])$/.exec(key)
-  if (match) return `${familyName(match[1], openings)} (${SIDES[match[2]]})`
+  if (match)
+    return t('puzzleStreak.withSide', {
+      name: familyName(match[1], openings),
+      side: sideLabel(match[2])
+    })
   return key
 }
 
@@ -134,7 +163,8 @@ export function topicLabel(key, openings = null) {
  */
 export function topicOptions(rules, openings = null) {
   /** @type {TopicOption[]} */
-  const options = [{ value: GENERAL, label: 'Général', group: 'Général' }]
+  const general = t('puzzleStreak.general')
+  const options = [{ value: GENERAL, label: general, group: general }]
   for (const [category, group] of Object.entries(CATEGORIES)) {
     for (const topic of rules.topics.filter(t => t.category === category)) {
       options.push({
@@ -147,8 +177,11 @@ export function topicOptions(rules, openings = null) {
   for (const mine of openings?.mine ?? []) {
     options.push({
       value: mine.topic,
-      label: `${mine.name} (${SIDES[mine.color]})`,
-      group: 'Mes ouvertures'
+      label: t('puzzleStreak.withSide', {
+        name: mine.name,
+        side: sideLabel(mine.color)
+      }),
+      group: t('puzzleStreak.myOpenings')
     })
   }
   for (const family of openings?.all ?? []) {
@@ -159,8 +192,11 @@ export function topicOptions(rules, openings = null) {
       if (count >= rules.minOpeningPuzzles)
         options.push({
           value: `opening:${family.tag}:${side}`,
-          label: `${family.name} (${SIDES[side]})`,
-          group: 'Toutes les ouvertures'
+          label: t('puzzleStreak.withSide', {
+            name: family.name,
+            side: sideLabel(side)
+          }),
+          group: t('puzzleStreak.allOpenings')
         })
     }
   }
@@ -195,9 +231,13 @@ export function levelAt(ramp, solved, rules) {
   if (ramp === 'tiers') {
     const index = Math.floor(solved / rules.tiers.size)
     const low = rules.tiers.start + rules.tiers.width * index
-    return low >= rules.tiers.last
-      ? `Palier ${index + 1} · ${rules.tiers.last}+`
-      : `Palier ${index + 1} · ${low}–${low + rules.tiers.width}`
+    return t('puzzleStreak.tier', {
+      n: index + 1,
+      range:
+        low >= rules.tiers.last
+          ? `${rules.tiers.last}+`
+          : `${low}–${low + rules.tiers.width}`
+    })
   }
   return `≈ ${Math.min(rules.ladder.max, rules.ladder.start + rules.ladder.step * solved)}`
 }
@@ -219,7 +259,7 @@ export function recordOf(records, ramp, topic) {
  * @param {number} count
  */
 export function streakText(count) {
-  return `${count} puzzle${count > 1 ? 's' : ''} d’affilée`
+  return t('puzzleStreak.inARow', { n: count }, count)
 }
 
 /**
@@ -229,12 +269,13 @@ export function streakText(count) {
  * @typedef {{key: string, goal: number, name: string}} PuzzleStreakBadge
  * @type {PuzzleStreakBadge[]}
  */
-export const PUZZLE_STREAK_BADGES = [
-  { key: 'streak_puzzles_10', goal: 10, name: 'Enchaînement' },
-  { key: 'streak_puzzles_20', goal: 20, name: 'Rafale' },
-  { key: 'streak_puzzles_30', goal: 30, name: 'Déferlante' },
-  { key: 'streak_puzzles_50', goal: 50, name: 'Imparable' }
-]
+export const PUZZLE_STREAK_BADGES = [10, 20, 30, 50].map(goal => ({
+  key: `streak_puzzles_${goal}`,
+  goal,
+  get name() {
+    return t(`puzzleStreak.badges.streak_puzzles_${goal}`)
+  }
+}))
 
 /**
  * The badges a run won (its summary's `metrics.badges`), shortest first.

@@ -5,13 +5,15 @@
   >
     <q-card style="min-width: min(92vw, 460px)" data-testid="puzzle-run-dialog">
       <q-card-section>
-        <div class="text-h6">Séance chronométrée</div>
+        <div class="text-h6">{{ $t('puzzle.run.title') }}</div>
         <div class="text-caption cm-muted">
-          Des puzzles classés à ton niveau, tant qu’il reste du temps.
+          {{ $t('puzzle.run.lead') }}
           {{
             themes.length
-              ? `Thèmes : ${themes.map(store.themeLabel).join(', ')}.`
-              : 'Tous les thèmes.'
+              ? $t('puzzle.run.themes', {
+                  list: themes.map(store.themeLabel).join(', ')
+                })
+              : $t('puzzle.run.allThemes')
           }}
         </div>
       </q-card-section>
@@ -25,7 +27,7 @@
         <q-spinner v-else />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn v-close-popup flat no-caps label="Fermer" />
+        <q-btn v-close-popup flat no-caps :label="$t('common.actions.close')" />
       </q-card-actions>
     </q-card>
   </q-dialog>

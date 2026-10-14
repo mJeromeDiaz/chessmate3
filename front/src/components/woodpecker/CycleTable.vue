@@ -9,10 +9,10 @@
     >
       <div class="cycle-row__head">
         <div class="cycle-row__name">
-          Cycle {{ cycle.number
-          }}<span v-if="cycle.run > 1" class="cycle-row__run">
-            · essai {{ cycle.run }}</span
-          >
+          {{ $t('woodpecker.table.cycle', { n: cycle.number })
+          }}<span v-if="cycle.run > 1" class="cycle-row__run">{{
+            $t('woodpecker.table.attempt', { n: cycle.run })
+          }}</span>
         </div>
         <span
           class="cycle-row__status"
@@ -20,7 +20,7 @@
             background: STATUS[cycle.status].bg,
             color: STATUS[cycle.status].ink
           }"
-          >{{ STATUS[cycle.status].label }}</span
+          >{{ $t(`woodpecker.table.status.${cycle.status}`) }}</span
         >
       </div>
 
@@ -39,29 +39,39 @@
           <div class="cycle-row__value"
             >{{ cycle.played }} / {{ puzzleCount }}</div
           >
-          <div class="cycle-row__label">joués</div>
+          <div class="cycle-row__label">{{
+            $t('woodpecker.table.played')
+          }}</div>
         </div>
         <div class="cycle-row__stat">
           <div class="cycle-row__value">{{
             formatPercent(cycle.accuracy)
           }}</div>
-          <div class="cycle-row__label">précision</div>
+          <div class="cycle-row__label">{{
+            $t('woodpecker.table.accuracy')
+          }}</div>
         </div>
         <div class="cycle-row__stat">
           <div class="cycle-row__value">{{
             formatDuration(cycle.averageMs)
           }}</div>
-          <div class="cycle-row__label">par puzzle</div>
+          <div class="cycle-row__label">{{
+            $t('woodpecker.table.perPuzzle')
+          }}</div>
         </div>
         <div class="cycle-row__stat">
           <div class="cycle-row__value">{{
             formatDuration(cycle.activeMs)
           }}</div>
-          <div class="cycle-row__label">temps actif</div>
+          <div class="cycle-row__label">{{
+            $t('woodpecker.table.active')
+          }}</div>
         </div>
         <div class="cycle-row__stat">
           <div class="cycle-row__value">{{ formatDays(cycle.calendarMs) }}</div>
-          <div class="cycle-row__label">durée</div>
+          <div class="cycle-row__label">{{
+            $t('woodpecker.table.duration')
+          }}</div>
         </div>
         <div class="cycle-row__stat">
           <div
@@ -72,7 +82,9 @@
             }"
             >{{ deadline(cycle) }}</div
           >
-          <div class="cycle-row__label">échéance</div>
+          <div class="cycle-row__label">{{
+            $t('woodpecker.table.deadline')
+          }}</div>
         </div>
       </div>
     </div>
@@ -86,6 +98,7 @@
  */
 import { formatDuration, formatPercent } from '@/utils/format'
 import { deadlineDay } from '@/utils/woodpecker'
+import { intlLocale, t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/stores/woodpecker').CycleView[]>} */
@@ -97,25 +110,21 @@ const props = defineProps({
 
 const STATUS = {
   resting: {
-    label: 'Repos',
     bg: 'var(--cm-subtle)',
     ink: 'var(--cm-ink-soft)',
     bar: 'var(--cm-faint)'
   },
   active: {
-    label: 'En cours',
     bg: 'var(--cm-brand-soft)',
     ink: 'var(--cm-brand-deep)',
     bar: 'var(--cm-brand-deep)'
   },
   completed: {
-    label: 'Terminé',
     bg: 'var(--cm-success-soft)',
     ink: 'var(--cm-success)',
     bar: 'var(--cm-success)'
   },
   lost: {
-    label: 'Perdu',
     bg: 'var(--cm-danger-soft)',
     ink: 'var(--cm-danger)',
     bar: 'var(--cm-danger)'
@@ -126,13 +135,20 @@ const STATUS = {
 function formatDays(ms) {
   if (ms === null) return '—'
   const days = ms / 86_400_000
-  return days < 1 ? formatDuration(ms) : `${days.toFixed(1)} j`
+  return days < 1
+    ? formatDuration(ms)
+    : t('woodpecker.table.days', {
+        n: days.toLocaleString(intlLocale(), {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        })
+      })
 }
 
 /** @param {import('@/stores/woodpecker').CycleView} cycle */
 function deadline(cycle) {
-  if (cycle.onTime === true) return 'respectée'
-  if (cycle.onTime === false) return 'dépassée'
+  if (cycle.onTime === true) return t('woodpecker.table.onTime')
+  if (cycle.onTime === false) return t('woodpecker.table.late')
   return cycle.deadlineAt ? deadlineDay(cycle.deadlineAt, props.timeZone) : '—'
 }
 </script>

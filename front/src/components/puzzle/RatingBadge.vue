@@ -7,7 +7,9 @@
     :label="label"
     data-testid="puzzle-rating"
   >
-    <q-tooltip>Classement puzzles (±{{ store.rating.deviation }})</q-tooltip>
+    <q-tooltip>{{
+      $t('puzzle.ratingTip', { n: store.rating.deviation })
+    }}</q-tooltip>
   </q-chip>
 </template>
 

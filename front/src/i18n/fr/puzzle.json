@@ -1,0 +1,107 @@
+{
+  "difficulties": {
+    "easier": "Plus facile",
+    "normal": "Normal",
+    "harder": "Plus difficile"
+  },
+  "lichessImport": {
+    "409": "Votre classement est déjà établi.",
+    "422": "Lichess n’a pas de classement puzzle pour ce compte."
+  },
+  "player": {
+    "helpCount": "Aide · {n}",
+    "helpTip": "La pièce à jouer s’illumine (boutique).",
+    "passCount": "Pass · {n}",
+    "passTip": "Avant ton premier coup : la solution s’affiche, ton streak continue (boutique).",
+    "help": "Aide",
+    "solution": "Solution",
+    "skip": "Passer",
+    "replace": "Remplacer ce puzzle",
+    "settings": "Réglages des puzzles",
+    "white": "les Blancs",
+    "black": "les Noirs",
+    "passIntro": "Pass : voici la solution…",
+    "solutionIntro": "Solution…",
+    "opponent": "Au tour de l’adversaire…",
+    "wrong": "Ce n’est pas le bon coup. Cherche encore !",
+    "find": "Trouve le meilleur coup pour {side}.",
+    "passed": "Puzzle passé : ton streak continue.",
+    "done": "Puzzle terminé.",
+    "bravo": "Bravo !",
+    "hintKicker": "INDICE",
+    "hint1": "Indice : la pièce à jouer est en surbrillance.",
+    "hint2": "Indice : suis la flèche.",
+    "yourTurn": "À TOI",
+    "skipTitle": "Passer ce puzzle ?",
+    "skipMessage": "Passer compte comme un échec.",
+    "replaceTitle": "Remplacer ce puzzle ?",
+    "replaceMessage": "Il quitte le set pour de bon : un autre puzzle du même niveau prend sa place.",
+    "replaceOk": "Remplacer"
+  },
+  "run": {
+    "title": "Séance chronométrée",
+    "lead": "Des puzzles classés à ton niveau, tant qu’il reste du temps.",
+    "themes": "Thèmes : {list}.",
+    "allThemes": "Tous les thèmes."
+  },
+  "settings": {
+    "title": "Réglages des puzzles",
+    "rating": "Classement",
+    "history": "Historique",
+    "lichess": "Démarrer avec votre classement puzzle Lichess ?",
+    "import": "Importer",
+    "difficulty": "Difficulté",
+    "themes": "Thèmes",
+    "clear": "Tout effacer",
+    "themesHint": "Aucun thème coché : tous les thèmes. Sinon, un puzzle est proposé s’il a au moins un des thèmes choisis.",
+    "nextPuzzle": "Appliqués à partir du prochain puzzle.",
+    "apply": "Appliquer"
+  },
+  "ratingTip": "Classement puzzles (±{n})",
+  "play": {
+    "title": "Puzzles",
+    "lichessLinked": "Vous avez lié votre compte Lichess : démarrer avec votre classement puzzle Lichess ?",
+    "joinRun": "Rejoindre la séance",
+    "sourceGame": "Partie d'origine",
+    "timedRun": "Séance chronométrée",
+    "heldByRun": "Votre puzzle en cours est joué dans une séance chronométrée.",
+    "pardoned": "Pardonné : ton classement est revenu.",
+    "tooLate": "Trop tard : un autre puzzle a été joué depuis.",
+    "noPardon": "Ce puzzle ne peut pas être pardonné.",
+    "backToPuzzles": "Retour aux puzzles",
+    "next": "Puzzle suivant →",
+    "pardon": "Pardonner · {n}",
+    "retry": "Réessayer",
+    "alreadySubmitted": "Ce puzzle a déjà été soumis.",
+    "attemptNotFound": "Cette tentative est introuvable.",
+    "notInHistory": "Ce puzzle ne fait pas partie de votre historique.",
+    "noMatch": "Aucun puzzle ne correspond à ces critères. Essayez d’autres thèmes.",
+    "unknownTheme": "Thème inconnu."
+  },
+  "history": {
+    "title": "Historique",
+    "all": "Tous",
+    "solved": "Réussis",
+    "failed": "Échoués",
+    "theme": "Thème",
+    "empty": "Aucune tentative.",
+    "solvedOne": "Réussi",
+    "failedOne": "Échoué",
+    "unrated": "non classé",
+    "replay": "Rejouer",
+    "columns": {
+      "date": "Date",
+      "themes": "Thèmes",
+      "puzzle": "Puzzle",
+      "status": "Résultat",
+      "duration": "Durée",
+      "delta": "Classement"
+    }
+  },
+  "themesPage": {
+    "title": "Thèmes",
+    "playSome": "Jouer ({n})",
+    "playAll": "Jouer tous les thèmes",
+    "hint": "Un puzzle est proposé s’il a au moins un des thèmes choisis."
+  }
+}

@@ -1,4 +1,4 @@
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * Woodpecker set page helpers (docs/WOODPECKER.md): the cycle lengths, the last day of a
@@ -67,55 +67,42 @@ export function deadlineDay(deadlineAt, timeZone) {
  */
 export function explainCycles(set) {
   if (set.mode === 'light') {
-    return [
-      {
-        title: 'Toujours les mêmes puzzles',
-        text: `Votre set compte ${set.puzzleCount} puzzles. Chaque séance chronométrée repart du premier : vous revoyez les mêmes motifs jusqu’à les reconnaître d’un coup d’œil.`
-      },
-      {
-        title: 'Un seul essai',
-        text: 'Une erreur, et la solution s’affiche : retenez-la, le puzzle reviendra.'
-      },
-      {
-        title: 'Un set qui grandit',
-        text: 'Quand une séance arrive au bout des puzzles, le set s’agrandit de nouveaux puzzles du même niveau.'
-      },
-      {
-        title: 'Sur mesure',
-        text: 'Un puzzle ne vous plaît pas ? Remplacez-le : un autre du même niveau prend sa place.'
-      }
-    ]
+    return ['same', 'oneTry', 'grows', 'custom'].map(key => ({
+      title: t(`woodpecker.explain.light.${key}.title`),
+      text: t(`woodpecker.explain.light.${key}.text`, { n: set.puzzleCount })
+    }))
   }
 
   const schedule = cycleSchedule(set)
-  const days = schedule.map(d => `${d} j`).join(' → ')
+  const days = schedule
+    .map(d => t('woodpecker.explain.days', { n: d }))
+    .join(' → ')
   const rest = set.restDays
-    ? `${set.restDays} jour${set.restDays > 1 ? 's' : ''} de repos`
-    : 'aucun repos'
+    ? t('woodpecker.explain.rest', { n: set.restDays }, set.restDays)
+    : t('woodpecker.explain.noRest')
   return [
     {
-      title: 'Toujours les mêmes puzzles',
-      text: `Un cycle, c’est jouer les ${set.puzzleCount} puzzles du set une fois chacun${set.shuffle ? ', dans un ordre mélangé à chaque cycle' : ', toujours dans le même ordre'}.`
+      title: t('woodpecker.explain.classic.same.title'),
+      text: t(
+        set.shuffle
+          ? 'woodpecker.explain.classic.same.shuffled'
+          : 'woodpecker.explain.classic.same.ordered',
+        {
+          n: set.puzzleCount
+        }
+      )
     },
     {
-      title: 'De plus en plus vite',
-      text: `${set.cycleCount} cycles, chacun plus court que le précédent : ${days}. Entre deux cycles, ${rest}.`
+      title: t('woodpecker.explain.classic.faster.title'),
+      text: t('woodpecker.explain.classic.faster.text', {
+        n: set.cycleCount,
+        days,
+        rest
+      })
     },
-    {
-      title: 'Un seul essai',
-      text: 'Une erreur, et la solution s’affiche : le puzzle compte comme raté pour ce cycle. Retenez le motif, il reviendra.'
-    },
-    {
-      title: 'L’échéance compte',
-      text: 'Un cycle non terminé à temps est perdu et recommence avec le même délai (« essai 2 »). Les échéances tombent en fin de journée.'
-    },
-    {
-      title: 'Le but',
-      text: 'Gagner en précision et en vitesse sur les mêmes motifs, jusqu’à les jouer par réflexe en partie.'
-    },
-    {
-      title: 'Sur mesure',
-      text: 'Un puzzle ne vous plaît pas ? Remplacez-le : un autre du même niveau prend sa place, sans rien changer aux échéances.'
-    }
+    ...['oneTry', 'deadline', 'goal', 'custom'].map(key => ({
+      title: t(`woodpecker.explain.classic.${key}.title`),
+      text: t(`woodpecker.explain.classic.${key}.text`)
+    }))
   ]
 }

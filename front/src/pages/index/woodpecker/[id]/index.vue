@@ -5,7 +5,7 @@
         <q-btn flat round dense icon="arrow_back" to="/woodpecker" />
         <div class="woodpecker-page__name cm-heading">{{ set.name }}</div>
         <span class="woodpecker-page__mode">{{
-          light ? 'Light' : 'Classique'
+          light ? $t('woodpecker.new.light') : $t('woodpecker.new.classic')
         }}</span>
         <q-space />
         <q-btn
@@ -13,7 +13,7 @@
           flat
           round
           icon="more_vert"
-          aria-label="Actions du set"
+          :aria-label="$t('woodpecker.set.actions')"
           data-testid="set-menu"
         >
           <q-menu auto-close>
@@ -52,7 +52,9 @@
         v-if="!light && set.cycles.length"
         class="woodpecker-page__section"
       >
-        <h2 class="woodpecker-page__title">Cycles</h2>
+        <h2 class="woodpecker-page__title">{{
+          $t('woodpecker.set.cycles')
+        }}</h2>
         <CycleTable
           :cycles="set.cycles"
           :puzzle-count="set.puzzleCount"
@@ -61,12 +63,14 @@
       </section>
 
       <section v-if="light || set.runs.length" class="woodpecker-page__section">
-        <h2 class="woodpecker-page__title">Séances chronométrées</h2>
+        <h2 class="woodpecker-page__title">{{ $t('woodpecker.set.runs') }}</h2>
         <RunTable :runs="set.runs" />
       </section>
 
       <section v-if="light" class="woodpecker-page__section">
-        <h2 class="woodpecker-page__title">Croissance du set</h2>
+        <h2 class="woodpecker-page__title">{{
+          $t('woodpecker.set.growth')
+        }}</h2>
         <div
           v-if="set.growths.length"
           class="woodpecker-page__rows"
@@ -77,17 +81,20 @@
             :key="g.occurredAt + g.puzzleCount"
             class="woodpecker-page__row"
           >
-            <div class="woodpecker-page__row-main"
-              >+{{ g.added }} puzzles → {{ g.puzzleCount }}</div
-            >
+            <div class="woodpecker-page__row-main">{{
+              $t('woodpecker.set.grown', {
+                added: g.added,
+                total: g.puzzleCount
+              })
+            }}</div>
             <div class="woodpecker-page__row-side">{{
               formatDate(g.occurredAt)
             }}</div>
           </div>
         </div>
-        <div v-else class="woodpecker-page__empty"
-          >Pas encore : le set grandit quand une séance en vient à bout.</div
-        >
+        <div v-else class="woodpecker-page__empty">{{
+          $t('woodpecker.set.noGrowth')
+        }}</div>
       </section>
 
       <SetPuzzleList
@@ -97,11 +104,14 @@
       />
 
       <section class="woodpecker-page__section">
-        <h2 class="woodpecker-page__title">Puzzles récalcitrants</h2>
-        <div class="woodpecker-page__hint"
-          >Échoués dans au moins deux {{ light ? 'séances' : 'cycles' }}.
-          Rejouables librement (non comptés).</div
-        >
+        <h2 class="woodpecker-page__title">{{
+          $t('woodpecker.set.stubborn')
+        }}</h2>
+        <div class="woodpecker-page__hint">{{
+          light
+            ? $t('woodpecker.set.stubbornHintLight')
+            : $t('woodpecker.set.stubbornHintClassic')
+        }}</div>
         <div v-if="stubborn.length" class="woodpecker-page__rows">
           <div
             v-for="p in stubborn"
@@ -109,10 +119,17 @@
             class="woodpecker-page__row"
           >
             <div class="woodpecker-page__row-main">
-              <div
-                >Puzzle {{ p.rating }} · raté dans {{ p.failedCycles }}
-                {{ light ? 'séances' : 'cycles' }}</div
-              >
+              <div>{{
+                $t(
+                  light
+                    ? 'woodpecker.set.failedLight'
+                    : 'woodpecker.set.failedClassic',
+                  {
+                    rating: p.rating,
+                    n: p.failedCycles
+                  }
+                )
+              }}</div>
               <div class="woodpecker-page__row-sub">{{
                 p.themes.slice(0, 4).map(puzzles.themeLabel).join(' · ')
               }}</div>
@@ -122,12 +139,14 @@
               color="primary"
               no-caps
               icon="replay"
-              label="Rejouer"
+              :label="$t('woodpecker.set.replay')"
               :to="{ path: '/puzzle', query: { replay: p.puzzleId } }"
             />
           </div>
         </div>
-        <div v-else class="woodpecker-page__empty">Aucun pour l’instant.</div>
+        <div v-else class="woodpecker-page__empty">{{
+          $t('woodpecker.set.none')
+        }}</div>
       </section>
     </div>
     <div v-else-if="error" class="text-negative">{{ error }}</div>
@@ -149,6 +168,7 @@ import { useWoodpeckerStore } from '@/stores/woodpecker'
 import { woodpeckerApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -176,19 +196,19 @@ const menu = computed(() => {
   return [
     s.status === 'active' && {
       action: 'pause',
-      label: 'Mettre en pause',
+      label: t('woodpecker.set.pause'),
       icon: 'pause',
       onClick: () => act('pause')
     },
     s.status === 'paused' && {
       action: 'resume',
-      label: 'Reprendre',
+      label: t('woodpecker.set.resume'),
       icon: 'play_arrow',
       onClick: () => act('resume')
     },
     ongoing && {
       action: 'abandon',
-      label: 'Abandonner',
+      label: t('woodpecker.set.abandon'),
       icon: 'flag',
       danger: true,
       onClick: confirmAbandon
@@ -196,7 +216,7 @@ const menu = computed(() => {
     !ongoing &&
       !s.archived && {
         action: 'archive',
-        label: 'Archiver',
+        label: t('woodpecker.set.archive'),
         icon: 'archive',
         onClick: () => act('archive')
       }
@@ -210,15 +230,15 @@ async function act(action) {
     await store.act(id.value, action)
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Action impossible dans l’état actuel du set.'
+      409: t('woodpecker.set.impossible')
     })
   }
 }
 
 function confirmAbandon() {
   $q.dialog({
-    title: 'Abandonner ce set ?',
-    message: 'Les statistiques restent consultables.',
+    title: t('woodpecker.set.abandonTitle'),
+    message: t('woodpecker.set.abandonMessage'),
     cancel: true
   }).onOk(() => act('abandon'))
 }
@@ -231,7 +251,7 @@ onMounted(async () => {
     await store.fetchSet(id.value)
     stubborn.value = await woodpeckerApi.stubborn(id.value)
   } catch (e) {
-    error.value = apiErrorMessage(e, { 404: 'Set introuvable.' })
+    error.value = apiErrorMessage(e, { 404: t('woodpecker.set.notFound') })
   }
 })
 </script>

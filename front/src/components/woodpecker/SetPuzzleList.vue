@@ -2,8 +2,8 @@
   <q-expansion-item
     class="set-puzzles"
     icon="tune"
-    :label="`Puzzles du set (${count})`"
-    caption="Remplacez ceux qui ne vous plaisent pas : un set sur mesure"
+    :label="$t('woodpecker.puzzles.label', { n: count })"
+    :caption="$t('woodpecker.puzzles.caption')"
     header-class="set-puzzles__header"
     data-testid="set-puzzles"
     @before-show="load"
@@ -24,7 +24,7 @@
         <div class="set-puzzle__position">{{ puzzle.position + 1 }}</div>
         <div class="set-puzzle__main">
           <div class="set-puzzle__title">
-            Puzzle {{ puzzle.rating }}
+            {{ $t('woodpecker.puzzles.title', { rating: puzzle.rating }) }}
             <a
               class="set-puzzle__link"
               :href="`https://lichess.org/training/${puzzle.puzzleId}`"
@@ -38,23 +38,25 @@
           }}</div>
         </div>
         <div class="set-puzzle__score">
-          <template v-if="puzzle.played"
-            >{{ puzzle.played - puzzle.failed }} /
-            {{ puzzle.played }} réussis</template
-          >
-          <template v-else>pas encore joué</template>
+          <template v-if="puzzle.played">{{
+            $t('woodpecker.puzzles.score', {
+              solved: puzzle.played - puzzle.failed,
+              played: puzzle.played
+            })
+          }}</template>
+          <template v-else>{{ $t('woodpecker.puzzles.notPlayed') }}</template>
         </div>
         <q-btn
           v-if="editable"
           flat
           round
           icon="swap_horiz"
-          aria-label="Remplacer ce puzzle"
+          :aria-label="$t('puzzle.player.replace')"
           :loading="busy === puzzle.position"
           data-testid="set-puzzle-replace"
           @click="confirmReplace(puzzle)"
         >
-          <q-tooltip>Remplacer ce puzzle</q-tooltip>
+          <q-tooltip>{{ $t('puzzle.player.replace') }}</q-tooltip>
         </q-btn>
       </div>
     </div>
@@ -80,6 +82,7 @@ import { useQuasar } from 'quasar'
 import { woodpeckerApi } from '@/services/api'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
 const props = defineProps({
   setId: { type: String, required: true },
@@ -110,11 +113,10 @@ async function load() {
 /** @param {SetPuzzle} puzzle */
 function confirmReplace(puzzle) {
   $q.dialog({
-    title: 'Remplacer ce puzzle ?',
-    message:
-      'Il quitte le set pour de bon : un autre puzzle du même niveau prend sa place.',
-    cancel: { label: 'Annuler', flat: true, noCaps: true },
-    ok: { label: 'Remplacer', unelevated: true, noCaps: true }
+    title: t('puzzle.player.replaceTitle'),
+    message: t('puzzle.player.replaceMessage'),
+    cancel: { label: t('common.actions.cancel'), flat: true, noCaps: true },
+    ok: { label: t('puzzle.player.replaceOk'), unelevated: true, noCaps: true }
   }).onOk(() => replace(puzzle))
 }
 
@@ -132,8 +134,8 @@ async function replace(puzzle) {
     )
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Ce set est terminé : son contenu ne change plus.',
-      422: 'Plus aucun autre puzzle ne correspond à ce set.'
+      409: t('training.page.setFinished'),
+      422: t('training.page.noOtherPuzzle')
     })
   } finally {
     busy.value = null

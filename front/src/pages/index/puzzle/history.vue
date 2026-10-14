@@ -2,7 +2,7 @@
   <q-page padding>
     <div class="history-page">
       <div class="row items-center q-gutter-sm q-mb-md">
-        <div class="text-h6">Historique</div>
+        <div class="text-h6">{{ $t('puzzle.history.title') }}</div>
         <q-space />
         <q-btn-toggle
           v-model="result"
@@ -10,9 +10,9 @@
           dense
           toggle-color="primary"
           :options="[
-            { label: 'Tous', value: null },
-            { label: 'Réussis', value: 'solved' },
-            { label: 'Échoués', value: 'failed' }
+            { label: $t('puzzle.history.all'), value: null },
+            { label: $t('puzzle.history.solved'), value: 'solved' },
+            { label: $t('puzzle.history.failed'), value: 'failed' }
           ]"
         />
         <q-select
@@ -23,7 +23,7 @@
           clearable
           dense
           outlined
-          label="Thème"
+          :label="$t('puzzle.history.theme')"
           style="min-width: 200px"
         />
       </div>
@@ -41,7 +41,7 @@
         flat
         bordered
         :rows-per-page-options="[20]"
-        no-data-label="Aucune tentative."
+        :no-data-label="$t('puzzle.history.empty')"
         data-testid="history-table"
         @request="onRequest"
       >
@@ -57,10 +57,16 @@
             <q-badge
               :color="props.row.status === 'solved' ? 'positive' : 'negative'"
             >
-              {{ props.row.status === 'solved' ? 'Réussi' : 'Échoué' }}
+              {{
+                props.row.status === 'solved'
+                  ? $t('puzzle.history.solvedOne')
+                  : $t('puzzle.history.failedOne')
+              }}
             </q-badge>
-            <span v-if="!props.row.rated" class="text-caption text-grey q-ml-xs"
-              >non classé</span
+            <span
+              v-if="!props.row.rated"
+              class="text-caption text-grey q-ml-xs"
+              >{{ $t('puzzle.history.unrated') }}</span
             >
           </q-td>
         </template>
@@ -71,7 +77,7 @@
               dense
               no-caps
               icon="replay"
-              label="Rejouer"
+              :label="$t('puzzle.history.replay')"
               :to="{ path: '/puzzle', query: { replay: props.row.puzzle.id } }"
             />
           </q-td>
@@ -87,6 +93,7 @@ import { usePuzzleStore } from '@/stores/puzzle'
 import { puzzleApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatDuration, formatRatingDelta } from '@/utils/format'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -98,31 +105,45 @@ const result = ref(null)
 const theme = ref(null)
 const pagination = ref({ page: 1, rowsPerPage: 20, rowsNumber: 0 })
 
-const columns = [
+const columns = computed(() => [
   {
     name: 'date',
-    label: 'Date',
+    label: t('puzzle.history.columns.date'),
     field: 'submittedAt',
     format: formatDate,
     align: 'left'
   },
-  { name: 'themes', label: 'Thèmes', field: 'puzzle', align: 'left' },
-  { name: 'puzzleRating', label: 'Puzzle', field: row => row.puzzle.rating },
-  { name: 'status', label: 'Résultat', field: 'status', align: 'left' },
+  {
+    name: 'themes',
+    label: t('puzzle.history.columns.themes'),
+    field: 'puzzle',
+    align: 'left'
+  },
+  {
+    name: 'puzzleRating',
+    label: t('puzzle.history.columns.puzzle'),
+    field: row => row.puzzle.rating
+  },
+  {
+    name: 'status',
+    label: t('puzzle.history.columns.status'),
+    field: 'status',
+    align: 'left'
+  },
   {
     name: 'duration',
-    label: 'Durée',
+    label: t('puzzle.history.columns.duration'),
     field: 'durationMs',
     format: formatDuration
   },
   {
     name: 'delta',
-    label: 'Classement',
+    label: t('puzzle.history.columns.delta'),
     field: 'ratingDelta',
     format: formatRatingDelta
   },
   { name: 'actions', label: '', field: 'id' }
-]
+])
 
 const themeOptions = computed(() =>
   store.themes.map(t => ({ label: t.labelFr, value: t.key }))

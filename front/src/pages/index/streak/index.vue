@@ -1,12 +1,8 @@
 <template>
   <q-page padding>
     <div class="streak-page q-gutter-y-md">
-      <div class="text-h5">Puzzle streak</div>
-      <p class="text-body2 text-grey-8">
-        Un premier puzzle très facile, puis de plus en plus durs. Une seule
-        erreur et le streak s’arrête : ni aide ni solution. Pas de chrono, et
-        aucun effet sur ton classement puzzles.
-      </p>
+      <div class="text-h5">{{ $t('puzzleStreak.page.title') }}</div>
+      <p class="text-body2 text-grey-8">{{ $t('puzzleStreak.page.lead') }}</p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
         error
@@ -17,9 +13,11 @@
 
       <q-card v-if="overview" flat bordered data-testid="streak-new">
         <q-card-section class="q-gutter-y-sm">
-          <div class="text-subtitle1">Nouveau streak</div>
+          <div class="text-subtitle1">{{ $t('puzzleStreak.page.new') }}</div>
 
-          <div class="text-subtitle2">Difficulté</div>
+          <div class="text-subtitle2">{{
+            $t('puzzleStreak.page.difficulty')
+          }}</div>
           <q-btn-toggle
             v-model="ramp"
             no-caps
@@ -32,7 +30,7 @@
             rampText(ramp, overview.rules)
           }}</div>
 
-          <div class="text-subtitle2">Thématique</div>
+          <div class="text-subtitle2">{{ $t('puzzleStreak.page.topic') }}</div>
           <TopicSelect
             v-model="topic"
             :rules="overview.rules"
@@ -41,10 +39,17 @@
           />
 
           <div class="text-body2" data-testid="streak-record">
-            <template v-if="record > 0"
-              >Ton record : <b>{{ streakText(record) }}</b></template
+            <i18n-t
+              v-if="record > 0"
+              keypath="puzzleStreak.page.record"
+              tag="span"
+              scope="global"
             >
-            <template v-else>Pas encore de record ici.</template>
+              <template #record>
+                <b>{{ streakText(record) }}</b>
+              </template>
+            </i18n-t>
+            <template v-else>{{ $t('puzzleStreak.page.noRecord') }}</template>
           </div>
 
           <RunLauncher
@@ -53,18 +58,20 @@
             :subject-id="subjectId"
             :fixed-minutes="overview.rules.singleBudgetSeconds / 60"
             :config="{ ramp, topic, mode: 'single' }"
-            label="Lancer le streak"
+            :label="$t('puzzleStreak.page.launch')"
             icon="bolt"
           />
         </q-card-section>
         <q-separator />
         <q-card-section>
-          <div class="text-subtitle2 q-mb-xs">Tes records</div>
+          <div class="text-subtitle2 q-mb-xs">{{
+            $t('puzzleStreak.page.records')
+          }}</div>
           <div
             v-if="!overview.records.length"
             class="text-body2 text-grey"
             data-testid="streak-records-empty"
-            >Aucun streak joué pour l’instant.</div
+            >{{ $t('puzzleStreak.page.noStreak') }}</div
           >
           <div
             v-for="r in overview.records"
@@ -75,15 +82,20 @@
             <b>{{ streakText(r.best) }}</b> ·
             {{ topicLabel(r.topic, openings) }} ·
             {{ RAMPS[r.ramp] ?? r.ramp }}
-            <span class="text-grey"
-              >({{ r.streaks }} streak{{ r.streaks > 1 ? 's' : '' }})</span
-            >
+            <span class="text-grey">{{
+              $t('puzzleStreak.page.streaks', { n: r.streaks }, r.streaks)
+            }}</span>
           </div>
-          <div class="text-caption text-grey q-mt-sm" data-testid="streak-total"
-            >{{ overview.total.solved }} puzzle{{
-              overview.total.solved > 1 ? 's' : ''
-            }}
-            réussi{{ overview.total.solved > 1 ? 's' : '' }} en streak.</div
+          <div
+            class="text-caption text-grey q-mt-sm"
+            data-testid="streak-total"
+            >{{
+              $t(
+                'puzzleStreak.page.total',
+                { n: overview.total.solved },
+                overview.total.solved
+              )
+            }}</div
           >
         </q-card-section>
       </q-card>
@@ -124,10 +136,9 @@ const ramp = ref('ladder')
 const topic = ref(GENERAL)
 
 const subjectId = computed(() => /** @type {any} */ (auth.profile)?.id ?? null)
-const rampOptions = Object.entries(RAMPS).map(([value, label]) => ({
-  value,
-  label
-}))
+const rampOptions = computed(() =>
+  Object.entries(RAMPS).map(([value, label]) => ({ value, label }))
+)
 const record = computed(() =>
   overview.value ? recordOf(overview.value.records, ramp.value, topic.value) : 0
 )

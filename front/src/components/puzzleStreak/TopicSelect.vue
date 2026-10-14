@@ -25,7 +25,9 @@
     </template>
     <template #no-option>
       <q-item>
-        <q-item-section class="text-grey">Aucune thématique.</q-item-section>
+        <q-item-section class="text-grey">{{
+          $t('puzzleStreak.noTopic')
+        }}</q-item-section>
       </q-item>
     </template>
   </q-select>

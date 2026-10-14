@@ -2,6 +2,7 @@ import { Chess } from 'chess.js'
 import { formatDuration, formatRatingDelta } from '@/utils/format'
 import { numberedLine } from '@/utils/chess/lichess'
 import { moduleProf } from '@/utils/runEnd'
+import { t } from '@/i18n'
 
 /**
  * The end-of-exercise feedback (design "Animation Puzzle"): a sheet sliding up with the verdict,
@@ -73,8 +74,18 @@ export const FEEDBACK_THEMES = {
   }
 }
 
-/** Kicker of the professor's bubble once the verdict is known. */
-const KICKERS = { win: 'BRAVO', help: 'PAS MAL', miss: 'CORRECTION' }
+/**
+ * Kicker of the professor's bubble once the verdict is known.
+ *
+ * @param {FeedbackKind} kind
+ */
+const kicker = kind => t(`feedback.kickers.${kind}`)
+
+/** @param {number|null} durationMs */
+const timePart = durationMs =>
+  durationMs === null
+    ? ''
+    : t('feedback.time', { time: formatDuration(durationMs) })
 
 /**
  * Lichess themes that describe a puzzle's length, phase or stake rather than its motif: never a
@@ -184,35 +195,38 @@ export function puzzleCopy(
   kind,
   { move, motif = null, durationMs = null, ratingDelta = null }
 ) {
-  const time = durationMs === null ? '' : ` · ${formatDuration(durationMs)}`
+  const time = timePart(durationMs)
   const elo =
-    ratingDelta === null ? '' : ` · Elo ${formatRatingDelta(ratingDelta)}`
+    ratingDelta === null
+      ? ''
+      : t('feedback.elo', { delta: formatRatingDelta(ratingDelta) })
   if (kind === 'win') {
     return {
-      title: motif ? `${motif} !` : 'Bravo !',
-      sub: `${move ? `${move} trouvé seul` : 'Trouvé seul'}${time}${elo}`,
-      kicker: KICKERS.win,
+      title: motif
+        ? t('feedback.puzzle.winMotif', { motif })
+        : t('feedback.puzzle.win'),
+      sub: `${move ? t('feedback.puzzle.foundAlone', { move }) : t('feedback.puzzle.foundAloneNoMove')}${time}${elo}`,
+      kicker: kicker('win'),
       bubble: motif
-        ? `Impeccable. Le motif « ${motif.toLowerCase()} » était là, et tu l’as vu sans moi.`
-        : 'Impeccable. Tu as vu le coup sans moi.'
+        ? t('feedback.puzzle.winBubbleMotif', { motif: motif.toLowerCase() })
+        : t('feedback.puzzle.winBubble')
     }
   }
   if (kind === 'help') {
     return {
-      title: 'Bien joué !',
-      sub: `Trouvé avec un indice${time}${elo}`,
-      kicker: KICKERS.help,
-      bubble:
-        'Tu as eu le bon réflexe une fois mis sur la piste. La prochaine fois, seul !'
+      title: t('feedback.puzzle.help'),
+      sub: `${t('feedback.puzzle.withHint')}${time}${elo}`,
+      kicker: kicker('help'),
+      bubble: t('feedback.puzzle.helpBubble')
     }
   }
   return {
-    title: 'Raté !',
-    sub: `${move ? `La solution : ${move} !` : 'Regarde la solution.'}${elo}`,
-    kicker: KICKERS.miss,
+    title: t('feedback.puzzle.miss'),
+    sub: `${move ? t('feedback.puzzle.solution', { move }) : t('feedback.puzzle.seeSolution')}${elo}`,
+    kicker: kicker('miss'),
     bubble: motif
-      ? `Le motif à retenir : « ${motif.toLowerCase()} ». Rejoue la solution dans ta tête.`
-      : 'Cherche d’abord les échecs, les prises et les menaces : la solution part souvent de là.'
+      ? t('feedback.puzzle.missBubbleMotif', { motif: motif.toLowerCase() })
+      : t('feedback.puzzle.missBubble')
   }
 }
 
@@ -224,30 +238,30 @@ export function puzzleCopy(
  * @returns {FeedbackCopy}
  */
 export function blindfoldCopy(kind, { move, durationMs = null }) {
-  const time = durationMs === null ? '' : ` · ${formatDuration(durationMs)}`
+  const time = timePart(durationMs)
   if (kind === 'win') {
     return {
-      title: 'De mémoire !',
-      sub: `${move ? `${move} trouvé à l’aveugle` : 'Trouvé à l’aveugle'}${time}`,
-      kicker: KICKERS.win,
-      bubble: 'Tu as tout gardé en tête. Belle mémoire !'
+      title: t('feedback.blindfold.win'),
+      sub: `${move ? t('feedback.blindfold.found', { move }) : t('feedback.blindfold.foundNoMove')}${time}`,
+      kicker: kicker('win'),
+      bubble: t('feedback.blindfold.winBubble')
     }
   }
   if (kind === 'help') {
     return {
-      title: 'Bien joué !',
-      sub: `Trouvé avec un coup d’œil${time}`,
-      kicker: KICKERS.help,
-      bubble:
-        'Un coup d’œil, et tu as retrouvé le fil. La prochaine fois, sans regarder !'
+      title: t('feedback.puzzle.help'),
+      sub: `${t('feedback.blindfold.withPeek')}${time}`,
+      kicker: kicker('help'),
+      bubble: t('feedback.blindfold.helpBubble')
     }
   }
   return {
-    title: 'Raté !',
-    sub: move ? `La solution : ${move} !` : 'Regarde la solution.',
-    kicker: KICKERS.miss,
-    bubble:
-      'La position t’a échappé. Mémorise-la pièce par pièce, en partant des rois.'
+    title: t('feedback.puzzle.miss'),
+    sub: move
+      ? t('feedback.puzzle.solution', { move })
+      : t('feedback.puzzle.seeSolution'),
+    kicker: kicker('miss'),
+    bubble: t('feedback.blindfold.missBubble')
   }
 }
 
@@ -264,24 +278,33 @@ export function repertoireCopy(
   { unit, moves, expected = '', retry = false }
 ) {
   const line = unit === 'line'
-  const name = line ? 'Ligne' : 'Tronçon'
   if (kind !== 'miss') {
     return {
-      title: `${name} réussi${line ? 'e' : ''} !`,
-      sub: `${moves} coup${moves > 1 ? 's' : ''} préparé${moves > 1 ? 's' : ''} sans faute`,
-      kicker: KICKERS.win,
-      bubble: 'Ta préparation tient la route. On enchaîne !'
+      title: t(
+        line ? 'feedback.repertoire.winLine' : 'feedback.repertoire.winSegment'
+      ),
+      sub: t('feedback.repertoire.moves', { n: moves }, moves),
+      kicker: kicker('win'),
+      bubble: t('feedback.repertoire.winBubble')
     }
   }
   return {
-    title: 'Raté !',
+    title: t('feedback.puzzle.miss'),
     sub: expected
-      ? `Le coup préparé : ${expected}`
-      : `${name} raté${line ? 'e' : ''}`,
-    kicker: KICKERS.miss,
+      ? t('feedback.repertoire.expected', { move: expected })
+      : t(
+          line
+            ? 'feedback.repertoire.missLine'
+            : 'feedback.repertoire.missSegment'
+        ),
+    kicker: kicker('miss'),
     bubble: retry
-      ? `Ce coup-là, il faut le connaître par cœur. ${line ? 'Elle' : 'Il'} revient plus tard dans la séance.`
-      : 'Ce coup-là, il faut le connaître par cœur. Revois-le après la séance.'
+      ? t(
+          line
+            ? 'feedback.repertoire.retryLine'
+            : 'feedback.repertoire.retrySegment'
+        )
+      : t('feedback.repertoire.later')
   }
 }
 
@@ -306,5 +329,5 @@ export function feedbackProf(module, kind) {
  */
 export function xpText(xp) {
   if (xp === undefined) return '…'
-  return xp === null ? '' : `+${xp} XP`
+  return xp === null ? '' : t('feedback.xp', { n: xp })
 }

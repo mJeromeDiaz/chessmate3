@@ -1,0 +1,224 @@
+{
+  "explain": {
+    "light": {
+      "same": {
+        "title": "Toujours les mêmes puzzles",
+        "text": "Votre set compte {n} puzzles. Chaque séance chronométrée repart du premier : vous revoyez les mêmes motifs jusqu’à les reconnaître d’un coup d’œil."
+      },
+      "oneTry": {
+        "title": "Un seul essai",
+        "text": "Une erreur, et la solution s’affiche : retenez-la, le puzzle reviendra."
+      },
+      "grows": {
+        "title": "Un set qui grandit",
+        "text": "Quand une séance arrive au bout des puzzles, le set s’agrandit de nouveaux puzzles du même niveau."
+      },
+      "custom": {
+        "title": "Sur mesure",
+        "text": "Un puzzle ne vous plaît pas ? Remplacez-le : un autre du même niveau prend sa place."
+      }
+    },
+    "classic": {
+      "same": {
+        "title": "Toujours les mêmes puzzles",
+        "shuffled": "Un cycle, c’est jouer les {n} puzzles du set une fois chacun, dans un ordre mélangé à chaque cycle.",
+        "ordered": "Un cycle, c’est jouer les {n} puzzles du set une fois chacun, toujours dans le même ordre."
+      },
+      "faster": {
+        "title": "De plus en plus vite",
+        "text": "{n} cycles, chacun plus court que le précédent : {days}. Entre deux cycles, {rest}."
+      },
+      "oneTry": {
+        "title": "Un seul essai",
+        "text": "Une erreur, et la solution s’affiche : le puzzle compte comme raté pour ce cycle. Retenez le motif, il reviendra."
+      },
+      "deadline": {
+        "title": "L’échéance compte",
+        "text": "Un cycle non terminé à temps est perdu et recommence avec le même délai (« essai 2 »). Les échéances tombent en fin de journée."
+      },
+      "goal": {
+        "title": "Le but",
+        "text": "Gagner en précision et en vitesse sur les mêmes motifs, jusqu’à les jouer par réflexe en partie."
+      },
+      "custom": {
+        "title": "Sur mesure",
+        "text": "Un puzzle ne vous plaît pas ? Remplacez-le : un autre du même niveau prend sa place, sans rien changer aux échéances."
+      }
+    },
+    "days": "{n} j",
+    "rest": "{n} jour de repos | {n} jours de repos",
+    "noRest": "aucun repos"
+  },
+  "pace": {
+    "puzzles": "{n} puzzle | {n} puzzles",
+    "done": "Cycle terminé.",
+    "overdue": "Échéance dépassée : il restait {puzzles}.",
+    "lastDay": "Dernier jour : encore {puzzles} aujourd’hui.",
+    "left": "Il reste {puzzles} et {days} jours : environ {perDay} par jour."
+  },
+  "cycleCard": {
+    "count": "{played} / {total} puzzles",
+    "percent": "{n} %",
+    "lightSize": "{n} puzzles dans le set.",
+    "runHere": "Une séance chronométrée est en cours sur ce set.",
+    "resumeRun": "Reprendre la séance",
+    "continue": "Continuer le cycle {n}",
+    "resumeSet": "Reprendre le set",
+    "runLight": "Lancer une séance chronométrée",
+    "runClassic": "Ou en séance chronométrée",
+    "runLightHint": "Chaque séance repart du premier puzzle. Le set grandit quand vous en venez à bout.",
+    "runClassicHint": "La séance fait avancer le cycle en cours, échéance comprise.",
+    "kickerLight": "WOODPECKER LIGHT",
+    "kicker": "WOODPECKER",
+    "kickerCycle": "CYCLE {n} / {total}",
+    "kickerAttempt": "CYCLE {n} / {total} · ESSAI {run}",
+    "titles": {
+      "resting": "Au repos",
+      "paused": "En pause",
+      "completed": "Set terminé, bravo !",
+      "abandoned": "Set abandonné",
+      "light": "En cours",
+      "active": "Cycle en cours"
+    },
+    "restUntil": "Le cycle {n} commence le {date}.",
+    "pausedHint": "Les échéances sont décalées de la durée de la pause à la reprise.",
+    "completedOn": "Terminé le {date}.",
+    "abandonedOn": "Abandonné le {date}.",
+    "until": "Jusqu’au {day} inclus. {pace}"
+  },
+  "recap": {
+    "setDone": "Set terminé !",
+    "cycleDone": "Cycle {n} terminé",
+    "accuracy": "Précision : {value}",
+    "active": "Temps actif : {value}",
+    "average": "Temps moyen par puzzle : {value}",
+    "calendar": "Durée calendaire : {value}",
+    "compared": " ({comparison})",
+    "percent": "{n} %",
+    "days": "{n} jour(s)",
+    "noComparison": "pas de comparaison",
+    "points": "{sign}{n} points vs cycle précédent",
+    "ofPrevious": "{n} % du cycle précédent"
+  },
+  "table": {
+    "cycle": "Cycle {n}",
+    "attempt": " · essai {n}",
+    "played": "joués",
+    "accuracy": "précision",
+    "perPuzzle": "par puzzle",
+    "active": "temps actif",
+    "duration": "durée",
+    "deadline": "échéance",
+    "days": "{n} j",
+    "onTime": "respectée",
+    "late": "dépassée",
+    "status": {
+      "resting": "Repos",
+      "active": "En cours",
+      "completed": "Terminé",
+      "lost": "Perdu"
+    }
+  },
+  "puzzles": {
+    "label": "Puzzles du set ({n})",
+    "caption": "Remplacez ceux qui ne vous plaisent pas : un set sur mesure",
+    "title": "Puzzle {rating}",
+    "score": "{solved} / {played} réussis",
+    "notPlayed": "pas encore joué"
+  },
+  "explainer": {
+    "light": "Comment marche le mode light ?",
+    "classic": "Comment marchent les cycles ?"
+  },
+  "list": {
+    "title": "Woodpecker",
+    "archived": "Archivés",
+    "new": "Nouveau set",
+    "oneByMode": "Un seul set en cours par mode (classique et light) : terminez ou abandonnez l’un d’eux.",
+    "lead": "Résolvez le même ensemble de puzzles encore et encore pour ancrer les motifs : en cycles de plus en plus courts (classique), ou en séances chronométrées (light).",
+    "light": "Light · {puzzles} puzzles · {runs}",
+    "runs": "{n} séance | {n} séances",
+    "classic": "{puzzles} puzzles · {cycles} cycles",
+    "current": " · cycle {n} : {played} / {total}",
+    "empty": "Aucun set.",
+    "status": {
+      "active": "En cours",
+      "paused": "En pause",
+      "completed": "Terminé",
+      "abandoned": "Abandonné"
+    }
+  },
+  "new": {
+    "title": "Nouveau set Woodpecker",
+    "classic": "Classique",
+    "light": "Light",
+    "lightHint": "Séances chronométrées, sans échéances : chaque séance repart du premier puzzle et le set grandit quand vous en venez à bout. Il commence à 100 puzzles.",
+    "classicHint": "Des cycles de plus en plus courts, avec une échéance chacun.",
+    "name": "Nom",
+    "defaultName": "Mon set",
+    "nameRequired": "Nom requis",
+    "count": "Nombre de puzzles",
+    "countHint": "Entre {min} et 1500",
+    "difficulty": "Difficulté",
+    "auto": "Abordable (sous mon classement, recommandé)",
+    "manual": "Fourchette manuelle",
+    "themes": "Thèmes (facultatif, un au moins)",
+    "cycles": "Cycles",
+    "cyclesHint": "2 à 10",
+    "firstCycle": "1er cycle (jours)",
+    "factor": "Facteur de réduction",
+    "factorHint": "0,5 = durée divisée par 2",
+    "minCycle": "Cycle minimum (jours)",
+    "rest": "Repos entre cycles (jours)",
+    "shuffleRun": "Mélanger les puzzles à chaque séance",
+    "shuffleCycle": "Mélanger les puzzles à chaque cycle",
+    "schedule": "Durées prévues : {list}",
+    "days": "{n} j",
+    "create": "Créer le set",
+    "alreadyLight": "Vous avez déjà un set light actif ou en pause : terminez-le ou abandonnez-le d’abord.",
+    "alreadyClassic": "Vous avez déjà un set classique actif ou en pause : terminez-le ou abandonnez-le d’abord.",
+    "invalid": "Paramètres invalides, ou pas assez de puzzles pour ces critères : élargissez la fourchette ou les thèmes."
+  },
+  "set": {
+    "actions": "Actions du set",
+    "cycles": "Cycles",
+    "runs": "Séances chronométrées",
+    "growth": "Croissance du set",
+    "grown": "+{added} puzzles → {total}",
+    "noGrowth": "Pas encore : le set grandit quand une séance en vient à bout.",
+    "stubborn": "Puzzles récalcitrants",
+    "stubbornHintLight": "Échoués dans au moins deux séances. Rejouables librement (non comptés).",
+    "stubbornHintClassic": "Échoués dans au moins deux cycles. Rejouables librement (non comptés).",
+    "failedLight": "Puzzle {rating} · raté dans {n} séances",
+    "failedClassic": "Puzzle {rating} · raté dans {n} cycles",
+    "replay": "Rejouer",
+    "none": "Aucun pour l’instant.",
+    "pause": "Mettre en pause",
+    "resume": "Reprendre",
+    "abandon": "Abandonner",
+    "archive": "Archiver",
+    "impossible": "Action impossible dans l’état actuel du set.",
+    "abandonTitle": "Abandonner ce set ?",
+    "abandonMessage": "Les statistiques restent consultables.",
+    "notFound": "Set introuvable."
+  },
+  "play": {
+    "progress": "Cycle {n} / {total}",
+    "attempt": " (essai {n})",
+    "count": " · {played} / {total}",
+    "seeSet": "Voir le set",
+    "next": "Puzzle suivant →",
+    "cycleOver": "Ce cycle est terminé ou perdu : rechargez le set.",
+    "puzzleNotFound": "Ce puzzle est introuvable.",
+    "blocked": {
+      "cannot": "Ce set ne peut pas être joué.",
+      "run": "Une séance chronométrée est en cours sur ce set.",
+      "light": "Ce set se joue en séances chronométrées.",
+      "paused": "Ce set est en pause.",
+      "completed": "Set terminé, bravo !",
+      "abandoned": "Ce set a été abandonné.",
+      "resting": "Repos : prochain cycle le {date}.",
+      "notNow": "Ce set ne peut pas être joué maintenant."
+    }
+  }
+}

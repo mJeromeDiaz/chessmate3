@@ -18,20 +18,26 @@
         />
       </div>
       <div class="cycle-card__counts">
-        <span
-          ><strong>{{ progress.played }}</strong> /
-          {{ set.puzzleCount }} puzzles</span
-        >
-        <span>{{ Math.round(progress.ratio * 100) }} %</span>
+        <i18n-t keypath="woodpecker.cycleCard.count" tag="span" scope="global">
+          <template #played>
+            <strong>{{ progress.played }}</strong>
+          </template>
+          <template #total>{{ set.puzzleCount }}</template>
+        </i18n-t>
+        <span>{{
+          $t('woodpecker.cycleCard.percent', {
+            n: Math.round(progress.ratio * 100)
+          })
+        }}</span>
       </div>
     </template>
 
     <div v-if="details" class="cycle-card__details" data-testid="cycle-pace">{{
       details
     }}</div>
-    <div v-if="light" class="cycle-card__details" data-testid="light-size"
-      >{{ set.puzzleCount }} puzzles dans le set.</div
-    >
+    <div v-if="light" class="cycle-card__details" data-testid="light-size">{{
+      $t('woodpecker.cycleCard.lightSize', { n: set.puzzleCount })
+    }}</div>
 
     <q-banner
       v-if="runHere"
@@ -39,12 +45,12 @@
       class="cm-banner--info"
       data-testid="run-in-progress"
     >
-      Une séance chronométrée est en cours sur ce set.
+      {{ $t('woodpecker.cycleCard.runHere') }}
       <template #action>
         <q-btn
           flat
           no-caps
-          label="Reprendre la séance"
+          :label="$t('woodpecker.cycleCard.resumeRun')"
           :to="`/training/${runHere.id}`"
         />
       </template>
@@ -58,7 +64,11 @@
           color="primary"
           icon="play_arrow"
           class="cycle-card__play"
-          :label="`Continuer le cycle ${set.current?.number ?? ''}`"
+          :label="
+            $t('woodpecker.cycleCard.continue', {
+              n: set.current?.number ?? ''
+            })
+          "
           :to="`/woodpecker/${set.id}/play`"
           data-testid="cycle-continue"
         />
@@ -70,19 +80,21 @@
           color="primary"
           icon="play_arrow"
           class="cycle-card__play"
-          label="Reprendre le set"
+          :label="$t('woodpecker.cycleCard.resumeSet')"
           data-testid="set-resume"
           @click="emit('resume')"
         />
       </div>
       <div v-if="state === 'active'" class="cycle-card__run">
         <div class="cycle-card__run-title">{{
-          light ? 'Lancer une séance chronométrée' : 'Ou en séance chronométrée'
+          light
+            ? $t('woodpecker.cycleCard.runLight')
+            : $t('woodpecker.cycleCard.runClassic')
         }}</div>
         <div class="cycle-card__run-hint">{{
           light
-            ? 'Chaque séance repart du premier puzzle. Le set grandit quand vous en venez à bout.'
-            : 'La séance fait avancer le cycle en cours, échéance comprise.'
+            ? $t('woodpecker.cycleCard.runLightHint')
+            : $t('woodpecker.cycleCard.runClassicHint')
         }}</div>
         <RunLauncher module="woodpecker" :subject-id="set.id" />
       </div>
@@ -101,6 +113,7 @@ import RunLauncher from '@/components/training/RunLauncher.vue'
 import { formatDate } from '@/utils/format'
 import { deadlineDay } from '@/utils/woodpecker'
 import { pace } from '@/utils/woodpeckerPace'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/stores/woodpecker').WoodpeckerSet>} */
@@ -122,25 +135,29 @@ const state = computed(() => {
 
 const kicker = computed(() => {
   const current = props.set.current
-  if (light.value) return 'WOODPECKER LIGHT'
-  if (!current || props.set.status === 'completed') return 'WOODPECKER'
-  const attempt = current.run > 1 ? ` · ESSAI ${current.run}` : ''
-  return `CYCLE ${current.number} / ${props.set.cycleCount}${attempt}`
+  if (light.value) return t('woodpecker.cycleCard.kickerLight')
+  if (!current || props.set.status === 'completed')
+    return t('woodpecker.cycleCard.kicker')
+  return t(
+    current.run > 1
+      ? 'woodpecker.cycleCard.kickerAttempt'
+      : 'woodpecker.cycleCard.kickerCycle',
+    {
+      n: current.number,
+      total: props.set.cycleCount,
+      run: current.run
+    }
+  )
 })
 
 const title = computed(() => {
-  switch (state.value) {
-    case 'resting':
-      return 'Au repos'
-    case 'paused':
-      return 'En pause'
-    case 'completed':
-      return 'Set terminé, bravo !'
-    case 'abandoned':
-      return 'Set abandonné'
-    default:
-      return light.value ? 'En cours' : 'Cycle en cours'
-  }
+  if (['resting', 'paused', 'completed', 'abandoned'].includes(state.value))
+    return t(`woodpecker.cycleCard.titles.${state.value}`)
+  return t(
+    light.value
+      ? 'woodpecker.cycleCard.titles.light'
+      : 'woodpecker.cycleCard.titles.active'
+  )
 })
 
 /** The current cycle's progress (classic, not over). */
@@ -160,14 +177,21 @@ const details = computed(() => {
   switch (state.value) {
     case 'resting':
       return current
-        ? `Le cycle ${current.number} commence le ${formatDate(current.availableAt)}.`
+        ? t('woodpecker.cycleCard.restUntil', {
+            n: current.number,
+            date: formatDate(current.availableAt)
+          })
         : ''
     case 'paused':
-      return 'Les échéances sont décalées de la durée de la pause à la reprise.'
+      return t('woodpecker.cycleCard.pausedHint')
     case 'completed':
-      return `Terminé le ${formatDate(set.completedAt)}.`
+      return t('woodpecker.cycleCard.completedOn', {
+        date: formatDate(set.completedAt)
+      })
     case 'abandoned':
-      return `Abandonné le ${formatDate(set.abandonedAt)}.`
+      return t('woodpecker.cycleCard.abandonedOn', {
+        date: formatDate(set.abandonedAt)
+      })
     default: {
       if (light.value || !current?.deadlineAt) return ''
       const info = pace({
@@ -175,7 +199,10 @@ const details = computed(() => {
         deadlineAt: current.deadlineAt,
         timeZone: set.timezone
       })
-      return `Jusqu’au ${deadlineDay(current.deadlineAt, set.timezone)} inclus. ${info.text}`
+      return t('woodpecker.cycleCard.until', {
+        day: deadlineDay(current.deadlineAt, set.timezone),
+        pace: info.text
+      })
     }
   }
 })

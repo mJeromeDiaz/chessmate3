@@ -7,7 +7,7 @@
   >
     <q-card class="puzzle-settings" data-testid="puzzle-settings-dialog">
       <q-card-section class="row items-center no-wrap q-pb-sm">
-        <div class="text-h6">Réglages des puzzles</div>
+        <div class="text-h6">{{ $t('puzzle.settings.title') }}</div>
         <q-space />
         <q-btn
           v-close-popup
@@ -15,13 +15,15 @@
           round
           dense
           icon="close"
-          aria-label="Fermer"
+          :aria-label="$t('common.actions.close')"
         />
       </q-card-section>
 
       <q-card-section class="column q-gutter-md q-pt-none">
         <div class="row items-center q-gutter-sm">
-          <span class="text-weight-medium">Classement</span>
+          <span class="text-weight-medium">{{
+            $t('puzzle.settings.rating')
+          }}</span>
           <RatingBadge />
           <q-space />
           <q-btn
@@ -29,7 +31,7 @@
             dense
             no-caps
             icon="history"
-            label="Historique"
+            :label="$t('puzzle.settings.history')"
             to="/puzzle/history"
             data-testid="puzzle-history-link"
           />
@@ -41,13 +43,13 @@
           dense
           class="cm-banner--info"
         >
-          Démarrer avec votre classement puzzle Lichess ?
+          {{ $t('puzzle.settings.lichess') }}
           <template #action>
             <q-btn
               flat
               no-caps
               color="primary"
-              label="Importer"
+              :label="$t('puzzle.settings.import')"
               :loading="importing"
               @click="importLichess"
             />
@@ -55,7 +57,9 @@
         </q-banner>
 
         <div>
-          <div class="text-weight-medium q-mb-xs">Difficulté</div>
+          <div class="text-weight-medium q-mb-xs">{{
+            $t('puzzle.settings.difficulty')
+          }}</div>
           <q-btn-toggle
             v-model="difficulty"
             no-caps
@@ -68,20 +72,21 @@
 
         <div>
           <div class="row items-center">
-            <div class="text-weight-medium">Thèmes</div>
+            <div class="text-weight-medium">{{
+              $t('puzzle.settings.themes')
+            }}</div>
             <q-space />
             <q-btn
               flat
               dense
               no-caps
-              label="Tout effacer"
+              :label="$t('puzzle.settings.clear')"
               :disable="selected.length === 0"
               @click="selected = []"
             />
           </div>
           <div class="text-caption text-grey q-mb-sm">
-            Aucun thème coché : tous les thèmes. Sinon, un puzzle est proposé
-            s’il a au moins un des thèmes choisis.
+            {{ $t('puzzle.settings.themesHint') }}
           </div>
           <div v-for="group in groups" :key="group.category" class="q-mb-md">
             <div class="text-subtitle2 q-mb-xs">{{ group.label }}</div>
@@ -113,14 +118,14 @@
       </q-card-section>
 
       <q-card-actions align="right" class="puzzle-settings__actions">
-        <span class="text-caption text-grey q-mr-auto"
-          >Appliqués à partir du prochain puzzle.</span
-        >
+        <span class="text-caption text-grey q-mr-auto">{{
+          $t('puzzle.settings.nextPuzzle')
+        }}</span>
         <q-btn
           color="primary"
           unelevated
           no-caps
-          label="Appliquer"
+          :label="$t('puzzle.settings.apply')"
           data-testid="puzzle-settings-apply"
           @click="apply"
         />

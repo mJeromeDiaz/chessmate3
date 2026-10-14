@@ -1,4 +1,4 @@
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * @typedef {object} ThemeGroup
@@ -41,16 +41,21 @@ export function formatCount(count) {
 }
 
 /** The relative difficulty of the next puzzles. */
-export const DIFFICULTIES = [
-  { label: 'Plus facile', value: 'easier' },
-  { label: 'Normal', value: 'normal' },
-  { label: 'Plus difficile', value: 'harder' }
-]
+export const DIFFICULTIES = ['easier', 'normal', 'harder'].map(value => ({
+  value,
+  get label() {
+    return t(`puzzle.difficulties.${value}`)
+  }
+}))
 
-/** Why the Lichess rating import was refused. */
+/** Why the Lichess rating import was refused (read when shown). */
 export const LICHESS_IMPORT_ERRORS = {
-  409: 'Votre classement est déjà établi.',
-  422: 'Lichess n’a pas de classement puzzle pour ce compte.'
+  get 409() {
+    return t('puzzle.lichessImport.409')
+  },
+  get 422() {
+    return t('puzzle.lichessImport.422')
+  }
 }
 
 /**

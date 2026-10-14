@@ -2,12 +2,12 @@
   <q-page padding>
     <div class="themes-page">
       <div class="row items-center q-mb-md">
-        <div class="text-h6">Thèmes</div>
+        <div class="text-h6">{{ $t('puzzle.themesPage.title') }}</div>
         <q-space />
         <q-btn
           flat
           no-caps
-          label="Tout effacer"
+          :label="$t('puzzle.settings.clear')"
           :disable="selected.length === 0"
           @click="selected = []"
         />
@@ -16,15 +16,15 @@
           no-caps
           :label="
             selected.length
-              ? `Jouer (${selected.length})`
-              : 'Jouer tous les thèmes'
+              ? $t('puzzle.themesPage.playSome', { n: selected.length })
+              : $t('puzzle.themesPage.playAll')
           "
           data-testid="themes-play"
           @click="play"
         />
       </div>
       <p class="text-caption text-grey">
-        Un puzzle est proposé s’il a au moins un des thèmes choisis.
+        {{ $t('puzzle.themesPage.hint') }}
       </p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white q-mb-md">{{

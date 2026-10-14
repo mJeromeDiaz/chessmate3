@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <q-form class="woodpecker-form q-gutter-md" @submit="submit">
-      <div class="text-h5">Nouveau set Woodpecker</div>
+      <div class="text-h5">{{ $t('woodpecker.new.title') }}</div>
 
       <div>
         <q-btn-toggle
@@ -10,23 +10,23 @@
           unelevated
           toggle-color="primary"
           :options="[
-            { label: 'Classique', value: 'classic' },
-            { label: 'Light', value: 'light' }
+            { label: $t('woodpecker.new.classic'), value: 'classic' },
+            { label: $t('woodpecker.new.light'), value: 'light' }
           ]"
           data-testid="set-mode"
         />
         <div class="text-caption text-grey q-mt-xs">{{
           mode === 'light'
-            ? 'Séances chronométrées, sans échéances : chaque séance repart du premier puzzle et le set grandit quand vous en venez à bout. Il commence à 100 puzzles.'
-            : 'Des cycles de plus en plus courts, avec une échéance chacun.'
+            ? $t('woodpecker.new.lightHint')
+            : $t('woodpecker.new.classicHint')
         }}</div>
       </div>
 
       <q-input
         v-model="form.name"
-        label="Nom"
+        :label="$t('woodpecker.new.name')"
         maxlength="80"
-        :rules="[v => !!v?.trim() || 'Nom requis']"
+        :rules="[v => !!v?.trim() || $t('woodpecker.new.nameRequired')]"
         data-testid="set-name"
       />
 
@@ -34,22 +34,19 @@
         v-if="mode === 'classic'"
         v-model.number="form.puzzleCount"
         type="number"
-        label="Nombre de puzzles"
-        :hint="`Entre ${MIN_PUZZLES} et 1500`"
+        :label="$t('woodpecker.new.count')"
+        :hint="$t('woodpecker.new.countHint', { min: MIN_PUZZLES })"
         data-testid="set-count"
       />
 
       <div>
-        <div class="text-subtitle2">Difficulté</div>
+        <div class="text-subtitle2">{{ $t('woodpecker.new.difficulty') }}</div>
         <q-option-group
           v-model="ratingMode"
           inline
           :options="[
-            {
-              label: 'Abordable (sous mon classement, recommandé)',
-              value: 'auto'
-            },
-            { label: 'Fourchette manuelle', value: 'manual' }
+            { label: $t('woodpecker.new.auto'), value: 'auto' },
+            { label: $t('woodpecker.new.manual'), value: 'manual' }
           ]"
         />
         <q-range
@@ -70,7 +67,7 @@
         map-options
         multiple
         use-chips
-        label="Thèmes (facultatif, un au moins)"
+        :label="$t('woodpecker.new.themes')"
         :max-values="10"
       />
 
@@ -79,48 +76,48 @@
           v-model.number="form.cycleCount"
           class="col-6 col-sm-4"
           type="number"
-          label="Cycles"
-          hint="2 à 10"
+          :label="$t('woodpecker.new.cycles')"
+          :hint="$t('woodpecker.new.cyclesHint')"
         />
         <q-input
           v-model.number="form.firstCycleDays"
           class="col-6 col-sm-4"
           type="number"
-          label="1er cycle (jours)"
+          :label="$t('woodpecker.new.firstCycle')"
         />
         <q-input
           v-model.number="form.reductionFactor"
           class="col-6 col-sm-4"
           type="number"
           step="0.05"
-          label="Facteur de réduction"
-          hint="0,5 = durée divisée par 2"
+          :label="$t('woodpecker.new.factor')"
+          :hint="$t('woodpecker.new.factorHint')"
         />
         <q-input
           v-model.number="form.minCycleDays"
           class="col-6 col-sm-4"
           type="number"
-          label="Cycle minimum (jours)"
+          :label="$t('woodpecker.new.minCycle')"
         />
         <q-input
           v-model.number="form.restDays"
           class="col-6 col-sm-4"
           type="number"
-          label="Repos entre cycles (jours)"
+          :label="$t('woodpecker.new.rest')"
         />
       </div>
       <q-toggle
         v-model="form.shuffle"
         :label="
           mode === 'light'
-            ? 'Mélanger les puzzles à chaque séance'
-            : 'Mélanger les puzzles à chaque cycle'
+            ? $t('woodpecker.new.shuffleRun')
+            : $t('woodpecker.new.shuffleCycle')
         "
       />
 
-      <div v-if="mode === 'classic'" class="text-caption text-grey"
-        >Durées prévues : {{ schedule }}</div
-      >
+      <div v-if="mode === 'classic'" class="text-caption text-grey">{{
+        $t('woodpecker.new.schedule', { list: schedule })
+      }}</div>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
         error
@@ -132,11 +129,16 @@
           unelevated
           class="cm-btn-create"
           no-caps
-          label="Créer le set"
+          :label="$t('woodpecker.new.create')"
           :loading="saving"
           data-testid="set-create"
         />
-        <q-btn flat no-caps label="Annuler" to="/woodpecker" />
+        <q-btn
+          flat
+          no-caps
+          :label="$t('common.actions.cancel')"
+          to="/woodpecker"
+        />
       </div>
     </q-form>
   </q-page>
@@ -148,6 +150,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -165,7 +168,7 @@ const ratingMode = ref('auto')
 const mode = ref(route.query.mode === 'light' ? 'light' : 'classic')
 const range = ref({ min: 1000, max: 1400 })
 const form = ref({
-  name: 'Mon set',
+  name: t('woodpecker.new.defaultName'),
   puzzleCount: 300,
   themes: [],
   cycleCount: 7,
@@ -193,7 +196,7 @@ const schedule = computed(() => {
       )
     )
   }
-  return lengths.map(d => `${d} j`).join(', ')
+  return lengths.map(d => t('woodpecker.new.days', { n: d })).join(', ')
 })
 
 async function submit() {
@@ -224,8 +227,12 @@ async function submit() {
     )
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: `Vous avez déjà un set ${mode.value === 'light' ? 'light' : 'classique'} actif ou en pause : terminez-le ou abandonnez-le d’abord.`,
-      422: 'Paramètres invalides, ou pas assez de puzzles pour ces critères : élargissez la fourchette ou les thèmes.'
+      409: t(
+        mode.value === 'light'
+          ? 'woodpecker.new.alreadyLight'
+          : 'woodpecker.new.alreadyClassic'
+      ),
+      422: t('woodpecker.new.invalid')
     })
   } finally {
     saving.value = false

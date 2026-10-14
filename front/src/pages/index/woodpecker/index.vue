@@ -2,30 +2,29 @@
   <q-page padding>
     <div class="woodpecker-page q-gutter-y-md">
       <div class="cm-page-head">
-        <div class="text-h5">Woodpecker</div>
+        <div class="text-h5">{{ $t('woodpecker.list.title') }}</div>
         <q-space />
-        <q-toggle v-model="archived" label="Archivés" class="q-mr-sm" />
+        <q-toggle
+          v-model="archived"
+          :label="$t('woodpecker.list.archived')"
+          class="q-mr-sm"
+        />
         <q-btn
           unelevated
           no-caps
           class="cm-btn-create"
           icon="add"
-          label="Nouveau set"
+          :label="$t('woodpecker.list.new')"
           :to="newSetLink"
           :disable="freeModes.length === 0"
           data-testid="woodpecker-new"
         >
-          <q-tooltip v-if="freeModes.length === 0"
-            >Un seul set en cours par mode (classique et light) : terminez ou
-            abandonnez l’un d’eux.</q-tooltip
-          >
+          <q-tooltip v-if="freeModes.length === 0">{{
+            $t('woodpecker.list.oneByMode')
+          }}</q-tooltip>
         </q-btn>
       </div>
-      <p class="text-caption text-grey">
-        Résolvez le même ensemble de puzzles encore et encore pour ancrer les
-        motifs : en cycles de plus en plus courts (classique), ou en séances
-        chronométrées (light).
-      </p>
+      <p class="text-caption text-grey">{{ $t('woodpecker.list.lead') }}</p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
         error
@@ -41,26 +40,38 @@
           <q-item-section>
             <q-item-label>{{ s.name }}</q-item-label>
             <q-item-label v-if="s.mode === 'light'" caption>
-              Light · {{ s.puzzleCount }} puzzles · {{ s.runs.length }} séance{{
-                s.runs.length > 1 ? 's' : ''
+              {{
+                $t('woodpecker.list.light', {
+                  puzzles: s.puzzleCount,
+                  runs: $t('woodpecker.list.runs', s.runs.length)
+                })
               }}
             </q-item-label>
             <q-item-label v-else caption>
-              {{ s.puzzleCount }} puzzles · {{ s.cycleCount }} cycles
-              <span v-if="s.current">
-                · cycle {{ s.current.number }} : {{ s.current.played }} /
-                {{ s.puzzleCount }}</span
-              >
+              {{
+                $t('woodpecker.list.classic', {
+                  puzzles: s.puzzleCount,
+                  cycles: s.cycleCount
+                })
+              }}<span v-if="s.current">{{
+                $t('woodpecker.list.current', {
+                  n: s.current.number,
+                  played: s.current.played,
+                  total: s.puzzleCount
+                })
+              }}</span>
             </q-item-label>
           </q-item-section>
           <q-item-section side>
             <q-badge :color="STATUS[s.status].color">{{
-              STATUS[s.status].label
+              $t(`woodpecker.list.status.${s.status}`)
             }}</q-badge>
           </q-item-section>
         </q-item>
         <q-item v-if="!loading && store.sets.length === 0">
-          <q-item-section class="text-grey">Aucun set.</q-item-section>
+          <q-item-section class="text-grey">{{
+            $t('woodpecker.list.empty')
+          }}</q-item-section>
         </q-item>
       </q-list>
     </div>
@@ -75,10 +86,10 @@ import { apiErrorMessage } from '@/utils/apiError'
 definePage({ meta: { auth: 'required' } })
 
 const STATUS = {
-  active: { label: 'En cours', color: 'primary' },
-  paused: { label: 'En pause', color: 'orange' },
-  completed: { label: 'Terminé', color: 'positive' },
-  abandoned: { label: 'Abandonné', color: 'grey' }
+  active: { color: 'primary' },
+  paused: { color: 'orange' },
+  completed: { color: 'positive' },
+  abandoned: { color: 'grey' }
 }
 
 const store = useWoodpeckerStore()

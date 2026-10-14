@@ -1,0 +1,77 @@
+{
+  "ramps": {
+    "ladder": "Échelle",
+    "tiers": "Paliers"
+  },
+  "categories": {
+    "endgame": "Finales",
+    "mate": "Mats",
+    "motif": "Motifs tactiques"
+  },
+  "topics": {
+    "endgame": "Toutes les finales",
+    "pawnEndgame": "Finales de pions",
+    "rookEndgame": "Finales de tours",
+    "bishopEndgame": "Finales de fous",
+    "knightEndgame": "Finales de cavaliers",
+    "queenEndgame": "Finales de dames",
+    "queenRookEndgame": "Finales dames et tours",
+    "mate": "Tous les mats",
+    "mateIn1": "Mat en 1",
+    "mateIn2": "Mat en 2",
+    "mateIn3plus": "Mat en 3 et plus",
+    "fork": "Fourchette",
+    "pin": "Clouage",
+    "skewer": "Enfilade",
+    "discoveredAttack": "Attaque à la découverte",
+    "sacrifice": "Sacrifice",
+    "deflection": "Déviation",
+    "attraction": "Attraction",
+    "doubleCheck": "Échec double",
+    "hangingPiece": "Pièce en prise",
+    "trappedPiece": "Pièce piégée"
+  },
+  "sides": {
+    "white": "Blancs",
+    "black": "Noirs"
+  },
+  "rampText": {
+    "tiers": "{size} puzzles par palier de {width} points, dès {start}",
+    "ladder": "Dès {start}, +{step} points par puzzle réussi"
+  },
+  "general": "Général",
+  "withSide": "{name} ({side})",
+  "myOpenings": "Mes ouvertures",
+  "allOpenings": "Toutes les ouvertures",
+  "tier": "Palier {n} · {range}",
+  "inARow": "{n} puzzle d’affilée | {n} puzzles d’affilée",
+  "badges": {
+    "streak_puzzles_10": "Enchaînement",
+    "streak_puzzles_20": "Rafale",
+    "streak_puzzles_30": "Déferlante",
+    "streak_puzzles_50": "Imparable"
+  },
+  "overtime": {
+    "title": "Temps écoulé !",
+    "streak": "Ton streak est à {streak}. Tu continues {n} minutes de plus ?",
+    "left": "Sans réponse dans {n} s, le streak s’arrête là.",
+    "rule": "En prolongation, la première erreur termine le module.",
+    "end": "Achever le streak",
+    "extend": "Continuer (+{n} min)"
+  },
+  "noTopic": "Aucune thématique.",
+  "page": {
+    "title": "Puzzle streak",
+    "lead": "Un premier puzzle très facile, puis de plus en plus durs. Une seule erreur et le streak s’arrête : ni aide ni solution. Pas de chrono, et aucun effet sur ton classement puzzles.",
+    "new": "Nouveau streak",
+    "difficulty": "Difficulté",
+    "topic": "Thématique",
+    "record": "Ton record : {record}",
+    "noRecord": "Pas encore de record ici.",
+    "launch": "Lancer le streak",
+    "records": "Tes records",
+    "noStreak": "Aucun streak joué pour l’instant.",
+    "streaks": "({n} streak) | ({n} streaks)",
+    "total": "{n} puzzle réussi en streak. | {n} puzzles réussis en streak."
+  }
+}
