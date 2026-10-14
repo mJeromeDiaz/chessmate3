@@ -1,0 +1,179 @@
+{
+  "lizy": {
+    "title": "La Reine",
+    "kicker": "PROF · FINALES",
+    "tagline": "La championne des finales, et une stratège qui voit loin.",
+    "motto": "Une finale se gagne avant même d’y arriver : choisis bien tes échanges.",
+    "traits": ["Finales", "Stratégie", "Planification"],
+    "stats": [
+      {
+        "value": "86",
+        "label": "Finales maîtrisées"
+      },
+      {
+        "value": "1 690",
+        "label": "Elo finales"
+      },
+      {
+        "value": "5 j",
+        "label": "Série en cours"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Finales de pions",
+        "desc": "Opposition, carré, pions passés"
+      },
+      {
+        "name": "Finales de tours",
+        "desc": "Lucena, Philidor, tour active"
+      },
+      {
+        "name": "Mats élémentaires",
+        "desc": "Dame, tour, deux fous"
+      },
+      {
+        "name": "Pièces mineures",
+        "desc": "Bon et mauvais fou, cavalier"
+      }
+    ],
+    "method": [
+      {
+        "title": "Planifier",
+        "desc": "Évaluer la structure et choisir où mener la partie."
+      },
+      {
+        "title": "Simplifier",
+        "desc": "Échanger au bon moment vers une finale gagnante."
+      },
+      {
+        "title": "Conclure",
+        "desc": "Appliquer la technique sans laisser de chance."
+      }
+    ],
+    "cta": "Ajouter un module Finales",
+    "role": "FINALES"
+  },
+  "albert": {
+    "title": "Le Fou",
+    "kicker": "PROF · PUZZLES & WOODPECKER",
+    "tagline": "Une vision de génie pour des coups en diagonale.",
+    "motto": "Avant de jouer, regarde chaque diagonale ouverte. La solution s’y cache souvent.",
+    "traits": ["Calcul", "Stratégie", "Patience"],
+    "stats": [
+      {
+        "value": "1 284",
+        "label": "Puzzles résolus"
+      },
+      {
+        "value": "1 742",
+        "label": "Elo tactique"
+      },
+      {
+        "value": "12 j",
+        "label": "Série en cours"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Enfilade",
+        "desc": "Attaquer deux pièces alignées"
+      },
+      {
+        "name": "Clouage",
+        "desc": "Immobiliser une pièce devant le roi"
+      },
+      {
+        "name": "Attaque à la découverte",
+        "desc": "Démasquer une pièce à longue portée"
+      },
+      {
+        "name": "Sacrifice sur f7",
+        "desc": "Ouvrir la diagonale vers le roi"
+      }
+    ],
+    "method": [
+      {
+        "title": "Observer",
+        "desc": "Repérer échecs, prises et menaces avant de calculer."
+      },
+      {
+        "title": "Calculer",
+        "desc": "Suivre chaque variante forcée jusqu’au bout."
+      },
+      {
+        "title": "Ancrer",
+        "desc": "Revoir les motifs ratés pour qu’ils deviennent réflexes."
+      }
+    ],
+    "cta": "Ajouter un module Puzzles",
+    "role": "PUZZLES & WOODPECKER"
+  },
+  "aaron": {
+    "title": "Le Roi",
+    "kicker": "PROF · RÉPERTOIRE & ÉVALUATION",
+    "tagline": "Des leçons qui ont du rythme : attaque, confiance et style.",
+    "motto": "Prends l’initiative et ne la rends jamais. Le roi adverse, c’est ta scène.",
+    "traits": ["Attaque", "Tactique", "Confiance"],
+    "stats": [
+      {
+        "value": "214",
+        "label": "Attaques réussies"
+      },
+      {
+        "value": "1 810",
+        "label": "Elo attaque"
+      },
+      {
+        "value": "3 j",
+        "label": "Série en cours"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Attaque sur le roi",
+        "desc": "Ouvrir les lignes vers le roque"
+      },
+      {
+        "name": "Gambits",
+        "desc": "Sacrifier un pion pour l’initiative"
+      },
+      {
+        "name": "Sacrifices",
+        "desc": "Donner du matériel pour mater"
+      },
+      {
+        "name": "Jeu d’initiative",
+        "desc": "Garder les menaces coup après coup"
+      }
+    ],
+    "method": [
+      {
+        "title": "Oser",
+        "desc": "Repérer le moment où l’attaque devient possible."
+      },
+      {
+        "title": "Garder le rythme",
+        "desc": "Enchaîner les coups forcés sans laisser respirer."
+      },
+      {
+        "title": "Finir en beauté",
+        "desc": "Convertir l’attaque en mat ou en gain décisif."
+      }
+    ],
+    "cta": "Créer une session avec Aaron",
+    "role": "RÉPERTOIRE & ÉVALUATION"
+  },
+  "page": {
+    "backToSession": "Retour à la session",
+    "backHome": "Retour à l’accueil",
+    "soon": "{module} : bientôt",
+    "motto": "SA DEVISE",
+    "quote": "« {motto} »",
+    "progress": "Ta progression",
+    "progressWith": " avec {name}",
+    "specialties": "Ses spécialités",
+    "method": "Sa méthode",
+    "pct": "{pct}%"
+  }
+}

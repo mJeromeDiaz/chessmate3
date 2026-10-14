@@ -1,0 +1,101 @@
+{
+  "legend": {
+    "fast": "Rapide",
+    "ok": "Réussi",
+    "hint": "Avec aide",
+    "fail": "Raté",
+    "todo": "À faire"
+  },
+  "example": {
+    "repertoire": "Mes ouvertures Blancs",
+    "puzzles": "Fourchette, Clouage",
+    "finales": "Réviser · Tours",
+    "minutes": "{n} min"
+  },
+  "perks": [
+    "Import automatique de tes parties",
+    "Répertoire et Elo synchronisés",
+    "Puzzles tirés de tes propres erreurs"
+  ],
+  "anchors": {
+    "modules": "Modules",
+    "profs": "Les profs",
+    "suivi": "Suivi",
+    "lichess": "Lichess"
+  },
+  "signIn": "Connexion",
+  "cta": {
+    "title": "Ta première session t’attend.",
+    "email": "Avec un e-mail"
+  },
+  "footer": {
+    "terms": "Conditions d’utilisation",
+    "privacy": "Confidentialité",
+    "contact": "Contact"
+  },
+  "lichess": "Continuer avec Lichess",
+  "autoRepertoire": "Générer mon répertoire",
+  "placeholder": {
+    "soon": "Contenu à venir.",
+    "home": "← Retour à l’accueil"
+  },
+  "profs": {
+    "kicker": "LES PROFS",
+    "title": "Trois personnalités, une même obsession : ta progression.",
+    "profile": "Voir le profil →"
+  },
+  "hero": {
+    "pill": "Compatible Lichess",
+    "lead": "Compose ton entraînement d’échecs, coup par coup.",
+    "coach": "Générer ma session d’entraînement personnalisée"
+  },
+  "modules": {
+    "kicker": "{n} MODULES",
+    "title": "Chaque module a sa couleur, son prof et ses réglages.",
+    "lead": "Durée, Elo, thèmes, couleur jouée, chrono par coup, répétitions espacées : tu règles, on enchaîne.",
+    "soon": "Bientôt"
+  },
+  "woodpecker": {
+    "pill": "Méthode Woodpecker",
+    "title": "Le même set, toujours plus vite.",
+    "lead": "Résous ton set, puis recommence en cycles de plus en plus courts. La grille garde la trace de chaque puzzle : rapide, réussi, avec aide ou raté.",
+    "cta": "Essayer un cycle →",
+    "set": "Set de 100 puzzles · Cycle 2",
+    "done": "37 faits · 85 % réussis"
+  },
+  "steps": {
+    "compose": "Compose",
+    "composeText": "Un titre, une couverture, puis tes modules dans l’ordre qui te plaît.",
+    "train": "Entraîne-toi",
+    "trainText": "Ton prof te glisse un conseil, une aide ou la solution quand tu bloques.",
+    "tipLabel": "ALBERT · CONSEIL",
+    "tip": "Regarde chaque diagonale ouverte.",
+    "progress": "Progresse",
+    "progressText": "Chaque puzzle laisse une trace. Les erreurs reviennent jusqu’à devenir des réflexes."
+  },
+  "auto": {
+    "kicker": "DEPUIS TES PARTIES LICHESS",
+    "title": "Tes parties travaillent pour toi.",
+    "who": "AARON",
+    "quote": "Connecte ton compte Lichess : je lis tes parties et je te prépare un entraînement qui te ressemble.",
+    "repertoireKicker": "RÉPERTOIRE",
+    "repertoireTitle": "Génère ton répertoire",
+    "repertoireText": "On garde les coups que tu joues vraiment, ouverture par ouverture, et on te montre où tu gagnes et où tu perds.",
+    "repertoireButton": "Générer mon répertoire avec Lichess",
+    "sessionKicker": "SESSION D’ENTRAÎNEMENT",
+    "sessionTitle": "Génère ta session d’entraînement",
+    "sessionText": "On lit tes 200 dernières parties : tes ouvertures, tes finales, les avantages que tu as laissé filer. Ta séance du jour en sort.",
+    "sessionButton": "Générer ma séance avec Lichess",
+    "note": "Accès anticipé : une clé d’invitation t’est demandée à l’inscription. Déjà inscrit avec Lichess ? Tu arrives directement sur la génération.",
+    "sessionPoints": [
+      "Woodpecker sur tes deux ouvertures phares",
+      "Tes finales passées au crible",
+      "Enregistrée dans ton profil, relançable chaque jour"
+    ],
+    "repertoirePoints": [
+      "Tes coups les plus joués, ligne par ligne",
+      "Victoires, nulles, défaites et erreurs relevées par Lichess",
+      "Prêt à réviser, tu gardes la main sur chaque coup"
+    ]
+  }
+}

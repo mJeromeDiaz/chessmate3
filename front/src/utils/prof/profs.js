@@ -1,4 +1,5 @@
 import { profImage } from '@/utils/prof/images'
+import { t } from '@/i18n'
 
 /**
  * @typedef {object} ProfColors
@@ -14,6 +15,8 @@ import { profImage } from '@/utils/prof/images'
  * @property {string} title chess piece persona, e.g. "La Reine"
  * @property {string} glyph the piece, text presentation
  * @property {string} kicker e.g. "PROF · FINALES"
+ * Texts (title, kicker, tagline, traits, motto, stats, specialties, method, cta) are getters
+ * reading `profs.<prof>.*` in the current language (docs/I18N.md).
  * @property {string} tagline
  * @property {string[]} traits
  * @property {string} motto
@@ -37,57 +40,57 @@ export const PROFS = {
   lizy: {
     slug: 'lizy',
     name: 'Lizy',
-    title: 'La Reine',
+    get title() {
+      return t('profs.lizy.title')
+    },
     glyph: '♛︎',
-    kicker: 'PROF · FINALES',
-    tagline: 'La championne des finales, et une stratège qui voit loin.',
-    traits: ['Finales', 'Stratégie', 'Planification'],
-    motto:
-      'Une finale se gagne avant même d’y arriver : choisis bien tes échanges.',
+    get kicker() {
+      return t('profs.lizy.kicker')
+    },
+    get tagline() {
+      return t('profs.lizy.tagline')
+    },
+    get traits() {
+      return [0, 1, 2].map(i => t(`profs.lizy.traits.${i}`))
+    },
+    get motto() {
+      return t('profs.lizy.motto')
+    },
     mottoImage: profImage('lizy-board'),
     full: profImage('lizy-full'),
     bust: profImage('lizy-bust'),
-    stats: [
-      { value: '86', label: 'Finales maîtrisées' },
-      { value: '1 690', label: 'Elo finales' },
-      { value: '5 j', label: 'Série en cours' }
-    ],
-    specialties: [
-      {
-        name: 'Finales de pions',
-        desc: 'Opposition, carré, pions passés',
-        pct: 88
+    stats: [0, 1, 2].map(i => ({
+      get value() {
+        return t(`profs.lizy.stats.${i}.value`)
       },
-      {
-        name: 'Finales de tours',
-        desc: 'Lucena, Philidor, tour active',
-        pct: 67
-      },
-      { name: 'Mats élémentaires', desc: 'Dame, tour, deux fous', pct: 94 },
-      {
-        name: 'Pièces mineures',
-        desc: 'Bon et mauvais fou, cavalier',
-        pct: 41
+      get label() {
+        return t(`profs.lizy.stats.${i}.label`)
       }
-    ],
-    method: [
-      {
-        image: profImage('lizy-think'),
-        title: 'Planifier',
-        desc: 'Évaluer la structure et choisir où mener la partie.'
+    })),
+    specialties: [88, 67, 94, 41].map((pct, i) => ({
+      get name() {
+        return t(`profs.lizy.specialties.${i}.name`)
       },
-      {
-        image: profImage('lizy-cool'),
-        title: 'Simplifier',
-        desc: 'Échanger au bon moment vers une finale gagnante.'
+      get desc() {
+        return t(`profs.lizy.specialties.${i}.desc`)
       },
-      {
-        image: profImage('lizy-joy'),
-        title: 'Conclure',
-        desc: 'Appliquer la technique sans laisser de chance.'
+      pct
+    })),
+    method: ['lizy-think', 'lizy-cool', 'lizy-joy'].map((image, i) => ({
+      image: profImage(image),
+      get title() {
+        return t(`profs.lizy.method.${i}.title`)
+      },
+      get desc() {
+        return t(`profs.lizy.method.${i}.desc`)
       }
-    ],
-    cta: { label: 'Ajouter un module Finales', module: 'finales' },
+    })),
+    cta: {
+      get label() {
+        return t('profs.lizy.cta')
+      },
+      module: 'finales'
+    },
     colors: {
       bg: '#FF8A3D',
       deep: '#E0601A',
@@ -99,61 +102,57 @@ export const PROFS = {
   'albert-stein': {
     slug: 'albert-stein',
     name: 'Albert Stein',
-    title: 'Le Fou',
+    get title() {
+      return t('profs.albert.title')
+    },
     glyph: '♝︎',
-    kicker: 'PROF · PUZZLES & WOODPECKER',
-    tagline: 'Une vision de génie pour des coups en diagonale.',
-    traits: ['Calcul', 'Stratégie', 'Patience'],
-    motto:
-      'Avant de jouer, regarde chaque diagonale ouverte. La solution s’y cache souvent.',
+    get kicker() {
+      return t('profs.albert.kicker')
+    },
+    get tagline() {
+      return t('profs.albert.tagline')
+    },
+    get traits() {
+      return [0, 1, 2].map(i => t(`profs.albert.traits.${i}`))
+    },
+    get motto() {
+      return t('profs.albert.motto')
+    },
     mottoImage: profImage('albert-idea'),
     full: profImage('albert-full'),
     bust: profImage('albert-bust'),
-    stats: [
-      { value: '1 284', label: 'Puzzles résolus' },
-      { value: '1 742', label: 'Elo tactique' },
-      { value: '12 j', label: 'Série en cours' }
-    ],
-    specialties: [
-      {
-        name: 'Enfilade',
-        desc: 'Attaquer deux pièces alignées',
-        pct: 82
+    stats: [0, 1, 2].map(i => ({
+      get value() {
+        return t(`profs.albert.stats.${i}.value`)
       },
-      {
-        name: 'Clouage',
-        desc: 'Immobiliser une pièce devant le roi',
-        pct: 74
-      },
-      {
-        name: 'Attaque à la découverte',
-        desc: 'Démasquer une pièce à longue portée',
-        pct: 61
-      },
-      {
-        name: 'Sacrifice sur f7',
-        desc: 'Ouvrir la diagonale vers le roi',
-        pct: 45
+      get label() {
+        return t(`profs.albert.stats.${i}.label`)
       }
-    ],
-    method: [
-      {
-        image: profImage('albert-think'),
-        title: 'Observer',
-        desc: 'Repérer échecs, prises et menaces avant de calculer.'
+    })),
+    specialties: [82, 74, 61, 45].map((pct, i) => ({
+      get name() {
+        return t(`profs.albert.specialties.${i}.name`)
       },
-      {
-        image: profImage('albert-board'),
-        title: 'Calculer',
-        desc: 'Suivre chaque variante forcée jusqu’au bout.'
+      get desc() {
+        return t(`profs.albert.specialties.${i}.desc`)
       },
-      {
-        image: profImage('albert-joy'),
-        title: 'Ancrer',
-        desc: 'Revoir les motifs ratés pour qu’ils deviennent réflexes.'
+      pct
+    })),
+    method: ['albert-think', 'albert-board', 'albert-joy'].map((image, i) => ({
+      image: profImage(image),
+      get title() {
+        return t(`profs.albert.method.${i}.title`)
+      },
+      get desc() {
+        return t(`profs.albert.method.${i}.desc`)
       }
-    ],
-    cta: { label: 'Ajouter un module Puzzles', module: 'puzzles' },
+    })),
+    cta: {
+      get label() {
+        return t('profs.albert.cta')
+      },
+      module: 'puzzles'
+    },
     colors: {
       bg: '#FF6FAE',
       deep: '#E03C86',
@@ -165,57 +164,57 @@ export const PROFS = {
   aaron: {
     slug: 'aaron',
     name: 'Aaron',
-    title: 'Le Roi',
+    get title() {
+      return t('profs.aaron.title')
+    },
     glyph: '♚︎',
-    kicker: 'PROF · RÉPERTOIRE & ÉVALUATION',
-    tagline: 'Des leçons qui ont du rythme : attaque, confiance et style.',
-    traits: ['Attaque', 'Tactique', 'Confiance'],
-    motto:
-      'Prends l’initiative et ne la rends jamais. Le roi adverse, c’est ta scène.',
+    get kicker() {
+      return t('profs.aaron.kicker')
+    },
+    get tagline() {
+      return t('profs.aaron.tagline')
+    },
+    get traits() {
+      return [0, 1, 2].map(i => t(`profs.aaron.traits.${i}`))
+    },
+    get motto() {
+      return t('profs.aaron.motto')
+    },
     mottoImage: profImage('aaron-wink'),
     full: profImage('aaron-full'),
     bust: profImage('aaron-bust'),
-    stats: [
-      { value: '214', label: 'Attaques réussies' },
-      { value: '1 810', label: 'Elo attaque' },
-      { value: '3 j', label: 'Série en cours' }
-    ],
-    specialties: [
-      {
-        name: 'Attaque sur le roi',
-        desc: 'Ouvrir les lignes vers le roque',
-        pct: 72
+    stats: [0, 1, 2].map(i => ({
+      get value() {
+        return t(`profs.aaron.stats.${i}.value`)
       },
-      {
-        name: 'Gambits',
-        desc: 'Sacrifier un pion pour l’initiative',
-        pct: 58
-      },
-      { name: 'Sacrifices', desc: 'Donner du matériel pour mater', pct: 49 },
-      {
-        name: 'Jeu d’initiative',
-        desc: 'Garder les menaces coup après coup',
-        pct: 63
+      get label() {
+        return t(`profs.aaron.stats.${i}.label`)
       }
-    ],
-    method: [
-      {
-        image: profImage('aaron-cross'),
-        title: 'Oser',
-        desc: 'Repérer le moment où l’attaque devient possible.'
+    })),
+    specialties: [72, 58, 49, 63].map((pct, i) => ({
+      get name() {
+        return t(`profs.aaron.specialties.${i}.name`)
       },
-      {
-        image: profImage('aaron-sing'),
-        title: 'Garder le rythme',
-        desc: 'Enchaîner les coups forcés sans laisser respirer.'
+      get desc() {
+        return t(`profs.aaron.specialties.${i}.desc`)
       },
-      {
-        image: profImage('aaron-laugh'),
-        title: 'Finir en beauté',
-        desc: 'Convertir l’attaque en mat ou en gain décisif.'
+      pct
+    })),
+    method: ['aaron-cross', 'aaron-sing', 'aaron-laugh'].map((image, i) => ({
+      image: profImage(image),
+      get title() {
+        return t(`profs.aaron.method.${i}.title`)
+      },
+      get desc() {
+        return t(`profs.aaron.method.${i}.desc`)
       }
-    ],
-    cta: { label: 'Créer une session avec Aaron', module: 'repertoire' },
+    })),
+    cta: {
+      get label() {
+        return t('profs.aaron.cta')
+      },
+      module: 'repertoire'
+    },
     colors: {
       bg: '#4FB2FF',
       deep: '#1C86E0',

@@ -1,7 +1,9 @@
+import { t } from '@/i18n'
+
 /**
  * @typedef {object} NavLink
  * @property {string} to the route
- * @property {string} label
+ * @property {string} label in the current language (docs/I18N.md)
  * @property {string} icon
  * @property {boolean} header shown in the wide header (home is the logo there)
  * @property {string[]} [also] other route prefixes that belong to this page
@@ -15,19 +17,77 @@
 export const NAV_LINKS = [
   {
     to: '/',
-    label: 'Accueil',
+    get label() {
+      return t('layout.nav.home')
+    },
     icon: 'home',
     header: false,
     also: ['/stats']
   },
-  { to: '/session', label: 'Sessions', icon: 'playlist_play', header: true },
-  { to: '/puzzle', label: 'Puzzles', icon: 'extension', header: true },
-  { to: '/woodpecker', label: 'Woodpecker', icon: 'repeat', header: true },
-  { to: '/streak', label: 'Streak', icon: 'bolt', header: true },
-  { to: '/repertoire', label: 'Répertoires', icon: 'menu_book', header: true },
-  { to: '/coordinates', label: 'Coordonnées', icon: 'grid_on', header: true },
-  { to: '/blindfold', label: 'Aveugle', icon: 'visibility_off', header: true },
-  { to: '/evaluation', label: 'Évaluation', icon: 'balance', header: true }
+  {
+    to: '/session',
+    get label() {
+      return t('layout.nav.sessions')
+    },
+    icon: 'playlist_play',
+    header: true
+  },
+  {
+    to: '/puzzle',
+    get label() {
+      return t('layout.nav.puzzles')
+    },
+    icon: 'extension',
+    header: true
+  },
+  {
+    to: '/woodpecker',
+    get label() {
+      return t('layout.nav.woodpecker')
+    },
+    icon: 'repeat',
+    header: true
+  },
+  {
+    to: '/streak',
+    get label() {
+      return t('layout.nav.streak')
+    },
+    icon: 'bolt',
+    header: true
+  },
+  {
+    to: '/repertoire',
+    get label() {
+      return t('layout.nav.repertoires')
+    },
+    icon: 'menu_book',
+    header: true
+  },
+  {
+    to: '/coordinates',
+    get label() {
+      return t('layout.nav.coordinates')
+    },
+    icon: 'grid_on',
+    header: true
+  },
+  {
+    to: '/blindfold',
+    get label() {
+      return t('layout.nav.blindfold')
+    },
+    icon: 'visibility_off',
+    header: true
+  },
+  {
+    to: '/evaluation',
+    get label() {
+      return t('layout.nav.evaluation')
+    },
+    icon: 'balance',
+    header: true
+  }
 ]
 
 /**

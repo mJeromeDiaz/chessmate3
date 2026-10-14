@@ -347,7 +347,7 @@ onMounted(async () => {
 }
 
 /* The way into "repertoire from my games" (design "Repertoire auto"). */
-// The positions due: a card with a brand edge, the count in bold.
+/* The positions due: a card with a brand edge, the count in bold. */
 .repertoire-due {
   background: var(--cm-surface);
   color: var(--cm-ink);
@@ -364,7 +364,7 @@ onMounted(async () => {
   padding: 10px 18px 0 10px;
   border-radius: 22px;
   background: var(--cm-brand-soft);
-  // A brand ring: it stands out on the tinted page as on the dark one.
+  /* A brand ring: it stands out on the tinted page as on the dark one. */
   box-shadow:
     inset 0 0 0 2px rgba(106, 76, 255, 0.28),
     var(--cm-card-shadow);

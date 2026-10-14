@@ -17,7 +17,7 @@
       class="auth-input-toggle"
       :aria-pressed="shown"
       @click="shown = !shown"
-      >{{ shown ? 'Masquer' : 'Afficher' }}</button
+      >{{ shown ? $t('auth.password.hide') : $t('auth.password.show') }}</button
     >
   </div>
 </template>
@@ -25,13 +25,14 @@
 <script setup>
 /** A password input with a show/hide toggle (design "Connexion"). */
 import { ref } from 'vue'
+import { t } from '@/i18n'
 
 defineOptions({ inheritAttrs: false })
 
 defineProps({
   autocomplete: { type: String, default: 'current-password' },
   placeholder: { type: String, default: '••••••••••••' },
-  label: { type: String, default: 'Mot de passe' },
+  label: { type: String, default: () => t('auth.password.label') },
   error: { type: Boolean, default: false }
 })
 

@@ -2,10 +2,10 @@
   <q-page class="placeholder-page">
     <div class="placeholder-page__inner cm-card">
       <h1 class="placeholder-page__title cm-heading">{{ title }}</h1>
-      <p class="cm-muted q-mb-none">Contenu à venir.</p>
-      <router-link to="/" class="placeholder-page__back"
-        >← Retour à l’accueil</router-link
-      >
+      <p class="cm-muted q-mb-none">{{ $t('landing.placeholder.soon') }}</p>
+      <router-link to="/" class="placeholder-page__back">{{
+        $t('landing.placeholder.home')
+      }}</router-link>
     </div>
   </q-page>
 </template>

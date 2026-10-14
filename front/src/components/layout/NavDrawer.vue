@@ -33,7 +33,7 @@
 
       <q-item clickable to="/profile" active-class="nav-drawer__item--on">
         <q-item-section avatar><q-icon name="person" /></q-item-section>
-        <q-item-section>Profil</q-item-section>
+        <q-item-section>{{ $t('layout.account.profile') }}</q-item-section>
       </q-item>
       <q-item
         clickable
@@ -42,7 +42,7 @@
         data-testid="drawer-tour"
       >
         <q-item-section avatar><q-icon name="tour" /></q-item-section>
-        <q-item-section>Visite guidée</q-item-section>
+        <q-item-section>{{ $t('layout.account.tour') }}</q-item-section>
       </q-item>
       <q-item
         clickable
@@ -51,7 +51,7 @@
         data-testid="drawer-shop"
       >
         <q-item-section avatar><CrownCoin :size="22" /></q-item-section>
-        <q-item-section>Boutique</q-item-section>
+        <q-item-section>{{ $t('layout.account.shop') }}</q-item-section>
         <q-item-section
           v-if="balance !== null"
           side
@@ -69,11 +69,11 @@
         <q-item-section avatar>
           <q-icon name="admin_panel_settings" />
         </q-item-section>
-        <q-item-section>Admin</q-item-section>
+        <q-item-section>{{ $t('layout.account.admin') }}</q-item-section>
       </q-item>
       <q-expansion-item
         :icon="current.icon"
-        :label="`Thème : ${current.label}`"
+        :label="$t('layout.theme.current', { name: current.label })"
         data-testid="drawer-theme"
       >
         <q-item
@@ -98,7 +98,7 @@
         @click="logout"
       >
         <q-item-section avatar><q-icon name="logout" /></q-item-section>
-        <q-item-section>Déconnexion</q-item-section>
+        <q-item-section>{{ $t('layout.account.signOut') }}</q-item-section>
       </q-item>
     </q-list>
   </q-drawer>

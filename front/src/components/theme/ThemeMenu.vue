@@ -4,10 +4,12 @@
     round
     dense
     :icon="current.icon"
-    :aria-label="`Thème : ${current.label}`"
+    :aria-label="$t('layout.theme.current', { name: current.label })"
     data-testid="theme-menu"
   >
-    <q-tooltip>Thème : {{ current.label }}</q-tooltip>
+    <q-tooltip>{{
+      $t('layout.theme.current', { name: current.label })
+    }}</q-tooltip>
     <q-menu anchor="bottom right" self="top right">
       <q-list dense style="min-width: 170px">
         <q-item

@@ -3,14 +3,15 @@
     <div class="landing-section__inner">
       <div class="landing-modules__head">
         <div class="landing-modules__heading">
-          <div class="landing-kicker">{{ MODULES.length }} MODULES</div>
-          <h2 class="landing-h2 cm-heading"
-            >Chaque module a sa couleur, son prof et ses réglages.</h2
-          >
+          <div class="landing-kicker">{{
+            $t('landing.modules.kicker', { n: MODULES.length })
+          }}</div>
+          <h2 class="landing-h2 cm-heading">{{
+            $t('landing.modules.title')
+          }}</h2>
         </div>
         <p class="landing-modules__lead">
-          Durée, Elo, thèmes, couleur jouée, chrono par coup, répétitions
-          espacées : tu règles, on enchaîne.
+          {{ $t('landing.modules.lead') }}
         </p>
       </div>
       <div class="landing-modules__grid">
@@ -28,9 +29,9 @@
           <div class="landing-module__glow" />
           <div class="landing-module__title cm-heading">{{ module.title }}</div>
           <div class="landing-module__desc">{{ module.desc }}</div>
-          <span v-if="!module.available" class="landing-module__soon"
-            >Bientôt</span
-          >
+          <span v-if="!module.available" class="landing-module__soon">{{
+            $t('landing.modules.soon')
+          }}</span>
           <ProfAvatar
             class="landing-module__avatar"
             :image="module.image"

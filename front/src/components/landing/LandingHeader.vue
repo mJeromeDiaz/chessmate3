@@ -21,7 +21,7 @@
           to="/login"
           class="landing-header__btn landing-header__btn--soft"
           data-testid="landing-login"
-          >Connexion</router-link
+          >{{ $t('landing.signIn') }}</router-link
         >
       </div>
     </div>

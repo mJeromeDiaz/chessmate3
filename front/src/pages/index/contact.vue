@@ -1,5 +1,5 @@
 <template>
-  <PlaceholderPage title="Contact" />
+  <PlaceholderPage :title="$t('landing.footer.contact')" />
 </template>
 
 <script setup>

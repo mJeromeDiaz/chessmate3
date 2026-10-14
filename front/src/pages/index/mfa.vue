@@ -1,15 +1,22 @@
 <template>
   <AuthShell>
     <form class="auth-step" novalidate @submit.prevent="submit()">
-      <button type="button" class="auth-back" @click="cancel">← Retour</button>
+      <button type="button" class="auth-back" @click="cancel">
+        {{ $t('common.actions.back') }}
+      </button>
       <div>
-        <div class="auth-kicker">MOT DE PASSE ✓ · DERNIÈRE ÉTAPE</div>
-        <h1 class="auth-title">Vérifie ta boîte mail</h1>
-        <p class="auth-lead">
-          Un code à 6 chiffres vient d’être envoyé à
-          <b>{{ auth.mfa?.email }}</b
-          >. Il est valable 10 minutes.
-        </p>
+        <div class="auth-kicker">{{ $t('auth.mfa.kicker') }}</div>
+        <h1 class="auth-title">{{ $t('auth.mfa.title') }}</h1>
+        <i18n-t
+          keypath="auth.mfa.lead"
+          tag="p"
+          class="auth-lead"
+          scope="global"
+        >
+          <template #email
+            ><b>{{ auth.mfa?.email }}</b></template
+          >
+        </i18n-t>
       </div>
 
       <OtpInput
@@ -23,21 +30,23 @@
       <div v-if="info" class="auth-note">{{ info }}</div>
 
       <div class="mfa__resend">
-        <span>Rien reçu ? Pense aux spams.</span>
+        <span>{{ $t('auth.mfa.spam') }}</span>
         <button
           type="button"
           class="auth-link"
           :disabled="cooldown > 0 || resending"
           @click="resend"
           >{{
-            cooldown > 0 ? `Renvoyer dans ${cooldown} s` : 'Renvoyer le code'
+            cooldown > 0
+              ? $t('auth.mfa.resendIn', { seconds: cooldown })
+              : $t('auth.mfa.resend')
           }}</button
         >
       </div>
 
       <label class="mfa__trust">
         <input v-model="trustDevice" type="checkbox" data-testid="mfa-trust" />
-        Faire confiance à cet appareil pendant 30 jours
+        {{ $t('auth.mfa.trust') }}
       </label>
 
       <button
@@ -45,7 +54,7 @@
         class="auth-btn"
         :disabled="loading || code.length !== 6"
         data-testid="mfa-submit"
-        >{{ loading ? 'Vérification…' : 'Valider' }}</button
+        >{{ loading ? $t('auth.mfa.checking') : $t('auth.mfa.submit') }}</button
       >
     </form>
   </AuthShell>
@@ -59,6 +68,7 @@ import OtpInput from '@/components/auth/OtpInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import { safeRedirect } from '@/router/guards'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
 /**
  * The emailed code, after a right password (docs/AUTH.md): six boxes, sent as soon as the sixth
@@ -97,8 +107,8 @@ async function submit() {
     router.replace(safeRedirect(route.query.redirect))
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      401: 'Code invalide ou expiré. Après 5 essais, il faut recommencer la connexion.',
-      423: 'Ce compte est suspendu. Écris-nous depuis la page Contact si tu penses qu’il s’agit d’une erreur.'
+      401: t('auth.mfa.invalid'),
+      423: t('auth.login.errors.423')
     })
     code.value = ''
   } finally {
@@ -113,8 +123,7 @@ async function resend() {
 
   try {
     await auth.resendMfa()
-    info.value =
-      'Un nouveau code a été envoyé. Le précédent ne fonctionne plus.'
+    info.value = t('auth.mfa.resent')
     cooldown.value = RESEND_COOLDOWN_SECONDS
     code.value = ''
   } catch (e) {
@@ -125,7 +134,7 @@ async function resend() {
       return
     }
     error.value = apiErrorMessage(e, {
-      429: 'Patiente avant de demander un nouveau code.'
+      429: t('auth.mfa.wait')
     })
   } finally {
     resending.value = false

@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * Turns an API error into a message for the user.
  *
@@ -15,7 +17,7 @@
 export function apiErrorMessage(
   error,
   byStatus = {},
-  fallback = 'Une erreur est survenue. Réessayez.'
+  fallback = t('common.errors.generic')
 ) {
   const response =
     /** @type {{response?: {status: number, data?: any, headers?: Record<string, string>}}} */ (
@@ -23,11 +25,11 @@ export function apiErrorMessage(
     )?.response
 
   if (!response) {
-    return 'Le serveur est injoignable. Vérifiez votre connexion.'
+    return t('common.errors.offline')
   }
 
   if (response.status === 503 && response.headers?.['x-puzzle-maintenance']) {
-    return 'Le catalogue de puzzles est en maintenance. Réessayez dans une minute.'
+    return t('common.errors.puzzleMaintenance')
   }
 
   if (byStatus[response.status]) {
@@ -35,7 +37,7 @@ export function apiErrorMessage(
   }
 
   if (response.status === 429) {
-    return 'Trop de tentatives. Patientez quelques minutes avant de réessayer.'
+    return t('common.errors.tooMany')
   }
 
   const violations = response.data?.violations

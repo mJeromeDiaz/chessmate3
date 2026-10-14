@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * The sign-in and early access screens (designs "Connexion" and "Accès anticipé", docs/AUTH.md and
  * docs/EARLY_ACCESS.md): the pure parts, so that they can be tested alone. The server stays the
@@ -16,11 +18,15 @@ export const PASSWORD_MIN_LENGTH = 12
 
 /** What the API's invitation refusals mean (docs/EARLY_ACCESS.md). */
 export const KEY_ERRORS = {
-  invitation_required: 'Saisis ta clé d’invitation.',
-  invitation_invalid:
-    'Cette clé n’est pas valable : elle a peut-être déjà servi ou été remplacée.',
-  invitation_expired:
-    "Cette clé a expiré. Demande-en une nouvelle à l’équipe Don't Stay Rooky."
+  get invitation_required() {
+    return t('auth.key.required')
+  },
+  get invitation_invalid() {
+    return t('auth.key.invalid')
+  },
+  get invitation_expired() {
+    return t('auth.key.expired')
+  }
 }
 
 /** Sign-up refusals carried back by an OAuth callback: they belong to the early access screen. */
@@ -66,10 +72,23 @@ export function keyFormatError(key) {
   if (key === '') return KEY_ERRORS.invitation_required
   return KEY_PATTERN.test(key)
     ? ''
-    : `Une clé compte ${KEY_LENGTH} lettres et chiffres.`
+    : t('auth.key.format', { length: KEY_LENGTH })
 }
 
-const STRENGTH_LABELS = ['', 'Faible', 'Moyen', 'Bon', 'Solide']
+const STRENGTH_LABELS = {
+  get 1() {
+    return t('auth.strength.weak')
+  },
+  get 2() {
+    return t('auth.strength.fair')
+  },
+  get 3() {
+    return t('auth.strength.good')
+  },
+  get 4() {
+    return t('auth.strength.strong')
+  }
+}
 
 /**
  * A rough strength meter for the sign-up form (4 bars). Below the minimum length it never shows

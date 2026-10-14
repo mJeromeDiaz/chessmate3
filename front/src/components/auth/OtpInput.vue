@@ -20,7 +20,7 @@
       inputmode="numeric"
       autocomplete="one-time-code"
       maxlength="6"
-      aria-label="Code de vérification"
+      :aria-label="$t('auth.otp.label')"
       v-bind="$attrs"
       @input="onInput"
       @focus="focused = true"

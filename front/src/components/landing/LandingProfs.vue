@@ -2,10 +2,8 @@
   <section id="profs" class="landing-section">
     <div class="landing-section__inner">
       <div class="landing-profs__heading">
-        <div class="landing-kicker">LES PROFS</div>
-        <h2 class="landing-h2 cm-heading"
-          >Trois personnalités, une même obsession : ta progression.</h2
-        >
+        <div class="landing-kicker">{{ $t('landing.profs.kicker') }}</div>
+        <h2 class="landing-h2 cm-heading">{{ $t('landing.profs.title') }}</h2>
       </div>
       <div class="landing-profs__grid">
         <router-link
@@ -34,7 +32,9 @@
             class="landing-prof__img"
             :class="{ 'landing-prof__img--long': prof.slug === 'aaron' }"
           />
-          <span class="landing-prof__link">Voir le profil →</span>
+          <span class="landing-prof__link">{{
+            $t('landing.profs.profile')
+          }}</span>
         </router-link>
       </div>
     </div>

@@ -2,16 +2,16 @@
   <section class="landing-section landing-cta">
     <div class="landing-cta__card">
       <div class="landing-shade landing-cta__shade" />
-      <h2 class="landing-cta__title cm-heading"
-        >Ta première session t’attend.</h2
-      >
+      <h2 class="landing-cta__title cm-heading">{{
+        $t('landing.cta.title')
+      }}</h2>
       <div class="landing-actions landing-cta__actions">
         <LichessButton />
         <router-link
           to="/register"
           class="landing-btn landing-btn--light"
           data-testid="landing-email"
-          >Avec un e-mail</router-link
+          >{{ $t('landing.cta.email') }}</router-link
         >
       </div>
       <img
@@ -32,9 +32,15 @@
         >Don't Stay <span>Rooky</span></div
       >
       <nav class="landing-footer__links">
-        <router-link to="/conditions">Conditions d’utilisation</router-link>
-        <router-link to="/confidentialite">Confidentialité</router-link>
-        <router-link to="/contact">Contact</router-link>
+        <router-link to="/conditions">{{
+          $t('landing.footer.terms')
+        }}</router-link>
+        <router-link to="/confidentialite">{{
+          $t('landing.footer.privacy')
+        }}</router-link>
+        <router-link to="/contact">{{
+          $t('landing.footer.contact')
+        }}</router-link>
       </nav>
     </footer>
   </section>

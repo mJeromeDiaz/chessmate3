@@ -4,7 +4,7 @@
     class="auto-repertoire-btn"
     @click="markAfterSignIn(path)"
     ><span class="auto-repertoire-btn__knight" aria-hidden="true">♞︎</span
-    ><slot>Générer mon répertoire</slot></a
+    ><slot>{{ $t('landing.autoRepertoire') }}</slot></a
   >
 </template>
 

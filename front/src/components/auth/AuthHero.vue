@@ -9,7 +9,7 @@
       <router-link
         to="/"
         class="auth-hero__mark"
-        aria-label="Don't Stay Rooky — accueil"
+        :aria-label="$t('auth.hero.home')"
       >
         <span
           v-for="(l, i) in MARK"
@@ -52,7 +52,7 @@
       <button
         type="button"
         class="auth-hero__prof"
-        :aria-label="`Faire sauter ${prof.name}`"
+        :aria-label="$t('auth.hero.jump', { name: prof.name })"
         @click="hop(prof.id)"
       >
         <img
@@ -69,7 +69,7 @@
       </button>
     </div>
 
-    <div class="auth-hero__bubble">Salut ! ♟︎</div>
+    <div class="auth-hero__bubble">{{ $t('auth.hero.hello') }}</div>
   </div>
 </template>
 
@@ -84,6 +84,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import FloatingPieces from '@/components/training/result/FloatingPieces.vue'
 import { profImage } from '@/utils/prof/images'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** Wide layout (full-length pictures). */
@@ -93,8 +94,12 @@ const props = defineProps({
 const MARK = [..."Don't Stay "]
   .map(ch => ({ ch, lime: false }))
   .concat([...'Rooky'].map(ch => ({ ch, lime: true })))
-const WORDS = 'Tes profs d’échecs t’attendent.'.split(' ')
-const CHIPS = ['♛︎ Lizy · Finales', '♚︎ Aaron · Répertoire', '♝︎ Albert · Puzzles']
+const WORDS = computed(() => t('auth.hero.tagline').split(' '))
+const CHIPS = computed(() => [
+  t('auth.hero.chips.lizy'),
+  t('auth.hero.chips.aaron'),
+  t('auth.hero.chips.albert')
+])
 
 /** Intro steps (ms after mounting): flood, brand and profs, rays and form, bubble and chips. */
 const STEPS = [

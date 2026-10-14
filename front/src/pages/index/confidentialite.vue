@@ -1,5 +1,5 @@
 <template>
-  <PlaceholderPage title="Confidentialité" />
+  <PlaceholderPage :title="$t('landing.footer.privacy')" />
 </template>
 
 <script setup>

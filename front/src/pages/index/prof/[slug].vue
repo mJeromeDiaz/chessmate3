@@ -7,7 +7,9 @@
         :to="auth.isAuthenticated ? '/session/new' : '/'"
         class="prof-page__back"
         :aria-label="
-          auth.isAuthenticated ? 'Retour à la session' : 'Retour à l’accueil'
+          auth.isAuthenticated
+            ? $t('profs.page.backToSession')
+            : $t('profs.page.backHome')
         "
         >←</router-link
       >
@@ -47,7 +49,7 @@
           <span
             v-else
             class="prof-page__cta prof-page__cta--inline prof-page__cta--soon gt-sm"
-            >{{ ctaModule?.title }} : bientôt</span
+            >{{ $t('profs.page.soon', { module: ctaModule?.title }) }}</span
           >
         </div>
       </div>
@@ -60,15 +62,20 @@
           class="prof-page__motto-img"
         />
         <div class="prof-page__bubble">
-          <div class="prof-page__label">SA DEVISE</div>
-          <div class="prof-page__motto-text">« {{ prof.motto }} »</div>
+          <div class="prof-page__label">{{ $t('profs.page.motto') }}</div>
+          <div class="prof-page__motto-text">{{
+            $t('profs.page.quote', { motto: prof.motto })
+          }}</div>
         </div>
       </div>
 
       <div class="prof-page__grid">
         <section class="prof-page__section">
           <h2 class="prof-page__h2"
-            >Ta progression<span class="lt-md"> avec {{ firstName }}</span></h2
+            >{{ $t('profs.page.progress')
+            }}<span class="lt-md">{{
+              $t('profs.page.progressWith', { name: firstName })
+            }}</span></h2
           >
           <div class="prof-page__stats">
             <div
@@ -85,7 +92,7 @@
         </section>
 
         <section class="prof-page__section">
-          <h2 class="prof-page__h2">Ses spécialités</h2>
+          <h2 class="prof-page__h2">{{ $t('profs.page.specialties') }}</h2>
           <div
             v-for="specialty in prof.specialties"
             :key="specialty.name"
@@ -96,7 +103,9 @@
               <div class="prof-page__specialty-desc">{{ specialty.desc }}</div>
             </div>
             <div class="prof-page__meter">
-              <div class="prof-page__pct">{{ specialty.pct }}%</div>
+              <div class="prof-page__pct">{{
+                $t('profs.page.pct', { pct: specialty.pct })
+              }}</div>
               <div class="prof-page__bar">
                 <div
                   class="prof-page__bar-fill"
@@ -109,7 +118,7 @@
       </div>
 
       <section class="prof-page__section">
-        <h2 class="prof-page__h2">Sa méthode</h2>
+        <h2 class="prof-page__h2">{{ $t('profs.page.method') }}</h2>
         <div class="prof-page__method">
           <div
             v-for="step in prof.method"
@@ -133,9 +142,9 @@
         class="prof-page__cta"
         >{{ prof.cta.label }}</router-link
       >
-      <span v-else class="prof-page__cta prof-page__cta--soon"
-        >{{ ctaModule?.title }} : bientôt</span
-      >
+      <span v-else class="prof-page__cta prof-page__cta--soon">{{
+        $t('profs.page.soon', { module: ctaModule?.title })
+      }}</span>
     </div>
   </q-page>
 </template>

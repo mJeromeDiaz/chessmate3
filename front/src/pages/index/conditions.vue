@@ -1,5 +1,5 @@
 <template>
-  <PlaceholderPage title="Conditions d’utilisation" />
+  <PlaceholderPage :title="$t('landing.footer.terms')" />
 </template>
 
 <script setup>

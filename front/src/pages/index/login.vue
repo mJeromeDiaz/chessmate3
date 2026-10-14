@@ -10,8 +10,8 @@
         @submit.prevent="toPassword"
       >
         <div class="auth-rise" style="--d: 0ms">
-          <h1 class="auth-title">Connexion</h1>
-          <p class="auth-lead">Content de te voir ! Choisis comment entrer.</p>
+          <h1 class="auth-title">{{ $t('auth.login.title') }}</h1>
+          <p class="auth-lead">{{ $t('auth.login.lead') }}</p>
         </div>
 
         <div
@@ -25,10 +25,14 @@
 
         <ProviderButtons :delay="650" />
 
-        <div class="auth-sep auth-rise" style="--d: 260ms">ou par e-mail</div>
+        <div class="auth-sep auth-rise" style="--d: 260ms">
+          {{ $t('auth.login.orEmail') }}
+        </div>
 
         <div class="auth-field auth-rise" style="--d: 390ms">
-          <label class="auth-label" for="login-email">Adresse e-mail</label>
+          <label class="auth-label" for="login-email">{{
+            $t('auth.login.email')
+          }}</label>
           <input
             id="login-email"
             v-model="email"
@@ -36,7 +40,7 @@
             class="auth-input"
             :class="{ 'auth-input--error': emailError }"
             autocomplete="username"
-            placeholder="toi@exemple.fr"
+            :placeholder="$t('auth.login.emailPlaceholder')"
             data-testid="login-email"
             @input="emailError = ''"
           />
@@ -48,16 +52,16 @@
           class="auth-btn auth-btn--brand auth-rise"
           style="--d: 520ms"
           data-testid="login-continue"
-          >Continuer</button
+          >{{ $t('common.actions.continue') }}</button
         >
 
         <p class="auth-foot auth-rise" style="--d: 780ms">
-          Pas encore de compte ?
+          {{ $t('auth.login.noAccount') }}
           <router-link
             to="/register"
             class="auth-link"
             data-testid="login-to-register"
-            >Accès anticipé →</router-link
+            >{{ $t('auth.login.earlyAccess') }}</router-link
           >
         </p>
       </form>
@@ -70,14 +74,16 @@
         novalidate
         @submit.prevent="submit"
       >
-        <button type="button" class="auth-back" @click="back">← Retour</button>
+        <button type="button" class="auth-back" @click="back">
+          {{ $t('common.actions.back') }}
+        </button>
         <div>
-          <h1 class="auth-title">Ton mot de passe</h1>
+          <h1 class="auth-title">{{ $t('auth.login.passwordTitle') }}</h1>
           <div class="auth-lead login__who">
             <span class="auth-chip">{{ email }}</span>
-            <button type="button" class="auth-link" @click="back"
-              >Modifier</button
-            >
+            <button type="button" class="auth-link" @click="back">{{
+              $t('common.actions.edit')
+            }}</button>
           </div>
         </div>
 
@@ -94,10 +100,12 @@
 
         <div class="auth-field">
           <div class="auth-label-row">
-            <label class="auth-label" for="login-password">Mot de passe</label>
-            <button type="button" class="auth-link" @click="forgot"
-              >Mot de passe oublié ?</button
-            >
+            <label class="auth-label" for="login-password">{{
+              $t('auth.password.label')
+            }}</label>
+            <button type="button" class="auth-link" @click="forgot">{{
+              $t('auth.login.forgot')
+            }}</button>
           </div>
           <PasswordField
             id="login-password"
@@ -116,7 +124,7 @@
             class="auth-link login__resend"
             :disabled="resending"
             @click="resendVerification"
-            >Renvoyer l’e-mail de vérification</button
+            >{{ $t('auth.login.resend') }}</button
           >
         </div>
 
@@ -125,7 +133,9 @@
           class="auth-btn"
           :disabled="loading || !password"
           data-testid="login-submit"
-          >{{ loading ? 'Connexion…' : 'Se connecter' }}</button
+          >{{
+            loading ? $t('auth.login.signingIn') : $t('auth.login.signIn')
+          }}</button
         >
       </form>
     </Transition>
@@ -143,6 +153,7 @@ import { useAuthStore } from '@/stores/auth'
 import { safeRedirect } from '@/router/guards'
 import { apiErrorMessage } from '@/utils/apiError'
 import { WELCOME_PATH, isEmail } from '@/utils/auth/authFlow'
+import { t } from '@/i18n'
 
 /**
  * Sign-in (design "Connexion", docs/AUTH.md): Lichess or Google, or an address then its password
@@ -175,25 +186,25 @@ const notice = computed(() => {
   if (resent.value) {
     return {
       tone: 'auth-note--info',
-      text: 'Si cette adresse doit être vérifiée, un nouvel e-mail vient de lui être envoyé.'
+      text: t('auth.login.notice.resent')
     }
   }
   if (route.query.verified === '1') {
     return {
       tone: '',
-      text: 'Adresse confirmée ✓ Connecte-toi pour commencer.'
+      text: t('auth.login.notice.verified')
     }
   }
   if (route.query.verified === '0') {
     return {
       tone: 'auth-note--danger',
-      text: 'Ce lien de vérification est invalide ou a expiré.'
+      text: t('auth.login.notice.invalidLink')
     }
   }
   if (route.query.expired === '1') {
     return {
       tone: 'auth-note--danger',
-      text: 'Ta session a expiré. Reconnecte-toi.'
+      text: t('auth.login.notice.expired')
     }
   }
   return null
@@ -201,7 +212,7 @@ const notice = computed(() => {
 
 async function toPassword() {
   if (!isEmail(email.value)) {
-    emailError.value = 'Saisis une adresse e-mail valide.'
+    emailError.value = t('auth.login.invalidEmail')
     return
   }
   email.value = email.value.trim()
@@ -242,9 +253,9 @@ async function submit() {
   } catch (e) {
     unverified.value = /** @type {any} */ (e)?.response?.status === 403
     error.value = apiErrorMessage(e, {
-      401: 'E-mail ou mot de passe incorrect.',
-      403: 'Ton adresse n’est pas encore vérifiée : ouvre le lien reçu par e-mail.',
-      423: 'Ce compte est suspendu. Écris-nous depuis la page Contact si tu penses qu’il s’agit d’une erreur.'
+      401: t('auth.login.errors.401'),
+      403: t('auth.login.errors.403'),
+      423: t('auth.login.errors.423')
     })
   } finally {
     loading.value = false

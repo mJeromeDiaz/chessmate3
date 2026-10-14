@@ -22,9 +22,9 @@
             aria-hidden="true"
             >{{ provider.glyph }}</span
           >{{ verb }} {{ provider.label }}
-          <span v-if="isLead(provider.id)" class="provider-buttons__badge"
-            >Recommandé</span
-          >
+          <span v-if="isLead(provider.id)" class="provider-buttons__badge">{{
+            $t('auth.providers.recommended')
+          }}</span>
         </button>
       </form>
       <a
@@ -41,9 +41,9 @@
           aria-hidden="true"
           >{{ provider.glyph }}</span
         >{{ verb }} {{ provider.label }}
-        <span v-if="isLead(provider.id)" class="provider-buttons__badge"
-          >Recommandé</span
-        >
+        <span v-if="isLead(provider.id)" class="provider-buttons__badge">{{
+          $t('auth.providers.recommended')
+        }}</span>
       </a>
     </template>
   </div>
@@ -58,6 +58,7 @@
 import { computed } from 'vue'
 import { authApi } from '@/services/api'
 import { PROVIDERS } from '@/utils/auth/authFlow'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** An invitation key checked by the early access screen; '' to sign in. */
@@ -67,7 +68,7 @@ const props = defineProps({
   /** Entrance delay of the first button, in ms. */
   delay: { type: Number, default: 0 },
   /** "Continuer avec X" or "Créer mon compte avec X". */
-  verb: { type: String, default: 'Continuer avec' }
+  verb: { type: String, default: () => t('auth.providers.continueWith') }
 })
 
 const emit = defineEmits(['leave'])

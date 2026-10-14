@@ -4,7 +4,7 @@
     round
     dense
     class="account-menu"
-    :aria-label="`Compte : ${name}`"
+    :aria-label="$t('layout.account.label', { name })"
     data-testid="account-menu"
   >
     <UserAvatar />
@@ -19,15 +19,15 @@
         }}</q-item-label>
         <q-item v-close-popup clickable to="/profile" data-testid="nav-profile">
           <q-item-section avatar><q-icon name="person" /></q-item-section>
-          <q-item-section>Profil</q-item-section>
+          <q-item-section>{{ $t('layout.account.profile') }}</q-item-section>
         </q-item>
         <q-item v-close-popup clickable :to="TOUR_PATH" data-testid="nav-tour">
           <q-item-section avatar><q-icon name="tour" /></q-item-section>
-          <q-item-section>Visite guidée</q-item-section>
+          <q-item-section>{{ $t('layout.account.tour') }}</q-item-section>
         </q-item>
         <q-item v-close-popup clickable to="/boutique" data-testid="nav-shop">
           <q-item-section avatar><CrownCoin :size="22" /></q-item-section>
-          <q-item-section>Boutique</q-item-section>
+          <q-item-section>{{ $t('layout.account.shop') }}</q-item-section>
           <q-item-section
             v-if="shop.state"
             side
@@ -46,13 +46,15 @@
           <q-item-section avatar>
             <q-icon name="admin_panel_settings" />
           </q-item-section>
-          <q-item-section>Admin</q-item-section>
+          <q-item-section>{{ $t('layout.account.admin') }}</q-item-section>
         </q-item>
         <q-item clickable data-testid="account-theme">
           <q-item-section avatar
             ><q-icon :name="current.icon"
           /></q-item-section>
-          <q-item-section>Thème : {{ current.label }}</q-item-section>
+          <q-item-section>{{
+            $t('layout.theme.current', { name: current.label })
+          }}</q-item-section>
           <q-item-section side><q-icon name="chevron_right" /></q-item-section>
           <q-menu anchor="top start" self="top end">
             <q-list dense style="min-width: 170px">
@@ -82,7 +84,7 @@
           @click="logout"
         >
           <q-item-section avatar><q-icon name="logout" /></q-item-section>
-          <q-item-section>Déconnexion</q-item-section>
+          <q-item-section>{{ $t('layout.account.signOut') }}</q-item-section>
         </q-item>
       </q-list>
     </q-menu>

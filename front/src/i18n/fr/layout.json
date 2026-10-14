@@ -1,0 +1,44 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "sessions": "Sessions",
+    "puzzles": "Puzzles",
+    "woodpecker": "Woodpecker",
+    "streak": "Streak",
+    "repertoires": "Répertoires",
+    "coordinates": "Coordonnées",
+    "blindfold": "Aveugle",
+    "evaluation": "Évaluation",
+    "main": "Navigation principale",
+    "menu": "Menu"
+  },
+  "account": {
+    "label": "Compte : {name}",
+    "profile": "Profil",
+    "tour": "Visite guidée",
+    "shop": "Boutique",
+    "admin": "Admin",
+    "signOut": "Déconnexion",
+    "signIn": "Connexion",
+    "signUp": "Inscription"
+  },
+  "theme": {
+    "current": "Thème : {name}",
+    "auto": "Automatique",
+    "light": "Clair",
+    "dark": "Sombre"
+  },
+  "notFound": {
+    "replay": "↺ Rejouer le coup",
+    "captured": "PIÈCE CAPTURÉE",
+    "move": "404. Cxpage ??",
+    "kicker": "ERREUR 404 · PAGE INTROUVABLE",
+    "subTitle": "La page était juste là.",
+    "subText": "Tu l’as laissée se faire capturer.",
+    "bubbleKicker": "AARON · OUPS",
+    "bubble": "Pas de panique, on reprend la partie depuis le début.",
+    "dashboard": "Retour au tableau de bord",
+    "puzzle": "Se venger sur un puzzle",
+    "home": "Retour à l’accueil"
+  }
+}

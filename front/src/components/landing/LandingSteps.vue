@@ -4,10 +4,12 @@
       <div class="landing-step">
         <div class="landing-step__head">
           <span class="landing-step__num landing-step__num--brand">1</span>
-          <div class="landing-step__title cm-heading">Compose</div>
+          <div class="landing-step__title cm-heading">{{
+            $t('landing.steps.compose')
+          }}</div>
         </div>
         <p class="landing-step__text">
-          Un titre, une couverture, puis tes modules dans l’ordre qui te plaît.
+          {{ $t('landing.steps.composeText') }}
         </p>
         <div class="landing-step__well landing-step__program">
           <div
@@ -38,11 +40,12 @@
       <div class="landing-step">
         <div class="landing-step__head">
           <span class="landing-step__num landing-step__num--pink">2</span>
-          <div class="landing-step__title cm-heading">Entraîne-toi</div>
+          <div class="landing-step__title cm-heading">{{
+            $t('landing.steps.train')
+          }}</div>
         </div>
         <p class="landing-step__text">
-          Ton prof te glisse un conseil, une aide ou la solution quand tu
-          bloques.
+          {{ $t('landing.steps.trainText') }}
         </p>
         <div class="landing-step__train">
           <div class="landing-step__board">
@@ -54,12 +57,10 @@
           </div>
           <div class="landing-step__coach">
             <div class="landing-bubble">
-              <div class="landing-bubble__label landing-step__label"
-                >ALBERT · CONSEIL</div
-              >
-              <div class="landing-step__tip"
-                >Regarde chaque diagonale ouverte.</div
-              >
+              <div class="landing-bubble__label landing-step__label">{{
+                $t('landing.steps.tipLabel')
+              }}</div>
+              <div class="landing-step__tip">{{ $t('landing.steps.tip') }}</div>
             </div>
             <img
               v-if="LANDING_IMAGES.albertIdea"
@@ -74,11 +75,12 @@
       <div class="landing-step">
         <div class="landing-step__head">
           <span class="landing-step__num landing-step__num--lime">3</span>
-          <div class="landing-step__title cm-heading">Progresse</div>
+          <div class="landing-step__title cm-heading">{{
+            $t('landing.steps.progress')
+          }}</div>
         </div>
         <p class="landing-step__text">
-          Chaque puzzle laisse une trace. Les erreurs reviennent jusqu’à devenir
-          des réflexes.
+          {{ $t('landing.steps.progressText') }}
         </p>
         <div class="landing-step__well landing-step__cells">
           <div

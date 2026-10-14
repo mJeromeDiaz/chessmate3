@@ -2,23 +2,24 @@
   <AuthShell>
     <div class="auth-step">
       <div>
-        <h1 class="auth-title">Nouveau mot de passe</h1>
-        <p class="auth-lead"
-          >Choisis-en un que tu n’utilises nulle part ailleurs.</p
-        >
+        <h1 class="auth-title">{{ $t('auth.reset.title') }}</h1>
+        <p class="auth-lead">{{ $t('auth.reset.lead') }}</p>
       </div>
 
       <template v-if="done">
         <div class="auth-note">
-          Ton mot de passe a été changé. Toutes tes sessions et tes appareils de
-          confiance ont été fermés.
+          {{ $t('auth.reset.done') }}
         </div>
-        <router-link to="/login" class="auth-btn">Se connecter</router-link>
+        <router-link to="/login" class="auth-btn">{{
+          $t('auth.login.signIn')
+        }}</router-link>
       </template>
 
       <div v-else-if="!token" class="auth-note auth-note--danger">
-        Lien de réinitialisation incomplet.
-        <router-link to="/forgot-password">Demandes-en un nouveau.</router-link>
+        {{ $t('auth.reset.incomplete') }}
+        <router-link to="/forgot-password">{{
+          $t('auth.reset.askNew')
+        }}</router-link>
       </div>
 
       <form v-else class="auth-step" novalidate @submit.prevent="submit">
@@ -32,7 +33,7 @@
           class="auth-btn"
           :disabled="loading || !acceptable"
         >
-          {{ loading ? 'Enregistrement…' : 'Enregistrer' }}
+          {{ loading ? $t('auth.reset.saving') : $t('common.actions.save') }}
         </button>
       </form>
     </div>
@@ -47,6 +48,7 @@ import NewPasswordFields from '@/components/auth/NewPasswordFields.vue'
 import { authApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { PASSWORD_MIN_LENGTH } from '@/utils/auth/authFlow'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'public', landing: true } })
 
@@ -84,7 +86,7 @@ async function submit() {
     done.value = true
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      400: 'Ce lien est invalide, expiré ou a déjà servi. Demandes-en un nouveau.'
+      400: t('auth.reset.invalid')
     })
   } finally {
     loading.value = false

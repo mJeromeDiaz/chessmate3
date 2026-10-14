@@ -3,8 +3,8 @@
     :href="authApi.oauthLoginUrl('lichess')"
     class="landing-btn landing-btn--dark"
     data-testid="landing-lichess"
-    ><span class="landing-btn__knight" aria-hidden="true">♞︎</span>Continuer avec
-    Lichess</a
+    ><span class="landing-btn__knight" aria-hidden="true">♞︎</span
+    >{{ $t('landing.lichess') }}</a
   >
 </template>
 

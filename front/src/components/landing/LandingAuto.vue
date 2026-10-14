@@ -2,8 +2,8 @@
   <section id="lichess" class="landing-section" data-testid="landing-auto">
     <div class="landing-section__inner">
       <div class="landing-auto__head">
-        <div class="landing-kicker">DEPUIS TES PARTIES LICHESS</div>
-        <h2 class="landing-h2 cm-heading">Tes parties travaillent pour toi.</h2>
+        <div class="landing-kicker">{{ $t('landing.auto.kicker') }}</div>
+        <h2 class="landing-h2 cm-heading">{{ $t('landing.auto.title') }}</h2>
       </div>
 
       <div class="landing-auto__body">
@@ -15,10 +15,11 @@
             class="landing-auto__img"
           />
           <div class="landing-bubble landing-auto__bubble">
-            <div class="landing-bubble__label landing-auto__label">AARON</div>
+            <div class="landing-bubble__label landing-auto__label">{{
+              $t('landing.auto.who')
+            }}</div>
             <div class="landing-auto__quote">
-              Connecte ton compte Lichess : je lis tes parties et je te prépare
-              un entraînement qui te ressemble.
+              {{ $t('landing.auto.quote') }}
             </div>
           </div>
         </div>
@@ -28,16 +29,17 @@
             class="landing-auto__card landing-auto__card--live"
             data-testid="landing-auto-repertoire"
           >
-            <div class="landing-auto__card-kicker">RÉPERTOIRE</div>
-            <h3 class="landing-auto__card-title cm-heading"
-              >Génère ton répertoire</h3
-            >
+            <div class="landing-auto__card-kicker">{{
+              $t('landing.auto.repertoireKicker')
+            }}</div>
+            <h3 class="landing-auto__card-title cm-heading">{{
+              $t('landing.auto.repertoireTitle')
+            }}</h3>
             <p class="landing-auto__card-text">
-              On garde les coups que tu joues vraiment, ouverture par ouverture,
-              et on te montre où tu gagnes et où tu perds.
+              {{ $t('landing.auto.repertoireText') }}
             </p>
             <ul class="landing-auto__points">
-              <li v-for="point in REPERTOIRE_POINTS" :key="point">
+              <li v-for="point in points('repertoirePoints')" :key="point">
                 <span class="landing-auto__check" aria-hidden="true">✓</span
                 >{{ point }}
               </li>
@@ -45,7 +47,7 @@
             <AutoRepertoireButton
               class="landing-auto__btn"
               data-testid="landing-auto-card"
-              >Générer mon répertoire avec Lichess</AutoRepertoireButton
+              >{{ $t('landing.auto.repertoireButton') }}</AutoRepertoireButton
             >
           </article>
 
@@ -53,16 +55,17 @@
             class="landing-auto__card landing-auto__card--live"
             data-testid="landing-auto-session"
           >
-            <div class="landing-auto__card-kicker">SESSION D’ENTRAÎNEMENT</div>
-            <h3 class="landing-auto__card-title cm-heading"
-              >Génère ta session d’entraînement</h3
-            >
+            <div class="landing-auto__card-kicker">{{
+              $t('landing.auto.sessionKicker')
+            }}</div>
+            <h3 class="landing-auto__card-title cm-heading">{{
+              $t('landing.auto.sessionTitle')
+            }}</h3>
             <p class="landing-auto__card-text">
-              On lit tes 200 dernières parties : tes ouvertures, tes finales,
-              les avantages que tu as laissé filer. Ta séance du jour en sort.
+              {{ $t('landing.auto.sessionText') }}
             </p>
             <ul class="landing-auto__points">
-              <li v-for="point in SESSION_POINTS" :key="point">
+              <li v-for="point in points('sessionPoints')" :key="point">
                 <span class="landing-auto__check" aria-hidden="true">✓</span
                 >{{ point }}
               </li>
@@ -71,15 +74,14 @@
               :path="COACH_PATH"
               class="landing-auto__btn"
               data-testid="landing-auto-session-btn"
-              >Générer ma séance avec Lichess</AutoRepertoireButton
+              >{{ $t('landing.auto.sessionButton') }}</AutoRepertoireButton
             >
           </article>
         </div>
       </div>
 
       <p class="landing-auto__note">
-        Accès anticipé : une clé d’invitation t’est demandée à l’inscription.
-        Déjà inscrit avec Lichess ? Tu arrives directement sur la génération.
+        {{ $t('landing.auto.note') }}
       </p>
     </div>
   </section>
@@ -89,23 +91,21 @@
 import AutoRepertoireButton from '@/components/landing/AutoRepertoireButton.vue'
 import { COACH_PATH } from '@/utils/auth/authFlow'
 import { LANDING_IMAGES } from '@/utils/landing/content'
+import { t } from '@/i18n'
 
 /**
  * What the user's Lichess games bring (docs/REPERTOIRE.md, "Repertoire from my games"): the
  * repertoire built from them, and the tailored session generated from them (docs/COACH.md).
  */
 
-const SESSION_POINTS = [
-  'Woodpecker sur tes deux ouvertures phares',
-  'Tes finales passées au crible',
-  'Enregistrée dans ton profil, relançable chaque jour'
-]
-
-const REPERTOIRE_POINTS = [
-  'Tes coups les plus joués, ligne par ligne',
-  'Victoires, nulles, défaites et erreurs relevées par Lichess',
-  'Prêt à réviser, tu gardes la main sur chaque coup'
-]
+/**
+ * A card's three points, in the current language.
+ *
+ * @param {'repertoirePoints'|'sessionPoints'} list
+ */
+function points(list) {
+  return [0, 1, 2].map(i => t(`landing.auto.${list}.${i}`))
+}
 </script>
 
 <style scoped lang="scss">

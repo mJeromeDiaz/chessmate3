@@ -9,7 +9,7 @@
         class="nf__replay"
         data-testid="not-found-replay"
         @click="play"
-        >↺ Rejouer le coup</button
+        >{{ $t('layout.notFound.replay') }}</button
       >
     </div>
 
@@ -45,12 +45,14 @@
         </div>
         <div class="nf__tray">
           <div class="nf__tray-left">
-            <span class="nf__tray-label">PIÈCE CAPTURÉE</span>
+            <span class="nf__tray-label">{{
+              $t('layout.notFound.captured')
+            }}</span>
             <div class="nf__tray-page" :style="{ transform: f.trayTf }"
               >404</div
             >
           </div>
-          <span class="nf__move">404. Cxpage ??</span>
+          <span class="nf__move">{{ $t('layout.notFound.move') }}</span>
         </div>
       </div>
 
@@ -58,7 +60,7 @@
         <div
           class="nf__kicker"
           :style="{ opacity: f.kickOp, transform: f.kickTf }"
-          >ERREUR 404 · PAGE INTROUVABLE</div
+          >{{ $t('layout.notFound.kicker') }}</div
         >
         <h1
           class="nf__title"
@@ -80,8 +82,8 @@
           >
         </h1>
         <div class="nf__sub" :style="{ opacity: f.subOp, transform: f.subTf }">
-          <div class="nf__sub-title">La page était juste là.</div>
-          <div class="nf__sub-text">Tu l’as laissée se faire capturer.</div>
+          <div class="nf__sub-title">{{ $t('layout.notFound.subTitle') }}</div>
+          <div class="nf__sub-text">{{ $t('layout.notFound.subText') }}</div>
         </div>
         <div
           class="nf__aaron"
@@ -91,10 +93,12 @@
             <img :src="aaronWow" alt="" />
           </div>
           <div class="nf__bubble">
-            <div class="nf__bubble-kicker">AARON · OUPS</div>
-            <div class="nf__bubble-text"
-              >Pas de panique, on reprend la partie depuis le début.</div
-            >
+            <div class="nf__bubble-kicker">{{
+              $t('layout.notFound.bubbleKicker')
+            }}</div>
+            <div class="nf__bubble-text">{{
+              $t('layout.notFound.bubble')
+            }}</div>
           </div>
         </div>
         <div
@@ -106,13 +110,13 @@
               to="/"
               class="nf__btn nf__btn--primary"
               data-testid="not-found-dashboard"
-              >Retour au tableau de bord</router-link
+              >{{ $t('layout.notFound.dashboard') }}</router-link
             >
             <router-link
               to="/puzzle"
               class="nf__btn nf__btn--soft"
               data-testid="not-found-puzzle"
-              >Se venger sur un puzzle</router-link
+              >{{ $t('layout.notFound.puzzle') }}</router-link
             >
           </template>
           <router-link
@@ -120,7 +124,7 @@
             to="/"
             class="nf__btn nf__btn--primary"
             data-testid="not-found-home"
-            >Retour à l’accueil</router-link
+            >{{ $t('layout.notFound.home') }}</router-link
           >
         </div>
       </div>

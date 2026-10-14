@@ -9,7 +9,7 @@
           dense
           icon="menu"
           class="lt-md"
-          aria-label="Menu"
+          :aria-label="$t('layout.nav.menu')"
           data-testid="nav-burger"
           @click="drawer = !drawer"
         />
@@ -20,7 +20,10 @@
         </q-toolbar-title>
 
         <template v-if="auth.isAuthenticated">
-          <nav class="app-header__nav gt-sm" aria-label="Navigation principale">
+          <nav
+            class="app-header__nav gt-sm"
+            :aria-label="$t('layout.nav.main')"
+          >
             <q-btn
               v-for="link in headerLinks"
               :key="link.to"
@@ -38,12 +41,17 @@
           <AccountMenu class="gt-sm" />
         </template>
         <template v-else>
-          <q-btn flat no-caps to="/login" label="Connexion" />
+          <q-btn
+            flat
+            no-caps
+            to="/login"
+            :label="$t('layout.account.signIn')"
+          />
           <q-btn
             flat
             no-caps
             to="/register"
-            label="Inscription"
+            :label="$t('layout.account.signUp')"
             class="gt-xs"
           />
           <ThemeMenu />

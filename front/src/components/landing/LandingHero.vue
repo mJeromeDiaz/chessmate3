@@ -4,7 +4,7 @@
       <div class="landing-shade landing-hero__shade" />
       <div class="landing-hero__glow" />
       <div class="landing-hero__text">
-        <span class="landing-pill">Compatible Lichess</span>
+        <span class="landing-pill">{{ $t('landing.hero.pill') }}</span>
         <h1 class="landing-hero__title cm-heading" data-testid="landing-slogan">
           <span
             v-for="(slogan, i) in HERO_SLOGANS"
@@ -16,7 +16,7 @@
           >
         </h1>
         <p class="landing-hero__lead">
-          Compose ton entraînement d’échecs, coup par coup.
+          {{ $t('landing.hero.lead') }}
         </p>
         <div class="landing-actions">
           <router-link
@@ -24,7 +24,7 @@
             class="landing-btn landing-btn--dark landing-hero__coach"
             data-testid="landing-coach"
             ><span class="landing-btn__knight" aria-hidden="true">♞︎</span
-            >Générer ma session d’entraînement personnalisée</router-link
+            >{{ $t('landing.hero.coach') }}</router-link
           >
         </div>
       </div>

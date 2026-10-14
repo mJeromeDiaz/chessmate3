@@ -3,7 +3,7 @@
     <div class="col-12 col-sm-8 col-md-5">
       <div v-if="!error" class="row items-center q-gutter-sm">
         <q-spinner />
-        <span>Connexion en cours…</span>
+        <span>{{ $t('auth.oauth.pending') }}</span>
       </div>
       <template v-else>
         <q-banner class="cm-banner--danger" rounded>{{ error }}</q-banner>
@@ -12,7 +12,7 @@
           color="primary"
           no-caps
           :to="backTo"
-          label="Retour"
+          :label="$t('auth.oauth.back')"
         />
       </template>
     </div>
@@ -30,6 +30,7 @@ import {
   takeLinkReturn,
   takeWelcome
 } from '@/utils/auth/authFlow'
+import { t } from '@/i18n'
 
 /**
  * Where the API sends the browser back after Google/Lichess. The URL carries only an outcome
@@ -38,24 +39,19 @@ import {
  */
 definePage({ meta: { auth: 'public' } })
 
-const REASONS = {
-  cancelled: 'Connexion annulée.',
-  invalid_state:
-    'Cette tentative de connexion a expiré ou ne vient pas de ce navigateur. Recommencez.',
-  provider_error: 'Le fournisseur a refusé ou n’a pas répondu. Réessayez.',
-  account_exists:
-    'Un compte existe déjà avec cette adresse email. Connectez-vous avec votre mot de passe, puis liez ce compte depuis votre profil.',
-  identity_in_use: "Ce compte est déjà lié à un autre compte Don't Stay Rooky.",
-  provider_already_linked:
-    'Un compte de ce fournisseur est déjà lié à votre profil. Retirez-le d’abord.',
-  conflict: 'La connexion a échoué. Réessayez.',
-  not_linked:
-    'Liez d’abord votre compte Lichess depuis votre profil, puis autorisez l’accès à vos études.',
-  identity_mismatch:
-    'Ce n’est pas le compte Lichess lié à votre profil : reconnectez-vous à Lichess avec ce compte-là.',
-  account_suspended:
-    'Ce compte est suspendu. Écrivez-nous depuis la page Contact si vous pensez qu’il s’agit d’une erreur.'
-}
+/** The refusals an OAuth callback carries back (their texts: `auth.oauth.reasons.*`). */
+const REASONS = new Set([
+  'cancelled',
+  'invalid_state',
+  'provider_error',
+  'account_exists',
+  'identity_in_use',
+  'provider_already_linked',
+  'conflict',
+  'not_linked',
+  'identity_mismatch',
+  'account_suspended'
+])
 
 /** Set by the page that started a grant (repertoire import): where to come back. */
 const RETURN_KEY = 'dontstayrooky.oauthReturn'
@@ -109,7 +105,9 @@ onMounted(async () => {
       return
     }
     if (!isLink.value && !isGrant.value) takeAfterSignIn()
-    error.value = REASONS[reason] ?? 'La connexion a échoué.'
+    error.value = REASONS.has(String(reason))
+      ? t(`auth.oauth.reasons.${reason}`)
+      : t('auth.oauth.failed')
     return
   }
 
@@ -137,7 +135,7 @@ onMounted(async () => {
     // Lichess already, the welcome screen would only offer that.
     router.replace(takeAfterSignIn() ?? (welcome ? WELCOME_PATH : '/'))
   } catch {
-    error.value = 'La session n’a pas pu être ouverte. Réessayez.'
+    error.value = t('auth.oauth.noSession')
   }
 })
 </script>

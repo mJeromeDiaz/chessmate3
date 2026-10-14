@@ -5,11 +5,14 @@
       <div class="auth-shell__inner">
         <slot />
         <p v-if="legal" class="auth-shell__legal">
-          En continuant, tu acceptes les
-          <router-link to="/conditions">conditions d’utilisation</router-link>
-          et la
-          <router-link to="/confidentialite"
-            >politique de confidentialité</router-link
+          {{ $t('auth.legal.before') }}
+          <router-link to="/conditions">{{
+            $t('auth.legal.terms')
+          }}</router-link>
+          {{ $t('auth.legal.and') }}
+          <router-link to="/confidentialite">{{
+            $t('auth.legal.privacy')
+          }}</router-link
           >.
         </p>
       </div>

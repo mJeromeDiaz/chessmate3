@@ -14,8 +14,12 @@
 
     <div class="early__column">
       <div class="early__top">
-        <router-link to="/login" class="early__back">← Connexion</router-link>
-        <div class="early__pill"><span class="early__dot" />ACCÈS ANTICIPÉ</div>
+        <router-link to="/login" class="early__back">{{
+          $t('auth.register.backToLogin')
+        }}</router-link>
+        <div class="early__pill">
+          <span class="early__dot" />{{ $t('auth.register.pill') }}
+        </div>
         <span class="early__top-spacer" />
       </div>
 
@@ -75,7 +79,7 @@
                 :aria-selected="tab === 'key'"
                 data-testid="access-tab-key"
                 @click="tab = 'key'"
-                >J’ai une clé</button
+                >{{ $t('auth.register.haveKey') }}</button
               >
               <button
                 type="button"
@@ -85,7 +89,7 @@
                 :aria-selected="tab === 'ask'"
                 data-testid="access-tab-ask"
                 @click="tab = 'ask'"
-                >Demander l’accès</button
+                >{{ $t('auth.register.askAccess') }}</button
               >
             </div>
 
@@ -100,22 +104,23 @@
                 class="auth-note auth-note--info"
                 data-testid="access-provider-note"
               >
-                Ton compte {{ fromProvider.label }} n’est lié à aucun compte
-                Don't Stay Rooky. Saisis ta clé : on te renverra chez
-                {{ fromProvider.label }} pour le créer.
+                {{
+                  $t('auth.register.providerNote', {
+                    provider: fromProvider.label
+                  })
+                }}
               </div>
               <p v-else class="auth-lead early__lead">
-                Don't Stay Rooky est en accès anticipé. Colle la clé reçue par
-                e-mail (ou ouvre son lien).
+                {{ $t('auth.register.lead') }}
               </p>
               <div
                 class="auth-field"
                 :class="{ early__shake: shake }"
                 @animationend="shake = 0"
               >
-                <label class="auth-label" for="invitation-key"
-                  >Clé d’invitation</label
-                >
+                <label class="auth-label" for="invitation-key">{{
+                  $t('auth.register.keyLabel')
+                }}</label>
                 <input
                   id="invitation-key"
                   v-model="key"
@@ -127,7 +132,7 @@
                   autocomplete="off"
                   autocapitalize="off"
                   spellcheck="false"
-                  placeholder="32 lettres et chiffres"
+                  :placeholder="$t('auth.register.keyPlaceholder')"
                   data-testid="invitation-key"
                   @input="keyError = ''"
                 />
@@ -146,19 +151,22 @@
                 class="auth-btn early__cta"
                 :disabled="checking || !keyComplete"
                 data-testid="invitation-activate"
-                >{{ checking ? 'Vérification…' : 'Activer mon compte' }}</button
+                >{{
+                  checking
+                    ? $t('auth.register.checking')
+                    : $t('auth.register.activate')
+                }}</button
               >
             </form>
 
             <form v-else class="auth-step" novalidate @submit.prevent="ask">
               <p class="auth-lead early__lead">
-                Les places s’ouvrent par vagues. Laisse ton e-mail, on te
-                prévient.
+                {{ $t('auth.register.waves') }}
               </p>
               <div class="auth-field">
-                <label class="auth-label" for="access-email"
-                  >Adresse e-mail</label
-                >
+                <label class="auth-label" for="access-email">{{
+                  $t('auth.login.email')
+                }}</label>
                 <input
                   id="access-email"
                   v-model="askEmail"
@@ -166,7 +174,7 @@
                   class="auth-input"
                   :class="{ 'auth-input--error': askError }"
                   autocomplete="email"
-                  placeholder="toi@exemple.fr"
+                  :placeholder="$t('auth.login.emailPlaceholder')"
                   data-testid="access-email"
                   @input="askError = ''"
                 />
@@ -187,7 +195,11 @@
                 class="auth-btn early__cta"
                 :disabled="asking"
                 data-testid="access-submit"
-                >{{ asking ? 'Envoi…' : 'Rejoindre la liste' }}</button
+                >{{
+                  asking
+                    ? $t('auth.register.sending')
+                    : $t('auth.register.join')
+                }}</button
               >
             </form>
           </div>
@@ -197,7 +209,9 @@
             <div class="early__stamp-row">
               <div class="early__stamp">✓</div>
               <div>
-                <div class="auth-kicker">CLÉ VALABLE</div>
+                <div class="auth-kicker">{{
+                  $t('auth.register.keyValid')
+                }}</div>
                 <div class="auth-lead early__lead">{{ keyValidity }}</div>
               </div>
             </div>
@@ -205,24 +219,24 @@
             <ProviderButtons
               :invitation-key="checkedKey"
               :lead="fromProvider?.id ?? 'lichess'"
-              verb="Créer mon compte avec"
+              :verb="$t('auth.register.createWith')"
               @leave="markWelcome"
             />
 
-            <div class="auth-sep">ou par e-mail</div>
+            <div class="auth-sep">{{ $t('auth.login.orEmail') }}</div>
 
             <form class="auth-step" novalidate @submit.prevent="signUp">
               <div class="auth-field">
-                <label class="auth-label" for="register-email"
-                  >Adresse e-mail</label
-                >
+                <label class="auth-label" for="register-email">{{
+                  $t('auth.login.email')
+                }}</label>
                 <input
                   id="register-email"
                   v-model="email"
                   type="email"
                   class="auth-input"
                   autocomplete="email"
-                  placeholder="toi@exemple.fr"
+                  :placeholder="$t('auth.login.emailPlaceholder')"
                   data-testid="register-email"
                 />
               </div>
@@ -238,7 +252,11 @@
                 class="auth-btn"
                 :disabled="loading || !signUpReady"
                 data-testid="register-submit"
-                >{{ loading ? 'Création…' : 'Créer mon compte' }}</button
+                >{{
+                  loading
+                    ? $t('auth.register.creating')
+                    : $t('auth.register.create')
+                }}</button
               >
             </form>
           </div>
@@ -250,32 +268,49 @@
             class="auth-step early__center"
           >
             <div class="early__stamp early__stamp--big">✉</div>
-            <p class="auth-lead" data-testid="register-done">
-              Si l’adresse <b>{{ email }}</b> peut être utilisée, un e-mail de
-              vérification vient de lui être envoyé. Ouvre son lien pour activer
-              ton compte.
-            </p>
-            <router-link to="/login" class="auth-btn"
-              >Aller à la connexion</router-link
+            <i18n-t
+              keypath="auth.register.sent"
+              tag="p"
+              class="auth-lead"
+              data-testid="register-done"
+              scope="global"
             >
+              <template #email
+                ><b>{{ email }}</b></template
+              >
+            </i18n-t>
+            <router-link to="/login" class="auth-btn">{{
+              $t('auth.register.toLogin')
+            }}</router-link>
           </div>
 
           <!-- On the waiting list. -->
           <div v-else key="queue" class="auth-step early__center">
             <div class="early__ticket" data-testid="access-queued">
-              <div class="early__ticket-kicker">LISTE D’ATTENTE</div>
+              <div class="early__ticket-kicker">{{
+                $t('auth.register.queueKicker')
+              }}</div>
               <div class="early__ticket-big">♞︎</div>
-              <div class="early__ticket-stamp">C’EST NOTÉ ✓</div>
+              <div class="early__ticket-stamp">{{
+                $t('auth.register.queueStamp')
+              }}</div>
             </div>
-            <p class="auth-lead">
-              On t’écrira sur <b>{{ askEmail }}</b> dès qu’une place se libère.
-            </p>
+            <i18n-t
+              keypath="auth.register.queued"
+              tag="p"
+              class="auth-lead"
+              scope="global"
+            >
+              <template #email
+                ><b>{{ askEmail }}</b></template
+              >
+            </i18n-t>
             <button
               type="button"
               class="auth-btn auth-btn--outline"
               @click="backToKey"
             >
-              J’ai déjà une clé
+              {{ $t('auth.register.alreadyKey') }}
             </button>
           </div>
         </Transition>
@@ -308,6 +343,7 @@ import {
 import { formatDate } from '@/utils/format'
 import { profImage } from '@/utils/prof/images'
 import { browserTimezone } from '@/utils/timezone'
+import { t } from '@/i18n'
 
 /**
  * Early access (design "Accès anticipé", docs/EARLY_ACCESS.md): an invitation key opens an account
@@ -319,13 +355,6 @@ import { browserTimezone } from '@/utils/timezone'
 definePage({ meta: { auth: 'guest', landing: true } })
 
 /** @typedef {'form'|'ok'|'sent'|'queue'} Stage */
-
-const TITLES = {
-  form: ['Tu es', 'en avance !'],
-  ok: ['Bienvenue', 'à bord !'],
-  sent: ['Plus qu’un', 'clic !'],
-  queue: ['Tu es sur', 'la liste !']
-}
 
 const route = useRoute()
 const router = useRouter()
@@ -362,7 +391,11 @@ watch(stage, () => (firstTitle.value = false))
 /** The provider a refused sign-in came from. */
 const fromProvider = ref(/** @type {ReturnType<typeof providerById>} */ (null))
 
-const title = computed(() => TITLES[stage.value])
+/** The stage's title, on two lines. */
+const title = computed(() => [
+  t(`auth.register.titles.${stage.value}.top`),
+  t(`auth.register.titles.${stage.value}.bottom`)
+])
 const profSrc = computed(() => {
   if (stage.value === 'ok' || stage.value === 'sent')
     return profImage('aaron-laugh')
@@ -375,14 +408,14 @@ const cleanKey = computed(() => normalizeKey(key.value))
 const keyComplete = computed(() => keyFormatError(cleanKey.value) === '')
 const keyMessage = computed(() => {
   if (keyError.value) return keyError.value
-  if (checking.value) return 'Vérification de ta clé…'
-  if (keyComplete.value) return 'Clé complète ✓'
+  if (checking.value) return t('auth.register.checkingKey')
+  if (keyComplete.value) return t('auth.register.keyComplete')
   return `${cleanKey.value.length} / ${KEY_LENGTH}`
 })
 const keyValidity = computed(() =>
   keyExpiresAt.value === null
-    ? 'Elle n’expire pas.'
-    : `Valable jusqu’au ${formatDate(keyExpiresAt.value)}.`
+    ? t('auth.register.noExpiry')
+    : t('auth.register.validUntil', { date: formatDate(keyExpiresAt.value) })
 )
 const signUpReady = computed(
   () =>
@@ -470,7 +503,7 @@ async function signUp() {
 
 async function ask() {
   if (!isEmail(askEmail.value)) {
-    askError.value = 'Saisis une adresse e-mail valide.'
+    askError.value = t('auth.login.invalidEmail')
     return
   }
   asking.value = true
@@ -481,8 +514,8 @@ async function ask() {
     stage.value = 'queue'
   } catch (e) {
     askError.value = apiErrorMessage(e, {
-      422: 'Saisis une adresse e-mail valide.',
-      429: 'Trop de demandes depuis cette connexion. Réessaie plus tard.'
+      422: t('auth.login.invalidEmail'),
+      429: t('auth.register.tooManyRequests')
     })
   } finally {
     asking.value = false

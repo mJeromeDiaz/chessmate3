@@ -1,27 +1,36 @@
 <template>
   <AuthShell>
     <div class="auth-step">
-      <button type="button" class="auth-back" @click="router.push('/login')"
-        >← Retour</button
-      >
+      <button type="button" class="auth-back" @click="router.push('/login')">{{
+        $t('common.actions.back')
+      }}</button>
       <div>
-        <h1 class="auth-title">Mot de passe oublié</h1>
-        <p class="auth-lead">On t’envoie un lien pour en choisir un nouveau.</p>
+        <h1 class="auth-title">{{ $t('auth.forgot.title') }}</h1>
+        <p class="auth-lead">{{ $t('auth.forgot.lead') }}</p>
       </div>
 
       <template v-if="done">
-        <div class="auth-note" data-testid="forgot-done">
-          Si un compte existe pour <b>{{ email }}</b
-          >, un lien vient d’y être envoyé. Il est valable 30 minutes.
-        </div>
-        <router-link to="/login" class="auth-btn"
-          >Retour à la connexion</router-link
+        <i18n-t
+          keypath="auth.forgot.done"
+          tag="div"
+          class="auth-note"
+          data-testid="forgot-done"
+          scope="global"
         >
+          <template #email
+            ><b>{{ email }}</b></template
+          >
+        </i18n-t>
+        <router-link to="/login" class="auth-btn">{{
+          $t('auth.forgot.backToLogin')
+        }}</router-link>
       </template>
 
       <form v-else class="auth-step" novalidate @submit.prevent="submit">
         <div class="auth-field">
-          <label class="auth-label" for="forgot-email">Adresse e-mail</label>
+          <label class="auth-label" for="forgot-email">{{
+            $t('auth.login.email')
+          }}</label>
           <input
             id="forgot-email"
             v-model="email"
@@ -29,13 +38,13 @@
             class="auth-input"
             :class="{ 'auth-input--error': error }"
             autocomplete="email"
-            placeholder="toi@exemple.fr"
+            :placeholder="$t('auth.login.emailPlaceholder')"
             @input="error = ''"
           />
           <p v-if="error" class="auth-error">{{ error }}</p>
         </div>
         <button type="submit" class="auth-btn" :disabled="loading">
-          {{ loading ? 'Envoi…' : 'Envoyer le lien' }}
+          {{ loading ? $t('auth.forgot.sending') : $t('auth.forgot.send') }}
         </button>
       </form>
     </div>
@@ -49,6 +58,7 @@ import AuthShell from '@/components/auth/AuthShell.vue'
 import { authApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { isEmail } from '@/utils/auth/authFlow'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'guest', landing: true } })
 
@@ -64,7 +74,7 @@ const done = ref(false)
 
 async function submit() {
   if (!isEmail(email.value)) {
-    error.value = 'Saisis une adresse e-mail valide.'
+    error.value = t('auth.login.invalidEmail')
     return
   }
   loading.value = true

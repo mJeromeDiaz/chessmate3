@@ -1,16 +1,22 @@
 <template>
   <div class="auth-field">
-    <label class="auth-label" for="new-password">Mot de passe</label>
+    <label class="auth-label" for="new-password">{{
+      $t('auth.password.label')
+    }}</label>
     <PasswordField
       id="new-password"
       v-model="model"
       autocomplete="new-password"
-      :placeholder="`${PASSWORD_MIN_LENGTH} caractères minimum`"
+      :placeholder="$t('auth.password.minimum', { min: PASSWORD_MIN_LENGTH })"
       data-testid="new-password"
     />
     <div
       class="new-password__meter"
-      :aria-label="`Solidité : ${strength.label || 'aucune'}`"
+      :aria-label="
+        $t('auth.strength.label', {
+          label: strength.label || $t('auth.strength.none')
+        })
+      "
     >
       <div
         v-for="bar in 4"
@@ -23,15 +29,14 @@
       <span class="new-password__label">{{ strength.label }}</span>
     </div>
     <p class="new-password__hint">
-      {{ PASSWORD_MIN_LENGTH }} caractères minimum. Une phrase de passe est
-      idéale.
+      {{ $t('auth.password.hint', { min: PASSWORD_MIN_LENGTH }) }}
     </p>
   </div>
 
   <div class="auth-field">
-    <label class="auth-label" for="new-password-confirmation"
-      >Confirme le mot de passe</label
-    >
+    <label class="auth-label" for="new-password-confirmation">{{
+      $t('auth.password.confirm')
+    }}</label>
     <input
       id="new-password-confirmation"
       v-model="confirmation"
@@ -42,14 +47,14 @@
         'auth-input--ok': match === true
       }"
       autocomplete="new-password"
-      placeholder="Saisis-le à nouveau"
+      :placeholder="$t('auth.password.again')"
       data-testid="new-password-confirmation"
     />
     <p
       v-if="match !== null"
       class="new-password__match"
       :class="{ 'new-password__match--ok': match }"
-      >{{ match ? '✓ Identiques' : 'Pas encore identiques' }}</p
+      >{{ match ? $t('auth.password.same') : $t('auth.password.notSame') }}</p
     >
   </div>
 </template>

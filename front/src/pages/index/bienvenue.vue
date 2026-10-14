@@ -13,19 +13,18 @@
         data-testid="welcome-link"
       >
         <div>
-          <div class="auth-kicker">COMPTE PRÊT · DERNIÈRE ÉTAPE</div>
-          <h1 class="auth-title">Lie ton compte Lichess</h1>
+          <div class="auth-kicker">{{ $t('auth.welcome.kicker') }}</div>
+          <h1 class="auth-title">{{ $t('auth.welcome.title') }}</h1>
         </div>
         <div class="welcome__talk">
           <img v-if="aaron" :src="aaron" alt="" class="welcome__aaron" />
           <div class="welcome__bubble">
-            <div class="welcome__who">AARON</div>
-            Avec tes parties Lichess, on prépare tes analyses, ton répertoire et
-            des puzzles à ton niveau.
+            <div class="welcome__who">{{ $t('auth.welcome.who') }}</div>
+            {{ $t('auth.welcome.bubble') }}
           </div>
         </div>
         <ul class="welcome__perks">
-          <li v-for="perk in LICHESS_PERKS" :key="perk">
+          <li v-for="perk in lichessPerks()" :key="perk">
             <span class="welcome__tick" aria-hidden="true">✓</span>{{ perk }}
           </li>
         </ul>
@@ -38,14 +37,14 @@
           @click="link"
         >
           <span class="welcome__knight" aria-hidden="true">♞︎</span>
-          {{ linking ? 'Direction Lichess…' : 'Lier mon compte Lichess' }}
+          {{ linking ? $t('auth.welcome.linking') : $t('auth.welcome.link') }}
         </button>
         <button
           type="button"
           class="auth-btn auth-btn--ghost"
           data-testid="welcome-skip"
           @click="step = 'done'"
-          >Plus tard</button
+          >{{ $t('auth.welcome.later') }}</button
         >
       </div>
 
@@ -54,14 +53,16 @@
         <div class="welcome__card">
           <div class="welcome__card-shade" />
           <div class="welcome__card-kicker">{{
-            linked ? 'LICHESS LIÉ ✓' : 'COMPTE PRÊT'
+            linked
+              ? $t('auth.welcome.linkedKicker')
+              : $t('auth.welcome.readyKicker')
           }}</div>
-          <div class="welcome__card-title">C’est parti !</div>
+          <div class="welcome__card-title">{{ $t('auth.welcome.go') }}</div>
           <div class="welcome__card-text">
             {{
               linked
-                ? 'Ton compte Lichess est lié. Tes profs t’attendent.'
-                : 'Tu pourras lier Lichess plus tard depuis ton profil.'
+                ? $t('auth.welcome.linkedText')
+                : $t('auth.welcome.laterText')
             }}
           </div>
           <img v-if="albert" :src="albert" alt="" class="welcome__albert" />
@@ -71,11 +72,11 @@
           class="auth-btn"
           data-testid="welcome-tour"
           @click="restartTour"
-          >Faire la visite guidée (2 min) →</router-link
+          >{{ $t('auth.welcome.tour') }}</router-link
         >
-        <router-link to="/" class="auth-btn auth-btn--ghost"
-          >Aller au tableau de bord</router-link
-        >
+        <router-link to="/" class="auth-btn auth-btn--ghost">{{
+          $t('auth.welcome.dashboard')
+        }}</router-link>
       </div>
     </Transition>
   </AuthShell>
@@ -88,7 +89,7 @@ import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/utils/apiError'
 import { TOUR_PATH, markLinkFromWelcome } from '@/utils/auth/authFlow'
 import { TOUR_STEP_KEY } from '@/utils/onboarding'
-import { LICHESS_PERKS } from '@/utils/landing/content'
+import { lichessPerks } from '@/utils/landing/content'
 import { profImage } from '@/utils/prof/images'
 
 /**

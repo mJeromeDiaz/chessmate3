@@ -2,25 +2,23 @@
   <section id="suivi" class="landing-section">
     <div class="landing-woodpecker">
       <div class="landing-woodpecker__text">
-        <span class="landing-pill">Méthode Woodpecker</span>
-        <h2 class="landing-woodpecker__title cm-heading"
-          >Le même set, toujours plus vite.</h2
-        >
+        <span class="landing-pill">{{ $t('landing.woodpecker.pill') }}</span>
+        <h2 class="landing-woodpecker__title cm-heading">{{
+          $t('landing.woodpecker.title')
+        }}</h2>
         <p class="landing-woodpecker__lead">
-          Résous ton set, puis recommence en cycles de plus en plus courts. La
-          grille garde la trace de chaque puzzle : rapide, réussi, avec aide ou
-          raté.
+          {{ $t('landing.woodpecker.lead') }}
         </p>
         <router-link
           to="/woodpecker"
           class="landing-btn landing-btn--light landing-woodpecker__cta"
-          >Essayer un cycle →</router-link
+          >{{ $t('landing.woodpecker.cta') }}</router-link
         >
       </div>
       <div class="landing-woodpecker__board">
         <div class="landing-woodpecker__caption">
-          <span>Set de 100 puzzles · Cycle 2</span>
-          <span>37 faits · 85 % réussis</span>
+          <span>{{ $t('landing.woodpecker.set') }}</span>
+          <span>{{ $t('landing.woodpecker.done') }}</span>
         </div>
         <div class="landing-woodpecker__grid">
           <div

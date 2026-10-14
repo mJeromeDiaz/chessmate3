@@ -3,5 +3,20 @@
     "title": "Langue",
     "hint": "Ton choix est gardé sur ton compte et s’applique sur tes autres appareils.",
     "menu": "Langue : {name}"
+  },
+  "actions": {
+    "continue": "Continuer",
+    "back": "← Retour",
+    "edit": "Modifier",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "retry": "Réessayer"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Réessayez.",
+    "offline": "Le serveur est injoignable. Vérifiez votre connexion.",
+    "puzzleMaintenance": "Le catalogue de puzzles est en maintenance. Réessayez dans une minute.",
+    "tooMany": "Trop de tentatives. Patientez quelques minutes avant de réessayer."
   }
 }

@@ -1,24 +1,30 @@
 <template>
   <q-page class="frozen" data-testid="account-deletion-page">
     <section class="cm-card frozen__card">
-      <h1 class="frozen__title">Suppression du compte</h1>
+      <h1 class="frozen__title">{{ $t('auth.deletion.title') }}</h1>
 
       <template v-if="auth.isAuthenticated && auth.isFrozen">
-        <p data-testid="frozen-date">
-          Ton compte sera supprimé définitivement le
-          <strong>{{ deletionDay(auth.profile?.deletionScheduledAt) }}</strong
-          >, avec toutes tes données.
-        </p>
+        <i18n-t
+          keypath="auth.deletion.frozen"
+          tag="p"
+          data-testid="frozen-date"
+          scope="global"
+        >
+          <template #date
+            ><strong>{{
+              deletionDay(auth.profile?.deletionScheduledAt)
+            }}</strong></template
+          >
+        </i18n-t>
         <p class="cm-muted">
-          D’ici là, il est gelé : annule la suppression pour t’entraîner de
-          nouveau, ou récupère tes données.
+          {{ $t('auth.deletion.frozenHint') }}
         </p>
         <div class="frozen__actions">
           <q-btn
             unelevated
             no-caps
             color="dark"
-            label="Annuler la suppression"
+            :label="$t('auth.deletion.cancel')"
             :loading="cancelling"
             data-testid="frozen-cancel"
             @click="cancel"
@@ -26,7 +32,7 @@
           <q-btn
             outline
             no-caps
-            label="Exporter mes données"
+            :label="$t('auth.deletion.export')"
             :loading="exporting"
             data-testid="frozen-export"
             @click="exportData"
@@ -34,7 +40,7 @@
           <q-btn
             flat
             no-caps
-            label="Me déconnecter"
+            :label="$t('auth.deletion.logout')"
             data-testid="frozen-logout"
             @click="logout"
           />
@@ -46,26 +52,27 @@
 
       <template v-else>
         <p data-testid="scheduled-date">
-          <template v-if="scheduledAt">
-            Ton compte sera supprimé définitivement le
-            <strong>{{ deletionDay(scheduledAt) }}</strong
-            >.
-          </template>
-          <template v-else
-            >La suppression de ton compte est programmée.</template
+          <i18n-t
+            v-if="scheduledAt"
+            keypath="auth.deletion.scheduledOn"
+            scope="global"
           >
-          Tu as été déconnecté de tous tes appareils.
+            <template #date
+              ><strong>{{ deletionDay(scheduledAt) }}</strong></template
+            >
+          </i18n-t>
+          <template v-else>{{ $t('auth.deletion.scheduled') }}</template>
+          {{ $t('auth.deletion.signedOut') }}
         </p>
         <p class="cm-muted">
-          Tu as changé d’avis ? Reconnecte-toi d’ici là pour annuler. Un email
-          te rappelle la date.
+          {{ $t('auth.deletion.changeMind') }}
         </p>
         <q-btn
           unelevated
           no-caps
           color="dark"
           to="/login"
-          label="Me reconnecter"
+          :label="$t('auth.deletion.signInAgain')"
           data-testid="scheduled-login"
         />
       </template>
@@ -84,6 +91,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useDataExport } from '@/composables/profile/useDataExport'
 import { useAuthStore } from '@/stores/auth'
 import { deletionDay } from '@/utils/profile'
+import { t } from '@/i18n'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -111,7 +119,7 @@ async function cancel() {
   try {
     await auth.cancelDeletion()
   } catch {
-    error.value = 'L’annulation a échoué. Réessaie.'
+    error.value = t('auth.deletion.cancelFailed')
   } finally {
     cancelling.value = false
   }
