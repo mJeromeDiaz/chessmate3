@@ -65,7 +65,7 @@
         <h1
           class="nf__title"
           :style="{ transform: f.titleTf }"
-          aria-label="Blunder !"
+          :aria-label="$t('layout.notFound.blunder')"
         >
           <span
             v-for="(l, i) in f.letters"

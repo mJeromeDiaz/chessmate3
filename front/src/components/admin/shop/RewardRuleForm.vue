@@ -1,10 +1,10 @@
 <template>
   <section class="cm-card reward-rule" data-testid="reward-rule">
-    <h2 class="cm-card__title">Couronnes gagnées en session</h2>
+    <h2 class="cm-card__title">{{
+      $t('admin.rewardRuleForm.couronnesGagneesEnSession')
+    }}</h2>
     <p class="cm-muted reward-rule__lead">
-      Une session menée au bout paie ses minutes jouées, au plus une par
-      exercice terminé (le temps libre ne compte pas), selon la réussite de
-      toute la session. Les sessions déjà terminées gardent leurs couronnes.
+      {{ $t('admin.rewardRuleForm.uneSessionMeneeAu') }}
     </p>
     <q-banner v-if="error" class="cm-banner--danger q-mb-md" rounded>{{
       error
@@ -32,22 +32,31 @@
       class="reward-rule__preview"
       data-testid="reward-rule-preview"
     >
-      Exemple, 20 minutes payées :
-      {{ crowns(preview.perfect) }} parfaite ·
-      {{ crowns(preview.near) }} presque · {{ crowns(preview.missed) }} en
-      dessous.
+      {{
+        $t('admin.rewardRuleForm.preview', {
+          perfect: crowns(preview.perfect),
+          near: crowns(preview.near),
+          missed: crowns(preview.missed)
+        })
+      }}
     </p>
     <div v-if="saved" class="cm-muted reward-rule__saved">
-      Modifié {{ saved.updatedAt ? formatDate(saved.updatedAt) : 'jamais'
-      }}{{
-        saved.updatedBy ? ` par ${saved.updatedBy}` : ' (valeurs par défaut)'
+      {{
+        $t('admin.rewardRuleForm.modified', {
+          date: saved.updatedAt
+            ? formatDate(saved.updatedAt)
+            : $t('admin.rewardRuleForm.never'),
+          by: saved.updatedBy
+            ? $t('admin.rewardRuleForm.by', { who: saved.updatedBy })
+            : $t('admin.rewardRuleForm.defaults')
+        })
       }}
     </div>
     <q-btn
       color="primary"
       no-caps
       unelevated
-      label="Enregistrer"
+      :label="$t('admin.rewardRuleForm.enregistrer')"
       :loading="saving"
       :disable="!form"
       data-testid="reward-rule-save"
@@ -65,6 +74,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { adminApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { formatDate } from '@/utils/format'
 import {
   REWARD_RULE_FIELDS,
@@ -127,11 +137,11 @@ async function save() {
         )
       )
     )
-    $q.notify({ type: 'positive', message: 'Règle enregistrée.' })
+    $q.notify({ type: 'positive', message: t('admin.rewardRuleForm.saved') })
   } catch (e) {
     violations.value = violationsOf(e)
     error.value = violations.value.length
-      ? 'Vérifie les champs en rouge.'
+      ? t('admin.offerForm.checkFields')
       : apiErrorMessage(e)
   } finally {
     saving.value = false

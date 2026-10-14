@@ -1,7 +1,7 @@
 <template>
   <div ref="root" class="move-tree" data-testid="move-tree">
     <div v-if="lines.length === 0" class="move-tree__empty text-grey">
-      <slot name="empty">Aucun coup.</slot>
+      <slot name="empty">{{ $t('chess.tree.empty') }}</slot>
     </div>
     <MoveTreeLine
       v-else

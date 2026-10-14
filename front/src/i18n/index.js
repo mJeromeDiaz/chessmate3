@@ -78,6 +78,26 @@ export const i18n = createI18n({
  */
 export const t = (...args) => i18n.global.t(...args)
 
+/**
+ * Keys to their labels, read when shown: `labelMap('admin.status', ['used'])` has a `used`
+ * property worth `t('admin.status.used')` in the current language.
+ *
+ * @param {string} prefix
+ * @param {Array<string|number>} keys
+ * @returns {Record<string, string>}
+ */
+export function labelMap(prefix, keys) {
+  return Object.defineProperties(
+    {},
+    Object.fromEntries(
+      keys.map(key => [
+        String(key),
+        { get: () => t(`${prefix}.${key}`), enumerable: true }
+      ])
+    )
+  )
+}
+
 /** @returns {Locale} */
 export function currentLocale() {
   return /** @type {Locale} */ (i18n.global.locale.value)

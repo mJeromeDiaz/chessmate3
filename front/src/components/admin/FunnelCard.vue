@@ -1,14 +1,18 @@
 <template>
   <section class="cm-card funnel" data-testid="admin-funnel">
     <div class="funnel__head">
-      <h2 class="cm-card__title">Invitations de la période</h2>
-      <span class="funnel__summary"
-        >Conversion {{ formatPercent(invitations.conversionRate) }}</span
-      >
+      <h2 class="cm-card__title">{{
+        $t('admin.funnelCard.invitationsDeLaPeriode')
+      }}</h2>
+      <span class="funnel__summary">{{
+        $t('admin.funnelCard.conversion', {
+          rate: formatPercent(invitations.conversionRate)
+        })
+      }}</span>
     </div>
 
     <p v-if="invitations.created === 0" class="cm-muted q-my-md">
-      Aucune invitation créée sur la période.
+      {{ $t('admin.funnelCard.aucuneInvitationCreeeSur') }}
     </p>
 
     <ul v-else class="funnel__rows">
@@ -22,9 +26,12 @@
     </ul>
 
     <p class="funnel__foot cm-muted">
-      Délai médian avant inscription :
-      {{ formatWait(invitations.medianSecondsToUse) }} · Clés utilisables
-      aujourd’hui : {{ invitations.pendingNow }}
+      {{
+        $t('admin.funnelCard.foot', {
+          wait: formatWait(invitations.medianSecondsToUse),
+          n: invitations.pendingNow
+        })
+      }}
     </p>
   </section>
 </template>

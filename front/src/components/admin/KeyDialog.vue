@@ -4,18 +4,20 @@
       <q-card-section>
         <div class="text-h6">{{ title }}</div>
         <p class="q-mt-sm q-mb-none">
-          L’email part vers <strong>{{ invitation.email }}</strong
-          >. Vous pouvez aussi transmettre ce lien par un autre moyen.
+          {{ $t('admin.keyDialog.lemailPartVers') }}
+          <strong>{{ invitation.email }}</strong
+          >{{ $t('admin.keyDialog.vousPouvezAussiTransmettre') }}
         </p>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
         <q-banner class="cm-banner--warning" rounded dense>
-          La clé ne sera plus jamais affichée : le serveur n’en garde que
-          l’empreinte.
+          {{ $t('admin.keyDialog.laCleNeSera') }}
         </q-banner>
 
-        <label class="key-dialog__label">Lien d’inscription</label>
+        <label class="key-dialog__label">{{
+          $t('admin.keyDialog.lienDinscription')
+        }}</label>
         <div class="key-dialog__value">
           <code data-testid="key-dialog-link">{{ link }}</code>
           <q-btn
@@ -23,12 +25,12 @@
             dense
             no-caps
             icon="content_copy"
-            label="Copier"
-            @click="copy(link, 'Lien copié')"
+            :label="$t('admin.keyDialog.copier')"
+            @click="copy(link, $t('admin.keyDialog.linkCopied'))"
           />
         </div>
 
-        <label class="key-dialog__label">Clé</label>
+        <label class="key-dialog__label">{{ $t('admin.keyDialog.cle') }}</label>
         <div class="key-dialog__value">
           <code data-testid="key-dialog-key">{{ invitation.key }}</code>
           <q-btn
@@ -36,8 +38,8 @@
             dense
             no-caps
             icon="content_copy"
-            label="Copier"
-            @click="copy(invitation.key, 'Clé copiée')"
+            :label="$t('admin.keyDialog.copier')"
+            @click="copy(invitation.key, $t('admin.keyDialog.keyCopied'))"
           />
         </div>
       </q-card-section>
@@ -46,7 +48,7 @@
         <q-btn
           color="primary"
           no-caps
-          label="J’ai noté"
+          :label="$t('admin.keyDialog.jaiNote')"
           data-testid="key-dialog-close"
           @click="close"
         />
@@ -59,6 +61,7 @@
 import { computed } from 'vue'
 import { copyToClipboard, useQuasar } from 'quasar'
 import { signupLink } from '@/utils/admin/invitations'
+import { t } from '@/i18n'
 
 /**
  * Shows a new key once, after a creation or a resend, with its sign-up link and copy buttons
@@ -74,7 +77,7 @@ const emit = defineEmits(['close'])
 
 const $q = useQuasar()
 const title = computed(() =>
-  props.resent ? 'Nouvelle clé envoyée' : 'Invitation envoyée'
+  t(props.resent ? 'admin.keyDialog.resent' : 'admin.keyDialog.sent')
 )
 const link = computed(() =>
   props.invitation ? signupLink(props.invitation.key) : ''
@@ -91,7 +94,7 @@ async function copy(text, done) {
   } catch {
     $q.notify({
       type: 'negative',
-      message: 'La copie a échoué : sélectionnez le texte.'
+      message: t('admin.keyDialog.copyFailed')
     })
   }
 }

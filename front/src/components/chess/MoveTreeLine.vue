@@ -26,7 +26,7 @@
         v-if="!item.move.canonical"
         type="button"
         class="move-tree__transposition"
-        title="Transposition : aller à la ligne rejointe"
+        :title="$t('chess.tree.transposition')"
         data-testid="tree-transposition"
         @click="emit('jump', item.move.to)"
       >

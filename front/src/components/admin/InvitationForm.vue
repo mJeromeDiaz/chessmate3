@@ -4,17 +4,19 @@
     data-testid="invitation-form"
     @submit="submit"
   >
-    <h2 class="cm-card__title">Inviter quelqu’un</h2>
+    <h2 class="cm-card__title">{{
+      $t('admin.invitationForm.inviterQuelquun')
+    }}</h2>
 
     <div class="invitation-form__row">
       <q-input
         v-model="email"
         type="email"
-        label="Email"
+        :label="$t('admin.invitationForm.email')"
         outlined
         dense
         class="invitation-form__email"
-        :rules="[v => !!v || 'Champ requis']"
+        :rules="[v => !!v || $t('admin.invitationForm.required')]"
         lazy-rules
         data-testid="invitation-email"
       />
@@ -25,7 +27,7 @@
         map-options
         outlined
         dense
-        label="Expiration"
+        :label="$t('admin.invitationForm.expiration')"
         class="invitation-form__expiry"
         data-testid="invitation-expiry"
       />
@@ -33,12 +35,12 @@
         v-if="expiry === 'date'"
         v-model="date"
         type="date"
-        label="Expire le"
+        :label="$t('admin.invitationForm.expireLe')"
         outlined
         dense
         stack-label
         :min="tomorrow"
-        :rules="[v => !!v || 'Choisissez une date']"
+        :rules="[v => !!v || $t('admin.invitationForm.pickDate')]"
         lazy-rules
         data-testid="invitation-date"
       />
@@ -46,7 +48,7 @@
         type="submit"
         color="primary"
         no-caps
-        label="Envoyer l’invitation"
+        :label="$t('admin.invitationForm.envoyerLinvitation')"
         :loading="loading"
         data-testid="invitation-submit"
       />
@@ -63,6 +65,7 @@ import { ref } from 'vue'
 import { useAdminStore } from '@/stores/admin'
 import { apiErrorMessage } from '@/utils/apiError'
 import { endOfDay } from '@/utils/admin/invitations'
+import { t } from '@/i18n'
 
 /**
  * Creates an invitation: an email address and an expiry (7 days, a chosen date up to a year away,
@@ -70,11 +73,12 @@ import { endOfDay } from '@/utils/admin/invitations'
  */
 const emit = defineEmits({ created: invitation => !!invitation?.key })
 
-const EXPIRY_OPTIONS = [
-  { value: 'default', label: '7 jours' },
-  { value: 'date', label: 'Date choisie' },
-  { value: 'never', label: 'Jamais' }
-]
+const EXPIRY_OPTIONS = ['default', 'date', 'never'].map(value => ({
+  value,
+  get label() {
+    return t(`admin.invitationForm.expiry.${value}`)
+  }
+}))
 
 const store = useAdminStore()
 const email = ref('')

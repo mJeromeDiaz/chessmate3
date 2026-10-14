@@ -1,4 +1,5 @@
 import { ITEMS } from '@/utils/shop'
+import { labelMap, t } from '@/i18n'
 
 /**
  * The store's administration (docs/SHOP.md): the offer and slide forms, statuses and labels.
@@ -24,17 +25,24 @@ import { ITEMS } from '@/utils/shop'
  */
 
 export const SECTION_OPTIONS = [
-  { value: 'freeze', label: 'Gel de série' },
-  { value: 'puzzle_streak', label: 'Puzzle Streak' },
-  { value: 'aids', label: 'Aides de module' },
-  { value: 'packs', label: 'Packs' },
-  { value: 'cosmetics', label: 'Cosmétiques' }
-]
+  'freeze',
+  'puzzle_streak',
+  'aids',
+  'packs',
+  'cosmetics'
+].map(value => ({
+  value,
+  get label() {
+    return t(`admin.shop.sections.${value}`)
+  }
+}))
 
 /** The coded items an offer can hold. */
 export const ITEM_OPTIONS = Object.entries(ITEMS).map(([value, look]) => ({
   value,
-  label: look.label
+  get label() {
+    return look.label
+  }
 }))
 
 /** Professors' pictures for a slide (src/assets/profs). */
@@ -50,55 +58,37 @@ export const SLIDE_IMAGES = [
   'lizy-wow'
 ]
 
-export const LEDGER_KINDS = {
-  purchase: 'Achat',
-  grant: 'Ajout',
-  revoke: 'Retrait',
-  reward: 'Session'
-}
+export const LEDGER_KINDS = labelMap('admin.shop.ledger', [
+  'purchase',
+  'grant',
+  'revoke',
+  'reward'
+])
 
 /**
  * The reward rule's fields (docs/SHOP.md, § 4 bis): label, bounds, unit.
  *
  * @type {{key: 'crownsPerHour'|'perfectPercent'|'nearPercent'|'missedPercent'|'dailyMinutes', label: string, max: number, suffix: string, hint: string}[]}
  */
-export const REWARD_RULE_FIELDS = [
-  {
-    key: 'crownsPerHour',
-    label: 'Couronnes par heure payée',
-    max: 10000,
-    suffix: '/ h',
-    hint: 'Au palier « presque » (coefficient 100 %).'
+export const REWARD_RULE_FIELDS = /** @type {const} */ ([
+  ['crownsPerHour', 10000, 'perHour'],
+  ['perfectPercent', 1000, '%'],
+  ['nearPercent', 1000, '%'],
+  ['missedPercent', 1000, '%'],
+  ['dailyMinutes', 1440, 'minutes']
+]).map(([key, max, unit]) => ({
+  key,
+  max,
+  get label() {
+    return t(`admin.shop.rule.${key}.label`)
   },
-  {
-    key: 'perfectPercent',
-    label: 'Session parfaite (100 %)',
-    max: 1000,
-    suffix: '%',
-    hint: 'Coefficient du palier.'
+  get suffix() {
+    return unit === '%' ? '%' : t(`admin.shop.rule.${unit}`)
   },
-  {
-    key: 'nearPercent',
-    label: 'Presque parfaite (80 à 99 %)',
-    max: 1000,
-    suffix: '%',
-    hint: 'Coefficient du palier.'
-  },
-  {
-    key: 'missedPercent',
-    label: 'En dessous de 80 %',
-    max: 1000,
-    suffix: '%',
-    hint: 'Coefficient du palier.'
-  },
-  {
-    key: 'dailyMinutes',
-    label: 'Minutes payées par jour',
-    max: 1440,
-    suffix: 'min',
-    hint: 'Par jour local du joueur.'
+  get hint() {
+    return t(`admin.shop.rule.${key}.hint`)
   }
-]
+}))
 
 /**
  * What a session earns under a rule, for the admin's preview: crowns for `minutes` paid minutes
@@ -215,13 +205,14 @@ export function offerPayload(form) {
  * @returns {{label: string, tone: 'active'|'used'|'danger'|''}}
  */
 export function offerStatus(offer, now = new Date()) {
-  if (offer.suspended) return { label: 'Suspendue', tone: 'danger' }
+  const s = 'admin.shop.status.'
+  if (offer.suspended) return { label: t(`${s}suspended`), tone: 'danger' }
   if (!offer.listed)
     return offer.startsAt && new Date(offer.startsAt) > now
-      ? { label: 'Programmée', tone: 'active' }
-      : { label: 'Terminée', tone: '' }
-  if (offer.comingSoon) return { label: 'Bientôt', tone: '' }
-  return { label: 'En vente', tone: 'used' }
+      ? { label: t(`${s}scheduled`), tone: 'active' }
+      : { label: t(`${s}ended`), tone: '' }
+  if (offer.comingSoon) return { label: t(`${s}soon`), tone: '' }
+  return { label: t(`${s}onSale`), tone: 'used' }
 }
 
 /**

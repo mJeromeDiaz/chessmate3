@@ -7,7 +7,7 @@
         dense
         clearable
         debounce="300"
-        label="Email, pseudo ou nom"
+        :label="$t('admin.shopPlayers.emailPseudoOuNom')"
         class="admin__filter--grow"
         data-testid="shop-player-search"
         @update:model-value="load"
@@ -21,17 +21,17 @@
       <q-markup-table flat dense class="admin__table">
         <thead>
           <tr>
-            <th class="text-left">Joueur</th>
-            <th class="text-right">Solde</th>
-            <th class="text-right">Dépensé</th>
+            <th class="text-left">{{ $t('admin.shopPlayers.joueur') }}</th>
+            <th class="text-right">{{ $t('admin.shopPlayers.solde') }}</th>
+            <th class="text-right">{{ $t('admin.shopPlayers.depense') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!loading && players.length === 0">
             <td colspan="3" class="cm-muted">{{
               search
-                ? 'Aucun joueur trouvé.'
-                : 'Aucun joueur n’a encore de couronnes.'
+                ? $t('admin.shopPlayers.notFound')
+                : $t('admin.shopPlayers.noCrowns')
             }}</td>
           </tr>
           <tr
@@ -75,7 +75,7 @@
             type="number"
             outlined
             dense
-            label="Couronnes (+ ou −)"
+            :label="$t('admin.shopPlayers.couronnesOu')"
             class="shop-players__delta"
             data-testid="shop-adjust-delta"
           />
@@ -83,7 +83,7 @@
             v-model="reason"
             outlined
             dense
-            label="Motif *"
+            :label="$t('admin.shopPlayers.motif')"
             maxlength="255"
             class="admin__filter--grow"
             data-testid="shop-adjust-reason"
@@ -93,7 +93,11 @@
             unelevated
             no-caps
             color="primary"
-            :label="(delta ?? 0) < 0 ? 'Retirer' : 'Ajouter'"
+            :label="
+              (delta ?? 0) < 0
+                ? $t('admin.shopPlayers.remove')
+                : $t('admin.shopPlayers.add')
+            "
             :disable="!delta || !reason.trim()"
             :loading="saving"
             data-testid="shop-adjust"
@@ -103,26 +107,45 @@
           adjustError
         }}</div>
 
-        <div class="shop-players__label">Inventaire</div>
+        <div class="shop-players__label">{{
+          $t('admin.shopPlayers.inventaire')
+        }}</div>
         <div class="shop-players__chips">
           <span
             v-for="(qty, item) in detail.inventory"
             :key="item"
             class="admin__status"
-            >{{ ITEMS[item]?.label ?? item }} × {{ qty }}</span
+            >{{
+              $t('admin.shopPlayers.item', {
+                item: ITEMS[item]?.label ?? item,
+                n: qty
+              })
+            }}</span
           >
           <span
             v-if="Object.keys(detail.inventory).length === 0"
             class="cm-muted"
-            >Rien.</span
+            >{{ $t('admin.shopPlayers.rien') }}</span
           >
         </div>
         <div v-if="detail.freezes.length" class="cm-muted q-mt-xs">
-          Gels :
-          {{ detail.freezes.map(f => `${f.daysLeft}/${f.days} j`).join(' · ') }}
+          {{
+            $t('admin.shopPlayers.freezes', {
+              list: detail.freezes
+                .map(f =>
+                  $t('admin.shopPlayers.freeze', {
+                    left: f.daysLeft,
+                    days: f.days
+                  })
+                )
+                .join(' · ')
+            })
+          }}
         </div>
 
-        <div class="shop-players__label">Mouvements</div>
+        <div class="shop-players__label">{{
+          $t('admin.shopPlayers.mouvements')
+        }}</div>
         <q-markup-table flat dense class="admin__table">
           <tbody>
             <tr
@@ -147,10 +170,17 @@
               <td>
                 {{
                   l.offerName
-                    ? `${l.quantity > 1 ? `${l.quantity} × ` : ''}${l.offerName}`
+                    ? l.quantity > 1
+                      ? $t('admin.shopPlayers.item', {
+                          item: l.offerName,
+                          n: l.quantity
+                        })
+                      : l.offerName
                     : l.reason
                 }}
-                <div v-if="l.admin" class="cm-muted">par {{ l.admin }}</div>
+                <div v-if="l.admin" class="cm-muted">{{
+                  $t('admin.shopPlayers.by', { who: l.admin })
+                }}</div>
               </td>
               <td class="text-right no-wrap">
                 {{ l.delta > 0 ? '+' : '' }}{{ crowns(l.delta) }}
@@ -158,7 +188,9 @@
               <td class="text-right cm-muted">{{ crowns(l.balanceAfter) }}</td>
             </tr>
             <tr v-if="detail.ledger.length === 0">
-              <td class="cm-muted">Aucun mouvement.</td>
+              <td class="cm-muted">{{
+                $t('admin.shopPlayers.aucunMouvement')
+              }}</td>
             </tr>
           </tbody>
         </q-markup-table>
@@ -176,6 +208,7 @@ import { onMounted, ref } from 'vue'
 import CrownCoin from '@/components/shop/CrownCoin.vue'
 import { adminApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { LEDGER_KINDS } from '@/utils/admin/shop'
 import { ITEMS, crowns } from '@/utils/shop'
 import { intlLocale } from '@/i18n'
@@ -224,7 +257,7 @@ async function open(id) {
   try {
     detail.value = await adminApi.shopPlayer(id)
   } catch (e) {
-    error.value = apiErrorMessage(e, { 404: 'Ce compte n’existe plus.' })
+    error.value = apiErrorMessage(e, { 404: t('admin.shopPlayers.gone') })
   }
 }
 
@@ -243,7 +276,7 @@ async function adjust() {
     load()
   } catch (e) {
     adjustError.value = apiErrorMessage(e, {
-      409: 'Le solde ne peut pas passer sous zéro.'
+      409: t('admin.shopPlayers.negative')
     })
   } finally {
     saving.value = false

@@ -3,7 +3,7 @@
     <q-card class="slide-form" data-testid="slide-form">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">{{
-          slide ? 'Modifier le slide' : 'Nouveau slide'
+          slide ? $t('admin.slideForm.edit') : $t('admin.slideForm.new')
         }}</div>
         <q-space />
         <q-btn
@@ -11,7 +11,7 @@
           round
           dense
           icon="close"
-          aria-label="Fermer"
+          :aria-label="$t('admin.slideForm.fermer')"
           @click="emit('close')"
         />
       </q-card-section>
@@ -23,7 +23,7 @@
           map-options
           outlined
           dense
-          label="Offre *"
+          :label="$t('admin.slideForm.offre')"
           :error="!!err('offerId')"
           :error-message="err('offerId')"
           data-testid="slide-offer"
@@ -32,15 +32,15 @@
           v-model="form.tag"
           outlined
           dense
-          label="Accroche *"
-          hint="« OFFRE DU MOMENT »"
+          :label="$t('admin.slideForm.accroche')"
+          :hint="$t('admin.slideForm.offreDuMoment')"
           maxlength="40"
           :error="!!err('tag')"
           :error-message="err('tag')"
           data-testid="slide-tag"
         />
         <div>
-          <div class="slide-form__label">Prof</div>
+          <div class="slide-form__label">{{ $t('admin.slideForm.prof') }}</div>
           <div class="slide-form__images">
             <button
               v-for="name in SLIDE_IMAGES"
@@ -62,7 +62,7 @@
           outlined
           dense
           stack-label
-          label="Affiché à partir de"
+          :label="$t('admin.slideForm.afficheAPartirDe')"
         />
         <q-input
           v-model="form.endsAt"
@@ -70,7 +70,7 @@
           outlined
           dense
           stack-label
-          label="Jusqu’au"
+          :label="$t('admin.slideForm.jusquau')"
           :error="!!err('endsAt')"
           :error-message="err('endsAt')"
         />
@@ -79,20 +79,30 @@
           type="number"
           outlined
           dense
-          label="Ordre"
+          :label="$t('admin.slideForm.ordre')"
         />
-        <q-toggle v-model="form.suspended" label="Suspendu" />
+        <q-toggle
+          v-model="form.suspended"
+          :label="$t('admin.slideForm.suspendu')"
+        />
       </q-card-section>
       <q-card-section v-if="error" class="q-pt-none">
         <q-banner class="cm-banner--danger" rounded>{{ error }}</q-banner>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat no-caps label="Annuler" @click="emit('close')" />
+        <q-btn
+          flat
+          no-caps
+          :label="$t('admin.slideForm.annuler')"
+          @click="emit('close')"
+        />
         <q-btn
           unelevated
           no-caps
           color="primary"
-          :label="slide ? 'Enregistrer' : 'Créer'"
+          :label="
+            slide ? $t('common.actions.save') : $t('admin.offerForm.create')
+          "
           :loading="saving"
           data-testid="slide-save"
           @click="save"
@@ -118,6 +128,7 @@ import {
   violationsOf
 } from '@/utils/admin/shop'
 import { profImage } from '@/utils/prof/images'
+import { t } from '@/i18n'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -198,8 +209,8 @@ async function save() {
   } catch (e) {
     violations.value = violationsOf(e)
     error.value = violations.value.length
-      ? 'Vérifie les champs en rouge.'
-      : apiErrorMessage(e, { 404: 'Ce slide n’existe plus.' })
+      ? t('admin.offerForm.checkFields')
+      : apiErrorMessage(e, { 404: t('admin.slideForm.gone') })
   } finally {
     saving.value = false
   }

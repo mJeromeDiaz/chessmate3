@@ -1,5 +1,5 @@
 import { dayLabel } from '@/utils/dashboard/stats'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * The admin dashboard's charts and figures (docs/EARLY_ACCESS.md), computed from GET /api/admin/stats.
@@ -31,12 +31,15 @@ import { intlLocale } from '@/i18n'
  */
 
 /** Sign-up methods, stacked bottom first in the fixed order of their colours (validated together). */
-export const SIGNUP_METHODS = [
-  { id: 'password', label: 'Mot de passe', color: 'var(--cm-admin-password)' },
-  { id: 'google', label: 'Google', color: 'var(--cm-admin-google)' },
-  { id: 'lichess', label: 'Lichess', color: 'var(--cm-admin-lichess)' },
-  { id: 'other', label: 'Sans clé', color: 'var(--cm-admin-other)' }
-]
+export const SIGNUP_METHODS = ['password', 'google', 'lichess', 'other'].map(
+  id => ({
+    id,
+    get label() {
+      return t(`admin.methods.${id}`)
+    },
+    color: `var(--cm-admin-${id})`
+  })
+)
 
 /** The single-series charts (active players, weekly time, ratings) wear the brand colour. */
 export const BRAND_SERIES = { color: 'var(--cm-brand)' }
@@ -197,7 +200,7 @@ export function activeColumns(days) {
 export function weeklyTimeColumns(weeks) {
   return weeks.map(w => ({
     key: w.start,
-    label: `Sem. du ${dayLabel(w.start)}`,
+    label: t('admin.charts.week', { day: dayLabel(w.start) }),
     values: { value: w.averageMs ?? 0 }
   }))
 }
@@ -227,13 +230,18 @@ export function ratingColumns(bands, bandWidth) {
 export function funnelRows(inv) {
   const share = n => (inv.created > 0 ? n / inv.created : 0)
   return [
-    { id: 'created', label: 'Créées', count: inv.created },
-    { id: 'used', label: 'Utilisées', count: inv.used },
-    { id: 'pending', label: 'En attente', count: inv.pending },
-    { id: 'expired', label: 'Expirées', count: inv.expired },
-    { id: 'revoked', label: 'Révoquées', count: inv.revoked },
-    { id: 'emailFailed', label: 'Email en échec', count: inv.emailFailed }
-  ].map(row => ({ ...row, share: share(row.count) }))
+    'created',
+    'used',
+    'pending',
+    'expired',
+    'revoked',
+    'emailFailed'
+  ].map(id => ({
+    id,
+    label: t(`admin.charts.funnel.${id}`),
+    count: inv[id],
+    share: share(inv[id])
+  }))
 }
 
 /**
@@ -258,9 +266,12 @@ export function formatCount(n) {
  */
 export function formatWait(seconds) {
   if (seconds === null || seconds === undefined) return '—'
-  if (seconds < 3600) return `${Math.max(1, Math.round(seconds / 60))} min`
-  if (seconds < 2 * 86_400) return `${Math.round(seconds / 3600)} h`
-  return `${Math.round(seconds / 86_400)} j`
+  const w = 'admin.charts.wait.'
+  if (seconds < 3600)
+    return t(`${w}minutes`, { n: Math.max(1, Math.round(seconds / 60)) })
+  if (seconds < 2 * 86_400)
+    return t(`${w}hours`, { n: Math.round(seconds / 3600) })
+  return t(`${w}days`, { n: Math.round(seconds / 86_400) })
 }
 
 /**

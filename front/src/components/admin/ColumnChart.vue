@@ -32,7 +32,7 @@
         :width="width"
         :height="HEIGHT + AXIS"
         role="img"
-        :aria-label="`${title} : graphique, voir le tableau pour les valeurs`"
+        :aria-label="$t('admin.columnChart.chartLabel', { title })"
       >
         <g>
           <template v-for="tick in scale.ticks" :key="tick">
@@ -96,12 +96,18 @@
         <strong>{{ columns[hovered].label }}</strong>
         <template v-if="series.length > 1">
           <span v-for="s in series" :key="s.id" class="column-chart__tip-row">
-            <i :style="{ background: s.color }" />{{ s.label }} :
-            {{ formatValue(columns[hovered].values[s.id] ?? 0) }}
+            <i :style="{ background: s.color }" />{{
+              $t('admin.columnChart.tipRow', {
+                label: s.label,
+                value: formatValue(columns[hovered].values[s.id] ?? 0)
+              })
+            }}
           </span>
-          <span class="column-chart__tip-row"
-            >Total : {{ formatValue(columnTotal(columns[hovered])) }}</span
-          >
+          <span class="column-chart__tip-row">{{
+            $t('admin.columnChart.tipTotal', {
+              value: formatValue(columnTotal(columns[hovered]))
+            })
+          }}</span>
         </template>
         <span v-else>{{
           formatValue(columns[hovered].values[series[0].id] ?? 0)
@@ -115,7 +121,9 @@
           <tr>
             <th scope="col">{{ keyHeader }}</th>
             <th v-for="s in series" :key="s.id" scope="col">{{ s.label }}</th>
-            <th v-if="series.length > 1" scope="col">Total</th>
+            <th v-if="series.length > 1" scope="col">{{
+              $t('admin.columnChart.total')
+            }}</th>
           </tr>
         </thead>
         <tbody>
@@ -139,7 +147,11 @@
       no-caps
       size="sm"
       class="column-chart__toggle"
-      :label="table ? 'Voir le graphique' : 'Voir le tableau'"
+      :label="
+        table
+          ? $t('admin.columnChart.showChart')
+          : $t('admin.columnChart.showTable')
+      "
       :data-testid="`${testid}-toggle`"
       @click="table = !table"
     />
@@ -150,6 +162,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { labelledBars } from '@/utils/dashboard/stats'
 import { barPath, layoutColumns } from '@/utils/admin/charts'
+import { t } from '@/i18n'
 
 /**
  * A column chart in SVG (docs/EARLY_ACCESS.md, admin dashboard): one bar per column, stacked by
@@ -170,9 +183,9 @@ const props = defineProps({
   formatTick: { type: Function, default: v => String(v) },
   /** A figure beside the title (e.g. the period's total). */
   summary: { type: String, default: '' },
-  emptyText: { type: String, default: 'Aucune donnée sur la période.' },
+  emptyText: { type: String, default: () => t('admin.columnChart.empty') },
   /** Header of the table's first column. */
-  keyHeader: { type: String, default: 'Jour' },
+  keyHeader: { type: String, default: () => t('admin.columnChart.day') },
   testid: { type: String, required: true }
 })
 

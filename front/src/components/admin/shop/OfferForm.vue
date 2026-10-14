@@ -7,7 +7,9 @@
     <q-card class="offer-form" data-testid="offer-form">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">{{
-          offer ? `Modifier « ${offer.name} »` : 'Nouvelle offre'
+          offer
+            ? $t('admin.offerForm.edit', { name: offer.name })
+            : $t('admin.offerForm.new')
         }}</div>
         <q-space />
         <q-btn
@@ -15,7 +17,7 @@
           round
           dense
           icon="close"
-          aria-label="Fermer"
+          :aria-label="$t('admin.offerForm.fermer')"
           @click="emit('close')"
         />
       </q-card-section>
@@ -25,8 +27,8 @@
           v-model="form.slug"
           outlined
           dense
-          label="Identifiant *"
-          hint="Minuscules, chiffres et _ ; ne change plus ensuite."
+          :label="$t('admin.offerForm.identifiant')"
+          :hint="$t('admin.offerForm.minusculesChiffresEtNe')"
           :readonly="!!offer"
           :error="!!err('slug')"
           :error-message="err('slug')"
@@ -39,14 +41,14 @@
           map-options
           outlined
           dense
-          label="Rayon *"
+          :label="$t('admin.offerForm.rayon')"
           data-testid="offer-section"
         />
         <q-input
           v-model="form.name"
           outlined
           dense
-          label="Nom *"
+          :label="$t('admin.offerForm.nom')"
           maxlength="80"
           :error="!!err('name')"
           :error-message="err('name')"
@@ -56,8 +58,8 @@
           v-model="form.subtitle"
           outlined
           dense
-          label="Sous-titre"
-          hint="Une ligne sous le nom (« Le week-end »)."
+          :label="$t('admin.offerForm.sousTitre')"
+          :hint="$t('admin.offerForm.uneLigneSousLe')"
           maxlength="80"
         />
         <q-input
@@ -65,7 +67,7 @@
           outlined
           dense
           autogrow
-          label="Description *"
+          :label="$t('admin.offerForm.description')"
           maxlength="255"
           class="offer-form__wide"
           :error="!!err('description')"
@@ -74,7 +76,9 @@
         />
 
         <div class="offer-form__wide">
-          <div class="offer-form__label">Contenu</div>
+          <div class="offer-form__label">{{
+            $t('admin.offerForm.contenu')
+          }}</div>
           <div
             v-for="(line, i) in form.contents"
             :key="i"
@@ -87,7 +91,7 @@
               map-options
               outlined
               dense
-              label="Objet"
+              :label="$t('admin.offerForm.objet')"
               class="offer-form__item"
               :error="!!err(`contents[${i}].item`)"
               :error-message="err(`contents[${i}].item`)"
@@ -100,7 +104,7 @@
               max="99"
               outlined
               dense
-              label="Qté"
+              :label="$t('admin.offerForm.qte')"
               class="offer-form__qty"
               :error="!!err(`contents[${i}].quantity`)"
               :error-message="err(`contents[${i}].quantity`)"
@@ -111,7 +115,7 @@
               round
               dense
               icon="delete"
-              aria-label="Retirer"
+              :aria-label="$t('admin.offerForm.retirer')"
               @click="form.contents.splice(i, 1)"
             />
           </div>
@@ -123,7 +127,7 @@
             dense
             no-caps
             icon="add"
-            label="Ajouter un objet"
+            :label="$t('admin.offerForm.ajouterUnObjet')"
             data-testid="offer-add-item"
             @click="form.contents.push({ item: 'puzzle_pardon', quantity: 1 })"
           />
@@ -135,7 +139,7 @@
           min="0"
           outlined
           dense
-          label="Prix (couronnes) *"
+          :label="$t('admin.offerForm.prixCouronnes')"
           :error="!!err('price')"
           :error-message="err('price')"
           data-testid="offer-price"
@@ -147,8 +151,8 @@
           outlined
           dense
           clearable
-          label="Prix barré"
-          hint="Vide : aucun."
+          :label="$t('admin.offerForm.prixBarre')"
+          :hint="$t('admin.offerForm.videAucun')"
           :error="!!err('wasPrice')"
           :error-message="err('wasPrice')"
           data-testid="offer-was-price"
@@ -159,8 +163,8 @@
           outlined
           dense
           stack-label
-          label="En vente à partir de"
-          hint="Vide : tout de suite."
+          :label="$t('admin.offerForm.enVenteAPartir')"
+          :hint="$t('admin.offerForm.videToutDeSuite')"
         />
         <q-input
           v-model="form.endsAt"
@@ -168,8 +172,8 @@
           outlined
           dense
           stack-label
-          label="Jusqu’au"
-          hint="Vide : sans fin."
+          :label="$t('admin.offerForm.jusquau')"
+          :hint="$t('admin.offerForm.videSansFin')"
           :error="!!err('endsAt')"
           :error-message="err('endsAt')"
         />
@@ -178,17 +182,17 @@
           type="number"
           outlined
           dense
-          label="Ordre dans le rayon"
+          :label="$t('admin.offerForm.ordreDansLeRayon')"
         />
         <div class="offer-form__toggles">
           <q-toggle
             v-model="form.suspended"
-            label="Suspendue"
+            :label="$t('admin.offerForm.suspendue')"
             data-testid="offer-suspended"
           />
           <q-toggle
             v-model="form.comingSoon"
-            label="Bientôt (affichée, pas vendue)"
+            :label="$t('admin.offerForm.bientotAfficheePasVendue')"
           />
         </div>
       </q-card-section>
@@ -198,12 +202,19 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat no-caps label="Annuler" @click="emit('close')" />
+        <q-btn
+          flat
+          no-caps
+          :label="$t('admin.offerForm.annuler')"
+          @click="emit('close')"
+        />
         <q-btn
           unelevated
           no-caps
           color="primary"
-          :label="offer ? 'Enregistrer' : 'Créer'"
+          :label="
+            offer ? $t('common.actions.save') : $t('admin.offerForm.create')
+          "
           :loading="saving"
           data-testid="offer-save"
           @click="save"
@@ -221,6 +232,7 @@
 import { ref, watch } from 'vue'
 import { adminApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import {
   ITEM_OPTIONS,
   SECTION_OPTIONS,
@@ -273,8 +285,8 @@ async function save() {
   } catch (e) {
     violations.value = violationsOf(e)
     error.value = violations.value.length
-      ? 'Vérifie les champs en rouge.'
-      : apiErrorMessage(e, { 404: 'Cette offre n’existe plus.' })
+      ? t('admin.offerForm.checkFields')
+      : apiErrorMessage(e, { 404: t('admin.offerForm.gone') })
   } finally {
     saving.value = false
   }

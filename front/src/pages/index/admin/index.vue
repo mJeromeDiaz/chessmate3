@@ -14,7 +14,12 @@
     >
       {{ store.statsError }}
       <template #action>
-        <q-btn flat no-caps label="Réessayer" @click="store.loadStats()" />
+        <q-btn
+          flat
+          no-caps
+          :label="$t('admin.overview.reessayer')"
+          @click="store.loadStats()"
+        />
       </template>
     </q-banner>
 
@@ -22,39 +27,58 @@
 
     <template v-else>
       <p class="admin__period cm-muted">
-        Du {{ dayLabel(stats.from) }} au {{ dayLabel(stats.today) }} ({{
-          stats.timezone
-        }})
+        {{
+          $t('admin.overview.period', {
+            from: dayLabel(stats.from),
+            to: dayLabel(stats.today),
+            tz: stats.timezone
+          })
+        }}
       </p>
 
       <div class="admin__tiles">
         <StatTile
-          label="Comptes"
+          :label="$t('admin.overview.comptes')"
           :value="formatCount(stats.signups.accounts)"
           :hint="accountsHint"
           testid="tile-accounts"
         />
         <StatTile
-          label="Inscriptions sur la période"
+          :label="$t('admin.overview.inscriptionsSurLaPeriode')"
           :value="formatCount(stats.signups.total)"
           testid="tile-signups"
         />
         <StatTile
-          label="Joueurs actifs"
+          :label="$t('admin.overview.joueursActifs')"
           :value="formatCount(stats.activity.active)"
-          :hint="`${plural(stats.activity.inactive, 'inactif', 'inactifs')} · un exercice en 7 jours`"
+          :hint="
+            $t(
+              'admin.overview.inactive',
+              { n: formatCount(stats.activity.inactive) },
+              stats.activity.inactive
+            )
+          "
           testid="tile-active"
         />
         <StatTile
-          label="Temps moyen"
+          :label="$t('admin.overview.tempsMoyen')"
           :value="formatHours(stats.activity.averageWeeklyMs)"
-          hint="par joueur actif et par semaine"
+          :hint="$t('admin.overview.parJoueurActifEt')"
           testid="tile-time"
         />
         <StatTile
-          label="Elo médian (Lichess)"
+          :label="$t('admin.overview.eloMedianLichess')"
           :value="formatCount(stats.ratings.median)"
-          :hint="`${plural(stats.ratings.rated, 'classé', 'classés')} · ${stats.ratings.notLinked} sans Lichess`"
+          :hint="
+            $t(
+              'admin.overview.rated',
+              {
+                n: formatCount(stats.ratings.rated),
+                notLinked: stats.ratings.notLinked
+              },
+              stats.ratings.rated
+            )
+          "
           testid="tile-elo"
         />
       </div>
@@ -62,51 +86,71 @@
       <div class="admin__grid">
         <ColumnChart
           class="admin__wide"
-          title="Inscriptions par jour"
+          :title="$t('admin.overview.inscriptionsParJour')"
           :summary="formatCount(stats.signups.total)"
           :columns="signups"
           :series="SIGNUP_METHODS"
           :scale="niceScale(maxTotal(signups, SIGNUP_METHODS))"
           :format-value="formatCount"
           :format-tick="formatCount"
-          empty-text="Aucune inscription sur la période."
+          :empty-text="$t('admin.overview.aucuneInscriptionSurLa')"
           testid="chart-signups"
         />
         <ColumnChart
           class="admin__wide"
-          title="Joueurs actifs par jour"
+          :title="$t('admin.overview.joueursActifsParJour')"
           :columns="active"
-          :series="[{ id: 'value', label: 'Joueurs actifs', ...BRAND_SERIES }]"
+          :series="[
+            {
+              id: 'value',
+              label: $t('admin.overview.seriesActive'),
+              ...BRAND_SERIES
+            }
+          ]"
           :scale="niceScale(maxTotal(active, VALUE))"
           :format-value="formatCount"
           :format-tick="formatCount"
-          empty-text="Aucun exercice sur la période."
+          :empty-text="$t('admin.overview.aucunExerciceSurLa')"
           testid="chart-active"
         />
         <ColumnChart
-          title="Temps moyen par semaine"
+          :title="$t('admin.overview.tempsMoyenParSemaine')"
           :summary="formatHours(stats.activity.averageWeeklyMs)"
           :columns="weekly"
           :series="[
-            { id: 'value', label: 'Par joueur actif', ...BRAND_SERIES }
+            {
+              id: 'value',
+              label: $t('admin.overview.seriesPerPlayer'),
+              ...BRAND_SERIES
+            }
           ]"
           :scale="durationScale(maxTotal(weekly, VALUE))"
           :format-value="formatHours"
           :format-tick="formatHours"
-          key-header="Semaine"
-          empty-text="Aucun exercice sur la période."
+          :key-header="$t('admin.overview.semaine')"
+          :empty-text="$t('admin.overview.aucunExerciceSurLa')"
           testid="chart-weekly"
         />
         <ColumnChart
-          title="Elo Lichess des joueurs"
-          :summary="`médiane ${formatCount(stats.ratings.median)}`"
+          :title="$t('admin.overview.eloLichessDesJoueurs')"
+          :summary="
+            $t('admin.overview.median', {
+              n: formatCount(stats.ratings.median)
+            })
+          "
           :columns="ratings"
-          :series="[{ id: 'value', label: 'Joueurs', ...BRAND_SERIES }]"
+          :series="[
+            {
+              id: 'value',
+              label: $t('admin.overview.seriesPlayers'),
+              ...BRAND_SERIES
+            }
+          ]"
           :scale="niceScale(maxTotal(ratings, VALUE))"
           :format-value="formatCount"
           :format-tick="formatCount"
-          key-header="Tranche"
-          empty-text="Aucun joueur avec une cote Lichess (rapide, blitz ou classique, non provisoire)."
+          :key-header="$t('admin.overview.tranche')"
+          :empty-text="$t('admin.overview.aucunJoueurAvecUne')"
           testid="chart-ratings"
         />
         <FunnelCard class="admin__wide" :invitations="stats.invitations" />
@@ -131,11 +175,11 @@ import {
   durationScale,
   formatCount,
   niceScale,
-  plural,
   ratingColumns,
   signupColumns,
   weeklyTimeColumns
 } from '@/utils/admin/charts'
+import { t } from '@/i18n'
 
 /** The admin dashboard (docs/EARLY_ACCESS.md): key figures and charts of the chosen period. */
 definePage({ meta: { auth: 'admin' } })
@@ -146,8 +190,13 @@ const stats = computed(() => store.stats)
 const VALUE = [{ id: 'value' }]
 const accountsHint = computed(() => {
   const { unverified, suspended } = stats.value.signups
-  const parts = [plural(unverified, 'email non vérifié', 'emails non vérifiés')]
-  if (suspended > 0) parts.push(plural(suspended, 'suspendu', 'suspendus'))
+  const parts = [
+    t('admin.overview.unverified', { n: formatCount(unverified) }, unverified)
+  ]
+  if (suspended > 0)
+    parts.push(
+      t('admin.overview.suspended', { n: formatCount(suspended) }, suspended)
+    )
   return parts.join(' · ')
 })
 const signups = computed(() => signupColumns(stats.value.signups.days))

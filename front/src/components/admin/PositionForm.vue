@@ -7,7 +7,9 @@
     <q-card class="position-form" data-testid="position-form">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">{{
-          position ? 'Modifier la position' : 'Nouvelle position'
+          position
+            ? $t('admin.positionForm.edit')
+            : $t('admin.positionForm.new')
         }}</div>
         <q-space />
         <q-btn
@@ -15,7 +17,7 @@
           round
           dense
           icon="close"
-          aria-label="Fermer"
+          :aria-label="$t('admin.positionForm.fermer')"
           @click="emit('close')"
         />
       </q-card-section>
@@ -29,9 +31,9 @@
             :animation-duration="0"
             :coordinates="true"
           />
-          <div v-else class="position-form__no-board cm-muted"
-            >L’échiquier s’affiche quand la FEN est lisible.</div
-          >
+          <div v-else class="position-form__no-board cm-muted">{{
+            $t('admin.positionForm.lechiquierSafficheQuandLa')
+          }}</div>
           <div v-if="turn" class="position-form__turn">{{
             turn === 'white' ? 'Trait aux Blancs' : 'Trait aux Noirs'
           }}</div>
@@ -42,16 +44,16 @@
             v-model="form.fen"
             outlined
             dense
-            label="FEN *"
-            hint="Copiée depuis l’échiquier d’analyse de Lichess, par exemple."
+            :label="$t('admin.positionForm.fen')"
+            :hint="$t('admin.positionForm.copieeDepuisLechiquierDanalyse')"
             data-testid="position-fen"
           />
           <q-input
             v-model="form.eval"
             outlined
             dense
-            label="Évaluation (Blancs) *"
-            hint="+1,4 · -0,3 · 0 · « gagné » ou « perdu » pour un mat ou une finale gagnée"
+            :label="$t('admin.positionForm.evaluationBlancs')"
+            :hint="$t('admin.positionForm.1403')"
             data-testid="position-eval"
           >
             <template #append>
@@ -64,13 +66,12 @@
             v-if="evalCp !== null && nearBorder(evalCp)"
             class="position-form__warn"
             data-testid="position-border"
-            >À moins de 0,2 d’une frontière de catégorie : la réponse serait un
-            pile ou face.</div
+            >{{ $t('admin.positionForm.aMoinsDe0') }}</div
           >
 
-          <div class="position-form__label"
-            >Libellés montrés avec la correction (1 à 3) *</div
-          >
+          <div class="position-form__label">{{
+            $t('admin.positionForm.libellesMontresAvecLa')
+          }}</div>
           <q-input
             v-for="(_, i) in form.ideas"
             :key="i"
@@ -78,8 +79,17 @@
             outlined
             dense
             maxlength="200"
-            :label="`Libellé ${i + 1}${i === 0 ? ' *' : ''}`"
-            :placeholder="i === 0 ? 'Le fou c8 est bloqué par ses pions.' : ''"
+            :label="
+              $t(
+                i === 0
+                  ? 'admin.positionForm.ideaRequired'
+                  : 'admin.positionForm.idea',
+                { n: i + 1 }
+              )
+            "
+            :placeholder="
+              i === 0 ? $t('admin.positionForm.ideaPlaceholder') : ''
+            "
             :data-testid="`position-idea-${i}`"
           />
 
@@ -91,7 +101,7 @@
               map-options
               outlined
               dense
-              label="Plan (facultatif)"
+              :label="$t('admin.positionForm.planFacultatif')"
               class="position-form__grow"
               data-testid="position-plan"
             />
@@ -102,7 +112,7 @@
               map-options
               outlined
               dense
-              label="Étiquette"
+              :label="$t('admin.positionForm.etiquette')"
               class="position-form__grow"
               data-testid="position-tag"
             />
@@ -112,7 +122,7 @@
             outlined
             dense
             maxlength="255"
-            label="Conseil d’Aaron, avant la réponse (facultatif)"
+            :label="$t('admin.positionForm.conseilDaaronAvantLa')"
             data-testid="position-tip"
           />
           <div class="position-form__row">
@@ -124,7 +134,7 @@
               step="50"
               outlined
               dense
-              label="Difficulté (Elo)"
+              :label="$t('admin.positionForm.difficulteElo')"
               class="position-form__rating"
               data-testid="position-rating"
             />
@@ -133,15 +143,17 @@
               outlined
               dense
               maxlength="160"
-              label="Source (facultatif)"
-              placeholder="Capablanca – Tartakovski, New York 1924"
+              :label="$t('admin.positionForm.sourceFacultatif')"
+              :placeholder="
+                $t('admin.positionForm.capablancaTartakovskiNewYork')
+              "
               class="position-form__grow"
               data-testid="position-source"
             />
           </div>
           <q-toggle
             v-model="form.active"
-            label="Active (servie aux joueurs)"
+            :label="$t('admin.positionForm.activeServieAuxJoueurs')"
             data-testid="position-active"
           />
 
@@ -150,7 +162,7 @@
               outline
               no-caps
               icon="travel_explore"
-              label="Vérifier sur Lichess"
+              :label="$t('admin.positionForm.verifierSurLichess')"
               :loading="checking"
               :disable="!form.fen.trim() || evalCp === null"
               data-testid="position-check"
@@ -162,7 +174,7 @@
               target="_blank"
               rel="noopener"
               class="position-form__analysis"
-              >Échiquier d’analyse Lichess ↗</a
+              >{{ $t('admin.positionForm.echiquierDanalyseLichess') }}</a
             >
           </div>
           <div
@@ -172,13 +184,15 @@
             data-testid="position-check-result"
           >
             <strong>{{ VERDICTS[checkResult.verdict] }}</strong>
-            <span v-if="checkResult.lichess">
-              · Lichess ({{
-                checkResult.source === 'tablebase'
-                  ? 'base de finales'
-                  : 'nuage'
-              }}) : {{ checkResult.lichess }}</span
-            >
+            <span v-if="checkResult.lichess">{{
+              $t('admin.positionForm.lichess', {
+                source:
+                  checkResult.source === 'tablebase'
+                    ? $t('admin.positionForm.tablebase')
+                    : $t('admin.positionForm.cloud'),
+                value: checkResult.lichess
+              })
+            }}</span>
           </div>
 
           <q-banner
@@ -192,12 +206,19 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn flat no-caps label="Annuler" @click="emit('close')" />
+        <q-btn
+          flat
+          no-caps
+          :label="$t('admin.positionForm.annuler')"
+          @click="emit('close')"
+        />
         <q-btn
           unelevated
           no-caps
           color="primary"
-          :label="position ? 'Enregistrer' : 'Ajouter la position'"
+          :label="
+            position ? $t('common.actions.save') : $t('admin.positionForm.add')
+          "
           :loading="saving"
           data-testid="position-save"
           @click="save"
@@ -230,6 +251,7 @@ import {
   parseEval,
   turnOf
 } from '@/utils/admin/evaluation'
+import { t } from '@/i18n'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 
 const props = defineProps({
@@ -291,7 +313,7 @@ async function check() {
       evalCp.value
     )
   } catch (e) {
-    error.value = apiErrorMessage(e, { 422: 'FEN illégale.' })
+    error.value = apiErrorMessage(e, { 422: t('admin.positionForm.illegal') })
   } finally {
     checking.value = false
   }
@@ -309,12 +331,12 @@ async function save() {
     const saved = props.position
       ? await adminApi.updateEvaluationPosition(props.position.id, body)
       : await adminApi.createEvaluationPosition(body)
-    $q.notify({ type: 'positive', message: 'Position enregistrée.' })
+    $q.notify({ type: 'positive', message: t('admin.positionForm.saved') })
     emit('saved', saved)
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Cette position est déjà dans le catalogue.',
-      422: 'Position refusée : FEN illégale, sans coup à jouer, ou champ invalide.'
+      409: t('admin.positionForm.duplicate'),
+      422: t('admin.positionForm.refused')
     })
   } finally {
     saving.value = false

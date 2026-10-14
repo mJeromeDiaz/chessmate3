@@ -17,56 +17,85 @@
     <template v-if="stats">
       <div class="shop-stats__tiles">
         <StatTile
-          label="Couronnes en circulation"
+          :label="$t('admin.shopStatsPanel.couronnesEnCirculation')"
           :value="crowns(stats.totals.circulating)"
-          :hint="`${stats.totals.holders} joueur(s) en ont`"
+          :hint="
+            $t('admin.shopStatsPanel.holders', { n: stats.totals.holders })
+          "
           testid="shop-tile-circulating"
         />
         <StatTile
-          label="Dépensées"
+          :label="$t('admin.shopStatsPanel.depensees')"
           :value="crowns(stats.totals.spent)"
-          :hint="`${stats.totals.purchases} achat(s) · ${stats.totals.buyers} acheteur(s)`"
+          :hint="
+            $t('admin.shopStatsPanel.purchases', {
+              n: stats.totals.purchases,
+              buyers: stats.totals.buyers
+            })
+          "
           testid="shop-tile-spent"
         />
         <StatTile
-          label="Gagnées en session"
+          :label="$t('admin.shopStatsPanel.gagneesEnSession')"
           :value="crowns(stats.totals.earned ?? 0)"
-          :hint="`${stats.totals.rewarded ?? 0} session(s) récompensée(s)`"
+          :hint="
+            $t('admin.shopStatsPanel.rewarded', {
+              n: stats.totals.rewarded ?? 0
+            })
+          "
           testid="shop-tile-earned"
         />
         <StatTile
-          label="Données"
+          :label="$t('admin.shopStatsPanel.donnees')"
           :value="crowns(stats.totals.granted)"
-          :hint="`${crowns(stats.totals.revoked)} retirées`"
+          :hint="
+            $t('admin.shopStatsPanel.revoked', {
+              n: crowns(stats.totals.revoked)
+            })
+          "
           testid="shop-tile-granted"
         />
         <StatTile
-          label="Jours de gel en stock"
+          :label="$t('admin.shopStatsPanel.joursDeGelEn')"
           :value="crowns(stats.freezeDays)"
-          hint="chez tous les joueurs"
+          :hint="$t('admin.shopStatsPanel.chezTousLesJoueurs')"
           testid="shop-tile-freezes"
         />
       </div>
       <ColumnChart
-        title="Couronnes dépensées par jour"
+        :title="$t('admin.shopStatsPanel.couronnesDepenseesParJour')"
         :summary="crowns(stats.totals.spent)"
         :columns="daily"
-        :series="[{ id: 'value', label: 'Couronnes', ...BRAND_SERIES }]"
+        :series="[
+          {
+            id: 'value',
+            label: $t('admin.shopStatsPanel.crowns'),
+            ...BRAND_SERIES
+          }
+        ]"
         :scale="niceScale(Math.max(0, ...daily.map(c => c.values.value)))"
         :format-value="crowns"
         :format-tick="crowns"
-        empty-text="Aucun achat sur la période."
+        :empty-text="$t('admin.shopStatsPanel.aucunAchatSurLa')"
         testid="chart-shop-spent"
       />
       <section class="cm-card q-mt-md">
-        <h2 class="cm-card__title q-mb-sm">Ventes par offre</h2>
+        <h2 class="cm-card__title q-mb-sm">{{
+          $t('admin.shopStatsPanel.ventesParOffre')
+        }}</h2>
         <q-markup-table flat dense class="admin__table">
           <thead>
             <tr>
-              <th class="text-left">Offre</th>
-              <th class="text-right">Achats</th>
-              <th class="text-right">Quantité</th>
-              <th class="text-right">Couronnes</th>
+              <th class="text-left">{{ $t('admin.shopStatsPanel.offre') }}</th>
+              <th class="text-right">{{
+                $t('admin.shopStatsPanel.achats')
+              }}</th>
+              <th class="text-right">{{
+                $t('admin.shopStatsPanel.quantite')
+              }}</th>
+              <th class="text-right">{{
+                $t('admin.shopStatsPanel.couronnes')
+              }}</th>
             </tr>
           </thead>
           <tbody>
@@ -77,23 +106,32 @@
               <td class="text-right">{{ crowns(o.crowns) }}</td>
             </tr>
             <tr v-if="stats.offers.length === 0">
-              <td colspan="4" class="cm-muted">Aucune vente sur la période.</td>
+              <td colspan="4" class="cm-muted">{{
+                $t('admin.shopStatsPanel.aucuneVenteSurLa')
+              }}</td>
             </tr>
           </tbody>
         </q-markup-table>
       </section>
       <section class="cm-card q-mt-md">
-        <h2 class="cm-card__title q-mb-sm">Objets détenus</h2>
+        <h2 class="cm-card__title q-mb-sm">{{
+          $t('admin.shopStatsPanel.objetsDetenus')
+        }}</h2>
         <div class="shop-stats__held">
           <span
             v-for="(qty, item) in stats.held"
             :key="item"
             class="admin__status"
-            >{{ ITEMS[item]?.label ?? item }} × {{ crowns(qty) }}</span
+            >{{
+              $t('admin.shopPlayers.item', {
+                item: ITEMS[item]?.label ?? item,
+                n: crowns(qty)
+              })
+            }}</span
           >
-          <span v-if="Object.keys(stats.held).length === 0" class="cm-muted"
-            >Aucun.</span
-          >
+          <span v-if="Object.keys(stats.held).length === 0" class="cm-muted">{{
+            $t('admin.shopStatsPanel.aucun')
+          }}</span>
         </div>
       </section>
     </template>
@@ -112,12 +150,14 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { BRAND_SERIES, niceScale } from '@/utils/admin/charts'
 import { dayLabel } from '@/utils/dashboard/stats'
 import { ITEMS, crowns } from '@/utils/shop'
+import { t } from '@/i18n'
 
-const PERIODS = [
-  { value: 7, label: '7 j' },
-  { value: 30, label: '30 j' },
-  { value: 90, label: '90 j' }
-]
+const PERIODS = [7, 30, 90].map(value => ({
+  value,
+  get label() {
+    return t('admin.shopStatsPanel.days', { n: value })
+  }
+}))
 
 const days = ref(30)
 /** @type {import('vue').Ref<any|null>} */

@@ -1,5 +1,5 @@
 <template>
-  <nav class="admin-tabs" aria-label="Administration">
+  <nav class="admin-tabs" :aria-label="$t('admin.tabs.administration')">
     <q-tabs
       dense
       no-caps
@@ -10,32 +10,32 @@
       <q-route-tab
         to="/admin"
         exact
-        label="Vue d’ensemble"
+        :label="$t('admin.tabs.vueDensemble')"
         data-testid="admin-tab-overview"
       />
       <q-route-tab
         to="/admin/invitations"
-        label="Invitations"
+        :label="$t('admin.tabs.invitations')"
         data-testid="admin-tab-invitations"
       />
       <q-route-tab
         to="/admin/demandes"
-        label="Demandes"
+        :label="$t('admin.tabs.demandes')"
         data-testid="admin-tab-requests"
       />
       <q-route-tab
         to="/admin/joueurs"
-        label="Joueurs"
+        :label="$t('admin.tabs.joueurs')"
         data-testid="admin-tab-players"
       />
       <q-route-tab
         to="/admin/positions"
-        label="Positions"
+        :label="$t('admin.tabs.positions')"
         data-testid="admin-tab-positions"
       />
       <q-route-tab
         to="/admin/boutique"
-        label="Boutique"
+        :label="$t('admin.tabs.boutique')"
         data-testid="admin-tab-shop"
       />
     </q-tabs>

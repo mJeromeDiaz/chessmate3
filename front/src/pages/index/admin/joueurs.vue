@@ -8,7 +8,7 @@
           dense
           clearable
           debounce="350"
-          label="Rechercher (email, handle, nom)"
+          :label="$t('admin.joueurs.rechercherEmailHandleNom')"
           class="admin__filter admin__filter--grow"
           data-testid="player-search"
           @update:model-value="reload"
@@ -20,7 +20,7 @@
           map-options
           outlined
           dense
-          label="Suspension"
+          :label="$t('admin.joueurs.suspension')"
           class="admin__filter"
           data-testid="player-filter-suspended"
           @update:model-value="reload"
@@ -43,18 +43,20 @@
       >
         <thead>
           <tr>
-            <th class="text-left">Joueur</th>
-            <th class="text-left">Inscrit</th>
-            <th class="text-left">Méthode</th>
-            <th class="text-left">Activité</th>
-            <th class="text-right">Temps 30 j</th>
-            <th class="text-right">Elo Lichess</th>
-            <th class="text-right">Actions</th>
+            <th class="text-left">{{ $t('admin.joueurs.joueur') }}</th>
+            <th class="text-left">{{ $t('admin.joueurs.inscrit') }}</th>
+            <th class="text-left">{{ $t('admin.joueurs.methode') }}</th>
+            <th class="text-left">{{ $t('admin.joueurs.activite') }}</th>
+            <th class="text-right">{{ $t('admin.joueurs.temps30J') }}</th>
+            <th class="text-right">{{ $t('admin.joueurs.eloLichess') }}</th>
+            <th class="text-right">{{ $t('admin.joueurs.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!store.playersLoading && store.players.length === 0">
-            <td colspan="7" class="cm-muted">Aucun joueur.</td>
+            <td colspan="7" class="cm-muted">{{
+              $t('admin.joueurs.aucunJoueur')
+            }}</td>
           </tr>
           <tr v-for="p in store.players" :key="p.id" data-testid="player-row">
             <td>
@@ -63,27 +65,35 @@
                 {{ p.email }}
               </div>
               <div class="admin-player__badges">
-                <span v-if="p.isAdmin" class="admin__status">Admin</span>
-                <span v-if="p.email && !p.emailVerified" class="admin__status"
-                  >Email non vérifié</span
+                <span v-if="p.isAdmin" class="admin__status">{{
+                  $t('admin.joueurs.admin')
+                }}</span>
+                <span
+                  v-if="p.email && !p.emailVerified"
+                  class="admin__status"
+                  >{{ $t('admin.joueurs.emailNonVerifie') }}</span
                 >
                 <span
                   v-if="p.deletionScheduledAt"
                   class="admin__status admin__status--danger"
-                  >Suppression programmée</span
+                  >{{ $t('admin.joueurs.suppressionProgrammee') }}</span
                 >
                 <span
                   v-if="p.suspendedAt"
                   class="admin__status admin__status--danger"
                   data-testid="player-suspended"
-                  >Suspendu le {{ formatDate(p.suspendedAt) }}</span
+                  >{{
+                    $t('admin.joueurs.suspendedOn', {
+                      date: formatDate(p.suspendedAt)
+                    })
+                  }}</span
                 >
               </div>
               <div
                 v-if="p.suspensionReason"
                 class="cm-muted admin-player__reason"
               >
-                Note : {{ p.suspensionReason }}
+                {{ $t('admin.joueurs.note', { note: p.suspensionReason }) }}
               </div>
             </td>
             <td>{{ formatDate(p.createdAt) }}</td>
@@ -97,13 +107,19 @@
                   'admin__status',
                   { 'admin__status--active': p.active }
                 ]"
-                >{{ p.active ? 'Actif' : 'Inactif' }}</span
+                >{{
+                  p.active
+                    ? $t('admin.joueurs.active')
+                    : $t('admin.joueurs.inactive')
+                }}</span
               >
               <div class="cm-muted">
                 {{
                   p.lastActivityAt
-                    ? `Dernier exercice ${formatDate(p.lastActivityAt)}`
-                    : 'Aucun exercice'
+                    ? $t('admin.joueurs.lastExercise', {
+                        date: formatDate(p.lastActivityAt)
+                      })
+                    : $t('admin.joueurs.noExercise')
                 }}
               </div>
             </td>
@@ -112,10 +128,14 @@
               <template v-if="p.lichess?.rating">
                 {{ p.lichess.rating }}
                 <span class="cm-muted">{{
-                  PERF_LABELS[p.lichess.perf] ?? p.lichess.perf
+                  PERFS.includes(p.lichess.perf)
+                    ? $t(`onboarding.perfs.${p.lichess.perf}`)
+                    : p.lichess.perf
                 }}</span>
               </template>
-              <span v-else-if="p.lichess" class="cm-muted">Non classé</span>
+              <span v-else-if="p.lichess" class="cm-muted">{{
+                $t('admin.joueurs.nonClasse')
+              }}</span>
               <span v-else class="cm-muted">—</span>
             </td>
             <td class="text-right no-wrap">
@@ -124,7 +144,7 @@
                 flat
                 dense
                 no-caps
-                label="Réactiver"
+                :label="$t('admin.joueurs.reactiver')"
                 :loading="busy === p.id"
                 data-testid="player-unsuspend"
                 @click="unsuspend(p)"
@@ -135,7 +155,7 @@
                 dense
                 no-caps
                 color="negative"
-                label="Suspendre"
+                :label="$t('admin.joueurs.suspendre')"
                 :loading="busy === p.id"
                 data-testid="player-suspend"
                 @click="suspend(p)"
@@ -146,7 +166,9 @@
       </q-markup-table>
 
       <div class="admin__pager">
-        <span class="cm-muted">{{ store.playerTotal }} joueur(s)</span>
+        <span class="cm-muted">{{
+          $t('admin.joueurs.total', { n: store.playerTotal })
+        }}</span>
         <q-pagination
           v-if="pages > 1"
           v-model="store.playerPage"
@@ -170,6 +192,7 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
 import { formatHours } from '@/utils/dashboard/stats'
 import { METHOD_LABELS, playerName } from '@/utils/admin/invitations'
+import { t } from '@/i18n'
 
 /**
  * Players (docs/EARLY_ACCESS.md): every account, how it signed up, how much it plays; suspend one
@@ -177,12 +200,18 @@ import { METHOD_LABELS, playerName } from '@/utils/admin/invitations'
  */
 definePage({ meta: { auth: 'admin' } })
 
-const PERF_LABELS = { rapid: 'rapide', blitz: 'blitz', classical: 'classique' }
+/** Lichess speeds with a name (onboarding.perfs). */
+const PERFS = ['rapid', 'blitz', 'classical']
 const SUSPENSION_OPTIONS = [
-  { value: null, label: 'Tous' },
-  { value: true, label: 'Suspendus' },
-  { value: false, label: 'Non suspendus' }
-]
+  [null, 'all'],
+  [true, 'suspended'],
+  [false, 'notSuspended']
+].map(([value, key]) => ({
+  value,
+  get label() {
+    return t(`admin.joueurs.filters.${key}`)
+  }
+}))
 
 const $q = useQuasar()
 const store = useAdminStore()
@@ -198,18 +227,17 @@ function reload() {
 /** @param {import('@/stores/admin').Player} p */
 function suspend(p) {
   $q.dialog({
-    title: `Suspendre ${playerName(p)} ?`,
-    message:
-      'Toutes ses sessions sont fermées tout de suite, et il ne pourra plus se connecter. Son agenda et ses rappels s’arrêtent. Rien n’est supprimé.',
+    title: t('admin.joueurs.suspendTitle', { name: playerName(p) }),
+    message: t('admin.joueurs.suspendMessage'),
     prompt: {
       model: '',
       type: 'textarea',
-      label: 'Note interne (jamais montrée au joueur)',
+      label: t('admin.joueurs.internalNote'),
       counter: true,
       maxlength: 500
     },
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Suspendre', color: 'negative' }
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { noCaps: true, label: t('admin.joueurs.suspend'), color: 'negative' }
   }).onOk(async reason => {
     busy.value = p.id
     try {
@@ -218,7 +246,7 @@ function suspend(p) {
       $q.notify({
         type: 'negative',
         message: apiErrorMessage(e, {
-          409: 'Un compte admin ne peut pas être suspendu : retirez d’abord son rôle.'
+          409: t('admin.joueurs.adminRefused')
         })
       })
     } finally {
@@ -230,10 +258,10 @@ function suspend(p) {
 /** @param {import('@/stores/admin').Player} p */
 function unsuspend(p) {
   $q.dialog({
-    title: `Réactiver ${playerName(p)} ?`,
-    message: 'Il pourra se reconnecter ; son agenda et ses rappels reprennent.',
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Réactiver', color: 'primary' }
+    title: t('admin.joueurs.reactivateTitle', { name: playerName(p) }),
+    message: t('admin.joueurs.reactivateMessage'),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { noCaps: true, label: t('admin.joueurs.reactivate'), color: 'primary' }
   }).onOk(async () => {
     busy.value = p.id
     try {

@@ -14,7 +14,9 @@
             >{{ curve.delta >= 0 ? '▲' : '▼' }}
             {{ formatRatingDelta(curve.delta) }}</span
           >
-          <span class="rating-card__record gt-sm">Record {{ curve.max }}</span>
+          <span class="rating-card__record gt-sm">{{
+            $t('dashboard.rating.record', { n: curve.max })
+          }}</span>
         </div>
       </div>
       <div class="rating-card__tabs" role="tablist">

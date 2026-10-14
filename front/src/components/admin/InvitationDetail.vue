@@ -2,13 +2,15 @@
   <q-dialog :model-value="!!id" @update:model-value="emit('close')">
     <q-card class="invitation-detail" data-testid="invitation-detail">
       <q-card-section class="row items-center no-wrap">
-        <div class="text-h6 col">Invitation</div>
+        <div class="text-h6 col">{{
+          $t('admin.invitationDetail.invitation')
+        }}</div>
         <q-btn
           flat
           round
           dense
           icon="close"
-          aria-label="Fermer"
+          :aria-label="$t('admin.invitationDetail.fermer')"
           @click="emit('close')"
         />
       </q-card-section>
@@ -23,47 +25,59 @@
       <template v-else-if="invitation">
         <q-card-section class="q-pt-none">
           <dl class="invitation-detail__facts">
-            <dt>Email</dt>
+            <dt>{{ $t('admin.invitationDetail.email') }}</dt>
             <dd>{{ invitation.email }}</dd>
-            <dt>Statut</dt>
+            <dt>{{ $t('admin.invitationDetail.statut') }}</dt>
             <dd>{{ STATUS_LABELS[invitation.status] }}</dd>
-            <dt>Clé</dt>
+            <dt>{{ $t('admin.invitationDetail.cle') }}</dt>
             <dd
               ><code>{{ invitation.keyHint }}…</code></dd
             >
-            <dt>Créée</dt>
-            <dd
-              >{{ formatDate(invitation.createdAt) }} par
-              {{ account(invitation.createdBy) }}</dd
-            >
-            <dt>Expire</dt>
+            <dt>{{ $t('admin.invitationDetail.creee') }}</dt>
             <dd>{{
-              invitation.expiresAt ? formatDate(invitation.expiresAt) : 'Jamais'
+              $t('admin.invitationDetail.by', {
+                date: formatDate(invitation.createdAt),
+                who: account(invitation.createdBy)
+              })
             }}</dd>
-            <dt>Email d’invitation</dt>
+            <dt>{{ $t('admin.invitationDetail.expire') }}</dt>
+            <dd>{{
+              invitation.expiresAt
+                ? formatDate(invitation.expiresAt)
+                : $t('admin.invitationDetail.never')
+            }}</dd>
+            <dt>{{ $t('admin.invitationDetail.emailDinvitation') }}</dt>
             <dd>
               {{ EMAIL_LABELS[invitation.emailStatus] }}
-              <template v-if="invitation.emailSentAt">
-                le {{ formatDate(invitation.emailSentAt) }}</template
-              >
-              · {{ invitation.sendCount }} envoi(s)
+              <template v-if="invitation.emailSentAt">{{
+                $t('admin.invitationDetail.sentOn', {
+                  date: formatDate(invitation.emailSentAt)
+                })
+              }}</template
+              >{{
+                $t('admin.invitationDetail.sends', { n: invitation.sendCount })
+              }}
             </dd>
             <template v-if="invitation.usedAt">
-              <dt>Utilisée</dt>
-              <dd
-                >{{ formatDate(invitation.usedAt) }} par
-                {{ account(invitation.usedBy) }}</dd
-              >
+              <dt>{{ $t('admin.invitationDetail.utilisee') }}</dt>
+              <dd>{{
+                $t('admin.invitationDetail.by', {
+                  date: formatDate(invitation.usedAt),
+                  who: account(invitation.usedBy)
+                })
+              }}</dd>
             </template>
             <template v-if="invitation.revokedAt">
-              <dt>Révoquée</dt>
+              <dt>{{ $t('admin.invitationDetail.revoquee') }}</dt>
               <dd>{{ formatDate(invitation.revokedAt) }}</dd>
             </template>
           </dl>
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <div class="text-subtitle2 q-mb-sm">Journal</div>
+          <div class="text-subtitle2 q-mb-sm">{{
+            $t('admin.invitationDetail.journal')
+          }}</div>
           <ol class="invitation-detail__log" data-testid="invitation-log">
             <li v-for="line in invitation.logs ?? []" :key="line.id">
               <span class="cm-muted">{{ formatDate(line.createdAt) }}</span>
@@ -75,9 +89,9 @@
                   METHOD_LABELS[line.details.method] ?? line.details.method
                 }}</span
               >
-              <span v-if="line.details?.accountCreated === false"
-                >· adresse déjà inscrite, aucun compte créé</span
-              >
+              <span v-if="line.details?.accountCreated === false">{{
+                $t('admin.invitationDetail.adresseDejaInscriteAucun')
+              }}</span>
             </li>
           </ol>
         </q-card-section>
@@ -97,6 +111,7 @@ import {
   METHOD_LABELS,
   STATUS_LABELS
 } from '@/utils/admin/invitations'
+import { t } from '@/i18n'
 
 /** One invitation and its log, read when opened. */
 const props = defineProps({
@@ -115,8 +130,10 @@ const error = ref('')
  * @returns {string}
  */
 function account(a) {
-  if (!a) return 'un compte supprimé'
-  return a.email ?? (a.handle ? `@${a.handle}` : 'un compte sans email')
+  if (!a) return t('admin.invitationDetail.deleted')
+  return (
+    a.email ?? (a.handle ? `@${a.handle}` : t('admin.invitationDetail.noEmail'))
+  )
 }
 
 watch(

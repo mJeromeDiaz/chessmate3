@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import { notificationApi } from '@/services/api'
 
 /** The service worker that shows Web Push notifications (front/public/push-sw.js). */
@@ -100,14 +101,15 @@ export async function unsubscribePush() {
   return 'unsubscribed'
 }
 
-/** @type {Record<PushState, string>} */
-export const PUSH_STATE_TEXT = {
-  unsupported:
-    "Ce navigateur ne reçoit pas de notifications (sur iPhone, ajoute d’abord Don't Stay Rooky à l’écran d’accueil).",
-  unavailable:
-    'Les notifications du navigateur ne sont pas disponibles pour le moment.',
-  denied:
-    'Les notifications sont bloquées pour ce site : autorise-les dans les réglages du navigateur.',
-  subscribed: 'Activées sur cet appareil.',
-  unsubscribed: 'Désactivées sur cet appareil.'
-}
+/** @type {Record<PushState, string>} the states in words (notification.states), read when shown */
+export const PUSH_STATE_TEXT = Object.defineProperties(
+  /** @type {Record<PushState, string>} */ ({}),
+  Object.fromEntries(
+    ['unsupported', 'unavailable', 'denied', 'subscribed', 'unsubscribed'].map(
+      state => [
+        state,
+        { get: () => t(`notification.states.${state}`), enumerable: true }
+      ]
+    )
+  )
+)

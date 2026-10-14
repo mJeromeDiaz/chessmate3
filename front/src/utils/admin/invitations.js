@@ -3,39 +3,41 @@
  * sign-up link of a key, what can still be done with an invitation. Pure.
  */
 
-/** @type {Record<string, string>} */
-export const STATUS_LABELS = {
-  pending: 'En attente',
-  used: 'Utilisée',
-  expired: 'Expirée',
-  revoked: 'Révoquée'
-}
+import { labelMap, t } from '@/i18n'
 
 /** @type {Record<string, string>} */
-export const EMAIL_LABELS = {
-  pending: 'En cours d’envoi',
-  sent: 'Envoyé',
-  failed: 'Échec'
-}
+export const STATUS_LABELS = labelMap('admin.invitations.status', [
+  'pending',
+  'used',
+  'expired',
+  'revoked'
+])
 
 /** @type {Record<string, string>} */
-export const ACTION_LABELS = {
-  key_created: 'Clé créée',
-  key_sent: 'Email envoyé',
-  key_resent: 'Nouvelle clé envoyée',
-  key_send_failed: 'Envoi abandonné',
-  key_used: 'Clé utilisée',
-  key_expired: 'Tentative avec la clé expirée',
-  key_revoked: 'Clé révoquée'
-}
+export const EMAIL_LABELS = labelMap('admin.invitations.email', [
+  'pending',
+  'sent',
+  'failed'
+])
 
 /** @type {Record<string, string>} */
-export const METHOD_LABELS = {
-  password: 'Mot de passe',
-  google: 'Google',
-  lichess: 'Lichess',
-  other: 'Sans clé'
-}
+export const ACTION_LABELS = labelMap('admin.invitations.actions', [
+  'key_created',
+  'key_sent',
+  'key_resent',
+  'key_send_failed',
+  'key_used',
+  'key_expired',
+  'key_revoked'
+])
+
+/** @type {Record<string, string>} */
+export const METHOD_LABELS = labelMap('admin.methods', [
+  'password',
+  'google',
+  'lichess',
+  'other'
+])
 
 /**
  * The link of the invitation email, for the admin to pass on by another channel: this SPA's
@@ -88,7 +90,7 @@ export function playerName(player) {
     (player.handle ? `@${player.handle}` : null) ??
     player.email ??
     (player.lichess?.username
-      ? `${player.lichess.username} (Lichess)`
-      : 'Compte sans email')
+      ? t('admin.invitations.lichessAccount', { name: player.lichess.username })
+      : t('admin.invitations.noEmail'))
   )
 }

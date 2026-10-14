@@ -1,0 +1,16 @@
+{
+  "states": {
+    "unsupported": "Ce navigateur ne reçoit pas de notifications (sur iPhone, ajoute d’abord Don't Stay Rooky à l’écran d’accueil).",
+    "unavailable": "Les notifications du navigateur ne sont pas disponibles pour le moment.",
+    "denied": "Les notifications sont bloquées pour ce site : autorise-les dans les réglages du navigateur.",
+    "subscribed": "Activées sur cet appareil.",
+    "unsubscribed": "Désactivées sur cet appareil."
+  },
+  "toggle": {
+    "checking": "Vérification…",
+    "enableHere": "Activer sur cet appareil",
+    "enable": "Activer",
+    "disable": "Désactiver",
+    "failed": "Impossible de modifier les notifications de cet appareil."
+  }
+}

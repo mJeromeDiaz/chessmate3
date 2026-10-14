@@ -1,7 +1,7 @@
 <template>
   <div class="push-toggle" data-testid="push-toggle">
     <span class="push-toggle__text" data-testid="push-state">{{
-      state ? PUSH_STATE_TEXT[state] : 'Vérification…'
+      state ? PUSH_STATE_TEXT[state] : $t('notification.toggle.checking')
     }}</span>
     <q-btn
       v-if="state === 'unsubscribed'"
@@ -9,7 +9,11 @@
       unelevated
       no-caps
       color="primary"
-      :label="compact ? 'Activer sur cet appareil' : 'Activer'"
+      :label="
+        compact
+          ? $t('notification.toggle.enableHere')
+          : $t('notification.toggle.enable')
+      "
       :loading="busy"
       data-testid="push-enable"
       @click="enable"
@@ -20,7 +24,7 @@
       flat
       no-caps
       color="negative"
-      label="Désactiver"
+      :label="$t('notification.toggle.disable')"
       :loading="busy"
       data-testid="push-disable"
       @click="disable"
@@ -41,6 +45,7 @@ import {
   subscribePush,
   unsubscribePush
 } from '@/utils/push'
+import { t } from '@/i18n'
 
 defineProps({
   compact: { type: Boolean, default: false }
@@ -58,7 +63,7 @@ async function run(action) {
   try {
     state.value = await action()
   } catch {
-    error.value = 'Impossible de modifier les notifications de cet appareil.'
+    error.value = t('notification.toggle.failed')
   } finally {
     busy.value = false
   }

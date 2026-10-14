@@ -2,7 +2,7 @@
   <q-page class="admin" :data-testid="testid">
     <div class="admin__inner">
       <header class="admin__head">
-        <h1 class="admin__title">Administration</h1>
+        <h1 class="admin__title">{{ $t('admin.page.administration') }}</h1>
         <slot name="actions" />
       </header>
       <AdminTabs />

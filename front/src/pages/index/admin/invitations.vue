@@ -11,7 +11,7 @@
           map-options
           outlined
           dense
-          label="Statut"
+          :label="$t('admin.invitations.statut')"
           class="admin__filter"
           data-testid="invitation-filter-status"
           @update:model-value="reload"
@@ -22,7 +22,7 @@
           dense
           clearable
           debounce="350"
-          label="Rechercher un email"
+          :label="$t('admin.invitations.rechercherUnEmail')"
           class="admin__filter admin__filter--grow"
           data-testid="invitation-filter-email"
           @update:model-value="reload"
@@ -45,20 +45,24 @@
       >
         <thead>
           <tr>
-            <th class="text-left">Email</th>
-            <th class="text-left">Statut</th>
-            <th class="text-left">Clé</th>
-            <th class="text-left">Créée</th>
-            <th class="text-left">Expire</th>
-            <th class="text-left">Email d’invitation</th>
-            <th class="text-right">Actions</th>
+            <th class="text-left">{{ $t('admin.invitations.email2') }}</th>
+            <th class="text-left">{{ $t('admin.invitations.statut') }}</th>
+            <th class="text-left">{{ $t('admin.invitations.cle') }}</th>
+            <th class="text-left">{{ $t('admin.invitations.creee') }}</th>
+            <th class="text-left">{{ $t('admin.invitations.expire') }}</th>
+            <th class="text-left">{{
+              $t('admin.invitations.emailDinvitation')
+            }}</th>
+            <th class="text-right">{{ $t('admin.invitations.actions2') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-if="!store.invitationsLoading && store.invitations.length === 0"
           >
-            <td colspan="7" class="cm-muted">Aucune invitation.</td>
+            <td colspan="7" class="cm-muted">{{
+              $t('admin.invitations.aucuneInvitation')
+            }}</td>
           </tr>
           <tr
             v-for="inv in store.invitations"
@@ -76,7 +80,11 @@
               ><code>{{ inv.keyHint }}…</code></td
             >
             <td>{{ formatDate(inv.createdAt) }}</td>
-            <td>{{ inv.expiresAt ? formatDate(inv.expiresAt) : 'Jamais' }}</td>
+            <td>{{
+              inv.expiresAt
+                ? formatDate(inv.expiresAt)
+                : $t('admin.invitations.never')
+            }}</td>
             <td>
               <span
                 :class="{ 'text-negative': inv.emailStatus === 'failed' }"
@@ -88,7 +96,7 @@
                 flat
                 dense
                 no-caps
-                label="Détail"
+                :label="$t('admin.invitations.detail')"
                 @click="detailId = inv.id"
               />
               <q-btn
@@ -96,7 +104,7 @@
                 flat
                 dense
                 no-caps
-                label="Renvoyer"
+                :label="$t('admin.invitations.renvoyer')"
                 :loading="busy === inv.id"
                 data-testid="invitation-resend"
                 @click="resend(inv)"
@@ -107,7 +115,7 @@
                 dense
                 no-caps
                 color="negative"
-                label="Révoquer"
+                :label="$t('admin.invitations.revoquer')"
                 :disable="busy === inv.id"
                 data-testid="invitation-revoke"
                 @click="revoke(inv)"
@@ -118,7 +126,9 @@
       </q-markup-table>
 
       <div class="admin__pager">
-        <span class="cm-muted">{{ store.invitationTotal }} invitation(s)</span>
+        <span class="cm-muted">{{
+          $t('admin.invitations.total', { n: store.invitationTotal })
+        }}</span>
         <q-pagination
           v-if="pages > 1"
           v-model="store.invitationPage"
@@ -155,14 +165,15 @@ import {
   STATUS_LABELS,
   invitationActions
 } from '@/utils/admin/invitations'
+import { t } from '@/i18n'
 
 /** Invitations (docs/EARLY_ACCESS.md): create, list and filter, resend, revoke, read the log. */
 definePage({ meta: { auth: 'admin' } })
 
-const STATUS_OPTIONS = [
-  { value: null, label: 'Tous' },
+const STATUS_OPTIONS = computed(() => [
+  { value: null, label: t('admin.invitations.all') },
   ...Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))
-]
+])
 
 const $q = useQuasar()
 const store = useAdminStore()
@@ -193,10 +204,10 @@ function reload() {
 /** @param {import('@/stores/admin').Invitation} inv */
 function resend(inv) {
   $q.dialog({
-    title: 'Renvoyer l’invitation ?',
-    message: `Une nouvelle clé part vers ${inv.email} ; l’ancienne cesse de fonctionner.`,
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Renvoyer', color: 'primary' }
+    title: t('admin.invitations.resendTitle'),
+    message: t('admin.invitations.resendMessage', { email: inv.email }),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { noCaps: true, label: t('admin.invitations.resend'), color: 'primary' }
   }).onOk(async () => {
     busy.value = inv.id
     try {
@@ -205,7 +216,7 @@ function resend(inv) {
       $q.notify({
         type: 'negative',
         message: apiErrorMessage(e, {
-          409: 'Cette invitation a déjà été utilisée ou révoquée.'
+          409: t('admin.invitations.closed')
         })
       })
     } finally {
@@ -217,10 +228,14 @@ function resend(inv) {
 /** @param {import('@/stores/admin').Invitation} inv */
 function revoke(inv) {
   $q.dialog({
-    title: 'Révoquer l’invitation ?',
-    message: `La clé envoyée à ${inv.email} ne permettra plus de s’inscrire.`,
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Révoquer', color: 'negative' }
+    title: t('admin.invitations.revokeTitle'),
+    message: t('admin.invitations.revokeMessage', { email: inv.email }),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: {
+      noCaps: true,
+      label: t('admin.invitations.revoke'),
+      color: 'negative'
+    }
   }).onOk(async () => {
     busy.value = inv.id
     try {
@@ -229,7 +244,7 @@ function revoke(inv) {
       $q.notify({
         type: 'negative',
         message: apiErrorMessage(e, {
-          409: 'Cette invitation a déjà été utilisée.'
+          409: t('admin.invitations.used')
         })
       })
     } finally {

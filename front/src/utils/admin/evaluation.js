@@ -1,3 +1,5 @@
+import { labelMap, t } from '@/i18n'
+
 /**
  * The admin's position form (docs/EVALUATION.md): the evaluation as chess players write it, the
  * choices, the body sent to the API. Pure, so that it can be tested alone.
@@ -21,39 +23,51 @@ export const WINNING_CP = 200
 export const MAX_IDEAS = 3
 export const DEFAULT_RATING = 1500
 
-export const PLAN_OPTIONS = [
-  { value: null, label: 'Aucun (pas de question « plan »)' },
-  { value: 'king_attack', label: 'Attaque sur le roi' },
-  { value: 'queenside', label: 'Jeu à l’aile dame' },
-  { value: 'center_space', label: 'Centre et espace' },
-  { value: 'simplify', label: 'Simplifier en finale' },
-  { value: 'active_defense', label: 'Défense active' }
-]
+/**
+ * Options whose labels are messages (`null`: the "none" one), read when shown.
+ *
+ * @param {string} prefix
+ * @param {Array<string|null>} values
+ * @returns {{value: string|null, label: string}[]}
+ */
+const options = (prefix, values) =>
+  values.map(value => ({
+    value,
+    get label() {
+      return t(`${prefix}.${value ?? 'none'}`)
+    }
+  }))
 
-export const TAG_OPTIONS = [
-  { value: null, label: 'Aucune' },
-  { value: 'opening', label: 'Ouverture' },
-  { value: 'middlegame', label: 'Milieu de partie' },
-  { value: 'structure', label: 'Structure' },
-  { value: 'endgame', label: 'Finale' }
-]
+export const PLAN_OPTIONS = options('admin.evaluation.plans', [
+  null,
+  'king_attack',
+  'queenside',
+  'center_space',
+  'simplify',
+  'active_defense'
+])
+
+export const TAG_OPTIONS = options('admin.evaluation.tags', [
+  null,
+  'opening',
+  'middlegame',
+  'structure',
+  'endgame'
+])
 
 /** The five categories, White's point of view. */
-export const CATEGORIES = {
-  2: '+− Blancs gagnent',
-  1: '± Avantage Blancs',
-  0: '= Équilibré',
-  '-1': '∓ Avantage Noirs',
-  '-2': '−+ Noirs gagnent'
-}
+export const CATEGORIES = labelMap(
+  'admin.evaluation.categories',
+  [2, 1, 0, -1, -2]
+)
 
-export const VERDICTS = {
-  ok: 'Lichess est d’accord',
-  mismatch: 'Lichess voit une autre catégorie',
-  drift: 'Même catégorie, mais à plus d’un pion de Lichess',
-  unverified: 'Lichess ne connaît pas cette position',
-  unavailable: 'Lichess ne répond pas, réessaie plus tard'
-}
+export const VERDICTS = labelMap('admin.evaluation.verdicts', [
+  'ok',
+  'mismatch',
+  'drift',
+  'unverified',
+  'unavailable'
+])
 
 /**
  * Reads an evaluation as typed: "+1,4", "-0.3", "1.4", "0", "gagné" / "+−" (White wins),
@@ -63,16 +77,16 @@ export const VERDICTS = {
  * @returns {number|null} centipawns
  */
 export function parseEval(text) {
-  const t = String(text ?? '')
+  const typed = String(text ?? '')
     .trim()
     .toLowerCase()
     .replace(/−/g, '-')
     .replace(/\s+/g, '')
-  if (t === '') return null
-  if (['+-', 'gagné', 'gagne', '1-0', '#'].includes(t)) return WON_CP
-  if (['-+', 'perdu', '0-1', '-#'].includes(t)) return -WON_CP
-  if (!/^[+-]?\d+([.,]\d+)?$/.test(t)) return null
-  const cp = Math.round(Number(t.replace(',', '.')) * 100)
+  if (typed === '') return null
+  if (['+-', 'gagné', 'gagne', 'won', '1-0', '#'].includes(typed)) return WON_CP
+  if (['-+', 'perdu', 'lost', '0-1', '-#'].includes(typed)) return -WON_CP
+  if (!/^[+-]?\d+([.,]\d+)?$/.test(typed)) return null
+  const cp = Math.round(Number(typed.replace(',', '.')) * 100)
   return Math.max(-WON_CP, Math.min(WON_CP, cp))
 }
 
@@ -142,15 +156,12 @@ export function formFrom(position = null) {
 export function bodyFrom(form) {
   const evalCp = parseEval(form.eval)
   const ideas = form.ideas.map(i => i.trim()).filter(Boolean)
-  if (!form.fen.trim()) return { body: null, error: 'La FEN est obligatoire.' }
+  if (!form.fen.trim())
+    return { body: null, error: t('admin.evaluation.errors.fen') }
   if (evalCp === null)
-    return {
-      body: null,
-      error:
-        'Évaluation illisible : écris par exemple +1,4, -0,3, 0 ou « gagné ».'
-    }
+    return { body: null, error: t('admin.evaluation.errors.eval') }
   if (ideas.length === 0)
-    return { body: null, error: 'Au moins un libellé est obligatoire.' }
+    return { body: null, error: t('admin.evaluation.errors.ideas') }
   const blank = /** @param {string} t */ t =>
     t.trim() === '' ? null : t.trim()
   return {

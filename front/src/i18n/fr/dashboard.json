@@ -129,7 +129,8 @@
     "solve": "Résoudre des puzzles",
     "linkLichess": "Lie ton compte Lichess pour suivre ton Elo en partie.",
     "link": "Lier Lichess",
-    "noGames": "Aucune partie classée dans cette cadence sur Lichess."
+    "noGames": "Aucune partie classée dans cette cadence sur Lichess.",
+    "record": "Record {n}"
   },
   "health": {
     "title": "Répertoires",

@@ -113,7 +113,7 @@
             <th v-for="m in CHART_MODULES" :key="m.id" scope="col">{{
               m.label
             }}</th>
-            <th scope="col">Total</th>
+            <th scope="col">{{ $t('dashboard.time.total') }}</th>
           </tr>
         </thead>
         <tbody>

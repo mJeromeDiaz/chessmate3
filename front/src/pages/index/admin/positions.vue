@@ -6,7 +6,7 @@
         no-caps
         color="primary"
         icon="add"
-        label="Nouvelle position"
+        :label="$t('admin.positions.nouvellePosition')"
         data-testid="position-new"
         @click="edit(null)"
       />
@@ -21,7 +21,7 @@
           map-options
           outlined
           dense
-          label="Statut"
+          :label="$t('admin.positions.statut')"
           class="admin__filter"
           data-testid="position-filter-active"
           @update:model-value="reload"
@@ -33,7 +33,7 @@
           map-options
           outlined
           dense
-          label="Étiquette"
+          :label="$t('admin.positions.etiquette')"
           class="admin__filter"
           data-testid="position-filter-tag"
           @update:model-value="reload"
@@ -52,28 +52,32 @@
       >
         <thead>
           <tr>
-            <th class="text-left">Position</th>
-            <th class="text-left">Évaluation</th>
-            <th class="text-left">Libellés</th>
-            <th class="text-left">Plan</th>
-            <th class="text-right">Elo</th>
-            <th class="text-right">Jouée</th>
-            <th class="text-left">Statut</th>
-            <th class="text-right">Actions</th>
+            <th class="text-left">{{ $t('admin.positions.position') }}</th>
+            <th class="text-left">{{ $t('admin.positions.evaluation') }}</th>
+            <th class="text-left">{{ $t('admin.positions.libelles') }}</th>
+            <th class="text-left">{{ $t('admin.positions.plan') }}</th>
+            <th class="text-right">{{ $t('admin.positions.elo') }}</th>
+            <th class="text-right">{{ $t('admin.positions.jouee') }}</th>
+            <th class="text-left">{{ $t('admin.positions.statut') }}</th>
+            <th class="text-right">{{ $t('admin.positions.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!loading && positions.length === 0">
-            <td colspan="8" class="cm-muted"
-              >Aucune position. Ajoute la première avec « Nouvelle position
-              ».</td
-            >
+            <td colspan="8" class="cm-muted">{{
+              $t('admin.positions.aucunePositionAjouteLa')
+            }}</td>
           </tr>
           <tr v-for="p in positions" :key="p.id" data-testid="position-row">
             <td>
               <div
-                >{{ p.turn === 'white' ? 'Trait Blancs' : 'Trait Noirs'
-                }}<span v-if="p.tag"> · {{ tagLabel(p.tag) }}</span></div
+                >{{
+                  p.turn === 'white'
+                    ? $t('admin.positions.turnWhite')
+                    : $t('admin.positions.turnBlack')
+                }}<span v-if="p.tag">{{
+                  $t('admin.positions.tag', { tag: tagLabel(p.tag) })
+                }}</span></div
               >
               <code class="position-fen">{{ p.fen }}</code>
             </td>
@@ -82,7 +86,7 @@
               <span
                 v-if="p.nearBorder"
                 class="position-border"
-                title="À moins de 0,2 d’une frontière"
+                :title="$t('admin.positions.aMoinsDe0')"
                 >⚠</span
               >
             </td>
@@ -96,7 +100,11 @@
                   'admin__status',
                   p.active ? 'admin__status--active' : ''
                 ]"
-                >{{ p.active ? 'Active' : 'Inactive' }}</span
+                >{{
+                  p.active
+                    ? $t('admin.positions.active')
+                    : $t('admin.positions.inactive')
+                }}</span
               >
             </td>
             <td class="text-right no-wrap">
@@ -104,7 +112,7 @@
                 flat
                 dense
                 no-caps
-                label="Modifier"
+                :label="$t('admin.positions.modifier')"
                 data-testid="position-edit"
                 @click="edit(p)"
               />
@@ -114,7 +122,7 @@
                 dense
                 no-caps
                 color="negative"
-                label="Supprimer"
+                :label="$t('admin.positions.supprimer')"
                 :disable="busy === p.id"
                 data-testid="position-delete"
                 @click="remove(p)"
@@ -125,7 +133,9 @@
       </q-markup-table>
 
       <div class="admin__pager">
-        <span class="cm-muted">{{ total }} position(s)</span>
+        <span class="cm-muted">{{
+          $t('admin.positions.total', { n: total })
+        }}</span>
         <q-pagination
           v-if="pages > 1"
           v-model="page"
@@ -155,6 +165,7 @@ import AdminPage from '@/components/admin/AdminPage.vue'
 import PositionForm from '@/components/admin/PositionForm.vue'
 import { apiErrorMessage } from '@/utils/apiError'
 import { PLAN_OPTIONS, TAG_OPTIONS } from '@/utils/admin/evaluation'
+import { t } from '@/i18n'
 
 /**
  * Positions to evaluate (docs/EVALUATION.md): the catalogue entered by hand. A position already
@@ -164,10 +175,15 @@ definePage({ meta: { auth: 'admin' } })
 
 const PAGE_SIZE = 20
 const ACTIVE_OPTIONS = [
-  { value: null, label: 'Toutes' },
-  { value: true, label: 'Actives' },
-  { value: false, label: 'Inactives' }
-]
+  [null, 'all'],
+  [true, 'active'],
+  [false, 'inactive']
+].map(([value, key]) => ({
+  value,
+  get label() {
+    return t(`admin.positions.filters.${key}`)
+  }
+}))
 
 const $q = useQuasar()
 /** @type {import('vue').Ref<any[]>} */
@@ -232,10 +248,10 @@ function onSaved() {
 /** @param {{id: string}} p */
 function remove(p) {
   $q.dialog({
-    title: 'Supprimer cette position ?',
-    message: 'Elle n’a jamais été jouée : elle disparaît du catalogue.',
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Supprimer', color: 'negative' }
+    title: t('admin.positions.deleteTitle'),
+    message: t('admin.positions.deleteMessage'),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { noCaps: true, label: t('admin.positions.delete'), color: 'negative' }
   }).onOk(async () => {
     busy.value = p.id
     try {
@@ -245,7 +261,7 @@ function remove(p) {
       $q.notify({
         type: 'negative',
         message: apiErrorMessage(e, {
-          409: 'Déjà jouée : désactive-la plutôt.'
+          409: t('admin.positions.played')
         })
       })
     } finally {

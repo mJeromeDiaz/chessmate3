@@ -9,7 +9,7 @@
           map-options
           outlined
           dense
-          label="Afficher"
+          :label="$t('admin.demandes.afficher')"
           class="admin__filter"
           data-testid="request-filter"
           @update:model-value="reload"
@@ -33,15 +33,17 @@
         <thead>
           <tr>
             <th class="text-left">#</th>
-            <th class="text-left">Email</th>
-            <th class="text-left">Demandée</th>
-            <th class="text-left">Invitation</th>
-            <th class="text-right">Actions</th>
+            <th class="text-left">{{ $t('admin.demandes.email') }}</th>
+            <th class="text-left">{{ $t('admin.demandes.demandee') }}</th>
+            <th class="text-left">{{ $t('admin.demandes.invitation') }}</th>
+            <th class="text-right">{{ $t('admin.demandes.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!store.requestsLoading && store.requests.length === 0">
-            <td colspan="5" class="cm-muted">Aucune demande.</td>
+            <td colspan="5" class="cm-muted">{{
+              $t('admin.demandes.aucuneDemande')
+            }}</td>
           </tr>
           <tr
             v-for="(req, i) in store.requests"
@@ -57,7 +59,7 @@
                 v-if="req.hasAccount"
                 class="admin__status admin__status--used q-ml-xs"
                 data-testid="request-has-account"
-                >A déjà un compte</span
+                >{{ $t('admin.demandes.aDejaUnCompte') }}</span
               >
             </td>
             <td>{{ formatDate(req.createdAt) }}</td>
@@ -71,14 +73,22 @@
                   >{{ STATUS_LABELS[req.invitation.status] }}</span
                 >
                 <span class="cm-muted q-ml-xs"
-                  >le {{ formatDate(req.invitedAt) }} ·
+                  >{{
+                    $t('admin.demandes.invitedOn', {
+                      date: formatDate(req.invitedAt)
+                    })
+                  }}
                   <code>{{ req.invitation.keyHint }}…</code></span
                 >
               </template>
-              <span v-else-if="req.invitedAt" class="cm-muted"
-                >Invitée le {{ formatDate(req.invitedAt) }}</span
-              >
-              <span v-else class="cm-muted">En attente</span>
+              <span v-else-if="req.invitedAt" class="cm-muted">{{
+                $t('admin.demandes.invitedAt', {
+                  date: formatDate(req.invitedAt)
+                })
+              }}</span>
+              <span v-else class="cm-muted">{{
+                $t('admin.demandes.enAttente')
+              }}</span>
             </td>
             <td class="text-right no-wrap">
               <q-btn
@@ -87,7 +97,7 @@
                 dense
                 no-caps
                 color="primary"
-                label="Inviter"
+                :label="$t('admin.demandes.inviter')"
                 :loading="busy === req.id"
                 data-testid="request-invite"
                 @click="invite(req)"
@@ -97,7 +107,7 @@
                 dense
                 no-caps
                 color="negative"
-                label="Supprimer"
+                :label="$t('admin.demandes.supprimer')"
                 :disable="busy === req.id"
                 data-testid="request-delete"
                 @click="remove(req)"
@@ -108,7 +118,9 @@
       </q-markup-table>
 
       <div class="admin__pager">
-        <span class="cm-muted">{{ store.requestTotal }} demande(s)</span>
+        <span class="cm-muted">{{
+          $t('admin.demandes.total', { n: store.requestTotal })
+        }}</span>
         <q-pagination
           v-if="pages > 1"
           v-model="store.requestPage"
@@ -134,6 +146,7 @@ import KeyDialog from '@/components/admin/KeyDialog.vue'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
 import { STATUS_LABELS } from '@/utils/admin/invitations'
+import { t } from '@/i18n'
 
 /**
  * The early access waiting list (docs/EARLY_ACCESS.md): who asked, in order of arrival; invite
@@ -142,10 +155,15 @@ import { STATUS_LABELS } from '@/utils/admin/invitations'
 definePage({ meta: { auth: 'admin' } })
 
 const FILTER_OPTIONS = [
-  { value: false, label: 'En attente' },
-  { value: true, label: 'Invitées' },
-  { value: null, label: 'Toutes' }
-]
+  [false, 'pending'],
+  [true, 'invited'],
+  [null, 'all']
+].map(([value, key]) => ({
+  value,
+  get label() {
+    return t(`admin.demandes.filters.${key}`)
+  }
+}))
 
 const $q = useQuasar()
 const store = useAdminStore()
@@ -164,12 +182,17 @@ function reload() {
 /** @param {import('@/stores/admin').AccessRequest} req */
 function invite(req) {
   $q.dialog({
-    title: 'Inviter cette adresse ?',
-    message: req.hasAccount
-      ? `${req.email} a déjà un compte. Une clé (7 jours) lui sera quand même envoyée.`
-      : `Une clé valable 7 jours part vers ${req.email}.`,
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Inviter', color: 'primary' }
+    title: t('admin.demandes.inviteTitle'),
+    message: t(
+      req.hasAccount
+        ? 'admin.demandes.inviteHasAccount'
+        : 'admin.demandes.inviteMessage',
+      {
+        email: req.email
+      }
+    ),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { noCaps: true, label: t('admin.demandes.invite'), color: 'primary' }
   }).onOk(async () => {
     busy.value = req.id
     try {
@@ -179,7 +202,7 @@ function invite(req) {
       $q.notify({
         type: 'negative',
         message: apiErrorMessage(e, {
-          409: 'Cette demande a déjà été invitée.'
+          409: t('admin.demandes.alreadyInvited')
         })
       })
       store.loadRequests()
@@ -192,10 +215,12 @@ function invite(req) {
 /** @param {import('@/stores/admin').AccessRequest} req */
 function remove(req) {
   $q.dialog({
-    title: 'Supprimer la demande ?',
-    message: `L’adresse ${req.email} sort de la liste d’attente.${req.invitation ? ' Son invitation reste valable.' : ''}`,
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Supprimer', color: 'negative' }
+    title: t('admin.demandes.deleteTitle'),
+    message:
+      t('admin.demandes.deleteMessage', { email: req.email }) +
+      (req.invitation ? t('admin.demandes.stillValid') : ''),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { noCaps: true, label: t('admin.demandes.delete'), color: 'negative' }
   }).onOk(async () => {
     busy.value = req.id
     try {

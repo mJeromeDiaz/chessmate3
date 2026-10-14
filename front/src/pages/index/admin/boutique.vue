@@ -7,7 +7,7 @@
         no-caps
         color="primary"
         icon="add"
-        label="Nouvelle offre"
+        :label="$t('admin.boutique.nouvelleOffre')"
         data-testid="offer-new"
         @click="editOffer(null)"
       />
@@ -17,7 +17,7 @@
         no-caps
         color="primary"
         icon="add"
-        label="Nouveau slide"
+        :label="$t('admin.boutique.nouveauSlide')"
         data-testid="slide-new"
         @click="editSlide(null)"
       />
@@ -32,11 +32,31 @@
       indicator-color="primary"
       class="q-mb-md"
     >
-      <q-tab name="offers" label="Offres" data-testid="shop-admin-offers" />
-      <q-tab name="slides" label="Carrousel" data-testid="shop-admin-slides" />
-      <q-tab name="rewards" label="Gains" data-testid="shop-admin-rewards" />
-      <q-tab name="players" label="Joueurs" data-testid="shop-admin-players" />
-      <q-tab name="stats" label="Statistiques" data-testid="shop-admin-stats" />
+      <q-tab
+        name="offers"
+        :label="$t('admin.boutique.offres')"
+        data-testid="shop-admin-offers"
+      />
+      <q-tab
+        name="slides"
+        :label="$t('admin.boutique.carrousel')"
+        data-testid="shop-admin-slides"
+      />
+      <q-tab
+        name="rewards"
+        :label="$t('admin.boutique.gains')"
+        data-testid="shop-admin-rewards"
+      />
+      <q-tab
+        name="players"
+        :label="$t('admin.boutique.joueurs')"
+        data-testid="shop-admin-players"
+      />
+      <q-tab
+        name="stats"
+        :label="$t('admin.boutique.statistiques')"
+        data-testid="shop-admin-stats"
+      />
     </q-tabs>
 
     <q-banner v-if="error" class="cm-banner--danger q-mb-md" rounded>{{
@@ -47,13 +67,13 @@
       <q-markup-table flat dense class="admin__table" data-testid="offer-table">
         <thead>
           <tr>
-            <th class="text-left">Offre</th>
-            <th class="text-left">Rayon</th>
-            <th class="text-left">Contenu</th>
-            <th class="text-right">Prix</th>
-            <th class="text-right">Ventes</th>
-            <th class="text-left">Statut</th>
-            <th class="text-right">Actions</th>
+            <th class="text-left">{{ $t('admin.boutique.offre') }}</th>
+            <th class="text-left">{{ $t('admin.boutique.rayon') }}</th>
+            <th class="text-left">{{ $t('admin.boutique.contenu') }}</th>
+            <th class="text-right">{{ $t('admin.boutique.prix') }}</th>
+            <th class="text-right">{{ $t('admin.boutique.ventes') }}</th>
+            <th class="text-left">{{ $t('admin.boutique.statut') }}</th>
+            <th class="text-right">{{ $t('admin.boutique.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -66,9 +86,9 @@
               <strong>{{ o.name }}</strong>
               <div class="cm-muted"
                 ><code>{{ o.slug }}</code
-                ><span v-if="o.endsAt">
-                  · jusqu’au {{ when(o.endsAt) }}</span
-                ></div
+                ><span v-if="o.endsAt">{{
+                  $t('admin.boutique.until', { date: when(o.endsAt) })
+                }}</span></div
               >
             </td>
             <td>{{ sectionLabel(o.section) }}</td>
@@ -101,7 +121,7 @@
                 flat
                 dense
                 no-caps
-                label="Modifier"
+                :label="$t('admin.boutique.modifier')"
                 data-testid="offer-edit"
                 @click="editOffer(o)"
               />
@@ -110,7 +130,11 @@
                 dense
                 no-caps
                 :color="o.suspended ? 'primary' : 'negative'"
-                :label="o.suspended ? 'Réactiver' : 'Suspendre'"
+                :label="
+                  o.suspended
+                    ? $t('admin.boutique.reactivate')
+                    : $t('admin.boutique.suspend')
+                "
                 :disable="busy === o.id"
                 data-testid="offer-suspend"
                 @click="toggleOffer(o)"
@@ -125,19 +149,19 @@
       <q-markup-table flat dense class="admin__table" data-testid="slide-table">
         <thead>
           <tr>
-            <th class="text-left">Prof</th>
-            <th class="text-left">Accroche</th>
-            <th class="text-left">Offre</th>
-            <th class="text-right">Ordre</th>
-            <th class="text-left">Statut</th>
-            <th class="text-right">Actions</th>
+            <th class="text-left">{{ $t('admin.boutique.prof') }}</th>
+            <th class="text-left">{{ $t('admin.boutique.accroche') }}</th>
+            <th class="text-left">{{ $t('admin.boutique.offre') }}</th>
+            <th class="text-right">{{ $t('admin.boutique.ordre') }}</th>
+            <th class="text-left">{{ $t('admin.boutique.statut') }}</th>
+            <th class="text-right">{{ $t('admin.boutique.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="(catalog?.slides ?? []).length === 0">
-            <td colspan="6" class="cm-muted"
-              >Aucun slide : le carrousel est masqué.</td
-            >
+            <td colspan="6" class="cm-muted">{{
+              $t('admin.boutique.aucunSlideLeCarrousel')
+            }}</td>
           </tr>
           <tr
             v-for="s in catalog?.slides ?? []"
@@ -154,7 +178,11 @@
               <span
                 :class="['admin__status', s.shown ? 'admin__status--used' : '']"
                 >{{
-                  s.shown ? 'Affiché' : s.suspended ? 'Suspendu' : 'Masqué'
+                  s.shown
+                    ? $t('admin.boutique.shown')
+                    : s.suspended
+                      ? $t('admin.boutique.suspended')
+                      : $t('admin.boutique.hidden')
                 }}</span
               >
             </td>
@@ -163,7 +191,7 @@
                 flat
                 dense
                 no-caps
-                label="Modifier"
+                :label="$t('admin.boutique.modifier')"
                 data-testid="slide-edit"
                 @click="editSlide(s)"
               />
@@ -172,7 +200,7 @@
                 dense
                 no-caps
                 color="negative"
-                label="Supprimer"
+                :label="$t('admin.boutique.supprimer')"
                 :disable="busy === s.id"
                 data-testid="slide-delete"
                 @click="removeSlide(s)"
@@ -227,6 +255,7 @@ import {
 import { profImage } from '@/utils/prof/images'
 import { ITEMS, crowns } from '@/utils/shop'
 import { intlLocale } from '@/i18n'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'admin' } })
 
@@ -263,9 +292,13 @@ function sectionLabel(section) {
 function contents(o) {
   if (o.items.length === 0) return '—'
   return o.items
-    .map(
-      i =>
-        `${i.quantity > 1 ? `${i.quantity} × ` : ''}${ITEMS[i.item]?.label ?? i.item}`
+    .map(i =>
+      i.quantity > 1
+        ? t('admin.shopPlayers.item', {
+            item: ITEMS[i.item]?.label ?? i.item,
+            n: i.quantity
+          })
+        : (ITEMS[i.item]?.label ?? i.item)
     )
     .join(', ')
 }
@@ -317,10 +350,13 @@ async function toggleOffer(o) {
 /** @param {import('@/utils/admin/shop').AdminSlide} s */
 function removeSlide(s) {
   $q.dialog({
-    title: 'Supprimer ce slide ?',
-    message: `« ${s.tag} » sur ${s.offerName}. L’offre reste en vente.`,
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { color: 'negative', noCaps: true, label: 'Supprimer' }
+    title: t('admin.boutique.deleteSlideTitle'),
+    message: t('admin.boutique.deleteSlideMessage', {
+      tag: s.tag,
+      offer: s.offerName
+    }),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { color: 'negative', noCaps: true, label: t('admin.boutique.delete') }
   }).onOk(async () => {
     busy.value = s.id
     try {
