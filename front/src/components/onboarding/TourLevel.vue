@@ -99,7 +99,9 @@ const lichess = computed(
 )
 const perfLabel = computed(() => {
   const perf = lichess.value.perf ?? ''
-  return (PERFS.includes(perf) ? t(`onboarding.perfs.${perf}`) : perf).toUpperCase()
+  return (
+    PERFS.includes(perf) ? t(`onboarding.perfs.${perf}`) : perf
+  ).toUpperCase()
 })
 const eloText = computed(() =>
   new Intl.NumberFormat(intlLocale()).format(lichess.value.rating ?? 0)

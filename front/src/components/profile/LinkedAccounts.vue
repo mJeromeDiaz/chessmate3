@@ -28,13 +28,11 @@
           <div class="profile-row__sub connection__detail">{{
             identityDetail(row.identity)
           }}</div>
-          <div class="profile-row__sub"
-            >{{
-              $t('profile.connections.linkedOn', {
-                date: formatDay(row.identity.linkedAt)
-              })
-            }}</div
-          >
+          <div class="profile-row__sub">{{
+            $t('profile.connections.linkedOn', {
+              date: formatDay(row.identity.linkedAt)
+            })
+          }}</div>
         </template>
         <div v-else class="profile-row__sub">{{
           $t('profile.connections.notLinked')

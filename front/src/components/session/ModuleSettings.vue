@@ -11,7 +11,7 @@
         v-if="module.profSlug"
         :to="`/prof/${module.profSlug}`"
         class="module-settings__profile"
-        >Voir le profil du prof →</router-link
+        >{{ $t('session.settings.profile') }}</router-link
       >
       <ProfAvatar
         class="module-settings__avatar"
@@ -27,11 +27,13 @@
         <button
           type="button"
           class="module-settings__subback"
-          aria-label="Retour aux réglages"
+          :aria-label="$t('session.settings.backToSettings')"
           @click="themesKey = null"
           >←</button
         >
-        <span class="module-settings__label">Thèmes</span>
+        <span class="module-settings__label">{{
+          $t('session.settings.themes')
+        }}</span>
       </div>
       <ThemePicker
         v-model="values[themesKey]"
@@ -116,7 +118,9 @@
                 : {}
             "
             @click="pick(field, option)"
-            >{{ option }}</button
+            >{{
+              field.optionLabel ? field.optionLabel(option) : option
+            }}</button
           >
         </div>
         <div
@@ -156,24 +160,24 @@
             v-if="!values[field.key].length"
             class="module-settings__tag"
             :style="{ background: module.soft }"
-            >Tous les thèmes</span
+            >{{ $t('session.settings.allThemes') }}</span
           >
           <button
             type="button"
             class="module-settings__option"
             data-testid="themes-open"
             @click="themesKey = field.key"
-            >Choisir…</button
+            >{{ $t('session.settings.pick') }}</button
           >
         </div>
         <template v-else-if="field.type === 'repertoire'">
           <div v-if="!context.loaded" class="module-settings__hint">{{
-            session.subjectsError || 'Chargement de tes répertoires…'
+            session.subjectsError || $t('session.settings.loadingRepertoires')
           }}</div>
           <div
             v-else-if="!context.repertoires.length"
             class="module-settings__empty"
-            >Tu n’as pas encore de répertoire.</div
+            >{{ $t('session.settings.noRepertoire') }}</div
           >
           <div
             v-else
@@ -197,7 +201,11 @@
               <span
                 class="module-settings__piece"
                 :class="`module-settings__piece--${repertoire.color}`"
-                :title="repertoire.color === 'white' ? 'Blancs' : 'Noirs'"
+                :title="
+                  repertoire.color === 'white'
+                    ? $t('session.settings.white')
+                    : $t('session.settings.black')
+                "
               />
               {{ repertoire.name }}
             </button>
@@ -215,7 +223,7 @@
                 : { background: module.deep, color: '#fff' }
             "
             data-testid="session-repertoire-create"
-            >+ Créer un répertoire</router-link
+            >{{ $t('session.settings.createRepertoire') }}</router-link
           >
         </template>
         <template v-else-if="field.type === 'lightSet' && values[field.key]">
@@ -225,24 +233,28 @@
             data-testid="opening-set"
           >
             <div class="module-settings__card-title">{{
-              openingSet(values[field.key])?.name ?? 'Set d’ouverture'
+              openingSet(values[field.key])?.name ??
+              $t('session.settings.openingSet')
             }}</div>
             <div class="module-settings__card-meta">{{
               openingSet(values[field.key])
-                ? `Set d’ouverture · ${openingSet(values[field.key]).puzzleCount} puzzles`
-                : 'Ce set d’ouverture n’est plus en cours.'
+                ? $t(
+                    'session.settings.openingSetMeta',
+                    openingSet(values[field.key]).puzzleCount
+                  )
+                : $t('session.settings.openingSetGone')
             }}</div>
             <router-link
               :to="`/woodpecker/${values[field.key]}`"
               class="module-settings__link"
               :style="{ color: module.accentInk }"
-              >Voir le set →</router-link
+              >{{ $t('session.settings.seeSet') }}</router-link
             >
           </div>
         </template>
         <template v-else-if="field.type === 'lightSet'">
           <div v-if="!context.loaded" class="module-settings__hint">{{
-            session.subjectsError || 'Chargement de ton set…'
+            session.subjectsError || $t('session.settings.loadingSet')
           }}</div>
           <div
             v-else-if="context.lightSet"
@@ -254,30 +266,40 @@
               context.lightSet.name
             }}</div>
             <div class="module-settings__card-meta"
-              >{{ context.lightSet.puzzleCount }} puzzles ·
-              {{ context.lightSet.runCount }} séance{{
-                context.lightSet.runCount > 1 ? 's' : ''
+              >{{
+                $t('session.settings.lightSetMeta', {
+                  puzzles: $t(
+                    'session.catalog.units.puzzles',
+                    context.lightSet.puzzleCount
+                  ),
+                  runs: $t(
+                    'session.settings.lightSetRuns',
+                    context.lightSet.runCount
+                  )
+                })
               }}{{
-                context.lightSet.status === 'paused' ? ' · en pause' : ''
+                context.lightSet.status === 'paused'
+                  ? $t('session.settings.paused')
+                  : ''
               }}</div
             >
             <router-link
               :to="`/woodpecker/${context.lightSet.id}`"
               class="module-settings__link"
               :style="{ color: module.accentInk }"
-              >Voir le set →</router-link
+              >{{ $t('session.settings.seeSet') }}</router-link
             >
           </div>
           <template v-else>
-            <div class="module-settings__empty"
-              >Tu n’as pas encore de set light.</div
-            >
+            <div class="module-settings__empty">{{
+              $t('session.settings.noLightSet')
+            }}</div>
             <router-link
               to="/woodpecker/new?mode=light"
               class="module-settings__link module-settings__link--cta"
               :style="{ background: module.deep, color: '#1b1530' }"
               data-testid="light-set-create"
-              >+ Créer mon set light</router-link
+              >{{ $t('session.settings.createLightSet') }}</router-link
             >
           </template>
         </template>
@@ -290,7 +312,7 @@
             data-testid="streak-topic"
           />
           <div v-else class="module-settings__hint">{{
-            session.subjectsError || 'Chargement des thématiques…'
+            session.subjectsError || $t('session.settings.loadingTopics')
           }}</div>
         </template>
         <textarea
@@ -300,7 +322,9 @@
           rows="2"
           maxlength="200"
           class="module-settings__text"
-          :placeholder="field.placeholder || 'Consigne, objectif…'"
+          :placeholder="
+            field.placeholder || $t('session.settings.notesPlaceholder')
+          "
         />
       </div>
     </div>
@@ -317,7 +341,7 @@
         class="module-settings__save"
         data-testid="themes-done"
         @click="themesKey = null"
-        >Valider les thèmes</button
+        >{{ $t('session.settings.themesDone') }}</button
       >
     </div>
     <div v-else class="module-settings__actions">
@@ -327,7 +351,7 @@
         class="module-settings__remove"
         data-testid="module-remove"
         @click="emit('remove')"
-        >Retirer</button
+        >{{ $t('session.settings.remove') }}</button
       >
       <button
         type="button"
@@ -335,8 +359,15 @@
         data-testid="module-save"
         :disabled="!!issue"
         @click="emit('save', values)"
-        >{{ mode === 'edit' ? 'Enregistrer' : 'Ajouter à la session' }} ·
-        {{ formatMinutes(moduleMinutes(module, values)) }}</button
+        >{{
+          $t('session.settings.saveWith', {
+            action:
+              mode === 'edit'
+                ? $t('common.actions.save')
+                : $t('session.settings.add'),
+            minutes: formatMinutes(moduleMinutes(module, values))
+          })
+        }}</button
       >
     </div>
   </div>
@@ -344,6 +375,7 @@
 
 <script setup>
 import { computed, reactive, ref, useId, watch } from 'vue'
+import { t } from '@/i18n'
 import TopicSelect from '@/components/puzzleStreak/TopicSelect.vue'
 import ProfAvatar from '@/components/session/ProfAvatar.vue'
 import ThemePicker from '@/components/session/ThemePicker.vue'
@@ -428,9 +460,15 @@ const durationChoices = computed(
   () => context.value.durationChoices?.[props.module.id]?.minutes ?? []
 )
 
-const kicker = computed(
-  () =>
-    `PROF ${props.module.prof.toUpperCase()} · ${props.mode === 'edit' ? 'MODIFIER' : 'NOUVEAU MODULE'}`
+const kicker = computed(() =>
+  t('session.settings.kicker', {
+    prof: props.module.prof.toUpperCase(),
+    mode: t(
+      props.mode === 'edit'
+        ? 'session.settings.kickerEdit'
+        : 'session.settings.kickerNew'
+    )
+  })
 )
 
 /**
@@ -442,7 +480,7 @@ function display(field) {
   if (field.type === 'slider') return field.format ? field.format(v) : String(v)
   if (field.type === 'durationChoice') return v > 0 ? formatMinutes(v) : '…'
   if ((field.type === 'many' || field.type === 'repertoire') && v.length) {
-    return `${v.length} choisi${v.length > 1 ? 's' : ''}`
+    return t('session.settings.chosen', v.length)
   }
   if (field.type === 'themes')
     return v.length ? `${v.length} / ${MAX_THEMES}` : ''

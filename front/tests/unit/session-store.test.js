@@ -162,6 +162,55 @@ describe('session store', () => {
     ])
   })
 
+  it('turns the French choices of older drafts into language-neutral values', () => {
+    localStorage.setItem(
+      DRAFT_KEY,
+      JSON.stringify({
+        items: [
+          {
+            uid: 1,
+            moduleId: 'libre',
+            values: { duree: 30, type: 'Vidéo', notes: '' }
+          },
+          {
+            uid: 2,
+            moduleId: 'aveugle',
+            values: {
+              duree: 15,
+              niveau: 'Difficile',
+              longueur: '4 coups et +',
+              memorisation: '30 s',
+              notes: ''
+            }
+          },
+          {
+            uid: 3,
+            moduleId: 'coordonnees',
+            values: { duree: 5, orientation: 'Noirs', notes: '' }
+          },
+          {
+            uid: 4,
+            moduleId: 'streak',
+            values: {
+              duree: 10,
+              difficulte: 'Inconnue',
+              thematique: 'general',
+              notes: ''
+            }
+          }
+        ]
+      })
+    )
+
+    expect(useSessionStore().items.map(i => i.values)).toEqual([
+      { duree: 30, type: 'video', notes: '' },
+      { duree: 15, niveau: 'hard', longueur: 4, memorisation: 30, notes: '' },
+      { duree: 5, orientation: 'black', notes: '' },
+      // A choice that never was an option: the default.
+      { duree: 10, difficulte: 'ladder', thematique: 'general', notes: '' }
+    ])
+  })
+
   it("loads the user's repertoires, ongoing light set and themes", async () => {
     api.repertoireApi.list.mockResolvedValue([
       { id: 'r1', name: 'Italienne', color: 'white', positionCount: 9 }
@@ -219,7 +268,7 @@ describe('session store', () => {
     api.puzzleApi.themes.mockResolvedValue([])
     const store = useSessionStore()
     store.title = ' Mardi '
-    store.add('libre', { duree: 10, type: 'Livre', notes: '' })
+    store.add('libre', { duree: 10, type: 'book', notes: '' })
     expect(store.canSave).toBe(false)
 
     await store.fetchSubjects()
@@ -368,7 +417,7 @@ describe('session store', () => {
 
     expect(store.items[0].values.duree).toBe(2)
     expect(
-      store.add('coordonnees', { duree: 10, orientation: 'Noirs', notes: '' })
+      store.add('coordonnees', { duree: 10, orientation: 'black', notes: '' })
         ?.values.duree
     ).toBe(10)
     expect(store.totalMinutes).toBe(12)
@@ -391,7 +440,7 @@ describe('session store', () => {
       store.add('evaluation', {
         duree: 5,
         elo: 1500,
-        couleur: 'Blancs',
+        couleur: 'white',
         notes: ''
       })?.values.duree
     ).toBe(5)

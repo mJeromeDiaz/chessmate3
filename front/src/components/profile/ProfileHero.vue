@@ -30,9 +30,9 @@
     </div>
     <template v-if="bar">
       <div class="profile-hero__level">
-        <span class="profile-hero__title" data-testid="profile-level"
-          >{{ $t('profile.hero.level', { level: bar.level }) }}</span
-        >
+        <span class="profile-hero__title" data-testid="profile-level">{{
+          $t('profile.hero.level', { level: bar.level })
+        }}</span>
         <span class="profile-hero__rank">{{ bar.rank }}</span>
         <span class="profile-hero__xp"
           >{{ bar.xpLabel }}<span class="gt-sm"> · {{ bar.next }}</span></span

@@ -3,7 +3,9 @@
     <div class="dashboard__inner">
       <header class="dashboard__head">
         <div>
-          <div class="dashboard__hello lt-md">{{ $t('dashboard.home.hello') }}</div>
+          <div class="dashboard__hello lt-md">{{
+            $t('dashboard.home.hello')
+          }}</div>
           <h1 class="dashboard__title">{{ $t('dashboard.home.title') }}</h1>
           <router-link
             v-if="!store.isNewUser"

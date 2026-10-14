@@ -108,12 +108,11 @@ const store = useDashboardStore()
 /** @type {import('vue').Ref<'puzzles'|'blitz'|'rapid'|'classical'>} */
 const selected = ref('puzzles')
 
-const kicker = computed(
-  () =>
-    t('dashboard.rating.kicker', {
-      tab: TABS.find(tab => tab.id === selected.value)?.kicker,
-      days: CURVE_DAYS
-    })
+const kicker = computed(() =>
+  t('dashboard.rating.kicker', {
+    tab: TABS.find(tab => tab.id === selected.value)?.kicker,
+    days: CURVE_DAYS
+  })
 )
 
 /** The period and points of the selected tab, null while unknown. */

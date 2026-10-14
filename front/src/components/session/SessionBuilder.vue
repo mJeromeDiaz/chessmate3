@@ -17,8 +17,8 @@
           rows="1"
           maxlength="120"
           class="session-builder__title cm-heading"
-          placeholder="Titre de la session"
-          aria-label="Titre de la session"
+          :placeholder="$t('session.builder.title')"
+          :aria-label="$t('session.builder.title')"
           data-testid="session-title"
         />
         <div class="session-builder__pills">
@@ -30,26 +30,28 @@
             data-testid="session-count"
             >{{ countLabel }}</span
           >
-          <span v-if="session.planId" class="session-builder__saved"
-            >Session enregistrée · modification</span
-          >
-          <span v-else-if="hasDraft" class="session-builder__saved"
-            >Brouillon enregistré</span
-          >
+          <span v-if="session.planId" class="session-builder__saved">{{
+            $t('session.builder.saved')
+          }}</span>
+          <span v-else-if="hasDraft" class="session-builder__saved">{{
+            $t('session.builder.draft')
+          }}</span>
         </div>
         <textarea
           v-model="session.description"
           rows="2"
           maxlength="500"
           class="session-builder__desc"
-          placeholder="Objectif, contexte…"
-          aria-label="Objectif de la session"
+          :placeholder="$t('session.builder.goal')"
+          :aria-label="$t('session.builder.goalLabel')"
         />
       </div>
 
       <section class="session-builder__section">
         <div class="session-builder__section-head">
-          <h2 class="session-builder__h2">Paramètres de la session</h2>
+          <h2 class="session-builder__h2">{{
+            $t('session.builder.settings')
+          }}</h2>
         </div>
         <SessionSettings
           v-model="session.settings"
@@ -59,11 +61,11 @@
 
       <section class="session-builder__section">
         <div class="session-builder__section-head">
-          <h2 class="session-builder__h2">Programme</h2>
+          <h2 class="session-builder__h2">{{
+            $t('session.builder.program')
+          }}</h2>
           <span class="session-builder__help">{{
-            wide
-              ? 'Glisser ⠿ pour réordonner · cliquer pour régler'
-              : 'Maintenir ⠿ pour déplacer'
+            wide ? $t('session.builder.dragWide') : $t('session.builder.drag')
           }}</span>
         </div>
         <div
@@ -71,9 +73,7 @@
           class="session-builder__empty"
           data-testid="session-empty"
           >{{
-            wide
-              ? 'Choisis un module dans la bibliothèque à droite.'
-              : 'Ajoute un premier module ci-dessous.'
+            wide ? $t('session.builder.emptyWide') : $t('session.builder.empty')
           }}</div
         >
         <div ref="listEl" class="session-builder__list">
@@ -90,10 +90,12 @@
 
       <section v-if="!wide" class="session-builder__section">
         <div class="session-builder__section-head column items-start">
-          <h2 class="session-builder__h2">Ajouter un module</h2>
-          <span class="session-builder__help"
-            >Chaque module a son prof et ses réglages.</span
-          >
+          <h2 class="session-builder__h2">{{
+            $t('session.builder.addModule')
+          }}</h2>
+          <span class="session-builder__help">{{
+            $t('session.builder.addHint')
+          }}</span>
         </div>
         <div class="session-builder__catalog">
           <ModuleCard
@@ -112,11 +114,13 @@
           <button
             type="button"
             class="session-builder__back"
-            aria-label="Retour à la bibliothèque"
+            :aria-label="$t('session.builder.backToLibrary')"
             @click="panel = null"
             >←</button
           >
-          <h2 class="session-builder__h2">Réglages du module</h2>
+          <h2 class="session-builder__h2">{{
+            $t('session.builder.moduleSettings')
+          }}</h2>
         </div>
         <ModuleSettings
           :key="panelKey"
@@ -129,10 +133,12 @@
       </template>
       <template v-else>
         <div class="session-builder__side-head">
-          <h2 class="session-builder__h2">Bibliothèque de modules</h2>
-          <span class="session-builder__help"
-            >Choisis un module pour le régler et l’ajouter.</span
-          >
+          <h2 class="session-builder__h2">{{
+            $t('session.builder.library')
+          }}</h2>
+          <span class="session-builder__help">{{
+            $t('session.builder.libraryHint')
+          }}</span>
         </div>
         <div class="session-builder__catalog session-builder__catalog--side">
           <ModuleCard
@@ -171,12 +177,12 @@
           class="session-builder__notice"
           data-testid="session-in-progress"
         >
-          <span>Une session est déjà en cours aujourd’hui.</span>
-          <router-link :to="`/session/${inProgress.id}`"
-            >La reprendre</router-link
-          >
+          <span>{{ $t('session.builder.inProgress') }}</span>
+          <router-link :to="`/session/${inProgress.id}`">{{
+            $t('session.builder.resume')
+          }}</router-link>
           <button type="button" @click="abandonAndLaunch">
-            L’abandonner et lancer celle-ci
+            {{ $t('session.builder.abandonAndLaunch') }}
           </button>
         </div>
         <div
@@ -193,7 +199,9 @@
             data-testid="session-save"
             @click="saveSession"
           >
-            {{ saving ? 'Enregistrement…' : 'Enregistrer' }}
+            {{
+              saving ? $t('session.builder.saving') : $t('common.actions.save')
+            }}
           </button>
           <button
             type="button"
@@ -202,13 +210,17 @@
             data-testid="session-launch"
             @click="saveAndLaunch"
           >
-            {{ launching ? 'Lancement…' : 'Enregistrer et lancer' }}
+            {{
+              launching
+                ? $t('session.builder.launching')
+                : $t('session.builder.saveAndLaunch')
+            }}
             <span class="session-builder__launch-total">{{ totalLabel }}</span>
           </button>
         </div>
-        <q-tooltip v-if="!session.canSave && session.items.length"
-          >Un module ou un réglage n’est pas valide (⚠).</q-tooltip
-        >
+        <q-tooltip v-if="!session.canSave && session.items.length">{{
+          $t('session.builder.invalid')
+        }}</q-tooltip>
       </div>
     </div>
   </q-page>
@@ -224,6 +236,7 @@ import { useSessionStore } from '@/stores/session'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { requestNotifications } from '@/utils/alerts'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { MODULES, MODULES_BY_ID, formatMinutes } from '@/utils/session/catalog'
 import ModuleCard from '@/components/session/ModuleCard.vue'
 import ModuleSettings from '@/components/session/ModuleSettings.vue'
@@ -262,10 +275,9 @@ const panel = ref(null)
 const panelKey = ref(0)
 
 const totalLabel = computed(() => formatMinutes(session.totalMinutes))
-const countLabel = computed(() => {
-  const n = session.items.length
-  return `${n} module${n > 1 ? 's' : ''}`
-})
+const countLabel = computed(() =>
+  t('session.builder.modules', session.items.length)
+)
 const hasDraft = computed(
   () => !!(session.title || session.description || session.items.length)
 )
@@ -284,7 +296,7 @@ async function saveSession() {
   launchError.value = ''
   try {
     await session.save()
-    $q.notify({ type: 'positive', message: 'Session enregistrée.' })
+    $q.notify({ type: 'positive', message: t('session.builder.savedNotice') })
     await router.push('/session')
   } catch (e) {
     launchError.value = saveError(e)
@@ -334,17 +346,19 @@ async function launchPlan(id) {
 /** @param {unknown} e */
 function saveError(e) {
   return apiErrorMessage(e, {
-    409: 'Tu as atteint le nombre maximal de sessions enregistrées.',
-    422: 'Un module ou un réglage n’est pas valide : vérifie-les.'
+    409: t('session.builder.tooMany'),
+    422: t('session.builder.invalidSave')
   })
 }
 
 /** @param {unknown} e */
 function launchErrorText(e) {
-  return `Session enregistrée, mais pas lancée : ${apiErrorMessage(e, {
-    409: 'une session est déjà en cours.',
-    422: 'un module ne peut pas être joué maintenant.'
-  })}`
+  return t('session.builder.notLaunched', {
+    reason: apiErrorMessage(e, {
+      409: t('session.builder.notLaunchedInProgress'),
+      422: t('session.builder.notLaunchedUnplayable')
+    })
+  })
 }
 
 async function abandonAndLaunch() {
@@ -413,7 +427,9 @@ onMounted(async () => {
     try {
       session.edit(await planApi.get(props.planId))
     } catch (e) {
-      loadError.value = apiErrorMessage(e, { 404: 'Session introuvable.' })
+      loadError.value = apiErrorMessage(e, {
+        404: t('session.launchErrors.notFound')
+      })
     }
   } else {
     session.startNew()

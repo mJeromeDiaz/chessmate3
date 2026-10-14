@@ -27,15 +27,13 @@
           <div class="health-card__value">{{
             formatPercent(health.tests.successRate)
           }}</div>
-          <div class="health-card__label"
-            >{{
-              $t(
-                'dashboard.health.success',
-                { n: health.tests.total },
-                health.tests.total > 1 ? 2 : 1
-              )
-            }}</div
-          >
+          <div class="health-card__label">{{
+            $t(
+              'dashboard.health.success',
+              { n: health.tests.total },
+              health.tests.total > 1 ? 2 : 1
+            )
+          }}</div>
         </div>
       </div>
 
@@ -52,22 +50,18 @@
       >
         <div class="health-card__row-main">
           <div class="health-card__row-title">{{ labelText(f.label) }}</div>
-          <div class="cm-muted"
-            >{{
-              $t('dashboard.health.fragileMeta', {
-                name: f.repertoireName,
-                n: f.tests
-              })
-            }}</div
-          >
-        </div>
-        <strong class="health-card__rate"
-          >{{
-            $t('dashboard.health.failures', {
-              pct: formatPercent(f.recentFailureRate)
+          <div class="cm-muted">{{
+            $t('dashboard.health.fragileMeta', {
+              name: f.repertoireName,
+              n: f.tests
             })
-          }}</strong
-        >
+          }}</div>
+        </div>
+        <strong class="health-card__rate">{{
+          $t('dashboard.health.failures', {
+            pct: formatPercent(f.recentFailureRate)
+          })
+        }}</strong>
       </router-link>
       <p class="health-card__note">
         {{ $t('dashboard.health.note') }}

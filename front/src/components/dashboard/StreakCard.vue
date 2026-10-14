@@ -2,9 +2,9 @@
   <section v-if="streak" class="cm-card streak-card" data-testid="streak-card">
     <div class="streak-card__head">
       <h2 class="cm-card__title">{{ $t('gamification.card.title') }}</h2>
-      <span class="streak-card__best" data-testid="streak-card-best"
-        >{{ $t('gamification.card.best', { days: days(streak.best) }) }}</span
-      >
+      <span class="streak-card__best" data-testid="streak-card-best">{{
+        $t('gamification.card.best', { days: days(streak.best) })
+      }}</span>
     </div>
 
     <div class="streak-card__now">
@@ -96,8 +96,7 @@ const week = computed(() =>
 const hint = computed(() => {
   const s = streak.value
   if (!s) return ''
-  if (!playedToday.value && s.protected)
-    return t('gamification.card.protected')
+  if (!playedToday.value && s.protected) return t('gamification.card.protected')
   if (!playedToday.value)
     return s.current > 0
       ? t('gamification.card.keep')

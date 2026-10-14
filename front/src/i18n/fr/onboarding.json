@@ -56,34 +56,22 @@
   },
   "profScreens": {
     "albert": {
-      "title": [
-        "Albert",
-        "Stein"
-      ],
+      "title": ["Albert", "Stein"],
       "kicker": "ALBERT · PUZZLES, WOODPECKER & STREAK",
       "line": "Le Fou de la tactique, c’est moi : je vois les diagonales avant que tu voies le piège. Et je les vois en diagonale, évidemment."
     },
     "aaron": {
-      "title": [
-        "Aaron,",
-        "le Roi"
-      ],
+      "title": ["Aaron,", "le Roi"],
       "kicker": "AARON · RÉPERTOIRE & ÉVALUATION",
       "line": "Je prends l’initiative dès le premier coup et je ne la rends jamais. Même au dîner, demande à Lizy."
     },
     "lizy": {
-      "title": [
-        "Lizy,",
-        "la Reine"
-      ],
+      "title": ["Lizy,", "la Reine"],
       "kicker": "LIZY · FINALES & SÉANCE SUR MESURE",
       "line": "Ton petit avantage, je le transforme en point entier. Sans trembler, et sans demander l’avis d’Aaron."
     },
     "ray": {
-      "title": [
-        "Ray,",
-        "le mystère"
-      ],
+      "title": ["Ray,", "le mystère"],
       "kicker": "ALBERT · UN PROF DANS L’OMBRE",
       "line": "Ray joue les yeux fermés. Il se présentera lui-même… dès qu’il aura trouvé la porte."
     }
@@ -168,22 +156,10 @@
     "step": "{n} / {total}"
   },
   "titles": {
-    "hello": [
-      "Bonjour,",
-      "champion !"
-    ],
-    "level": [
-      "Ton niveau,",
-      "sans tricher"
-    ],
-    "goal": [
-      "Ton grand",
-      "objectif ?"
-    ],
-    "end": [
-      "À toi",
-      "de jouer !"
-    ]
+    "hello": ["Bonjour,", "champion !"],
+    "level": ["Ton niveau,", "sans tricher"],
+    "goal": ["Ton grand", "objectif ?"],
+    "end": ["À toi", "de jouer !"]
   },
   "kickers": {
     "hello": "ALBERT · TON PROF PRINCIPAL",

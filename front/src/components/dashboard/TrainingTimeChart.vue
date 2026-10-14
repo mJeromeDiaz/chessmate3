@@ -73,9 +73,9 @@
           :style="{ left: `${tip.left}%` }"
           data-testid="training-tip"
         >
-          <div class="time-chart__tip-title"
-            >{{ $t('dashboard.time.week', { date: tip.bar.label }) }}</div
-          >
+          <div class="time-chart__tip-title">{{
+            $t('dashboard.time.week', { date: tip.bar.label })
+          }}</div>
           <div
             v-for="segment in [...tip.bar.segments].reverse()"
             :key="segment.module"

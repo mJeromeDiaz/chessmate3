@@ -2,14 +2,12 @@
   <section class="cm-card themes-card" data-testid="theme-strengths">
     <div class="themes-card__head">
       <h2 class="cm-card__title">{{ $t('dashboard.themes.title') }}</h2>
-      <span v-if="themes.attempts" class="cm-muted"
-        >{{
-          $t('dashboard.themes.summary', {
-            pct: formatPercent(themes.successCount / themes.attempts),
-            n: themes.attempts
-          })
-        }}</span
-      >
+      <span v-if="themes.attempts" class="cm-muted">{{
+        $t('dashboard.themes.summary', {
+          pct: formatPercent(themes.successCount / themes.attempts),
+          n: themes.attempts
+        })
+      }}</span>
     </div>
 
     <p
@@ -42,14 +40,12 @@
               :style="{ width: `${t.successRate * 100}%` }"
             />
           </div>
-          <div class="themes-card__meta"
-            >{{
-              $t('dashboard.themes.ratio', {
-                done: t.successCount,
-                total: t.attempts
-              })
-            }}</div
-          >
+          <div class="themes-card__meta">{{
+            $t('dashboard.themes.ratio', {
+              done: t.successCount,
+              total: t.attempts
+            })
+          }}</div>
         </div>
       </div>
       <div data-testid="themes-weak">

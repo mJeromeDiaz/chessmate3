@@ -1,11 +1,13 @@
 <template>
   <div class="session-settings" data-testid="session-settings">
     <div class="session-settings__row">
-      <span class="session-settings__label">Répétition</span>
+      <span class="session-settings__label">{{
+        $t('session.sessionSettings.repetition')
+      }}</span>
       <div
         class="session-settings__options"
         role="group"
-        aria-label="Répétition"
+        :aria-label="$t('session.sessionSettings.repetition')"
       >
         <button
           v-for="option in REPETITIONS"
@@ -20,14 +22,14 @@
       </div>
     </div>
     <p v-if="model.repetition === 'on_demand'" class="session-settings__hint">
-      Elle reste dans « Mes sessions » : tu la lances quand tu veux.
+      {{ $t('session.sessionSettings.onDemandHint') }}
     </p>
 
     <template v-else>
       <div class="session-settings__row">
-        <label :for="`${uid}-time`" class="session-settings__label"
-          >Heure</label
-        >
+        <label :for="`${uid}-time`" class="session-settings__label">{{
+          $t('session.sessionSettings.time')
+        }}</label>
         <input
           :id="`${uid}-time`"
           v-model="model.time"
@@ -39,9 +41,15 @@
       </div>
       <div class="session-settings__row">
         <span class="session-settings__label">{{
-          model.repetition === 'weekly' ? 'Jour' : 'Jours'
+          model.repetition === 'weekly'
+            ? $t('session.sessionSettings.day')
+            : $t('session.sessionSettings.days')
         }}</span>
-        <div class="session-settings__days" role="group" aria-label="Jours">
+        <div
+          class="session-settings__days"
+          role="group"
+          :aria-label="$t('session.sessionSettings.days')"
+        >
           <button
             v-for="day in WEEKDAYS"
             :key="day.value"
@@ -59,11 +67,13 @@
     </template>
 
     <div class="session-settings__row">
-      <span class="session-settings__label">Visibilité</span>
+      <span class="session-settings__label">{{
+        $t('session.sessionSettings.visibility')
+      }}</span>
       <div
         class="session-settings__options"
         role="group"
-        aria-label="Visibilité"
+        :aria-label="$t('session.sessionSettings.visibility')"
       >
         <button
           type="button"
@@ -71,7 +81,7 @@
           :aria-pressed="!model.public"
           data-testid="visibility-private"
           @click="model.public = false"
-          >Privée</button
+          >{{ $t('session.sessionSettings.private') }}</button
         >
         <button
           type="button"
@@ -79,27 +89,35 @@
           :aria-pressed="model.public"
           data-testid="visibility-public"
           @click="model.public = true"
-          >Publique</button
+          >{{ $t('session.sessionSettings.public') }}</button
         >
       </div>
     </div>
 
     <div class="session-settings__row">
-      <span class="session-settings__label">Rappel</span>
+      <span class="session-settings__label">{{
+        $t('session.sessionSettings.reminder')
+      }}</span>
       <q-toggle
         v-model="model.reminderEnabled"
         :disable="model.repetition === 'on_demand'"
         data-testid="reminder-toggle"
-        :label="model.reminderEnabled ? 'Activé' : 'Désactivé'"
+        :label="
+          model.reminderEnabled
+            ? $t('session.sessionSettings.on')
+            : $t('session.sessionSettings.off')
+        "
       />
     </div>
     <template v-if="model.reminderEnabled && model.repetition !== 'on_demand'">
       <div class="session-settings__row">
-        <span class="session-settings__label">Par</span>
+        <span class="session-settings__label">{{
+          $t('session.sessionSettings.by')
+        }}</span>
         <div
           class="session-settings__options"
           role="group"
-          aria-label="Canal du rappel"
+          :aria-label="$t('session.sessionSettings.channel')"
         >
           <button
             v-for="channel in REMINDER_CHANNELS"
@@ -121,11 +139,13 @@
         <PushToggle compact />
       </div>
       <div class="session-settings__row">
-        <span class="session-settings__label">Quand</span>
+        <span class="session-settings__label">{{
+          $t('session.sessionSettings.when')
+        }}</span>
         <div
           class="session-settings__options"
           role="group"
-          aria-label="Délai du rappel"
+          :aria-label="$t('session.sessionSettings.delay')"
         >
           <button
             v-for="delay in REMINDER_DELAYS"
@@ -142,25 +162,32 @@
     </template>
 
     <div class="session-settings__row">
-      <span class="session-settings__label">Calendrier</span>
+      <span class="session-settings__label">{{
+        $t('session.sessionSettings.calendar')
+      }}</span>
       <q-toggle
         v-model="model.calendarEnabled"
         :disable="model.repetition === 'on_demand'"
         data-testid="calendar-toggle"
-        label="Intégrer à mon calendrier"
+        :label="$t('session.sessionSettings.calendarToggle')"
       />
     </div>
-    <p
+    <i18n-t
       v-if="model.calendarEnabled && model.repetition !== 'on_demand'"
+      keypath="session.sessionSettings.calendarHint"
+      tag="p"
+      scope="global"
       class="session-settings__hint"
       data-testid="calendar-hint"
     >
-      Ton agenda l'affiche une fois abonné à l'adresse de ton calendrier :
-      <router-link to="/profile">ton profil</router-link> la donne.
-    </p>
+      <template #profile>
+        <router-link to="/profile">{{
+          $t('session.sessionSettings.yourProfile')
+        }}</router-link>
+      </template>
+    </i18n-t>
     <p v-if="model.repetition === 'on_demand'" class="session-settings__hint">
-      Rappel et calendrier demandent une répétition (quotidienne ou
-      hebdomadaire).
+      {{ $t('session.sessionSettings.needsRepetition') }}
     </p>
     <p
       v-if="issue"

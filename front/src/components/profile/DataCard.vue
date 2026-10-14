@@ -4,9 +4,7 @@
     <div class="profile-row profile-row--flat">
       <div class="profile-row__text">
         <div class="profile-row__title">{{ $t('profile.data.export') }}</div>
-        <div class="profile-row__sub"
-          >{{ $t('profile.data.exportHint') }}</div
-        >
+        <div class="profile-row__sub">{{ $t('profile.data.exportHint') }}</div>
       </div>
       <q-btn
         unelevated
@@ -23,9 +21,9 @@
     }}</div>
     <div class="profile-row">
       <div class="profile-row__text">
-        <div class="profile-row__title profile-row__title--danger"
-          >{{ $t('profile.data.delete') }}</div
-        >
+        <div class="profile-row__title profile-row__title--danger">{{
+          $t('profile.data.delete')
+        }}</div>
         <div class="profile-row__sub">{{ $t('profile.data.deleteHint') }}</div>
       </div>
       <q-btn

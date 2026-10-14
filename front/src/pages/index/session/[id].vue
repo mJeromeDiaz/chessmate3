@@ -13,13 +13,13 @@
     <div v-else class="session-page__inner">
       <div class="session-page__head">
         <div>
-          <div class="session-page__kicker"
-            >SESSION DU {{ formatDate(session.startedAt) }}</div
-          >
+          <div class="session-page__kicker">{{
+            $t('session.page.kicker', { date: formatDate(session.startedAt) })
+          }}</div>
           <h1
             class="session-page__title cm-heading"
             data-testid="session-name"
-            >{{ session.title || 'Session sans titre' }}</h1
+            >{{ session.title || $t('session.untitled') }}</h1
           >
           <p v-if="session.description" class="session-page__desc">{{
             session.description
@@ -37,9 +37,11 @@
         <span class="session-page__pill">{{
           sessionProgressText(session)
         }}</span>
-        <span class="session-page__pill"
-          >⏱ {{ formatDuration(session.durationMs) }} joués</span
-        >
+        <span class="session-page__pill">{{
+          $t('session.page.played', {
+            duration: formatDuration(session.durationMs)
+          })
+        }}</span>
       </div>
 
       <ol class="session-page__steps">
@@ -64,9 +66,15 @@
           >
           <div class="session-page__step-body">
             <div class="session-page__step-title">
-              {{ String(step.index + 1).padStart(2, '0') }} ·
-              {{ stepModule(step)?.title ?? step.module }}
-              <span class="session-page__minutes">{{ step.minutes }} min</span>
+              {{
+                $t('session.page.stepTitle', {
+                  n: String(step.index + 1).padStart(2, '0'),
+                  module: stepModule(step)?.title ?? step.module
+                })
+              }}
+              <span class="session-page__minutes">{{
+                $t('session.page.minutes', { n: step.minutes })
+              }}</span>
             </div>
             <div
               class="session-page__step-status"
@@ -96,7 +104,7 @@
           no-caps
           unelevated
           icon="play_arrow"
-          label="Reprendre le module en cours"
+          :label="$t('session.page.resumeRun')"
           :to="`/training/${current.runId}`"
           data-testid="session-resume"
         />
@@ -106,7 +114,11 @@
           no-caps
           unelevated
           icon="play_arrow"
-          :label="`${current.blocked ? 'Réessayer' : 'Commencer'} : ${stepModule(current)?.title ?? current.module}`"
+          :label="
+            $t(current.blocked ? 'session.page.retry' : 'session.page.start', {
+              module: stepModule(current)?.title ?? current.module
+            })
+          "
           :loading="step.starting.value"
           data-testid="session-next"
           @click="step.start(session.id)"
@@ -116,7 +128,7 @@
           outline
           color="primary"
           no-caps
-          label="Passer ce module"
+          :label="$t('session.page.skip')"
           :loading="acting === 'skip'"
           data-testid="session-skip"
           @click="skip"
@@ -127,7 +139,7 @@
           color="primary"
           no-caps
           icon="replay"
-          label="Recommencer la session"
+          :label="$t('session.page.restart')"
           :loading="!!launcher.launching.value"
           data-testid="session-restart"
           @click="confirmRestart"
@@ -136,7 +148,7 @@
           flat
           no-caps
           color="negative"
-          label="Abandonner la session"
+          :label="$t('session.page.abandon')"
           :loading="acting === 'abandon'"
           data-testid="session-abandon"
           @click="confirmAbandon"
@@ -148,23 +160,28 @@
         data-testid="session-action-error"
         >{{ step.error.value || launcher.error.value || error }}</div
       >
-      <div
+      <i18n-t
         v-if="launcher.inProgress.value"
+        keypath="session.page.otherInProgress"
+        tag="div"
+        scope="global"
         class="session-page__error"
         data-testid="session-replay-in-progress"
       >
-        Une autre session est en cours aujourd’hui :
-        <router-link :to="`/session/${launcher.inProgress.value.id}`"
-          >la reprendre</router-link
-        >
-        ou
-        <button
-          type="button"
-          class="session-page__link"
-          @click="launcher.abandonAndLaunch()"
-          >l’abandonner et rejouer celle-ci</button
-        >.
-      </div>
+        <template #resume>
+          <router-link :to="`/session/${launcher.inProgress.value.id}`">{{
+            $t('session.resume')
+          }}</router-link>
+        </template>
+        <template #abandon>
+          <button
+            type="button"
+            class="session-page__link"
+            @click="launcher.abandonAndLaunch()"
+            >{{ $t('session.page.abandonAndReplayThis') }}</button
+          >
+        </template>
+      </i18n-t>
 
       <div v-if="session.status !== 'active'" class="session-page__end">
         <div class="session-page__end-text" data-testid="session-end">{{
@@ -182,7 +199,7 @@
           no-caps
           unelevated
           icon="replay"
-          label="Rejouer la session"
+          :label="$t('session.replay')"
           :loading="!!launcher.launching.value"
           data-testid="session-replay"
           @click="launcher.replay(session)"
@@ -191,16 +208,22 @@
           unelevated
           class="cm-btn-create"
           no-caps
-          label="Composer une nouvelle session"
+          :label="$t('session.page.composeNew')"
           to="/session/new"
         />
-        <q-btn outline color="primary" no-caps label="Tableau de bord" to="/" />
+        <q-btn
+          outline
+          color="primary"
+          no-caps
+          :label="$t('session.page.dashboard')"
+          to="/"
+        />
       </div>
     </div>
     <TreasureChest
       v-if="chestOpen && session?.reward"
       :reward="session.reward"
-      results-label="Voir le bilan"
+      :results-label="$t('session.page.seeResults')"
       @results="chestOpen = false"
       @close="chestOpen = false"
       @shop="chestOpen = false"
@@ -225,6 +248,7 @@ import { useShopStore } from '@/stores/shop'
 import { usePlanLaunch } from '@/composables/session/usePlanLaunch'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { formatDate, formatDuration } from '@/utils/format'
 import { chestToOpen, rewardLine } from '@/utils/shopReward'
 import {
@@ -262,11 +286,11 @@ const current = computed(
 const endText = computed(() => {
   switch (session.value?.status) {
     case 'completed':
-      return 'Session terminée, bravo !'
+      return t('session.page.completed')
     case 'abandoned':
-      return 'Session abandonnée.'
+      return t('session.page.abandoned')
     case 'expired':
-      return 'Cette session n’a pas été terminée le jour de son lancement.'
+      return t('session.page.expired')
     default:
       return ''
   }
@@ -276,7 +300,9 @@ async function load() {
   try {
     session.value = await sessionApi.get(String(route.params.id))
   } catch (e) {
-    error.value = apiErrorMessage(e, { 404: 'Session introuvable.' })
+    error.value = apiErrorMessage(e, {
+      404: t('session.launchErrors.notFound')
+    })
   }
 }
 
@@ -289,7 +315,7 @@ async function act(action) {
     session.value = await sessionApi[action](session.value.id)
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Ce module est en cours : termine sa séance d’abord.'
+      409: t('session.page.runInProgress')
     })
   } finally {
     acting.value = null
@@ -302,18 +328,16 @@ function skip() {
 
 function confirmAbandon() {
   $q.dialog({
-    title: 'Abandonner la session ?',
-    message:
-      'Le module en cours s’arrête (ce qui est fait reste compté) et les modules restants ne seront pas joués.',
+    title: t('session.page.abandonTitle'),
+    message: t('session.page.abandonMessage'),
     cancel: true
   }).onOk(() => act('abandon'))
 }
 
 function confirmRestart() {
   $q.dialog({
-    title: 'Recommencer la session ?',
-    message:
-      'Celle-ci est abandonnée (ce qui est fait reste compté) et la session repart du premier module.',
+    title: t('session.page.restartTitle'),
+    message: t('session.page.restartMessage'),
     cancel: true
   }).onOk(async () => {
     await act('abandon')

@@ -5,6 +5,7 @@ import { useSessionStep } from '@/composables/session/useSessionStep'
 import { requestNotifications } from '@/utils/alerts'
 import { apiErrorMessage } from '@/utils/apiError'
 import { replayProgram } from '@/utils/session/steps'
+import { t } from '@/i18n'
 
 /**
  * Launches a saved session, or replays a played one, and starts its first module. Another session
@@ -45,9 +46,9 @@ export function usePlanLaunch() {
       }
       if (!inProgress.value) {
         error.value = apiErrorMessage(e, {
-          404: 'Session introuvable.',
-          409: 'Une session est déjà en cours.',
-          422: 'Un module ne peut pas être joué maintenant (set light en pause ou absent, répertoire supprimé…) : modifie la session.'
+          404: t('session.launchErrors.notFound'),
+          409: t('session.launchErrors.inProgress'),
+          422: t('session.launchErrors.unplayable')
         })
       }
     } finally {

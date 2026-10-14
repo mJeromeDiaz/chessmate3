@@ -5,9 +5,9 @@
         <div class="profile-row__title">{{
           $t('profile.streakReminder.title')
         }}</div>
-        <div class="profile-row__sub"
-          >{{ $t('profile.streakReminder.hint') }}</div
-        >
+        <div class="profile-row__sub">{{
+          $t('profile.streakReminder.hint')
+        }}</div>
       </div>
       <q-toggle
         :model-value="settings?.enabled ?? false"
@@ -40,9 +40,9 @@
         @update:model-value="save({ email: $event })"
       />
     </div>
-    <div v-if="settings?.enabled" class="profile-row__sub q-mt-xs"
-      >{{ $t('profile.streakReminder.devices') }}</div
-    >
+    <div v-if="settings?.enabled" class="profile-row__sub q-mt-xs">{{
+      $t('profile.streakReminder.devices')
+    }}</div>
     <q-banner v-if="error" class="profile-error q-mt-sm" rounded>{{
       error
     }}</q-banner>

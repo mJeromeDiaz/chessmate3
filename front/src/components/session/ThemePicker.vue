@@ -5,19 +5,19 @@
         v-model="search"
         type="search"
         class="theme-picker__search"
-        placeholder="Chercher un thème…"
-        aria-label="Chercher un thème"
+        :placeholder="$t('session.themePicker.search')"
+        :aria-label="$t('session.themePicker.searchLabel')"
       />
       <span class="theme-picker__count" :style="{ color: accentInk }"
         >{{ modelValue.length }} / {{ max }}</span
       >
     </div>
-    <div v-if="!themes.length" class="theme-picker__empty"
-      >Chargement des thèmes…</div
-    >
-    <div v-else-if="!groups.length" class="theme-picker__empty"
-      >Aucun thème ne correspond.</div
-    >
+    <div v-if="!themes.length" class="theme-picker__empty">{{
+      $t('session.themePicker.loading')
+    }}</div>
+    <div v-else-if="!groups.length" class="theme-picker__empty">{{
+      $t('session.themePicker.none')
+    }}</div>
     <div
       v-for="group in groups"
       :key="group.category"

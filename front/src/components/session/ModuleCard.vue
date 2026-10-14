@@ -12,7 +12,9 @@
     <span class="module-card__glow" />
     <span class="module-card__head">
       <span class="module-card__title cm-heading">{{ module.title }}</span>
-      <span v-if="!module.available" class="module-card__soon">Bientôt</span>
+      <span v-if="!module.available" class="module-card__soon">{{
+        $t('session.soon')
+      }}</span>
     </span>
     <span class="module-card__desc">{{ module.desc }}</span>
     <ProfAvatar

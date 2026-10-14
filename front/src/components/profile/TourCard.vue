@@ -4,9 +4,7 @@
     <div class="profile-row profile-row--flat">
       <div class="profile-row__text">
         <div class="profile-row__title">{{ $t('profile.tour.again') }}</div>
-        <div class="profile-row__sub"
-          >{{ $t('profile.tour.againHint') }}</div
-        >
+        <div class="profile-row__sub">{{ $t('profile.tour.againHint') }}</div>
       </div>
       <q-btn
         unelevated

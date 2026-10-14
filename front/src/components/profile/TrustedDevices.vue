@@ -1,9 +1,7 @@
 <template>
   <div class="profile-block">
     <div class="profile-row__title">{{ $t('profile.devices.title') }}</div>
-    <p class="profile-row__sub q-mb-sm"
-      >{{ $t('profile.devices.intro') }}</p
-    >
+    <p class="profile-row__sub q-mb-sm">{{ $t('profile.devices.intro') }}</p>
 
     <q-spinner v-if="loading" />
     <p v-else-if="devices.length === 0">{{ $t('profile.devices.none') }}</p>

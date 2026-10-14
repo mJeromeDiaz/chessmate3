@@ -110,7 +110,8 @@ export const STREAK_BADGES = [
 
 /** The week row's labels, Monday first. */
 /** The days' initials, Monday first, in the current language. */
-const weekDays = () => [0, 1, 2, 3, 4, 5, 6].map(i => t(`gamification.weekDays.${i}`))
+const weekDays = () =>
+  [0, 1, 2, 3, 4, 5, 6].map(i => t(`gamification.weekDays.${i}`))
 
 /**
  * @param {string|null|undefined} key
@@ -162,18 +163,14 @@ export function streakMessage(notice, name = null) {
     return t('gamification.streak.restarted', {
       days: days(notice.previousStreak)
     })
-  if (n === 1)
-    return t('gamification.streak.born')
-  if (n === 7)
-    return t('gamification.streak.week')
-  if (n === 30)
-    return t('gamification.streak.month')
+  if (n === 1) return t('gamification.streak.born')
+  if (n === 7) return t('gamification.streak.week')
+  if (n === 30) return t('gamification.streak.month')
   if (n === 100)
     return name
       ? t('gamification.streak.hundredNamed', { name })
       : t('gamification.streak.hundred')
-  if (n === 365)
-    return t('gamification.streak.year')
+  if (n === 365) return t('gamification.streak.year')
   const badge = streakBadge(notice.badge)
   if (badge)
     return t('gamification.streak.badge', { days: days(n), badge: badge.name })

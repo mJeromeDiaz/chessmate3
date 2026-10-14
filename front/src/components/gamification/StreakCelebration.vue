@@ -56,11 +56,9 @@
             notice.streak
           }}</div>
         </div>
-        <h2 id="streak-title" class="streak__label"
-          >{{
-            $t('gamification.celebration.label', notice.streak > 1 ? 2 : 1)
-          }}</h2
-        >
+        <h2 id="streak-title" class="streak__label">{{
+          $t('gamification.celebration.label', notice.streak > 1 ? 2 : 1)
+        }}</h2>
         <div
           v-if="badge"
           class="streak__badge"

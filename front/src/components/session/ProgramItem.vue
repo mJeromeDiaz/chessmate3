@@ -4,7 +4,7 @@
     :style="{ borderColor: selected ? module.deep : 'transparent' }"
     role="button"
     tabindex="0"
-    :aria-label="`Régler ${module.title}`"
+    :aria-label="$t('session.program.edit', { module: module.title })"
     data-testid="program-item"
     @click="emit('edit')"
     @keydown.enter.prevent="emit('edit')"
@@ -12,7 +12,7 @@
   >
     <span
       class="program-item__handle drag-handle"
-      title="Glisser pour déplacer"
+      :title="$t('session.program.drag')"
       aria-hidden="true"
       @click.stop
       >⠿</span
@@ -29,9 +29,12 @@
     <div class="program-item__body">
       <div class="row no-wrap items-start justify-between q-gutter-x-sm">
         <div>
-          <div class="program-item__kicker"
-            >{{ number }} · PROF {{ module.prof.toUpperCase() }}</div
-          >
+          <div class="program-item__kicker">{{
+            $t('session.program.kicker', {
+              n: number,
+              prof: module.prof.toUpperCase()
+            })
+          }}</div>
           <div class="program-item__title cm-heading">{{ module.title }}</div>
           <div class="program-item__desc gt-sm">{{ module.desc }}</div>
         </div>

@@ -8,5 +8,348 @@
   "replayNamed": "Rejouer {title}",
   "replayThis": "la session",
   "launch": "Lancer",
-  "resumeArrow": "Reprendre →"
+  "resumeArrow": "Reprendre →",
+  "catalog": {
+    "modules": {
+      "libre": {
+        "title": "Libre",
+        "desc": "Lecture d’un livre, vidéos, cours… à ton rythme."
+      },
+      "finales": {
+        "title": "Finales",
+        "desc": "Apprendre ou réviser les finales essentielles."
+      },
+      "puzzles": {
+        "title": "Puzzles",
+        "desc": "Des puzzles à ton niveau, tant qu’il reste du temps."
+      },
+      "streak": {
+        "title": "Puzzle streak",
+        "desc": "Du plus facile au plus dur : une erreur et tu repars de zéro. Ton meilleur streak compte."
+      },
+      "woodpecker": {
+        "title": "Woodpecker",
+        "desc": "Ton set light : des puzzles faciles, revus encore et encore."
+      },
+      "repertoire": {
+        "title": "Répertoire",
+        "desc": "Réviser les ouvertures de ton répertoire."
+      },
+      "evaluation": {
+        "title": "Évaluation de position",
+        "desc": "Juger des positions, en 1 à 10 minutes."
+      },
+      "analyse": {
+        "title": "Analyse de parties",
+        "desc": "Revenir sur tes parties et en tirer des leçons."
+      },
+      "coordonnees": {
+        "title": "Coordonnées",
+        "desc": "Trouver les cases sur un échiquier vide, sans coordonnées."
+      },
+      "aveugle": {
+        "title": "Jeu à l’aveugle",
+        "desc": "Des puzzles résolus de mémoire : la position s’affiche, disparaît, puis tu joues sur un échiquier vide."
+      }
+    },
+    "fields": {
+      "duration": "Durée",
+      "elo": "Difficulté (Elo)",
+      "format": "Format",
+      "notes": "Notes",
+      "mode": "Mode",
+      "themes": "Thèmes",
+      "difficulty": "Difficulté",
+      "topic": "Thématique",
+      "lightSet": "Set light",
+      "repertoires": "Répertoires",
+      "side": "Trait",
+      "color": "Couleur jouée",
+      "games": "Parties",
+      "selection": "Sélection",
+      "orientation": "Orientation",
+      "level": "Niveau",
+      "length": "Longueur",
+      "memorize": "Temps pour mémoriser",
+      "spaced": "Répétitions espacées"
+    },
+    "hints": {
+      "spaced": "Revoir les erreurs selon une courbe d’oubli.",
+      "themes": "Aucun thème : tous les thèmes. Sinon, un puzzle a au moins un des thèmes choisis.",
+      "topic": "Si le temps finit pendant un streak, tu pourras le prolonger de 5 minutes.",
+      "lightSet": "La séance repart du début du set ; il grandit tout seul quand tu l’as presque épuisé.",
+      "repertoires": "Les révisions dues passent en premier (répétition espacée automatique).",
+      "evaluationDuration": "Une séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent jusqu’au bout.",
+      "coordinatesDuration": "Une série dure 1, 2, 5 ou 10 minutes."
+    },
+    "placeholders": {
+      "free": "Titre, chapitre, lien…",
+      "endgames": "Ex. Lucena, Philidor…",
+      "analysis": "Points à creuser…"
+    },
+    "chips": {
+      "spaced": "Rép. espacées"
+    },
+    "units": {
+      "minutes": "{n} min",
+      "elo": "Elo {n}",
+      "seconds": "{n} s",
+      "games": "{n} partie | {n} parties",
+      "puzzles": "{n} puzzle | {n} puzzles"
+    },
+    "options": {
+      "formats": {
+        "book": "Livre",
+        "video": "Vidéo",
+        "course": "Cours",
+        "podcast": "Podcast",
+        "other": "Autre"
+      },
+      "endgameModes": {
+        "learn": "Apprendre",
+        "review": "Réviser"
+      },
+      "endgames": {
+        "pawns": "Pions",
+        "rooks": "Tours",
+        "basicMates": "Mats élémentaires",
+        "minorPieces": "Pièces mineures",
+        "queens": "Dames"
+      },
+      "sides": {
+        "white": "Blancs",
+        "black": "Noirs",
+        "both": "Les deux"
+      },
+      "gameFilters": {
+        "latest": "Dernières",
+        "losses": "Défaites",
+        "draws": "Nulles",
+        "chosen": "Au choix"
+      },
+      "levels": {
+        "easy": "Facile",
+        "medium": "Moyen",
+        "hard": "Difficile"
+      },
+      "length": "{n} coups",
+      "lengthOrMore": "{n} coups et +"
+    },
+    "allThemes": "Tous les thèmes",
+    "issues": {
+      "tooManyThemes": "{n} thèmes au plus.",
+      "noRepertoire": "Choisis au moins un répertoire.",
+      "repertoireGone": "Un répertoire choisi n’existe plus.",
+      "loadingDuration": "Chargement de la durée…",
+      "openingSetGone": "Ce set d’ouverture n’est plus en cours.",
+      "openingSetPaused": "Ce set d’ouverture est en pause.",
+      "noLightSet": "Tu n’as pas de set light en cours.",
+      "lightSetPaused": "Ton set light est en pause."
+    }
+  },
+  "settings": {
+    "profile": "Voir le profil du prof →",
+    "backToSettings": "Retour aux réglages",
+    "themes": "Thèmes",
+    "allThemes": "Tous les thèmes",
+    "pick": "Choisir…",
+    "loadingRepertoires": "Chargement de tes répertoires…",
+    "noRepertoire": "Tu n’as pas encore de répertoire.",
+    "white": "Blancs",
+    "black": "Noirs",
+    "createRepertoire": "+ Créer un répertoire",
+    "openingSet": "Set d’ouverture",
+    "openingSetMeta": "Set d’ouverture · {n} puzzle | Set d’ouverture · {n} puzzles",
+    "openingSetGone": "Ce set d’ouverture n’est plus en cours.",
+    "seeSet": "Voir le set →",
+    "loadingSet": "Chargement de ton set…",
+    "lightSetMeta": "{puzzles} · {runs}",
+    "lightSetRuns": "{n} séance | {n} séances",
+    "paused": " · en pause",
+    "noLightSet": "Tu n’as pas encore de set light.",
+    "createLightSet": "+ Créer mon set light",
+    "loadingTopics": "Chargement des thématiques…",
+    "notesPlaceholder": "Consigne, objectif…",
+    "themesDone": "Valider les thèmes",
+    "remove": "Retirer",
+    "add": "Ajouter à la session",
+    "saveWith": "{action} · {minutes}",
+    "kicker": "PROF {prof} · {mode}",
+    "kickerEdit": "MODIFIER",
+    "kickerNew": "NOUVEAU MODULE",
+    "chosen": "{n} choisi | {n} choisis"
+  },
+  "plans": {
+    "repetitions": {
+      "on_demand": "À la demande",
+      "daily": "Quotidienne",
+      "weekly": "Hebdomadaire"
+    },
+    "delays": {
+      "10": "10 min avant",
+      "30": "30 min avant",
+      "60": "1 h avant",
+      "1440": "1 jour avant"
+    },
+    "channels": {
+      "email": "Email",
+      "push": "Navigateur"
+    },
+    "issues": {
+      "noDay": "Choisis au moins un jour.",
+      "noChannel": "Choisis comment être rappelé (email ou navigateur)."
+    },
+    "onDemand": "À la demande",
+    "weekly": "Chaque {day} à {time}",
+    "daily": "Tous les jours à {time}",
+    "weekdays": "En semaine à {time}",
+    "days": "{days} à {time}",
+    "next": "Prochaine : {date}"
+  },
+  "steps": {
+    "blocked": {
+      "light_set_paused": "Ton set light est en pause : reprends-le pour jouer ce module.",
+      "no_light_set": "Tu n’as plus de set light en cours.",
+      "nothing_to_test": "Rien à réviser dans ces répertoires pour l’instant.",
+      "no_puzzle": "Plus aucun puzzle disponible pour ces thèmes.",
+      "subject_not_found": "Le sujet de ce module n’existe plus (répertoire supprimé ?).",
+      "invalid_settings": "Les réglages de ce module ne sont plus valides.",
+      "default": "Ce module ne peut pas démarrer pour l’instant."
+    },
+    "status": {
+      "pending": "À venir",
+      "running": "En cours",
+      "done": "Fait",
+      "skipped": "Passé",
+      "unplayed": "Non joué"
+    },
+    "doneFree": "Fait · {duration}",
+    "doneRun": "Fait · {done} terminés, {success} réussis",
+    "sessionStatus": {
+      "active": "En cours",
+      "completed": "Terminée",
+      "abandoned": "Abandonnée",
+      "expired": "Non terminée"
+    },
+    "progress": "{done} / {total} module | {done} / {total} modules",
+    "otherRun": "Une autre séance chronométrée est en cours : termine-la avant de continuer.",
+    "over": "Cette session est terminée."
+  },
+  "launchErrors": {
+    "notFound": "Session introuvable.",
+    "inProgress": "Une session est déjà en cours.",
+    "unplayable": "Un module ne peut pas être joué maintenant (set light en pause ou absent, répertoire supprimé…) : modifie la session."
+  },
+  "program": {
+    "edit": "Régler {module}",
+    "drag": "Glisser pour déplacer",
+    "kicker": "{n} · PROF {prof}"
+  },
+  "soon": "Bientôt",
+  "themePicker": {
+    "search": "Chercher un thème…",
+    "searchLabel": "Chercher un thème",
+    "loading": "Chargement des thèmes…",
+    "none": "Aucun thème ne correspond."
+  },
+  "sessionSettings": {
+    "repetition": "Répétition",
+    "onDemandHint": "Elle reste dans « Mes sessions » : tu la lances quand tu veux.",
+    "time": "Heure",
+    "day": "Jour",
+    "days": "Jours",
+    "visibility": "Visibilité",
+    "private": "Privée",
+    "public": "Publique",
+    "reminder": "Rappel",
+    "on": "Activé",
+    "off": "Désactivé",
+    "by": "Par",
+    "channel": "Canal du rappel",
+    "when": "Quand",
+    "delay": "Délai du rappel",
+    "calendar": "Calendrier",
+    "calendarToggle": "Intégrer à mon calendrier",
+    "calendarHint": "Ton agenda l'affiche une fois abonné à l'adresse de ton calendrier : {profile} la donne.",
+    "yourProfile": "ton profil",
+    "needsRepetition": "Rappel et calendrier demandent une répétition (quotidienne ou hebdomadaire)."
+  },
+  "builder": {
+    "title": "Titre de la session",
+    "saved": "Session enregistrée · modification",
+    "draft": "Brouillon enregistré",
+    "goal": "Objectif, contexte…",
+    "goalLabel": "Objectif de la session",
+    "settings": "Paramètres de la session",
+    "program": "Programme",
+    "dragWide": "Glisser ⠿ pour réordonner · cliquer pour régler",
+    "drag": "Maintenir ⠿ pour déplacer",
+    "emptyWide": "Choisis un module dans la bibliothèque à droite.",
+    "empty": "Ajoute un premier module ci-dessous.",
+    "addModule": "Ajouter un module",
+    "addHint": "Chaque module a son prof et ses réglages.",
+    "backToLibrary": "Retour à la bibliothèque",
+    "moduleSettings": "Réglages du module",
+    "library": "Bibliothèque de modules",
+    "libraryHint": "Choisis un module pour le régler et l’ajouter.",
+    "inProgress": "Une session est déjà en cours aujourd’hui.",
+    "resume": "La reprendre",
+    "abandonAndLaunch": "L’abandonner et lancer celle-ci",
+    "saving": "Enregistrement…",
+    "launching": "Lancement…",
+    "saveAndLaunch": "Enregistrer et lancer",
+    "invalid": "Un module ou un réglage n’est pas valide (⚠).",
+    "modules": "{n} module | {n} modules",
+    "savedNotice": "Session enregistrée.",
+    "tooMany": "Tu as atteint le nombre maximal de sessions enregistrées.",
+    "invalidSave": "Un module ou un réglage n’est pas valide : vérifie-les.",
+    "notLaunched": "Session enregistrée, mais pas lancée : {reason}",
+    "notLaunchedInProgress": "une session est déjà en cours.",
+    "notLaunchedUnplayable": "un module ne peut pas être joué maintenant."
+  },
+  "list": {
+    "title": "Mes sessions",
+    "coach": "♞ Séance sur mesure",
+    "new": "+ Nouvelle session",
+    "current": "Session du jour en cours : {title} · {progress}",
+    "empty": "Aucune session enregistrée.",
+    "composeFirst": "Composer ma première session",
+    "coachTitle": "Tirée de tes parties Lichess, mise à jour à chaque analyse",
+    "coachBadge": "Sur mesure",
+    "public": "Publique",
+    "meta": "{modules} · {minutes}",
+    "calendar": "Calendrier",
+    "edit": "Modifier",
+    "icsLabel": "Ajouter {title} à mon agenda (.ics)",
+    "icsTooltip": "Télécharger pour mon agenda (.ics)",
+    "delete": "Supprimer {title}",
+    "reminder": "{delay} · {channels}",
+    "deleteTitle": "Supprimer cette session ?",
+    "deleteMessage": "Les sessions déjà jouées restent dans ton historique ; seule la session enregistrée disparaît."
+  },
+  "page": {
+    "kicker": "SESSION DU {date}",
+    "played": "⏱ {duration} joués",
+    "stepTitle": "{n} · {module}",
+    "minutes": "{n} min",
+    "resumeRun": "Reprendre le module en cours",
+    "retry": "Réessayer : {module}",
+    "start": "Commencer : {module}",
+    "skip": "Passer ce module",
+    "restart": "Recommencer la session",
+    "abandon": "Abandonner la session",
+    "otherInProgress": "Une autre session est en cours aujourd’hui : {resume} ou {abandon}.",
+    "abandonAndReplayThis": "l’abandonner et rejouer celle-ci",
+    "composeNew": "Composer une nouvelle session",
+    "dashboard": "Tableau de bord",
+    "seeResults": "Voir le bilan",
+    "completed": "Session terminée, bravo !",
+    "abandoned": "Session abandonnée.",
+    "expired": "Cette session n’a pas été terminée le jour de son lancement.",
+    "runInProgress": "Ce module est en cours : termine sa séance d’abord.",
+    "abandonTitle": "Abandonner la session ?",
+    "abandonMessage": "Le module en cours s’arrête (ce qui est fait reste compté) et les modules restants ne seront pas joués.",
+    "restartTitle": "Recommencer la session ?",
+    "restartMessage": "Celle-ci est abandonnée (ce qui est fait reste compté) et la session repart du premier module."
+  }
 }

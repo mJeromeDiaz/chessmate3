@@ -1,5 +1,16 @@
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
 import { formatDuration } from '@/utils/format'
+import { t } from '@/i18n'
+
+/** The API's reasons a step cannot start (session.steps.blocked.*). */
+const BLOCKED_REASONS = [
+  'light_set_paused',
+  'no_light_set',
+  'nothing_to_test',
+  'no_puzzle',
+  'subject_not_found',
+  'invalid_settings'
+]
 
 /**
  * @typedef {object} SessionStep a step of a session, as the API sends it
@@ -46,32 +57,13 @@ export function stepModule(step) {
  * @returns {string}
  */
 export function blockedText(reason) {
-  switch (reason) {
-    case 'light_set_paused':
-      return 'Ton set light est en pause : reprends-le pour jouer ce module.'
-    case 'no_light_set':
-      return 'Tu n’as plus de set light en cours.'
-    case 'nothing_to_test':
-      return 'Rien à réviser dans ces répertoires pour l’instant.'
-    case 'no_puzzle':
-      return 'Plus aucun puzzle disponible pour ces thèmes.'
-    case 'subject_not_found':
-      return 'Le sujet de ce module n’existe plus (répertoire supprimé ?).'
-    case 'invalid_settings':
-      return 'Les réglages de ce module ne sont plus valides.'
-    default:
-      return 'Ce module ne peut pas démarrer pour l’instant.'
-  }
+  return t(
+    `session.steps.blocked.${BLOCKED_REASONS.includes(reason) ? reason : 'default'}`
+  )
 }
 
-/** @type {Record<SessionStep['status'], string>} */
-const STEP_STATUS = {
-  pending: 'À venir',
-  running: 'En cours',
-  done: 'Fait',
-  skipped: 'Passé',
-  unplayed: 'Non joué'
-}
+/** @type {SessionStep['status'][]} */
+const STEP_STATUS = ['pending', 'running', 'done', 'skipped', 'unplayed']
 
 /**
  * The state of a step, with what its run did once played.
@@ -81,25 +73,31 @@ const STEP_STATUS = {
  */
 export function stepStatusText(step) {
   const s = step.summary
-  if (step.status !== 'done' || !s) return STEP_STATUS[step.status] ?? ''
-  if (step.module === 'free') return `Fait · ${formatDuration(s.durationMs)}`
-  return `Fait · ${s.itemCount} terminés, ${s.successCount} réussis`
+  if (step.status !== 'done' || !s)
+    return STEP_STATUS.includes(step.status)
+      ? t(`session.steps.status.${step.status}`)
+      : ''
+  if (step.module === 'free')
+    return t('session.steps.doneFree', {
+      duration: formatDuration(s.durationMs)
+    })
+  return t('session.steps.doneRun', {
+    done: s.itemCount,
+    success: s.successCount
+  })
 }
 
-/** @type {Record<TrainingSession['status'], string>} */
-const SESSION_STATUS = {
-  active: 'En cours',
-  completed: 'Terminée',
-  abandoned: 'Abandonnée',
-  expired: 'Non terminée'
-}
+/** @type {TrainingSession['status'][]} */
+const SESSION_STATUS = ['active', 'completed', 'abandoned', 'expired']
 
 /**
  * @param {TrainingSession} session
  * @returns {string}
  */
 export function sessionStatusText(session) {
-  return SESSION_STATUS[session.status] ?? ''
+  return SESSION_STATUS.includes(session.status)
+    ? t(`session.steps.sessionStatus.${session.status}`)
+    : ''
 }
 
 /**
@@ -111,7 +109,7 @@ export function sessionStatusText(session) {
 export function sessionProgressText(session) {
   const done = session.steps.filter(s => s.status === 'done').length
   const total = session.steps.length
-  return `${done} / ${total} module${total > 1 ? 's' : ''}`
+  return t('session.steps.progress', { done, total }, total)
 }
 
 /**
@@ -124,9 +122,9 @@ export function nextErrorText(error) {
   const detail = String(error?.response?.data?.detail ?? '')
   if (error?.response?.status !== 409) return ''
   if (detail.includes('Another training run'))
-    return 'Une autre séance chronométrée est en cours : termine-la avant de continuer.'
-  if (detail.includes('session is over')) return 'Cette session est terminée.'
-  return 'Ce module ne peut pas démarrer pour l’instant.'
+    return t('session.steps.otherRun')
+  if (detail.includes('session is over')) return t('session.steps.over')
+  return t('session.steps.blocked.default')
 }
 
 /**

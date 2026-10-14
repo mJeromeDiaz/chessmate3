@@ -66,12 +66,12 @@
             class="cs-notice"
             data-testid="coach-in-progress"
           >
-            <span>Une session est déjà en cours aujourd’hui.</span>
+            <span>{{ $t('session.builder.inProgress') }}</span>
             <button
               type="button"
               class="cs-link"
               @click="launcher.abandonAndLaunch()"
-              >L’abandonner et lancer celle-ci</button
+              >{{ $t('session.builder.abandonAndLaunch') }}</button
             >
           </div>
           <div v-if="launcher.error.value" class="cs-error" role="alert">{{

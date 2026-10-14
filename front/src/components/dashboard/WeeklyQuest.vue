@@ -16,14 +16,12 @@
         <div class="quest__bar">
           <div :style="{ width: `${percent}%` }" />
         </div>
-        <span data-testid="quest-progress"
-          >{{
-            $t('dashboard.quest.progress', {
-              current: quest.current,
-              goal: quest.goal
-            })
-          }}</span
-        >
+        <span data-testid="quest-progress">{{
+          $t('dashboard.quest.progress', {
+            current: quest.current,
+            goal: quest.goal
+          })
+        }}</span>
         <span class="quest__reward">{{
           $t('dashboard.quest.reward', { xp: quest.reward })
         }}</span>

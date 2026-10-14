@@ -1,12 +1,14 @@
 <template>
   <div class="level-banner" data-testid="level-banner">
     <div class="level-banner__shade" />
-    <div class="level-banner__hello gt-sm">{{ $t('dashboard.level.hello') }}</div>
+    <div class="level-banner__hello gt-sm">{{
+      $t('dashboard.level.hello')
+    }}</div>
     <template v-if="bar">
       <div class="level-banner__level">
-        <span class="level-banner__title" data-testid="level-title"
-          >{{ $t('dashboard.level.title', { n: bar.level }) }}</span
-        >
+        <span class="level-banner__title" data-testid="level-title">{{
+          $t('dashboard.level.title', { n: bar.level })
+        }}</span>
         <span class="level-banner__rank">{{ bar.rank }}</span>
       </div>
       <div class="level-banner__bar">

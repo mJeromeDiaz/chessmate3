@@ -57,7 +57,9 @@ const emit = defineEmits({
 /** @param {(typeof END_CHOICES)[number]} choice */
 function tagOf(choice) {
   if (choice.id === 'coach' && props.linked) return t('onboarding.end.advised')
-  return choice.lichess && !props.linked ? t('onboarding.end.lichessRequired') : ''
+  return choice.lichess && !props.linked
+    ? t('onboarding.end.lichessRequired')
+    : ''
 }
 </script>
 

@@ -77,7 +77,9 @@ async function load() {
 function close(session) {
   $q.dialog({
     title: t('profile.sessions.closeTitle'),
-    message: t('profile.sessions.closeMessage', { device: session.line.device }),
+    message: t('profile.sessions.closeMessage', {
+      device: session.line.device
+    }),
     cancel: true
   }).onOk(async () => {
     busy.value = session.id

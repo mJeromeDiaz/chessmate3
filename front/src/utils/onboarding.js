@@ -105,7 +105,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.woodpecker.why')
-    },
+    }
   },
   puzzles: {
     id: 'puzzles',
@@ -122,7 +122,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.puzzles.why')
-    },
+    }
   },
   streak: {
     id: 'streak',
@@ -139,7 +139,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.streak.why')
-    },
+    }
   },
   repertoire: {
     id: 'repertoire',
@@ -159,7 +159,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.repertoire.why')
-    },
+    }
   },
   evaluation: {
     id: 'evaluation',
@@ -176,7 +176,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.evaluation.why')
-    },
+    }
   },
   analyse: {
     id: 'analyse',
@@ -194,7 +194,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.analyse.why')
-    },
+    }
   },
   coach: {
     id: 'coach',
@@ -211,7 +211,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.coach.why')
-    },
+    }
   },
   finales: {
     id: 'finales',
@@ -229,7 +229,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.finales.why')
-    },
+    }
   },
   aveugle: {
     id: 'aveugle',
@@ -250,7 +250,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.aveugle.why')
-    },
+    }
   },
   coordonnees: {
     id: 'coordonnees',
@@ -268,7 +268,7 @@ export const MODULES = {
     },
     get why() {
       return t('onboarding.modules.coordonnees.why')
-    },
+    }
   }
 }
 
@@ -368,7 +368,7 @@ export const LEVELS = [
     seed: 1000,
     get line() {
       return t('onboarding.levels.beginner.line')
-    },
+    }
   },
   {
     id: 'amateur',
@@ -382,7 +382,7 @@ export const LEVELS = [
     seed: 1400,
     get line() {
       return t('onboarding.levels.amateur.line')
-    },
+    }
   },
   {
     id: 'confirmed',
@@ -396,7 +396,7 @@ export const LEVELS = [
     seed: 1800,
     get line() {
       return t('onboarding.levels.confirmed.line')
-    },
+    }
   },
   {
     id: 'expert',
@@ -410,7 +410,7 @@ export const LEVELS = [
     seed: 2200,
     get line() {
       return t('onboarding.levels.expert.line')
-    },
+    }
   },
   {
     id: 'pro',
@@ -424,7 +424,7 @@ export const LEVELS = [
     seed: 2500,
     get line() {
       return t('onboarding.levels.pro.line')
-    },
+    }
   }
 ]
 
@@ -438,7 +438,7 @@ export const GOALS = [
     },
     get line() {
       return t('onboarding.goals.rating.line')
-    },
+    }
   },
   {
     id: 'blunders',
@@ -448,7 +448,7 @@ export const GOALS = [
     },
     get line() {
       return t('onboarding.goals.blunders.line')
-    },
+    }
   },
   {
     id: 'fun',
@@ -458,7 +458,7 @@ export const GOALS = [
     },
     get line() {
       return t('onboarding.goals.fun.line')
-    },
+    }
   },
   {
     id: 'understanding',
@@ -468,7 +468,7 @@ export const GOALS = [
     },
     get line() {
       return t('onboarding.goals.understanding.line')
-    },
+    }
   },
   {
     id: 'kasparov',
@@ -478,7 +478,7 @@ export const GOALS = [
     },
     get line() {
       return t('onboarding.goals.kasparov.line')
-    },
+    }
   }
 ]
 
@@ -645,8 +645,7 @@ export function kickerOf(step) {
  * @param {{level: string|null, goal: string|null, answers: OnboardingAnswers|null, linking?: boolean}} state
  */
 export function lineOf(step, { level, goal, answers, linking = false }) {
-  if (step === 'hello')
-    return t('onboarding.lines.hello')
+  if (step === 'hello') return t('onboarding.lines.hello')
   if (step === 'level') {
     if (linking) return t('onboarding.lines.linking')
     const chosen = levelOf(level)
@@ -664,15 +663,9 @@ export function lineOf(step, { level, goal, answers, linking = false }) {
           : lichess.perf,
         line: chosen.line
       })
-    return chosen
-      ? chosen.line
-      : t('onboarding.lines.noLevel')
+    return chosen ? chosen.line : t('onboarding.lines.noLevel')
   }
-  if (step === 'goal')
-    return (
-      goalOf(goal)?.line ??
-      t('onboarding.lines.noGoal')
-    )
+  if (step === 'goal') return goalOf(goal)?.line ?? t('onboarding.lines.noGoal')
   if (PROF_SCREENS[step]) return PROF_SCREENS[step].line
   return answers?.lichess.linked
     ? t('onboarding.lines.endLinked')
@@ -753,8 +746,7 @@ export function ctaOf(step, { level, goal, end, linked, linking = false }) {
  * @param {string} step
  */
 export function footOf(step) {
-  if (step === 'hello')
-    return t('onboarding.foot.hello')
+  if (step === 'hello') return t('onboarding.foot.hello')
   if (PROF_SCREENS[step]) return t('onboarding.foot.prof')
   if (step === 'end') return t('onboarding.foot.end')
   return ''

@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import { PROFS } from '@/utils/prof/profs'
 import { GENERAL, RAMPS, topicLabel } from '@/utils/puzzleStreak'
 
@@ -27,7 +28,8 @@ import { GENERAL, RAMPS, topicLabel } from '@/utils/puzzleStreak'
  * @property {number} [max] slider
  * @property {number} [step] slider
  * @property {(v: number) => string} [format] slider: the value as displayed
- * @property {string[]} [options] one / many
+ * @property {Array<string|number>} [options] one / many: language-neutral values
+ * @property {(v: any) => string} [optionLabel] one / many: an option as displayed
  * @property {string} [hint]
  * @property {string} [chip] toggle: the chip shown when on
  * @property {string} [placeholder] text
@@ -59,95 +61,165 @@ import { GENERAL, RAMPS, topicLabel } from '@/utils/puzzleStreak'
 /** @param {string} piece */
 const glyph = piece => `${piece}︎`
 
+/**
+ * A catalogue message (session.catalog.*), pluralized by `plural` when given.
+ *
+ * @param {string} key
+ * @param {Record<string, unknown>} [params]
+ * @param {number} [plural]
+ * @returns {string}
+ */
+const m = (key, params = {}, plural) =>
+  plural === undefined
+    ? t(`session.catalog.${key}`, params)
+    : t(`session.catalog.${key}`, params, plural)
+
 /** A timed run lasts at most an hour (TimeboxRunner). */
 export const MAX_RUN_MINUTES = 60
 
+/**
+ * A field whose label (and hint, placeholder, chip) are messages, read when shown.
+ *
+ * @param {Omit<Field, 'label'|'hint'|'placeholder'|'chip'>} spec
+ * @param {{label: string, hint?: string, placeholder?: string, chip?: string}} keys message keys
+ *   under session.catalog
+ * @returns {Field}
+ */
+function field(spec, keys) {
+  const texts = /** @type {Record<string, string>} */ (keys)
+  return Object.defineProperties(
+    spec,
+    Object.fromEntries(
+      Object.keys(texts).map(name => [
+        name,
+        { get: () => m(texts[name]), enumerable: true }
+      ])
+    )
+  )
+}
+
 /** @param {number} def @param {number} [max] @returns {Field} */
-const duration = (def, max = 90) => ({
-  key: 'duree',
-  label: 'Durée',
-  type: 'slider',
-  min: 5,
-  max,
-  step: 5,
-  default: def,
-  format: v => `${v} min`
-})
+const duration = (def, max = 90) =>
+  field(
+    {
+      key: 'duree',
+      type: 'slider',
+      min: 5,
+      max,
+      step: 5,
+      default: def,
+      format: v => m('units.minutes', { n: v })
+    },
+    { label: 'fields.duration' }
+  )
 
 /** @param {number} def @param {string} [label] @returns {Field} */
-const elo = (def, label = 'Difficulté (Elo)') => ({
-  key: 'elo',
-  label,
-  type: 'slider',
-  min: 800,
-  max: 2600,
-  step: 50,
-  default: def,
-  format: v => `Elo ${v}`
-})
+const elo = (def, label = 'fields.elo') =>
+  field(
+    {
+      key: 'elo',
+      type: 'slider',
+      min: 800,
+      max: 2600,
+      step: 50,
+      default: def,
+      format: v => m('units.elo', { n: v })
+    },
+    { label }
+  )
 
 /**
  * @param {string} label @param {number} min @param {number} max @param {number} def
- * @param {string} unit
+ * @param {string} unit message key of the value, pluralized by it
  * @returns {Field}
  */
-const count = (label, min, max, def, unit) => ({
-  key: 'nombre',
-  label,
-  type: 'slider',
-  min,
-  max,
-  step: 1,
-  default: def,
-  format: v => `${v} ${unit}`
-})
+const count = (label, min, max, def, unit) =>
+  field(
+    {
+      key: 'nombre',
+      type: 'slider',
+      min,
+      max,
+      step: 1,
+      default: def,
+      format: v => m(unit, { n: v }, v)
+    },
+    { label }
+  )
 
 /**
- * @param {string} key @param {string} label @param {string[]} options @param {string} def
+ * A single choice. Values are language-neutral (the API's when it has them); `labels` names the
+ * group of session.catalog.options holding their labels, or is a function.
+ *
+ * @param {string} key @param {string} label @param {Array<string|number>} options
+ * @param {string|number} def @param {string|((v: any) => string)} labels
  * @returns {Field}
  */
-const one = (key, label, options, def) => ({
-  key,
-  label,
-  type: 'one',
-  options,
-  default: def
-})
+const one = (key, label, options, def, labels) =>
+  field(
+    {
+      key,
+      type: 'one',
+      options,
+      default: def,
+      optionLabel: optionLabel(labels)
+    },
+    { label }
+  )
 
 /**
  * @param {string} key @param {string} label @param {string[]} options @param {string[]} def
+ * @param {string} labels
  * @returns {Field}
  */
-const many = (key, label, options, def) => ({
-  key,
-  label,
-  type: 'many',
-  options,
-  default: def
-})
+const many = (key, label, options, def, labels) =>
+  field(
+    {
+      key,
+      type: 'many',
+      options,
+      default: def,
+      optionLabel: optionLabel(labels)
+    },
+    { label }
+  )
+
+/**
+ * @param {string|((v: any) => string)} labels
+ * @returns {(v: any) => string}
+ */
+function optionLabel(labels) {
+  return typeof labels === 'function'
+    ? labels
+    : v => m(`options.${labels}.${v}`)
+}
 
 /** @param {boolean} def @returns {Field} */
-const spaced = def => ({
-  key: 'rep',
-  label: 'Répétitions espacées',
-  type: 'toggle',
-  default: def,
-  hint: 'Revoir les erreurs selon une courbe d’oubli.',
-  chip: 'Rép. espacées'
-})
+const spaced = def =>
+  field(
+    { key: 'rep', type: 'toggle', default: def },
+    {
+      label: 'fields.spaced',
+      hint: 'hints.spaced',
+      chip: 'chips.spaced'
+    }
+  )
 
-/** @param {string} [placeholder] @returns {Field} */
-const notes = (placeholder = '') => ({
-  key: 'notes',
-  label: 'Notes',
-  type: 'text',
-  default: '',
-  placeholder
-})
+/** @param {string} [placeholder] message key @returns {Field} */
+const notes = placeholder =>
+  field(
+    { key: 'notes', type: 'text', default: '' },
+    placeholder
+      ? { label: 'fields.notes', placeholder }
+      : { label: 'fields.notes' }
+  )
+
+/** Colours, as the API names them. */
+const SIDES = ['white', 'black', 'both']
 
 /** @param {string} [def] @returns {Field} */
-const color = (def = 'Les deux') =>
-  one('couleur', 'Couleur jouée', ['Blancs', 'Noirs', 'Les deux'], def)
+const color = (def = 'both') =>
+  one('couleur', 'fields.color', SIDES, def, 'sides')
 
 /**
  * @param {string} slug
@@ -162,40 +234,43 @@ const byProf = slug => ({
 /** @param {string} name @returns {Pick<Module, 'prof'|'profSlug'|'image'>} */
 const noCard = name => ({ prof: name, profSlug: null, image: '' })
 
+/**
+ * A module whose title and description are messages (session.catalog.modules.<id>).
+ *
+ * @param {Omit<Module, 'title'|'desc'>} spec
+ * @returns {Module}
+ */
+function defineModule(spec) {
+  return Object.defineProperties(spec, {
+    title: { get: () => m(`modules.${spec.id}.title`), enumerable: true },
+    desc: { get: () => m(`modules.${spec.id}.desc`), enumerable: true }
+  })
+}
+
 /** Puzzle themes (keys of /puzzles/themes, combined with OR); none = every theme. */
 export const MAX_THEMES = 10
 
 /** @type {Field} */
-const themes = {
-  key: 'themes',
-  label: 'Thèmes',
-  type: 'themes',
-  default: [],
-  hint: 'Aucun thème : tous les thèmes. Sinon, un puzzle a au moins un des thèmes choisis.'
-}
-
-/**
- * The settings of blindfold puzzles (App\Blindfold\Puzzle\PuzzleRules, docs/BLINDFOLD.md),
- * labels to API values. The API refuses any other value (422): change them together.
- */
-const BLINDFOLD_LEVELS = { Facile: 'easy', Moyen: 'medium', Difficile: 'hard' }
-const BLINDFOLD_LENGTHS = { '2 coups': 2, '3 coups': 3, '4 coups et +': 4 }
-const BLINDFOLD_VISIBLE = ['5 s', '10 s', '15 s', '20 s', '30 s']
-
-/** The puzzle streak's ramps (docs/PUZZLE_STREAK.md), labels to API values. */
-const STREAK_RAMPS = Object.fromEntries(
-  Object.entries(RAMPS).map(([value, label]) => [label, value])
+const themes = field(
+  { key: 'themes', type: 'themes', default: [] },
+  { label: 'fields.themes', hint: 'hints.themes' }
 )
 
-/** The position evaluation (docs/EVALUATION.md): the side to move asked. */
-const EVALUATION_SIDES = { Blancs: 'white', Noirs: 'black', 'Les deux': 'both' }
+/**
+ * The settings of blindfold puzzles (App\Blindfold\Puzzle\PuzzleRules, docs/BLINDFOLD.md), as the
+ * API takes them. The API refuses any other value (422): change them together.
+ */
+const BLINDFOLD_LEVELS = ['easy', 'medium', 'hard']
+const BLINDFOLD_LENGTHS = [2, 3, 4]
+const BLINDFOLD_VISIBLE = [5, 10, 15, 20, 30]
+
+/** Free study formats, as the API names them. */
+const FREE_FORMATS = ['book', 'video', 'course', 'podcast', 'other']
 
 /** @type {Module[]} */
 export const MODULES = [
-  {
+  defineModule({
     id: 'libre',
-    title: 'Libre',
-    desc: 'Lecture d’un livre, vidéos, cours… à ton rythme.',
     ...noCard('Biblio'),
     glyph: glyph('♛'),
     available: true,
@@ -206,19 +281,12 @@ export const MODULES = [
     accentInk: '#5A3BE0',
     fields: [
       duration(30, MAX_RUN_MINUTES),
-      one(
-        'type',
-        'Format',
-        ['Livre', 'Vidéo', 'Cours', 'Podcast', 'Autre'],
-        'Livre'
-      ),
-      notes('Titre, chapitre, lien…')
+      one('type', 'fields.format', FREE_FORMATS, 'book', 'formats'),
+      notes('placeholders.free')
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'finales',
-    title: 'Finales',
-    desc: 'Apprendre ou réviser les finales essentielles.',
     ...byProf('lizy'),
     glyph: glyph('♚'),
     available: false,
@@ -229,22 +297,21 @@ export const MODULES = [
     accentInk: '#B84A0E',
     fields: [
       duration(20),
-      one('mode', 'Mode', ['Apprendre', 'Réviser'], 'Réviser'),
+      one('mode', 'fields.mode', ['learn', 'review'], 'review', 'endgameModes'),
       many(
         'themes',
-        'Thèmes',
-        ['Pions', 'Tours', 'Mats élémentaires', 'Pièces mineures', 'Dames'],
-        ['Tours']
+        'fields.themes',
+        ['pawns', 'rooks', 'basicMates', 'minorPieces', 'queens'],
+        ['rooks'],
+        'endgames'
       ),
       elo(1500),
       spaced(true),
-      notes('Ex. Lucena, Philidor…')
+      notes('placeholders.endgames')
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'puzzles',
-    title: 'Puzzles',
-    desc: 'Des puzzles à ton niveau, tant qu’il reste du temps.',
     ...byProf('albert-stein'),
     glyph: glyph('♞'),
     available: true,
@@ -254,11 +321,9 @@ export const MODULES = [
     deep: '#E03C86',
     accentInk: '#C02670',
     fields: [duration(20, MAX_RUN_MINUTES), themes, notes()]
-  },
-  {
+  }),
+  defineModule({
     id: 'streak',
-    title: 'Puzzle streak',
-    desc: 'Du plus facile au plus dur : une erreur et tu repars de zéro. Ton meilleur streak compte.',
     ...byProf('albert-stein'),
     glyph: glyph('♛'),
     available: true,
@@ -269,21 +334,22 @@ export const MODULES = [
     accentInk: '#B8300F',
     fields: [
       duration(10, MAX_RUN_MINUTES),
-      one('difficulte', 'Difficulté', Object.keys(STREAK_RAMPS), 'Échelle'),
-      {
-        key: 'thematique',
-        label: 'Thématique',
-        type: 'streakTopic',
-        default: GENERAL,
-        hint: 'Si le temps finit pendant un streak, tu pourras le prolonger de 5 minutes.'
-      },
+      one(
+        'difficulte',
+        'fields.difficulty',
+        Object.keys(RAMPS),
+        'ladder',
+        v => RAMPS[v] ?? v
+      ),
+      field(
+        { key: 'thematique', type: 'streakTopic', default: GENERAL },
+        { label: 'fields.topic', hint: 'hints.topic' }
+      ),
       notes()
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'woodpecker',
-    title: 'Woodpecker',
-    desc: 'Ton set light : des puzzles faciles, revus encore et encore.',
     ...byProf('albert-stein'),
     glyph: glyph('♝'),
     available: true,
@@ -294,20 +360,15 @@ export const MODULES = [
     accentInk: '#5A7A00',
     fields: [
       duration(15, MAX_RUN_MINUTES),
-      {
-        key: 'set',
-        label: 'Set light',
-        type: 'lightSet',
-        default: null,
-        hint: 'La séance repart du début du set ; il grandit tout seul quand tu l’as presque épuisé.'
-      },
+      field(
+        { key: 'set', type: 'lightSet', default: null },
+        { label: 'fields.lightSet', hint: 'hints.lightSet' }
+      ),
       notes()
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'repertoire',
-    title: 'Répertoire',
-    desc: 'Réviser les ouvertures de ton répertoire.',
     ...byProf('aaron'),
     glyph: glyph('♜'),
     available: true,
@@ -318,20 +379,15 @@ export const MODULES = [
     accentInk: '#0F6BBA',
     fields: [
       duration(15, MAX_RUN_MINUTES),
-      {
-        key: 'repertoires',
-        label: 'Répertoires',
-        type: 'repertoire',
-        default: [],
-        hint: 'Les révisions dues passent en premier (répétition espacée automatique).'
-      },
+      field(
+        { key: 'repertoires', type: 'repertoire', default: [] },
+        { label: 'fields.repertoires', hint: 'hints.repertoires' }
+      ),
       notes()
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'evaluation',
-    title: 'Évaluation de position',
-    desc: 'Juger des positions, en 1 à 10 minutes.',
     ...byProf('aaron'),
     glyph: glyph('♟'),
     available: true,
@@ -341,22 +397,17 @@ export const MODULES = [
     deep: '#E0AE00',
     accentInk: '#8A6A00',
     fields: [
-      {
-        key: 'duree',
-        label: 'Durée',
-        type: 'durationChoice',
-        default: 0,
-        hint: 'Une séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent jusqu’au bout.'
-      },
+      field(
+        { key: 'duree', type: 'durationChoice', default: 0 },
+        { label: 'fields.duration', hint: 'hints.evaluationDuration' }
+      ),
       elo(1500),
-      one('couleur', 'Trait', ['Blancs', 'Noirs', 'Les deux'], 'Les deux'),
+      one('couleur', 'fields.side', SIDES, 'both', 'sides'),
       notes()
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'analyse',
-    title: 'Analyse de parties',
-    desc: 'Revenir sur tes parties et en tirer des leçons.',
     ...noCard('Lupa'),
     glyph: glyph('♔'),
     available: false,
@@ -367,21 +418,20 @@ export const MODULES = [
     accentInk: '#0B7D62',
     fields: [
       duration(30),
-      count('Parties', 1, 5, 2, 'parties'),
+      count('fields.games', 1, 5, 2, 'units.games'),
       one(
         'filtre',
-        'Sélection',
-        ['Dernières', 'Défaites', 'Nulles', 'Au choix'],
-        'Défaites'
+        'fields.selection',
+        ['latest', 'losses', 'draws', 'chosen'],
+        'losses',
+        'gameFilters'
       ),
       color(),
-      notes('Points à creuser…')
+      notes('placeholders.analysis')
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'coordonnees',
-    title: 'Coordonnées',
-    desc: 'Trouver les cases sur un échiquier vide, sans coordonnées.',
     ...noCard('Noctis'),
     glyph: glyph('♙'),
     available: true,
@@ -391,21 +441,22 @@ export const MODULES = [
     deep: '#2B2250',
     accentInk: '#4A3D86',
     fields: [
-      {
-        key: 'duree',
-        label: 'Durée',
-        type: 'durationChoice',
-        default: 0,
-        hint: 'Une série dure 1, 2, 5 ou 10 minutes.'
-      },
-      one('orientation', 'Orientation', ['Blancs', 'Noirs'], 'Blancs'),
+      field(
+        { key: 'duree', type: 'durationChoice', default: 0 },
+        { label: 'fields.duration', hint: 'hints.coordinatesDuration' }
+      ),
+      one(
+        'orientation',
+        'fields.orientation',
+        ['white', 'black'],
+        'white',
+        'sides'
+      ),
       notes()
     ]
-  },
-  {
+  }),
+  defineModule({
     id: 'aveugle',
-    title: 'Jeu à l’aveugle',
-    desc: 'Des puzzles résolus de mémoire : la position s’affiche, disparaît, puis tu joues sur un échiquier vide.',
     ...noCard('Noctis'),
     glyph: glyph('♘'),
     available: true,
@@ -416,13 +467,94 @@ export const MODULES = [
     accentInk: '#4A3D86',
     fields: [
       duration(15, MAX_RUN_MINUTES),
-      one('niveau', 'Niveau', Object.keys(BLINDFOLD_LEVELS), 'Facile'),
-      one('longueur', 'Longueur', Object.keys(BLINDFOLD_LENGTHS), '2 coups'),
-      one('memorisation', 'Temps pour mémoriser', BLINDFOLD_VISIBLE, '10 s'),
+      one('niveau', 'fields.level', BLINDFOLD_LEVELS, 'easy', 'levels'),
+      one('longueur', 'fields.length', BLINDFOLD_LENGTHS, 2, v =>
+        v >= 4
+          ? m('options.lengthOrMore', { n: v })
+          : m('options.length', { n: v })
+      ),
+      one('memorisation', 'fields.memorize', BLINDFOLD_VISIBLE, 10, v =>
+        m('units.seconds', { n: v })
+      ),
       notes()
     ]
-  }
+  })
 ]
+
+/**
+ * The values drafts kept before the settings were language-neutral (2026-10-14): the French
+ * labels, per module and setting, to today's values.
+ *
+ * @type {Record<string, Record<string, Record<string, any>>>}
+ */
+const LEGACY_VALUES = {
+  libre: {
+    type: {
+      Livre: 'book',
+      Vidéo: 'video',
+      Cours: 'course',
+      Podcast: 'podcast',
+      Autre: 'other'
+    }
+  },
+  finales: {
+    mode: { Apprendre: 'learn', Réviser: 'review' },
+    themes: {
+      Pions: 'pawns',
+      Tours: 'rooks',
+      'Mats élémentaires': 'basicMates',
+      'Pièces mineures': 'minorPieces',
+      Dames: 'queens'
+    }
+  },
+  streak: { difficulte: { Échelle: 'ladder', Paliers: 'tiers' } },
+  evaluation: {
+    couleur: { Blancs: 'white', Noirs: 'black', 'Les deux': 'both' }
+  },
+  analyse: {
+    filtre: {
+      Dernières: 'latest',
+      Défaites: 'losses',
+      Nulles: 'draws',
+      'Au choix': 'chosen'
+    },
+    couleur: { Blancs: 'white', Noirs: 'black', 'Les deux': 'both' }
+  },
+  coordonnees: { orientation: { Blancs: 'white', Noirs: 'black' } },
+  aveugle: {
+    niveau: { Facile: 'easy', Moyen: 'medium', Difficile: 'hard' },
+    longueur: { '2 coups': 2, '3 coups': 3, '4 coups et +': 4 },
+    memorisation: { '5 s': 5, '10 s': 10, '15 s': 15, '20 s': 20, '30 s': 30 }
+  }
+}
+
+/**
+ * A stored item's settings with the French labels of older drafts turned into today's values;
+ * any other choice that is not an option any more falls back to the default.
+ *
+ * @param {Module} module
+ * @param {Record<string, any>} values
+ * @returns {Record<string, any>}
+ */
+export function upgradeValues(module, values) {
+  const legacy = LEGACY_VALUES[module.id] ?? {}
+  const upgraded = { ...values }
+  for (const f of module.fields) {
+    if (f.type !== 'one' && f.type !== 'many') continue
+    const map = legacy[f.key] ?? {}
+    const options = /** @type {any[]} */ (f.options)
+    const v = upgraded[f.key]
+    if (f.type === 'one') {
+      const value = v in map ? map[v] : v
+      upgraded[f.key] = options.includes(value) ? value : f.default
+    } else if (Array.isArray(v)) {
+      upgraded[f.key] = v
+        .map(x => (x in map ? map[x] : x))
+        .filter(x => options.includes(x))
+    }
+  }
+  return upgraded
+}
 
 /** @type {Record<string, Module>} */
 export const MODULES_BY_ID = Object.fromEntries(MODULES.map(m => [m.id, m]))
@@ -570,15 +702,15 @@ export function settingChips(module, values, context = NO_CONTEXT) {
       case 'slider':
         return [f.format ? f.format(v) : String(v)]
       case 'one':
-        return [v]
+        return [f.optionLabel ? f.optionLabel(v) : String(v)]
       case 'many':
-        return firstTwo(v)
+        return firstTwo(f.optionLabel ? v.map(f.optionLabel) : v)
       case 'toggle':
         return v && f.chip ? [f.chip] : []
       case 'themes':
         return v?.length
           ? firstTwo(v.map(context.themeLabel))
-          : ['Tous les thèmes']
+          : [m('allThemes')]
       case 'repertoire':
         return firstTwo(
           (v ?? []).flatMap(
@@ -590,7 +722,9 @@ export function settingChips(module, values, context = NO_CONTEXT) {
         const set = v
           ? context.openingSets?.find(s => s.id === v)
           : context.lightSet
-        return set ? [`${set.puzzleCount} puzzles`] : []
+        return set
+          ? [m('units.puzzles', { n: set.puzzleCount }, set.puzzleCount)]
+          : []
       }
       case 'streakTopic':
         return [topicLabel(v ?? GENERAL, context.streakOpenings ?? null)]
@@ -613,10 +747,10 @@ export function itemIssue(module, values, context = NO_CONTEXT) {
   for (const f of module.fields) {
     const v = values[f.key]
     if (f.type === 'themes' && (v?.length ?? 0) > MAX_THEMES) {
-      return `${MAX_THEMES} thèmes au plus.`
+      return m('issues.tooManyThemes', { n: MAX_THEMES })
     }
     if (f.type === 'repertoire') {
-      if (!v?.length) return 'Choisis au moins un répertoire.'
+      if (!v?.length) return m('issues.noRepertoire')
       if (
         context.loaded &&
         v.some(
@@ -624,22 +758,22 @@ export function itemIssue(module, values, context = NO_CONTEXT) {
             !context.repertoires.some(r => r.id === id)
         )
       ) {
-        return 'Un répertoire choisi n’existe plus.'
+        return m('issues.repertoireGone')
       }
     }
     if (f.type === 'durationChoice' && !(v > 0)) {
-      return 'Chargement de la durée…'
+      return m('issues.loadingDuration')
     }
     if (f.type === 'lightSet' && context.loaded && v) {
       const set = context.openingSets?.find(s => s.id === v)
-      if (!set) return 'Ce set d’ouverture n’est plus en cours.'
-      if (set.status === 'paused') return 'Ce set d’ouverture est en pause.'
+      if (!set) return m('issues.openingSetGone')
+      if (set.status === 'paused') return m('issues.openingSetPaused')
       continue
     }
     if (f.type === 'lightSet' && context.loaded) {
-      if (!context.lightSet) return 'Tu n’as pas de set light en cours.'
+      if (!context.lightSet) return m('issues.noLightSet')
       if (context.lightSet.status === 'paused')
-        return 'Ton set light est en pause.'
+        return m('issues.lightSetPaused')
     }
   }
   return null
@@ -657,15 +791,6 @@ export const API_MODULES = {
   streak: 'puzzle_streak'
 }
 
-/** Free study formats: the catalogue's labels, as the API names them. */
-const FREE_FORMATS = {
-  Livre: 'book',
-  Vidéo: 'video',
-  Cours: 'course',
-  Podcast: 'podcast',
-  Autre: 'other'
-}
-
 /**
  * A program item as a step of the API's session (docs/TRAINING.md): module, length, notes and the
  * settings the module checks.
@@ -679,27 +804,28 @@ export function toStep(item) {
   if (!module) throw new Error(`Module ${item.moduleId} cannot be played yet.`)
   /** @type {Record<string, any>} */
   let settings = {}
-  if (module === 'free') settings = { format: FREE_FORMATS[v.type] ?? 'other' }
+  if (module === 'free')
+    settings = { format: FREE_FORMATS.includes(v.type) ? v.type : 'other' }
   if (module === 'puzzles') settings = { themes: [...(v.themes ?? [])] }
   if (module === 'woodpecker' && v.set) settings = { setId: v.set }
   if (module === 'repertoire')
     settings = { repertoireIds: [...(v.repertoires ?? [])] }
   if (module === 'coordinates')
-    settings = { orientation: v.orientation === 'Noirs' ? 'black' : 'white' }
+    settings = { orientation: v.orientation === 'black' ? 'black' : 'white' }
   if (module === 'blindfold')
     settings = {
-      level: BLINDFOLD_LEVELS[v.niveau] ?? 'easy',
-      length: BLINDFOLD_LENGTHS[v.longueur] ?? 2,
-      visibleSeconds: parseInt(v.memorisation, 10) || 10
+      level: oneOf(BLINDFOLD_LEVELS, v.niveau, 'easy'),
+      length: oneOf(BLINDFOLD_LENGTHS, v.longueur, 2),
+      visibleSeconds: oneOf(BLINDFOLD_VISIBLE, v.memorisation, 10)
     }
   if (module === 'evaluation')
     settings = {
       elo: v.elo,
-      side: EVALUATION_SIDES[v.couleur] ?? 'both'
+      side: oneOf(SIDES, v.couleur, 'both')
     }
   if (module === 'puzzle_streak')
     settings = {
-      ramp: STREAK_RAMPS[v.difficulte] ?? 'ladder',
+      ramp: oneOf(Object.keys(RAMPS), v.difficulte, 'ladder'),
       topic: v.thematique || GENERAL
     }
   return {
@@ -731,45 +857,49 @@ export function fromStep(step) {
   values.notes = step.notes ?? ''
   const settings = step.settings ?? {}
   if (step.module === 'free') {
-    values.type =
-      Object.entries(FREE_FORMATS).find(
-        ([, f]) => f === settings.format
-      )?.[0] ?? 'Autre'
+    values.type = oneOf(FREE_FORMATS, settings.format, 'other')
   }
   if (step.module === 'puzzles') values.themes = [...(settings.themes ?? [])]
   if (step.module === 'woodpecker') values.set = settings.setId ?? null
   if (step.module === 'repertoire')
     values.repertoires = [...(settings.repertoireIds ?? [])]
   if (step.module === 'coordinates')
-    values.orientation = settings.orientation === 'black' ? 'Noirs' : 'Blancs'
+    values.orientation = settings.orientation === 'black' ? 'black' : 'white'
   if (step.module === 'blindfold') {
-    values.niveau = labelOf(BLINDFOLD_LEVELS, settings.level) ?? values.niveau
-    values.longueur =
-      labelOf(BLINDFOLD_LENGTHS, settings.length) ?? values.longueur
-    if (BLINDFOLD_VISIBLE.includes(`${settings.visibleSeconds} s`))
-      values.memorisation = `${settings.visibleSeconds} s`
+    values.niveau = oneOf(BLINDFOLD_LEVELS, settings.level, values.niveau)
+    values.longueur = oneOf(BLINDFOLD_LENGTHS, settings.length, values.longueur)
+    values.memorisation = oneOf(
+      BLINDFOLD_VISIBLE,
+      settings.visibleSeconds,
+      values.memorisation
+    )
   }
   if (step.module === 'evaluation') {
     if (Number.isInteger(settings.elo)) values.elo = settings.elo
-    values.couleur = labelOf(EVALUATION_SIDES, settings.side) ?? values.couleur
+    values.couleur = oneOf(SIDES, settings.side, values.couleur)
   }
   if (step.module === 'puzzle_streak') {
-    values.difficulte =
-      labelOf(STREAK_RAMPS, settings.ramp) ?? values.difficulte
+    values.difficulte = oneOf(
+      Object.keys(RAMPS),
+      settings.ramp,
+      values.difficulte
+    )
     if (typeof settings.topic === 'string') values.thematique = settings.topic
   }
   return { moduleId, values }
 }
 
 /**
- * The label of an API value in a labels-to-values map, or null.
+ * `value` when it is one of `options`, `fallback` otherwise.
  *
- * @param {Record<string, any>} map
+ * @template T
+ * @param {T[]} options
  * @param {any} value
- * @returns {string|null}
+ * @param {T} fallback
+ * @returns {T}
  */
-function labelOf(map, value) {
-  return Object.entries(map).find(([, v]) => v === value)?.[0] ?? null
+function oneOf(options, value, fallback) {
+  return options.includes(value) ? value : fallback
 }
 
 /**

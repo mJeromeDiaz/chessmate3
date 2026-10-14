@@ -44,9 +44,7 @@
       </label>
 
       <label class="profile-edit__field">
-        <span class="profile-edit__label">{{
-          $t('profile.edit.handle')
-        }}</span>
+        <span class="profile-edit__label">{{ $t('profile.edit.handle') }}</span>
         <input
           :value="draft.handle"
           class="profile-edit__input"

@@ -2,9 +2,7 @@
   <section class="welcome" data-testid="dashboard-welcome">
     <div class="welcome__text">
       <div class="welcome__kicker">{{ $t('dashboard.welcome.kicker') }}</div>
-      <h1 class="welcome__title"
-        >{{ $t('dashboard.welcome.title') }}</h1
-      >
+      <h1 class="welcome__title">{{ $t('dashboard.welcome.title') }}</h1>
       <p>
         {{ $t('dashboard.welcome.text') }}
       </p>

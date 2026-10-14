@@ -6,9 +6,9 @@
   >
     <div class="spotlight__head">
       <h2 class="cm-card__title">{{ $t('dashboard.shop.title') }}</h2>
-      <router-link to="/boutique" class="spotlight__link"
-        >{{ $t('dashboard.shop.link') }}</router-link
-      >
+      <router-link to="/boutique" class="spotlight__link">{{
+        $t('dashboard.shop.link')
+      }}</router-link>
     </div>
     <ShopCarousel :slides="slides" @open="open" />
   </section>

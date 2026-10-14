@@ -18,9 +18,9 @@
         data-testid="weak-theme-train"
         @click="train"
       />
-      <router-link to="/stats" class="weak-tip__link"
-        >{{ $t('dashboard.weak.stats') }}</router-link
-      >
+      <router-link to="/stats" class="weak-tip__link">{{
+        $t('dashboard.weak.stats')
+      }}</router-link>
     </div>
   </section>
 </template>

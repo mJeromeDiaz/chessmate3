@@ -54,7 +54,8 @@ describe('session catalogue', () => {
     ])
     // The evaluation lasts one of the API's lengths, like a coordinates series.
     expect(keys('evaluation')).toEqual(['duree', 'elo', 'couleur', 'notes'])
-    expect(MODULES_BY_ID.libre.fields[1].options).toContain('Autre')
+    expect(MODULES_BY_ID.libre.fields[1].options).toContain('other')
+    expect(MODULES_BY_ID.libre.fields[1].optionLabel('other')).toBe('Autre')
     for (const m of MODULES.filter(m => m.available)) {
       if (m.fields[0].key === 'duree' && m.fields[0].type === 'slider')
         expect(m.fields[0].max).toBe(MAX_RUN_MINUTES)
@@ -224,7 +225,7 @@ describe('session catalogue', () => {
       toStep({
         uid: 1,
         moduleId: 'libre',
-        values: { duree: 30, type: 'Vidéo', notes: ' Cours de finales ' }
+        values: { duree: 30, type: 'video', notes: ' Cours de finales ' }
       })
     ).toEqual({
       module: 'free',
@@ -301,7 +302,7 @@ describe('session catalogue', () => {
     const step = toStep({
       uid: 6,
       moduleId: 'coordonnees',
-      values: { ...ten, orientation: 'Noirs' }
+      values: { ...ten, orientation: 'black' }
     })
     expect(step).toEqual({
       module: 'coordinates',
@@ -311,7 +312,7 @@ describe('session catalogue', () => {
     })
     expect(fromStep(step)).toEqual({
       moduleId: 'coordonnees',
-      values: { duree: 10, orientation: 'Noirs', notes: '' }
+      values: { duree: 10, orientation: 'black', notes: '' }
     })
   })
 
@@ -334,9 +335,9 @@ describe('session catalogue', () => {
       values: {
         ...values,
         duree: 20,
-        niveau: 'Difficile',
-        longueur: '4 coups et +',
-        memorisation: '30 s'
+        niveau: 'hard',
+        longueur: 4,
+        memorisation: 30
       }
     })
     expect(step).toEqual({
@@ -349,9 +350,9 @@ describe('session catalogue', () => {
       moduleId: 'aveugle',
       values: {
         duree: 20,
-        niveau: 'Difficile',
-        longueur: '4 coups et +',
-        memorisation: '30 s',
+        niveau: 'hard',
+        longueur: 4,
+        memorisation: 30,
         notes: ''
       }
     })
@@ -380,7 +381,7 @@ describe('session catalogue', () => {
       values: {
         ...values,
         duree: 20,
-        difficulte: 'Paliers',
+        difficulte: 'tiers',
         thematique: 'opening:Italian_Game:w'
       }
     })
@@ -392,7 +393,7 @@ describe('session catalogue', () => {
       moduleId: 'streak',
       values: {
         duree: 20,
-        difficulte: 'Paliers',
+        difficulte: 'tiers',
         thematique: 'opening:Italian_Game:w',
         notes: ''
       }
@@ -422,7 +423,7 @@ describe('session catalogue', () => {
     const step = toStep({
       uid: 9,
       moduleId: 'evaluation',
-      values: { duree: 5, elo: 1600, couleur: 'Noirs', notes: '' }
+      values: { duree: 5, elo: 1600, couleur: 'black', notes: '' }
     })
     expect(step).toEqual({
       module: 'evaluation',
@@ -432,7 +433,7 @@ describe('session catalogue', () => {
     })
     expect(fromStep(step)).toEqual({
       moduleId: 'evaluation',
-      values: { duree: 5, elo: 1600, couleur: 'Noirs', notes: '' }
+      values: { duree: 5, elo: 1600, couleur: 'black', notes: '' }
     })
   })
 })

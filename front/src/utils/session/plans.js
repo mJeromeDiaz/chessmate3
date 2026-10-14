@@ -1,4 +1,4 @@
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * Saved sessions (docs/TRAINING.md): their settings and how they read.
@@ -18,33 +18,67 @@ import { intlLocale } from '@/i18n'
  * @typedef {SessionSettings & {id: string, title: string, description: string, steps: {module: string, minutes: number, notes: string, settings: Record<string, any>}[], totalMinutes: number, time: string|null, nextAt: string|null, updatedAt: string}} Plan
  */
 
+/**
+ * A choice whose label is a message (session.plans.<group>.<value>), read when shown.
+ *
+ * @template V
+ * @param {string} group
+ * @param {V} value
+ * @returns {{value: V, label: string}}
+ */
+function option(group, value) {
+  return {
+    value,
+    get label() {
+      return t(`session.plans.${group}.${value}`)
+    }
+  }
+}
+
+/** @type {{value: Repetition, label: string}[]} */
 export const REPETITIONS = [
-  { value: 'on_demand', label: 'À la demande' },
-  { value: 'daily', label: 'Quotidienne' },
-  { value: 'weekly', label: 'Hebdomadaire' }
+  option('repetitions', 'on_demand'),
+  option('repetitions', 'daily'),
+  option('repetitions', 'weekly')
 ]
 
-/** ISO days of the week, Monday first. */
-export const WEEKDAYS = [
-  { value: 1, short: 'L', label: 'lundi', abbr: 'lun.' },
-  { value: 2, short: 'M', label: 'mardi', abbr: 'mar.' },
-  { value: 3, short: 'M', label: 'mercredi', abbr: 'mer.' },
-  { value: 4, short: 'J', label: 'jeudi', abbr: 'jeu.' },
-  { value: 5, short: 'V', label: 'vendredi', abbr: 'ven.' },
-  { value: 6, short: 'S', label: 'samedi', abbr: 'sam.' },
-  { value: 7, short: 'D', label: 'dimanche', abbr: 'dim.' }
-]
+/**
+ * A weekday's name in the current language ("lundi", "lun.", "L"; "Monday", "Mon", "M").
+ *
+ * @param {number} day ISO day, 1 = Monday
+ * @param {'long'|'short'|'narrow'} weekday
+ * @returns {string}
+ */
+function dayName(day, weekday) {
+  // 1 January 2024 was a Monday.
+  return new Intl.DateTimeFormat(intlLocale(), {
+    weekday,
+    timeZone: 'UTC'
+  }).format(new Date(Date.UTC(2024, 0, day)))
+}
 
-export const REMINDER_DELAYS = [
-  { value: 10, label: '10 min avant' },
-  { value: 30, label: '30 min avant' },
-  { value: 60, label: '1 h avant' },
-  { value: 1440, label: '1 jour avant' }
-]
+/** ISO days of the week, Monday first, named in the current language. */
+export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7].map(value => ({
+  value,
+  get short() {
+    return dayName(value, 'narrow')
+  },
+  get label() {
+    return dayName(value, 'long')
+  },
+  get abbr() {
+    return dayName(value, 'short')
+  }
+}))
 
+export const REMINDER_DELAYS = [10, 30, 60, 1440].map(value =>
+  option('delays', value)
+)
+
+/** @type {{value: 'email'|'push', label: string}[]} */
 export const REMINDER_CHANNELS = [
-  { value: 'email', label: 'Email' },
-  { value: 'push', label: 'Navigateur' }
+  option('channels', 'email'),
+  option('channels', 'push')
 ]
 
 /** @returns {SessionSettings} */
@@ -124,9 +158,9 @@ export function settingsPayload(s) {
  */
 export function settingsIssue(s) {
   if (s.repetition === 'on_demand') return null
-  if (!s.weekdays.length) return 'Choisis au moins un jour.'
+  if (!s.weekdays.length) return t('session.plans.issues.noDay')
   if (s.reminderEnabled && !s.reminderChannels.length)
-    return 'Choisis comment être rappelé (email ou navigateur).'
+    return t('session.plans.issues.noChannel')
   return null
 }
 
@@ -137,17 +171,22 @@ export function settingsIssue(s) {
  * @returns {string}
  */
 export function repetitionText(s) {
-  if (s.repetition === 'on_demand' || !s.time) return 'À la demande'
+  if (s.repetition === 'on_demand' || !s.time)
+    return t('session.plans.onDemand')
+  const time = s.time
   const days = [...s.weekdays].sort()
   if (s.repetition === 'weekly') {
     const day = WEEKDAYS.find(d => d.value === days[0])
-    return `Chaque ${day?.label ?? '?'} à ${s.time}`
+    return t('session.plans.weekly', { day: day?.label ?? '?', time })
   }
-  if (days.length === 7) return `Tous les jours à ${s.time}`
-  if (days.join() === '1,2,3,4,5') return `En semaine à ${s.time}`
+  if (days.length === 7) return t('session.plans.daily', { time })
+  if (days.join() === '1,2,3,4,5') return t('session.plans.weekdays', { time })
   const names = days.map(n => WEEKDAYS.find(d => d.value === n)?.abbr ?? '')
   const text = names.join(', ')
-  return `${text.charAt(0).toUpperCase()}${text.slice(1)} à ${s.time}`
+  return t('session.plans.days', {
+    days: `${text.charAt(0).toUpperCase()}${text.slice(1)}`,
+    time
+  })
 }
 
 const nextFormat = {
@@ -169,7 +208,9 @@ const nextFormat = {
  */
 export function nextText(plan) {
   return plan.nextAt
-    ? `Prochaine : ${nextFormat.format(new Date(plan.nextAt))}`
+    ? t('session.plans.next', {
+        date: nextFormat.format(new Date(plan.nextAt))
+      })
     : ''
 }
 

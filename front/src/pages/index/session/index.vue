@@ -2,13 +2,15 @@
   <q-page class="plans-page">
     <div class="plans-page__inner">
       <header class="plans-page__head">
-        <h1 class="plans-page__title cm-heading">Mes sessions</h1>
+        <h1 class="plans-page__title cm-heading">{{
+          $t('session.list.title')
+        }}</h1>
         <div class="plans-page__head-actions">
           <q-btn
             unelevated
             no-caps
             class="cm-btn-generate"
-            label="♞ Séance sur mesure"
+            :label="$t('session.list.coach')"
             to="/session/auto"
             data-testid="plans-coach"
           />
@@ -16,7 +18,7 @@
             unelevated
             no-caps
             class="cm-btn-create"
-            label="+ Nouvelle session"
+            :label="$t('session.list.new')"
             to="/session/new"
             data-testid="plans-new"
           />
@@ -29,12 +31,15 @@
         class="plans-page__current"
         data-testid="plans-current"
       >
-        <span
-          >Session du jour en cours :
-          <strong>{{ current.title || 'Session sans titre' }}</strong> ·
-          {{ sessionProgressText(current) }}</span
-        >
-        <span class="plans-page__current-go">Reprendre →</span>
+        <i18n-t keypath="session.list.current" tag="span" scope="global">
+          <template #title>
+            <strong>{{ current.title || $t('session.untitled') }}</strong>
+          </template>
+          <template #progress>{{ sessionProgressText(current) }}</template>
+        </i18n-t>
+        <span class="plans-page__current-go">{{
+          $t('session.resumeArrow')
+        }}</span>
       </router-link>
 
       <div
@@ -42,12 +47,12 @@
         class="plans-page__notice"
         data-testid="plans-in-progress"
       >
-        <span>Une session est déjà en cours aujourd’hui.</span>
-        <router-link :to="`/session/${launcher.inProgress.value.id}`"
-          >La reprendre</router-link
-        >
+        <span>{{ $t('session.builder.inProgress') }}</span>
+        <router-link :to="`/session/${launcher.inProgress.value.id}`">{{
+          $t('session.builder.resume')
+        }}</router-link>
         <button type="button" @click="launcher.abandonAndLaunch()">
-          L’abandonner et lancer celle-ci
+          {{ $t('session.builder.abandonAndLaunch') }}
         </button>
       </div>
       <div
@@ -65,12 +70,12 @@
         class="plans-page__empty"
         data-testid="plans-empty"
       >
-        <p>Aucune session enregistrée.</p>
+        <p>{{ $t('session.list.empty') }}</p>
         <q-btn
           class="cm-btn-create"
           no-caps
           unelevated
-          label="Composer ma première session"
+          :label="$t('session.list.composeFirst')"
           to="/session/new"
         />
       </div>
@@ -83,15 +88,17 @@
         >
           <div class="plans-page__card-head">
             <h2 class="plans-page__card-title">{{
-              plan.title || 'Session sans titre'
+              plan.title || $t('session.untitled')
             }}</h2>
             <span
               v-if="plan.origin === 'coach'"
               class="plans-page__badge plans-page__badge--coach"
-              title="Tirée de tes parties Lichess, mise à jour à chaque analyse"
-              >Sur mesure</span
+              :title="$t('session.list.coachTitle')"
+              >{{ $t('session.list.coachBadge') }}</span
             >
-            <span v-if="plan.public" class="plans-page__badge">Publique</span>
+            <span v-if="plan.public" class="plans-page__badge">{{
+              $t('session.list.public')
+            }}</span>
           </div>
           <div class="plans-page__glyphs" aria-hidden="true">
             <span
@@ -106,10 +113,12 @@
             >
           </div>
           <div class="plans-page__meta">
-            {{ plan.steps.length }} module{{
-              plan.steps.length > 1 ? 's' : ''
+            {{
+              $t('session.list.meta', {
+                modules: $t('session.builder.modules', plan.steps.length),
+                minutes: formatMinutes(plan.totalMinutes)
+              })
             }}
-            · {{ formatMinutes(plan.totalMinutes) }}
           </div>
           <div class="plans-page__repetition" data-testid="plan-repetition">{{
             repetitionText(plan)
@@ -124,7 +133,9 @@
             <span v-if="plan.reminderEnabled"
               >🔔&#xFE0E; {{ reminderText(plan) }}</span
             >
-            <span v-if="plan.calendarEnabled">📅&#xFE0E; Calendrier</span>
+            <span v-if="plan.calendarEnabled"
+              >📅&#xFE0E; {{ $t('session.list.calendar') }}</span
+            >
           </div>
           <div class="plans-page__actions">
             <q-btn
@@ -132,7 +143,7 @@
               no-caps
               unelevated
               icon="play_arrow"
-              label="Lancer"
+              :label="$t('session.launch')"
               :loading="launcher.launching.value === plan.id"
               data-testid="plan-launch"
               @click="launcher.launch(plan.id)"
@@ -140,7 +151,7 @@
             <q-btn
               flat
               no-caps
-              label="Modifier"
+              :label="$t('session.list.edit')"
               :to="`/session/plans/${plan.id}`"
               data-testid="plan-edit"
             />
@@ -152,11 +163,15 @@
               dense
               icon="event"
               :loading="downloading === plan.id"
-              :aria-label="`Ajouter ${plan.title || 'la session'} à mon agenda (.ics)`"
+              :aria-label="
+                $t('session.list.icsLabel', {
+                  title: plan.title || $t('session.replayThis')
+                })
+              "
               data-testid="plan-ics"
               @click="downloadIcs(plan)"
             >
-              <q-tooltip>Télécharger pour mon agenda (.ics)</q-tooltip>
+              <q-tooltip>{{ $t('session.list.icsTooltip') }}</q-tooltip>
             </q-btn>
             <q-btn
               flat
@@ -164,7 +179,11 @@
               dense
               icon="delete"
               color="negative"
-              :aria-label="`Supprimer ${plan.title || 'la session'}`"
+              :aria-label="
+                $t('session.list.delete', {
+                  title: plan.title || $t('session.replayThis')
+                })
+              "
               data-testid="plan-delete"
               @click="confirmDelete(plan)"
             />
@@ -189,6 +208,7 @@ import { usePlanLaunch } from '@/composables/session/usePlanLaunch'
 import { calendarApi, planApi, sessionApi } from '@/services/api'
 import { downloadText } from '@/utils/download'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { formatMinutes } from '@/utils/session/catalog'
 import {
   REMINDER_CHANNELS,
@@ -220,7 +240,7 @@ function reminderText(plan) {
   const channels = plan.reminderChannels
     .map(c => REMINDER_CHANNELS.find(r => r.value === c)?.label.toLowerCase())
     .join(', ')
-  return `${delay?.label ?? ''} · ${channels}`
+  return t('session.list.reminder', { delay: delay?.label ?? '', channels })
 }
 
 /** @param {import('@/utils/session/plans').Plan} plan */
@@ -247,9 +267,8 @@ async function downloadIcs(plan) {
 
 function confirmDelete(plan) {
   $q.dialog({
-    title: 'Supprimer cette session ?',
-    message:
-      'Les sessions déjà jouées restent dans ton historique ; seule la session enregistrée disparaît.',
+    title: t('session.list.deleteTitle'),
+    message: t('session.list.deleteMessage'),
     cancel: true
   }).onOk(async () => {
     try {

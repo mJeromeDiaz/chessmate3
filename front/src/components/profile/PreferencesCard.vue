@@ -37,9 +37,9 @@
         <div class="profile-row__title">{{
           $t('profile.preferences.sounds')
         }}</div>
-        <div class="profile-row__sub"
-          >{{ $t('profile.preferences.soundsHint') }}</div
-        >
+        <div class="profile-row__sub">{{
+          $t('profile.preferences.soundsHint')
+        }}</div>
       </div>
       <q-toggle
         :model-value="profile.moveSound"

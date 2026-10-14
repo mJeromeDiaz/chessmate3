@@ -85,15 +85,7 @@
     "nextMilestone": "Prochain palier : {days} · encore {left}",
     "legend": "Tu es une légende."
   },
-  "weekDays": [
-    "L",
-    "M",
-    "M",
-    "J",
-    "V",
-    "S",
-    "D"
-  ],
+  "weekDays": ["L", "M", "M", "J", "V", "S", "D"],
   "card": {
     "title": "Série",
     "best": "Record : {days}",

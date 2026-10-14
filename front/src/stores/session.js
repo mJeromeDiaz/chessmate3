@@ -19,6 +19,7 @@ import {
   move as moveItem,
   sessionMinutes,
   toStep,
+  upgradeValues,
   withDurationChoice
 } from '@/utils/session/catalog'
 import {
@@ -53,7 +54,8 @@ function clone(values) {
 
 /**
  * A stored item's settings on its module's current fields: settings the module no longer has are
- * dropped, new ones get their default (a draft may predate a catalogue change).
+ * dropped, new ones get their default, older French choices become today's values (a draft may
+ * predate a catalogue change).
  *
  * @param {import('@/utils/session/catalog').Module} module
  * @param {Record<string, any>} values
@@ -61,9 +63,10 @@ function clone(values) {
  */
 function normalize(module, values) {
   const defaults = defaultValues(module)
+  const upgraded = upgradeValues(module, values)
   return Object.fromEntries(
     Object.entries(defaults).map(([key, def]) => {
-      const v = values[key]
+      const v = upgraded[key]
       const ok =
         v !== undefined &&
         (Array.isArray(def) ? Array.isArray(v) : typeof v === typeof def)
