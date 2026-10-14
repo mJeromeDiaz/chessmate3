@@ -2,7 +2,7 @@
   <div
     v-if="shares"
     class="result-bar"
-    :title="`Blancs ${shares.white} % · nulle ${shares.draws} % · Noirs ${shares.black} %`"
+    :title="$t('repertoire.resultBar.title', shares)"
   >
     <span
       v-for="part in parts"
@@ -10,7 +10,11 @@
       class="result-bar__part"
       :class="`result-bar__part--${part.key}`"
       :style="{ width: `${part.value}%` }"
-      >{{ part.value >= MIN_LABEL ? `${part.value} %` : '' }}</span
+      >{{
+        part.value >= MIN_LABEL
+          ? $t('repertoire.resultBar.percent', { n: part.value })
+          : ''
+      }}</span
     >
   </div>
 </template>

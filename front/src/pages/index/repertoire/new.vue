@@ -1,34 +1,34 @@
 <template>
   <q-page padding>
     <q-form class="repertoire-form q-gutter-md" @submit="submit">
-      <div class="text-h5">Nouveau répertoire</div>
+      <div class="text-h5">{{ $t('repertoire.new.title') }}</div>
 
       <q-input
         v-model="name"
-        label="Nom"
+        :label="$t('repertoire.new.name')"
         :maxlength="NAME_MAX"
         autofocus
-        :rules="[v => !!v?.trim() || 'Nom requis']"
+        :rules="[v => !!v?.trim() || $t('repertoire.new.nameRequired')]"
         data-testid="repertoire-name"
       />
 
       <div>
-        <div class="text-subtitle2 q-mb-xs">Couleur</div>
+        <div class="text-subtitle2 q-mb-xs">{{
+          $t('repertoire.new.color')
+        }}</div>
         <q-btn-toggle
           v-model="color"
           no-caps
           unelevated
           toggle-color="primary"
           :options="[
-            { label: 'Blancs', value: 'white' },
-            { label: 'Noirs', value: 'black' }
+            { label: $t('repertoire.list.white'), value: 'white' },
+            { label: $t('repertoire.list.black'), value: 'black' }
           ]"
           data-testid="repertoire-color"
         />
         <div class="text-caption text-grey q-mt-xs">
-          Vos coups sont ceux de cette couleur : un seul par position, celui qui
-          sera testé. Les coups de l’adversaire peuvent être aussi nombreux que
-          vous voulez.
+          {{ $t('repertoire.new.colorHint') }}
         </div>
       </div>
 
@@ -42,11 +42,16 @@
           unelevated
           class="cm-btn-create"
           no-caps
-          label="Créer et commencer"
+          :label="$t('repertoire.new.create')"
           :loading="saving"
           data-testid="repertoire-create"
         />
-        <q-btn flat no-caps label="Annuler" to="/repertoire" />
+        <q-btn
+          flat
+          no-caps
+          :label="$t('common.actions.cancel')"
+          to="/repertoire"
+        />
       </div>
     </q-form>
   </q-page>
@@ -57,6 +62,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRepertoireStore } from '@/stores/repertoire'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -82,7 +88,7 @@ async function submit() {
     router.push(`/repertoire/${created.id}`)
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      422: 'Vous avez atteint le nombre maximal de répertoires, ou le nom est invalide.'
+      422: t('repertoire.new.refused')
     })
   } finally {
     saving.value = false

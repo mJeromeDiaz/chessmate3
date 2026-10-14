@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * Wording of the repertoire test (docs/REPERTOIRE.md § 15).
  *
@@ -12,8 +14,13 @@
  */
 export function labelText(label) {
   const name = label?.opening?.name ?? null
-  if (label?.move) return name ? `${name} · ${label.move}` : label.move
-  return name ? `Tronc commun · ${name}` : 'Tronc commun'
+  if (label?.move)
+    return name
+      ? t('repertoire.test.withMove', { name, move: label.move })
+      : label.move
+  return name
+    ? t('repertoire.test.trunkNamed', { name })
+    : t('repertoire.test.trunk')
 }
 
 /**
@@ -40,8 +47,11 @@ export function numberedMoves(sans, firstPly = 0) {
  * @returns {string}
  */
 export function unitWord(unit, count) {
-  const word = unit === 'line' ? 'ligne' : 'tronçon'
-  return `${count} ${word}${count > 1 ? 's' : ''}`
+  return t(
+    `repertoire.test.units.${unit === 'line' ? 'line' : 'segment'}`,
+    { n: count },
+    count
+  )
 }
 
 /**
@@ -51,16 +61,7 @@ export function unitWord(unit, count) {
  * @returns {string}
  */
 export function statusText(status) {
-  switch (status) {
-    case 'succeeded':
-      return 'Réussi'
-    case 'failed':
-      return 'Raté'
-    case 'interrupted':
-      return 'Interrompu'
-    case 'in_progress':
-      return 'En cours'
-    default:
-      return status
-  }
+  return ['succeeded', 'failed', 'interrupted', 'in_progress'].includes(status)
+    ? t(`repertoire.test.status.${status}`)
+    : status
 }

@@ -14,7 +14,7 @@
           dense
           no-caps
           color="primary"
-          label="Réessayer"
+          :label="$t('common.actions.retry')"
           @click="retry"
         />
       </template>
@@ -29,16 +29,15 @@
       class="text-grey q-pa-sm"
       data-testid="cloud-eval-missing"
     >
-      Lichess n’a pas d’évaluation pour cette position : seules les positions
-      déjà analysées par ses utilisateurs sont disponibles.
+      {{ $t('repertoire.cloud.missing') }}
     </div>
 
     <template v-else-if="data">
       <div class="text-caption cm-muted q-mb-xs">
-        Profondeur {{ data.depth ?? '?' }}
-        <template v-if="data.knodes">
-          · {{ millions(data.knodes) }} de positions</template
-        >
+        {{ $t('repertoire.cloud.depth', { n: data.depth ?? '?' })
+        }}<template v-if="data.knodes">{{
+          $t('repertoire.cloud.nodes', { n: millions(data.knodes) })
+        }}</template>
       </div>
       <q-list dense separator>
         <q-item
@@ -68,8 +67,7 @@
     </template>
 
     <div class="text-caption text-grey q-mt-sm">
-      Évaluations du nuage de Lichess, du point de vue des Blancs. Cliquez sur
-      une ligne pour jouer son premier coup.
+      {{ $t('repertoire.cloud.note') }}
     </div>
   </div>
 </template>
@@ -82,7 +80,7 @@
 import { toRef } from 'vue'
 import { useCloudEval } from '@/composables/repertoire/useExplorer'
 import { evalSide, formatEval, numberedLine } from '@/utils/chess/lichess'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 const props = defineProps({
   /** Normalized FEN of the position, null for none. */
@@ -107,7 +105,11 @@ const unbreakable = text => text.replace(/-/g, '\u2011')
 
 /** @param {number} knodes thousands of positions searched */
 const millions = knodes =>
-  `${(knodes / 1000).toLocaleString(intlLocale(), { maximumFractionDigits: 0 })} M`
+  t('repertoire.cloud.millions', {
+    n: (knodes / 1000).toLocaleString(intlLocale(), {
+      maximumFractionDigits: 0
+    })
+  })
 
 const { data, loading, failure, retry } = useCloudEval(
   toRef(props, 'fen'),

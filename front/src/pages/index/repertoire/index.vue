@@ -2,14 +2,14 @@
   <q-page padding>
     <div class="repertoire-page q-gutter-y-md">
       <div class="cm-page-head">
-        <div class="text-h5">Répertoires</div>
+        <div class="text-h5">{{ $t('repertoire.list.title') }}</div>
         <q-space />
         <q-btn
           outline
           color="primary"
           no-caps
           icon="insights"
-          label="Statistiques"
+          :label="$t('repertoire.list.stats')"
           to="/repertoire/stats"
           data-testid="repertoire-stats"
         />
@@ -18,7 +18,7 @@
           color="primary"
           no-caps
           icon="upload_file"
-          label="Importer"
+          :label="$t('repertoire.list.import')"
           to="/repertoire/import"
           data-testid="repertoire-import"
         />
@@ -27,7 +27,7 @@
           no-caps
           class="cm-btn-generate"
           icon="auto_awesome"
-          label="Depuis mes parties"
+          :label="$t('repertoire.list.auto')"
           to="/repertoire/auto"
           data-testid="repertoire-auto"
         />
@@ -36,15 +36,12 @@
           no-caps
           class="cm-btn-create"
           icon="add"
-          label="Nouveau répertoire"
+          :label="$t('repertoire.list.new')"
           to="/repertoire/new"
           data-testid="repertoire-new"
         />
       </div>
-      <p class="text-caption text-grey">
-        Construisez vos ouvertures coup par coup sur l’échiquier, avec vos
-        réponses aux coups de l’adversaire.
-      </p>
+      <p class="text-caption text-grey">{{ $t('repertoire.list.lead') }}</p>
 
       <router-link
         to="/repertoire/auto"
@@ -57,13 +54,12 @@
           class="auto-entry__albert"
         />
         <span class="auto-entry__text">
-          <span class="auto-entry__title"
-            >Ton répertoire, tiré de tes vraies parties</span
-          >
-          <span class="auto-entry__sub"
-            >Albert lit tes parties Lichess et construit un répertoire par
-            ouverture, avec ce qui te coûte des points.</span
-          >
+          <span class="auto-entry__title">{{
+            $t('repertoire.list.autoTitle')
+          }}</span>
+          <span class="auto-entry__sub">{{
+            $t('repertoire.list.autoSub')
+          }}</span>
         </span>
         <q-icon name="arrow_forward" size="22px" class="auto-entry__arrow" />
       </router-link>
@@ -80,17 +76,21 @@
       >
         <template #avatar><q-icon name="timer" color="primary" /></template>
         <span class="text-weight-medium">{{
-          plural(overview.cards.due, 'position due', 'positions dues')
-        }}</span>
-        · {{ plural(overview.cards.new, 'nouvelle') }} sur
-        {{ plural(overview.cards.total, 'coup préparé', 'coups préparés') }}
+          $t('repertoire.list.due', overview.cards.due)
+        }}</span
+        >{{
+          $t('repertoire.list.dueNew', {
+            new: $t('repertoire.list.new_', overview.cards.new),
+            total: $t('repertoire.list.prepared', overview.cards.total)
+          })
+        }}
         <template #action>
           <q-btn
             color="primary"
             unelevated
             no-caps
             icon="play_arrow"
-            label="Tester mes répertoires"
+            :label="$t('repertoire.list.testAll')"
             data-testid="repertoire-test-all"
             @click="openTest(null)"
           />
@@ -123,13 +123,23 @@
         data-testid="repertoire-empty"
       >
         <q-icon name="menu_book" size="48px" color="grey-5" />
-        <div class="q-mt-sm">
-          Aucun répertoire. Créez votre premier répertoire,
-          <router-link to="/repertoire/auto"
-            >construisez-le depuis vos parties Lichess</router-link
-          >, ou
-          <router-link to="/repertoire/import">importez un PGN</router-link>.
-        </div>
+        <i18n-t
+          keypath="repertoire.list.empty"
+          tag="div"
+          scope="global"
+          class="q-mt-sm"
+        >
+          <template #auto>
+            <router-link to="/repertoire/auto">{{
+              $t('repertoire.list.emptyAuto')
+            }}</router-link>
+          </template>
+          <template #import>
+            <router-link to="/repertoire/import">{{
+              $t('repertoire.list.emptyImport')
+            }}</router-link>
+          </template>
+        </i18n-t>
       </div>
 
       <q-list v-else bordered separator>
@@ -151,9 +161,13 @@
           <q-item-section>
             <q-item-label>{{ r.name }}</q-item-label>
             <q-item-label caption>
-              {{ r.color === 'white' ? 'Blancs' : 'Noirs' }} ·
-              {{ plural(r.positionCount - 1, 'position') }} ·
-              {{ plural(r.segmentCount, 'tronçon') }}
+              {{
+                r.color === 'white'
+                  ? $t('repertoire.list.white')
+                  : $t('repertoire.list.black')
+              }}
+              · {{ $t('repertoire.list.positions', r.positionCount - 1) }} ·
+              {{ $t('repertoire.list.segments', r.segmentCount) }}
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -166,36 +180,46 @@
                     data-testid="repertoire-test"
                     @click="openTest(r)"
                   >
-                    <q-item-section>Tester</q-item-section>
+                    <q-item-section>{{
+                      $t('repertoire.list.test')
+                    }}</q-item-section>
                   </q-item>
                   <q-item
                     v-close-popup
                     clickable
                     :to="`/repertoire/${r.id}/stats`"
                   >
-                    <q-item-section>Statistiques</q-item-section>
+                    <q-item-section>{{
+                      $t('repertoire.list.stats')
+                    }}</q-item-section>
                   </q-item>
                   <q-item v-close-popup clickable @click="rename(r)">
-                    <q-item-section>Renommer</q-item-section>
+                    <q-item-section>{{
+                      $t('repertoire.list.rename')
+                    }}</q-item-section>
                   </q-item>
                   <q-item v-close-popup clickable @click="exportFile(r, 'pgn')">
-                    <q-item-section>Exporter (PGN)</q-item-section>
+                    <q-item-section>{{
+                      $t('repertoire.list.exportPgn')
+                    }}</q-item-section>
                   </q-item>
                   <q-item
                     v-close-popup
                     clickable
                     @click="exportFile(r, 'openbook')"
                   >
-                    <q-item-section
-                      >Exporter pour OpenBook (JSON)</q-item-section
-                    >
+                    <q-item-section>{{
+                      $t('repertoire.list.exportOpenBook')
+                    }}</q-item-section>
                   </q-item>
                   <q-item
                     v-close-popup
                     clickable
                     :to="`/repertoire/${r.id}/trash`"
                   >
-                    <q-item-section>Corbeille</q-item-section>
+                    <q-item-section>{{
+                      $t('repertoire.list.trash')
+                    }}</q-item-section>
                   </q-item>
                   <q-item
                     v-close-popup
@@ -204,7 +228,9 @@
                     data-testid="repertoire-delete"
                     @click="confirmDelete(r)"
                   >
-                    <q-item-section>Supprimer</q-item-section>
+                    <q-item-section>{{
+                      $t('repertoire.list.delete')
+                    }}</q-item-section>
                   </q-item>
                 </q-list>
               </q-menu>
@@ -225,6 +251,7 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { repertoireApi } from '@/services/api'
 import { downloadText } from '@/utils/download'
 import { profImage } from '@/utils/prof/images'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -249,39 +276,30 @@ const testScope = ref(null)
 function openTest(r) {
   testScope.value = r
     ? {
-        title: 'Tester le répertoire',
+        title: t('repertoire.list.testOne'),
         caption: r.name,
         config: { repertoireIds: [r.id] }
       }
     : {
-        title: 'Tester mes répertoires',
-        caption:
-          'Les positions dues d’abord, puis les tronçons ratés et les nouveaux.',
+        title: t('repertoire.list.testAll'),
+        caption: t('repertoire.list.testAllCaption'),
         config: { repertoireIds: store.repertoires.map(x => x.id) }
       }
   testOpen.value = true
 }
 
-/**
- * @param {number} count
- * @param {string} word
- * @param {string} [many] the plural, when not word + "s"
- */
-const plural = (count, word, many = `${word}s`) =>
-  `${count} ${count > 1 ? many : word}`
-
 /** @param {import('@/stores/repertoire').RepertoireSummary} r */
 function rename(r) {
   $q.dialog({
-    title: 'Renommer le répertoire',
+    title: t('repertoire.list.renameTitle'),
     prompt: {
       model: r.name,
       type: 'text',
       maxlength: NAME_MAX,
       isValid: v => !!v?.trim()
     },
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { noCaps: true, label: 'Renommer' }
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: { noCaps: true, label: t('repertoire.list.rename') }
   }).onOk(async name => {
     try {
       await store.rename(r.id, name.trim())
@@ -311,11 +329,14 @@ async function exportFile(r, format) {
 /** @param {import('@/stores/repertoire').RepertoireSummary} r */
 function confirmDelete(r) {
   $q.dialog({
-    title: `Supprimer « ${r.name} » ?`,
-    message:
-      'Le répertoire et toutes ses statistiques seront supprimés définitivement.',
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { color: 'negative', noCaps: true, label: 'Supprimer définitivement' }
+    title: t('repertoire.list.deleteTitle', { name: r.name }),
+    message: t('repertoire.list.deleteMessage'),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: {
+      color: 'negative',
+      noCaps: true,
+      label: t('repertoire.list.deleteOk')
+    }
   }).onOk(async () => {
     try {
       await store.remove(r.id)

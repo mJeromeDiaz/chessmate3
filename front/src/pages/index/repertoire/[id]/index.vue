@@ -15,7 +15,7 @@
         flat
         no-caps
         icon="arrow_back"
-        label="Mes répertoires"
+        :label="$t('repertoire.editor.back')"
         to="/repertoire"
       />
     </div>
@@ -37,7 +37,7 @@
           dense
           icon="arrow_back"
           to="/repertoire"
-          aria-label="Mes répertoires"
+          :aria-label="$t('repertoire.editor.back')"
         />
         <div class="text-h6 ellipsis q-ml-sm" data-testid="editor-name">{{
           store.graph.name
@@ -46,7 +46,11 @@
           class="q-ml-sm"
           :color="store.graph.color === 'white' ? 'grey-3' : 'grey-9'"
           :text-color="store.graph.color === 'white' ? 'grey-9' : 'white'"
-          :label="store.graph.color === 'white' ? 'Blancs' : 'Noirs'"
+          :label="
+            store.graph.color === 'white'
+              ? $t('repertoire.list.white')
+              : $t('repertoire.list.black')
+          "
         />
         <q-badge
           v-if="store.graph.origin"
@@ -60,7 +64,9 @@
           data-testid="editor-save-state"
         >
           <q-spinner v-if="store.saving" size="12px" class="q-mr-xs" />{{
-            store.saving ? 'Enregistrement…' : 'Enregistré'
+            store.saving
+              ? $t('repertoire.editor.saving')
+              : $t('repertoire.editor.saved')
           }}
         </span>
         <q-btn
@@ -68,7 +74,7 @@
           dense
           no-caps
           icon="undo"
-          label="Annuler"
+          :label="$t('repertoire.editor.undo')"
           class="gt-xs"
           data-testid="editor-undo"
           @click="undo"
@@ -79,7 +85,7 @@
           dense
           icon="undo"
           class="lt-sm"
-          aria-label="Annuler"
+          :aria-label="$t('repertoire.editor.undo')"
           @click="undo"
         />
         <q-btn
@@ -87,10 +93,10 @@
           round
           dense
           icon="download"
-          aria-label="Exporter"
+          :aria-label="$t('repertoire.editor.export')"
           data-testid="editor-export"
         >
-          <q-tooltip>Exporter</q-tooltip>
+          <q-tooltip>{{ $t('repertoire.editor.export') }}</q-tooltip>
           <q-menu>
             <q-list dense>
               <q-item
@@ -99,7 +105,9 @@
                 data-testid="editor-export-pgn"
                 @click="exportFile('pgn')"
               >
-                <q-item-section>Exporter en PGN</q-item-section>
+                <q-item-section>{{
+                  $t('repertoire.editor.exportPgn')
+                }}</q-item-section>
               </q-item>
               <q-item
                 v-close-popup
@@ -107,7 +115,9 @@
                 data-testid="editor-export-openbook"
                 @click="exportFile('openbook')"
               >
-                <q-item-section>Exporter pour OpenBook (JSON)</q-item-section>
+                <q-item-section>{{
+                  $t('repertoire.list.exportOpenBook')
+                }}</q-item-section>
               </q-item>
             </q-list>
           </q-menu>
@@ -117,29 +127,29 @@
           round
           dense
           icon="restore_from_trash"
-          aria-label="Corbeille"
+          :aria-label="$t('repertoire.editor.trash')"
           data-testid="editor-trash"
           :to="`/repertoire/${store.graph.id}/trash`"
         >
-          <q-tooltip>Corbeille : coups remplacés ou supprimés</q-tooltip>
+          <q-tooltip>{{ $t('repertoire.editor.trashTip') }}</q-tooltip>
         </q-btn>
         <q-btn
           flat
           round
           dense
           icon="insights"
-          aria-label="Statistiques"
+          :aria-label="$t('repertoire.editor.stats')"
           data-testid="editor-stats"
           :to="`/repertoire/${store.graph.id}/stats`"
         >
-          <q-tooltip>Statistiques des tests</q-tooltip>
+          <q-tooltip>{{ $t('repertoire.editor.statsTip') }}</q-tooltip>
         </q-btn>
         <q-btn-dropdown
           flat
           dense
           no-caps
           icon="timer"
-          label="Tester"
+          :label="$t('repertoire.editor.test')"
           data-testid="editor-test"
         >
           <q-list dense>
@@ -151,10 +161,12 @@
               @click="openTest('line')"
             >
               <q-item-section>
-                <q-item-label>Tester cette ligne</q-item-label>
-                <q-item-label caption
-                  >Les tronçons à partir de la position affichée</q-item-label
-                >
+                <q-item-label>{{
+                  $t('repertoire.editor.testLine')
+                }}</q-item-label>
+                <q-item-label caption>{{
+                  $t('repertoire.editor.testLineHint')
+                }}</q-item-label>
               </q-item-section>
             </q-item>
             <q-item
@@ -163,7 +175,9 @@
               data-testid="editor-test-all"
               @click="openTest('all')"
             >
-              <q-item-section>Tester tout le répertoire</q-item-section>
+              <q-item-section>{{
+                $t('repertoire.editor.testAll')
+              }}</q-item-section>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -178,8 +192,10 @@
                 <span class="cm-muted">{{ editor.opening.value.eco }}</span>
                 {{ editor.opening.value.name }}
               </template>
-              <span v-else-if="editor.path.value.length === 0" class="text-grey"
-                >Position de départ</span
+              <span
+                v-else-if="editor.path.value.length === 0"
+                class="text-grey"
+                >{{ $t('repertoire.editor.start') }}</span
               >
             </div>
             <q-space />
@@ -187,23 +203,20 @@
               :model-value="editor.exploring.value"
               dense
               icon="explore"
-              label="Explorer"
+              :label="$t('repertoire.editor.explore')"
               left-label
               class="q-mr-sm"
               data-testid="editor-explore"
               @update:model-value="on => editor.setExploring(on)"
             >
-              <q-tooltip
-                >Jouer des coups sans les enregistrer dans le
-                répertoire</q-tooltip
-              >
+              <q-tooltip>{{ $t('repertoire.editor.exploreTip') }}</q-tooltip>
             </q-toggle>
             <q-btn
               flat
               round
               dense
               icon="swap_vert"
-              aria-label="Retourner l’échiquier"
+              :aria-label="$t('repertoire.editor.flip')"
               data-testid="editor-flip"
               @click="editor.flip()"
             />
@@ -227,15 +240,19 @@
           >
             <q-icon name="explore" class="q-mr-sm" />
             <div class="col ellipsis">
-              <span class="text-weight-medium">Hors répertoire :</span>
+              <span class="text-weight-medium">{{
+                $t('repertoire.editor.offBook')
+              }}</span>
               {{ offBookText }}
-              <span class="cm-muted">(non enregistré)</span>
+              <span class="cm-muted">{{
+                $t('repertoire.editor.notSaved')
+              }}</span>
             </div>
             <q-btn
               flat
               dense
               no-caps
-              label="Revenir au répertoire"
+              :label="$t('repertoire.editor.backToBook')"
               data-testid="editor-off-book-leave"
               @click="editor.offBook.value = []"
             />
@@ -246,28 +263,28 @@
               flat
               round
               icon="first_page"
-              aria-label="Début"
+              :aria-label="$t('repertoire.editor.first')"
               @click="navigate('start')"
             />
             <q-btn
               flat
               round
               icon="chevron_left"
-              aria-label="Coup précédent"
+              :aria-label="$t('repertoire.editor.previous')"
               @click="navigate('back')"
             />
             <q-btn
               flat
               round
               icon="chevron_right"
-              aria-label="Coup suivant"
+              :aria-label="$t('repertoire.editor.next')"
               @click="navigate('forward')"
             />
             <q-btn
               flat
               round
               icon="last_page"
-              aria-label="Fin de la ligne"
+              :aria-label="$t('repertoire.editor.last')"
               @click="navigate('end')"
             />
           </div>
@@ -282,13 +299,21 @@
             active-color="primary"
             indicator-color="primary"
           >
-            <q-tab name="moves" label="Coups" data-testid="tab-moves" />
+            <q-tab
+              name="moves"
+              :label="$t('repertoire.editor.tabs.moves')"
+              data-testid="tab-moves"
+            />
             <q-tab
               name="explorer"
-              label="Explorateur"
+              :label="$t('repertoire.editor.tabs.explorer')"
               data-testid="tab-explorer"
             />
-            <q-tab name="engine" label="Moteur" data-testid="tab-engine" />
+            <q-tab
+              name="engine"
+              :label="$t('repertoire.editor.tabs.engine')"
+              data-testid="tab-engine"
+            />
           </q-tabs>
           <q-separator />
           <q-tab-panels v-model="tab" keep-alive>
@@ -305,9 +330,7 @@
                 class="q-mb-sm"
               />
               <div v-else class="text-caption text-grey q-mb-sm">
-                Jouez un coup sur l’échiquier pour l’ajouter au répertoire. Un
-                seul coup vous est préparé par position ; l’adversaire peut
-                avoir plusieurs réponses.
+                {{ $t('repertoire.editor.playHint') }}
               </div>
               <MoveTree
                 ref="tree"
@@ -318,16 +341,18 @@
                 :index="store.index"
                 :move-class="moveClass"
               >
-                <template #empty>Aucun coup pour l’instant.</template>
+                <template #empty>{{ $t('repertoire.editor.empty') }}</template>
               </MoveTree>
               <div class="text-caption text-grey q-mt-md editor__legend">
                 <span class="editor__legend-item"
                   ><span class="move-tree__move move-tree__move--unanswered"
                     >e5</span
                   >
-                  sans réponse</span
+                  {{ $t('repertoire.editor.unanswered') }}</span
                 >
-                <span class="editor__legend-item">⤳ transposition</span>
+                <span class="editor__legend-item">{{
+                  $t('repertoire.editor.transposition')
+                }}</span>
               </div>
             </q-tab-panel>
             <q-tab-panel name="explorer" class="q-px-none">
@@ -355,40 +380,47 @@
 
     <q-dialog v-model="replacing.open" data-testid="replace-dialog">
       <q-card v-if="replacing.prepared" style="width: 520px; max-width: 92vw">
-        <q-card-section class="text-h6"
-          >Remplacer {{ replacing.preparedLabel }} par
-          {{ replacing.label }} ?</q-card-section
-        >
+        <q-card-section class="text-h6">{{
+          $t('repertoire.editor.replaceTitle', {
+            prepared: replacing.preparedLabel,
+            move: replacing.label
+          })
+        }}</q-card-section>
         <q-card-section class="q-pt-none">
-          Un seul coup vous est préparé dans cette position.
-          <template v-if="replacing.others > 0">
-            {{ replacing.preparedLabel }} et
-            {{ plural(replacing.others, 'coup') }} qui ne sont atteints que par
-            lui<template v-if="replacing.preparedCount > 0">
-              (dont
-              {{
-                plural(
-                  replacing.preparedCount,
-                  'coup préparé',
-                  'coups préparés'
+          {{ $t('repertoire.editor.replaceOnly') }}
+          {{
+            replacing.others > 0
+              ? $t(
+                  replacing.preparedCount > 0
+                    ? 'repertoire.editor.replaceManyPrepared'
+                    : 'repertoire.editor.replaceMany',
+                  {
+                    prepared: replacing.preparedLabel,
+                    others: $t('repertoire.trash.moves', replacing.others),
+                    preparedMoves: $t(
+                      'repertoire.list.prepared',
+                      replacing.preparedCount
+                    )
+                  }
                 )
-              }})</template
-            >
-            partiront à la corbeille : vous pourrez les restaurer.
-          </template>
-          <template v-else>
-            {{ replacing.preparedLabel }} partira à la corbeille : vous pourrez
-            le restaurer.
-          </template>
+              : $t('repertoire.editor.replaceSingle', {
+                  prepared: replacing.preparedLabel
+                })
+          }}
         </q-card-section>
         <q-card-actions align="right" class="q-gutter-xs">
-          <q-btn v-close-popup flat no-caps label="Annuler" />
+          <q-btn
+            v-close-popup
+            flat
+            no-caps
+            :label="$t('common.actions.cancel')"
+          />
           <q-btn
             v-close-popup
             flat
             no-caps
             icon="explore"
-            label="Explorer sans enregistrer"
+            :label="$t('repertoire.editor.exploreInstead')"
             data-testid="replace-explore"
             @click="exploreInstead"
           />
@@ -396,7 +428,7 @@
             v-close-popup
             color="primary"
             no-caps
-            label="Remplacer"
+            :label="$t('repertoire.editor.replace')"
             data-testid="replace-confirm"
             @click="confirmReplace"
           />
@@ -431,6 +463,7 @@ import {
 } from '@/stores/repertoire'
 import { useRepertoireEditor } from '@/composables/repertoire/useRepertoireEditor'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { repertoireApi } from '@/services/api'
 import { downloadText } from '@/utils/download'
 
@@ -456,8 +489,8 @@ const originLabel = computed(() => {
   const origin = store.graph?.origin
   if (!origin) return ''
   return origin.games
-    ? `Depuis tes parties · ${origin.games} parties`
-    : 'Depuis tes parties'
+    ? t('repertoire.editor.originGames', { n: origin.games })
+    : t('repertoire.editor.origin')
 })
 
 const testOpen = ref(false)
@@ -475,13 +508,12 @@ function openTest(scope) {
   testScope.value =
     scope === 'line' && testRoot.value
       ? {
-          title: 'Tester cette ligne',
-          caption:
-            'Les tronçons qui partent de la position affichée ou plus loin.',
+          title: t('repertoire.editor.testLine'),
+          caption: t('repertoire.editor.testLineCaption'),
           config: { repertoireIds: [id], rootPositionId: testRoot.value }
         }
       : {
-          title: 'Tester le répertoire',
+          title: t('repertoire.list.testOne'),
           caption: store.graph?.name ?? '',
           config: { repertoireIds: [id] }
         }
@@ -543,15 +575,6 @@ const offBookText = computed(() => {
     .join(' ')
 })
 
-/**
- * @param {number} n
- * @param {string} one
- * @param {string} [many]
- */
-function plural(n, one, many = `${one}s`) {
-  return `${n} ${n > 1 ? many : one}`
-}
-
 /** @param {import('@/stores/repertoire').Move} move */
 function moveClass(move) {
   if (editor.isUnanswered(move)) return 'move-tree__move--unanswered'
@@ -608,10 +631,10 @@ async function confirmReplace() {
   editor.path.value = pathToMove(store.index, store.graph, moveId)
   $q.notify({
     type: 'info',
-    message: `${replacing.preparedLabel} est dans la corbeille.`,
+    message: t('repertoire.editor.inTrash', { move: replacing.preparedLabel }),
     actions: [
       {
-        label: 'Voir la corbeille',
+        label: t('repertoire.editor.seeTrash'),
         color: 'white',
         noCaps: true,
         handler: () => router.push(`/repertoire/${store.graph.id}/trash`)
@@ -637,11 +660,10 @@ function onBoardMove({ uci }) {
       const target = store.graph.moves[result.moveId]?.to
       $q.notify({
         type: 'info',
-        message:
-          'Transposition : cette position est déjà dans le répertoire, les deux lignes sont reliées.',
+        message: t('repertoire.editor.transposed'),
         actions: [
           {
-            label: 'Voir la ligne',
+            label: t('repertoire.editor.seeLine'),
             color: 'white',
             noCaps: true,
             handler: () => {
@@ -666,8 +688,8 @@ function onBoardMove({ uci }) {
       type: 'negative',
       message:
         e instanceof RepeatedPositionError
-          ? 'Ce coup ramène à une position d’où vient la ligne.'
-          : 'Coup impossible ici.'
+          ? t('repertoire.editor.repeated')
+          : t('repertoire.editor.impossible')
     })
   }
 }
@@ -706,22 +728,22 @@ watch(
     const messages = {
       409:
         failure.operation === 'undo'
-          ? 'Rien à annuler, ou le répertoire a changé ailleurs : il a été rechargé.'
-          : 'Le répertoire a été modifié ailleurs (un autre onglet ?) : il a été rechargé.',
+          ? t('repertoire.editor.failures.undo')
+          : t('repertoire.editor.failures.stale'),
       404:
         failure.operation === 'restore'
-          ? 'Cette suite n’est plus dans la corbeille : le répertoire a été rechargé.'
-          : 'Ce coup n’existe plus : le répertoire a été rechargé.',
-      422: 'Modification refusée (limite atteinte ou position répétée) : le répertoire a été rechargé.',
-      429: 'Trop de modifications en peu de temps : patientez un peu. Le répertoire a été rechargé.'
+          ? t('repertoire.editor.failures.suiteGone')
+          : t('repertoire.editor.failures.moveGone'),
+      422: t('repertoire.editor.failures.refused'),
+      429: t('repertoire.editor.failures.tooMany')
     }
     $q.notify({
       type: 'negative',
       message:
         messages[failure.status] ??
         (failure.status === null
-          ? 'Serveur injoignable : la dernière modification n’a pas été enregistrée.'
-          : 'La dernière modification n’a pas été enregistrée : le répertoire a été rechargé.')
+          ? t('repertoire.editor.failures.offline')
+          : t('repertoire.editor.failures.notSaved'))
     })
   }
 )
@@ -772,7 +794,9 @@ async function load() {
   try {
     await store.load(/** @type {string} */ (route.params.id))
   } catch (e) {
-    loadError.value = apiErrorMessage(e, { 404: 'Répertoire introuvable.' })
+    loadError.value = apiErrorMessage(e, {
+      404: t('repertoire.stats.notFound')
+    })
   }
 }
 

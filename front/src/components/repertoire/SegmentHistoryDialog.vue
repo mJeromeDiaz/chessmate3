@@ -9,9 +9,9 @@
         <div v-if="history?.path.length" class="text-caption cm-muted">{{
           numberedMoves(history.path)
         }}</div>
-        <div v-if="history?.archived" class="text-caption cm-muted"
-          >Ce tronçon n’est plus présenté (le répertoire a changé).</div
-        >
+        <div v-if="history?.archived" class="text-caption cm-muted">{{
+          $t('repertoire.segmentHistory.archived')
+        }}</div>
       </q-card-section>
       <q-card-section v-if="loading" class="flex flex-center"
         ><q-spinner
@@ -49,9 +49,17 @@
               {{ statusText(p.status) }}</q-item-label
             >
             <q-item-label caption>
-              {{ p.unit === 'line' ? 'Ligne complète' : 'Tronçon' }}
-              <template v-if="p.rank > 1"> · retour ({{ p.rank }}ᵉ)</template>
-              <template v-if="p.beforeMerge"> · avant fusion</template>
+              {{
+                p.unit === 'line'
+                  ? $t('repertoire.segmentHistory.line')
+                  : $t('repertoire.segmentHistory.segment')
+              }}
+              <template v-if="p.rank > 1">{{
+                $t('repertoire.segmentHistory.retry', { n: p.rank })
+              }}</template>
+              <template v-if="p.beforeMerge">{{
+                $t('repertoire.segmentHistory.beforeMerge')
+              }}</template>
               <template v-if="p.durationMs !== null">
                 · {{ formatDuration(p.durationMs) }}</template
               >
@@ -59,9 +67,11 @@
           </q-item-section>
         </q-item>
       </q-list>
-      <q-card-section v-else class="text-grey">Jamais testé.</q-card-section>
+      <q-card-section v-else class="text-grey">{{
+        $t('repertoire.segmentHistory.never')
+      }}</q-card-section>
       <q-card-actions align="right">
-        <q-btn v-close-popup flat no-caps label="Fermer" />
+        <q-btn v-close-popup flat no-caps :label="$t('common.actions.close')" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -76,6 +86,7 @@ import { computed, ref, watch } from 'vue'
 import { repertoireApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatDuration } from '@/utils/format'
+import { t } from '@/i18n'
 import { labelText, numberedMoves, statusText } from '@/utils/repertoireTest'
 
 const props = defineProps({
@@ -95,7 +106,7 @@ const title = computed(() =>
     ? labelText(history.value.label)
     : history.value?.presentations[0]
       ? labelText(history.value.presentations[0].label)
-      : 'Historique'
+      : t('repertoire.segmentHistory.title')
 )
 
 watch(

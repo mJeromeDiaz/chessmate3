@@ -8,8 +8,8 @@
         unelevated
         toggle-color="primary"
         :options="[
-          { label: 'Maîtres', value: 'masters' },
-          { label: 'Lichess', value: 'lichess' }
+          { label: $t('repertoire.explorer.masters'), value: 'masters' },
+          { label: $t('repertoire.explorer.lichess'), value: 'lichess' }
         ]"
         data-testid="explorer-source"
       />
@@ -23,7 +23,9 @@
       >
         <q-menu>
           <div class="q-pa-md" style="max-width: 320px">
-            <div class="text-subtitle2 q-mb-xs">Cadences</div>
+            <div class="text-subtitle2 q-mb-xs">{{
+              $t('repertoire.explorer.speeds')
+            }}</div>
             <div class="row q-gutter-xs q-mb-md">
               <q-chip
                 v-for="s in SPEEDS"
@@ -34,10 +36,12 @@
                 color="primary"
                 :text-color="speeds.includes(s.value) ? 'white' : 'primary'"
                 @click="toggle(speeds, s.value)"
-                >{{ s.label }}</q-chip
+                >{{ $t(`repertoire.explorer.speedNames.${s.value}`) }}</q-chip
               >
             </div>
-            <div class="text-subtitle2 q-mb-xs">Classements</div>
+            <div class="text-subtitle2 q-mb-xs">{{
+              $t('repertoire.explorer.ratings')
+            }}</div>
             <div class="row q-gutter-xs">
               <q-chip
                 v-for="r in RATINGS"
@@ -48,11 +52,11 @@
                 color="primary"
                 :text-color="ratings.includes(r) ? 'white' : 'primary'"
                 @click="toggle(ratings, r)"
-                >{{ r === 0 ? '< 1000' : r }}</q-chip
+                >{{ r === 0 ? $t('repertoire.explorer.under1000') : r }}</q-chip
               >
             </div>
             <div class="text-caption text-grey q-mt-sm">
-              Aucune sélection : toutes.
+              {{ $t('repertoire.explorer.noSelection') }}
             </div>
           </div>
         </q-menu>
@@ -82,7 +86,7 @@
           dense
           no-caps
           color="primary"
-          label="Mon profil"
+          :label="$t('repertoire.explorer.profile')"
           to="/profile"
         />
         <q-btn
@@ -91,7 +95,7 @@
           dense
           no-caps
           color="primary"
-          label="Réessayer"
+          :label="$t('common.actions.retry')"
           @click="retry"
         />
       </template>
@@ -106,16 +110,20 @@
       class="text-grey q-pa-sm"
       data-testid="explorer-empty"
     >
-      Aucune partie dans cette base pour cette position.
+      {{ $t('repertoire.explorer.empty') }}
     </div>
 
     <q-markup-table v-else-if="data" flat dense class="explorer__table">
       <thead>
         <tr>
-          <th class="text-left">Coup</th>
-          <th class="text-right">Parties</th>
-          <th class="text-left explorer__bar-head">Blancs / nulle / Noirs</th>
-          <th class="text-right gt-xs">Elo moy.</th>
+          <th class="text-left">{{ $t('repertoire.explorer.move') }}</th>
+          <th class="text-right">{{ $t('repertoire.explorer.games') }}</th>
+          <th class="text-left explorer__bar-head">{{
+            $t('repertoire.explorer.results')
+          }}</th>
+          <th class="text-right gt-xs">{{
+            $t('repertoire.explorer.avgElo')
+          }}</th>
         </tr>
       </thead>
       <tbody>
@@ -137,7 +145,7 @@
               color="positive"
               size="14px"
             >
-              <q-tooltip>Déjà dans le répertoire</q-tooltip>
+              <q-tooltip>{{ $t('repertoire.explorer.known') }}</q-tooltip>
             </q-icon>
           </td>
           <td class="text-right">
@@ -159,8 +167,7 @@
     </q-markup-table>
 
     <div class="text-caption text-grey q-mt-sm">
-      Statistiques de l’explorateur d’ouvertures de Lichess. Cliquez sur un coup
-      pour l’ajouter au répertoire.
+      {{ $t('repertoire.explorer.note') }}
     </div>
   </div>
 </template>
@@ -175,15 +182,17 @@ import { computed, toRef } from 'vue'
 import ResultBar from './ResultBar.vue'
 import { useExplorer } from '@/composables/repertoire/useExplorer'
 import { formatGames } from '@/utils/chess/lichess'
+import { t } from '@/i18n'
 
+/** Lichess speeds (their names: repertoire.explorer.speedNames). */
 const SPEEDS = [
-  { value: 'ultraBullet', label: 'UltraBullet' },
-  { value: 'bullet', label: 'Bullet' },
-  { value: 'blitz', label: 'Blitz' },
-  { value: 'rapid', label: 'Rapide' },
-  { value: 'classical', label: 'Classique' },
-  { value: 'correspondence', label: 'Correspondance' }
-]
+  'ultraBullet',
+  'bullet',
+  'blitz',
+  'rapid',
+  'classical',
+  'correspondence'
+].map(value => ({ value }))
 const RATINGS = [0, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2500]
 
 const props = defineProps({
@@ -209,7 +218,9 @@ const { source, speeds, ratings, data, loading, failure, retry } = useExplorer(
 
 const filterSummary = computed(() => {
   const count = speeds.value.length + ratings.value.length
-  return count ? `Filtres (${count})` : 'Filtres'
+  return count
+    ? t('repertoire.explorer.filtersCount', { n: count })
+    : t('repertoire.explorer.filters')
 })
 
 /**
@@ -226,7 +237,9 @@ function toggle(list, value) {
 /** @param {number} games */
 function share(games) {
   const total = data.value?.total ?? 0
-  return total ? `${Math.round((games * 100) / total)} %` : ''
+  return total
+    ? t('repertoire.explorer.share', { n: Math.round((games * 100) / total) })
+    : ''
 }
 </script>
 

@@ -1,5 +1,6 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
 import { repertoireApi } from '@/services/api'
+import { t } from '@/i18n'
 
 /** Stillness before asking (navigating with the arrows asks only for the position reached). */
 export const QUERY_DELAY_MS = 300
@@ -24,44 +25,41 @@ export function describeFailure(error) {
   if (!response) {
     return {
       reason: 'offline',
-      message: 'Le serveur est injoignable. Vérifiez votre connexion.',
+      message: t('common.errors.offline'),
       retryAfter: null
     }
   }
   const retryAfter = Number(response.headers?.['retry-after']) || null
   if (response.status === 503) {
     const reason = response.headers?.['x-lichess-unavailable'] ?? 'down'
-    const messages = {
-      no_token:
-        'L’explorateur Lichess demande un compte Lichess : liez le vôtre dans votre profil.',
-      rate_limited: `Lichess limite les requêtes pour le moment : réessayez dans ${retryAfter ?? 60} s.`,
-      busy: 'Lichess est occupé : réessayez dans un instant.',
-      down: 'Lichess ne répond pas pour le moment.'
-    }
+    const known = ['no_token', 'rate_limited', 'busy', 'down'].includes(reason)
+      ? reason
+      : 'down'
     return {
-      reason: messages[reason] ? reason : 'down',
-      message: messages[reason] ?? messages.down,
+      reason: known,
+      message: t(`repertoire.explorer.errors.${known}`, {
+        n: retryAfter ?? 60
+      }),
       retryAfter
     }
   }
   if (response.status === 429) {
     return {
       reason: 'too_many',
-      message:
-        'Trop de requêtes vers Lichess en peu de temps : patientez quelques minutes.',
+      message: t('repertoire.explorer.errors.too_many'),
       retryAfter
     }
   }
   if (response.status === 422) {
     return {
       reason: 'invalid',
-      message: 'Position non reconnue.',
+      message: t('repertoire.explorer.errors.invalid'),
       retryAfter: null
     }
   }
   return {
     reason: 'error',
-    message: 'Une erreur est survenue. Réessayez.',
+    message: t('common.errors.generic'),
     retryAfter: null
   }
 }

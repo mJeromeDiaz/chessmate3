@@ -20,8 +20,12 @@
       class="bg-negative text-white q-mb-md"
       data-testid="import-too-big"
     >
-      Le répertoire compterait {{ preview.positionsAfter }} positions : la
-      limite est de {{ preview.maxPositions }}.
+      {{
+        $t('repertoire.preview.tooBig', {
+          after: preview.positionsAfter,
+          max: preview.maxPositions
+        })
+      }}
     </q-banner>
 
     <q-banner
@@ -31,15 +35,20 @@
       data-testid="import-replaced"
     >
       <template #avatar><q-icon name="restore_from_trash" /></template>
-      {{ preview.replaced }} coup{{ preview.replaced > 1 ? 's' : '' }} préparé{{
-        preview.replaced > 1 ? 's' : ''
+      {{
+        $t(
+          preview.replaced > 1
+            ? 'repertoire.preview.replacedMany'
+            : 'repertoire.preview.replacedOne',
+          {
+            n: preview.replaced,
+            positions: $t(
+              'repertoire.preview.positions',
+              preview.trashedPositions
+            )
+          }
+        )
       }}
-      du répertoire
-      {{ preview.replaced > 1 ? 'seront remplacés' : 'sera remplacé' }} par ceux
-      du fichier : {{ preview.replaced > 1 ? 'ils partiront' : 'il partira' }} à
-      la corbeille avec leur suite ({{ preview.trashedPositions }} position{{
-        preview.trashedPositions > 1 ? 's' : ''
-      }}), d’où vous pourrez les restaurer.
     </q-banner>
 
     <q-expansion-item
@@ -47,7 +56,7 @@
       dense
       icon="warning"
       header-class="cm-text-warning"
-      :label="`${preview.warnings.length} élément${preview.warnings.length > 1 ? 's' : ''} ignoré${preview.warnings.length > 1 ? 's' : ''}`"
+      :label="$t('repertoire.preview.ignored', preview.warnings.length)"
       :default-opened="preview.warnings.length <= 5"
       data-testid="import-warnings"
     >
@@ -63,10 +72,7 @@
     <template v-if="preview.conflicts.length">
       <div class="row items-center q-mt-md q-mb-xs">
         <div class="text-subtitle1">
-          {{ preview.conflicts.length }} position{{
-            preview.conflicts.length > 1 ? 's' : ''
-          }}
-          avec plusieurs coups à vous
+          {{ $t('repertoire.preview.conflicts', preview.conflicts.length) }}
         </div>
         <q-space />
         <q-btn
@@ -74,7 +80,7 @@
           flat
           dense
           no-caps
-          label="Tout garder"
+          :label="$t('repertoire.preview.keepAll')"
           @click="emit('choose-all', 'existing')"
         />
         <q-btn
@@ -82,16 +88,13 @@
           flat
           dense
           no-caps
-          label="Tout prendre du fichier"
+          :label="$t('repertoire.preview.takeFile')"
           data-testid="import-choose-file"
           @click="emit('choose-all', 'file')"
         />
       </div>
       <div class="text-caption cm-muted q-mb-sm">
-        Un seul coup vous est préparé par position : le coup choisi est gardé,
-        les autres coups du fichier ne sont pas importés (ni leur suite). Un
-        coup du répertoire remplacé part à la corbeille. Choisir un coup du
-        fichier peut faire apparaître d’autres choix plus loin.
+        {{ $t('repertoire.preview.conflictsHint') }}
       </div>
       <q-list bordered separator>
         <q-item
@@ -109,7 +112,10 @@
               dense
               :options="
                 conflict.candidates.map(c => ({
-                  label: `${c.san} (${originLabel(c.origin)})`,
+                  label: $t('repertoire.preview.candidate', {
+                    san: c.san,
+                    origin: originLabel(c.origin)
+                  }),
                   value: c.uci
                 }))
               "
@@ -130,6 +136,7 @@
  */
 import { computed } from 'vue'
 import { originLabel, pathText, warningText } from '@/utils/repertoireImport'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<any>} the import's preview */
@@ -153,20 +160,26 @@ const hasExisting = computed(() =>
   props.preview.conflicts.some(c => c.candidates.some(x => x.origin !== 'file'))
 )
 const figures = computed(() => [
-  { key: 'lines', label: 'lignes', value: props.preview.lines },
+  {
+    key: 'lines',
+    label: t('repertoire.preview.figures.lines'),
+    value: props.preview.lines
+  },
   {
     key: 'new-positions',
-    label: 'nouvelles positions',
+    label: t('repertoire.preview.figures.newPositions'),
     value: props.preview.newPositions
   },
   {
     key: 'known',
-    label: 'coups déjà présents',
+    label: t('repertoire.preview.figures.known'),
     value: props.preview.knownMoves
   },
   {
     key: 'after',
-    label: `positions au total (max ${props.preview.maxPositions})`,
+    label: t('repertoire.preview.figures.after', {
+      max: props.preview.maxPositions
+    }),
     value: props.preview.positionsAfter,
     alert: tooBig.value
   }

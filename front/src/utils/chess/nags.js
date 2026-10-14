@@ -1,3 +1,22 @@
+import { t } from '@/i18n'
+
+/**
+ * A NAG with its label, read when shown (repertoire.nags.<nag>).
+ *
+ * @param {number} nag
+ * @param {string} symbol
+ * @returns {{nag: number, symbol: string, label: string}}
+ */
+function glyph(nag, symbol) {
+  return {
+    nag,
+    symbol,
+    get label() {
+      return t(`repertoire.nags.${nag}`)
+    }
+  }
+}
+
 /**
  * PGN Numeric Annotation Glyphs the editor offers (the API accepts 1 to 255, at most one move
  * assessment from 1 to 6).
@@ -5,24 +24,24 @@
 
 /** Move assessments: one per move. */
 export const MOVE_NAGS = [
-  { nag: 1, symbol: '!', label: 'Bon coup' },
-  { nag: 2, symbol: '?', label: 'Erreur' },
-  { nag: 3, symbol: '!!', label: 'Excellent coup' },
-  { nag: 4, symbol: '??', label: 'Gaffe' },
-  { nag: 5, symbol: '!?', label: 'Coup intéressant' },
-  { nag: 6, symbol: '?!', label: 'Coup douteux' }
+  glyph(1, '!'),
+  glyph(2, '?'),
+  glyph(3, '!!'),
+  glyph(4, '??'),
+  glyph(5, '!?'),
+  glyph(6, '?!')
 ]
 
 /** Position assessments. */
 export const POSITION_NAGS = [
-  { nag: 10, symbol: '=', label: 'Égalité' },
-  { nag: 13, symbol: '∞', label: 'Position incertaine' },
-  { nag: 14, symbol: '⩲', label: 'Léger avantage blanc' },
-  { nag: 15, symbol: '⩱', label: 'Léger avantage noir' },
-  { nag: 16, symbol: '±', label: 'Avantage blanc' },
-  { nag: 17, symbol: '∓', label: 'Avantage noir' },
-  { nag: 18, symbol: '+−', label: 'Avantage décisif blanc' },
-  { nag: 19, symbol: '−+', label: 'Avantage décisif noir' }
+  glyph(10, '='),
+  glyph(13, '∞'),
+  glyph(14, '⩲'),
+  glyph(15, '⩱'),
+  glyph(16, '±'),
+  glyph(17, '∓'),
+  glyph(18, '+−'),
+  glyph(19, '−+')
 ]
 
 const SYMBOLS = new Map(

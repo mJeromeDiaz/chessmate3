@@ -1,6 +1,8 @@
 <template>
   <q-card flat bordered data-testid="run-units">
-    <q-card-section class="text-subtitle1">Unités présentées</q-card-section>
+    <q-card-section class="text-subtitle1">{{
+      $t('repertoire.runUnits.title')
+    }}</q-card-section>
     <q-card-section v-if="loading" class="flex flex-center">
       <q-spinner />
     </q-card-section>
@@ -16,19 +18,19 @@
           <q-item-label>{{ labelText(u.label) }}</q-item-label>
           <q-item-label caption>
             {{ statusText(u.status) }}
-            <template v-if="u.rank > 1"> · {{ u.rank }}ᵉ présentation</template>
-            <template v-if="u.unit === 'line'">
-              · ligne de {{ u.segments.length }} tronçon{{
-                u.segments.length > 1 ? 's' : ''
-              }}</template
-            >
+            <template v-if="u.rank > 1">{{
+              $t('repertoire.runUnits.rank', { n: u.rank })
+            }}</template>
+            <template v-if="u.unit === 'line'">{{
+              $t('repertoire.runUnits.line', u.segments.length)
+            }}</template>
           </q-item-label>
         </q-item-section>
       </q-item>
     </q-list>
-    <q-card-section v-else class="text-grey"
-      >Aucune unité présentée.</q-card-section
-    >
+    <q-card-section v-else class="text-grey">{{
+      $t('repertoire.runUnits.empty')
+    }}</q-card-section>
   </q-card>
 </template>
 

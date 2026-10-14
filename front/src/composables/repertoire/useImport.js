@@ -1,6 +1,7 @@
 import { onScopeDispose, ref, shallowRef, watch } from 'vue'
 import { repertoireApi } from '@/services/api'
 import { describeFailure } from '@/composables/repertoire/useExplorer'
+import { t } from '@/i18n'
 import {
   bulkChoices,
   defaultChoices,
@@ -35,7 +36,7 @@ export function importError(error) {
     if (Array.isArray(violations) && violations.length) {
       return {
         code: 'invalid',
-        message: 'Donnez un PGN, un fichier ou un lien d’étude Lichess.'
+        message: t('repertoire.import.noSource')
       }
     }
   }
@@ -45,13 +46,13 @@ export function importError(error) {
   if (response?.status === 404) {
     return {
       code: 'not_found',
-      message: 'Cet import a expiré (24 h) ou n’existe plus : recommencez.'
+      message: t('repertoire.import.expired')
     }
   }
   if (response?.status === 503 || response?.status === 429 || !response) {
     return { code: 'lichess', message: describeFailure(error).message }
   }
-  return { code: null, message: 'L’import a échoué. Réessayez.' }
+  return { code: null, message: failureText(null) }
 }
 
 /**

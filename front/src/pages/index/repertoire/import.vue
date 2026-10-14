@@ -8,9 +8,11 @@
           dense
           icon="arrow_back"
           to="/repertoire"
-          aria-label="Mes répertoires"
+          :aria-label="$t('repertoire.overview.back')"
         />
-        <div class="text-h5 q-ml-sm">Importer un répertoire</div>
+        <div class="text-h5 q-ml-sm">{{
+          $t('repertoire.importPage.title')
+        }}</div>
       </div>
 
       <!-- 1. The source -->
@@ -24,17 +26,17 @@
         >
           <q-tab
             name="file"
-            label="Fichier (PGN, OpenBook)"
+            :label="$t('repertoire.importPage.tabs.file')"
             data-testid="import-tab-file"
           />
           <q-tab
             name="paste"
-            label="Coller un PGN"
+            :label="$t('repertoire.importPage.tabs.paste')"
             data-testid="import-tab-paste"
           />
           <q-tab
             name="study"
-            label="Étude Lichess"
+            :label="$t('repertoire.importPage.tabs.study')"
             data-testid="import-tab-study"
           />
         </q-tabs>
@@ -45,7 +47,7 @@
           v-model="file"
           outlined
           accept=".pgn,.json,text/plain,application/x-chess-pgn,application/json"
-          label="Fichier .pgn, ou sauvegarde OpenBook .json (1 Mo au plus)"
+          :label="$t('repertoire.importPage.file')"
           data-testid="import-file"
         >
           <template #prepend><q-icon name="attach_file" /></template>
@@ -56,7 +58,7 @@
           outlined
           type="textarea"
           rows="10"
-          label="PGN : une ou plusieurs parties, variantes et commentaires compris"
+          :label="$t('repertoire.importPage.paste')"
           input-class="import-page__pgn"
           data-testid="import-pgn"
         />
@@ -64,9 +66,9 @@
           v-else
           v-model="studyUrl"
           outlined
-          label="Lien de l’étude ou du chapitre"
+          :label="$t('repertoire.importPage.study')"
           placeholder="https://lichess.org/study/…"
-          hint="Une étude publique se lit directement ; une étude privée ou non répertoriée demande votre autorisation."
+          :hint="$t('repertoire.importPage.studyHint')"
           data-testid="import-study-url"
         />
 
@@ -83,7 +85,7 @@
               flat
               no-caps
               color="white"
-              label="Autoriser l’accès à mes études"
+              :label="$t('repertoire.importPage.grant')"
               :loading="granting"
               data-testid="import-grant"
               @click="grant"
@@ -93,7 +95,7 @@
               flat
               no-caps
               color="white"
-              label="Lier mon compte Lichess"
+              :label="$t('repertoire.importPage.link')"
               to="/profile"
             />
           </template>
@@ -103,18 +105,21 @@
           <q-btn
             color="primary"
             no-caps
-            label="Analyser"
+            :label="$t('repertoire.importPage.analyze')"
             :loading="imp.busy.value"
             :disable="!ready"
             data-testid="import-analyze"
             @click="analyze"
           />
-          <q-btn flat no-caps label="Annuler" to="/repertoire" />
+          <q-btn
+            flat
+            no-caps
+            :label="$t('common.actions.cancel')"
+            to="/repertoire"
+          />
         </div>
         <div class="text-caption cm-muted">
-          Chaque coup est vérifié. Vos coups (ceux de la couleur du répertoire)
-          deviennent les coups testés, un seul par position ; ceux de
-          l’adversaire, ses réponses.
+          {{ $t('repertoire.importPage.checkHint') }}
         </div>
       </template>
 
@@ -129,8 +134,8 @@
         <div class="q-mb-sm">
           {{
             imp.phase.value === 'analyzing'
-              ? 'Analyse du fichier…'
-              : 'Import dans le répertoire…'
+              ? $t('repertoire.importPage.analyzing')
+              : $t('repertoire.importPage.applying')
           }}
         </div>
         <q-linear-progress
@@ -140,8 +145,7 @@
           color="primary"
         />
         <div class="text-caption cm-muted q-mt-sm">
-          Un gros fichier prend un moment : vous pouvez laisser cette page
-          ouverte.
+          {{ $t('repertoire.importPage.bigFile') }}
         </div>
       </div>
 
@@ -149,22 +153,25 @@
       <template v-else-if="imp.phase.value === 'preview' && imp.current.value">
         <div class="text-body2 cm-muted">
           {{ sourceLabel
-          }}<template v-if="imp.current.value.source !== 'openbook'">
-            · {{ imp.current.value.games }} partie{{
-              imp.current.value.games > 1 ? 's' : ''
-            }}</template
-          >
+          }}<template v-if="imp.current.value.source !== 'openbook'">{{
+            $t('repertoire.importPage.games', imp.current.value.games)
+          }}</template>
         </div>
 
         <q-card flat bordered class="q-pa-md">
-          <div class="text-subtitle1 q-mb-sm">Destination</div>
+          <div class="text-subtitle1 q-mb-sm">{{
+            $t('repertoire.importPage.destination')
+          }}</div>
           <q-option-group
             v-model="imp.destination.value.mode"
             inline
             :options="[
-              { label: 'Nouveau répertoire', value: 'new' },
               {
-                label: 'Un de mes répertoires',
+                label: $t('repertoire.importPage.newRepertoire'),
+                value: 'new'
+              },
+              {
+                label: $t('repertoire.importPage.existing'),
                 value: 'existing',
                 disable: store.repertoires.length === 0
               }
@@ -178,9 +185,9 @@
             <q-input
               v-model="imp.destination.value.name"
               class="col-12 col-sm-8"
-              label="Nom"
+              :label="$t('repertoire.new.name')"
               maxlength="80"
-              :rules="[v => !!v?.trim() || 'Nom requis']"
+              :rules="[v => !!v?.trim() || $t('repertoire.new.nameRequired')]"
               data-testid="import-name"
             />
             <div class="col-12 col-sm-4">
@@ -190,8 +197,8 @@
                 unelevated
                 toggle-color="primary"
                 :options="[
-                  { label: 'Blancs', value: 'white' },
-                  { label: 'Noirs', value: 'black' }
+                  { label: $t('repertoire.list.white'), value: 'white' },
+                  { label: $t('repertoire.list.black'), value: 'black' }
                 ]"
                 data-testid="import-color"
               />
@@ -205,7 +212,7 @@
             :options="targetOptions"
             emit-value
             map-options
-            label="Répertoire"
+            :label="$t('repertoire.importPage.repertoire')"
             data-testid="import-target"
           />
         </q-card>
@@ -234,16 +241,20 @@
           <q-btn
             color="primary"
             no-caps
-            label="Importer"
+            :label="$t('repertoire.importPage.apply')"
             :loading="imp.busy.value"
             :disable="!canApply"
             data-testid="import-apply"
             @click="imp.apply()"
           />
-          <q-btn flat no-caps label="Recommencer" @click="restart" />
+          <q-btn
+            flat
+            no-caps
+            :label="$t('repertoire.importPage.restart')"
+            @click="restart"
+          />
           <div class="text-caption cm-muted">
-            L’import compte comme une seule modification : le bouton Annuler de
-            l’éditeur le défait.
+            {{ $t('repertoire.importPage.undoHint') }}
           </div>
         </div>
       </template>
@@ -256,7 +267,12 @@
           data-testid="import-error"
           >{{ imp.error.value?.message }}</q-banner
         >
-        <q-btn color="primary" no-caps label="Recommencer" @click="restart" />
+        <q-btn
+          color="primary"
+          no-caps
+          :label="$t('repertoire.importPage.restart')"
+          @click="restart"
+        />
       </template>
     </div>
   </q-page>
@@ -272,8 +288,9 @@ import { useRepertoireStore } from '@/stores/repertoire'
 import { useAuthStore } from '@/stores/auth'
 import { profileApi } from '@/services/api'
 import { readText } from '@/utils/download'
-import { MAX_IMPORT_BYTES } from '@/utils/repertoireImport'
+import { MAX_IMPORT_BYTES, failureText } from '@/utils/repertoireImport'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -307,14 +324,22 @@ const ready = computed(
 const sourceLabel = computed(() => {
   const current = imp.current.value
   if (!current) return ''
-  if (current.source === 'study') return `Étude ${current.label ?? ''}`
+  if (current.source === 'study')
+    return t('repertoire.importPage.studyLabel', { label: current.label ?? '' })
   if (current.source === 'openbook')
-    return `Sauvegarde OpenBook${current.label ? ` (${current.label})` : ''}`
-  return current.label ?? 'PGN collé'
+    return current.label
+      ? t('repertoire.importPage.openbookNamed', { label: current.label })
+      : t('repertoire.importPage.openbook')
+  return current.label ?? t('repertoire.importPage.pasted')
 })
 const targetOptions = computed(() =>
   store.repertoires.map(r => ({
-    label: `${r.name} (${r.color === 'white' ? 'Blancs' : 'Noirs'})`,
+    label: t('repertoire.importPage.target', {
+      name: r.name,
+      color: t(
+        r.color === 'white' ? 'repertoire.list.white' : 'repertoire.list.black'
+      )
+    }),
     value: r.id
   }))
 )
@@ -342,7 +367,7 @@ async function analyze() {
     if (file.value.size > MAX_IMPORT_BYTES) {
       imp.error.value = {
         code: 'too_large',
-        message: 'Le fichier dépasse 1 Mo.'
+        message: failureText('too_large')
       }
       return
     }
@@ -386,7 +411,7 @@ watch(
   () => imp.phase.value,
   phase => {
     if (phase !== 'done' || !imp.current.value?.repertoireId) return
-    $q.notify({ type: 'positive', message: 'Répertoire importé.' })
+    $q.notify({ type: 'positive', message: t('repertoire.importPage.done') })
     router.push(`/repertoire/${imp.current.value.repertoireId}`)
   }
 )

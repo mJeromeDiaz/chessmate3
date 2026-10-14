@@ -19,7 +19,7 @@
         <q-spinner v-else />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn v-close-popup flat no-caps label="Fermer" />
+        <q-btn v-close-popup flat no-caps :label="$t('common.actions.close')" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -34,10 +34,11 @@
 import { computed, onMounted } from 'vue'
 import RunLauncher from '@/components/training/RunLauncher.vue'
 import { useAuthStore } from '@/stores/auth'
+import { t } from '@/i18n'
 
 defineProps({
   modelValue: { type: Boolean, default: false },
-  title: { type: String, default: 'Tester' },
+  title: { type: String, default: () => t('repertoire.testDialog.title') },
   caption: { type: String, default: '' },
   /** @type {import('vue').PropType<{repertoireIds: string[], rootPositionId?: string, segmentIds?: string[]}>} */
   config: { type: Object, required: true }

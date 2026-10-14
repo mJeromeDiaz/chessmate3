@@ -2,18 +2,22 @@
   <div class="game-stat" data-testid="game-stat">
     <div class="game-stat__head">
       <q-icon name="auto_awesome" size="16px" class="game-stat__icon" />
-      <span class="game-stat__title">Dans tes parties</span>
-      <span class="game-stat__figures"
-        >{{ summary.games }} partie{{ summary.games > 1 ? 's' : '' }} · score
-        {{ summary.score }} %</span
-      >
+      <span class="game-stat__title">{{
+        $t('repertoire.gameStat.title')
+      }}</span>
+      <span class="game-stat__figures">{{
+        $t('repertoire.gameStat.figures', {
+          games: $t('repertoire.gameStat.games', summary.games),
+          score: summary.score
+        })
+      }}</span>
     </div>
     <div v-if="summary.games > 0" class="game-stat__bar">
       <div
         v-for="o in summary.outcomes"
         :key="o.key"
         :style="{ width: `${o.share}%`, background: o.color }"
-        :title="`${o.label} ${o.share} %`"
+        :title="$t('repertoire.gameStat.share', { label: o.label, n: o.share })"
       />
     </div>
     <div v-for="(fact, i) in summary.facts" :key="i" class="game-stat__fact">

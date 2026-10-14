@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 /**
  * Wording and choices of the repertoire import (docs/REPERTOIRE.md, "Import"). The API speaks in
  * stable codes; the words are here.
@@ -12,28 +14,32 @@
 /** Largest import, as the API checks it (App\Repertoire\Limits::$maxImportBytes). */
 export const MAX_IMPORT_BYTES = 1_048_576
 
-const FAILURES = {
-  too_large: 'Le fichier dépasse 1 Mo.',
-  too_many_games: 'Le fichier contient plus de 300 parties ou chapitres.',
-  too_many_positions:
-    'Le fichier contient plus de 5 000 positions : découpez-le en plusieurs répertoires.',
-  empty: 'Aucun coup légal à importer dans ce fichier.',
-  syntax: 'Le fichier est mal formé',
-  invalid_study_url:
-    'Ce lien n’est pas celui d’une étude Lichess (lichess.org/study/…).',
-  study_private:
-    'Lichess ne donne pas cette étude : elle est privée, non répertoriée, ou n’existe pas.',
-  study_not_found: 'Cette étude n’existe pas, ou vous n’y avez pas accès.',
-  limit_positions:
-    'Le répertoire dépasserait 5 000 positions : importez dans un nouveau répertoire, ou allégez le fichier.',
-  limit_depth:
-    'Une ligne dépasserait 80 demi-coups depuis la position initiale.',
-  limit_repertoires: 'Vous avez atteint le nombre maximal de répertoires (50).',
-  stale:
-    'Le répertoire a été modifié entre-temps : vérifiez l’aperçu, puis recommencez.',
-  not_found: 'Ce répertoire n’existe plus.',
-  invalid_name: 'Nom de répertoire invalide.'
-}
+/** The API's failure codes with a text of their own (repertoire.import.failures). */
+const FAILURES = [
+  'too_large',
+  'too_many_games',
+  'too_many_positions',
+  'empty',
+  'invalid_study_url',
+  'study_private',
+  'study_not_found',
+  'limit_positions',
+  'limit_depth',
+  'limit_repertoires',
+  'stale',
+  'not_found',
+  'invalid_name'
+]
+
+/** The API's warning types with a text of their own (repertoire.import.warnings). */
+const WARNINGS = [
+  'illegal_move',
+  'repeated_position',
+  'too_deep',
+  'invalid_start',
+  'start_not_found',
+  'comment_truncated'
+]
 
 /**
  * Why an import failed or was refused, for the user.
@@ -43,10 +49,10 @@ const FAILURES = {
  * @returns {string}
  */
 export function failureText(code, line = null) {
-  if (code === 'syntax') {
-    return line ? `${FAILURES.syntax} (ligne ${line}).` : `${FAILURES.syntax}.`
-  }
-  return FAILURES[code] ?? 'L’import a échoué. Réessayez.'
+  const f = 'repertoire.import.failures.'
+  if (code === 'syntax')
+    return line ? t(`${f}syntaxLine`, { line }) : t(`${f}syntax`)
+  return t(`${f}${code && FAILURES.includes(code) ? code : 'default'}`)
 }
 
 /**
@@ -55,30 +61,21 @@ export function failureText(code, line = null) {
  * @returns {string}
  */
 export function warningText({ type, game, move, count }, source = 'pgn') {
+  const w = 'repertoire.import.'
   const where =
     source === 'openbook'
-      ? (move ?? 'Position')
-      : `Partie ${game}${move ? `, ${move}` : ''}`
-  switch (type) {
-    case 'invalid_position':
-      return `Position ignorée (invalide, ou pas à vous de jouer) : ${move ?? ''}`
-    case 'unreachable':
-      return `${count ?? 0} position${(count ?? 0) > 1 ? 's' : ''} du fichier ne ${(count ?? 0) > 1 ? 'sont' : 'est'} atteinte${(count ?? 0) > 1 ? 's' : ''} par aucune ligne depuis la position initiale : ignorée${(count ?? 0) > 1 ? 's' : ''}.`
-    case 'illegal_move':
-      return `${where} : coup illégal ou ambigu, la ligne s’arrête avant lui.`
-    case 'repeated_position':
-      return `${where} : le coup ramène à une position d’où vient la ligne, il est ignoré.`
-    case 'too_deep':
-      return `${where} : ligne coupée à 80 demi-coups.`
-    case 'invalid_start':
-      return `Partie ${game} : position de départ (FEN) invalide, partie ignorée.`
-    case 'start_not_found':
-      return `Partie ${game} : elle part d’une position absente du fichier et du répertoire, elle est ignorée.`
-    case 'comment_truncated':
-      return `${where} : commentaire raccourci à 2 000 caractères.`
-    default:
-      return `${where} : élément ignoré.`
-  }
+      ? (move ?? t(`${w}where.position`))
+      : move
+        ? t(`${w}where.gameMove`, { game, move })
+        : t(`${w}where.game`, { game })
+  if (type === 'invalid_position')
+    return t(`${w}warnings.invalid_position`, { move: move ?? '' })
+  if (type === 'unreachable')
+    return t(`${w}warnings.unreachable`, { n: count ?? 0 }, count ?? 0)
+  return t(`${w}warnings.${WARNINGS.includes(type) ? type : 'default'}`, {
+    where,
+    game
+  })
 }
 
 /**
@@ -136,5 +133,5 @@ export function pathText(path) {
  * @param {Candidate['origin']} origin
  */
 export function originLabel(origin) {
-  return { existing: 'répertoire', file: 'fichier', both: 'les deux' }[origin]
+  return t(`repertoire.import.origins.${origin}`)
 }

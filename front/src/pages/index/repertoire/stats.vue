@@ -8,9 +8,9 @@
           dense
           icon="arrow_back"
           to="/repertoire"
-          aria-label="Mes répertoires"
+          :aria-label="$t('repertoire.overview.back')"
         />
-        <div class="text-h5 q-ml-sm">Statistiques des répertoires</div>
+        <div class="text-h5 q-ml-sm">{{ $t('repertoire.overview.title') }}</div>
       </div>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -21,9 +21,9 @@
       <template v-else-if="overview">
         <CardCounts :cards="overview.cards" />
         <div>
-          <div class="text-subtitle1 q-mb-xs"
-            >Positions dues, 7 prochains jours</div
-          >
+          <div class="text-subtitle1 q-mb-xs">{{
+            $t('repertoire.overview.forecast')
+          }}</div>
           <ForecastBars :days="overview.forecast" />
         </div>
         <q-list bordered separator data-testid="overview-repertoires">
@@ -36,10 +36,15 @@
             <q-item-section>
               <q-item-label>{{ r.name }}</q-item-label>
               <q-item-label caption>
-                {{ r.cards.due }} dues · {{ r.cards.new }} nouvelles ·
-                {{ r.tests }} tests · réussite 30 j :
-                {{ formatPercent(r.successRate30) }} · dernier test :
-                {{ formatDate(r.lastTestedAt) }}
+                {{
+                  $t('repertoire.overview.row', {
+                    due: r.cards.due,
+                    new: r.cards.new,
+                    tests: r.tests,
+                    rate: formatPercent(r.successRate30),
+                    date: formatDate(r.lastTestedAt)
+                  })
+                }}
               </q-item-label>
             </q-item-section>
             <q-item-section side

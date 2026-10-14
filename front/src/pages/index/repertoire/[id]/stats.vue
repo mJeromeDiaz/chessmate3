@@ -8,17 +8,17 @@
           dense
           icon="arrow_back"
           :to="`/repertoire/${id}`"
-          aria-label="Éditeur"
+          :aria-label="$t('repertoire.stats.editor')"
         />
         <div class="text-h5 q-ml-sm ellipsis" data-testid="stats-name">{{
-          stats?.name ?? 'Statistiques'
+          stats?.name ?? $t('repertoire.stats.title')
         }}</div>
         <q-space />
         <q-btn
           color="primary"
           no-caps
           icon="timer"
-          label="Tester"
+          :label="$t('repertoire.stats.test')"
           :disable="!stats"
           data-testid="stats-test"
           @click="openTest(null)"
@@ -33,28 +33,36 @@
       <template v-else-if="stats">
         <CardCounts :cards="stats.cards" />
         <div>
-          <div class="text-subtitle1 q-mb-xs"
-            >Positions dues, 7 prochains jours</div
-          >
+          <div class="text-subtitle1 q-mb-xs">{{
+            $t('repertoire.overview.forecast')
+          }}</div>
           <ForecastBars :days="stats.forecast" />
         </div>
 
         <div class="row q-col-gutter-md" data-testid="stats-tests">
-          <div v-for="t in testFigures" :key="t.label" class="col-6 col-sm-3">
-            <div class="text-caption text-grey">{{ t.label }}</div>
-            <div class="text-h6" :data-testid="t.testid">{{ t.value }}</div>
+          <div
+            v-for="figure in testFigures"
+            :key="figure.label"
+            class="col-6 col-sm-3"
+          >
+            <div class="text-caption text-grey">{{ figure.label }}</div>
+            <div class="text-h6" :data-testid="figure.testid">{{
+              figure.value
+            }}</div>
           </div>
         </div>
 
         <q-card v-if="stats.fragile.length" flat bordered data-testid="fragile">
           <q-card-section class="row items-center">
-            <div class="text-subtitle1">Tronçons fragiles</div>
+            <div class="text-subtitle1">{{
+              $t('repertoire.stats.fragile')
+            }}</div>
             <q-space />
             <q-btn
               flat
               no-caps
               color="primary"
-              label="Tester les fragiles"
+              :label="$t('repertoire.stats.testFragile')"
               data-testid="fragile-test-all"
               @click="openTest(stats.fragile.map(s => s.id))"
             />
@@ -67,17 +75,19 @@
             >
               <q-item-section>
                 <q-item-label>{{ labelText(s.label) }}</q-item-label>
-                <q-item-label caption
-                  >{{ formatPercent(s.tests.recentFailureRate) }} d’échecs sur
-                  les {{ s.tests.recent }} derniers tests</q-item-label
-                >
+                <q-item-label caption>{{
+                  $t('repertoire.stats.fragileRow', {
+                    rate: formatPercent(s.tests.recentFailureRate),
+                    n: s.tests.recent
+                  })
+                }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-btn
                   flat
                   dense
                   no-caps
-                  label="Tester"
+                  :label="$t('repertoire.stats.test')"
                   @click="openTest([s.id])"
                 />
               </q-item-section>
@@ -88,7 +98,7 @@
         <q-table
           flat
           bordered
-          title="Tronçons"
+          :title="$t('repertoire.stats.segments')"
           :rows="stats.segments"
           :columns="columns"
           row-key="id"
@@ -139,6 +149,7 @@ import { repertoireApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatPercent } from '@/utils/format'
 import { labelText, numberedMoves, statusText } from '@/utils/repertoireTest'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -153,55 +164,71 @@ const testScope = ref(null)
 const historyOpen = ref(false)
 const historySegment = ref(null)
 
-const columns = [
-  { name: 'label', label: 'Tronçon', field: 'id', align: 'left' },
+const columns = computed(() => [
+  {
+    name: 'label',
+    label: t('repertoire.stats.columns.label'),
+    field: 'id',
+    align: 'left'
+  },
   {
     name: 'due',
-    label: 'Dues',
+    label: t('repertoire.stats.columns.due'),
     field: row => row.cards.due,
     sortable: true
   },
   {
     name: 'tests',
-    label: 'Tests',
+    label: t('repertoire.stats.columns.tests'),
     field: row => row.tests.total,
     sortable: true
   },
   {
     name: 'rate',
-    label: 'Réussite',
+    label: t('repertoire.stats.columns.rate'),
     field: row => row.tests.successRate,
     format: formatPercent,
     sortable: true
   },
   {
     name: 'last',
-    label: 'Dernier test',
+    label: t('repertoire.stats.columns.last'),
     field: row => row.tests.lastAt,
     format: (value, row) =>
       value
-        ? `${formatDate(value)} · ${statusText(row.tests.lastStatus)}`
+        ? t('repertoire.stats.last', {
+            date: formatDate(value),
+            status: statusText(row.tests.lastStatus)
+          })
         : '—',
     sortable: true
   }
-]
+])
 
 const testFigures = computed(() => {
-  const t = stats.value?.tests
-  if (!t) return []
+  const tests = stats.value?.tests
+  if (!tests) return []
   return [
-    { label: 'Tests', value: t.total, testid: 'tests-total' },
     {
-      label: 'Réussite',
-      value: formatPercent(t.successRate),
+      label: t('repertoire.stats.figures.tests'),
+      value: tests.total,
+      testid: 'tests-total'
+    },
+    {
+      label: t('repertoire.stats.figures.rate'),
+      value: formatPercent(tests.successRate),
       testid: 'tests-rate'
     },
     {
-      label: '7 / 30 jours',
-      value: `${t.last7} / ${t.last30}`,
+      label: t('repertoire.stats.figures.recent'),
+      value: `${tests.last7} / ${tests.last30}`,
       testid: 'tests-recent'
     },
-    { label: 'Dernier test', value: formatDate(t.lastAt), testid: 'tests-last' }
+    {
+      label: t('repertoire.stats.figures.last'),
+      value: formatDate(tests.lastAt),
+      testid: 'tests-last'
+    }
   ]
 })
 
@@ -209,15 +236,16 @@ const testFigures = computed(() => {
 function openTest(segmentIds) {
   testScope.value = segmentIds
     ? {
-        title:
+        title: t(
           segmentIds.length > 1
-            ? 'Tester les tronçons fragiles'
-            : 'Tester ce tronçon',
+            ? 'repertoire.stats.testFragileTitle'
+            : 'repertoire.stats.testOneTitle'
+        ),
         caption: stats.value?.name ?? '',
         config: { repertoireIds: [id], segmentIds }
       }
     : {
-        title: 'Tester le répertoire',
+        title: t('repertoire.list.testOne'),
         caption: stats.value?.name ?? '',
         config: { repertoireIds: [id] }
       }
@@ -234,7 +262,7 @@ onMounted(async () => {
   try {
     stats.value = await repertoireApi.stats(id)
   } catch (e) {
-    error.value = apiErrorMessage(e, { 404: 'Répertoire introuvable.' })
+    error.value = apiErrorMessage(e, { 404: t('repertoire.stats.notFound') })
   } finally {
     loading.value = false
   }

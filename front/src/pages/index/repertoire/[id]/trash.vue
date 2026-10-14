@@ -8,18 +8,19 @@
           dense
           icon="arrow_back"
           :to="`/repertoire/${repertoireId}`"
-          aria-label="Retour au répertoire"
+          :aria-label="$t('repertoire.trash.back')"
         />
         <div class="text-h5 q-ml-sm ellipsis">
-          Corbeille<template v-if="store.graph?.id === repertoireId">
-            · {{ store.graph.name }}</template
-          >
+          {{
+            store.graph?.id === repertoireId
+              ? $t('repertoire.trash.named', { name: store.graph.name })
+              : $t('repertoire.trash.title')
+          }}
         </div>
       </div>
 
       <div class="text-body2 cm-muted">
-        Un coup remplacé ou supprimé arrive ici avec tout ce qui n’était atteint
-        que par lui. Restauré, il revient avec sa progression.
+        {{ $t('repertoire.trash.lead') }}
       </div>
 
       <q-banner v-if="loadError" rounded class="bg-negative text-white">{{
@@ -37,7 +38,7 @@
         class="text-grey q-pa-lg text-center"
         data-testid="trash-empty"
       >
-        La corbeille est vide.
+        {{ $t('repertoire.trash.empty') }}
       </div>
 
       <q-list v-else bordered separator>
@@ -51,8 +52,8 @@
               suiteText(suite)
             }}</q-item-label>
             <q-item-label caption>
-              {{ REASONS[suite.reason] ?? suite.reason }} ·
-              {{ plural(suite.moveCount, 'coup') }} ·
+              {{ reasonText(suite.reason) }} ·
+              {{ $t('repertoire.trash.moves', suite.moveCount) }} ·
               {{ formatDate(suite.createdAt) }}
             </q-item-label>
           </q-item-section>
@@ -63,7 +64,7 @@
                 dense
                 no-caps
                 icon="restore"
-                label="Restaurer"
+                :label="$t('repertoire.trash.restore')"
                 data-testid="trash-restore"
                 @click="openRestore(suite)"
               />
@@ -73,11 +74,11 @@
                 round
                 color="negative"
                 icon="delete_forever"
-                aria-label="Supprimer définitivement"
+                :aria-label="$t('repertoire.trash.discard')"
                 data-testid="trash-discard"
                 @click="confirmDiscard(suite)"
               >
-                <q-tooltip>Supprimer définitivement</q-tooltip>
+                <q-tooltip>{{ $t('repertoire.trash.discard') }}</q-tooltip>
               </q-btn>
             </div>
           </q-item-section>
@@ -87,14 +88,15 @@
 
     <q-dialog v-model="restoring.open" data-testid="restore-dialog">
       <q-card v-if="restoring.suite" style="width: 600px; max-width: 94vw">
-        <q-card-section class="text-h6"
-          >Restaurer {{ suiteText(restoring.suite) }}</q-card-section
-        >
+        <q-card-section class="text-h6">{{
+          $t('repertoire.trash.restoreTitle', {
+            suite: suiteText(restoring.suite)
+          })
+        }}</q-card-section>
         <q-card-section class="q-pt-none relative-position">
           <template v-if="restoring.preview === null && !restoring.loading">
             <div data-testid="restore-impossible">
-              Sa position de départ n’est plus dans le répertoire : restaurez
-              d’abord la suite qui la contient.
+              {{ $t('repertoire.trash.impossible') }}
             </div>
           </template>
           <template v-else-if="restoring.preview">
@@ -104,8 +106,7 @@
               data-testid="restore-conflicts"
             >
               <div class="q-mb-xs">
-                Un seul coup vous est préparé par position : choisissez lequel
-                garder.
+                {{ $t('repertoire.trash.conflictsHint') }}
               </div>
               <q-list bordered separator>
                 <q-item
@@ -123,11 +124,15 @@
                       dense
                       :options="[
                         {
-                          label: `${conflict.restored.san} (restauré)`,
+                          label: $t('repertoire.trash.restored', {
+                            san: conflict.restored.san
+                          }),
                           value: 'restored'
                         },
                         {
-                          label: `${conflict.current.san} (actuel)`,
+                          label: $t('repertoire.trash.current', {
+                            san: conflict.current.san
+                          }),
                           value: 'current'
                         }
                       ]"
@@ -144,11 +149,16 @@
           <q-inner-loading :showing="restoring.loading" />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn v-close-popup flat no-caps label="Annuler" />
+          <q-btn
+            v-close-popup
+            flat
+            no-caps
+            :label="$t('common.actions.cancel')"
+          />
           <q-btn
             color="primary"
             no-caps
-            label="Restaurer"
+            :label="$t('repertoire.trash.restore')"
             :disable="!restoring.preview || restoring.loading"
             :loading="restoring.saving"
             data-testid="restore-confirm"
@@ -167,17 +177,16 @@ import { useQuasar } from 'quasar'
 import { useRepertoireStore } from '@/stores/repertoire'
 import { apiErrorMessage } from '@/utils/apiError'
 import { pathText } from '@/utils/repertoireImport'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
 /** Why a suite is in the trash (App\Enum\Repertoire\TrashReason). */
-const REASONS = {
-  replaced: 'Remplacé',
-  deleted: 'Supprimé',
-  imported: 'Remplacé par un import',
-  migrated: 'Mis de côté (ancienne alternative)'
-}
+const REASONS = ['replaced', 'deleted', 'imported', 'migrated']
+
+/** @param {string} reason */
+const reasonText = reason =>
+  REASONS.includes(reason) ? t(`repertoire.trash.reasons.${reason}`) : reason
 
 const route = useRoute()
 const router = useRouter()
@@ -205,31 +214,15 @@ const restoring = reactive({
 const summary = computed(() => {
   const p = restoring.preview
   if (!p) return ''
-  const parts = [
-    `${plural(p.moves, 'coup')} ${p.moves > 1 ? 'reviennent' : 'revient'}`
-  ]
-  if (p.joined)
-    parts.push(
-      `${plural(p.joined, 'coup')} déjà présent${p.joined > 1 ? 's' : ''}`
-    )
-  if (p.leftOut)
-    parts.push(
-      `${plural(p.leftOut, 'coup')} laissé${p.leftOut > 1 ? 's' : ''} de côté`
-    )
+  const s = 'repertoire.trash.summary.'
+  const parts = [t(`${s}back`, p.moves)]
+  if (p.joined) parts.push(t(`${s}joined`, p.joined))
+  if (p.leftOut) parts.push(t(`${s}leftOut`, p.leftOut))
   const text = parts.join(', ')
   return p.replaced
-    ? `${text}. ${plural(p.replaced, 'coup actuel', 'coups actuels')} ${p.replaced > 1 ? 'partent' : 'part'} à la corbeille avec sa suite.`
-    : `${text}.`
+    ? t(`${s}replaced`, { text, n: p.replaced }, p.replaced)
+    : t(`${s}done`, { text })
 })
-
-/**
- * @param {number} n
- * @param {string} one
- * @param {string} [many]
- */
-function plural(n, one, many = `${one}s`) {
-  return `${n} ${n > 1 ? many : one}`
-}
 
 /**
  * The suite's first move with the moves leading to it: "1.e4 e5 2.Nf3 Nc6 3.Bb5".
@@ -262,7 +255,9 @@ async function load() {
       await store.load(repertoireId.value)
     suites.value = await store.fetchTrash()
   } catch (e) {
-    loadError.value = apiErrorMessage(e, { 404: 'Répertoire introuvable.' })
+    loadError.value = apiErrorMessage(e, {
+      404: t('repertoire.stats.notFound')
+    })
   }
 }
 
@@ -316,10 +311,10 @@ async function confirmRestore() {
   if (change) {
     $q.notify({
       type: 'positive',
-      message: `${suiteText(suite)} est de retour dans le répertoire.`,
+      message: t('repertoire.trash.isBack', { suite: suiteText(suite) }),
       actions: [
         {
-          label: 'Ouvrir le répertoire',
+          label: t('repertoire.trash.open'),
           color: 'white',
           noCaps: true,
           handler: () => router.push(`/repertoire/${repertoireId.value}`)
@@ -333,13 +328,16 @@ async function confirmRestore() {
 /** @param {import('@/stores/repertoire').TrashedSuite} suite */
 function confirmDiscard(suite) {
   $q.dialog({
-    title: 'Supprimer définitivement ?',
-    message: `${suiteText(suite)} et ${plural(suite.moveCount - 1, 'coup')} qui le suivent seront supprimés pour de bon : ni restauration, ni annulation possibles.`,
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
+    title: t('repertoire.trash.discardTitle'),
+    message: t('repertoire.trash.discardMessage', {
+      suite: suiteText(suite),
+      moves: t('repertoire.trash.moves', suite.moveCount - 1)
+    }),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
     ok: {
       color: 'negative',
       noCaps: true,
-      label: 'Supprimer définitivement'
+      label: t('repertoire.trash.discard')
     },
     persistent: false
   }).onOk(async () => {
@@ -362,10 +360,10 @@ watch(
       type: 'negative',
       message:
         failure.status === 409
-          ? 'Le répertoire a changé entre-temps, ou la position de départ n’y est plus : rien n’a été restauré.'
+          ? t('repertoire.trash.stale')
           : failure.status === 422
-            ? 'La restauration dépasserait une limite du répertoire (positions ou profondeur).'
-            : 'La restauration n’a pas été enregistrée.'
+            ? t('repertoire.trash.limit')
+            : t('repertoire.trash.failed')
     })
   }
 )

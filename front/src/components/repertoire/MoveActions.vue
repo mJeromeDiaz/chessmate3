@@ -10,11 +10,13 @@
       dense
       no-caps
       icon="edit_note"
-      label="Annoter"
+      :label="$t('repertoire.moveActions.annotate')"
       data-testid="move-annotate"
     >
       <q-list dense style="min-width: 220px">
-        <q-item-label header>Coup</q-item-label>
+        <q-item-label header>{{
+          $t('repertoire.moveActions.move')
+        }}</q-item-label>
         <q-item
           v-for="n in MOVE_NAGS"
           :key="n.nag"
@@ -29,7 +31,9 @@
           <q-item-section>{{ n.label }}</q-item-section>
         </q-item>
         <q-separator />
-        <q-item-label header>Position</q-item-label>
+        <q-item-label header>{{
+          $t('repertoire.moveActions.position')
+        }}</q-item-label>
         <q-item
           v-for="n in POSITION_NAGS"
           :key="n.nag"
@@ -46,7 +50,9 @@
         <q-item v-close-popup clickable @click="openComment">
           <q-item-section avatar><q-icon name="comment" /></q-item-section>
           <q-item-section>{{
-            move.comment ? 'Modifier le commentaire' : 'Ajouter un commentaire'
+            move.comment
+              ? $t('repertoire.moveActions.editComment')
+              : $t('repertoire.moveActions.addComment')
           }}</q-item-section>
         </q-item>
       </q-list>
@@ -58,7 +64,7 @@
       dense
       no-caps
       icon="vertical_align_top"
-      label="Ligne principale"
+      :label="$t('repertoire.moveActions.promote')"
       data-testid="move-promote"
       @click="store.promote(move.id)"
     />
@@ -68,16 +74,16 @@
       no-caps
       color="negative"
       icon="delete"
-      label="Supprimer"
+      :label="$t('repertoire.moveActions.delete')"
       data-testid="move-delete"
       @click="confirmDelete"
     />
 
     <q-dialog v-model="commenting">
       <q-card style="width: 520px; max-width: 92vw">
-        <q-card-section class="text-subtitle1"
-          >Commentaire sur {{ label }}</q-card-section
-        >
+        <q-card-section class="text-subtitle1">{{
+          $t('repertoire.moveActions.commentOn', { move: label })
+        }}</q-card-section>
         <q-card-section class="q-pt-none">
           <q-input
             v-model="draft"
@@ -86,17 +92,22 @@
             autofocus
             :maxlength="COMMENT_MAX"
             counter
-            hint="Texte brut"
+            :hint="$t('repertoire.moveActions.plainText')"
             data-testid="move-comment"
           />
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn v-close-popup flat no-caps label="Annuler" />
+          <q-btn
+            v-close-popup
+            flat
+            no-caps
+            :label="$t('common.actions.cancel')"
+          />
           <q-btn
             v-close-popup
             color="primary"
             no-caps
-            label="Enregistrer"
+            :label="$t('common.actions.save')"
             data-testid="move-comment-save"
             @click="saveComment"
           />
@@ -117,6 +128,7 @@ import { useQuasar } from 'quasar'
 import { useRepertoireStore } from '@/stores/repertoire'
 import { MOVE_NAGS, POSITION_NAGS } from '@/utils/chess/nags'
 import { moveNumber } from '@/components/chess/moveTree'
+import { t } from '@/i18n'
 
 /** Same limits as the API (App\Entity\Repertoire\Move). */
 const COMMENT_MAX = 2000
@@ -173,13 +185,17 @@ function confirmDelete() {
   const { moveIds } = store.removalOf(props.move.id)
   const others = moveIds.length - 1
   $q.dialog({
-    title: `Supprimer ${label.value} ?`,
+    title: t('repertoire.moveActions.deleteTitle', { move: label.value }),
     message:
       others > 0
-        ? `Ce coup et les ${others} coup${others > 1 ? 's' : ''} qui ne sont atteints que par lui iront à la corbeille : vous pourrez les restaurer.`
-        : 'Ce coup ira à la corbeille : vous pourrez le restaurer.',
-    cancel: { flat: true, noCaps: true, label: 'Annuler' },
-    ok: { color: 'negative', noCaps: true, label: 'Supprimer' },
+        ? t('repertoire.moveActions.deleteMany', { n: others }, others)
+        : t('repertoire.moveActions.deleteOne'),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: {
+      color: 'negative',
+      noCaps: true,
+      label: t('repertoire.moveActions.delete')
+    },
     persistent: false
   }).onOk(() => store.deleteMove(props.move.id))
 }

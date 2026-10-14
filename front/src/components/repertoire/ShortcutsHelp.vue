@@ -1,12 +1,24 @@
 <template>
-  <q-btn flat round dense icon="keyboard" aria-label="Raccourcis clavier">
+  <q-btn
+    flat
+    round
+    dense
+    icon="keyboard"
+    :aria-label="$t('repertoire.shortcuts.title')"
+  >
     <q-menu anchor="bottom right" self="top right">
       <q-list dense style="min-width: 260px">
-        <q-item-label header>Raccourcis clavier</q-item-label>
-        <q-item v-for="s in SHORTCUTS" :key="s.keys">
-          <q-item-section>{{ s.label }}</q-item-section>
+        <q-item-label header>{{
+          $t('repertoire.shortcuts.title')
+        }}</q-item-label>
+        <q-item v-for="s in SHORTCUTS" :key="s.label">
+          <q-item-section>{{
+            $t(`repertoire.shortcuts.labels.${s.label}`)
+          }}</q-item-section>
           <q-item-section side
-            ><kbd class="shortcut-key">{{ s.keys }}</kbd></q-item-section
+            ><kbd class="shortcut-key">{{
+              s.keys ? $t(`repertoire.shortcuts.${s.keys}`) : s.symbol
+            }}</kbd></q-item-section
           >
         </q-item>
       </q-list>
@@ -16,14 +28,15 @@
 
 <script setup>
 /** Keyboard shortcuts of the repertoire editor (handled by MoveTree and the editor page). */
+/** `label`: under repertoire.shortcuts.labels; a key named in words (`keys`): under repertoire.shortcuts. */
 const SHORTCUTS = [
-  { keys: '←', label: 'Coup précédent' },
-  { keys: '→', label: 'Coup suivant' },
-  { keys: '↑ ↓', label: 'Variante précédente / suivante' },
-  { keys: 'Début', label: 'Position initiale' },
-  { keys: 'Fin', label: 'Fin de la ligne' },
-  { keys: 'F', label: 'Retourner l’échiquier' },
-  { keys: 'Ctrl+Z', label: 'Annuler la dernière modification' }
+  { symbol: '←', label: 'previous' },
+  { symbol: '→', label: 'next' },
+  { symbol: '↑ ↓', label: 'variation' },
+  { keys: 'home', label: 'start' },
+  { keys: 'end', label: 'lineEnd' },
+  { symbol: 'F', label: 'flip' },
+  { symbol: 'Ctrl+Z', label: 'undo' }
 ]
 </script>
 

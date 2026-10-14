@@ -53,7 +53,7 @@
         no-caps
         icon="replay"
         class="play-btn play-btn--replay"
-        label="Revoir les coups"
+        :label="$t('repertoire.drill.replay')"
         :disable="
           drill.phase.value !== 'playing' && drill.phase.value !== 'unitDone'
         "
@@ -69,7 +69,7 @@
         rounded
         class="cm-banner--neutral"
         data-testid="drill-stale"
-        >Le répertoire a changé : l’unité précédente est ignorée.</q-banner
+        >{{ $t('repertoire.drill.stale') }}</q-banner
       >
       <q-banner
         v-if="drill.start.value?.retry"
@@ -77,10 +77,11 @@
         rounded
         class="cm-banner--warning"
         data-testid="drill-retry"
-        >Nouvelle tentative : {{ unitName }} raté{{
-          unit === 'line' ? 'e' : ''
-        }}
-        plus tôt dans la séance.</q-banner
+        >{{
+          unit === 'line'
+            ? $t('repertoire.drill.retryLine')
+            : $t('repertoire.drill.retrySegment')
+        }}</q-banner
       >
       <q-banner
         v-else-if="drill.start.value?.newRound"
@@ -88,7 +89,9 @@
         rounded
         class="cm-banner--info"
         data-testid="drill-new-round"
-        >Nouveau tour ({{ drill.start.value.round }}).</q-banner
+        >{{
+          $t('repertoire.drill.newRound', { n: drill.start.value.round })
+        }}</q-banner
       >
       <q-banner
         v-if="drill.deviation.value"
@@ -96,9 +99,10 @@
         rounded
         class="cm-banner--warning"
         data-testid="drill-deviation"
-        >Déviation :
-        {{
-          drill.start.value?.label.move ?? drill.deviation.value.san
+        >{{
+          $t('repertoire.drill.deviation', {
+            move: drill.start.value?.label.move ?? drill.deviation.value.san
+          })
         }}</q-banner
       >
 
@@ -150,6 +154,7 @@ import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { useRepertoireDrill } from '@/composables/repertoire/useRepertoireDrill'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { feedbackProf, repertoireCopy } from '@/utils/feedback'
 import { labelText, unitWord } from '@/utils/repertoireTest'
 import { playOutcomeSound } from '@/utils/sounds'
@@ -171,22 +176,26 @@ const error = ref('')
 let autoNext
 
 const unit = computed(() => drill.start.value?.unit ?? 'segment')
-const unitName = computed(() => (unit.value === 'line' ? 'Ligne' : 'Tronçon'))
 
 const status = computed(() => {
   switch (drill.phase.value) {
     case 'showing':
-      return 'Au tour de l’adversaire…'
+      return t('repertoire.drill.opponent')
     case 'playing':
-      return `À toi : coup ${drill.index.value + 1} sur ${drill.total.value}.`
+      return t('repertoire.drill.yourMove', {
+        n: drill.index.value + 1,
+        total: drill.total.value
+      })
     case 'submitting':
-      return 'Vérification…'
+      return t('repertoire.drill.checking')
     case 'correcting':
-      return `Ce n’est pas le coup préparé : joue ${drill.expected.value?.san ?? 'le coup indiqué'}.`
+      return t('repertoire.drill.correcting', {
+        move: drill.expected.value?.san ?? t('repertoire.drill.theMove')
+      })
     case 'replaying':
-      return 'Revoir les coups…'
+      return t('repertoire.drill.replaying')
     case 'unitDone':
-      return drill.outcome.value?.success ? 'Bravo !' : ''
+      return drill.outcome.value?.success ? t('repertoire.drill.bravo') : ''
     default:
       return ''
   }
@@ -279,12 +288,10 @@ const prof = computed(() =>
 const bubble = computed(() => {
   if (reacting.value)
     return { kicker: copy.value.kicker, text: copy.value.bubble }
-  const kicker =
-    drill.phase.value === 'correcting'
-      ? 'ATTENTION'
-      : drill.phase.value === 'playing'
-        ? 'À TOI'
-        : 'RÉPERTOIRE'
+  const phase = drill.phase.value
+  const kicker = t(
+    `repertoire.drill.kickers.${phase === 'correcting' || phase === 'playing' ? phase : 'default'}`
+  )
   return { kicker, text: status.value }
 })
 
@@ -293,7 +300,7 @@ const actions = computed(() =>
   drill.outcome.value && !drill.outcome.value.success
     ? [
         {
-          label: 'Suivant →',
+          label: t('repertoire.drill.next'),
           primary: true,
           loading: loading.value,
           testid: 'drill-next',
@@ -310,7 +317,7 @@ async function next() {
   try {
     await props.runner.next()
   } catch (e) {
-    error.value = apiErrorMessage(e, { 404: 'Séance introuvable.' })
+    error.value = apiErrorMessage(e, { 404: t('training.page.notFound') })
   } finally {
     loading.value = false
   }
