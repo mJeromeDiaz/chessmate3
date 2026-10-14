@@ -118,7 +118,8 @@
               }}</div>
             </div>
             <q-btn
-              flat
+              outline
+              color="primary"
               no-caps
               icon="replay"
               label="Rejouer"
@@ -300,7 +301,7 @@ onMounted(async () => {
   padding: 12px 16px;
   border-radius: 14px;
   background: var(--cm-surface);
-  border: 1px solid var(--cm-line);
+  box-shadow: var(--cm-card-shadow);
   font-size: 16px;
 }
 

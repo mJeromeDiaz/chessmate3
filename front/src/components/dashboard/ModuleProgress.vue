@@ -102,7 +102,7 @@ defineProps({
   gap: 12px;
   padding: 10px 12px;
   border-radius: 18px;
-  background: var(--cm-page);
+  background: var(--cm-inset);
   color: inherit;
   text-decoration: none;
 

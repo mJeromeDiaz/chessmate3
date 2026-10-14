@@ -12,7 +12,8 @@ import {
   partsOf,
   savingOf,
   stockOf,
-  tweenAt
+  tweenAt,
+  carouselSlides
 } from '@/utils/shop'
 
 /** @returns {import('@/utils/shop').ShopOffer} */
@@ -166,5 +167,30 @@ describe('aidOffer', () => {
     expect(aidOffer(offers, 'puzzle_streak_pass')?.id).toBe('three')
     expect(aidOffer(offers, 'puzzle_streak_help')?.id).toBe('help')
     expect(aidOffer(offers, 'puzzle_pardon')).toBeNull()
+  })
+})
+
+describe('the carousel', () => {
+  it('pairs each slide with its listed offer and picture', () => {
+    const state = {
+      slides: [
+        { id: 's1', offerId: 'o1', tag: 'OFFRE DU MOMENT', image: 'albert-cool' },
+        { id: 's2', offerId: 'gone', tag: 'X', image: 'lizy-joy' }
+      ],
+      offers: [{ id: 'o1', slug: 'pack_holidays' }]
+    }
+    const slides = carouselSlides(
+      /** @type {any} */ (state),
+      image => `/img/${image}.png`
+    )
+    expect(slides).toEqual([
+      {
+        id: 's1',
+        tag: 'OFFRE DU MOMENT',
+        picture: '/img/albert-cool.png',
+        offer: { id: 'o1', slug: 'pack_holidays' }
+      }
+    ])
+    expect(carouselSlides(null, String)).toEqual([])
   })
 })

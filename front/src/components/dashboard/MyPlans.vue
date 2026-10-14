@@ -138,7 +138,7 @@ onMounted(async () => {
   gap: 4px;
   padding: 16px;
   border-radius: 16px;
-  background: var(--cm-page);
+  background: var(--cm-inset);
   color: var(--cm-ink-soft);
   text-align: center;
   font-size: 14px;
@@ -151,7 +151,7 @@ onMounted(async () => {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 14px;
-  background: var(--cm-page);
+  background: var(--cm-inset);
 }
 
 .my-plans__main {

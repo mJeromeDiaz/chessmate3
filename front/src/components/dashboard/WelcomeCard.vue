@@ -13,7 +13,7 @@
         <q-btn
           unelevated
           no-caps
-          color="dark"
+          class="cm-btn-create"
           to="/session/new"
           label="Composer ma première session"
           data-testid="welcome-session"

@@ -40,10 +40,14 @@ const points = computed(() => explainCycles(/** @type {any} */ (props.set)))
 
 <style scoped lang="scss">
 .cycle-explainer {
-  border-radius: 16px;
+  border-radius: 22px;
   background: var(--cm-surface);
-  border: 1px solid var(--cm-line);
+  box-shadow: var(--cm-card-shadow);
   overflow: hidden;
+
+  @media (min-width: $breakpoint-md-min) {
+    border-radius: 24px;
+  }
 }
 
 :deep(.cycle-explainer__header) {

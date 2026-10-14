@@ -234,8 +234,9 @@ function toggleChannel(channel) {
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 22px;
   background: var(--cm-surface);
+  box-shadow: var(--cm-card-shadow);
 }
 
 .session-settings__row {
@@ -288,7 +289,7 @@ function toggleChannel(channel) {
   padding: 0 10px;
   border: 1.5px solid var(--cm-line);
   border-radius: 12px;
-  background: var(--cm-page);
+  background: var(--cm-inset);
   color: var(--cm-ink);
   font: inherit;
 }

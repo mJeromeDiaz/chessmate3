@@ -207,6 +207,7 @@
  * balance counts down.
  */
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import CosmeticCard from '@/components/shop/CosmeticCard.vue'
 import CrownCoin from '@/components/shop/CrownCoin.vue'
 import OfferTile from '@/components/shop/OfferTile.vue'
@@ -220,6 +221,7 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { profImage } from '@/utils/prof/images'
 import {
   MODULE_TABS,
+  carouselSlides,
   SECTIONS,
   crowns,
   frozenDays,
@@ -232,6 +234,7 @@ import { earningRows } from '@/utils/shopReward'
 definePage({ meta: { auth: 'required' } })
 
 const shop = useShopStore()
+const route = useRoute()
 const gamification = useGamificationStore()
 
 const state = computed(() => shop.state)
@@ -259,21 +262,7 @@ const moduleTabs = computed(() =>
     state.value?.offers.some(o => o.section === 'aids' && o.module === m.id)
   )
 )
-const slides = computed(() =>
-  (state.value?.slides ?? []).flatMap(slide => {
-    const offer = state.value?.offers.find(o => o.id === slide.offerId)
-    return offer
-      ? [
-          {
-            id: slide.id,
-            tag: slide.tag,
-            picture: profImage(slide.image),
-            offer
-          }
-        ]
-      : []
-  })
-)
+const slides = computed(() => carouselSlides(state.value, profImage))
 const streak = computed(() => gamification.summary?.streak.current ?? 0)
 const frozen = computed(() => frozenDays(state.value?.freezes ?? []))
 
@@ -371,7 +360,12 @@ onMounted(async () => {
     await shop.load()
   } catch (e) {
     loadError.value = apiErrorMessage(e)
+    return
   }
+  // From the dashboard's carousel: that offer's sheet at once.
+  const slug = route.query.offer
+  const offer = state.value?.offers.find(o => o.slug === slug)
+  if (offer) open(offer)
 })
 
 onBeforeUnmount(() => {
@@ -470,7 +464,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   background: var(--cm-surface);
   color: var(--cm-ink);
-  box-shadow: 0 0 0 1px var(--cm-line);
+  box-shadow: var(--cm-card-shadow);
   transition:
     background 0.2s,
     color 0.2s;
@@ -498,10 +492,6 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 10px;
   scroll-margin-top: 110px;
-  // A marked outline on the pale page; the dark surface stands out on its own.
-  box-shadow:
-    0 0 0 1px var(--cm-line),
-    0 10px 28px rgba(27, 21, 48, 0.08);
 
   @media (min-width: $breakpoint-md-min) {
     &--freeze,
@@ -705,10 +695,10 @@ onBeforeUnmount(() => {
 </style>
 
 <style lang="scss">
-// The store's tiles (offers, packs), inside the section cards like the dashboard's rows: a tint
-// of the page, a pressable bottom edge.
+// The store's tiles (offers, packs), inside the section cards like the dashboard's rows: the
+// inset tint, a pressable bottom edge.
 .shop-tile {
-  background: var(--cm-page);
+  background: var(--cm-inset);
   // A button to press: a marked bottom edge, sunk on press.
   box-shadow:
     0 0 0 1.5px var(--cm-dash),

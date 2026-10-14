@@ -100,7 +100,7 @@ function perMinute(value) {
   padding: 14px 16px;
   border-radius: 16px;
   background: var(--cm-surface);
-  border: 1px solid var(--cm-line);
+  box-shadow: var(--cm-card-shadow);
 }
 
 .run-row__date {

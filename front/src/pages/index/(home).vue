@@ -17,8 +17,7 @@
           <q-btn
             unelevated
             no-caps
-            color="dark"
-            class="dashboard__new"
+            class="dashboard__new cm-btn-create"
             to="/session/new"
             label="+ Nouvelle session"
             data-testid="dashboard-new-session"
@@ -48,6 +47,7 @@
       <div v-else class="dashboard__grid">
         <div class="dashboard__col dashboard__col--main">
           <LevelBanner class="dashboard__banner" />
+          <ShopSpotlight class="dashboard__shop" />
           <RatingCard class="dashboard__rating" />
           <ModuleProgress :rows="moduleRows" class="dashboard__modules" />
         </div>
@@ -95,6 +95,7 @@ import ModuleProgress from '@/components/dashboard/ModuleProgress.vue'
 import RatingCard from '@/components/dashboard/RatingCard.vue'
 import MyPlans from '@/components/dashboard/MyPlans.vue'
 import RecentSessions from '@/components/dashboard/RecentSessions.vue'
+import ShopSpotlight from '@/components/dashboard/ShopSpotlight.vue'
 import StreakCard from '@/components/dashboard/StreakCard.vue'
 import TrophyGrid from '@/components/dashboard/TrophyGrid.vue'
 import WeakThemeTip from '@/components/dashboard/WeakThemeTip.vue'
@@ -240,6 +241,8 @@ watch(
 .dashboard__streak-card {
   order: 1;
 }
+// Phone: the streak card stays just under the banner; the store's carousel comes before the rating.
+.dashboard__shop,
 .dashboard__rating {
   order: 2;
 }

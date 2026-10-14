@@ -90,6 +90,7 @@ d'agrégats (et leur commande de recalcul) arriveront au lot B si une mesure les
 | Dernières sessions | Réelles (`GET /api/training/sessions`, 5 dernières) : titre, jour, modules faits / programme, temps joué, statut ; « Reprendre → » sur la session du jour. Un nouvel utilisateur la voit sous la carte d'accueil dès sa première session ([TRAINING.md § 9](TRAINING.md#9-sessions)) |
 | Trophées | Réels (`GET /api/gamification/trophies`) : seuls les trophées gagnés s'affichent, avec la date de l'exploit (les badges de série à la fin, du plus court au plus long) ; les autres restent cachés, seulement comptés (« 2 / 20 débloqués ») |
 | Lien « Mes statistiques → » (sous le titre) | Mène à `/stats` (§ 3 bis) |
+| « En ce moment à la boutique » (`ShopSpotlight`, 2026-10-14) | Le carrousel de la boutique (`GET /api/shop`, slides réglées dans l'admin, [SHOP.md](SHOP.md)), entre la bannière d'accueil et la courbe de classement ; une slide ouvre son offre dans la boutique (`/boutique?offer=<slug>`) ; masqué sans slide ou si la lecture échoue |
 | « À travailler » (`WeakThemeTip`) | Réel : le thème le plus faible sur 30 jours (`/dashboard/themes?days=30`) et « S'entraîner », qui ouvre `/puzzle` filtré sur ce thème ; masqué s'il n'y en a pas ou si la lecture échoue |
 
 Les blocs de gamification viennent de `stores/gamification.js` (chargé avec le dashboard, chaque

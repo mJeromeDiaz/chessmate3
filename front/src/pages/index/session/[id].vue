@@ -113,7 +113,8 @@
         />
         <q-btn
           v-if="current.status === 'pending'"
-          flat
+          outline
+          color="primary"
           no-caps
           label="Passer ce module"
           :loading="acting === 'skip'"
@@ -122,7 +123,8 @@
         />
         <q-space />
         <q-btn
-          flat
+          outline
+          color="primary"
           no-caps
           icon="replay"
           label="Recommencer la session"
@@ -186,13 +188,13 @@
           @click="launcher.replay(session)"
         />
         <q-btn
-          outline
-          color="primary"
+          unelevated
+          class="cm-btn-create"
           no-caps
           label="Composer une nouvelle session"
           to="/session/new"
         />
-        <q-btn flat no-caps label="Tableau de bord" to="/" />
+        <q-btn outline color="primary" no-caps label="Tableau de bord" to="/" />
       </div>
     </div>
     <TreasureChest
@@ -404,7 +406,7 @@ onMounted(load)
   padding: 5px 12px;
   border-radius: 999px;
   background: var(--cm-surface);
-  border: 1px solid var(--cm-line);
+  box-shadow: var(--cm-card-shadow);
   font-size: 13px;
   font-weight: 600;
 }
@@ -425,6 +427,7 @@ onMounted(load)
   border: 2px solid transparent;
   border-radius: 18px;
   background: var(--cm-surface);
+  box-shadow: var(--cm-card-shadow);
 
   &--current {
     border-color: var(--cm-brand);

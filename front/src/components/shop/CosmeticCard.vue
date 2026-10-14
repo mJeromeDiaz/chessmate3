@@ -74,7 +74,7 @@ const preview = computed(() => {
 .cosmetic {
   padding: 8px;
   border-radius: 18px;
-  background: var(--cm-page);
+  background: var(--cm-inset);
   box-shadow: 0 0 0 1px var(--cm-line);
   display: flex;
   flex-direction: column;

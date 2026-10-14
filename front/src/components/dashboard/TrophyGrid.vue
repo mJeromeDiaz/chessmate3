@@ -97,7 +97,7 @@ const error = computed(() => gamification.errors.trophies ?? '')
   gap: 5px;
   padding: 10px 6px;
   border-radius: 16px;
-  background: var(--cm-page);
+  background: var(--cm-inset);
   text-align: center;
 }
 

@@ -1,13 +1,14 @@
 <template>
   <q-page padding>
     <div class="woodpecker-page q-gutter-y-md">
-      <div class="row items-center">
+      <div class="cm-page-head">
         <div class="text-h5">Woodpecker</div>
         <q-space />
-        <q-toggle v-model="archived" label="Archivés" />
+        <q-toggle v-model="archived" label="Archivés" class="q-mr-sm" />
         <q-btn
-          color="primary"
+          unelevated
           no-caps
+          class="cm-btn-create"
           icon="add"
           label="Nouveau set"
           :to="newSetLink"

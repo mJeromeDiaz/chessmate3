@@ -376,3 +376,19 @@ export function tweenAt(from, to, p) {
   const k = 1 - Math.pow(1 - Math.min(1, Math.max(0, p)), 3)
   return Math.round(from + (to - from) * k)
 }
+
+/**
+ * The carousel's slides with their offer (a slide whose offer is no longer listed is left out).
+ *
+ * @param {ShopState|null|undefined} state
+ * @param {(image: string) => string} picture a professor's picture by its name
+ * @returns {{id: string, tag: string, picture: string, offer: ShopOffer}[]}
+ */
+export function carouselSlides(state, picture) {
+  return (state?.slides ?? []).flatMap(slide => {
+    const offer = state?.offers.find(o => o.id === slide.offerId)
+    return offer
+      ? [{ id: slide.id, tag: slide.tag, picture: picture(slide.image), offer }]
+      : []
+  })
+}

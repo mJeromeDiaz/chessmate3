@@ -168,6 +168,8 @@ Statistiques.
   onglets collants (scroll spy), carrousel, gels en cartes, aides par module, packs, cosmétiques
   « Bientôt » (affichage seul) ; feuille d'achat (en bas sur téléphone) : comment ça marche,
   quantité, prix ou ce qui manque, puis célébration.
+- Le tableau de bord montre le carrousel (« En ce moment à la boutique », `ShopSpotlight`) ; une
+  slide mène à `/boutique?offer=<slug>`, qui ouvre la feuille d'achat de l'offre.
 - **Achat sur place** (`useAidPurchase`) : un article manquant au moment de s'en servir (aide ou
   pass du Puzzle Streak, pardon) ouvre la feuille d'achat sur la page de jeu, sur l'offre à l'unité
   la moins chère ; le chrono d'une séance continue.

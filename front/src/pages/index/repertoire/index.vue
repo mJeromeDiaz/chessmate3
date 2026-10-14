@@ -1,39 +1,40 @@
 <template>
   <q-page padding>
     <div class="repertoire-page q-gutter-y-md">
-      <div class="row items-center">
+      <div class="cm-page-head">
         <div class="text-h5">Répertoires</div>
         <q-space />
         <q-btn
-          flat
+          outline
+          color="primary"
           no-caps
           icon="insights"
           label="Statistiques"
           to="/repertoire/stats"
-          class="q-mr-sm"
           data-testid="repertoire-stats"
         />
         <q-btn
-          flat
+          outline
+          color="primary"
           no-caps
           icon="upload_file"
           label="Importer"
           to="/repertoire/import"
-          class="q-mr-sm"
           data-testid="repertoire-import"
         />
         <q-btn
-          flat
+          unelevated
           no-caps
+          class="cm-btn-generate"
           icon="auto_awesome"
           label="Depuis mes parties"
           to="/repertoire/auto"
-          class="q-mr-sm"
           data-testid="repertoire-auto"
         />
         <q-btn
-          color="primary"
+          unelevated
           no-caps
+          class="cm-btn-create"
           icon="add"
           label="Nouveau répertoire"
           to="/repertoire/new"
@@ -74,7 +75,7 @@
       <q-banner
         v-if="overview && overview.cards.total > 0"
         rounded
-        class="cm-banner--info"
+        class="repertoire-due"
         data-testid="repertoire-due"
       >
         <template #avatar><q-icon name="timer" color="primary" /></template>
@@ -86,6 +87,7 @@
         <template #action>
           <q-btn
             color="primary"
+            unelevated
             no-caps
             icon="play_arrow"
             label="Tester mes répertoires"
@@ -345,6 +347,16 @@ onMounted(async () => {
 }
 
 /* The way into "repertoire from my games" (design "Repertoire auto"). */
+// The positions due: a card with a brand edge, the count in bold.
+.repertoire-due {
+  background: var(--cm-surface);
+  color: var(--cm-ink);
+  border-radius: 18px;
+  border-left: 5px solid var(--cm-brand);
+  box-shadow: var(--cm-card-shadow);
+  font-size: 15px;
+}
+
 .auto-entry {
   display: flex;
   align-items: center;
@@ -352,6 +364,10 @@ onMounted(async () => {
   padding: 10px 18px 0 10px;
   border-radius: 22px;
   background: var(--cm-brand-soft);
+  // A brand ring: it stands out on the tinted page as on the dark one.
+  box-shadow:
+    inset 0 0 0 2px rgba(106, 76, 255, 0.28),
+    var(--cm-card-shadow);
   color: var(--cm-ink);
   text-decoration: none;
   overflow: hidden;

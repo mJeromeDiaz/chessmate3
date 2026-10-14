@@ -9,7 +9,7 @@
       <q-btn
         unelevated
         no-caps
-        color="dark"
+        color="primary"
         label="S’entraîner"
         data-testid="weak-theme-train"
         @click="train"

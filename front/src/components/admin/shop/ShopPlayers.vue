@@ -274,7 +274,7 @@ onMounted(load)
 .shop-players__detail {
   padding: 14px;
   border-radius: 18px;
-  background: var(--cm-page);
+  background: var(--cm-inset);
   display: flex;
   flex-direction: column;
   gap: 10px;

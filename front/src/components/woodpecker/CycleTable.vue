@@ -151,10 +151,11 @@ function deadline(cycle) {
   padding: 14px 16px;
   border-radius: 16px;
   background: var(--cm-surface);
-  border: 1px solid var(--cm-line);
+  border: 2px solid transparent;
+  box-shadow: var(--cm-card-shadow);
 
   &--active {
-    border: 2px solid var(--cm-brand);
+    border-color: var(--cm-brand);
   }
 }
 

@@ -110,6 +110,7 @@ const issue = computed(() =>
   background: var(--cm-surface);
   border: 2px solid transparent;
   border-radius: 20px;
+  box-shadow: var(--cm-card-shadow);
   cursor: pointer;
 
   &:focus-visible {

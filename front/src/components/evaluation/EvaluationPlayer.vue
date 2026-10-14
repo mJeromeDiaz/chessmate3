@@ -321,8 +321,9 @@ const bubble = computed(() =>
 
 .eval-player__card {
   background: var(--cm-surface);
-  border-radius: 18px;
+  border-radius: 22px;
   padding: 14px;
+  box-shadow: var(--cm-card-shadow);
 }
 
 .eval-player__card {

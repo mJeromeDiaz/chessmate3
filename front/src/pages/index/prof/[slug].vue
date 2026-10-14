@@ -492,6 +492,7 @@ const colorVars = computed(() => {
   padding: 12px;
   border-radius: 16px;
   background: var(--cm-surface);
+  box-shadow: var(--cm-card-shadow);
 
   @media (min-width: $breakpoint-md-min) {
     display: flex;
@@ -522,6 +523,7 @@ const colorVars = computed(() => {
   padding: 12px 14px;
   border-radius: 16px;
   background: var(--cm-surface);
+  box-shadow: var(--cm-card-shadow);
 }
 
 .prof-page__specialty-name {
@@ -592,6 +594,7 @@ const colorVars = computed(() => {
   padding: 12px;
   border-radius: 18px;
   background: var(--cm-surface);
+  box-shadow: var(--cm-card-shadow);
 
   @media (min-width: $breakpoint-md-min) {
     width: auto;

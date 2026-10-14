@@ -187,9 +187,14 @@ const details = computed(() => {
   flex-direction: column;
   gap: 12px;
   padding: 20px;
-  border-radius: 20px;
+  border-radius: 22px;
   background: var(--cm-surface);
-  border: 2px solid var(--cm-line);
+  border: 2px solid transparent;
+  box-shadow: var(--cm-card-shadow);
+
+  @media (min-width: $breakpoint-md-min) {
+    border-radius: 24px;
+  }
 
   &[data-state='active'] {
     border-color: var(--cm-brand);

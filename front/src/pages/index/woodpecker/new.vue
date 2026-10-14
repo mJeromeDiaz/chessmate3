@@ -129,7 +129,8 @@
       <div class="row q-gutter-sm">
         <q-btn
           type="submit"
-          color="primary"
+          unelevated
+          class="cm-btn-create"
           no-caps
           label="Créer le set"
           :loading="saving"

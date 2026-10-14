@@ -7,7 +7,7 @@
           <q-btn
             unelevated
             no-caps
-            class="plans-page__coach"
+            class="cm-btn-generate"
             label="♞ Séance sur mesure"
             to="/session/auto"
             data-testid="plans-coach"
@@ -15,7 +15,7 @@
           <q-btn
             unelevated
             no-caps
-            color="dark"
+            class="cm-btn-create"
             label="+ Nouvelle session"
             to="/session/new"
             data-testid="plans-new"
@@ -67,7 +67,7 @@
       >
         <p>Aucune session enregistrée.</p>
         <q-btn
-          color="primary"
+          class="cm-btn-create"
           no-caps
           unelevated
           label="Composer ma première session"
@@ -303,12 +303,6 @@ onMounted(async () => {
   gap: 8px;
 }
 
-.plans-page__coach {
-  background: #5ee6b0;
-  color: #0b3b29;
-  font-weight: 700;
-}
-
 .plans-page__title {
   margin: 0;
   font-size: 28px;
@@ -364,8 +358,9 @@ onMounted(async () => {
 
 .plans-page__empty {
   padding: 28px 16px;
-  border-radius: 20px;
+  border-radius: 22px;
   background: var(--cm-surface);
+  box-shadow: var(--cm-card-shadow);
   text-align: center;
 }
 
@@ -380,8 +375,13 @@ onMounted(async () => {
   flex-direction: column;
   gap: 6px;
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 22px;
   background: var(--cm-surface);
+  box-shadow: var(--cm-card-shadow);
+
+  @media (min-width: $breakpoint-md-min) {
+    border-radius: 24px;
+  }
 }
 
 .plans-page__card-head {
