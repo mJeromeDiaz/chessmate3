@@ -6,7 +6,7 @@
       no-caps
       unelevated
       toggle-color="primary"
-      :options="UNIT_OPTIONS"
+      :options="unitOptions"
       data-testid="run-unit-choice"
     />
     <div class="row items-center q-gutter-sm">
@@ -25,7 +25,7 @@
         type="number"
         dense
         outlined
-        suffix="min"
+        :suffix="$t('training.launcher.minutesSuffix')"
         style="width: 110px"
         :min="MIN_RUN_MINUTES"
         :max="MAX_RUN_MINUTES"
@@ -43,19 +43,19 @@
       />
     </div>
     <q-banner v-if="inProgress" rounded class="cm-banner--warning">
-      Une séance est déjà en cours.
+      {{ $t('training.launcher.inProgress') }}
       <template #action>
         <q-btn
           flat
           no-caps
-          label="Reprendre"
+          :label="$t('training.launcher.resume')"
           :to="`/training/${inProgress.id}`"
         />
         <q-btn
           flat
           no-caps
           color="negative"
-          label="La terminer"
+          :label="$t('training.launcher.end')"
           @click="endAndRetry"
         />
       </template>
@@ -81,6 +81,7 @@ import {
   useTrainingStore
 } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 
 const props = defineProps({
   module: { type: String, required: true },
@@ -96,47 +97,45 @@ const props = defineProps({
   defaultMinutes: { type: Number, default: 20 },
   /** The only length, not offered (a single puzzle streak), in minutes. */
   fixedMinutes: { type: Number, default: null },
-  label: { type: String, default: 'Lancer la séance' },
+  label: { type: String, default: () => t('training.launcher.start') },
   icon: { type: String, default: 'timer' }
 })
 
-const UNIT_OPTIONS = [
-  { label: 'Tronçons', value: 'segment' },
-  { label: 'Lignes complètes', value: 'line' }
-]
-/** Refusals, in the module's words. */
+const unitOptions = computed(() =>
+  ['segment', 'line'].map(value => ({
+    label: t(`training.launcher.units.${value}`),
+    value
+  }))
+)
+/** Refusals, in the module's words: message keys under training.launcher.refusals. */
 const MESSAGES = {
-  woodpecker: {
-    409: 'Ce set ne peut pas être joué maintenant (pause, repos ou terminé).',
-    404: 'Set introuvable.'
-  },
-  puzzles: {
-    409: 'Aucun puzzle disponible pour ces thèmes.',
-    422: 'Thème inconnu.'
-  },
-  free: {
-    422: 'Réglages invalides.'
-  },
-  coordinates: {
-    422: 'Réglages invalides.'
-  },
-  blindfold: {
-    409: 'Aucun puzzle disponible à ce niveau et de cette longueur.',
-    422: 'Réglages invalides.'
-  },
-  evaluation: {
-    409: 'Aucune position disponible pour ces réglages.',
-    422: 'Réglages invalides.'
-  },
-  puzzle_streak: {
-    409: 'Aucun puzzle disponible dans cette thématique.',
-    422: 'Réglages invalides.'
-  },
+  woodpecker: { 409: 'setUnavailable', 404: 'setNotFound' },
+  puzzles: { 409: 'noPuzzleThemes', 422: 'unknownTheme' },
+  free: { 422: 'invalidSettings' },
+  coordinates: { 422: 'invalidSettings' },
+  blindfold: { 409: 'noBlindfold', 422: 'invalidSettings' },
+  evaluation: { 409: 'noPosition', 422: 'invalidSettings' },
+  puzzle_streak: { 409: 'noStreakPuzzle', 422: 'invalidSettings' },
   repertoire: {
-    409: 'Rien à tester dans cette sélection : ajoutez vos coups au répertoire.',
-    404: 'Répertoire introuvable.',
-    422: 'Sélection invalide.'
+    409: 'nothingToTest',
+    404: 'repertoireNotFound',
+    422: 'invalidSelection'
   }
+}
+
+/**
+ * The refusals of a module, in words.
+ *
+ * @param {string} module
+ * @returns {Record<number, string>}
+ */
+function refusals(module) {
+  return Object.fromEntries(
+    Object.entries(MESSAGES[module] ?? {}).map(([status, key]) => [
+      status,
+      t(`training.launcher.refusals.${key}`)
+    ])
+  )
 }
 
 const router = useRouter()
@@ -150,10 +149,16 @@ const unit = ref('segment')
 
 const options = computed(() =>
   props.durations
-    ? props.durations.map(m => ({ label: `${m} min`, value: m }))
+    ? props.durations.map(m => ({
+        label: t('training.launcher.minutes', { n: m }),
+        value: m
+      }))
     : [
-        ...RUN_DURATIONS.map(m => ({ label: `${m} min`, value: m })),
-        { label: 'Autre', value: 'custom' }
+        ...RUN_DURATIONS.map(m => ({
+          label: t('training.launcher.minutes', { n: m }),
+          value: m
+        })),
+        { label: t('training.launcher.other'), value: 'custom' }
       ]
 )
 
@@ -189,7 +194,7 @@ async function launch() {
     if (e?.response?.status === 409 && store.current) {
       inProgress.value = store.current
     } else {
-      error.value = apiErrorMessage(e, MESSAGES[props.module] ?? {})
+      error.value = apiErrorMessage(e, refusals(props.module))
     }
   } finally {
     starting.value = false

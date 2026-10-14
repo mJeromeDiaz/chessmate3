@@ -35,7 +35,7 @@
           :missed="current"
           :has-next="nextFixable !== null"
           :paused="!!run.parentId"
-          back-label="Retour au résultat"
+          :back-label="$t('training.replay.backToResult')"
           @back="view = 'result'"
           @next="current = nextFixable"
         />

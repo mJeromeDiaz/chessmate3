@@ -1,4 +1,4 @@
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * The crowns of a completed session (design "Coffre", docs/SHOP.md, § 4 bis): the chest's stages,
@@ -61,31 +61,32 @@ export function chestSize(crowns, earning) {
   return ratio < 0.25 ? 'small' : 'medium'
 }
 
-/** The first stage's background and promise by size. */
+/** The first stage's background by size (its promise: shop.chest.closed.<size>). */
 const CLOSED = {
   small: {
     bg: '#1E2A4A',
-    glow: 'rgba(79,178,255,.35)',
-    title: ['Un petit trésor', 'pour toi !']
+    glow: 'rgba(79,178,255,.35)'
   },
   medium: {
     bg: '#2B2250',
-    glow: 'rgba(139,107,255,.35)',
-    title: ['Un trésor', 'pour toi !']
+    glow: 'rgba(139,107,255,.35)'
   },
   big: {
     bg: '#4A1550',
-    glow: 'rgba(255,212,59,.45)',
-    title: ['Un gros trésor', 'pour toi !']
+    glow: 'rgba(255,212,59,.45)'
   }
 }
 
-/** The last stage's title by tier. */
-const OPEN_TITLES = {
-  perfect: ['Quel', 'jackpot !'],
-  near: ['Beau', 'trésor !'],
-  missed: ['Joli', 'butin !']
-}
+/** Tiers with a title of their own on the last stage (shop.chest.open). */
+const TIERS = ['perfect', 'near', 'missed']
+
+/**
+ * A two-line title from messages.
+ *
+ * @param {string} key
+ * @returns {[string, string]}
+ */
+const title = key => [t(`${key}.0`), t(`${key}.1`)]
 
 /**
  * The four stages of the chest: closed (by size), two hits, open (by tier).
@@ -95,54 +96,47 @@ const OPEN_TITLES = {
  * @returns {ChestStage[]}
  */
 export function chestStages(reward, earning) {
-  const closed = CLOSED[chestSize(reward.crowns, earning)]
+  const size = chestSize(reward.crowns, earning)
+  const closed = CLOSED[size]
+  const tier = TIERS.includes(reward.tier) ? reward.tier : 'near'
   return [
     {
       bg: closed.bg,
       glow: closed.glow,
       ink: '#FFFFFF',
-      kicker: 'RÉCOMPENSE DE SESSION',
-      title: /** @type {[string, string]} */ (closed.title),
+      kicker: t('shop.chest.stages.closed.kicker'),
+      title: title(`shop.chest.closed.${size}`),
       accent: '#C6F432',
-      hint: 'Touche le coffre'
+      hint: t('shop.chest.stages.closed.hint')
     },
     {
       bg: '#5A3BE0',
       glow: 'rgba(255,111,174,.45)',
       ink: '#FFFFFF',
-      kicker: 'ÇA BOUGE…',
-      title: ['Il résiste', 'encore !'],
+      kicker: t('shop.chest.stages.hit1.kicker'),
+      title: title('shop.chest.stages.hit1.title'),
       accent: '#FFD43B',
-      hint: 'Encore un coup !'
+      hint: t('shop.chest.stages.hit1.hint')
     },
     {
       bg: '#E03C86',
       glow: 'rgba(255,212,59,.6)',
       ink: '#FFFFFF',
-      kicker: 'PRESQUE…',
-      title: ['Allez,', 'le dernier !'],
+      kicker: t('shop.chest.stages.hit2.kicker'),
+      title: title('shop.chest.stages.hit2.title'),
       accent: '#FFD43B',
-      hint: 'Il va céder…'
+      hint: t('shop.chest.stages.hit2.hint')
     },
     {
       bg: '#FFD43B',
       glow: 'rgba(255,255,255,.9)',
       ink: '#1B1530',
-      kicker: 'TRÉSOR OUVERT',
-      title: /** @type {[string, string]} */ (
-        OPEN_TITLES[reward.tier] ?? OPEN_TITLES.near
-      ),
+      kicker: t('shop.chest.stages.open.kicker'),
+      title: title(`shop.chest.open.${tier}`),
       accent: '#C02670',
       hint: ''
     }
   ]
-}
-
-/** What a tier means, under the amount. */
-const TIER_NOTES = {
-  perfect: 'Session parfaite',
-  near: 'Presque parfaite',
-  missed: 'Session terminée'
 }
 
 /**
@@ -152,10 +146,14 @@ const TIER_NOTES = {
  */
 export function rewardNote(reward) {
   const parts = [
-    `${reward.paidMinutes} min payée${reward.paidMinutes > 1 ? 's' : ''}`,
-    TIER_NOTES[reward.tier] ?? ''
+    t(
+      'shop.chest.paid',
+      { n: reward.paidMinutes },
+      reward.paidMinutes > 1 ? 2 : 1
+    ),
+    TIERS.includes(reward.tier) ? t(`shop.chest.tiers.${reward.tier}`) : ''
   ]
-  if (reward.capped) parts.push('plafond du jour atteint')
+  if (reward.capped) parts.push(t('shop.chest.capped'))
   return parts.filter(Boolean).join(' · ')
 }
 
@@ -167,9 +165,11 @@ export function rewardNote(reward) {
  */
 export function rewardLine(reward) {
   if (!reward) return ''
-  if (reward.crowns === 0)
-    return 'Plafond du jour atteint : pas de couronnes pour cette session.'
-  return `+${new Intl.NumberFormat(intlLocale()).format(reward.crowns)} couronnes · ${rewardNote(reward)}`
+  if (reward.crowns === 0) return t('shop.chest.cappedLine')
+  return t('shop.chest.line', {
+    n: new Intl.NumberFormat(intlLocale()).format(reward.crowns),
+    note: rewardNote(reward)
+  })
 }
 
 /**
@@ -197,8 +197,8 @@ export function chestToOpen(session, seen = new Set()) {
 export function earningRows(earning) {
   const hour = pct => Math.round((earning.crownsPerHour * pct) / 100)
   return [
-    { label: 'Session parfaite (100 %)', value: hour(earning.perfectPercent) },
-    { label: 'Presque parfaite (80 à 99 %)', value: hour(earning.nearPercent) },
-    { label: 'En dessous de 80 %', value: hour(earning.missedPercent) }
+    { label: t('shop.earning.perfect'), value: hour(earning.perfectPercent) },
+    { label: t('shop.earning.near'), value: hour(earning.nearPercent) },
+    { label: t('shop.earning.missed'), value: hour(earning.missedPercent) }
   ]
 }

@@ -10,7 +10,7 @@
     </div>
 
     <div class="fix__column">
-      <h2 class="fix__title" :aria-label="FIX_TITLE">
+      <h2 class="fix__title" :aria-label="fixTitle()">
         <span
           v-for="(w, i) in words"
           :key="i"
@@ -111,7 +111,7 @@
           data-testid="run-fix-start"
           @click="emit('start')"
         >
-          Corriger mes erreurs
+          {{ $t('training.result.fixStart') }}
         </button>
         <button
           type="button"
@@ -119,7 +119,7 @@
           data-testid="run-fix-later"
           @click="emit('later')"
         >
-          Plus tard
+          {{ $t('training.result.buttons.later') }}
         </button>
       </div>
     </div>
@@ -140,9 +140,9 @@ import {
   FIX_COUNT_MS,
   FIX_COUNT_STEP,
   FIX_STEPS_MS,
-  FIX_TITLE,
   fixCards,
   fixLabel,
+  fixTitle,
   fixWords,
   resultProf
 } from '@/utils/runResult'

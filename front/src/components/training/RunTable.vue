@@ -12,29 +12,29 @@
           <div class="run-row__value">{{
             formatDuration(row.summary?.durationMs)
           }}</div>
-          <div class="run-row__label">durée</div>
+          <div class="run-row__label">{{ $t('training.table.duration') }}</div>
         </div>
         <div>
           <div class="run-row__value">{{ row.summary?.itemCount ?? '—' }}</div>
-          <div class="run-row__label">terminés</div>
+          <div class="run-row__label">{{ $t('training.table.finished') }}</div>
         </div>
         <div>
           <div class="run-row__value">{{
             row.summary?.successCount ?? '—'
           }}</div>
-          <div class="run-row__label">réussis</div>
+          <div class="run-row__label">{{ $t('training.table.succeeded') }}</div>
         </div>
         <div>
           <div class="run-row__value">{{
             formatPercent(row.summary?.successRate)
           }}</div>
-          <div class="run-row__label">précision</div>
+          <div class="run-row__label">{{ $t('training.table.accuracy') }}</div>
         </div>
         <div>
           <div class="run-row__value">{{
             perMinute(row.summary?.itemsPerMinute)
           }}</div>
-          <div class="run-row__label">par minute</div>
+          <div class="run-row__label">{{ $t('training.table.perMinute') }}</div>
         </div>
         <div>
           <div
@@ -52,13 +52,13 @@
                 : `${row.trend > 0 ? '+' : ''}${perMinute(row.trend)}`
             }}</div
           >
-          <div class="run-row__label">évolution</div>
+          <div class="run-row__label">{{ $t('training.table.trend') }}</div>
         </div>
       </div>
     </div>
-    <div v-if="rows.length === 0" class="run-list__empty"
-      >Aucune séance pour l’instant.</div
-    >
+    <div v-if="rows.length === 0" class="run-list__empty">{{
+      $t('training.table.empty')
+    }}</div>
   </div>
 </template>
 

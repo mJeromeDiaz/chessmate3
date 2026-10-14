@@ -3,7 +3,7 @@
     class="chest-screen"
     role="dialog"
     aria-modal="true"
-    aria-label="Récompense de session"
+    :aria-label="$t('shop.chestScreen.label')"
     data-testid="treasure-chest"
     :style="{ background: stage.bg, color: stage.ink }"
     @keydown.esc="close"
@@ -41,7 +41,7 @@
           type="button"
           class="chest-screen__close"
           :style="{ color: stage.ink }"
-          aria-label="Fermer"
+          :aria-label="$t('common.actions.close')"
           data-testid="chest-close"
           @click="close"
         >
@@ -69,7 +69,7 @@
           class="chest"
           :class="{ 'chest--open': open }"
           :disabled="open"
-          aria-label="Ouvrir le coffre"
+          :aria-label="$t('shop.chestScreen.open')"
           data-testid="chest-hit"
           @click="hit"
         >
@@ -179,7 +179,7 @@
                 +{{ crowns(shown) }}
               </div>
               <div class="chest-reward__label">
-                couronnes ajoutées à ta bourse
+                {{ $t('shop.chestScreen.added') }}
               </div>
               <div class="chest-reward__note">{{ note }}</div>
             </div>
@@ -198,7 +198,7 @@
             data-testid="chest-shop"
             @click="toShop"
           >
-            Dépenser à la boutique
+            {{ $t('shop.chestScreen.spend') }}
           </button>
         </template>
         <div
@@ -229,12 +229,16 @@ import { useShopStore } from '@/stores/shop'
 import { prefersReducedMotion } from '@/utils/runResult'
 import { crowns, tweenAt } from '@/utils/shop'
 import { CHEST_HITS, chestStages, rewardNote } from '@/utils/shopReward'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/utils/shopReward').SessionReward>} */
   reward: { type: Object, required: true },
   /** The button that leaves the chest for the results. */
-  resultsLabel: { type: String, default: 'Voir mes résultats' }
+  resultsLabel: {
+    type: String,
+    default: () => t('shop.chestScreen.results')
+  }
 })
 
 const emit = defineEmits({

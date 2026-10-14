@@ -3,6 +3,7 @@ import { useQuasar } from 'quasar'
 import { useShopStore } from '@/stores/shop'
 import { apiErrorMessage } from '@/utils/apiError'
 import { aidOffer } from '@/utils/shop'
+import { t } from '@/i18n'
 
 /**
  * An aid of the store bought in place (docs/SHOP.md): out of stock, the store's purchase sheet
@@ -29,9 +30,7 @@ export function useAidPurchase(onBought = () => {}) {
     try {
       const state = await shop.load()
       sheet.value = aidOffer(state.offers, item)
-      return sheet.value
-        ? ''
-        : 'Rien à acheter pour l’instant : la boutique n’en vend pas.'
+      return sheet.value ? '' : t('shop.errors.nothingToBuy')
     } catch (e) {
       return apiErrorMessage(e)
     }
@@ -53,12 +52,12 @@ export function useAidPurchase(onBought = () => {}) {
       sheet.value = null
       $q.notify({
         type: 'positive',
-        message: `${offer.name} : c’est dans ton stock.`
+        message: t('shop.bought', { name: offer.name })
       })
     } catch (e) {
       error.value = apiErrorMessage(e, {
-        404: 'Cette offre n’existe plus.',
-        409: 'Cette offre n’est plus en vente, ou il te manque des couronnes.'
+        404: t('shop.errors.gone'),
+        409: t('shop.errors.unavailable')
       })
       shop.load().catch(() => {})
     } finally {

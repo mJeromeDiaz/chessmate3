@@ -1,4 +1,4 @@
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /**
  * The store (design "Boutique", docs/SHOP.md): what each coded item looks like and how it works,
@@ -59,154 +59,115 @@ import { intlLocale } from '@/i18n'
  * @property {string[]} how three steps
  */
 
-/** The store's sections, in order (the tabs scroll to them). */
+/** The store's sections, in order (the tabs scroll to them); words in shop.sections.<id>. */
 export const SECTIONS = [
-  {
-    id: 'freeze',
-    tab: 'Série',
-    title: 'Gel de série',
-    lead: 'Un jour sans entraînement ? Ta série reste intacte.'
+  'freeze',
+  'puzzle_streak',
+  'aids',
+  'packs',
+  'cosmetics'
+].map(id => ({
+  id,
+  get tab() {
+    return t(`shop.sections.${id}.tab`)
   },
-  {
-    id: 'puzzle_streak',
-    tab: 'Puzzle Streak',
-    title: 'Puzzle Streak',
-    lead: 'Bloqué sur un puzzle ? Ton streak survit.'
+  get title() {
+    return t(`shop.sections.${id}.title`)
   },
-  {
-    id: 'aids',
-    tab: 'Aides',
-    title: 'Aides de module',
-    lead: 'Une erreur qui ne compte pas, quand ça compte.'
-  },
-  {
-    id: 'packs',
-    tab: 'Packs',
-    title: 'Packs',
-    lead: 'Plusieurs objets, une seule ponction.'
-  },
-  {
-    id: 'cosmetics',
-    tab: 'Cosmétiques',
-    title: 'Cosmétiques',
-    lead: 'Pour gagner avec style. Garde tes couronnes au chaud.'
+  get lead() {
+    return t(`shop.sections.${id}.lead`)
   }
-]
+}))
 
 /** The module aids' tabs. */
 export const MODULE_TABS = [
-  { id: 'puzzles', label: 'Puzzles', glyph: '♞︎' },
-  { id: 'blindfold', label: 'Aveugle', glyph: '♘︎' },
-  { id: 'coordinates', label: 'Coordonnées', glyph: '⌗' }
-]
+  { id: 'puzzles', glyph: '♞︎' },
+  { id: 'blindfold', glyph: '♘︎' },
+  { id: 'coordinates', glyph: '⌗' }
+].map(tab => ({
+  ...tab,
+  get label() {
+    return t(`shop.moduleTabs.${tab.id}`)
+  }
+}))
 
 const ICE = {
   glyph: '❄︎',
   tile: '#4FB2FF',
   tileInk: '#1B1530',
   accent: '#0F6BBA',
-  soft: '#E2F2FF',
-  kicker: 'GEL DE SÉRIE'
+  soft: '#E2F2FF'
 }
 
 /**
- * @param {string} until
- * @returns {string[]}
+ * An item's look with its words, read when shown (shop.items.<id>): kicker, label and the three
+ * steps of how it works (a freeze: shop.freezeHow, with how long it lasts).
+ *
+ * @param {string} id
+ * @param {Pick<ItemLook, 'glyph'|'tile'|'tileInk'|'accent'|'soft'>} colours
+ * @returns {ItemLook}
  */
-const freezeHow = until => [
-  `Un jour manqué ? Le gel s’active tout seul, jusqu’à ${until}.`,
-  'Une boule de gel remplace ta flamme ces jours-là ; ta série ne casse pas.',
-  'Les jours qu’il n’a pas servis restent pour la prochaine fois.'
-]
+function item(id, colours) {
+  const freeze = id.startsWith('streak_freeze_')
+  return {
+    ...colours,
+    get kicker() {
+      return t(`shop.items.${id}.kicker`)
+    },
+    get label() {
+      return t(`shop.items.${id}.label`)
+    },
+    get how() {
+      return [0, 1, 2].map(i =>
+        freeze
+          ? t(`shop.freezeHow.${i}`, { until: t(`shop.items.${id}.until`) })
+          : t(`shop.items.${id}.how.${i}`)
+      )
+    }
+  }
+}
 
 /** @type {Record<string, ItemLook>} */
 export const ITEMS = {
-  streak_freeze_1: { ...ICE, label: 'Gel 1 jour', how: freezeHow('1 jour') },
-  streak_freeze_2: {
-    ...ICE,
-    label: 'Gel 2 jours',
-    how: freezeHow('2 jours d’affilée')
-  },
-  streak_freeze_7: {
-    ...ICE,
-    label: 'Gel 1 semaine',
-    how: freezeHow('7 jours d’affilée')
-  },
-  streak_freeze_14: {
-    ...ICE,
-    label: 'Gel 2 semaines',
-    how: freezeHow('14 jours d’affilée')
-  },
-  puzzle_streak_pass: {
+  streak_freeze_1: item('streak_freeze_1', ICE),
+  streak_freeze_2: item('streak_freeze_2', ICE),
+  streak_freeze_7: item('streak_freeze_7', ICE),
+  streak_freeze_14: item('streak_freeze_14', ICE),
+  puzzle_streak_pass: item('puzzle_streak_pass', {
     glyph: '⇥',
     tile: '#FF6FAE',
     tileInk: '#1B1530',
     accent: '#C02670',
-    soft: '#FFE6F1',
-    kicker: 'PUZZLE STREAK',
-    label: 'Pass Puzzle Streak',
-    how: [
-      'Tu sèches ? Avant de jouer, utilise le pass : la solution s’affiche.',
-      'Ton streak n’est pas cassé.',
-      'Tu enchaînes sur un puzzle équivalent, même thème, même niveau.'
-    ]
-  },
-  puzzle_streak_help: {
+    soft: '#FFE6F1'
+  }),
+  puzzle_streak_help: item('puzzle_streak_help', {
     glyph: '♞︎',
     tile: '#FFB3D6',
     tileInk: '#1B1530',
     accent: '#C02670',
-    soft: '#FFE6F1',
-    kicker: 'PUZZLE STREAK',
-    label: 'Aide Puzzle Streak',
-    how: [
-      'Touche « Aide » pendant ton streak.',
-      'La pièce à jouer s’illumine.',
-      'Tu trouves le coup : le streak continue normalement.'
-    ]
-  },
-  puzzle_pardon: {
+    soft: '#FFE6F1'
+  }),
+  puzzle_pardon: item('puzzle_pardon', {
     glyph: '♥︎',
     tile: '#FF6FAE',
     tileInk: '#1B1530',
     accent: '#C02670',
-    soft: '#FFE6F1',
-    kicker: 'AIDE · PUZZLES',
-    label: 'Erreur pardonnée · Puzzles',
-    how: [
-      'Tu rates un puzzle classé.',
-      'Sur la fiche d’échec, touche « Pardonner » : aucun point perdu.',
-      'Le puzzle reste raté, ton classement revient comme avant.'
-    ]
-  },
-  blindfold_pardon: {
+    soft: '#FFE6F1'
+  }),
+  blindfold_pardon: item('blindfold_pardon', {
     glyph: '♥︎',
     tile: '#5B4BA6',
     tileInk: '#FFFFFF',
     accent: '#4A3D86',
-    soft: '#E7E4F2',
-    kicker: 'AIDE · AVEUGLE',
-    label: 'Erreur pardonnée · Aveugle',
-    how: [
-      'Tu joues un coup faux, ou tu rates le puzzle, les yeux fermés.',
-      'Touche « Pardonner » : tes erreurs sont effacées, ton coup d’œil revient.',
-      'Le puzzle compte comme résolu, avec toute son XP.'
-    ]
-  },
-  coordinates_pardon: {
+    soft: '#E7E4F2'
+  }),
+  coordinates_pardon: item('coordinates_pardon', {
     glyph: '♥︎',
     tile: '#8B6BFF',
     tileInk: '#FFFFFF',
     accent: '#5A3BE0',
-    soft: '#EEE9FF',
-    kicker: 'AIDE · COORDONNÉES',
-    label: 'Erreur pardonnée · Coordonnées',
-    how: [
-      'Active « Pardon » en lançant ta série.',
-      'Ta première mauvaise case ne compte pas.',
-      'Pas d’erreur : ton pardon reste en stock.'
-    ]
-  }
+    soft: '#EEE9FF'
+  })
 }
 
 /** Numbers in the current language (docs/I18N.md). */
@@ -228,7 +189,9 @@ export function crowns(n) {
  */
 export function savingOf(offer) {
   if (!offer.wasPrice || offer.wasPrice <= offer.price) return ''
-  return `−${Math.round((1 - offer.price / offer.wasPrice) * 100)} %`
+  return t('shop.saving', {
+    n: Math.round((1 - offer.price / offer.wasPrice) * 100)
+  })
 }
 
 /**
@@ -246,11 +209,21 @@ export function lookOf(offer) {
       tileInk: '#C6F432',
       accent: '#5A3BE0',
       soft: '#EEE9FF',
-      kicker: 'COSMÉTIQUE',
+      kicker: t('shop.cosmeticKicker'),
       label: offer.name,
       how: []
     }
-  if (offer.items.length > 1) return { ...look, kicker: 'PACK' }
+  if (offer.items.length > 1)
+    return {
+      glyph: look.glyph,
+      tile: look.tile,
+      tileInk: look.tileInk,
+      accent: look.accent,
+      soft: look.soft,
+      kicker: t('shop.packKicker'),
+      label: look.label,
+      how: look.how
+    }
   return look
 }
 
@@ -267,7 +240,10 @@ export function partsOf(offer) {
       glyph: look?.glyph ?? '✦',
       color: look?.accent ?? '#1B1530',
       tile: look?.tile ?? '#C6F432',
-      label: `${quantity > 1 ? `${quantity} × ` : ''}${look?.label ?? item}`
+      label:
+        quantity > 1
+          ? t('shop.part', { n: quantity, label: look?.label ?? item })
+          : (look?.label ?? item)
     }
   })
 }
@@ -281,8 +257,8 @@ export function partsOf(offer) {
 export function howOf(offer) {
   if (offer.items.length === 1) return lookOf(offer).how
   return [
-    ...partsOf(offer).map(p => `${p.label}.`),
-    'Tout arrive dans ton inventaire.'
+    ...partsOf(offer).map(p => t('shop.partLine', { label: p.label })),
+    t('shop.packArrives')
   ]
 }
 
@@ -345,16 +321,20 @@ export function checkout(price, quantity, balance) {
     ? {
         ok: false,
         total,
-        label: 'Il te manque',
+        label: t('shop.checkout.missing'),
         amount: missing,
-        note: 'Encore un peu d’entraînement, et reviens me voir.'
+        note: t('shop.checkout.missingNote')
       }
     : {
         ok: true,
         total,
-        label: 'Acheter ·',
+        label: t('shop.checkout.buy'),
         amount: total,
-        note: `Il te restera ${crowns(balance - total)} couronne${balance - total > 1 ? 's' : ''}`
+        note: t(
+          'shop.checkout.left',
+          { n: crowns(balance - total) },
+          balance - total > 1 ? 2 : 1
+        )
       }
 }
 

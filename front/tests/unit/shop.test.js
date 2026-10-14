@@ -83,7 +83,7 @@ describe('store', () => {
       '3 × Pass Puzzle Streak.',
       'Tout arrive dans ton inventaire.'
     ])
-    expect(howOf(offer())).toBe(ITEMS.streak_freeze_7.how)
+    expect(howOf(offer())).toEqual(ITEMS.streak_freeze_7.how)
     expect(lookOf(offer({ items: [], section: 'cosmetics' })).kicker).toBe(
       'COSMÉTIQUE'
     )

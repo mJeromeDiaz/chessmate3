@@ -1,6 +1,7 @@
 import { profImage } from '@/utils/prof/images'
 import { MODULE_FAIL_RATE } from '@/utils/sounds'
 import { catalogModule } from '@/utils/runEnd'
+import { t } from '@/i18n'
 
 /**
  * The end-of-run result (designs "Résultat de leçon" and "Corriger ses erreurs", docs/TRAINING.md
@@ -53,11 +54,36 @@ export function resultScore(run) {
   return Math.floor((s.successCount / s.itemCount) * 100 + 1e-9)
 }
 
+/**
+ * A screen's colours with its words, read when shown: the title's two lines
+ * (training.result.screens.<kind>), the unit ('minutes' is a message, others are written as is) and
+ * the caption (training.result.captions.<caption>).
+ *
+ * @param {ResultKind} kind
+ * @param {{bg: string, deep: string, ink: string, accentInk: string, track: string, fill: string, unit: string, caption: string}} spec
+ */
+function screen(kind, spec) {
+  const { unit, caption, ...colours } = spec
+  return {
+    ...colours,
+    get line1() {
+      return t(`training.result.screens.${kind}.0`)
+    },
+    get line2() {
+      return t(`training.result.screens.${kind}.1`)
+    },
+    get unit() {
+      return unit === 'minutes' ? t('training.result.unitMinutes') : unit
+    },
+    get caption() {
+      return t(`training.result.captions.${caption}`)
+    }
+  }
+}
+
 /** The screens' words and colours (the design's, whatever the theme). */
 export const RESULT_SCREENS = {
-  perfect: {
-    line1: 'Leçon',
-    line2: 'parfaite !',
+  perfect: screen('perfect', {
     bg: '#2ED3A8',
     deep: '#0FA582',
     ink: '#0B5E4A',
@@ -65,11 +91,9 @@ export const RESULT_SCREENS = {
     track: '#DAF8EF',
     fill: '#0B5E4A',
     unit: '%',
-    caption: 'DE RÉUSSITE'
-  },
-  close: {
-    line1: 'Presque',
-    line2: 'parfait !',
+    caption: 'success'
+  }),
+  close: screen('close', {
     bg: '#FFD43B',
     deep: '#E0AE00',
     ink: '#6B5200',
@@ -77,11 +101,9 @@ export const RESULT_SCREENS = {
     track: '#FFF5D1',
     fill: '#8A6A00',
     unit: '%',
-    caption: 'DE RÉUSSITE'
-  },
-  fail: {
-    line1: 'Raté',
-    line2: 'total !',
+    caption: 'success'
+  }),
+  fail: screen('fail', {
     bg: '#FF6FAE',
     deep: '#E03C86',
     ink: '#8A1450',
@@ -89,23 +111,19 @@ export const RESULT_SCREENS = {
     track: '#FFE6F1',
     fill: '#B4231A',
     unit: '%',
-    caption: 'DE RÉUSSITE'
-  },
-  done: {
-    line1: 'Séance',
-    line2: 'terminée !',
+    caption: 'success'
+  }),
+  done: screen('done', {
     bg: '#2ED3A8',
     deep: '#0FA582',
     ink: '#0B5E4A',
     accentInk: '#FFFFFF',
     track: '#DAF8EF',
     fill: '#0B5E4A',
-    unit: 'min',
-    caption: 'D’ÉTUDE'
-  },
-  streak: {
-    line1: 'Meilleur',
-    line2: 'streak !',
+    unit: 'minutes',
+    caption: 'study'
+  }),
+  streak: screen('streak', {
     bg: '#FF5A36',
     deep: '#D93A16',
     ink: '#5E1606',
@@ -113,11 +131,9 @@ export const RESULT_SCREENS = {
     track: '#FFE7E1',
     fill: '#B8300F',
     unit: '',
-    caption: 'D’AFFILÉE'
-  },
-  record: {
-    line1: 'Nouveau',
-    line2: 'record !',
+    caption: 'inARow'
+  }),
+  record: screen('record', {
     bg: '#FFD43B',
     deep: '#E0AE00',
     ink: '#6B5200',
@@ -125,8 +141,8 @@ export const RESULT_SCREENS = {
     track: '#FFF5D1',
     fill: '#B8300F',
     unit: '',
-    caption: 'D’AFFILÉE'
-  }
+    caption: 'inARow'
+  })
 }
 
 /**
@@ -150,11 +166,14 @@ export function streakRing(run) {
 export function streakNote(run) {
   const m = run.summary?.metrics ?? {}
   const before = m.recordBefore ?? 0
-  let note = before > 0 ? `Ton record : ${before}` : ''
+  let note = before > 0 ? t('training.result.record', { n: before }) : ''
   if (m.record)
-    note = before > 0 ? `Ancien record : ${before}` : 'Ton premier record !'
+    note =
+      before > 0
+        ? t('training.result.oldRecord', { n: before })
+        : t('training.result.firstRecord')
   else if ((m.bestStreak ?? 0) >= before && before > 0)
-    note = `Record égalé : ${before}`
+    note = t('training.result.recordTied', { n: before })
   const aids = streakAids(m)
   return [note, aids].filter(Boolean).join(' · ')
 }
@@ -167,9 +186,9 @@ export function streakNote(run) {
  */
 export function streakAids(metrics) {
   const parts = []
-  if (metrics.passes > 0) parts.push(`${metrics.passes} pass`)
-  if (metrics.helps > 0)
-    parts.push(`${metrics.helps} aide${metrics.helps > 1 ? 's' : ''}`)
+  if (metrics.passes > 0)
+    parts.push(t('training.result.passes', { n: metrics.passes }))
+  if (metrics.helps > 0) parts.push(t('training.result.helps', metrics.helps))
   return parts.join(', ')
 }
 
@@ -230,7 +249,7 @@ export function resultProf(module, pose) {
         : pose
   const name = poses ? poses[key] : ''
   return {
-    name: m?.prof ?? 'Ton prof',
+    name: m?.prof ?? t('training.result.yourProf'),
     image: name ? profImage(name) : '',
     glyph: m?.glyph ?? '♞︎'
   }
@@ -246,19 +265,30 @@ export function resultProf(module, pose) {
  */
 export function resultButtons(kind, fixable) {
   /** @type {ResultButton} */
-  const next = { label: 'Leçon suivante →', action: 'next' }
+  const next = { label: t('training.result.buttons.next'), action: 'next' }
   /** @type {ResultButton} */
-  const carryOn = { label: 'Continuer', action: 'close' }
+  const carryOn = {
+    label: t('training.result.buttons.carryOn'),
+    action: 'close'
+  }
   if (kind === 'close' || kind === 'streak' || kind === 'record')
     return {
       primary: carryOn,
-      secondary: fixable ? { label: 'Revoir mes erreurs', action: 'fix' } : next
+      secondary: fixable
+        ? { label: t('training.result.buttons.review'), action: 'fix' }
+        : next
     }
   if (kind === 'fail')
     return fixable
       ? {
-          primary: { label: 'Recommencer la leçon', action: 'fix' },
-          secondary: { label: 'Plus tard', action: 'close' }
+          primary: {
+            label: t('training.result.buttons.restart'),
+            action: 'fix'
+          },
+          secondary: {
+            label: t('training.result.buttons.later'),
+            action: 'close'
+          }
         }
       : { primary: carryOn, secondary: next }
   return { primary: carryOn, secondary: next }
@@ -312,8 +342,10 @@ export function fallingLetters(text, step, offset = 0) {
   }))
 }
 
-/** The mistakes screen's title; "erreurs" stands out. */
-export const FIX_TITLE = 'Il est temps de corriger ses erreurs !'
+/** The mistakes screen's title; its word for the mistakes ("erreurs") stands out. */
+export function fixTitle() {
+  return t('training.result.fixTitle')
+}
 
 /**
  * The title's words falling into place from step 3.
@@ -321,16 +353,19 @@ export const FIX_TITLE = 'Il est temps de corriger ses erreurs !'
  * @param {number} step
  */
 export function fixWords(step) {
-  return FIX_TITLE.split(' ').map((t, i) => ({
-    t,
-    accent: /erreurs/i.test(t),
-    delay: `${i * 0.08}s`,
-    op: step >= 3 ? 1 : 0,
-    tf:
-      step >= 3
-        ? 'none'
-        : `translateY(-70px) rotate(${i % 2 ? 12 : -12}deg) scale(.5)`
-  }))
+  const accent = t('training.result.fixAccent').toLowerCase()
+  return fixTitle()
+    .split(' ')
+    .map((word, i) => ({
+      t: word,
+      accent: word.toLowerCase().includes(accent),
+      delay: `${i * 0.08}s`,
+      op: step >= 3 ? 1 : 0,
+      tf:
+        step >= 3
+          ? 'none'
+          : `translateY(-70px) rotate(${i % 2 ? 12 : -12}deg) scale(.5)`
+    }))
 }
 
 /**
@@ -341,10 +376,9 @@ export function fixWords(step) {
  * @param {string} [unit] repertoire: segment or line
  */
 export function fixLabel(module, count, unit) {
-  const s = count > 1 ? 'S' : ''
-  if (module === 'repertoire')
-    return `${unit === 'line' ? 'LIGNE' : 'TRONÇON'}${s} À REVOIR`
-  return `PUZZLE${s} À REVOIR`
+  const kind =
+    module === 'repertoire' ? (unit === 'line' ? 'line' : 'segment') : 'puzzle'
+  return t(`training.result.fixLabel.${kind}`, count > 1 ? 2 : 1)
 }
 
 const CARD_GLYPHS = ['♞︎', '♝︎', '♛︎', '♜︎', '♟︎', '♚︎']

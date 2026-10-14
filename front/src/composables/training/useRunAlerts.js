@@ -1,6 +1,7 @@
 import { watch } from 'vue'
 import { notify, playAlert } from '@/utils/alerts'
 import { moduleEndSound, playOutcomeSound } from '@/utils/sounds'
+import { t } from '@/i18n'
 
 /** How long before the end of a session module the alert sounds. */
 export const WARNING_MS = 5_000
@@ -65,7 +66,7 @@ export function useRunAlerts(runner, options = {}) {
       if (!timeUp) return
       ended.add(run.id)
       play()
-      show('Temps libre terminé', 'Ton module libre est fini.')
+      show(t('training.alerts.freeDoneTitle'), t('training.alerts.freeDone'))
     }
   )
 

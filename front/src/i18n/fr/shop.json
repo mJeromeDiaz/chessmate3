@@ -1,0 +1,203 @@
+{
+  "sections": {
+    "freeze": {
+      "tab": "Série",
+      "title": "Gel de série",
+      "lead": "Un jour sans entraînement ? Ta série reste intacte."
+    },
+    "puzzle_streak": {
+      "tab": "Puzzle Streak",
+      "title": "Puzzle Streak",
+      "lead": "Bloqué sur un puzzle ? Ton streak survit."
+    },
+    "aids": {
+      "tab": "Aides",
+      "title": "Aides de module",
+      "lead": "Une erreur qui ne compte pas, quand ça compte."
+    },
+    "packs": {
+      "tab": "Packs",
+      "title": "Packs",
+      "lead": "Plusieurs objets, une seule ponction."
+    },
+    "cosmetics": {
+      "tab": "Cosmétiques",
+      "title": "Cosmétiques",
+      "lead": "Pour gagner avec style. Garde tes couronnes au chaud."
+    }
+  },
+  "moduleTabs": {
+    "puzzles": "Puzzles",
+    "blindfold": "Aveugle",
+    "coordinates": "Coordonnées"
+  },
+  "freezeHow": [
+    "Un jour manqué ? Le gel s’active tout seul, jusqu’à {until}.",
+    "Une boule de gel remplace ta flamme ces jours-là ; ta série ne casse pas.",
+    "Les jours qu’il n’a pas servis restent pour la prochaine fois."
+  ],
+  "items": {
+    "streak_freeze_1": {
+      "kicker": "GEL DE SÉRIE",
+      "label": "Gel 1 jour",
+      "until": "1 jour"
+    },
+    "streak_freeze_2": {
+      "kicker": "GEL DE SÉRIE",
+      "label": "Gel 2 jours",
+      "until": "2 jours d’affilée"
+    },
+    "streak_freeze_7": {
+      "kicker": "GEL DE SÉRIE",
+      "label": "Gel 1 semaine",
+      "until": "7 jours d’affilée"
+    },
+    "streak_freeze_14": {
+      "kicker": "GEL DE SÉRIE",
+      "label": "Gel 2 semaines",
+      "until": "14 jours d’affilée"
+    },
+    "puzzle_streak_pass": {
+      "kicker": "PUZZLE STREAK",
+      "label": "Pass Puzzle Streak",
+      "how": [
+        "Tu sèches ? Avant de jouer, utilise le pass : la solution s’affiche.",
+        "Ton streak n’est pas cassé.",
+        "Tu enchaînes sur un puzzle équivalent, même thème, même niveau."
+      ]
+    },
+    "puzzle_streak_help": {
+      "kicker": "PUZZLE STREAK",
+      "label": "Aide Puzzle Streak",
+      "how": [
+        "Touche « Aide » pendant ton streak.",
+        "La pièce à jouer s’illumine.",
+        "Tu trouves le coup : le streak continue normalement."
+      ]
+    },
+    "puzzle_pardon": {
+      "kicker": "AIDE · PUZZLES",
+      "label": "Erreur pardonnée · Puzzles",
+      "how": [
+        "Tu rates un puzzle classé.",
+        "Sur la fiche d’échec, touche « Pardonner » : aucun point perdu.",
+        "Le puzzle reste raté, ton classement revient comme avant."
+      ]
+    },
+    "blindfold_pardon": {
+      "kicker": "AIDE · AVEUGLE",
+      "label": "Erreur pardonnée · Aveugle",
+      "how": [
+        "Tu joues un coup faux, ou tu rates le puzzle, les yeux fermés.",
+        "Touche « Pardonner » : tes erreurs sont effacées, ton coup d’œil revient.",
+        "Le puzzle compte comme résolu, avec toute son XP."
+      ]
+    },
+    "coordinates_pardon": {
+      "kicker": "AIDE · COORDONNÉES",
+      "label": "Erreur pardonnée · Coordonnées",
+      "how": [
+        "Active « Pardon » en lançant ta série.",
+        "Ta première mauvaise case ne compte pas.",
+        "Pas d’erreur : ton pardon reste en stock."
+      ]
+    }
+  },
+  "cosmeticKicker": "COSMÉTIQUE",
+  "packKicker": "PACK",
+  "part": "{n} × {label}",
+  "partLine": "{label}.",
+  "packArrives": "Tout arrive dans ton inventaire.",
+  "saving": "−{n} %",
+  "checkout": {
+    "missing": "Il te manque",
+    "missingNote": "Encore un peu d’entraînement, et reviens me voir.",
+    "buy": "Acheter ·",
+    "left": "Il te restera {n} couronne | Il te restera {n} couronnes"
+  },
+  "chest": {
+    "closed": {
+      "small": ["Un petit trésor", "pour toi !"],
+      "medium": ["Un trésor", "pour toi !"],
+      "big": ["Un gros trésor", "pour toi !"]
+    },
+    "open": {
+      "perfect": ["Quel", "jackpot !"],
+      "near": ["Beau", "trésor !"],
+      "missed": ["Joli", "butin !"]
+    },
+    "stages": {
+      "closed": {
+        "kicker": "RÉCOMPENSE DE SESSION",
+        "hint": "Touche le coffre"
+      },
+      "hit1": {
+        "kicker": "ÇA BOUGE…",
+        "title": ["Il résiste", "encore !"],
+        "hint": "Encore un coup !"
+      },
+      "hit2": {
+        "kicker": "PRESQUE…",
+        "title": ["Allez,", "le dernier !"],
+        "hint": "Il va céder…"
+      },
+      "open": {
+        "kicker": "TRÉSOR OUVERT"
+      }
+    },
+    "tiers": {
+      "perfect": "Session parfaite",
+      "near": "Presque parfaite",
+      "missed": "Session terminée"
+    },
+    "paid": "{n} min payée | {n} min payées",
+    "capped": "plafond du jour atteint",
+    "cappedLine": "Plafond du jour atteint : pas de couronnes pour cette session.",
+    "line": "+{n} couronnes · {note}"
+  },
+  "earning": {
+    "perfect": "Session parfaite (100 %)",
+    "near": "Presque parfaite (80 à 99 %)",
+    "missed": "En dessous de 80 %"
+  },
+  "page": {
+    "lead": "Dépense tes couronnes",
+    "title": "Boutique",
+    "balance": "{n} couronnes",
+    "tabs": "Rayons",
+    "soon": "BIENTÔT",
+    "toProtect": "🔥︎ {n} j à protéger",
+    "frozen": "❄︎ {n} jour de gel en stock | ❄︎ {n} jours de gel en stock",
+    "earnTitle": "Gagner des couronnes",
+    "earnLead": "Termine une session : un coffre t’attend à la fin. Chaque minute jouée rapporte, au plus une par exercice terminé (le temps libre ne compte pas).",
+    "perHour": "{n} / h",
+    "daily": "Jusqu’à {n} min payées par jour · {left}",
+    "leftToday": "encore {n} min aujourd’hui",
+    "cappedToday": "plafond atteint aujourd’hui",
+    "launch": "Lancer une session"
+  },
+  "errors": {
+    "gone": "Cette offre n’existe plus.",
+    "unavailable": "Cette offre n’est plus en vente, ou il te manque des couronnes.",
+    "nothingToBuy": "Rien à acheter pour l’instant : la boutique n’en vend pas."
+  },
+  "bought": "{name} : c’est dans ton stock.",
+  "celebration": {
+    "name": "{n} × {name}",
+    "added": "Ajouté à ton inventaire"
+  },
+  "sheet": {
+    "stock": "En stock : {n}",
+    "quantity": "Quantité",
+    "less": "Un de moins",
+    "more": "Un de plus",
+    "wait": "Un instant…"
+  },
+  "chestScreen": {
+    "label": "Récompense de session",
+    "open": "Ouvrir le coffre",
+    "added": "couronnes ajoutées à ta bourse",
+    "spend": "Dépenser à la boutique",
+    "results": "Voir mes résultats"
+  }
+}

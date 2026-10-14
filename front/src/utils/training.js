@@ -1,13 +1,43 @@
 import { formatDate } from '@/utils/format'
+import { t } from '@/i18n'
 
-/** Free study formats (module `free`), as the API names them. */
-export const FREE_FORMATS = {
-  book: 'Livre',
-  video: 'Vidéo',
-  course: 'Cours',
-  podcast: 'Podcast',
-  other: 'Autre'
-}
+/**
+ * Free study formats (module `free`), as the API names them, to their labels (read when shown).
+ *
+ * @type {Record<string, string>}
+ */
+export const FREE_FORMATS = Object.defineProperties(
+  {},
+  Object.fromEntries(
+    ['book', 'video', 'course', 'podcast', 'other'].map(format => [
+      format,
+      {
+        get: () => t(`session.catalog.options.formats.${format}`),
+        enumerable: true
+      }
+    ])
+  )
+)
+
+/** Modules with their own "subject unavailable" text (training.close.unavailable). */
+const UNAVAILABLE = [
+  'repertoire',
+  'puzzles',
+  'blindfold',
+  'evaluation',
+  'puzzle_streak'
+]
+
+/** Modules with their own "back" label (training.back). */
+const BACK_MODULES = [
+  'woodpecker',
+  'repertoire',
+  'puzzles',
+  'coordinates',
+  'blindfold',
+  'evaluation',
+  'puzzle_streak'
+]
 
 /**
  * Why a timed run closed, for the user.
@@ -18,33 +48,26 @@ export const FREE_FORMATS = {
 export function closeReasonText(run) {
   switch (run.closeReason) {
     case 'time_up':
-      return 'Temps écoulé.'
+      return t('training.close.time_up')
     case 'stopped':
-      return 'Séance terminée avant la fin du temps.'
+      return t('training.close.stopped')
     case 'subject_finished':
       if (run.module === 'puzzle_streak')
         return run.summary?.context?.reason === 'no_puzzle'
-          ? 'Plus aucun puzzle à ce niveau dans cette thématique : streak terminé.'
-          : 'Streak terminé.'
+          ? t('training.close.streakNoPuzzle')
+          : t('training.close.streakDone')
       if (run.module === 'coordinates')
-        return 'Toutes les cases de la série sont faites !'
-      if (run.module === 'evaluation')
-        return 'Toutes les positions sont évaluées !'
-      return 'Set terminé, bravo !'
+        return t('training.close.coordinatesDone')
+      if (run.module === 'evaluation') return t('training.close.evaluationDone')
+      return t('training.close.setDone')
     case 'subject_resting':
-      return `Cycle terminé. Repos : prochain cycle le ${formatDate(run.summary?.context?.availableAt)}.`
+      return t('training.close.resting', {
+        date: formatDate(run.summary?.context?.availableAt)
+      })
     case 'subject_unavailable':
-      if (run.module === 'repertoire')
-        return 'Plus rien à tester dans cette sélection : séance close.'
-      if (run.module === 'puzzles')
-        return 'Plus aucun puzzle disponible pour ces thèmes : séance close.'
-      if (run.module === 'blindfold')
-        return 'Plus aucun puzzle à l’aveugle à ce niveau et de cette longueur : séance close.'
-      if (run.module === 'evaluation')
-        return 'Plus aucune position pour ces réglages : séance close.'
-      if (run.module === 'puzzle_streak')
-        return 'La sélection des puzzles est en cours de mise à jour : séance close.'
-      return 'Le set a été mis en pause ou abandonné : séance close.'
+      return t(
+        `training.close.unavailable.${UNAVAILABLE.includes(run.module) ? run.module : 'woodpecker'}`
+      )
     default:
       return ''
   }
@@ -75,24 +98,9 @@ export function subjectPath(run) {
  * @returns {string}
  */
 export function backLabel(run) {
-  switch (run.module) {
-    case 'woodpecker':
-      return 'Retour au set'
-    case 'repertoire':
-      return 'Retour aux répertoires'
-    case 'puzzles':
-      return 'Retour aux puzzles'
-    case 'coordinates':
-      return 'Retour aux coordonnées'
-    case 'blindfold':
-      return 'Retour au jeu à l’aveugle'
-    case 'evaluation':
-      return 'Retour à l’évaluation'
-    case 'puzzle_streak':
-      return 'Retour au streak'
-    default:
-      return 'Retour à l’accueil'
-  }
+  return t(
+    `training.back.${BACK_MODULES.includes(run.module) ? run.module : 'home'}`
+  )
 }
 
 /**

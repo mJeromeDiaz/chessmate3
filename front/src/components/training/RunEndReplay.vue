@@ -17,7 +17,7 @@
       class="run-end-replay__pause"
       data-testid="run-end-replay-pause"
     >
-      Session en pause le temps de la révision : ce rejeu ne compte pas.
+      {{ $t('training.replay.paused') }}
     </div>
 
     <PuzzlePlayer
@@ -31,8 +31,8 @@
       <template #result="{ failed }">
         <div data-testid="run-end-replay-result">{{
           failed
-            ? 'Solution vue : retiens le motif.'
-            : 'Bien joué, c’est revu !'
+            ? $t('training.replay.solutionSeen')
+            : $t('training.replay.reviewed')
         }}</div>
       </template>
     </PuzzlePlayer>
@@ -60,7 +60,7 @@
         data-testid="run-end-replay-next"
         @click="emit('next')"
       >
-        Raté suivant →
+        {{ $t('training.replay.nextMiss') }}
       </button>
       <button
         v-else
@@ -87,6 +87,7 @@ import ChessBoard from '@/components/chess/ChessBoard.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import { useLineReplay } from '@/composables/repertoire/useLineReplay'
 import { playOutcomeSound } from '@/utils/sounds'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<ReturnType<typeof import('@/utils/runEnd').missedItems>[number]>} */
@@ -96,7 +97,7 @@ const props = defineProps({
   /** The run is a session step: say the session waits. */
   paused: { type: Boolean, default: false },
   /** Where "back" goes, in words. */
-  backLabel: { type: String, default: 'Retour au bilan' }
+  backLabel: { type: String, default: () => t('training.replay.backToReview') }
 })
 
 const emit = defineEmits({
@@ -119,17 +120,17 @@ const puzzle = computed(() => {
 const lineStatus = computed(() => {
   switch (replay.phase.value) {
     case 'showing':
-      return 'Au tour de l’adversaire…'
+      return t('training.replay.opponent')
     case 'playing':
-      return 'Joue le coup de ton répertoire.'
+      return t('training.replay.yourMove')
     case 'correcting':
-      return 'Ce n’est pas ton coup : joue celui de la flèche.'
+      return t('training.replay.notYourMove')
     case 'done':
       return replay.mistakes.value
-        ? `Ligne terminée, ${replay.mistakes.value} erreur${replay.mistakes.value > 1 ? 's' : ''}.`
-        : 'Ligne terminée sans erreur !'
+        ? t('training.replay.lineMistakes', replay.mistakes.value)
+        : t('training.replay.lineClean')
     case 'invalid':
-      return 'Cette ligne ne peut pas être rejouée.'
+      return t('training.replay.invalid')
     default:
       return ''
   }

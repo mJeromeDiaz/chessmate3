@@ -11,6 +11,7 @@ import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
 import { unitWord } from '@/utils/repertoireTest'
 import { FREE_FORMATS } from '@/utils/training'
 import { MODULE_FAIL_MIN_ITEMS, MODULE_FAIL_RATE } from '@/utils/sounds'
+import { t } from '@/i18n'
 
 /**
  * The end-of-run review (design "Fin de séance", docs/TRAINING.md § 5 quater): what the dialog
@@ -39,9 +40,23 @@ import { MODULE_FAIL_MIN_ITEMS, MODULE_FAIL_RATE } from '@/utils/sounds'
 
 /** Colours and labels of an item's status (grid, legend, list). */
 export const STATUS = {
-  ok: { label: 'Réussi', color: '#A6D61E' },
-  hint: { label: 'Avec aide', color: '#FFD43B' },
-  fail: { label: 'Raté', color: '#FF6FAE' }
+  ok: status('ok', '#A6D61E'),
+  hint: status('hint', '#FFD43B'),
+  fail: status('fail', '#FF6FAE')
+}
+
+/**
+ * @param {ItemStatus} key
+ * @param {string} color
+ * @returns {{label: string, color: string}}
+ */
+function status(key, color) {
+  return {
+    get label() {
+      return t(`training.end.status.${key}`)
+    },
+    color
+  }
 }
 
 /**
@@ -90,7 +105,7 @@ export function moduleProf(module, mood) {
   const m = catalogModule(module)
   const picture = moodImage(m?.profSlug ?? null, mood)
   return {
-    name: m?.prof ?? 'Ton prof',
+    name: m?.prof ?? t('training.result.yourProf'),
     image: picture || m?.image || '',
     glyph: m?.glyph ?? '♞︎',
     bg: m?.bg ?? '#C6F432',
@@ -108,9 +123,9 @@ export function moduleProf(module, mood) {
  */
 function itemWord(count, module, unit) {
   if (module === 'repertoire') return unitWord(unit ?? 'segment', count)
-  if (module === 'coordinates') return `${count} case${count > 1 ? 's' : ''}`
-  if (module === 'evaluation') return `${count} position${count > 1 ? 's' : ''}`
-  return `${count} puzzle${count > 1 ? 's' : ''}`
+  const words =
+    module === 'coordinates' || module === 'evaluation' ? module : 'puzzles'
+  return t(`training.end.words.${words}`, { n: count }, count)
 }
 
 /**
@@ -126,16 +141,26 @@ export function endHero(run, name, failed) {
   const orientation = ORIENTATIONS[s?.metrics?.orientation] ?? ''
   const kicker =
     run.module === 'woodpecker' && cycle
-      ? `SÉANCE TERMINÉE · CYCLE ${cycle}`
+      ? t('training.end.kicker.cycle', { n: cycle })
       : run.module === 'coordinates'
-        ? `${s?.metrics?.validated ? 'SÉRIE VALIDÉE' : 'SÉRIE TERMINÉE'} · ${orientation.toUpperCase()}`
-        : 'SÉANCE TERMINÉE'
-  const title = failed ? `Courage ${name} !` : `Bravo ${name} !`
+        ? t(
+            s?.metrics?.validated
+              ? 'training.end.kicker.seriesValidated'
+              : 'training.end.kicker.seriesDone',
+            { orientation: orientation.toUpperCase() }
+          )
+        : t('training.end.kicker.done')
+  const title = t(failed ? 'training.end.courage' : 'training.end.bravo', {
+    name
+  })
   const duration = formatDuration(s?.durationMs)
   const subtitle =
     run.module === 'free'
-      ? `${duration} d’étude`
-      : `${itemWord(s?.itemCount ?? 0, run.module, s?.metrics?.unit)} en ${duration}`
+      ? t('training.end.study', { duration })
+      : t('training.end.itemsIn', {
+          items: itemWord(s?.itemCount ?? 0, run.module, s?.metrics?.unit),
+          duration
+        })
   return { kicker, title, subtitle }
 }
 
@@ -152,9 +177,12 @@ export function itemTitle(item, themeLabel) {
     return label.move ? `${opening} · ${label.move}` : opening
   }
   if (item.type === 'evaluation_position')
-    return `${item.data.position?.tagLabel ?? 'Position'} · moteur ${item.data.engine ?? ''}`
+    return t('training.end.engine', {
+      tag: item.data.position?.tagLabel ?? t('training.end.position'),
+      engine: item.data.engine ?? ''
+    })
   const theme = item.data.puzzle?.themes?.[0]
-  return theme ? themeLabel(theme) : 'Puzzle'
+  return theme ? themeLabel(theme) : t('training.end.puzzle')
 }
 
 /**
@@ -179,7 +207,10 @@ export function missedItems(items, themeLabel) {
       item,
       number: itemNumber(item),
       title: itemTitle(item, themeLabel),
-      meta: `${STATUS[item.status].label} · ${formatDuration(item.durationMs)}`,
+      meta: t('training.end.meta', {
+        status: STATUS[item.status].label,
+        duration: formatDuration(item.durationMs)
+      }),
       color: STATUS[item.status].color,
       // A position to evaluate has no line to replay.
       replayable:
@@ -224,33 +255,49 @@ export function weakPoint(items, themeLabel) {
 export function endMessage(run, items, name, themeLabel) {
   const s = run.summary
   if (run.module === 'free') {
-    const format = FREE_FORMATS[s?.metrics?.format] ?? 'Étude'
-    return `${formatDuration(s?.durationMs)} d’étude (${format.toLowerCase()}). Bien joué ${name} : la régularité, c’est ce qui paie.`
+    const format =
+      FREE_FORMATS[s?.metrics?.format] ?? t('training.end.message.study')
+    return t('training.end.message.free', {
+      duration: formatDuration(s?.durationMs),
+      format: format.toLowerCase(),
+      name
+    })
   }
   if (!s || s.itemCount === 0) {
-    return 'Rien de terminé cette fois. Pas grave : on fait mieux au prochain module.'
+    return t('training.end.message.nothing')
   }
   const pct = Math.round((s.successCount / s.itemCount) * 100)
   if (run.module === 'coordinates') {
     const missed = missedSquares(items, 3)
     const squares = missed.length
-      ? ` Cases à retravailler : ${missed.map(m => m.square).join(', ')}.`
-      : ' Aucune erreur !'
-    return `${validationText(run)}${squares}`
+      ? t('training.end.message.squares', {
+          squares: missed.map(m => m.square).join(', ')
+        })
+      : t('training.end.message.noMistake')
+    return `${validationText(run)} ${squares}`
   }
   const opener =
     pct >= 85
-      ? `Quelle séance, ${name} !`
+      ? t('training.end.message.great', { name })
       : pct >= 70
-        ? `Belle séance, ${name} !`
+        ? t('training.end.message.good', { name })
         : isFailedRun(run)
-          ? 'Séance difficile, mais chaque erreur t’apprend quelque chose.'
-          : 'Tu t’accroches, et ça paie.'
+          ? t('training.end.message.hard')
+          : t('training.end.message.hanging')
   const weak = weakPoint(items, themeLabel)
-  if (!weak) return `${opener} ${pct} % de réussite, aucune erreur à revoir.`
-  const what =
-    run.module === 'repertoire' ? 'Ligne à reprendre' : 'Point à reprendre'
-  return `${opener} ${pct} % de réussite. ${what} : ${weak.label} (${weak.count} à revoir). On les rejoue maintenant ?`
+  if (!weak) return t('training.end.message.clean', { opener, pct })
+  const what = t(
+    run.module === 'repertoire'
+      ? 'training.end.message.line'
+      : 'training.end.message.point'
+  )
+  return t('training.end.message.weak', {
+    opener,
+    pct,
+    what,
+    label: weak.label,
+    count: weak.count
+  })
 }
 
 /**
@@ -268,9 +315,12 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
   const m = s?.metrics ?? {}
   const xp = {
     value: gain.xp === null ? '…' : `+${gain.xp}`,
-    label: 'XP gagnés',
+    label: t('training.end.stats.xp'),
     sub: gain.summary
-      ? `Niveau ${gain.summary.level} · ${Math.round(levelBar(gain.summary).percent)} %`
+      ? t('training.end.stats.level', {
+          level: gain.summary.level,
+          pct: Math.round(levelBar(gain.summary).percent)
+        })
       : '',
     tone: /** @type {const} */ ('brand')
   }
@@ -278,7 +328,7 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
     return [
       {
         value: formatDuration(s?.durationMs),
-        label: 'Temps d’étude',
+        label: t('training.end.stats.studyTime'),
         sub: FREE_FORMATS[m.format] ?? '',
         tone: 'muted'
       },
@@ -288,24 +338,39 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
   const count = s?.itemCount ?? 0
   const pct =
     count > 0 ? Math.round(((s?.successCount ?? 0) / count) * 100) : null
+  const success = {
+    value: pct === null ? '—' : t('training.end.stats.percent', { n: pct }),
+    label: t('training.end.stats.success'),
+    sub: t('training.end.stats.outOf', {
+      done: s?.successCount ?? 0,
+      total: count
+    })
+  }
+  const total = t('training.end.stats.total', {
+    duration: formatDuration(s?.durationMs)
+  })
   if (run.module === 'coordinates') {
     return [
       {
-        value: pct === null ? '—' : `${pct} %`,
-        label: 'Réussite',
-        sub: `${s?.successCount ?? 0} sur ${count}`,
+        ...success,
         tone: isFailedRun(run) ? 'bad' : 'good'
       },
       {
         value: formatAnswerTime(m.averageMs ?? null),
-        label: 'Moyenne / case',
-        sub: `${formatDuration(s?.durationMs)} au total`,
+        label: t('training.end.stats.perSquare'),
+        sub: total,
         tone: 'muted'
       },
       {
-        value: m.validated ? 'Validée' : 'Non validée',
-        label: 'Validation',
-        sub: `${ORIENTATIONS[m.orientation] ?? ''} en bas`,
+        value: t(
+          m.validated
+            ? 'training.end.stats.validated'
+            : 'training.end.stats.notValidated'
+        ),
+        label: t('training.end.stats.validation'),
+        sub: t('training.end.stats.bottom', {
+          orientation: ORIENTATIONS[m.orientation] ?? ''
+        }),
         tone: m.validated ? 'good' : 'muted'
       },
       xp
@@ -320,32 +385,37 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
   /** @type {Stat[]} */
   const stats = [
     {
-      value: pct === null ? '—' : `${pct} %`,
-      label: 'Réussite',
-      sub: `${s?.successCount ?? 0} sur ${count}`,
+      ...success,
       tone: isFailedRun(run) ? 'bad' : 'good'
     },
     {
       value: formatDuration(average),
-      label:
-        run.module === 'repertoire' ? 'Moyenne / unité' : 'Moyenne / puzzle',
-      sub: `${formatDuration(s?.durationMs)} au total`,
+      label: t(
+        run.module === 'repertoire'
+          ? 'training.end.stats.perUnit'
+          : 'training.end.stats.perPuzzle'
+      ),
+      sub: total,
       tone: 'muted'
     }
   ]
   if (run.module === 'blindfold') {
     stats.push({
       value: String(m.helped ?? 0),
-      label: 'Avec coup d’œil',
-      sub: `${m.failed ?? 0} raté${(m.failed ?? 0) > 1 ? 's' : ''}`,
+      label: t('training.end.stats.peek'),
+      sub: t('training.end.stats.failed', { n: m.failed ?? 0 }, m.failed ?? 0),
       tone: 'muted'
     })
   } else if (run.module === 'puzzles') {
     stats.push({
       value: m.ratingAfter == null ? '—' : String(m.ratingAfter),
-      label: 'Classement',
+      label: t('training.end.stats.rating'),
       sub:
-        m.ratingDelta == null ? '' : `${formatRatingDelta(m.ratingDelta)} pts`,
+        m.ratingDelta == null
+          ? ''
+          : t('training.end.stats.points', {
+              delta: formatRatingDelta(m.ratingDelta)
+            }),
       tone: (m.ratingDelta ?? 0) >= 0 ? 'good' : 'bad'
     })
   } else if (run.module === 'woodpecker') {
@@ -355,21 +425,23 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
         played == null
           ? String(m.puzzleCount ?? '—')
           : `${played}/${m.puzzleCount}`,
-      label: 'Puzzles du set',
+      label: t('training.end.stats.setPuzzles'),
       sub:
         played == null
           ? m.added
-            ? `+${m.added} ajoutés`
+            ? t('training.end.stats.added', { n: m.added })
             : ''
-          : `${Math.max(0, (m.puzzleCount ?? 0) - played)} restants`,
+          : t('training.end.stats.left', {
+              n: Math.max(0, (m.puzzleCount ?? 0) - played)
+            }),
       tone: 'muted'
     })
   } else {
     stats.push({
       value: String(m.positionsGraded ?? 0),
-      label: 'Positions notées',
+      label: t('training.end.stats.graded'),
       sub: m.recovered
-        ? `${m.recovered} rattrapé${m.recovered > 1 ? 's' : ''}`
+        ? t('training.end.stats.recovered', { n: m.recovered }, m.recovered)
         : '',
       tone: 'good'
     })
@@ -384,9 +456,11 @@ export function endStats(run, items, gain = { xp: null, summary: null }) {
  * @param {import('@/composables/training/useTimeboxedRun').TrainingRun} run
  */
 export function gridTitle(run) {
-  if (run.module === 'coordinates') return 'Cases de la série'
-  if (run.module !== 'repertoire') return 'Puzzles de la séance'
-  return run.summary?.metrics?.unit === 'line'
-    ? 'Lignes de la séance'
-    : 'Tronçons de la séance'
+  if (run.module === 'coordinates') return t('training.end.grid.coordinates')
+  if (run.module !== 'repertoire') return t('training.end.grid.puzzles')
+  return t(
+    run.summary?.metrics?.unit === 'line'
+      ? 'training.end.grid.lines'
+      : 'training.end.grid.segments'
+  )
 }

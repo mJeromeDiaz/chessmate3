@@ -1,0 +1,285 @@
+{
+  "close": {
+    "time_up": "Temps écoulé.",
+    "stopped": "Séance terminée avant la fin du temps.",
+    "streakNoPuzzle": "Plus aucun puzzle à ce niveau dans cette thématique : streak terminé.",
+    "streakDone": "Streak terminé.",
+    "coordinatesDone": "Toutes les cases de la série sont faites !",
+    "evaluationDone": "Toutes les positions sont évaluées !",
+    "setDone": "Set terminé, bravo !",
+    "resting": "Cycle terminé. Repos : prochain cycle le {date}.",
+    "unavailable": {
+      "repertoire": "Plus rien à tester dans cette sélection : séance close.",
+      "puzzles": "Plus aucun puzzle disponible pour ces thèmes : séance close.",
+      "blindfold": "Plus aucun puzzle à l’aveugle à ce niveau et de cette longueur : séance close.",
+      "evaluation": "Plus aucune position pour ces réglages : séance close.",
+      "puzzle_streak": "La sélection des puzzles est en cours de mise à jour : séance close.",
+      "woodpecker": "Le set a été mis en pause ou abandonné : séance close."
+    }
+  },
+  "back": {
+    "woodpecker": "Retour au set",
+    "repertoire": "Retour aux répertoires",
+    "puzzles": "Retour aux puzzles",
+    "coordinates": "Retour aux coordonnées",
+    "blindfold": "Retour au jeu à l’aveugle",
+    "evaluation": "Retour à l’évaluation",
+    "puzzle_streak": "Retour au streak",
+    "home": "Retour à l’accueil"
+  },
+  "result": {
+    "screens": {
+      "perfect": ["Leçon", "parfaite !"],
+      "close": ["Presque", "parfait !"],
+      "fail": ["Raté", "total !"],
+      "done": ["Séance", "terminée !"],
+      "streak": ["Meilleur", "streak !"],
+      "record": ["Nouveau", "record !"]
+    },
+    "captions": {
+      "success": "DE RÉUSSITE",
+      "study": "D’ÉTUDE",
+      "inARow": "D’AFFILÉE"
+    },
+    "unitMinutes": "min",
+    "record": "Ton record : {n}",
+    "oldRecord": "Ancien record : {n}",
+    "firstRecord": "Ton premier record !",
+    "recordTied": "Record égalé : {n}",
+    "passes": "{n} pass",
+    "helps": "{n} aide | {n} aides",
+    "yourProf": "Ton prof",
+    "buttons": {
+      "next": "Leçon suivante →",
+      "carryOn": "Continuer",
+      "review": "Revoir mes erreurs",
+      "restart": "Recommencer la leçon",
+      "later": "Plus tard"
+    },
+    "fixTitle": "Il est temps de corriger ses erreurs !",
+    "fixAccent": "erreurs",
+    "fixLabel": {
+      "line": "LIGNE À REVOIR | LIGNES À REVOIR",
+      "segment": "TRONÇON À REVOIR | TRONÇONS À REVOIR",
+      "puzzle": "PUZZLE À REVOIR | PUZZLES À REVOIR"
+    },
+    "fixStart": "Corriger mes erreurs",
+    "badge": "Badge débloqué : {name} · {goal} puzzles d’affilée",
+    "launching": "Lancement…"
+  },
+  "end": {
+    "status": {
+      "ok": "Réussi",
+      "hint": "Avec aide",
+      "fail": "Raté"
+    },
+    "words": {
+      "coordinates": "{n} case | {n} cases",
+      "evaluation": "{n} position | {n} positions",
+      "puzzles": "{n} puzzle | {n} puzzles"
+    },
+    "kicker": {
+      "cycle": "SÉANCE TERMINÉE · CYCLE {n}",
+      "seriesValidated": "SÉRIE VALIDÉE · {orientation}",
+      "seriesDone": "SÉRIE TERMINÉE · {orientation}",
+      "done": "SÉANCE TERMINÉE"
+    },
+    "courage": "Courage {name} !",
+    "bravo": "Bravo {name} !",
+    "study": "{duration} d’étude",
+    "itemsIn": "{items} en {duration}",
+    "position": "Position",
+    "engine": "{tag} · moteur {engine}",
+    "puzzle": "Puzzle",
+    "meta": "{status} · {duration}",
+    "message": {
+      "free": "{duration} d’étude ({format}). Bien joué {name} : la régularité, c’est ce qui paie.",
+      "study": "Étude",
+      "nothing": "Rien de terminé cette fois. Pas grave : on fait mieux au prochain module.",
+      "squares": "Cases à retravailler : {squares}.",
+      "noMistake": "Aucune erreur !",
+      "great": "Quelle séance, {name} !",
+      "good": "Belle séance, {name} !",
+      "hard": "Séance difficile, mais chaque erreur t’apprend quelque chose.",
+      "hanging": "Tu t’accroches, et ça paie.",
+      "clean": "{opener} {pct} % de réussite, aucune erreur à revoir.",
+      "line": "Ligne à reprendre",
+      "point": "Point à reprendre",
+      "weak": "{opener} {pct} % de réussite. {what} : {label} ({count} à revoir). On les rejoue maintenant ?"
+    },
+    "stats": {
+      "xp": "XP gagnés",
+      "level": "Niveau {level} · {pct} %",
+      "studyTime": "Temps d’étude",
+      "success": "Réussite",
+      "outOf": "{done} sur {total}",
+      "percent": "{n} %",
+      "perSquare": "Moyenne / case",
+      "total": "{duration} au total",
+      "validated": "Validée",
+      "notValidated": "Non validée",
+      "validation": "Validation",
+      "bottom": "{orientation} en bas",
+      "perUnit": "Moyenne / unité",
+      "perPuzzle": "Moyenne / puzzle",
+      "peek": "Avec coup d’œil",
+      "failed": "{n} raté | {n} ratés",
+      "rating": "Classement",
+      "points": "{delta} pts",
+      "setPuzzles": "Puzzles du set",
+      "added": "+{n} ajoutés",
+      "left": "{n} restants",
+      "graded": "Positions notées",
+      "recovered": "{n} rattrapé | {n} rattrapés"
+    },
+    "grid": {
+      "coordinates": "Cases de la série",
+      "puzzles": "Puzzles de la séance",
+      "lines": "Lignes de la séance",
+      "segments": "Tronçons de la séance"
+    }
+  },
+  "replay": {
+    "backToResult": "Retour au résultat",
+    "backToReview": "Retour au bilan",
+    "paused": "Session en pause le temps de la révision : ce rejeu ne compte pas.",
+    "solutionSeen": "Solution vue : retiens le motif.",
+    "reviewed": "Bien joué, c’est revu !",
+    "opponent": "Au tour de l’adversaire…",
+    "yourMove": "Joue le coup de ton répertoire.",
+    "notYourMove": "Ce n’est pas ton coup : joue celui de la flèche.",
+    "lineMistakes": "Ligne terminée, {n} erreur. | Ligne terminée, {n} erreurs.",
+    "lineClean": "Ligne terminée sans erreur !",
+    "invalid": "Cette ligne ne peut pas être rejouée.",
+    "nextMiss": "Raté suivant →"
+  },
+  "recap": {
+    "title": "Récapitulatif de la séance",
+    "duration": "Durée",
+    "finished": "Terminés",
+    "succeeded": "Réussis",
+    "failed": "Échoués",
+    "accuracy": "Précision",
+    "perMinute": "Par minute",
+    "graded": "Positions notées : {n}.",
+    "recovered": {
+      "line": "{units} ratée puis réussie. | {units} ratées puis réussies.",
+      "segment": "{units} raté puis réussi. | {units} ratés puis réussis."
+    },
+    "interrupted": {
+      "line": "{units} interrompue par la fin, sans erreur : non comptée. | {units} interrompues par la fin, sans erreur : non comptées.",
+      "segment": "{units} interrompu par la fin, sans erreur : non compté. | {units} interrompus par la fin, sans erreur : non comptés."
+    },
+    "dropped": {
+      "line": "{units} ignorée : le répertoire a changé pendant la séance. | {units} ignorées : le répertoire a changé pendant la séance.",
+      "segment": "{units} ignoré : le répertoire a changé pendant la séance. | {units} ignorés : le répertoire a changé pendant la séance."
+    },
+    "rounds": "{n} tours.",
+    "format": "Format : {format}.",
+    "notes": "Notes : {notes}",
+    "orientation": "Orientation : {orientation} en bas.",
+    "perSquare": "Temps moyen par case : {time}.",
+    "blindfoldSettings": "Niveau {level} · {length} coups · {seconds} s pour mémoriser.",
+    "blindfoldResults": "Résolus de mémoire : {solved} · avec un coup d’œil : {helped} · ratés : {failed}.",
+    "perPuzzle": "Temps moyen par puzzle : {time}",
+    "streakSettings": "{ramp} · {topic}.",
+    "bestStreak": "Meilleur streak : {streak}.",
+    "bestStreakRecord": "Meilleur streak : {streak} (nouveau record !).",
+    "streaks": "Streaks : {list}.",
+    "badge": "Badge débloqué : {name} ({goal}).",
+    "hardest": "Puzzle le plus dur réussi : {rating}.",
+    "extended": "Prolongé {n} fois de 5 minutes.",
+    "aids": "Aides de la boutique : {aids}.",
+    "evaluation": "Justes : {exact} · à un cran : {close} · ratées : {miss} · temps écoulé : {timeout}.",
+    "plans": "Plans trouvés : {n}.",
+    "perPosition": "Temps moyen par position : {time}",
+    "rating": "Classement : {before} → {after} ({delta}).",
+    "grown": "Le set a grandi de {added} puzzles ({total} au total).",
+    "cycle": "Cycle {n} : {played} / {total} puzzles."
+  },
+  "table": {
+    "duration": "durée",
+    "finished": "terminés",
+    "succeeded": "réussis",
+    "accuracy": "précision",
+    "perMinute": "par minute",
+    "trend": "évolution",
+    "empty": "Aucune séance pour l’instant."
+  },
+  "free": {
+    "title": "Temps libre",
+    "hint": "Lis, regarde, écoute à ton rythme : le temps est compté jusqu’à la fin du chrono ou jusqu’à « Terminer »."
+  },
+  "stop": "Terminer",
+  "launcher": {
+    "minutes": "{n} min",
+    "other": "Autre",
+    "minutesSuffix": "min",
+    "start": "Lancer la séance",
+    "inProgress": "Une séance est déjà en cours.",
+    "resume": "Reprendre",
+    "end": "La terminer",
+    "units": {
+      "segment": "Tronçons",
+      "line": "Lignes complètes"
+    },
+    "refusals": {
+      "setUnavailable": "Ce set ne peut pas être joué maintenant (pause, repos ou terminé).",
+      "setNotFound": "Set introuvable.",
+      "noPuzzleThemes": "Aucun puzzle disponible pour ces thèmes.",
+      "unknownTheme": "Thème inconnu.",
+      "invalidSettings": "Réglages invalides.",
+      "noBlindfold": "Aucun puzzle disponible à ce niveau et de cette longueur.",
+      "noPosition": "Aucune position disponible pour ces réglages.",
+      "noStreakPuzzle": "Aucun puzzle disponible dans cette thématique.",
+      "nothingToTest": "Rien à tester dans cette sélection : ajoutez vos coups au répertoire.",
+      "repertoireNotFound": "Répertoire introuvable.",
+      "invalidSelection": "Sélection invalide."
+    }
+  },
+  "alerts": {
+    "freeDoneTitle": "Temps libre terminé",
+    "freeDone": "Ton module libre est fini."
+  },
+  "page": {
+    "seeResult": "Voir le résultat",
+    "nextModule": "Module suivant : {module}",
+    "seeSession": "Voir la session",
+    "seeSessionReview": "Voir le bilan de la session",
+    "seeMyResults": "Voir mes résultats",
+    "seeReview": "Voir le bilan",
+    "blindfoldProgress": "{played} puzzles · {solved} résolus",
+    "evaluationProgress": "Position {n} · {solved} juste | Position {n} · {solved} justes",
+    "streakTimed": "Streak {now} · meilleur {best}",
+    "streak": "Streak : {now}",
+    "noHelp": "Sans aide",
+    "noHelpTip": "Une erreur et le streak s’arrête. Aides et pass : boutique.",
+    "puzzlesProgress": "{played} puzzles · {solved} réussis",
+    "oneTry": "Un seul essai",
+    "oneTryTip": "En cas d’erreur, la solution s’affiche.",
+    "timeUp": "Temps écoulé…",
+    "next": "Suivant →",
+    "nextPosition": "Position suivante →",
+    "newStreak": "Nouveau streak →",
+    "pardoned": "Pardonné : compté comme résolu (+{xp} XP).",
+    "tooLateServed": "Trop tard : un autre puzzle a été servi.",
+    "noPardon": "Ce puzzle ne peut plus être pardonné.",
+    "noMoreHelp": "Plus d’aide possible sur ce puzzle.",
+    "tooLatePlayed": "Trop tard : ce puzzle est déjà joué.",
+    "tooLateDecide": "Trop tard : le temps de décider est passé.",
+    "setFinished": "Ce set est terminé : son contenu ne change plus.",
+    "noOtherPuzzle": "Plus aucun autre puzzle ne correspond à ce set.",
+    "notFound": "Séance introuvable.",
+    "stopTitle": "Terminer la séance ?",
+    "stop": {
+      "repertoire": "L’unité en cours ne sera pas comptée, sauf si vous y avez déjà fait une erreur.",
+      "puzzles": "Le puzzle en cours ne sera pas compté : il vous attendra au prochain puzzle.",
+      "free": "Le temps passé jusqu’ici sera compté.",
+      "coordinates": "Tes réponses seront comptées, mais une série arrêtée avant la fin ne valide pas.",
+      "blindfold": "Le puzzle en cours ne sera pas compté.",
+      "evaluation": "La position à l’écran ne sera pas comptée.",
+      "puzzle_streak": "Le puzzle en cours ne sera pas compté : ton streak s’arrête là.",
+      "default": "Le puzzle en cours ne sera pas compté."
+    }
+  }
+}

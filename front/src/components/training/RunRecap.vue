@@ -1,7 +1,7 @@
 <template>
   <q-card flat bordered data-testid="run-recap">
     <q-card-section>
-      <div class="text-h6">Récapitulatif de la séance</div>
+      <div class="text-h6">{{ $t('training.recap.title') }}</div>
       <div class="text-body2" data-testid="run-close-reason">{{
         closeReasonText(run)
       }}</div>
@@ -42,7 +42,7 @@ import {
 import { streakAids } from '@/utils/runResult'
 import { unitWord } from '@/utils/repertoireTest'
 import { FREE_FORMATS, closeReasonText } from '@/utils/training'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/composables/training/useTimeboxedRun').TrainingRun>} */
@@ -55,7 +55,7 @@ const stats = computed(() => {
   const s = summary.value
   if (!s) return []
   const duration = {
-    label: 'Durée',
+    label: t('training.recap.duration'),
     value: formatDuration(s.durationMs),
     testid: 'run-duration'
   }
@@ -63,20 +63,28 @@ const stats = computed(() => {
   if (props.run.module === 'free') return [duration]
   return [
     duration,
-    { label: 'Terminés', value: String(s.itemCount), testid: 'run-items' },
     {
-      label: 'Réussis',
+      label: t('training.recap.finished'),
+      value: String(s.itemCount),
+      testid: 'run-items'
+    },
+    {
+      label: t('training.recap.succeeded'),
       value: String(s.successCount),
       testid: 'run-successes'
     },
-    { label: 'Échoués', value: String(s.failureCount), testid: 'run-failures' },
     {
-      label: 'Précision',
+      label: t('training.recap.failed'),
+      value: String(s.failureCount),
+      testid: 'run-failures'
+    },
+    {
+      label: t('training.recap.accuracy'),
       value: formatPercent(s.successRate),
       testid: 'run-accuracy'
     },
     {
-      label: 'Par minute',
+      label: t('training.recap.perMinute'),
       value:
         s.itemsPerMinute === null
           ? '—'
@@ -91,92 +99,136 @@ const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
   if (props.run.module === 'repertoire') {
-    const units = count =>
-      unitWord(m.unit === 'line' ? 'line' : 'segment', count)
-    const e = m.unit === 'line' ? 'e' : ''
-    const s = count => e + (count > 1 ? 's' : '')
-    lines.push(`Positions notées : ${m.positionsGraded ?? 0}.`)
-    if (m.recovered > 0)
-      lines.push(
-        `${units(m.recovered)} raté${s(m.recovered)} puis réussi${s(m.recovered)}.`
+    const unit = m.unit === 'line' ? 'line' : 'segment'
+    /** @param {'recovered'|'interrupted'|'dropped'} key @param {number} count */
+    const unitLine = (key, count) =>
+      t(
+        `training.recap.${key}.${unit}`,
+        { units: unitWord(unit, count) },
+        count
       )
-    if (m.interrupted > 0)
-      lines.push(
-        `${units(m.interrupted)} interrompu${s(m.interrupted)} par la fin, sans erreur : non compté${s(m.interrupted)}.`
-      )
-    if (m.dropped > 0)
-      lines.push(
-        `${units(m.dropped)} ignoré${s(m.dropped)} : le répertoire a changé pendant la séance.`
-      )
-    if (m.rounds > 1) lines.push(`${m.rounds} tours.`)
+    lines.push(t('training.recap.graded', { n: m.positionsGraded ?? 0 }))
+    if (m.recovered > 0) lines.push(unitLine('recovered', m.recovered))
+    if (m.interrupted > 0) lines.push(unitLine('interrupted', m.interrupted))
+    if (m.dropped > 0) lines.push(unitLine('dropped', m.dropped))
+    if (m.rounds > 1) lines.push(t('training.recap.rounds', { n: m.rounds }))
     return lines
   }
   if (props.run.module === 'free') {
-    lines.push(`Format : ${FREE_FORMATS[m.format] ?? m.format}.`)
-    if (m.notes) lines.push(`Notes : ${m.notes}`)
+    lines.push(
+      t('training.recap.format', { format: FREE_FORMATS[m.format] ?? m.format })
+    )
+    if (m.notes) lines.push(t('training.recap.notes', { notes: m.notes }))
     return lines
   }
   if (props.run.module === 'coordinates') {
     lines.push(
-      `Orientation : ${ORIENTATIONS[m.orientation] ?? m.orientation} en bas.`
+      t('training.recap.orientation', {
+        orientation: ORIENTATIONS[m.orientation] ?? m.orientation
+      })
     )
     lines.push(validationText(props.run))
     if (m.averageMs)
-      lines.push(`Temps moyen par case : ${formatAnswerTime(m.averageMs)}.`)
+      lines.push(
+        t('training.recap.perSquare', { time: formatAnswerTime(m.averageMs) })
+      )
     return lines
   }
   if (props.run.module === 'blindfold') {
     lines.push(
-      `Niveau ${LEVELS[m.level] ?? m.level} · ${m.length} coups · ${m.visibleSeconds} s pour mémoriser.`
+      t('training.recap.blindfoldSettings', {
+        level: LEVELS[m.level] ?? m.level,
+        length: m.length,
+        seconds: m.visibleSeconds
+      })
     )
     lines.push(
-      `Résolus de mémoire : ${m.solved ?? 0} · avec un coup d’œil : ${m.helped ?? 0} · ratés : ${m.failed ?? 0}.`
+      t('training.recap.blindfoldResults', {
+        solved: m.solved ?? 0,
+        helped: m.helped ?? 0,
+        failed: m.failed ?? 0
+      })
     )
     if (m.averageMs)
-      lines.push(`Temps moyen par puzzle : ${formatDuration(m.averageMs)}`)
+      lines.push(
+        t('training.recap.perPuzzle', { time: formatDuration(m.averageMs) })
+      )
     return lines
   }
   if (props.run.module === 'puzzle_streak') {
     lines.push(
-      `${RAMPS[m.ramp] ?? m.ramp} · ${topicLabel(m.topic ?? 'general')}.`
+      t('training.recap.streakSettings', {
+        ramp: RAMPS[m.ramp] ?? m.ramp,
+        topic: topicLabel(m.topic ?? 'general')
+      })
     )
     lines.push(
-      `Meilleur streak : ${streakText(m.bestStreak ?? 0)}${m.record ? ' (nouveau record !)' : ''}.`
+      t(
+        m.record
+          ? 'training.recap.bestStreakRecord'
+          : 'training.recap.bestStreak',
+        {
+          streak: streakText(m.bestStreak ?? 0)
+        }
+      )
     )
     if ((m.streaks?.length ?? 0) > 1)
-      lines.push(`Streaks : ${m.streaks.join(', ')}.`)
+      lines.push(t('training.recap.streaks', { list: m.streaks.join(', ') }))
     for (const badge of wonBadges(m))
-      lines.push(`Badge débloqué : ${badge.name} (${streakText(badge.goal)}).`)
+      lines.push(
+        t('training.recap.badge', {
+          name: badge.name,
+          goal: streakText(badge.goal)
+        })
+      )
     if (m.hardestRating)
-      lines.push(`Puzzle le plus dur réussi : ${m.hardestRating}.`)
-    if (m.extensions) lines.push(`Prolongé ${m.extensions} fois de 5 minutes.`)
+      lines.push(t('training.recap.hardest', { rating: m.hardestRating }))
+    if (m.extensions)
+      lines.push(t('training.recap.extended', { n: m.extensions }))
     const aids = streakAids(m)
-    if (aids) lines.push(`Aides de la boutique : ${aids}.`)
+    if (aids) lines.push(t('training.recap.aids', { aids }))
     return lines
   }
   if (props.run.module === 'evaluation') {
     lines.push(
-      `Justes : ${m.exact ?? 0} · à un cran : ${m.close ?? 0} · ratées : ${m.miss ?? 0} · temps écoulé : ${m.timeout ?? 0}.`
+      t('training.recap.evaluation', {
+        exact: m.exact ?? 0,
+        close: m.close ?? 0,
+        miss: m.miss ?? 0,
+        timeout: m.timeout ?? 0
+      })
     )
-    if (m.planOk) lines.push(`Plans trouvés : ${m.planOk}.`)
+    if (m.planOk) lines.push(t('training.recap.plans', { n: m.planOk }))
     if (m.averageMs)
-      lines.push(`Temps moyen par position : ${formatDuration(m.averageMs)}`)
+      lines.push(
+        t('training.recap.perPosition', { time: formatDuration(m.averageMs) })
+      )
     return lines
   }
   if (props.run.module === 'puzzles' && m.ratingBefore != null) {
     lines.push(
-      `Classement : ${m.ratingBefore} → ${m.ratingAfter} (${formatRatingDelta(m.ratingDelta)}).`
+      t('training.recap.rating', {
+        before: m.ratingBefore,
+        after: m.ratingAfter,
+        delta: formatRatingDelta(m.ratingDelta)
+      })
     )
   }
   if (m.averageMs)
-    lines.push(`Temps moyen par puzzle : ${formatDuration(m.averageMs)}`)
+    lines.push(
+      t('training.recap.perPuzzle', { time: formatDuration(m.averageMs) })
+    )
   if (m.added > 0)
     lines.push(
-      `Le set a grandi de ${m.added} puzzles (${m.puzzleCount} au total).`
+      t('training.recap.grown', { added: m.added, total: m.puzzleCount })
     )
   if (m.cycle)
     lines.push(
-      `Cycle ${m.cycle.number} : ${m.cycle.played} / ${m.puzzleCount} puzzles.`
+      t('training.recap.cycle', {
+        n: m.cycle.number,
+        played: m.cycle.played,
+        total: m.puzzleCount
+      })
     )
   return lines
 })

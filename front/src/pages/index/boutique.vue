@@ -3,15 +3,15 @@
     <div class="shop__inner">
       <header class="shop__head">
         <div class="shop__title">
-          <div class="shop__lead">Dépense tes couronnes</div>
-          <h1 class="shop__h1">Boutique</h1>
+          <div class="shop__lead">{{ $t('shop.page.lead') }}</div>
+          <h1 class="shop__h1">{{ $t('shop.page.title') }}</h1>
         </div>
         <div
           :key="bump"
           class="shop__wallet"
           :class="{ 'shop__wallet--bump': bump > 0 }"
           data-testid="shop-balance"
-          :aria-label="`${shown} couronnes`"
+          :aria-label="$t('shop.page.balance', { n: shown })"
         >
           <CrownCoin :size="32" spin />{{ crowns(shown) }}
         </div>
@@ -20,7 +20,7 @@
       <p v-if="loadError" class="shop__error" role="alert">{{ loadError }}</p>
 
       <template v-if="state">
-        <nav class="shop__tabs" aria-label="Rayons">
+        <nav class="shop__tabs" :aria-label="$t('shop.page.tabs')">
           <button
             v-for="section in sections"
             :key="section.id"
@@ -54,14 +54,14 @@
             <div class="shop__section-head">
               <h2 class="shop__h2">
                 {{ section.title
-                }}<span v-if="section.id === 'cosmetics'" class="shop__soon"
-                  >BIENTÔT</span
-                >
+                }}<span v-if="section.id === 'cosmetics'" class="shop__soon">{{
+                  $t('shop.page.soon')
+                }}</span>
               </h2>
               <span
                 v-if="section.id === 'freeze' && streak > 0"
                 class="shop__streak"
-                >🔥︎ {{ streak }} j à protéger</span
+                >{{ $t('shop.page.toProtect', { n: streak }) }}</span
               >
             </div>
             <p class="shop__section-lead">{{ section.lead }}</p>
@@ -70,7 +70,7 @@
               class="shop__frozen"
               data-testid="shop-frozen"
             >
-              ❄︎ {{ frozen }} jour{{ frozen > 1 ? 's' : '' }} de gel en stock
+              {{ $t('shop.page.frozen', { n: frozen }, frozen > 1 ? 2 : 1) }}
             </p>
 
             <div v-if="section.id === 'freeze'" class="shop__grid">
@@ -144,33 +144,36 @@
           class="cm-card shop__section shop__earn"
           data-testid="shop-earn"
         >
-          <h2 class="shop__h2">Gagner des couronnes</h2>
-          <p class="shop__section-lead">
-            Termine une session : un coffre t’attend à la fin. Chaque minute
-            jouée rapporte, au plus une par exercice terminé (le temps libre ne
-            compte pas).
-          </p>
+          <h2 class="shop__h2">{{ $t('shop.page.earnTitle') }}</h2>
+          <p class="shop__section-lead">{{ $t('shop.page.earnLead') }}</p>
           <ul class="shop__earn-rows">
             <li v-for="row in earningRows(state.earning)" :key="row.label">
               <span>{{ row.label }}</span>
               <span class="shop__earn-value"
-                ><CrownCoin :size="18" />{{ crowns(row.value) }} / h</span
+                ><CrownCoin :size="18" />{{
+                  $t('shop.page.perHour', { n: crowns(row.value) })
+                }}</span
               >
             </li>
           </ul>
           <p class="shop__earn-day" data-testid="shop-earn-left">
-            Jusqu’à {{ state.earning.dailyMinutes }} min payées par jour ·
             {{
-              state.earning.minutesLeftToday > 0
-                ? `encore ${state.earning.minutesLeftToday} min aujourd’hui`
-                : 'plafond atteint aujourd’hui'
+              $t('shop.page.daily', {
+                n: state.earning.dailyMinutes,
+                left:
+                  state.earning.minutesLeftToday > 0
+                    ? $t('shop.page.leftToday', {
+                        n: state.earning.minutesLeftToday
+                      })
+                    : $t('shop.page.cappedToday')
+              })
             }}
           </p>
           <q-btn
             color="primary"
             no-caps
             unelevated
-            label="Lancer une session"
+            :label="$t('shop.page.launch')"
             to="/session"
           />
         </section>
@@ -230,6 +233,7 @@ import {
   tweenAt
 } from '@/utils/shop'
 import { earningRows } from '@/utils/shopReward'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -321,8 +325,8 @@ async function buy(quantity) {
     bump.value += 1
   } catch (e) {
     buyError.value = apiErrorMessage(e, {
-      404: 'Cette offre n’existe plus.',
-      409: 'Cette offre n’est plus en vente, ou il te manque des couronnes.'
+      404: t('shop.errors.gone'),
+      409: t('shop.errors.unavailable')
     })
     shop.load().catch(() => {})
   } finally {

@@ -10,7 +10,7 @@
         no-caps
         color="negative"
         icon="stop"
-        label="Terminer"
+        :label="$t('training.stop')"
         data-testid="run-stop"
         @click="emit('stop')"
       />

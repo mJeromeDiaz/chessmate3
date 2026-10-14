@@ -124,10 +124,12 @@
           <span class="rr__badge-disc" aria-hidden="true">{{
             badge.goal
           }}</span>
-          <span
-            >Badge débloqué : <strong>{{ badge.name }}</strong> ·
-            {{ badge.goal }} puzzles d’affilée</span
-          >
+          <i18n-t keypath="training.result.badge" tag="span" scope="global">
+            <template #name>
+              <strong>{{ badge.name }}</strong>
+            </template>
+            <template #goal>{{ badge.goal }}</template>
+          </i18n-t>
         </div>
       </div>
 
@@ -185,6 +187,7 @@ import ConfettiBurst from '@/components/training/ConfettiBurst.vue'
 import FloatingPieces from '@/components/training/result/FloatingPieces.vue'
 import ProfStage from '@/components/training/result/ProfStage.vue'
 import { useResultSteps } from '@/composables/training/useResultSteps'
+import { t } from '@/i18n'
 import {
   RESULT_CONFETTI,
   RESULT_COUNT_MS,
@@ -290,7 +293,9 @@ function letterStyle(l) {
 
 /** @param {import('@/utils/runResult').ResultButton} b */
 function label(b) {
-  return props.busy && b.action === 'next' ? 'Lancement…' : b.label
+  return props.busy && b.action === 'next'
+    ? t('training.result.launching')
+    : b.label
 }
 
 onMounted(play)

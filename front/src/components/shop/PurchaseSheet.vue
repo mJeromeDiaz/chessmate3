@@ -19,9 +19,9 @@
             look.kicker
           }}</span>
           <span class="sheet__name">{{ offer.name }}</span>
-          <span v-if="offer.items.length === 1" class="sheet__stock"
-            >En stock : {{ stock }}</span
-          >
+          <span v-if="offer.items.length === 1" class="sheet__stock">{{
+            $t('shop.sheet.stock', { n: stock })
+          }}</span>
         </div>
       </div>
 
@@ -36,11 +36,11 @@
       </ol>
 
       <div class="sheet__quantity">
-        <span>Quantité</span>
+        <span>{{ $t('shop.sheet.quantity') }}</span>
         <div class="sheet__stepper">
           <button
             type="button"
-            aria-label="Un de moins"
+            :aria-label="$t('shop.sheet.less')"
             :disabled="quantity <= 1"
             data-testid="shop-less"
             @click="quantity--"
@@ -50,7 +50,7 @@
           <span data-testid="shop-quantity">{{ quantity }}</span>
           <button
             type="button"
-            aria-label="Un de plus"
+            :aria-label="$t('shop.sheet.more')"
             :disabled="quantity >= MAX"
             data-testid="shop-more"
             @click="quantity++"
@@ -73,7 +73,7 @@
           data-testid="shop-buy"
           @click="buy"
         >
-          {{ busy ? 'Un instant…' : pay.label }}
+          {{ busy ? $t('shop.sheet.wait') : pay.label }}
           <template v-if="!busy"
             ><CrownCoin :size="22" />{{ crowns(pay.amount) }}</template
           >

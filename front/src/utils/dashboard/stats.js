@@ -28,11 +28,11 @@ import { intlLocale, t } from '@/i18n'
 
 /** The period choices, in local days. */
 export const PERIODS = [7, 30, 90, 365].map(days => ({
-    days,
-    get label() {
-      return t(`dashboard.stats.periods.${days}`)
-    }
-  }))
+  days,
+  get label() {
+    return t(`dashboard.stats.periods.${days}`)
+  }
+}))
 export const DEFAULT_PERIOD = 30
 
 /**
@@ -41,12 +41,17 @@ export const DEFAULT_PERIOD = 30
  *
  * @type {{id: ChartModule, label: string}[]}
  */
-export const CHART_MODULES = ['puzzles', 'repertoire', 'woodpecker', 'free'].map(id => ({
-    id,
-    get label() {
-      return t(`dashboard.stats.chart.${id}`)
-    }
-  }))
+export const CHART_MODULES = [
+  'puzzles',
+  'repertoire',
+  'woodpecker',
+  'free'
+].map(id => ({
+  id,
+  get label() {
+    return t(`dashboard.stats.chart.${id}`)
+  }
+}))
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE

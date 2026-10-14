@@ -27,9 +27,13 @@
     </div>
     <div class="party__text">
       <div class="party__name">
-        {{ quantity > 1 ? `${quantity} × ` : '' }}{{ offer.name }}
+        {{
+          quantity > 1
+            ? $t('shop.celebration.name', { n: quantity, name: offer.name })
+            : offer.name
+        }}
       </div>
-      <div class="party__added">Ajouté à ton inventaire</div>
+      <div class="party__added">{{ $t('shop.celebration.added') }}</div>
     </div>
   </div>
 </template>

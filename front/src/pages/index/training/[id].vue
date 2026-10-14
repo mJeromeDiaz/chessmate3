@@ -11,7 +11,7 @@
             outline
             no-caps
             icon="emoji_events"
-            label="Voir le résultat"
+            :label="$t('training.page.seeResult')"
             data-testid="run-end-open"
             @click="endOpen = true"
           />
@@ -22,7 +22,11 @@
               no-caps
               unelevated
               icon="skip_next"
-              :label="`Module suivant : ${stepModule(nextStep)?.title ?? nextStep.module}`"
+              :label="
+                $t('training.page.nextModule', {
+                  module: stepModule(nextStep)?.title ?? nextStep.module
+                })
+              "
               :loading="sessionStep.starting.value"
               data-testid="session-next"
               @click="sessionStep.start(runner.run.value.parentId)"
@@ -32,7 +36,9 @@
               :flat="!!nextStep"
               no-caps
               :label="
-                nextStep ? 'Voir la session' : 'Voir le bilan de la session'
+                nextStep
+                  ? $t('training.page.seeSession')
+                  : $t('training.page.seeSessionReview')
               "
               :to="`/session/${runner.run.value.parentId}`"
               data-testid="session-open"
@@ -69,7 +75,11 @@
       <TreasureChest
         v-if="chestOpen && session?.reward"
         :reward="session.reward"
-        :results-label="hasResult ? 'Voir mes résultats' : 'Voir le bilan'"
+        :results-label="
+          hasResult
+            ? $t('training.page.seeMyResults')
+            : $t('training.page.seeReview')
+        "
         @results="leaveChest(true)"
         @close="leaveChest(false)"
         @shop="chestOpen = false"
@@ -134,8 +144,12 @@
           @stop="confirmStop"
         >
           <div class="text-subtitle2" data-testid="run-progress">
-            {{ runner.played.value }} puzzles ·
-            {{ runner.solved.value }} résolus
+            {{
+              $t('training.page.blindfoldProgress', {
+                played: runner.played.value,
+                solved: runner.solved.value
+              })
+            }}
           </div>
         </RunHeader>
         <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -160,9 +174,12 @@
           @stop="confirmStop"
         >
           <div class="text-subtitle2" data-testid="run-progress">
-            Position {{ evalItem.data.index }} ·
-            {{ runner.solved.value }} juste{{
-              runner.solved.value > 1 ? 's' : ''
+            {{
+              $t(
+                'training.page.evaluationProgress',
+                { n: evalItem.data.index, solved: runner.solved.value },
+                runner.solved.value > 1 ? 2 : 1
+              )
             }}
           </div>
         </RunHeader>
@@ -213,20 +230,25 @@
           @stop="confirmStop"
         >
           <div class="text-subtitle2" data-testid="run-progress">
-            Streak {{ streakNow }} · meilleur {{ streakBest }}
+            {{
+              $t('training.page.streakTimed', {
+                now: streakNow,
+                best: streakBest
+              })
+            }}
           </div>
         </RunHeader>
         <div v-else class="row items-center q-gutter-sm">
-          <div class="text-h5 text-weight-medium" data-testid="run-progress"
-            >Streak : {{ streakNow }}</div
-          >
+          <div class="text-h5 text-weight-medium" data-testid="run-progress">{{
+            $t('training.page.streak', { now: streakNow })
+          }}</div>
           <q-space />
           <q-btn
             flat
             no-caps
             color="negative"
             icon="stop"
-            label="Terminer"
+            :label="$t('training.stop')"
             data-testid="run-stop"
             @click="confirmStop"
           />
@@ -241,10 +263,8 @@
           streakLevel
         }}</span>
         <span class="play-chip lt-md"
-          >Sans aide<q-tooltip
-            >Une erreur et le streak s’arrête. Aides et pass :
-            boutique.</q-tooltip
-          ></span
+          >{{ $t('training.page.noHelp')
+          }}<q-tooltip>{{ $t('training.page.noHelpTip') }}</q-tooltip></span
         >
       </template>
     </PuzzlePlayer>
@@ -269,8 +289,12 @@
           @stop="confirmStop"
         >
           <div class="text-subtitle2" data-testid="run-progress">
-            {{ runner.played.value }} puzzles ·
-            {{ runner.solved.value }} réussis
+            {{
+              $t('training.page.puzzlesProgress', {
+                played: runner.played.value,
+                solved: runner.solved.value
+              })
+            }}
           </div>
         </RunHeader>
         <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -280,9 +304,8 @@
 
       <template #chips>
         <span class="play-chip lt-md"
-          >Un seul essai<q-tooltip
-            >En cas d’erreur, la solution s’affiche.</q-tooltip
-          ></span
+          >{{ $t('training.page.oneTry')
+          }}<q-tooltip>{{ $t('training.page.oneTryTip') }}</q-tooltip></span
         >
       </template>
     </PuzzlePlayer>
@@ -293,9 +316,9 @@
       data-testid="run-waiting"
     >
       <q-spinner size="3em" />
-      <div v-if="runner.phase.value === 'timeUp'" class="text-h6"
-        >Temps écoulé…</div
-      >
+      <div v-if="runner.phase.value === 'timeUp'" class="text-h6">{{
+        $t('training.page.timeUp')
+      }}</div>
       <div v-if="error" class="text-negative">{{ error }}</div>
     </div>
 
@@ -361,6 +384,7 @@ import { useGamificationStore } from '@/stores/gamification'
 import { useShopStore } from '@/stores/shop'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
+import { t } from '@/i18n'
 import { levelAt } from '@/utils/puzzleStreak'
 import { stepModule } from '@/utils/session/steps'
 import { resultKind } from '@/utils/runResult'
@@ -378,20 +402,16 @@ const AUTO_NEXT_MS = 1200
 /** Item types played on the puzzle board. */
 const PUZZLE_ITEMS = ['woodpecker_puzzle', 'puzzle']
 
-/** What "Terminer" leaves behind, by module. */
-const STOP_MESSAGES = {
-  repertoire:
-    'L’unité en cours ne sera pas comptée, sauf si vous y avez déjà fait une erreur.',
-  puzzles:
-    'Le puzzle en cours ne sera pas compté : il vous attendra au prochain puzzle.',
-  free: 'Le temps passé jusqu’ici sera compté.',
-  coordinates:
-    'Tes réponses seront comptées, mais une série arrêtée avant la fin ne valide pas.',
-  blindfold: 'Le puzzle en cours ne sera pas compté.',
-  evaluation: 'La position à l’écran ne sera pas comptée.',
-  puzzle_streak:
-    'Le puzzle en cours ne sera pas compté : ton streak s’arrête là.'
-}
+/** Modules saying what "Terminer" leaves behind (training.page.stop). */
+const STOP_MESSAGES = [
+  'repertoire',
+  'puzzles',
+  'free',
+  'coordinates',
+  'blindfold',
+  'evaluation',
+  'puzzle_streak'
+]
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
@@ -414,7 +434,7 @@ const missActions = computed(() =>
   (runner.result.value && !runner.result.value.success) || error.value
     ? [
         {
-          label: 'Suivant →',
+          label: t('training.page.next'),
           primary: true,
           disable: loading.value,
           testid: 'run-next',
@@ -464,7 +484,7 @@ const blindfoldActions = computed(() => [
       ]
     : []),
   {
-    label: 'Suivant →',
+    label: t('training.page.next'),
     primary: true,
     disable: (!runner.result.value && !error.value) || loading.value,
     testid: 'run-next',
@@ -495,7 +515,7 @@ async function onBlindfoldPardon() {
       runner.pardonResult(answer.data.xp)
       $q.notify({
         type: 'positive',
-        message: `Pardonné : compté comme résolu (+${answer.data.xp} XP).`
+        message: t('training.page.pardoned', { xp: answer.data.xp })
       })
     } else {
       blindfoldPlayer.value?.pardon()
@@ -509,8 +529,8 @@ async function onBlindfoldPardon() {
       error.value = apiErrorMessage(e, {
         409:
           detail === 'too_late'
-            ? 'Trop tard : un autre puzzle a été servi.'
-            : 'Ce puzzle ne peut plus être pardonné.'
+            ? t('training.page.tooLateServed')
+            : t('training.page.noPardon')
       })
     }
   } finally {
@@ -547,8 +567,8 @@ const evaluationActions = computed(() => [
   {
     label:
       runner.phase.value === 'running'
-        ? 'Position suivante →'
-        : 'Voir le résultat',
+        ? t('training.page.nextPosition')
+        : t('training.page.seeResult'),
     primary: true,
     disable: loading.value,
     testid: 'run-next',
@@ -621,10 +641,10 @@ const streakActions = computed(() =>
         {
           label:
             runner.phase.value === 'ended'
-              ? 'Voir le résultat'
+              ? t('training.page.seeResult')
               : error.value
-                ? 'Suivant →'
-                : 'Nouveau streak →',
+                ? t('training.page.next')
+                : t('training.page.newStreak'),
           primary: true,
           disable: loading.value,
           testid: 'run-next',
@@ -723,8 +743,8 @@ async function onStreakAid(kind) {
       error.value = apiErrorMessage(e, {
         409:
           detail === 'help_limit'
-            ? 'Plus d’aide possible sur ce puzzle.'
-            : 'Trop tard : ce puzzle est déjà joué.'
+            ? t('training.page.noMoreHelp')
+            : t('training.page.tooLatePlayed')
       })
     }
   } finally {
@@ -768,7 +788,7 @@ async function onExtend() {
     await runner.extend()
   } catch (e) {
     overtimeError.value = apiErrorMessage(e, {
-      409: 'Trop tard : le temps de décider est passé.'
+      409: t('training.page.tooLateDecide')
     })
     await runner.resume(String(route.params.id)).catch(() => {})
   } finally {
@@ -821,8 +841,8 @@ async function onReplace() {
     await woodpeckerApi.replacePuzzle(subjectId, current.id)
   } catch (e) {
     error.value = apiErrorMessage(e, {
-      409: 'Ce set est terminé : son contenu ne change plus.',
-      422: 'Plus aucun autre puzzle ne correspond à ce set.'
+      409: t('training.page.setFinished'),
+      422: t('training.page.noOtherPuzzle')
     })
     return
   }
@@ -850,7 +870,7 @@ async function next() {
   try {
     await runner.next()
   } catch (e) {
-    error.value = apiErrorMessage(e, { 404: 'Séance introuvable.' })
+    error.value = apiErrorMessage(e, { 404: t('training.page.notFound') })
   } finally {
     loading.value = false
   }
@@ -858,10 +878,10 @@ async function next() {
 
 function confirmStop() {
   $q.dialog({
-    title: 'Terminer la séance ?',
-    message:
-      STOP_MESSAGES[runner.run.value?.module ?? ''] ??
-      'Le puzzle en cours ne sera pas compté.',
+    title: t('training.page.stopTitle'),
+    message: t(
+      `training.page.stop.${STOP_MESSAGES.includes(runner.run.value?.module ?? '') ? runner.run.value?.module : 'default'}`
+    ),
     cancel: true
   }).onOk(() => runner.stop().catch(e => (error.value = apiErrorMessage(e))))
 }
@@ -976,7 +996,7 @@ watch(
     try {
       await runner.resume(String(id))
     } catch (e) {
-      error.value = apiErrorMessage(e, { 404: 'Séance introuvable.' })
+      error.value = apiErrorMessage(e, { 404: t('training.page.notFound') })
     } finally {
       loading.value = false
     }

@@ -3,7 +3,9 @@
     <slot name="header" />
     <q-card flat bordered>
       <q-card-section>
-        <div class="text-caption text-grey">Temps libre</div>
+        <div class="text-caption text-grey">{{
+          $t('training.free.title')
+        }}</div>
         <div class="text-h5" data-testid="free-run-format">{{ format }}</div>
         <div
           v-if="notes"
@@ -13,8 +15,7 @@
         >
       </q-card-section>
       <q-card-section class="text-body2 cm-muted">
-        Lis, regarde, écoute à ton rythme : le temps est compté jusqu’à la fin
-        du chrono ou jusqu’à « Terminer ».
+        {{ $t('training.free.hint') }}
       </q-card-section>
     </q-card>
   </div>
