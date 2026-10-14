@@ -34,6 +34,7 @@ final readonly class StreakReminderHandler
         private MailerInterface $mailer,
         private PushSender $push,
         private ClockInterface $clock,
+        private FreezeStockInterface $freezes,
         #[Autowire('%env(MAILER_FROM_ADDRESS)%')]
         private string $fromAddress,
         #[Autowire('%env(FRONTEND_URL)%')]
@@ -65,6 +66,10 @@ final readonly class StreakReminderHandler
             [ParameterType::BINARY],
         );
         if (false === $last || $last['local_date'] !== $today->modify('-1 day')->format('Y-m-d') || !is_numeric($last['streak'])) {
+            return;
+        }
+        // A freeze in stock covers tonight anyway (docs/SHOP.md): no danger to announce.
+        if ($this->freezes->available($user->getId()) > 0) {
             return;
         }
         $streak = (int) $last['streak'];

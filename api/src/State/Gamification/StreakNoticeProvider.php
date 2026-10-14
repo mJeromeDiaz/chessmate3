@@ -41,6 +41,7 @@ final class StreakNoticeProvider implements ProviderInterface
         $view->previousStreak = $notice['previousStreak'];
         $view->badge = $notice['badge'];
         $view->week = $notice['week'];
+        $view->frozenWeek = $notice['frozenWeek'];
         $view->nextMilestone = $notice['nextMilestone'];
         $view->localDate = $notice['localDate'];
 

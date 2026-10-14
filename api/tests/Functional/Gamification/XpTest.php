@@ -111,7 +111,7 @@ final class XpTest extends WebTestCase
         self::assertIsArray($woodpecker);
         self::assertSame(8, $woodpecker['xp'] ?? null);
         // Monday: Thursday to Sunday belong to the past week.
-        self::assertSame(['current' => 3, 'best' => 3, 'playedToday' => true, 'week' => [true, false, false, false, false, false, false], 'nextMilestone' => 7], $body['streak']);
+        self::assertSame(['current' => 3, 'best' => 3, 'playedToday' => true, 'week' => [true, false, false, false, false, false, false], 'frozenWeek' => [false, false, false, false, false, false, false], 'protected' => false, 'freezeDays' => 0, 'nextMilestone' => 7], $body['streak']);
         self::assertSame(['date' => '2026-10-05', 'exerciseXp' => 18, 'cap' => 500], $body['today']);
 
         $this->client->request('GET', '/api/gamification/summary');

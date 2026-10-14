@@ -197,9 +197,11 @@ Préfixe `/api`, utilisateur authentifié ; une séance d'un autre utilisateur r
 | `GET /training/runs/current` | La séance active, sinon `null` | — |
 | `GET /training/runs/{id}` | Une séance, avec `serverNow` | 404 |
 | `POST /training/runs/{id}/next` | `{run, item}` : élément à jouer, `item: null` une fois close (600 par 10 min) | 404 |
-| `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown, thinkMs?, answers?}` → `{run, result}` (600 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis ou séance close |
+| `POST /training/runs/{id}/submission` | `{itemId, moves, hintLevel, solutionShown, thinkMs?, answers?, pass?}` → `{run, result}` (600 par 10 min) | 400 coups impossibles, 404, 409 trop tard, déjà soumis, séance close ou `no_pass` (pass du puzzle streak) |
 | `POST /training/runs/{id}/stop` | Termine la séance | 404 |
 | `POST /training/runs/{id}/extend` | Prolongation : la séance qui attend la décision repart pour 5 min (§ 2) | 404, 409 séance close ou n'attendant pas de décision |
+| `POST /training/runs/{id}/help` | Aide payée de la boutique sur l'élément à l'écran (puzzle streak, [PUZZLE_STREAK.md § 3 bis](PUZZLE_STREAK.md#3-bis-aides-de-la-boutique-2026-10-13)) : `{itemId}` → `{data: {helps, aids}}` | 404, 409 séance close, temps écoulé, élément soumis, `no_help`, `help_limit`, `not_offered` |
+| `POST /training/runs/{id}/pardon` | Pardon de la boutique sur un puzzle à l'aveugle (l'élément à l'écran, ou celui qui vient d'être raté si rien n'a été servi depuis, [BLINDFOLD.md § 3 bis](BLINDFOLD.md#3-bis-pardon-de-la-boutique-2026-10-13)) : `{itemId}` → `{data: {pardon, status, xp, pardons}}` | 404, 409 séance close, temps écoulé, `no_pardon`, `not_pardonable`, `too_late`, `not_offered` (autres modules) |
 | `GET /training/runs/{id}/review` | Bilan d'une séance close, élément par élément (§ 5 quater) | 404, 409 séance encore active |
 
 L'identifiant de l'élément est dans le corps, pas dans l'URL : une seule route de soumission quel que

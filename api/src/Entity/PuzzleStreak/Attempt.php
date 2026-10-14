@@ -70,6 +70,10 @@ class Attempt
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 0])]
     private int $mistakes = 0;
 
+    /** Helps of the store spent on this puzzle (each lights up the piece to move once). */
+    #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 0])]
+    private int $helps = 0;
+
     public function __construct(Streak $streak, int $puzzleId, int $puzzleRating, int $targetRating, \DateTimeImmutable $startedAt)
     {
         $this->id = Uuid::v7();
@@ -174,5 +178,18 @@ class Attempt
     public function getMistakes(): int
     {
         return $this->mistakes;
+    }
+
+    public function getHelps(): int
+    {
+        return $this->helps;
+    }
+
+    public function helped(): void
+    {
+        if (!$this->isPending()) {
+            throw new \LogicException('Attempt already resolved.');
+        }
+        ++$this->helps;
     }
 }

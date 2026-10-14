@@ -74,13 +74,15 @@
           class="streak__day"
           :class="{
             'streak__day--today': day.today,
-            'streak__day--on': day.done && (day.today ? phase >= 6 : phase >= 5)
+            'streak__day--on': day.done && (day.today ? phase >= 6 : phase >= 5),
+            'streak__day--frozen': day.frozen && phase >= 5
           }"
           :style="{ '--delay': `${day.today ? 0 : i * 90}ms` }"
         >
           <span class="streak__day-label">{{ day.label }}</span>
           <span class="streak__day-dot"
-            ><span class="streak__day-check">✓</span></span
+            ><span v-if="day.frozen" class="streak__day-ice">❄︎</span
+            ><span v-else class="streak__day-check">✓</span></span
           >
         </div>
       </div>
@@ -174,7 +176,13 @@ const next = computed(() =>
     : ''
 )
 const week = computed(() =>
-  notice.value ? weekRow(notice.value.week, notice.value.localDate) : []
+  notice.value
+    ? weekRow(
+        notice.value.week,
+        notice.value.localDate,
+        notice.value.frozenWeek ?? []
+      )
+    : []
 )
 
 const sparks = Array.from({ length: 14 }, (_, i) => {
@@ -523,6 +531,26 @@ onBeforeUnmount(clear)
   transition-delay: var(--delay);
 
   .streak__day--on & {
+    transform: scale(1);
+  }
+}
+
+// A day a freeze kept (docs/SHOP.md): an ice ball instead of the tick.
+.streak__day-ice {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0, #b9ddfb 45%, #4fb2ff 100%);
+  color: #0f6bba;
+  font-size: 20px;
+  transform: scale(0);
+  transition: transform 0.45s cubic-bezier(0.34, 1.9, 0.64, 1);
+  transition-delay: var(--delay);
+
+  .streak__day--frozen & {
     transform: scale(1);
   }
 }

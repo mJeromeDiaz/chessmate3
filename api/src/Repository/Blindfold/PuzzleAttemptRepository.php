@@ -41,6 +41,14 @@ class PuzzleAttemptRepository extends ServiceEntityRepository
     }
 
     /**
+     * The last puzzle served in the run, pending or not.
+     */
+    public function findLatestOfRun(Run $run): ?PuzzleAttempt
+    {
+        return $this->findOneBy(['run' => $run], ['startedAt' => 'DESC', 'id' => 'DESC']);
+    }
+
+    /**
      * @return list<PuzzleAttempt> in the order played
      */
     public function findResolvedOfRun(Run $run): array

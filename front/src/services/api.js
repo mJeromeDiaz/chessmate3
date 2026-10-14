@@ -256,6 +256,20 @@ export const puzzleApi = {
   importLichessRating: () =>
     http
       .post('/api/puzzles/rating/lichess-import', null, JSON_LD)
+      .then(r => r.data),
+  /**
+   * The store's pardon on the rated puzzle just missed (docs/PUZZLES.md): the rating comes back.
+   * Resolves the attempt (`pardoned`, `pardons` left); 409 `no_pardon`, `too_late`, `not_pardonable`.
+   *
+   * @param {string} attemptId
+   */
+  pardon: attemptId =>
+    http
+      .post(
+        `/api/puzzles/attempts/${encodeURIComponent(attemptId)}/pardon`,
+        null,
+        JSON_LD
+      )
       .then(r => r.data)
 }
 
@@ -361,8 +375,9 @@ export const trainingApi = {
       .then(r => r.data),
   /**
    * @param {string} id
-   * @param {{itemId: string, moves?: string[], hintLevel?: number, solutionShown?: boolean, thinkMs?: number, answers?: {index: number, square: string, ms: number}[]}} report
-   *   `answers`: the squares clicked in a coordinates series (docs/COORDINATES.md)
+   * @param {{itemId: string, moves?: string[], hintLevel?: number, solutionShown?: boolean, thinkMs?: number, answers?: {index: number, square: string, ms: number}[], pass?: boolean}} report
+   *   `answers`: the squares clicked in a coordinates series (docs/COORDINATES.md); `pass`: a
+   *   puzzle streak's puzzle skipped with a pass of the store, before any move (409 `no_pass`)
    */
   submit: (id, report) =>
     http
@@ -380,6 +395,37 @@ export const trainingApi = {
   stop: id =>
     http
       .post(`/api/training/runs/${encodeURIComponent(id)}/stop`, null, JSON_LD)
+      .then(r => r.data),
+  /**
+   * The puzzle streak: spends a help of the store on the item on screen (the piece to move lights
+   * up). Resolves `{data: {helps, aids}}`; 409 `no_help`, `help_limit`.
+   *
+   * @param {string} id
+   * @param {string} itemId
+   */
+  help: (id, itemId) =>
+    http
+      .post(
+        `/api/training/runs/${encodeURIComponent(id)}/help`,
+        { itemId },
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Blindfold puzzles: spends a pardon of the store on the puzzle on screen (its mistakes erased)
+   * or on the one just missed (solved after all). Resolves `{data: {pardon, status, xp,
+   * pardons}}`; 409 `no_pardon`, `too_late`, `not_pardonable`.
+   *
+   * @param {string} id
+   * @param {string} itemId
+   */
+  pardon: (id, itemId) =>
+    http
+      .post(
+        `/api/training/runs/${encodeURIComponent(id)}/pardon`,
+        { itemId },
+        JSON_LD
+      )
       .then(r => r.data),
   /** Overtime: the run waiting for the player's decision goes on for 5 more minutes. */
   extend: id =>
@@ -940,6 +986,23 @@ export const gamificationApi = {
       .then(r => r.data)
 }
 
+/** The store (docs/SHOP.md): crowns, offers, carousel, inventory. */
+export const shopApi = {
+  /** `{balance, offers, slides, inventory, freezes}` */
+  get: () => http.get('/api/shop', JSON_LD).then(r => r.data),
+  /**
+   * Buys an offer `quantity` times (1 to 9); answers with the store after it. 409: `insufficient`
+   * or `not_on_sale`.
+   *
+   * @param {string} offerId
+   * @param {number} quantity
+   */
+  buy: (offerId, quantity) =>
+    http
+      .post('/api/shop/purchases', { offerId, quantity }, JSON_LD)
+      .then(r => r.data)
+}
+
 /** The guided tour (docs/ONBOARDING.md): the declared level and goal. */
 export const onboardingApi = {
   /** `{level, goal, suggestedLevel, lichess: {linked, perf, rating}, canSeedRating, puzzleRating}` */
@@ -1135,6 +1198,63 @@ export const adminApi = {
         JSON_LD
       )
       .then(() => undefined),
+  /** The store's catalogue (docs/SHOP.md): every offer with its sales, every slide. */
+  shopCatalog: () =>
+    http.get('/api/admin/shop/catalog', JSON_LD).then(r => r.data),
+  /** Creates an offer; resolves the catalogue. 422 `{violations}`. */
+  createOffer: body =>
+    http.post('/api/admin/shop/offers', body, JSON_LD).then(r => r.data),
+  /** Replaces an offer (its slug stays); resolves the catalogue. */
+  updateOffer: (id, body) =>
+    http
+      .put(`/api/admin/shop/offers/${encodeURIComponent(id)}`, body, JSON_LD)
+      .then(r => r.data),
+  /** Adds a carousel slide; resolves the catalogue. */
+  createSlide: body =>
+    http.post('/api/admin/shop/slides', body, JSON_LD).then(r => r.data),
+  /** Replaces a slide; resolves the catalogue. */
+  updateSlide: (id, body) =>
+    http
+      .put(`/api/admin/shop/slides/${encodeURIComponent(id)}`, body, JSON_LD)
+      .then(r => r.data),
+  /** Removes a slide; resolves the catalogue. */
+  deleteSlide: id =>
+    http
+      .delete(`/api/admin/shop/slides/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /** Players and their crowns (the richest without a search). Resolves `{players}`. */
+  shopPlayers: (search = '') =>
+    http
+      .get('/api/admin/shop/players', {
+        ...JSON_LD,
+        params: search ? { search } : {}
+      })
+      .then(r => r.data),
+  /** One player's crowns: `{player, inventory, freezes, ledger}`. */
+  shopPlayer: id =>
+    http
+      .get(`/api/admin/shop/players/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Gives (positive) or takes back (negative) crowns; resolves the player's detail. 409 below 0.
+   *
+   * @param {string} id
+   * @param {number} delta
+   * @param {string} reason
+   */
+  adjustCrowns: (id, delta, reason) =>
+    http
+      .post(
+        `/api/admin/shop/players/${encodeURIComponent(id)}/crowns`,
+        { delta, reason },
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** The store's figures over 7, 30 or 90 days. */
+  shopStats: (days = 30) =>
+    http
+      .get('/api/admin/shop/stats', { ...JSON_LD, params: { days } })
+      .then(r => r.data),
   /**
    * Checks a FEN and its evaluation against Lichess, nothing saved: `{verdict, source, lichess,
    * lichessCategory, category, nearBorder, fen, turn}`.

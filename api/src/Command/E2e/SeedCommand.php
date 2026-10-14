@@ -6,6 +6,7 @@ namespace App\Command\E2e;
 
 use App\Entity\User;
 use App\Security\Session\AuthenticatedSessionFactory;
+use App\Shop\Wallet\CrownAdjustment;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -21,7 +22,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  * Phase 1 tests). Registered in the "e2e" environment only: it does not exist in dev or prod.
  *
  * --admin gives it ROLE_ADMIN (the administration, docs/EARLY_ACCESS.md); --password sets a
- * password, for a test that signs in through the login page.
+ * password, for a test that signs in through the login page; --crowns gives it crowns of the
+ * store (docs/SHOP.md), as an admin's grant.
  */
 #[When(env: 'e2e')]
 #[AsCommand(name: 'app:e2e:seed-user', description: 'E2E only: creates a user and prints a refresh token')]
@@ -31,6 +33,7 @@ final class SeedCommand extends Command
         private readonly EntityManagerInterface $entityManager,
         private readonly AuthenticatedSessionFactory $sessionFactory,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly CrownAdjustment $crowns,
     ) {
         parent::__construct();
     }
@@ -39,7 +42,8 @@ final class SeedCommand extends Command
     {
         $this
             ->addOption('admin', null, InputOption::VALUE_NONE, 'Give the user ROLE_ADMIN')
-            ->addOption('password', null, InputOption::VALUE_REQUIRED, 'Set this password');
+            ->addOption('password', null, InputOption::VALUE_REQUIRED, 'Set this password')
+            ->addOption('crowns', null, InputOption::VALUE_REQUIRED, 'Give it this many crowns');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -56,6 +60,10 @@ final class SeedCommand extends Command
         }
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+        $crowns = $input->getOption('crowns');
+        if (is_numeric($crowns) && (int) $crowns > 0) {
+            $this->crowns->adjust($user->getId(), (int) $crowns, 'e2e', null);
+        }
 
         $session = $this->sessionFactory->issueFor($user);
         $output->writeln((string) json_encode([

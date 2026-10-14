@@ -15,11 +15,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The coordinates series in timed runs (docs/COORDINATES.md): squares drawn at the start, answers
- * sent in batches and judged again by the server, validation per orientation at the closing, XP.
+ * sent in batches and judged again by the server, validation per orientation at the closing, XP;
+ * the store's pardon on the first wrong answer.
  *
  * @phpstan-import-type RunJson from WoodpeckerWebTestCase
  *
- * @phpstan-type SeriesItem array{id: string, type: string, data: array{orientation: string, squares: list<string>, answered: int, successCount: int, rules: array<string, mixed>}}
+ * @phpstan-type SeriesItem array{id: string, type: string, data: array{orientation: string, squares: list<string>, answered: int, successCount: int, rules: array<string, mixed>, pardon: bool}}
  * @phpstan-type Answer array{index: int, square: string, ms: int}
  */
 final class CoordinatesRunTest extends WoodpeckerWebTestCase
@@ -65,7 +66,7 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         $review = $this->review($alice, $run['id']);
         self::assertSame(120, $review['xp'], 'The bonus belongs to the run.');
         self::assertCount(60, $review['items']);
-        self::assertSame(['coordinate', 'ok', 1_000, ['index' => 0, 'target' => $squares[0], 'clicked' => $squares[0]]], [
+        self::assertSame(['coordinate', 'ok', 1_000, ['index' => 0, 'target' => $squares[0], 'clicked' => $squares[0], 'pardoned' => false]], [
             $review['items'][0]['type'], $review['items'][0]['status'], $review['items'][0]['durationMs'], $review['items'][0]['data'],
         ]);
 
@@ -232,6 +233,60 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         self::assertSame('black', $this->item($alice, $next['run']['id'])['data']['orientation']);
     }
 
+    public function testAPardonTakesTheFirstWrongAnswerAway(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->givePardons($alice, 2);
+        self::assertSame(2, $this->coordinates($alice)['pardons']);
+
+        // 57 / 61 = 93 % without it; 57 / 60 = 95 % with it.
+        $runId = $this->playFullSeries($alice, 'white', 61, [3, 10, 20, 30], pardon: true);
+        $closed = $this->getRun($alice, $runId);
+        self::assertSame([true, 60, 57, 3], [
+            $closed['summary']['metrics']['validated'] ?? null,
+            $closed['summary']['itemCount'] ?? null,
+            $closed['summary']['successCount'] ?? null,
+            $closed['summary']['metrics']['pardonedIndex'] ?? null,
+        ]);
+        self::assertSame(1, $this->stockOf($alice));
+        $review = $this->review($alice, $runId)['items'];
+        self::assertCount(61, $review, 'The click stays on the ribbon.');
+        self::assertSame(['hint', true], [$review[3]['status'], $review[3]['data']['pardoned'] ?? null]);
+        self::assertSame(['fail', false], [$review[10]['status'], $review[10]['data']['pardoned'] ?? null]);
+        $this->runOutbox();
+        self::assertSame(60, $this->exercises($alice)[0][3]);
+        self::assertSame(1, $this->validationBonuses($alice));
+        $state = $this->coordinates($alice);
+        self::assertSame([true, 1], [$state['history'][0]['pardoned'] ?? null, $state['pardons']]);
+
+        // No wrong answer: nothing spent.
+        $clean = $this->playFullSeries($alice, 'black', 60, [], pardon: true);
+        self::assertNull($this->getRun($alice, $clean)['summary']['metrics']['pardonedIndex'] ?? null);
+        self::assertSame(1, $this->stockOf($alice));
+    }
+
+    public function testThePardonOptionIsChecked(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $start = fn (array $config): Response => $this->api('POST', '/api/training/runs', $alice, ['module' => 'coordinates', 'subjectId' => $alice->getId()->toRfc4122(), 'budgetSeconds' => self::SECONDS, 'config' => $config]);
+        self::assertSame(422, $start(['orientation' => 'white', 'pardon' => true])->getStatusCode(), 'None held.');
+        $this->givePardons($alice, 1);
+        self::assertSame(422, $start(['orientation' => 'white', 'pardon' => 'yes'])->getStatusCode());
+
+        // Not in a session step.
+        $step = ['module' => 'coordinates', 'minutes' => CoordinateRules::DEFAULT_MINUTES, 'settings' => ['orientation' => 'white', 'pardon' => true]];
+        self::assertSame(422, $this->api('POST', '/api/training/sessions', $alice, ['steps' => [$step]])->getStatusCode());
+
+        // No pardon asked of a series in play: blindfold puzzles only.
+        $run = $this->startSeries($alice, 'white', pardon: true);
+        $item = $this->item($alice, $run['id']);
+        self::assertTrue($item['data']['pardon']);
+        $refused = $this->api('POST', '/api/training/runs/'.$run['id'].'/pardon', $alice, ['itemId' => $item['id']]);
+        self::assertSame(409, $refused->getStatusCode());
+        self::assertStringContainsString('not_offered', (string) $refused->getContent());
+        self::assertSame(1, $this->stockOf($alice));
+    }
+
     public function testTheStateIsPrivate(): void
     {
         $this->client->request('GET', '/api/coordinates');
@@ -251,9 +306,9 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
      *
      * @return string the run id
      */
-    private function playFullSeries(User $user, string $orientation, int $count, array $wrongAt = [], int $seconds = self::SECONDS): string
+    private function playFullSeries(User $user, string $orientation, int $count, array $wrongAt = [], int $seconds = self::SECONDS, bool $pardon = false): string
     {
-        $run = $this->startSeries($user, $orientation, $seconds);
+        $run = $this->startSeries($user, $orientation, $seconds, $pardon);
         $item = $this->item($user, $run['id']);
         $this->travel(sprintf('+%d seconds', intdiv($seconds, 2)));
         $answers = array_map(
@@ -272,13 +327,13 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
     /**
      * @return RunJson
      */
-    private function startSeries(User $user, string $orientation, int $seconds = self::SECONDS): array
+    private function startSeries(User $user, string $orientation, int $seconds = self::SECONDS, bool $pardon = false): array
     {
         $response = $this->api('POST', '/api/training/runs', $user, [
             'module' => 'coordinates',
             'subjectId' => $user->getId()->toRfc4122(),
             'budgetSeconds' => $seconds,
-            'config' => ['orientation' => $orientation],
+            'config' => $pardon ? ['orientation' => $orientation, 'pardon' => true] : ['orientation' => $orientation],
         ]);
         self::assertSame(201, $response->getStatusCode(), (string) $response->getContent());
 
@@ -352,14 +407,14 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
     }
 
     /**
-     * @return array{rules: array<string, mixed>, orientations: list<array{orientation: string, validated: bool, validatedAt: string|null, seriesCount: int, best: array<string, mixed>|null}>, history: list<array<string, mixed>>}
+     * @return array{rules: array<string, mixed>, orientations: list<array{orientation: string, validated: bool, validatedAt: string|null, seriesCount: int, best: array<string, mixed>|null}>, history: list<array<string, mixed>>, pardons: int}
      */
     private function coordinates(User $user): array
     {
         $response = $this->api('GET', '/api/coordinates', $user);
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
 
-        /** @var array{rules: array<string, mixed>, orientations: list<array{orientation: string, validated: bool, validatedAt: string|null, seriesCount: int, best: array<string, mixed>|null}>, history: list<array<string, mixed>>} */
+        /** @var array{rules: array<string, mixed>, orientations: list<array{orientation: string, validated: bool, validatedAt: string|null, seriesCount: int, best: array<string, mixed>|null}>, history: list<array<string, mixed>>, pardons: int} */
         return $this->json($response);
     }
 
@@ -403,6 +458,24 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         return array_map(static fn (array $row): array => [
             $text($row['exercise_type']), (bool) $row['success'], $number($row['duration_ms']), $number($row['item_count']), $text($row['source_type']), $text($row['occurred_at']),
         ], $rows);
+    }
+
+    private function givePardons(User $user, int $quantity): void
+    {
+        $this->connection()->executeStatement(
+            "INSERT INTO shop_inventory_item (user_id, item, quantity) VALUES (?, 'coordinates_pardon', ?)",
+            [$user->getId()->toBinary(), $quantity],
+        );
+    }
+
+    private function stockOf(User $user): int
+    {
+        $quantity = $this->connection()->fetchOne(
+            "SELECT quantity FROM shop_inventory_item WHERE user_id = ? AND item = 'coordinates_pardon'",
+            [$user->getId()->toBinary()],
+        );
+
+        return is_numeric($quantity) ? (int) $quantity : 0;
     }
 
     private function validationBonuses(User $user): int

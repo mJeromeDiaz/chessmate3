@@ -70,11 +70,34 @@
               :options="ORIENTATION_OPTIONS"
               data-testid="coordinates-orientation"
             />
+            <div class="row items-center q-gutter-x-sm">
+              <q-toggle
+                v-model="withPardon"
+                :disable="!state.pardons"
+                :label="`Pardon de la boutique · ${state.pardons}`"
+                data-testid="coordinates-pardon-toggle"
+              >
+                <q-tooltip
+                  >Ta première erreur ne comptera pas : dépensé à la fin de la
+                  série, seulement si tu en fais une.</q-tooltip
+                >
+              </q-toggle>
+              <q-btn
+                v-if="!state.pardons"
+                flat
+                dense
+                no-caps
+                color="primary"
+                label="En acheter"
+                data-testid="coordinates-pardon-buy"
+                @click="buyPardon"
+              />
+            </div>
             <RunLauncher
               v-if="subjectId"
               module="coordinates"
               :subject-id="subjectId"
-              :config="{ orientation }"
+              :config="launchConfig"
               :durations="state.rules.seriesMinutes"
               :default-minutes="state.rules.defaultMinutes"
               label="Lancer la série"
@@ -105,9 +128,17 @@
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side>
-                  <q-badge v-if="s.validated" color="positive"
-                    >Validante</q-badge
-                  >
+                  <div class="row q-gutter-xs">
+                    <q-badge
+                      v-if="s.pardoned"
+                      class="coordinates-page__pardoned"
+                      data-testid="series-pardoned"
+                      >Pardonnée</q-badge
+                    >
+                    <q-badge v-if="s.validated" color="positive"
+                      >Validante</q-badge
+                    >
+                  </div>
                 </q-item-section>
               </template>
               <q-card-section>
@@ -127,6 +158,16 @@
         </div>
       </template>
     </div>
+
+    <PurchaseSheet
+      :offer="purchase.sheet.value"
+      :balance="purchase.shop.state?.balance ?? 0"
+      :inventory="purchase.shop.state?.inventory ?? {}"
+      :busy="purchase.busy.value"
+      :error="purchase.error.value"
+      @close="purchase.close()"
+      @buy="purchase.buy"
+    />
   </q-page>
 </template>
 
@@ -134,11 +175,14 @@
 /**
  * The coordinates (docs/COORDINATES.md): the state of each orientation (validated, best series),
  * a new series and the latest series, each with its ribbon (loaded when opened). The rules come
- * from the API.
+ * from the API. A series may be launched with the store's pardon (its first wrong answer taken
+ * away at the end), bought in place when none is held.
  */
 import { computed, onMounted, reactive, ref } from 'vue'
 import CoordinateRibbon from '@/components/coordinates/CoordinateRibbon.vue'
+import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
 import RunLauncher from '@/components/training/RunLauncher.vue'
+import { useAidPurchase } from '@/composables/shop/useAidPurchase'
 import { coordinatesApi, trainingApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -159,6 +203,24 @@ const error = ref('')
 const orientation = ref('white')
 /** @type {Record<string, import('@/utils/coordinates').CoordinateItem[]|null>} ribbons by run id; null: failed */
 const ribbons = reactive({})
+
+/** Launch the next series with the store's pardon. */
+const withPardon = ref(false)
+const launchConfig = computed(() =>
+  withPardon.value && state.value?.pardons
+    ? { orientation: orientation.value, pardon: true }
+    : { orientation: orientation.value }
+)
+const purchase = useAidPurchase(inventory => {
+  if (!state.value) return
+  state.value.pardons = inventory.coordinates_pardon ?? 0
+  if (state.value.pardons) withPardon.value = true
+})
+
+async function buyPardon() {
+  const message = await purchase.open('coordinates_pardon')
+  if (message) error.value = message
+}
 
 const subjectId = computed(() => /** @type {any} */ (auth.profile)?.id ?? null)
 
@@ -194,5 +256,9 @@ onMounted(async () => {
 
 .coordinates-page__orientation {
   height: 100%;
+}
+
+.coordinates-page__pardoned {
+  background: #4fb2ff;
 }
 </style>

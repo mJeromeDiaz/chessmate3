@@ -24,8 +24,12 @@ import { useAuthStore } from '@/stores/auth'
  * @property {string} id
  * @property {'pending'|'solved'|'failed'} status
  * @property {boolean} rated
+ * @property {number|null} [ratingBefore]
  * @property {number|null} ratingAfter
  * @property {number|null} ratingDelta
+ * @property {number|null} [xp] submission only: the XP gained
+ * @property {boolean} [pardoned] missed, then pardoned with the store's pardon (the rating came back)
+ * @property {number|null} [pardons] pardon only: the pardons left
  * @property {{id: string, fen: string, moves: string[], playerColor: 'white'|'black', rating: number, themes: string[], gameUrl: string}} puzzle
  */
 
@@ -120,6 +124,25 @@ export const usePuzzleStore = defineStore('puzzle', () => {
     return answer
   }
 
+  /**
+   * The store's pardon on the rated puzzle just missed (docs/PUZZLES.md): the rating comes back,
+   * the verdict stays a miss with no rating change.
+   *
+   * @returns {Promise<number>} the pardons left
+   */
+  async function pardon() {
+    if (!result.value) throw new Error('No result to pardon')
+    const answer = await puzzleApi.pardon(result.value.id)
+    result.value = {
+      ...answer,
+      xp: result.value.xp,
+      ratingAfter: answer.ratingBefore,
+      ratingDelta: 0
+    }
+    await fetchRating()
+    return answer.pardons ?? 0
+  }
+
   async function importLichessRating() {
     rating.value = await puzzleApi.importLichessRating()
     return rating.value
@@ -148,6 +171,7 @@ export const usePuzzleStore = defineStore('puzzle', () => {
     next,
     replay,
     submit,
+    pardon,
     importLichessRating,
     setThemes,
     setDifficulty

@@ -42,13 +42,18 @@
         class="streak-card__day"
         :class="{
           'streak-card__day--on': day.done,
+          'streak-card__day--frozen': day.frozen,
           'streak-card__day--today': day.today
         }"
         :data-testid="`streak-day-${i}`"
         :data-done="day.done || undefined"
+        :data-frozen="day.frozen || undefined"
+        :title="day.frozen ? 'Gelé : ta série a tenu sans toi' : undefined"
       >
         <span class="streak-card__day-label">{{ day.label }}</span>
-        <span class="streak-card__day-dot">{{ day.done ? '✓' : '' }}</span>
+        <span class="streak-card__day-dot">{{
+          day.done ? '✓' : day.frozen ? '❄︎' : ''
+        }}</span>
       </div>
     </div>
   </section>
@@ -83,12 +88,15 @@ const playedToday = computed(
 const week = computed(() =>
   weekRow(
     streak.value?.week ?? [],
-    gamification.summary?.today?.date ?? today.value
+    gamification.summary?.today?.date ?? today.value,
+    streak.value?.frozenWeek ?? []
   )
 )
 const hint = computed(() => {
   const s = streak.value
   if (!s) return ''
+  if (!playedToday.value && s.protected)
+    return 'Un gel protège ta série. Joue aujourd’hui pour ne pas l’entamer.'
   if (!playedToday.value)
     return s.current > 0
       ? 'Un exercice aujourd’hui et ta série continue.'
@@ -288,6 +296,11 @@ const hint = computed(() => {
   .streak-card__day--on & {
     background: #ff8a3d;
     color: #1b1530;
+  }
+
+  .streak-card__day--frozen & {
+    background: radial-gradient(circle at 35% 30%, #ffffff 0, #b9ddfb 45%, #4fb2ff 100%);
+    color: #0f6bba;
   }
 
   .streak-card__day--today & {

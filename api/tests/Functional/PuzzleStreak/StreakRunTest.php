@@ -18,16 +18,16 @@ use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Puzzle streaks (docs/PUZZLE_STREAK.md): easy to hard, one miss breaks the streak, no help,
- * never rated; the streak page plays one streak, a session step plays one after the other and
+ * Puzzle streaks (docs/PUZZLE_STREAK.md): easy to hard, one miss breaks the streak, no free
+ * help (the store's helps and passes are paid), never rated; the streak page plays one streak, a session step plays one after the other and
  * keeps the best; topics (general, theme, opening); records and their XP bonus; the openings
  * offered.
  *
  * @phpstan-import-type RunJson from WoodpeckerWebTestCase
  *
  * @phpstan-type PuzzleJson array{id: string, fen: string, moves: list<string>, playerColor: string, rating: int, themes: list<string>, gameUrl: string}
- * @phpstan-type StreakItem array{id: string, type: string, data: array{puzzle: PuzzleJson, ramp: string, topic: string, mode: string, streak: int, best: int, targetRating: int, startedAt: string}}
- * @phpstan-type ResultJson array{itemId: string, success: bool, data: array{status: string, mistakes: int, durationMs: int|null, streak: int, broken: bool, record: bool, best: int}}
+ * @phpstan-type StreakItem array{id: string, type: string, data: array{puzzle: PuzzleJson, ramp: string, topic: string, mode: string, streak: int, best: int, targetRating: int, startedAt: string, helps: int, aids: array{help: int, pass: int}}}
+ * @phpstan-type ResultJson array{itemId: string, success: bool, data: array{status: string, mistakes: int, durationMs: int|null, streak: int, broken: bool, record: bool, best: int, aids?: array{help: int, pass: int}}}
  */
 final class StreakRunTest extends WoodpeckerWebTestCase
 {
@@ -188,6 +188,93 @@ final class StreakRunTest extends WoodpeckerWebTestCase
         $item = $this->item($alice, $run['id']);
         $shown = $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $item['id'], 'moves' => self::solution($item['data']), 'solutionShown' => true]);
         self::assertSame('failed', $this->statusOf($shown));
+    }
+
+    public function testAPaidHelpLightsUpThePieceAndKeepsTheStreak(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->giveAids($alice, 2, 0);
+        $run = $this->startOk($alice, self::TIMED, 600);
+
+        $item = $this->item($alice, $run['id']);
+        self::assertSame([0, ['help' => 2, 'pass' => 0]], [$item['data']['helps'], $item['data']['aids']]);
+        $help = $this->help($alice, $run['id'], $item['id']);
+        self::assertSame(200, $help->getStatusCode(), (string) $help->getContent());
+        self::assertSame(['helps' => 1, 'aids' => ['help' => 1, 'pass' => 0]], $this->json($help)['data'] ?? null);
+        self::assertSame(1, $this->item($alice, $run['id'])['data']['helps'], 'A reload shows the help spent.');
+        // One move to find in these puzzles: one help at most.
+        $again = $this->help($alice, $run['id'], $item['id']);
+        self::assertSame(409, $again->getStatusCode());
+        self::assertStringContainsString('help_limit', (string) $again->getContent());
+
+        $solved = $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $item['id'], 'moves' => self::solution($item['data']), 'hintLevel' => 1]);
+        self::assertSame('solved', $this->statusOf($solved));
+
+        // The move itself shown is still a miss, help or not.
+        $item = $this->item($alice, $run['id']);
+        self::assertSame(1, $item['data']['streak']);
+        self::assertSame(200, $this->help($alice, $run['id'], $item['id'])->getStatusCode());
+        $shown = $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $item['id'], 'moves' => self::solution($item['data']), 'hintLevel' => 2]);
+        self::assertSame('failed', $this->statusOf($shown));
+
+        // None left: refused, nothing spent.
+        $item = $this->item($alice, $run['id']);
+        self::assertSame(['help' => 0, 'pass' => 0], $item['data']['aids']);
+        $none = $this->help($alice, $run['id'], $item['id']);
+        self::assertSame(409, $none->getStatusCode());
+        self::assertStringContainsString('no_help', (string) $none->getContent());
+        self::assertSame(0, $this->item($alice, $run['id'])['data']['helps']);
+
+        $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice);
+        self::assertSame(2, $this->getRun($alice, $run['id'])['summary']['metrics']['helps'] ?? null);
+    }
+
+    public function testAPassKeepsTheStreakAndServesAnEquivalentPuzzle(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->giveAids($alice, 0, 1);
+        $run = $this->startOk($alice, self::SINGLE);
+        $this->solveInRun($alice, $run['id'], 2);
+
+        $skipped = $this->item($alice, $run['id']);
+        self::assertSame(['help' => 0, 'pass' => 1], $skipped['data']['aids']);
+        // Before any move only.
+        $late = $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $skipped['id'], 'moves' => [self::wrongFirstMove($skipped)], 'pass' => true]);
+        self::assertSame(400, $late->getStatusCode());
+
+        $response = $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $skipped['id'], 'moves' => [], 'pass' => true]);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+        $step = $this->json($response);
+        self::assertNull($step['xp'] ?? null, 'A passed puzzle gains nothing.');
+        self::assertIsArray($step['result'] ?? null);
+        /** @var ResultJson $result */
+        $result = $step['result'];
+        self::assertSame(['passed', 2, false, ['help' => 0, 'pass' => 0]], [$result['data']['status'], $result['data']['streak'], $result['data']['broken'], $result['data']['aids'] ?? null]);
+        self::assertSame('active', $this->getRun($alice, $run['id'])['status'], 'The streak goes on.');
+
+        // An equivalent puzzle: the same level, another puzzle.
+        $next = $this->item($alice, $run['id']);
+        self::assertNotSame($skipped['data']['puzzle']['id'], $next['data']['puzzle']['id']);
+        self::assertSame([2, $skipped['data']['targetRating']], [$next['data']['streak'], $next['data']['targetRating']]);
+        $none = $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $next['id'], 'moves' => [], 'pass' => true]);
+        self::assertSame(409, $none->getStatusCode());
+        self::assertStringContainsString('no_pass', (string) $none->getContent());
+
+        $this->submitOk($alice, $run['id'], $next['id'], self::solution($next['data']));
+        $missed = $this->item($alice, $run['id']);
+        $this->submitOk($alice, $run['id'], $missed['id'], [self::wrongFirstMove($missed)]);
+
+        $closed = $this->getRun($alice, $run['id']);
+        $metrics = $closed['summary']['metrics'] ?? [];
+        self::assertSame([3, 3, 1, 1], [$metrics['bestStreak'] ?? null, $metrics['solved'] ?? null, $metrics['failed'] ?? null, $metrics['passes'] ?? null]);
+        self::assertSame([4, 3], [$closed['summary']['itemCount'] ?? null, $closed['summary']['successCount'] ?? null], 'A passed puzzle is not a played one.');
+        $review = $this->review($alice, $run['id']);
+        self::assertSame(['ok', 'ok', 'hint', 'ok', 'fail'], array_column($review['items'], 'status'));
+        self::assertTrue($review['items'][2]['data']['passed'] ?? null);
+
+        $this->runOutbox();
+        self::assertSame(4, $this->countRows("SELECT COUNT(*) FROM activity_log_entry WHERE user_id = ? AND exercise_type = 'streak_puzzle'", $alice), 'A passed puzzle is no exercise.');
+        self::assertSame(['solved' => 3, 'failed' => 1], $this->overview($alice)['total']);
     }
 
     public function testATheme(): void
@@ -594,6 +681,24 @@ final class StreakRunTest extends WoodpeckerWebTestCase
         }
 
         self::fail('No wrong move available.');
+    }
+
+    private function help(User $user, string $runId, string $itemId): Response
+    {
+        return $this->api('POST', '/api/training/runs/'.$runId.'/help', $user, ['itemId' => $itemId]);
+    }
+
+    /**
+     * Puts the store's puzzle streak helps and passes in the user's inventory.
+     */
+    private function giveAids(User $user, int $helps, int $passes): void
+    {
+        foreach (['puzzle_streak_help' => $helps, 'puzzle_streak_pass' => $passes] as $item => $quantity) {
+            $this->connection()->executeStatement(
+                'INSERT INTO shop_inventory_item (user_id, item, quantity) VALUES (?, ?, ?)',
+                [$user->getId()->toBinary(), $item, $quantity],
+            );
+        }
     }
 
     private function countRows(string $sql, User $user): int

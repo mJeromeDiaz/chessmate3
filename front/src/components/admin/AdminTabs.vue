@@ -33,6 +33,11 @@
         label="Positions"
         data-testid="admin-tab-positions"
       />
+      <q-route-tab
+        to="/admin/boutique"
+        label="Boutique"
+        data-testid="admin-tab-shop"
+      />
     </q-tabs>
   </nav>
 </template>

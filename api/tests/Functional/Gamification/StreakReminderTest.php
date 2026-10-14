@@ -76,6 +76,22 @@ final class StreakReminderTest extends WoodpeckerWebTestCase
         self::assertSame(1, $this->sendReminders(), 'Wednesday, the 2-day streak is in danger.');
     }
 
+    public function testAFreezeInStockMeansNoDanger(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->subscribeBrowser($alice);
+        $this->exercise($alice);
+        self::getContainer()->get(Connection::class)->executeStatement(
+            "INSERT INTO shop_freeze (id, user_id, item, days, days_left, acquired_at) VALUES (?, ?, 'streak_freeze_1', 1, 1, UTC_TIMESTAMP())",
+            [\Symfony\Component\Uid\Uuid::v7()->toBinary(), $alice->getId()->toBinary()],
+        );
+        $this->travel('+1 day 8 hours');
+        self::assertSame(1, $this->sendReminders());
+        $this->deliver();
+
+        self::assertCount(0, $this->pushRequests, 'the freeze covers tonight');
+    }
+
     public function testNothingIsSentWhenTheUserPlaysBeforeTheWorker(): void
     {
         $alice = $this->createUserIn('alice@example.com');

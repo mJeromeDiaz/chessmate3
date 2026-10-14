@@ -7,6 +7,8 @@ namespace App\Blindfold\Training;
 use App\Activity\Event\ExerciseCompleted;
 use App\Activity\EventPublisher;
 use App\ApiResource\Puzzle\PuzzleView;
+use App\Blindfold\Event\PuzzlePardoned;
+use App\Blindfold\Pardon\PardonStockInterface;
 use App\Blindfold\Puzzle\PuzzlePicker;
 use App\Blindfold\Puzzle\PuzzleRules;
 use App\Entity\Blindfold\PuzzleAttempt;
@@ -15,14 +17,17 @@ use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Blindfold\AttemptStatus;
+use App\Enum\Blindfold\Pardon;
 use App\Enum\Blindfold\PuzzleLevel;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
+use App\Gamification\Xp\XpRules;
 use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Puzzle\Selection\SelectionUnavailableException;
 use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Puzzle\Solution\SolutionValidator;
 use App\Repository\Blindfold\PuzzleAttemptRepository;
+use App\Training\Exception\AidRefusedException;
 use App\Training\Exception\InvalidItemSubmissionException;
 use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\ItemAlreadySubmittedException;
@@ -32,6 +37,7 @@ use App\Training\Exception\SubjectUnavailableException;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
+use App\Training\Module\PardonModuleInterface;
 use App\Training\Module\PreparedStep;
 use App\Training\Module\ReviewableModuleInterface;
 use App\Training\Module\ReviewItem;
@@ -46,8 +52,10 @@ use Symfony\Component\Uid\Uuid;
  * memory; the client reports the moves tried, the server replays them: solved without a mistake,
  * "helped" after one mistake (and the peek that follows it), failed beyond. Never rated: the
  * puzzle rating is not touched. The first puzzle is served at the start: none in the range, no run.
+ * The store's pardon covers a whole puzzle: during play (its mistakes erased) or on the miss sheet
+ * (solved after all, with an XP top-up).
  */
-final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleInterface
+final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleInterface, PardonModuleInterface
 {
     public const SUBJECT_TYPE = 'blindfold_player';
     public const ITEM_TYPE = 'blindfold_puzzle';
@@ -60,6 +68,7 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
         private readonly PuzzleCatalog $catalog,
         private readonly SolutionValidator $validator,
         private readonly EventPublisher $events,
+        private readonly PardonStockInterface $pardons,
     ) {
     }
 
@@ -112,9 +121,11 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
         } catch (InvalidSubmissionException $e) {
             throw new InvalidItemSubmissionException($e->getMessage(), 0, $e);
         }
+        // Pardoned during play: its mistakes do not count.
+        $mistakes = null === $attempt->getPardon() ? $replay->mistakes : 0;
         $status = match (true) {
-            $submission->solutionShown || !$replay->completed || $replay->mistakes > PuzzleRules::PEEKS => AttemptStatus::Failed,
-            0 === $replay->mistakes => AttemptStatus::Solved,
+            $submission->solutionShown || !$replay->completed || $mistakes > PuzzleRules::PEEKS => AttemptStatus::Failed,
+            0 === $mistakes => AttemptStatus::Solved,
             default => AttemptStatus::Helped,
         };
         $attempt->resolve($status, $submission->moves, $replay->mistakes, $now);
@@ -135,6 +146,7 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
                 'level' => $attempt->getLevel()->value,
                 'length' => $attempt->getLength(),
                 'visibleSeconds' => $attempt->getVisibleSeconds(),
+                'pardoned' => null !== $attempt->getPardon(),
                 'trainingRunId' => $run->getId()->toRfc4122(),
             ],
         ));
@@ -146,8 +158,49 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
                 'status' => $status->value,
                 'mistakes' => $replay->mistakes,
                 'durationMs' => $attempt->getDurationMs(),
+                'pardoned' => null !== $attempt->getPardon(),
             ],
         );
+    }
+
+    /**
+     * The store's pardon (docs/BLINDFOLD.md): on the puzzle on screen (its mistakes will not
+     * count), or on the one just missed while nothing was served since (solved after all, the XP
+     * topped up by {@see XpRules::BLINDFOLD_PARDON}). Once per puzzle.
+     */
+    public function pardon(Run $run, string $itemId, \DateTimeImmutable $now): array
+    {
+        $attempt = Uuid::isValid($itemId) ? $this->attempts->findOwned(Uuid::fromString($itemId), $run->getUser()) : null;
+        if (null === $attempt || !$attempt->getRun()->getId()->equals($run->getId())) {
+            throw new ItemNotFoundException();
+        }
+        if (null !== $attempt->getPardon() || (!$attempt->isPending() && AttemptStatus::Failed !== $attempt->getStatus())) {
+            throw new AidRefusedException(AidRefusedException::NOT_PARDONABLE);
+        }
+        if (!$attempt->isPending() && !$attempt->getId()->equals($this->attempts->findLatestOfRun($run)?->getId() ?? Uuid::v7())) {
+            throw new AidRefusedException(AidRefusedException::TOO_LATE);
+        }
+        $userId = $run->getUser()->getId();
+        if (!$this->pardons->consume($userId)) {
+            throw new AidRefusedException(AidRefusedException::NO_PARDON);
+        }
+        if ($attempt->isPending()) {
+            $attempt->pardonInPlay();
+            $this->entityManager->flush();
+
+            return ['pardon' => Pardon::Play->value, 'status' => AttemptStatus::Pending->value, 'xp' => 0, 'pardons' => $this->pardons->stock($userId)];
+        }
+        $attempt->pardonLoss();
+        $this->entityManager->flush();
+        // Same transaction as the pardon; the top-up joins the day of the miss.
+        $this->events->publish(new PuzzlePardoned(
+            userId: $userId->toRfc4122(),
+            attemptId: $attempt->getId()->toRfc4122(),
+            runId: $run->getId()->toRfc4122(),
+            occurredAt: $attempt->getSubmittedAt() ?? $now,
+        ));
+
+        return ['pardon' => Pardon::Loss->value, 'status' => AttemptStatus::Solved->value, 'xp' => XpRules::BLINDFOLD_PARDON, 'pardons' => $this->pardons->stock($userId)];
     }
 
     public function close(Run $run, CloseReason $reason, \DateTimeImmutable $now): void
@@ -201,6 +254,7 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
                 'level' => $attempt->getLevel()->value,
                 'length' => $attempt->getLength(),
                 'visibleSeconds' => $attempt->getVisibleSeconds(),
+                'pardoned' => null !== $attempt->getPardon(),
             ],
         ), $attempts);
     }
@@ -238,6 +292,9 @@ final class PuzzleModule implements TimeboxedModuleInterface, ReviewableModuleIn
             'hiddenSeconds' => PuzzleRules::HIDDEN_SECONDS,
             'peeks' => PuzzleRules::PEEKS,
             'startedAt' => $attempt->getStartedAt()->format(\DATE_ATOM),
+            // The store's pardon: already spent on it (a reload), and the stock.
+            'pardoned' => null !== $attempt->getPardon(),
+            'pardons' => $this->pardons->stock($attempt->getUser()->getId()),
         ]);
     }
 

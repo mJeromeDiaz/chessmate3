@@ -60,6 +60,10 @@ class Series
     #[ORM\Column(options: ['default' => false])]
     private bool $validated = false;
 
+    /** The wrong answer the store's pardon took away (docs/COORDINATES.md): neither an answer nor an error. */
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
+    private ?int $pardonedIndex = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $startedAt;
 
@@ -180,6 +184,39 @@ class Series
     public function isExhausted(): bool
     {
         return $this->answerCount >= \count($this->squares);
+    }
+
+    /**
+     * The first wrong answer, if any (the one a pardon takes away).
+     */
+    public function firstMistake(): ?int
+    {
+        foreach ($this->answers as $index => $answer) {
+            if ($answer['square'] !== $this->squares[$index]) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The store's pardon, at the closing: a wrong answer stops counting, as an answer, as an error
+     * and in the time. Its click stays in the answers (the end ribbon shows it).
+     */
+    public function pardon(int $index): void
+    {
+        if ($this->isClosed() || null !== $this->pardonedIndex || false !== $this->isCorrect($index)) {
+            throw new \LogicException('Only a wrong answer of an open series, once.');
+        }
+        $this->pardonedIndex = $index;
+        --$this->answerCount;
+        $this->answeredMs = max(0, $this->answeredMs - $this->answers[$index]['ms']);
+    }
+
+    public function getPardonedIndex(): ?int
+    {
+        return $this->pardonedIndex;
     }
 
     public function close(bool $validated, \DateTimeImmutable $closedAt): void

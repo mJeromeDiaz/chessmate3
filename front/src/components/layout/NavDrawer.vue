@@ -45,6 +45,21 @@
         <q-item-section>Visite guidée</q-item-section>
       </q-item>
       <q-item
+        clickable
+        to="/boutique"
+        active-class="nav-drawer__item--on"
+        data-testid="drawer-shop"
+      >
+        <q-item-section avatar><CrownCoin :size="22" /></q-item-section>
+        <q-item-section>Boutique</q-item-section>
+        <q-item-section
+          v-if="balance !== null"
+          side
+          class="nav-drawer__crowns"
+          >{{ crowns(balance) }}</q-item-section
+        >
+      </q-item>
+      <q-item
         v-if="auth.isAdmin"
         clickable
         to="/admin"
@@ -93,14 +108,17 @@
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import StreakChip from '@/components/gamification/StreakChip.vue'
+import CrownCoin from '@/components/shop/CrownCoin.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
 import UserAvatar from '@/components/layout/UserAvatar.vue'
 import { useLogout } from '@/composables/layout/useLogout'
 import { useAuthStore } from '@/stores/auth'
+import { useShopStore } from '@/stores/shop'
 import { useThemeStore } from '@/stores/theme'
 import { TOUR_PATH } from '@/utils/auth/authFlow'
 import { NAV_LINKS, isNavActive } from '@/utils/layout/navigation'
 import { profileName } from '@/utils/profile'
+import { crowns } from '@/utils/shop'
 import { THEME_OPTIONS } from '@/utils/theme'
 
 /**
@@ -113,6 +131,13 @@ const auth = useAuthStore()
 const theme = useThemeStore()
 const route = useRoute()
 const { loggingOut, logout } = useLogout()
+const shop = useShopStore()
+
+/** The crowns, read the first time the drawer opens. */
+const balance = computed(() => shop.state?.balance ?? null)
+watch(open, opened => {
+  if (opened) shop.loadOnce().catch(() => {})
+})
 
 const name = computed(() => profileName(auth.profile ?? {}))
 const current = computed(
@@ -130,6 +155,15 @@ watch(
 </script>
 
 <style scoped lang="scss">
+.nav-drawer__crowns {
+  font-weight: 800;
+  color: #8a6a00;
+}
+
+.body--dark .nav-drawer__crowns {
+  color: #ffd43b;
+}
+
 .nav-drawer__who {
   display: flex;
   align-items: center;

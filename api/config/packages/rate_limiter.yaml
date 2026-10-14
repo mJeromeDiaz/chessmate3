@@ -237,6 +237,11 @@ framework:
             limit: 120
             interval: '10 minutes'
 
+        # Store (identifier = user id): purchases (docs/SHOP.md).
+        shop_write:
+            policy: sliding_window
+            limit: 60
+            interval: '10 minutes'
         # Profile (identifier = user id): saving the name/handle/avatar or the preferences, and checking a handle while
         # typing (debounced by the SPA). The check only tells whether a public handle is taken.
         profile_write:

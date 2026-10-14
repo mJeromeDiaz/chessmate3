@@ -7,6 +7,7 @@ namespace App\Gamification\Xp;
 use App\Activity\Log\LocalDate;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
+use App\Enum\Blindfold\Pardon;
 use App\Enum\Gamification\XpKind;
 use App\Enum\Training\Module;
 use App\Enum\Training\SessionStatus;
@@ -22,7 +23,7 @@ use Symfony\Component\Uid\Uuid;
  * Recomputes the XP of a user from what they played (docs/GAMIFICATION.md): the activity log in
  * chronological order (the daily cap applied on each `local_date` written with the entry), the
  * completed sessions, Woodpecker cycles and sets, the first validation of each orientation of
- * the coordinates and the puzzle streak records. Quest rewards are kept. One transaction per
+ * the coordinates, the puzzle streak records and the blindfold puzzles pardoned after their miss. Quest rewards are kept. One transaction per
  * user; the same rows as the handlers would have written, under the same sources.
  */
 final readonly class XpRebuilder
@@ -158,6 +159,15 @@ final readonly class XpRebuilder
             [ParameterType::BINARY],
         ) as $row) {
             $rows[] = [XpKind::Record, Module::PuzzleStreak->value, XpRules::STREAK_RECORD, AwardBonusXp::RECORD_SOURCE, self::string($row['id']), self::string($row['run_id']), null, self::string($row['ended_at'])];
+        }
+        // The blindfold puzzles pardoned on the miss sheet, on the day of the miss.
+        foreach ($this->connection->fetchAllAssociative(
+            'SELECT BIN_TO_UUID(id) AS id, run_id, submitted_at FROM blindfold_puzzle_attempt
+              WHERE user_id = ? AND pardon = ? AND submitted_at IS NOT NULL',
+            [$id, Pardon::Loss->value],
+            [ParameterType::BINARY],
+        ) as $row) {
+            $rows[] = [XpKind::Pardon, Module::Blindfold->value, XpRules::BLINDFOLD_PARDON, AwardBonusXp::PARDON_SOURCE, self::string($row['id']), self::string($row['run_id']), null, self::string($row['submitted_at'])];
         }
         // The local day of each bonus, in the user's timezone.
         foreach ($rows as $i => $row) {

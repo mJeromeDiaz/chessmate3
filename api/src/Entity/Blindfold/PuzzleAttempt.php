@@ -7,6 +7,7 @@ namespace App\Entity\Blindfold;
 use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Blindfold\AttemptStatus;
+use App\Enum\Blindfold\Pardon;
 use App\Enum\Blindfold\PuzzleLevel;
 use App\Repository\Blindfold\PuzzleAttemptRepository;
 use Doctrine\DBAL\Types\Types;
@@ -69,6 +70,10 @@ class PuzzleAttempt
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 0])]
     private int $mistakes = 0;
 
+    /** The store's pardon, when it took one (docs/BLINDFOLD.md). */
+    #[ORM\Column(length: 4, nullable: true, enumType: Pardon::class)]
+    private ?Pardon $pardon = null;
+
     public function __construct(Run $run, int $puzzleId, PuzzleLevel $level, int $length, int $visibleSeconds, \DateTimeImmutable $startedAt)
     {
         $this->id = Uuid::v7();
@@ -94,6 +99,34 @@ class PuzzleAttempt
         $this->mistakes = $mistakes;
         $this->submittedAt = $at;
         $this->durationMs = max(0, (int) round(((float) $at->format('U.u') - (float) $this->startedAt->format('U.u')) * 1000));
+    }
+
+    /**
+     * The store's pardon during play: the mistakes of the puzzle will not count.
+     */
+    public function pardonInPlay(): void
+    {
+        if (!$this->isPending() || null !== $this->pardon) {
+            throw new \LogicException('Only a puzzle on screen, once.');
+        }
+        $this->pardon = Pardon::Play;
+    }
+
+    /**
+     * The store's pardon after losing: the puzzle missed becomes solved.
+     */
+    public function pardonLoss(): void
+    {
+        if (AttemptStatus::Failed !== $this->status || null !== $this->pardon) {
+            throw new \LogicException('Only a puzzle missed, once.');
+        }
+        $this->pardon = Pardon::Loss;
+        $this->status = AttemptStatus::Solved;
+    }
+
+    public function getPardon(): ?Pardon
+    {
+        return $this->pardon;
     }
 
     public function getId(): Uuid

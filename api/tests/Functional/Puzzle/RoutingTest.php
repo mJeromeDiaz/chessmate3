@@ -24,6 +24,7 @@ final class RoutingTest extends PuzzleWebTestCase
         yield ['POST', '/api/puzzles/attempts', '_api_/puzzles/attempts_post'];
         yield ['GET', '/api/puzzles/attempts/0192f6a0-1111-7000-8000-000000000000', '_api_/puzzles/attempts/{id}_get'];
         yield ['POST', '/api/puzzles/attempts/0192f6a0-1111-7000-8000-000000000000/submission', '_api_/puzzles/attempts/{id}/submission_post'];
+        yield ['POST', '/api/puzzles/attempts/0192f6a0-1111-7000-8000-000000000000/pardon', '_api_/puzzles/attempts/{id}/pardon_post'];
         yield ['GET', '/api/puzzles/K69di', '_api_/puzzles/{id}_get'];
     }
 

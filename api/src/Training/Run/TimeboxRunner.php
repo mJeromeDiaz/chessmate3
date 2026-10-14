@@ -11,15 +11,18 @@ use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
 use App\Repository\Training\RunRepository;
 use App\Training\Event\RunCompleted;
+use App\Training\Exception\AidRefusedException;
 use App\Training\Exception\ExtensionRefusedException;
 use App\Training\Exception\RunClosedException;
 use App\Training\Exception\RunInProgressException;
 use App\Training\Exception\RunNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
 use App\Training\Exception\SubmissionTooLateException;
+use App\Training\Module\HelpModuleInterface;
 use App\Training\Module\ItemSubmission;
 use App\Training\Module\ModuleRegistry;
 use App\Training\Module\OvertimeModuleInterface;
+use App\Training\Module\PardonModuleInterface;
 use App\Training\Module\TimeboxedModuleInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -164,7 +167,7 @@ final class TimeboxRunner
      */
     public function submit(User $user, Uuid $runId, ItemSubmission $submission): Step
     {
-        $outcome = $this->entityManager->wrapInTransaction(function () use ($user, $runId, $submission): Step|string {
+        $outcome = $this->entityManager->wrapInTransaction(function () use ($user, $runId, $submission): Step|AidRefusedException|string {
             $now = $this->now();
             $run = $this->runs->lockOwned($runId, $user) ?? throw new RunNotFoundException();
             if (!$run->isActive()) {
@@ -183,6 +186,9 @@ final class TimeboxRunner
                 $this->close($run, $e->reason, $now, $now, $e->context);
 
                 return RunClosedException::class;
+            } catch (AidRefusedException $e) {
+                // Refused before any write: thrown outside, the entity manager stays open.
+                return $e;
             }
             if (null !== $result->closes) {
                 $this->close($run, $result->closes, $now, $now, $result->context);
@@ -192,6 +198,88 @@ final class TimeboxRunner
 
             return new Step($run, null, $result);
         });
+        if ($outcome instanceof AidRefusedException) {
+            throw $outcome;
+        }
+
+        return match ($outcome) {
+            RunClosedException::class => throw new RunClosedException(),
+            SubmissionTooLateException::class => throw new SubmissionTooLateException(),
+            default => $outcome,
+        };
+    }
+
+    /**
+     * A paid help of the store on the item on screen (docs/PUZZLE_STREAK.md): only while the run's
+     * time runs, like a submission.
+     *
+     * @return array<string, mixed> what the module answers (the stock left...)
+     *
+     * @throws RunNotFoundException
+     * @throws RunClosedException
+     * @throws SubmissionTooLateException (the run is closed, or waits for the overtime decision)
+     * @throws AidRefusedException        none left, or no help in this module
+     * @throws \App\Training\Exception\ItemNotFoundException
+     * @throws \App\Training\Exception\ItemAlreadySubmittedException
+     */
+    public function help(User $user, Uuid $runId, string $itemId): array
+    {
+        return $this->aid($user, $runId, static fn (TimeboxedModuleInterface $module, Run $run, \DateTimeImmutable $now): array|AidRefusedException => $module instanceof HelpModuleInterface
+            ? $module->help($run, $itemId, $now)
+            : new AidRefusedException(AidRefusedException::NOT_OFFERED));
+    }
+
+    /**
+     * A pardon of the store on an item of the run (docs/BLINDFOLD.md): the item on screen, or the
+     * one just resolved while nothing was served since; only while the run's time runs.
+     *
+     * @return array<string, mixed> what the module answers (the stock left...)
+     *
+     * @throws RunNotFoundException
+     * @throws RunClosedException
+     * @throws SubmissionTooLateException (the run is closed, or waits for the overtime decision)
+     * @throws AidRefusedException        none left, too late, or no pardon in this module
+     * @throws \App\Training\Exception\ItemNotFoundException
+     */
+    public function pardon(User $user, Uuid $runId, string $itemId): array
+    {
+        return $this->aid($user, $runId, static fn (TimeboxedModuleInterface $module, Run $run, \DateTimeImmutable $now): array|AidRefusedException => $module instanceof PardonModuleInterface
+            ? $module->pardon($run, $itemId, $now)
+            : new AidRefusedException(AidRefusedException::NOT_OFFERED));
+    }
+
+    /**
+     * Spends an aid of the store through the module, under the same checks as a submission.
+     *
+     * @param \Closure(TimeboxedModuleInterface, Run, \DateTimeImmutable): (array<string, mixed>|AidRefusedException) $spend
+     *
+     * @return array<string, mixed>
+     */
+    private function aid(User $user, Uuid $runId, \Closure $spend): array
+    {
+        $outcome = $this->entityManager->wrapInTransaction(function () use ($user, $runId, $spend): array|AidRefusedException|string {
+            $now = $this->now();
+            $run = $this->runs->lockOwned($runId, $user) ?? throw new RunNotFoundException();
+            if (!$run->isActive()) {
+                return RunClosedException::class;
+            }
+            if ($now > $run->getExpiresAt()->modify(sprintf('+%d milliseconds', self::SUBMISSION_TOLERANCE_MS))) {
+                if (!$this->awaitsDecision($run, $now)) {
+                    $this->close($run, CloseReason::TimeUp, $run->getExpiresAt(), $now);
+                }
+
+                return SubmissionTooLateException::class;
+            }
+            try {
+                return $spend($this->module($run), $run, $now);
+            } catch (AidRefusedException $e) {
+                // Refused before any write: thrown outside, the entity manager stays open.
+                return $e;
+            }
+        });
+        if ($outcome instanceof AidRefusedException) {
+            throw $outcome;
+        }
 
         return match ($outcome) {
             RunClosedException::class => throw new RunClosedException(),

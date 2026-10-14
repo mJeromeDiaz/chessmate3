@@ -68,24 +68,51 @@ avec au moins `RECORD_MIN` (5) puzzles, est marqué `record` et publie `RecordBe
   - `mode: timed` (étape de session : `prepare()` force ce mode, réglages `{ramp, topic}`) : après
     une erreur, un nouveau streak commence ; la séance dure son temps.
 - **Élément** `streak_puzzle` : le puzzle complet (solution comprise), `ramp`, `topic`, `mode`,
-  `streak` (réussis avant lui), `best` (meilleur streak de la séance), `targetRating`, `startedAt`.
+  `streak` (réussis avant lui), `best` (meilleur streak de la séance), `targetRating`, `startedAt`,
+  `helps` (aides de la boutique dépensées sur lui) et `aids` `{help, pass}` (le stock, § 3 bis).
   Un rechargement rend le même puzzle.
-- **Verdict** : `solved` ou `failed` ; réponse `{status, mistakes, durationMs, streak, broken,
-  record, best}`.
+- **Verdict** : `solved`, `failed` ou `passed` (§ 3 bis) ; réponse `{status, mistakes, durationMs,
+  streak, broken, record, best}` (+ `aids` après un pass).
 - **Fin** : le puzzle à l'écran n'est pas compté ; le streak en cours se termine (`ended`) à son
   dernier puzzle soumis (supprimé s'il n'en a aucun). Statuts d'un streak : `active`, `broken`,
   `ended`.
 - **Récapitulatif** `metrics` : `mode`, `ramp`, `topic`, `bestStreak`, `streaks` (longueurs dans
   l'ordre), `recordBefore` (record de la difficulté et de la thématique hors de cette séance),
   `record` (un streak de la séance l'a battu), `badges` (badges gagnés par cette séance, § 4 bis),
-  `hardestRating`, `solved`, `failed`, `activeMs`, `averageMs`, `extensions`. Bilan (`review`) : `ok` / `fail`, le puzzle complet, `streakNumber`,
-  `position`, `targetRating`.
+  `hardestRating`, `solved`, `failed`, `passes`, `helps`, `activeMs`, `averageMs`, `extensions`
+  (`itemCount` = réussis + ratés : un puzzle passé n'est pas joué). Bilan (`review`) : `ok` /
+  `fail` / `hint` (passé), le puzzle complet, `passed`, `helps`, `streakNumber`, `position`,
+  `targetRating`.
 - **Prolongation** ([TRAINING.md § 2](TRAINING.md#2-règles-validées)) : `StreakModule` implémente
   `OvertimeModuleInterface` ; `canExtend` = un streak en cours d'au moins un puzzle. Le temps écoulé,
   la séance attend 60 s la décision ; « Continuer » (`POST /training/runs/{id}/extend`) donne 5 min
   de plus à partir du clic, sur le même puzzle ; une fois prolongée, la première erreur clôt la
   séance (pas de nouveau streak en prolongation). « Achever » ou pas de réponse : clôture `time_up`
   à l'expiration.
+
+## 3 bis. Aides de la boutique (2026-10-13)
+
+Pas d'aide gratuite, mais deux articles de la boutique ([SHOP.md](SHOP.md)), en stock
+(`shop_inventory_item` : `puzzle_streak_help`, `puzzle_streak_pass`). Le domaine PuzzleStreak
+possède l'interface `PuzzleStreak\Aid\AidStockInterface` (`stock`, `consume`), la boutique
+l'implémente (`Shop\Aid\AidStock`, alias dans `config/services.yaml`) : le streak ne dépend pas de
+la boutique.
+
+- **Aide** : `POST /training/runs/{id}/help {itemId}` (`TimeboxRunner::help()`, modules
+  `Training\Module\HelpModuleInterface`) dépense une aide sur le puzzle à l'écran
+  (`puzzle_streak_attempt.helps` + 1) et répond `{data: {helps, aids}}` ; la pièce à jouer
+  s'illumine (premier niveau d'indice). Une par coup à trouver au plus. La soumission qui suit peut
+  porter `hintLevel: 1` sans casser le streak si au moins une aide a été payée ; la flèche ou la
+  solution restent une erreur. 409 `no_help` (aucune, rien dépensé), `help_limit`, `not_offered`
+  (autre module) ; 409 aussi séance close ou temps écoulé, puzzle déjà soumis.
+- **Pass** : soumission `{itemId, moves: [], pass: true}`, **avant tout coup** (un coup joué : 400 ;
+  un mauvais coup a déjà cassé le streak). Statut `passed`, le streak continue sans s'allonger, le
+  puzzle suivant est tiré au même niveau (jamais le même : le tirage exclut les puzzles de la
+  séance). Ni exercice, ni XP, ni activité. 409 `no_pass` (aucun, rien dépensé).
+- **Records et badges** : un streak avec aides ou pass compte comme les autres, sans limite ; le
+  récapitulatif le dit (« 2 pass, 1 aide »).
+- Les refus sont rendus hors de la transaction (l'entity manager reste ouvert) : rien n'est écrit
+  avant le refus.
 
 ## 4. XP
 
@@ -133,8 +160,13 @@ Exportés avec le compte (`entrainement.json` : `puzzleStreaks`, `puzzleStreakAt
 - Page `/streak` (lien « Streak » du menu) : difficulté, thématique (`TopicSelect` : liste groupée
   avec recherche, accents ignorés), record du choix en cours, « Lancer le streak »
   (`RunLauncher` `fixed-minutes` 60, aucune durée à choisir), puis les records.
-- Jeu sur `training/[id]` : `PuzzlePlayer` sans aide (`help=false`), un seul essai (la solution se
-  déroule après l'erreur). En tête « Streak : N » (seul, sans chrono) ou le chrono et « Streak N ·
+- Jeu sur `training/[id]` : `PuzzlePlayer` sans aide gratuite (`help=false`), un seul essai (la
+  solution se déroule après l'erreur). Boutons « Aide · n » et « Pass · n » (prop `aids`, événement
+  `aid`) : en stock, la page dépense (`trainingApi.help`, ou la soumission `pass`) puis appelle
+  `lightPiece()` ou `pass()` du lecteur (la solution se déroule sans feuille de verdict, le puzzle
+  suivant arrive) ; « Pass » grisé dès le premier coup, « Aide » quand le coup en cours est déjà
+  éclairé ou la limite atteinte. À 0, la feuille d'achat de la boutique (`PurchaseSheet`, l'offre
+  d'un seul article la moins chère, `aidOffer`) s'ouvre sur place, le chrono continue. En tête « Streak : N » (seul, sans chrono) ou le chrono et « Streak N ·
   meilleur M » (séance) ; puce du niveau (« ≈ 900 », « Palier 3 · 1000–1200 »). Réussi : le suivant
   arrive seul (1,2 s) ; raté : « Nouveau streak → », ou « Voir le résultat » quand la séance est
   close (le puzzle reste affiché jusque-là).
@@ -144,7 +176,7 @@ Exportés avec le compte (`entrainement.json` : `puzzleStreaks`, `puzzleStreakAt
   termine la séance.
 - Fin : écran « Meilleur streak ! » ou « Nouveau record ! » (confettis) ; le score est le meilleur
   streak, l'anneau le compare au record d'avant, une ligne dit le record (`streakRing`,
-  `streakNote` de `utils/runResult.js`), puis les badges gagnés (`wonBadges`, pastille violette) ;
+  `streakNote` de `utils/runResult.js`, suivie des aides dépensées, `streakAids`), puis les badges gagnés (`wonBadges`, pastille violette) ;
   « Revoir mes erreurs » rejoue les puzzles qui ont cassé
   les streaks. Jamais de son ni d'écran d'échec (un streak finit toujours sur une erreur).
 - Session Builder : carte « Puzzle streak » (prof Albert) : durée (5 à 60 min), difficulté,
@@ -154,7 +186,8 @@ Exportés avec le compte (`entrainement.json` : `puzzleStreaks`, `puzzleStreakAt
 
 `tests/Unit/PuzzleStreak/StreakRulesTest.php` (difficultés, thématiques, XP),
 `tests/Functional/PuzzleStreak/StreakRunTest.php` (streak seul jusqu'à l'erreur, jamais classé, XP
-et recalcul, record et son bonus, badge annoncé une seule fois, streaks enchaînés en séance, aide = erreur, thème, ouverture et
+et recalcul, record et son bonus, badge annoncé une seule fois, streaks enchaînés en séance, aide = erreur, aide payée
+(pièce éclairée, limite, stock vide), pass (avant tout coup, puzzle équivalent, ni exercice ni XP, stock vide), thème, ouverture et
 ouvertures proposées, réglages, étape de session ; prolongation : sans streak, deux prolongations
 puis l'erreur, « Achever », sans réponse), `RoutingTest.php`, `Gamification/TrophyTest.php`
 (badges : toutes thématiques, date de l'exploit) ; Vitest `puzzle-streak.test.js`,

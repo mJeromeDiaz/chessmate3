@@ -36,8 +36,13 @@ final class Summary
     public ?array $nextRank = null;
     /** @var array<string, ModuleLevel> by module (Module values) */
     public array $modules = [];
-    /** @var StreakView week: the active days of the current local week, Monday first; nextMilestone: the next streak badge's length */
-    public array $streak = ['current' => 0, 'best' => 0, 'playedToday' => false, 'week' => [false, false, false, false, false, false, false], 'nextMilestone' => 3];
+    /**
+     * @var StreakView week: the active days of the current local week, Monday first; frozenWeek: its
+     *                 days covered by a freeze; protected: alive thanks to the freezes in stock
+     *                 (docs/SHOP.md); freezeDays: the days they still cover; nextMilestone: the next
+     *                 streak badge's length
+     */
+    public array $streak = ['current' => 0, 'best' => 0, 'playedToday' => false, 'week' => [false, false, false, false, false, false, false], 'frozenWeek' => [false, false, false, false, false, false, false], 'protected' => false, 'freezeDays' => 0, 'nextMilestone' => 3];
     /** @var array{date: string, exerciseXp: int, cap: int} date: the user's local day (Y-m-d) */
     public array $today = ['date' => '', 'exerciseXp' => 0, 'cap' => 0];
 }

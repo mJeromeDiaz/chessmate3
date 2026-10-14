@@ -67,6 +67,22 @@
         />
       </template>
       <q-btn
+        v-if="pardons && game.canPardon.value"
+        unelevated
+        no-caps
+        class="play-btn play-btn--hint"
+        :label="`Pardonner · ${pardons.count}`"
+        :loading="pardons.busy"
+        :disable="pardons.busy"
+        data-testid="blindfold-pardon"
+        @click="emit('pardon')"
+      >
+        <q-tooltip
+          >Ton erreur est effacée et ton coup d’œil revient : le puzzle compte
+          comme résolu (boutique).</q-tooltip
+        >
+      </q-btn>
+      <q-btn
         unelevated
         no-caps
         class="play-btn play-btn--solution"
@@ -156,6 +172,8 @@
  * The logic lives in {@see useBlindfoldPuzzle}; the page owns the API calls (through `resolve`),
  * gives the XP the server announced and the result sheet's buttons, and fills the `header` and
  * `result` slots. Noctis, the module's professor, talks and reacts (design "Animation Puzzle").
+ * After a mistake, "Pardonner · n" asks the page for the store's pardon (`pardon`), which then
+ * calls `pardon()`.
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
@@ -182,7 +200,13 @@ const props = defineProps({
   /** The submission's `xp`: undefined until it answered. */
   xp: { type: [Number, null], default: undefined },
   /** @type {import('vue').PropType<import('@/components/feedback/ResultSheet.vue').SheetAction[]>} the result sheet's buttons */
-  actions: { type: Array, default: () => [] }
+  actions: { type: Array, default: () => [] },
+  /**
+   * The store's pardons (docs/BLINDFOLD.md): the stock and a request in flight; null: none offered.
+   *
+   * @type {import('vue').PropType<{count: number, busy: boolean}|null>}
+   */
+  pardons: { type: Object, default: null }
 })
 
 const emit = defineEmits({
@@ -190,7 +214,9 @@ const emit = defineEmits({
   resolve: (status, report) =>
     typeof status === 'string' && Array.isArray(report?.moves),
   /** The final position is on the board. */
-  complete: null
+  complete: null,
+  /** "Pardonner" asked, even out of stock: the page spends or sells a pardon. */
+  pardon: null
 })
 
 const PROMOTIONS = [
@@ -328,13 +354,19 @@ watch(
     game.load(d.puzzle, {
       visibleSeconds: d.visibleSeconds,
       hiddenSeconds: d.hiddenSeconds,
-      peeks: d.peeks
+      peeks: d.peeks,
+      pardoned: !!d.pardoned
     })
   },
   { immediate: true }
 )
 
 onBeforeUnmount(() => game.dispose())
+
+defineExpose({
+  /** The store's pardon accepted by the server: the mistakes erased, the peeks back. */
+  pardon: () => game.pardon()
+})
 </script>
 
 <style scoped lang="scss">

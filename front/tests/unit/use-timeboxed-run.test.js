@@ -306,6 +306,32 @@ describe('useTimeboxedRun', () => {
     runner.dispose()
   })
 
+  it('turns a miss into a success when the store’s pardon took it (blindfold)', async () => {
+    const api = mockApi()
+    const { runner, expiresAt } = await started(api)
+    api.submit.mockResolvedValue({
+      run: runJson({ expiresAt, serverNow: Date.now() }),
+      result: { itemId: 'a1', success: false, data: { status: 'failed' } },
+      xp: 2
+    })
+    await runner.submit({ moves: ['e2e4'], hintLevel: 0, solutionShown: false })
+    expect([runner.played.value, runner.solved.value]).toEqual([1, 0])
+
+    runner.pardonResult(10)
+    expect(runner.result.value).toEqual({
+      itemId: 'a1',
+      success: true,
+      data: { status: 'solved', pardoned: true }
+    })
+    expect([runner.played.value, runner.solved.value, runner.xp.value]).toEqual(
+      [1, 1, 12]
+    )
+    // Once only: a success stays as it is.
+    runner.pardonResult(10)
+    expect([runner.solved.value, runner.xp.value]).toEqual([1, 12])
+    runner.dispose()
+  })
+
   it('keeps playing when the server still had a few ms, then closes', async () => {
     const api = mockApi()
     const { runner, expiresAt } = await started(api)

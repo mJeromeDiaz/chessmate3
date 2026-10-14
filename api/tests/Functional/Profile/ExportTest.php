@@ -80,7 +80,7 @@ final class ExportTest extends WebTestCase
             $names[] = (string) $zip->getNameIndex($i);
         }
         sort($names);
-        self::assertSame(['LISEZMOI.txt', 'activite.json', 'entrainement.json', 'profil.json', 'puzzles.json', 'repertoires.json', 'repertoires/01-italienne.pgn', 'woodpecker.json'], $names);
+        self::assertSame(['LISEZMOI.txt', 'activite.json', 'boutique.json', 'entrainement.json', 'profil.json', 'puzzles.json', 'repertoires.json', 'repertoires/01-italienne.pgn', 'woodpecker.json'], $names);
 
         $profile = $this->json($zip, 'profil.json');
         self::assertSame('alice@example.com', $profile['email']);

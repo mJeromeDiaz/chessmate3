@@ -19,6 +19,7 @@ use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\ReceivedStamp;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * The streak announcement (docs/GAMIFICATION.md, "Annonce de la série"): written when the first
@@ -52,13 +53,14 @@ final class StreakNoticeTest extends WebTestCase
         foreach (['2026-10-02', '2026-10-03', '2026-10-04'] as $day) {
             $this->deliver($this->exercise($alice, $day.' 08:00:00'));
         }
-        self::assertSame(['pending' => false, 'streak' => null, 'previousStreak' => null, 'badge' => null, 'week' => null, 'nextMilestone' => null, 'localDate' => null], $this->notice($alice));
+        self::assertSame(['pending' => false, 'streak' => null, 'previousStreak' => null, 'badge' => null, 'week' => null, 'frozenWeek' => null, 'nextMilestone' => null, 'localDate' => null], $this->notice($alice));
 
         $this->publish($this->exercise($alice, '2026-10-05 09:00:00'));
         $expected = [
             'pending' => true, 'streak' => 4, 'previousStreak' => 3, 'badge' => null,
             // Monday, today's exercise still in the outbox: Friday to Sunday belong to the past week.
-            'week' => [true, false, false, false, false, false, false], 'nextMilestone' => 7, 'localDate' => '2026-10-05',
+            'week' => [true, false, false, false, false, false, false], 'frozenWeek' => [false, false, false, false, false, false, false],
+            'nextMilestone' => 7, 'localDate' => '2026-10-05',
         ];
         self::assertSame($expected, $this->notice($alice));
         // A second exercise, its predecessor not logged yet: the same announcement.
@@ -112,6 +114,83 @@ final class StreakNoticeTest extends WebTestCase
         $read = $this->client->getResponse()->getStatusCode();
         $this->client->request('POST', '/api/gamification/streak/notice/acknowledgement');
         self::assertSame([401, 401], [$read, $this->client->getResponse()->getStatusCode()]);
+    }
+
+    public function testFreezesCoverTheMissedDaysWhenThePlayerComesBack(): void
+    {
+        // Thursday 8 October: Alice played Friday to Monday, missed Tuesday and Wednesday.
+        Clock::set(new MockClock('2026-10-08 08:00:00', 'UTC'));
+        $alice = $this->createUser('alice@example.com');
+        foreach (['2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05'] as $day) {
+            $this->deliver($this->exercise($alice, $day.' 08:00:00'));
+        }
+        $this->freeze($alice, 1);
+        $this->freeze($alice, 7);
+
+        // Away: protected by the stock, nothing used yet.
+        $streak = $this->summaryStreak($alice);
+        self::assertSame([4, true, 8, [false, true, true, false, false, false, false]], [$streak['current'], $streak['protected'], $streak['freezeDays'], $streak['frozenWeek']]);
+        self::assertSame([7, 1], $this->freezesLeft($alice));
+
+        // Back: the week's freeze covers both days (the smallest long enough), 5 days left.
+        $this->publish($this->exercise($alice, '2026-10-08 07:59:00'));
+        $notice = $this->notice($alice);
+        self::assertSame([5, 4, [false, true, true, false, false, false, false]], [$notice['streak'], $notice['previousStreak'], $notice['frozenWeek']]);
+        self::assertSame([5, 1], $this->freezesLeft($alice));
+        $this->deliver($this->exercise($alice, '2026-10-08 07:59:00'));
+        $streak = $this->summaryStreak($alice);
+        self::assertSame([5, 5, false, 6], [$streak['current'], $streak['best'], $streak['protected'], $streak['freezeDays']]);
+
+        // Two 1-day freezes cover two days together.
+        $bob = $this->createUser('bob@example.com');
+        $this->deliver($this->exercise($bob, '2026-10-05 08:00:00'));
+        $this->freeze($bob, 1);
+        $this->freeze($bob, 1);
+        $this->publish($this->exercise($bob, '2026-10-08 08:00:00'));
+        self::assertSame([2, 1], [$this->notice($bob)['streak'], $this->notice($bob)['previousStreak']]);
+        self::assertSame([0, 0], $this->freezesLeft($bob));
+
+        // Too short: the streak breaks, the freeze stays.
+        $carol = $this->createUser('carol@example.com');
+        $this->deliver($this->exercise($carol, '2026-10-04 08:00:00'));
+        $this->freeze($carol, 2);
+        self::assertSame([0, false], [$this->summaryStreak($carol)['current'], $this->summaryStreak($carol)['protected']]);
+        $this->publish($this->exercise($carol, '2026-10-08 08:00:00'));
+        self::assertSame([1, 0], [$this->notice($carol)['streak'], $this->notice($carol)['previousStreak']]);
+        self::assertSame([2], $this->freezesLeft($carol));
+    }
+
+    private function freeze(User $user, int $days): void
+    {
+        $this->connection()->executeStatement(
+            "INSERT INTO shop_freeze (id, user_id, item, days, days_left, acquired_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())",
+            [Uuid::v7()->toBinary(), $user->getId()->toBinary(), 'streak_freeze_'.$days, $days, $days],
+        );
+    }
+
+    /**
+     * @return list<int> the days each freeze has left, longest first
+     */
+    private function freezesLeft(User $user): array
+    {
+        return array_map(static fn (mixed $left): int => is_numeric($left) ? (int) $left : -1, $this->connection()->fetchFirstColumn(
+            'SELECT days_left FROM shop_freeze WHERE user_id = ? ORDER BY days_left DESC',
+            [$user->getId()->toBinary()],
+        ));
+    }
+
+    /**
+     * @return array{current: int, best: int, protected: bool, freezeDays: int, frozenWeek: list<bool>}
+     */
+    private function summaryStreak(User $user): array
+    {
+        $this->client->request('GET', '/api/gamification/summary', server: $this->auth($user));
+        $response = $this->client->getResponse();
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+        /** @var array{streak: array{current: int, best: int, protected: bool, freezeDays: int, frozenWeek: list<bool>}} $body */
+        $body = json_decode((string) $response->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+
+        return $body['streak'];
     }
 
     private function createUser(string $email): User

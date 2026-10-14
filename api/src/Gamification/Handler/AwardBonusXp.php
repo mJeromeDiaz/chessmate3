@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Gamification\Handler;
 
+use App\Blindfold\Event\PuzzlePardoned;
 use App\Coordinates\Event\SeriesValidated;
 use App\Enum\Gamification\XpKind;
 use App\Enum\Training\Module;
@@ -20,14 +21,16 @@ use Symfony\Component\Uid\Uuid;
 /**
  * The bonuses (docs/GAMIFICATION.md): a session completed to its end, a Woodpecker cycle
  * completed in time, a Woodpecker set completed, an orientation of the coordinates validated for
- * the first time, a puzzle streak record beaten. Idempotent on their source (the cycle by set,
- * number and run, the validation by user and orientation, the record by streak, as
+ * the first time, a puzzle streak record beaten, a blindfold puzzle pardoned after its miss.
+ * Idempotent on their source (the cycle by set, number and run, the validation by user and
+ * orientation, the record by streak, the pardon by attempt, as
  * {@see \App\Gamification\Xp\XpRebuilder} keys them).
  */
 final class AwardBonusXp
 {
     public const VALIDATION_SOURCE = 'coordinates_validation';
     public const RECORD_SOURCE = 'puzzle_streak';
+    public const PARDON_SOURCE = 'blindfold_pardon';
 
     public function __construct(private readonly XpLedger $ledger)
     {
@@ -87,6 +90,21 @@ final class AwardBonusXp
             XpRules::STREAK_RECORD,
             self::RECORD_SOURCE,
             $event->streakId,
+            $event->occurredAt,
+            Uuid::isValid($event->runId) ? Uuid::fromString($event->runId) : null,
+        );
+    }
+
+    #[AsMessageHandler]
+    public function onPuzzlePardoned(PuzzlePardoned $event): void
+    {
+        $this->ledger->awardBonus(
+            $event->userId,
+            XpKind::Pardon,
+            Module::Blindfold->value,
+            XpRules::BLINDFOLD_PARDON,
+            self::PARDON_SOURCE,
+            $event->attemptId,
             $event->occurredAt,
             Uuid::isValid($event->runId) ? Uuid::fromString($event->runId) : null,
         );

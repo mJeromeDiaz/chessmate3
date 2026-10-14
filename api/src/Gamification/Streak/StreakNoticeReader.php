@@ -15,13 +15,14 @@ use Psr\Clock\ClockInterface;
  * Today's streak announcement not shown yet (docs/GAMIFICATION.md, "Annonce de la série"), and
  * its acknowledgement once the front showed it. An announcement of a past day is never shown.
  *
- * @phpstan-type Notice array{streak: int, previousStreak: int, badge: string|null, week: list<bool>, nextMilestone: int|null, localDate: string}
+ * @phpstan-type Notice array{streak: int, previousStreak: int, badge: string|null, week: list<bool>, frozenWeek: list<bool>, nextMilestone: int|null, localDate: string}
  */
 final readonly class StreakNoticeReader
 {
     public function __construct(
         private Connection $connection,
         private ClockInterface $clock,
+        private StreakDays $streakDays,
     ) {
     }
 
@@ -53,6 +54,8 @@ final readonly class StreakNoticeReader
             'previousStreak' => (int) $row['previous_streak'],
             'badge' => \is_string($row['badge']) ? $row['badge'] : null,
             'week' => Streak::week($days, $today),
+            // The days a freeze covered this week (docs/SHOP.md).
+            'frozenWeek' => Streak::week($this->streakDays->frozen($user->getId()), $today),
             'nextMilestone' => Streak::nextMilestone((int) $row['streak']),
             'localDate' => $today,
         ];

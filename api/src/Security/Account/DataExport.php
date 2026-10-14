@@ -41,6 +41,8 @@ final readonly class DataExport
           repertoires/*.pgn : chaque répertoire au format PGN.
         - entrainement.json : vos séances chronométrées, sessions, sessions enregistrées, séries
           de coordonnées et puzzles à l'aveugle.
+        - boutique.json : vos couronnes (chaque mouvement), vos objets, vos gels de série et les jours
+          qu'ils ont couverts.
         - activite.json : le journal de vos exercices terminés.
 
         Les dates sont en UTC (ISO 8601), les identifiants des UUID.
@@ -77,7 +79,7 @@ final readonly class DataExport
             'ratingHistory' => $this->rows('SELECT reason, rating_before, rating_after, deviation_after, created_at FROM puzzle_rating_change WHERE user_id = ? ORDER BY created_at', $id),
             'attempts' => $this->withLichessIds($this->rows(
                 'SELECT BIN_TO_UUID(a.id) AS id, a.puzzle_id AS puzzle, a.rated, a.status, a.started_at, a.submitted_at, a.duration_ms, a.moves,
-                        a.mistakes, a.hint_level, a.solution_shown, BIN_TO_UUID(a.training_run_id) AS training_run_id
+                        a.mistakes, a.hint_level, a.solution_shown, a.pardoned, BIN_TO_UUID(a.training_run_id) AS training_run_id
                    FROM puzzle_attempt a
                   WHERE a.user_id = ? ORDER BY a.started_at',
                 $id,
@@ -144,14 +146,14 @@ final readonly class DataExport
             ),
             'coordinates' => $this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, orientation, squares, answers, answer_count, success_count,
-                        answered_ms, validated, started_at, closed_at
+                        answered_ms, validated, pardoned_index, started_at, closed_at
                    FROM coordinates_series WHERE user_id = ? ORDER BY started_at',
                 $id,
                 ['squares', 'answers'],
             ),
             'blindfoldPuzzles' => $this->withLichessIds($this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, puzzle_id AS puzzle, level, length, visible_seconds, status,
-                        started_at, submitted_at, duration_ms, moves, mistakes
+                        started_at, submitted_at, duration_ms, moves, mistakes, pardon
                    FROM blindfold_puzzle_attempt WHERE user_id = ? ORDER BY started_at',
                 $id,
                 ['moves'],
@@ -164,11 +166,21 @@ final readonly class DataExport
             ),
             'puzzleStreakAttempts' => $this->withLichessIds($this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(streak_id) AS streak_id, puzzle_id AS puzzle, puzzle_rating, position, target_rating,
-                        status, started_at, submitted_at, duration_ms, moves, mistakes
+                        status, started_at, submitted_at, duration_ms, moves, mistakes, helps
                    FROM puzzle_streak_attempt WHERE user_id = ? ORDER BY started_at',
                 $id,
                 ['moves'],
             )),
+        ]));
+        // Crowns and the store (docs/SHOP.md).
+        $zip->addFromString('boutique.json', self::json([
+            'ledger' => $this->rows(
+                'SELECT kind, delta, balance_after, offer_name, quantity, reason, created_at FROM shop_ledger_entry WHERE user_id = ? ORDER BY created_at, id',
+                $id,
+            ),
+            'inventory' => $this->rows('SELECT item, quantity FROM shop_inventory_item WHERE user_id = ? AND quantity > 0 ORDER BY item', $id),
+            'freezes' => $this->rows('SELECT item, days, days_left, acquired_at FROM shop_freeze WHERE user_id = ? ORDER BY acquired_at', $id),
+            'frozenDays' => $this->rows('SELECT local_date, created_at FROM gamification_frozen_day WHERE user_id = ? ORDER BY local_date', $id),
         ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(

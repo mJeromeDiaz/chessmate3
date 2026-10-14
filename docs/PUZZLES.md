@@ -109,6 +109,30 @@ publique). Une ligne `puzzle_rating_change` (raison `lichess_import`) garde la t
 Aussi par-dessus un niveau déclaré dans la visite guidée ([ONBOARDING.md](ONBOARDING.md) : source
 `declared`, raison `level_declared`, RD 250), jamais l'inverse.
 
+### Erreur pardonnée (boutique, 2026-10-13)
+
+Un article de la boutique ([SHOP.md](SHOP.md), stock `puzzle_pardon`) : sur la fiche d'échec d'un
+puzzle classé raté, « Pardonner » rend le classement d'avant ce puzzle.
+
+- `Puzzle\Pardon\Pardoner` (verrous dans l'ordre d'`AttemptService` : classement puis tentative) ;
+  le stock passe par `Puzzle\Pardon\PardonStockInterface`, implémentée par la boutique
+  (`Shop\Pardon\PuzzlePardons`, alias dans `config/services.yaml`).
+- **Seulement sur la fiche d'échec** : la tentative est classée, ratée, pas encore pardonnée
+  (`not_pardonable`) ; son changement de classement est le dernier de l'utilisateur et aucun puzzle
+  n'a été servi depuis (`too_late`) ; un pardon en stock (`no_pardon`). Refus avant toute écriture.
+- **Effet exact** : classement, RD et volatilité reviennent à l'état d'avant (`RatingChange::before()`,
+  `Rating::restore()`), `rated_count` − 1 (la date du dernier puzzle classé reste) ; une ligne
+  `puzzle_rating_change` de raison `pardon` (avant = après l'échec, après = restauré) : la courbe du
+  dashboard remonte. La tentative reste `failed` (statistiques, XP), marquée `pardoned`.
+- Séance chronométrée : le classement de fin (`statsOfRun`) prend le classement d'avant pour un
+  dernier puzzle pardonné.
+- Front : en jeu libre (`pages/index/puzzle/(play).vue`), la fiche d'échec d'un puzzle classé qui a
+  coûté des points montre « Pardonner · n » (stock lu dans la boutique à l'arrivée sur la page) ;
+  `store.pardon()` affiche alors un écart de 0 et relit le classement. À 0, ou sur un refus
+  `no_pardon`, la feuille d'achat de la boutique s'ouvre sur place (`composables/shop/useAidPurchase.js`,
+  offre la moins chère à l'unité). Pas de pardon dans les séances chronométrées (puzzle suivant
+  automatique).
+
 ## 4. Sélection adaptative
 
 `App\Puzzle\Selection\PuzzleSelector`.
@@ -191,6 +215,7 @@ Toutes les routes exigent un JWT. Formats JSON-LD (`application/ld+json`).
 | `POST /api/puzzles/attempts` `{themes?: string[], difficulty?: "easier"\|"normal"\|"harder"}` | `PuzzleAttempt` | 201 : tentative en attente + puzzle (FEN, coups, couleur du joueur). La tentative classée en attente si elle existe. 404 aucun puzzle, 409 si une séance chronométrée active la tient, 422 thème inconnu, 429. |
 | `POST /api/puzzles/attempts` `{replayOf: "K69di"}` | `PuzzleAttempt` | 201 : rejeu non classé ; 404 si le puzzle n'est ni dans l'historique ni autorisé par un `ReplayAuthorizerInterface` (puzzle d'un de mes sets Woodpecker). |
 | `POST /api/puzzles/attempts/{id}/submission` `{moves: string[], hintLevel: 0-2, solutionShown: bool}` | `PuzzleAttempt` | 200 : résultat calculé par le serveur, `ratingBefore/After/Delta`. 400 liste impossible, 404 tentative inconnue ou d'un autre, 409 déjà soumise ou tenue par une séance active, 422, 429. |
+| `POST /api/puzzles/attempts/{id}/pardon` | `PuzzleAttempt` | 200 : la tentative `pardoned`, `pardons` (stock restant) ; 404 tentative inconnue ou d'un autre ; 409 `not_pardonable`, `too_late`, `no_pardon` (§ 3, « Erreur pardonnée ») ; 429. |
 | `GET /api/puzzles/attempts?page=&itemsPerPage=&result=solved\|failed&theme=` | `PuzzleAttempt` | Historique paginé (20 par page, 50 max), du plus récent au plus ancien. |
 | `GET /api/puzzles/attempts/{id}` | `PuzzleAttempt` | 404 si elle appartient à un autre. |
 | `GET /api/puzzles/themes` | `PuzzleTheme` | Thèmes dans l'ordre d'affichage, avec catégorie et `puzzleCount` précalculé. |
@@ -316,7 +341,8 @@ classée), `fetchRating()`, `fetchThemes()`, `importLichessRating()`, `setThemes
   promotion, mat en un alternatif, listes impossibles, les 50 puzzles réels), sélecteur (fenêtre,
   OU entre thèmes, exclusions, élargissement, qualité), API (réussite, échec, indice, solution,
   résultat falsifié, double soumission, tentative d'un autre, rejeu, historique, rate limit,
-  collisions de routes, import Lichess), synchronisation des thèmes.
+  collisions de routes, import Lichess), pardon (`PardonTest` : retour exact du classement, une
+  fois, stock vide, trop tard, tentative d'un autre), synchronisation des thèmes.
 - Vitest : `usePuzzle` (déroulé complet, erreur, mat alternatif, promotion, indices, solution,
   passer, annulation), le store et `utils/puzzle.js` (groupement des thèmes, filtres actifs).
 - Playwright (`front/tests/e2e`) : résoudre un puzzle, échouer un puzzle, passer un puzzle

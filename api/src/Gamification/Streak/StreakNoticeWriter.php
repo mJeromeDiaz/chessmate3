@@ -22,7 +22,8 @@ use Symfony\Component\Uid\Uuid;
  * user's local day enters the outbox, in the transaction of that exercise: the activity log is only
  * written later by the outbox's handler, so the announcement can't wait for it. Only a newer day
  * overwrites the row: a second exercise of the same day, written to the log or not yet, announces
- * nothing more. It also moves the "streak in danger" reminder to the next day.
+ * nothing more. Missed days since the streak's last day are first covered by the player's freezes
+ * when they can (docs/SHOP.md). It also moves the "streak in danger" reminder to the next day.
  */
 final readonly class StreakNoticeWriter implements EventSubscriberInterface
 {
@@ -31,6 +32,7 @@ final readonly class StreakNoticeWriter implements EventSubscriberInterface
         private UserRepository $users,
         private ClockInterface $clock,
         private StreakReminders $reminders,
+        private StreakDays $streakDays,
     ) {
     }
 
@@ -62,12 +64,9 @@ final readonly class StreakNoticeWriter implements EventSubscriberInterface
         if ($day === $this->connection->fetchOne('SELECT local_date FROM gamification_streak_notice WHERE user_id = ?', [$id], [ParameterType::BINARY])) {
             return;
         }
-        $days =array_values(array_filter($this->connection->fetchFirstColumn(
-            'SELECT DISTINCT local_date FROM activity_log_entry WHERE user_id = ? ORDER BY local_date',
-            [$id],
-            [ParameterType::BINARY],
-        ), 'is_string'));
-        $streak = Streak::of($days, $day);
+        // Back after missed days: the freezes in stock cover them when they can (docs/SHOP.md).
+        $this->streakDays->freezeGap($user->getId(), $day, $this->clock->now());
+        $streak = Streak::of($this->streakDays->active($user->getId()), $day, $this->streakDays->frozen($user->getId()));
         if ($streak['playedToday']) {
             return;
         }

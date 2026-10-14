@@ -15,4 +15,6 @@ enum AttemptStatus: string
     case Solved = 'solved';
     /** A wrong move, or the solution shown: the streak is broken. */
     case Failed = 'failed';
+    /** A pass of the store spent before any move: the streak goes on, an equivalent puzzle next. */
+    case Passed = 'passed';
 }

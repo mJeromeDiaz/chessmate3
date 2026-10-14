@@ -110,8 +110,14 @@ final readonly class TrophyProgress
             [$userId],
             [ParameterType::BINARY],
         ), 'is_string'));
-        $best = Streak::of($days, '0000-00-00')['best'];
-        $day = Streak::reachedOn($days, $goal);
+        // Days covered by a freeze keep the streak without counting (docs/SHOP.md).
+        $frozen = array_values(array_filter($this->connection->fetchFirstColumn(
+            'SELECT local_date FROM gamification_frozen_day WHERE user_id = ? ORDER BY local_date',
+            [$userId],
+            [ParameterType::BINARY],
+        ), 'is_string'));
+        $best = Streak::of($days, '0000-00-00', $frozen)['best'];
+        $day = Streak::reachedOn($days, $goal, $frozen);
         // The streak reached its length with the first exercise of that day.
         $at = null === $day ? null : $this->connection->fetchOne(
             'SELECT MIN(occurred_at) FROM activity_log_entry WHERE user_id = ? AND local_date = ?',

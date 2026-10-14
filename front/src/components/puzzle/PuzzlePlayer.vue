@@ -45,10 +45,49 @@
       v-if="
         puzzle &&
         game.phase.value !== 'complete' &&
-        (help || skippable || replaceable || withSettings)
+        (help || aids || skippable || replaceable || withSettings)
       "
       #controls
     >
+      <template v-if="aids">
+        <q-btn
+          unelevated
+          no-caps
+          class="play-btn play-btn--hint"
+          :class="{ 'play-btn--hint-used': game.hintShown.value > 0 }"
+          :label="`Aide · ${aids.help}`"
+          :loading="aids.busy === 'help'"
+          :disable="
+            !!aids.busy ||
+            game.phase.value !== 'playing' ||
+            game.hintShown.value > 0 ||
+            !aids.canHelp
+          "
+          data-testid="streak-help"
+          @click="emit('aid', 'help')"
+        >
+          <q-tooltip>La pièce à jouer s’illumine (boutique).</q-tooltip>
+        </q-btn>
+        <q-btn
+          unelevated
+          no-caps
+          class="play-btn play-btn--skip"
+          :label="`Pass · ${aids.pass}`"
+          :loading="aids.busy === 'pass'"
+          :disable="
+            !!aids.busy ||
+            game.phase.value !== 'playing' ||
+            game.moveLog.value.length > 0
+          "
+          data-testid="streak-pass"
+          @click="emit('aid', 'pass')"
+        >
+          <q-tooltip
+            >Avant ton premier coup : la solution s’affiche, ton streak
+            continue (boutique).</q-tooltip
+          >
+        </q-btn>
+      </template>
       <q-btn
         v-if="help"
         unelevated
@@ -192,6 +231,13 @@ const props = defineProps({
   withSettings: { type: Boolean, default: false },
   /** The Aide and Solution buttons; false: no help at all (the puzzle streak). */
   help: { type: Boolean, default: true },
+  /**
+   * The puzzle streak's paid aids (docs/PUZZLE_STREAK.md): "Aide · n" and "Pass · n", answered by
+   * the page (`aid`), which then calls `lightPiece()` or `pass()`; null: none.
+   *
+   * @type {import('vue').PropType<{help: number, pass: number, canHelp: boolean, busy: ''|'help'|'pass'}|null>}
+   */
+  aids: { type: Object, default: null },
   /** A dot on the settings icon: filters other than the defaults. */
   settingsActive: { type: Boolean, default: false }
 })
@@ -207,7 +253,9 @@ const emit = defineEmits({
   /** The settings icon. */
   settings: null,
   /** "Remplacer" confirmed: the page swaps the puzzle and loads the new one. */
-  replace: null
+  replace: null,
+  /** A paid aid asked (`help` or `pass`), even out of stock: the page spends or sells it. */
+  aid: kind => kind === 'help' || kind === 'pass'
 })
 
 const $q = useQuasar()
@@ -224,6 +272,11 @@ const game = usePuzzle({
   onResolve: (outcome, report) => emit('resolve', outcome, report),
   onComplete: () => {
     durationMs.value = startedAt ? Date.now() - startedAt : null
+    // A pass of the store: the solution played, no verdict (the next puzzle comes).
+    if (game.passed.value) {
+      emit('complete')
+      return
+    }
     const kind = puzzleKind({
       mistaken: game.mistaken.value,
       solutionShown: game.solutionShown.value,
@@ -239,12 +292,14 @@ const statusText = computed(() => {
   const side = game.orientation.value === 'white' ? 'les Blancs' : 'les Noirs'
   switch (game.phase.value) {
     case 'intro':
+      if (game.passed.value) return 'Pass : voici la solution…'
       return game.solutionShown.value ? 'Solution…' : 'Au tour de l’adversaire…'
     case 'playing':
       return game.mistaken.value
         ? 'Ce n’est pas le bon coup. Cherche encore !'
         : `Trouve le meilleur coup pour ${side}.`
     case 'complete':
+      if (game.passed.value) return 'Puzzle passé : ton streak continue.'
       return game.failed.value ? 'Puzzle terminé.' : 'Bravo !'
     default:
       return ''
@@ -347,4 +402,15 @@ watch(
 onMounted(() => puzzles.fetchThemes().catch(() => null))
 
 onBeforeUnmount(() => game.dispose())
+
+defineExpose({
+  /** A paid help accepted by the server: the piece to move lights up. */
+  lightPiece: () => game.lightPiece(),
+  /**
+   * A paid pass accepted by the server: the solution plays.
+   *
+   * @returns {Promise<void>} resolved at the final position
+   */
+  pass: () => game.pass()
+})
 </script>

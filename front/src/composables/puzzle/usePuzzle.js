@@ -7,7 +7,7 @@ import { Chess } from 'chess.js'
  * @property {string[]} moves UCI moves: [0] is the opponent's, then player / opponent alternately
  * @property {'white'|'black'} playerColor
  *
- * @typedef {'solved'|'failed'} Outcome
+ * @typedef {'solved'|'failed'|'passed'} Outcome `passed`: a paid pass (the puzzle streak), never reported
  *
  * @typedef {object} PuzzleOptions
  * @property {(outcome: Outcome, report: {moves: string[], hintLevel: number, solutionShown: boolean}) => void} [onResolve]
@@ -52,6 +52,8 @@ export function usePuzzle(options = {}) {
   /** Hint level shown for the current move (cleared by each correct move). */
   const hintShown = ref(0)
   const solutionShown = ref(false)
+  /** Skipped with a paid pass (the puzzle streak): the solution plays, nothing is reported. */
+  const passed = ref(false)
   /** Every move the player tried, wrong ones included (what the server replays). */
   const moveLog = ref(/** @type {string[]} */ ([]))
   const feedback = ref(
@@ -116,6 +118,7 @@ export function usePuzzle(options = {}) {
     hintLevel.value = 0
     hintShown.value = 0
     solutionShown.value = false
+    passed.value = false
     moveLog.value = []
     feedback.value = null
     phase.value = 'intro'
@@ -178,6 +181,16 @@ export function usePuzzle(options = {}) {
   }
 
   /**
+   * A paid help (the puzzle streak, docs/PUZZLE_STREAK.md): the piece to move lights up, like the
+   * first hint level, but nothing fails; the server checks the help was paid.
+   */
+  function lightPiece() {
+    if (phase.value !== 'playing' || hintShown.value >= 1) return
+    hintShown.value = 1
+    hintLevel.value = Math.max(hintLevel.value, 1)
+  }
+
+  /**
    * Plays the rest of the solution, one animated move at a time. Counts as a failure.
    *
    * @returns {Promise<void>}
@@ -188,11 +201,32 @@ export function usePuzzle(options = {}) {
     const run = ++generation
     solutionShown.value = true
     fail()
+    await playSolution(run)
+  }
+
+  /**
+   * A paid pass, already accepted by the server (the puzzle streak): the solution plays, no
+   * outcome is reported.
+   *
+   * @returns {Promise<void>} resolved at the final position
+   */
+  async function pass() {
+    if (!puzzle.value || phase.value === 'complete' || phase.value === 'idle')
+      return
+    const run = ++generation
+    passed.value = true
+    outcome.value = 'passed'
+    await playSolution(run)
+  }
+
+  /** @param {number} run the generation that plays it */
+  async function playSolution(run) {
+    if (!puzzle.value) return
     feedback.value = null
     phase.value = 'intro'
     while (cursor.value < puzzle.value.moves.length) {
       await wait(delays.solutionStep)
-      if (run !== generation) return
+      if (run !== generation || !puzzle.value) return
       apply(puzzle.value.moves[cursor.value])
     }
     finish()
@@ -263,11 +297,14 @@ export function usePuzzle(options = {}) {
     hintLevel,
     hintShown,
     solutionShown,
+    passed,
     moveLog,
     load,
     play,
     hint,
+    lightPiece,
     showSolution,
+    pass,
     skip,
     dispose
   }

@@ -230,7 +230,8 @@ export function useTimeboxedRun(options = {}) {
       )
       result.value = step.result
       xp.value = step.xp ?? null
-      if (step.result) {
+      // A puzzle streak's pass of the store: skipped, not played.
+      if (step.result && step.result.data?.status !== 'passed') {
         played.value++
         if (step.result.success) solved.value++
       }
@@ -246,6 +247,23 @@ export function useTimeboxedRun(options = {}) {
       submitting.value = false
       if (phase.value === 'timeUp') expire()
     }
+  }
+
+  /**
+   * The store's pardon turned the last verdict into a success (a blindfold puzzle missed,
+   * docs/BLINDFOLD.md): solved after all, its XP topped up.
+   *
+   * @param {number} bonus the XP added
+   */
+  function pardonResult(bonus) {
+    if (!result.value || result.value.success) return
+    result.value = {
+      ...result.value,
+      success: true,
+      data: { ...result.value.data, status: 'solved', pardoned: true }
+    }
+    solved.value++
+    xp.value = (xp.value ?? 0) + bonus
   }
 
   /**
@@ -362,6 +380,7 @@ export function useTimeboxedRun(options = {}) {
     resume,
     next,
     submit,
+    pardonResult,
     stop,
     extend,
     beforeClose,

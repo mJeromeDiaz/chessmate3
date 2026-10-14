@@ -14,6 +14,7 @@ use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Gamification\Trophy;
+use App\Enum\PuzzleStreak\Aid;
 use App\Enum\PuzzleStreak\AttemptStatus;
 use App\Enum\PuzzleStreak\PlayMode;
 use App\Enum\PuzzleStreak\Ramp;
@@ -24,18 +25,21 @@ use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Puzzle\Selection\SelectionUnavailableException;
 use App\Puzzle\Solution\InvalidSubmissionException;
 use App\Puzzle\Solution\SolutionValidator;
+use App\PuzzleStreak\Aid\AidStockInterface;
 use App\PuzzleStreak\Event\RecordBeaten;
 use App\PuzzleStreak\Selection\PuzzlePicker;
 use App\PuzzleStreak\Selection\Topic;
 use App\PuzzleStreak\StreakRules;
 use App\Repository\PuzzleStreak\AttemptRepository;
 use App\Repository\PuzzleStreak\StreakRepository;
+use App\Training\Exception\AidRefusedException;
 use App\Training\Exception\InvalidItemSubmissionException;
 use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
+use App\Training\Module\HelpModuleInterface;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
@@ -52,14 +56,15 @@ use Symfony\Component\Uid\Uuid;
  * Puzzle streaks in timed runs (docs/PUZZLE_STREAK.md). The subject is the user; config `ramp`
  * (ladder, tiers), `topic` ({@see Topic}) and `mode`: `single` (the streak page: one streak, the
  * run ends with it; budget {@see StreakRules::SINGLE_BUDGET_SECONDS}) or `timed` (a session step:
- * after a miss, a new streak starts from the easiest puzzle; the best one counts). No help: a
- * wrong move, a hint or the solution breaks the streak. Never rated. The first puzzle is served at
- * the start: none in the topic and range, no run.
+ * after a miss, a new streak starts from the easiest puzzle; the best one counts). No free help: a
+ * wrong move, a hint or the solution breaks the streak; the store's aids are the exception (a help
+ * spent lights up the piece to move, a pass skips the puzzle before any move, an equivalent one
+ * next). Never rated. The first puzzle is served at the start: none in the topic and range, no run.
  *
  * Overtime: time up while a streak is alive (a puzzle solved at least), the player may go on
  * (docs/TRAINING.md, "Prolongation"); once extended, the run ends with that streak.
  */
-final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleInterface, OvertimeModuleInterface
+final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleInterface, OvertimeModuleInterface, HelpModuleInterface
 {
     public const SUBJECT_TYPE = 'puzzle_streak_player';
     public const ITEM_TYPE = 'streak_puzzle';
@@ -73,6 +78,7 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
         private readonly PuzzleCatalog $catalog,
         private readonly SolutionValidator $validator,
         private readonly EventPublisher $events,
+        private readonly AidStockInterface $aids,
     ) {
     }
 
@@ -116,12 +122,9 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
 
     public function submit(Run $run, ItemSubmission $submission, \DateTimeImmutable $now): ItemResult
     {
-        $attempt = Uuid::isValid($submission->itemId) ? $this->attempts->findOwned(Uuid::fromString($submission->itemId), $run->getUser()) : null;
-        if (null === $attempt || !$attempt->getRun()->getId()->equals($run->getId())) {
-            throw new ItemNotFoundException();
-        }
-        if (!$attempt->isPending()) {
-            throw new ItemAlreadySubmittedException();
+        $attempt = $this->pendingAttempt($run, $submission->itemId);
+        if ($submission->pass) {
+            return $this->pass($run, $attempt, $submission, $now);
         }
         $puzzle = $this->catalog->get($attempt->getPuzzleId());
         try {
@@ -129,8 +132,9 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
         } catch (InvalidSubmissionException $e) {
             throw new InvalidItemSubmissionException($e->getMessage(), 0, $e);
         }
-        // No help: a hint or the solution is a miss.
-        $solved = $replay->completed && 0 === $replay->mistakes && 0 === $submission->hintLevel && !$submission->solutionShown;
+        // No free help: a hint or the solution is a miss; the piece lit up by a help spent is not.
+        $helped = 0 === $submission->hintLevel || (1 === $submission->hintLevel && $attempt->getHelps() > 0);
+        $solved = $replay->completed && 0 === $replay->mistakes && $helped && !$submission->solutionShown;
         $status = $solved ? AttemptStatus::Solved : AttemptStatus::Failed;
         $attempt->resolve($status, $submission->moves, $replay->mistakes, $now);
         $streak = $attempt->getStreak();
@@ -159,6 +163,7 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
                 'position' => $attempt->getPosition(),
                 'ramp' => $streak->getRamp()->value,
                 'topic' => $streak->getTopic(),
+                'helps' => $attempt->getHelps(),
                 'streakId' => $streak->getId()->toRfc4122(),
                 'trainingRunId' => $run->getId()->toRfc4122(),
             ],
@@ -182,6 +187,23 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
             closes: $closes,
             context: null === $closes ? [] : ['reason' => 'streak_broken'],
         );
+    }
+
+    public function help(Run $run, string $itemId, \DateTimeImmutable $now): array
+    {
+        $attempt = $this->pendingAttempt($run, $itemId);
+        // One per move to find: each lights up the piece of the move on the board.
+        if ($attempt->getHelps() >= intdiv(\count($this->catalog->get($attempt->getPuzzleId())->getMoveList()), 2)) {
+            throw new AidRefusedException(AidRefusedException::HELP_LIMIT);
+        }
+        $userId = $run->getUser()->getId();
+        if (!$this->aids->consume($userId, Aid::Help)) {
+            throw new AidRefusedException(AidRefusedException::NO_HELP);
+        }
+        $attempt->helped();
+        $this->entityManager->flush();
+
+        return ['helps' => $attempt->getHelps(), 'aids' => $this->aids->stock($userId)];
     }
 
     public function canExtend(Run $run): bool
@@ -219,13 +241,16 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
         $topic = \is_string($config['topic'] ?? null) ? $config['topic'] : Topic::GENERAL;
         $solved = 0;
         $failed = 0;
+        $passes = 0;
+        $helps = 0;
         $activeMs = 0;
         foreach ($this->attempts->findResolvedOfRun($run) as $attempt) {
-            if (AttemptStatus::Solved === $attempt->getStatus()) {
-                ++$solved;
-            } else {
-                ++$failed;
-            }
+            match ($attempt->getStatus()) {
+                AttemptStatus::Solved => ++$solved,
+                AttemptStatus::Passed => ++$passes,
+                default => ++$failed,
+            };
+            $helps += $attempt->getHelps();
             $activeMs += min(StreakRules::ACTIVE_TIME_CAP_MS, $attempt->getDurationMs() ?? 0);
         }
         $streaks = array_values(array_filter($this->streaks->findOfRun($run), static fn (Streak $s): bool => !$s->isActive()));
@@ -251,6 +276,9 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
                 'hardestRating' => [] === $ratings ? null : max($ratings),
                 'solved' => $solved,
                 'failed' => $failed,
+                // The store's aids spent (docs/PUZZLE_STREAK.md): passed puzzles are not played ones.
+                'passes' => $passes,
+                'helps' => $helps,
                 'activeMs' => $activeMs,
                 'averageMs' => $played > 0 ? intdiv($activeMs, $played) : null,
                 'extensions' => $run->getExtensions(),
@@ -269,16 +297,78 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
 
         return array_map(fn (Attempt $attempt): ReviewItem => new ReviewItem(
             self::ITEM_TYPE,
-            AttemptStatus::Solved === $attempt->getStatus() ? ReviewItem::OK : ReviewItem::FAIL,
+            match ($attempt->getStatus()) {
+                AttemptStatus::Solved => ReviewItem::OK,
+                // Skipped without a wrong move: the solution was shown.
+                AttemptStatus::Passed => ReviewItem::HINT,
+                default => ReviewItem::FAIL,
+            },
             $attempt->getDurationMs(),
             [
                 'puzzle' => self::puzzle($puzzles[$attempt->getPuzzleId()] ?? $this->catalog->get($attempt->getPuzzleId())),
                 'mistakes' => $attempt->getMistakes(),
+                'passed' => AttemptStatus::Passed === $attempt->getStatus(),
+                'helps' => $attempt->getHelps(),
                 'streakNumber' => $numbers[$attempt->getStreak()->getId()->toRfc4122()] ?? null,
                 'position' => $attempt->getPosition(),
                 'targetRating' => $attempt->getTargetRating(),
             ],
         ), $attempts);
+    }
+
+    /**
+     * The puzzle skipped with a pass of the store, before any move: the streak goes on, the next
+     * puzzle is drawn at the same level (the streak's length is unchanged). Not an exercise: no
+     * XP, no activity.
+     *
+     * @throws InvalidItemSubmissionException a move played, or the solution shown
+     * @throws AidRefusedException            no pass left
+     */
+    private function pass(Run $run, Attempt $attempt, ItemSubmission $submission, \DateTimeImmutable $now): ItemResult
+    {
+        if ([] !== $submission->moves || $submission->solutionShown) {
+            throw new InvalidItemSubmissionException('A pass is used before any move.');
+        }
+        if (!$this->aids->consume($run->getUser()->getId(), Aid::Pass)) {
+            throw new AidRefusedException(AidRefusedException::NO_PASS);
+        }
+        $attempt->resolve(AttemptStatus::Passed, [], 0, $now);
+        $this->entityManager->flush();
+        $streak = $attempt->getStreak();
+
+        return new ItemResult(
+            itemId: $attempt->getId()->toRfc4122(),
+            success: false,
+            data: [
+                'status' => AttemptStatus::Passed->value,
+                'mistakes' => 0,
+                'durationMs' => $attempt->getDurationMs(),
+                'streak' => $streak->getLength(),
+                'broken' => false,
+                'record' => false,
+                'best' => $this->bestOfRun($run),
+                'aids' => $this->aids->stock($run->getUser()->getId()),
+            ],
+        );
+    }
+
+    /**
+     * The run's item on screen.
+     *
+     * @throws ItemNotFoundException
+     * @throws ItemAlreadySubmittedException
+     */
+    private function pendingAttempt(Run $run, string $itemId): Attempt
+    {
+        $attempt = Uuid::isValid($itemId) ? $this->attempts->findOwned(Uuid::fromString($itemId), $run->getUser()) : null;
+        if (null === $attempt || !$attempt->getRun()->getId()->equals($run->getId())) {
+            throw new ItemNotFoundException();
+        }
+        if (!$attempt->isPending()) {
+            throw new ItemAlreadySubmittedException();
+        }
+
+        return $attempt;
     }
 
     /**
@@ -358,6 +448,9 @@ final class StreakModule implements TimeboxedModuleInterface, ReviewableModuleIn
             'best' => $this->bestOfRun($attempt->getRun()),
             'targetRating' => $attempt->getTargetRating(),
             'startedAt' => $attempt->getStartedAt()->format(\DATE_ATOM),
+            // The store's aids: spent on this puzzle, and left.
+            'helps' => $attempt->getHelps(),
+            'aids' => $this->aids->stock($attempt->getUser()->getId()),
         ]);
     }
 

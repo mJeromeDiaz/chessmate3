@@ -15,6 +15,7 @@ use App\Entity\Catalog\Puzzle;
 use App\Entity\Puzzle\Attempt as AttemptEntity;
 use App\State\Puzzle\AttemptHistoryProvider;
 use App\State\Puzzle\AttemptProvider;
+use App\State\Puzzle\PardonAttemptProcessor;
 use App\State\Puzzle\StartAttemptProcessor;
 use App\State\Puzzle\SubmitAttemptProcessor;
 
@@ -65,6 +66,17 @@ use App\State\Puzzle\SubmitAttemptProcessor;
             read: false,
             processor: SubmitAttemptProcessor::class,
         ),
+        new Post(
+            uriTemplate: '/puzzles/attempts/{id}/pardon',
+            requirements: ['id' => self::UUID_PATTERN],
+            priority: 10,
+            status: 200,
+            openapi: new Operation(summary: 'Spends a pardon of the store on the rated puzzle just missed: the rating comes back (409 with the reason when refused).'),
+            input: false,
+            read: false,
+            deserialize: false,
+            processor: PardonAttemptProcessor::class,
+        ),
     ],
 )]
 final class Attempt
@@ -87,6 +99,10 @@ final class Attempt
     public ?float $ratingDelta = null;
     /** Submission only: XP this attempt gains, daily cap included; null elsewhere. */
     public ?int $xp = null;
+    /** Missed, then pardoned with the store's pardon: the rating came back to `ratingBefore`. */
+    public bool $pardoned = false;
+    /** Pardon only: the pardons left; null elsewhere. */
+    public ?int $pardons = null;
     #[ApiProperty(genId: false)]
     public PuzzleView $puzzle;
 
@@ -102,6 +118,7 @@ final class Attempt
         $view->mistakes = $attempt->getMistakes();
         $view->hintLevel = $attempt->getHintLevel();
         $view->solutionShown = $attempt->isSolutionShown();
+        $view->pardoned = $attempt->isPardoned();
         $change = $attempt->getRatingChange();
         if (null !== $change) {
             $view->ratingBefore = round($change->getRatingBefore(), 1);

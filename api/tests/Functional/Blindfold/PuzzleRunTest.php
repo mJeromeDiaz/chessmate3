@@ -18,12 +18,12 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Blindfold puzzles in timed runs (docs/BLINDFOLD.md): open to everyone (the coordinates are not
  * a prerequisite), fixed levels and lengths, solved / helped / failed from the moves replayed by the server, never
- * rated, XP and statistics.
+ * rated, XP and statistics; the store's pardon, during play or after the miss.
  *
  * @phpstan-import-type RunJson from WoodpeckerWebTestCase
  *
  * @phpstan-type PuzzleJson array{id: string, fen: string, moves: list<string>, playerColor: string, rating: int, themes: list<string>, gameUrl: string}
- * @phpstan-type BlindfoldItem array{id: string, type: string, data: array{puzzle: PuzzleJson, level: string, length: int, visibleSeconds: int, hiddenSeconds: int, peeks: int, startedAt: string}}
+ * @phpstan-type BlindfoldItem array{id: string, type: string, data: array{puzzle: PuzzleJson, level: string, length: int, visibleSeconds: int, hiddenSeconds: int, peeks: int, startedAt: string, pardoned: bool, pardons: int}}
  */
 final class PuzzleRunTest extends WoodpeckerWebTestCase
 {
@@ -104,6 +104,99 @@ final class PuzzleRunTest extends WoodpeckerWebTestCase
         $command = new CommandTester((new Application($this->client->getKernel()))->find('app:gamification:rebuild'));
         self::assertSame(0, $command->execute(['--user' => $alice->getId()->toRfc4122()]));
         self::assertSame(20, $this->xpOf($alice), 'The rebuild finds the same XP.');
+    }
+
+    public function testAPardonDuringPlayErasesTheMistakes(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->givePardons($alice, 'blindfold_pardon', 2);
+        $run = $this->startOk($alice, self::EASY_SHORT);
+        $item = $this->item($alice, $run['id']);
+        self::assertSame([false, 2], [$item['data']['pardoned'], $item['data']['pardons']]);
+
+        self::assertSame(['play', 'pending', 0, 1], $this->pardonOk($alice, $run['id'], $item['id']));
+        self::assertSame([true, 1], [$this->item($alice, $run['id'])['data']['pardoned'], $this->item($alice, $run['id'])['data']['pardons']], 'A reload knows it.');
+        self::assertStringContainsString('not_pardonable', (string) $this->pardon($alice, $run['id'], $item['id'])->getContent(), 'Once per puzzle.');
+
+        // Two mistakes, then the solution: solved, all its XP.
+        $wrong = self::wrongFirstMove($item);
+        $solved = $this->submitOk($alice, $run['id'], $item['id'], [$wrong, $wrong, ...self::solution($item['data'])], XpRules::BLINDFOLD_SOLVED);
+        self::assertSame([true, 'solved', 2, true], [$solved['success'], $solved['data']['status'] ?? null, $solved['data']['mistakes'] ?? null, $solved['data']['pardoned'] ?? null]);
+        self::assertSame(1, $this->stockOf($alice, 'blindfold_pardon'));
+
+        // The solution shown still fails it.
+        $next = $this->item($alice, $run['id']);
+        self::assertSame(200, $this->pardon($alice, $run['id'], $next['id'])->getStatusCode());
+        $this->api('POST', '/api/training/runs/'.$run['id'].'/submission', $alice, ['itemId' => $next['id'], 'moves' => [], 'solutionShown' => true]);
+        // The review once the run is over.
+        $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice);
+        self::assertSame(['ok', 'fail'], array_column($this->review($alice, $run['id'])['items'], 'status'));
+    }
+
+    public function testAPardonAfterTheMissMakesItSolved(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->givePardons($alice, 'blindfold_pardon', 1);
+        $run = $this->startOk($alice, self::EASY_SHORT);
+        $item = $this->item($alice, $run['id']);
+        $wrong = self::wrongFirstMove($item);
+        self::assertSame('failed', $this->submitOk($alice, $run['id'], $item['id'], [$wrong, $wrong], XpRules::BLINDFOLD_FAILED)['data']['status'] ?? null);
+
+        self::assertSame(['loss', 'solved', XpRules::BLINDFOLD_PARDON, 0], $this->pardonOk($alice, $run['id'], $item['id']));
+
+        $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice);
+        $closed = $this->getRun($alice, $run['id']);
+        self::assertSame([1, 1, 1, 0], [
+            $closed['summary']['itemCount'] ?? null,
+            $closed['summary']['successCount'] ?? null,
+            $closed['summary']['metrics']['solved'] ?? null,
+            $closed['summary']['metrics']['failed'] ?? null,
+        ]);
+        $review = $this->review($alice, $run['id']);
+        self::assertSame(['ok', true], [$review['items'][0]['status'], $review['items'][0]['data']['pardoned'] ?? null]);
+        self::assertSame(['played' => 1, 'solved' => 1, 'helped' => 0, 'failed' => 0], $this->state($alice)['total']);
+
+        // The miss's XP, topped up to a solved puzzle; the rebuild finds it again.
+        $this->runOutbox();
+        self::assertSame(XpRules::BLINDFOLD_SOLVED, $this->xpOf($alice));
+        self::assertSame(XpRules::BLINDFOLD_PARDON, $this->countRows("SELECT COALESCE(SUM(xp), 0) FROM gamification_xp_entry WHERE user_id = ? AND kind = 'pardon'", $alice));
+        $this->connection()->executeStatement('DELETE FROM gamification_xp_entry');
+        $command = new CommandTester((new Application($this->client->getKernel()))->find('app:gamification:rebuild'));
+        self::assertSame(0, $command->execute(['--user' => $alice->getId()->toRfc4122()]));
+        self::assertSame(XpRules::BLINDFOLD_SOLVED, $this->xpOf($alice));
+    }
+
+    public function testWhatAPardonRefuses(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $bob = $this->createUserIn('bob@example.com');
+        $run = $this->startOk($alice, self::EASY_SHORT);
+        $first = $this->item($alice, $run['id']);
+        self::assertStringContainsString('no_pardon', (string) $this->pardon($alice, $run['id'], $first['id'])->getContent());
+
+        $this->givePardons($alice, 'blindfold_pardon', 2);
+        // Helped is not a miss.
+        $helped = $this->submitOk($alice, $run['id'], $first['id'], [self::wrongFirstMove($first), ...self::solution($first['data'])]);
+        self::assertSame('helped', $helped['data']['status'] ?? null);
+        self::assertStringContainsString('not_pardonable', (string) $this->pardon($alice, $run['id'], $first['id'])->getContent());
+
+        // Missed, then the next puzzle served: too late.
+        $second = $this->item($alice, $run['id']);
+        $wrong = self::wrongFirstMove($second);
+        $this->submitOk($alice, $run['id'], $second['id'], [$wrong, $wrong]);
+        $this->item($alice, $run['id']);
+        $late = $this->pardon($alice, $run['id'], $second['id']);
+        self::assertSame(409, $late->getStatusCode());
+        self::assertStringContainsString('too_late', (string) $late->getContent());
+
+        // Someone else's run, or an item of nowhere.
+        self::assertSame(404, $this->pardon($bob, $run['id'], $second['id'])->getStatusCode());
+        self::assertSame(404, $this->pardon($alice, $run['id'], '0190a6c0-0000-7000-8000-000000000000')->getStatusCode());
+        self::assertSame(2, $this->stockOf($alice, 'blindfold_pardon'), 'Nothing spent.');
+
+        // Over: nothing more.
+        $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice);
+        self::assertSame(409, $this->pardon($alice, $run['id'], $second['id'])->getStatusCode());
     }
 
     public function testNoPuzzleTwiceInARunThenTheRangeRunsOut(): void
@@ -292,6 +385,42 @@ final class PuzzleRunTest extends WoodpeckerWebTestCase
         }
 
         self::fail('No wrong move available.');
+    }
+
+    private function pardon(User $user, string $runId, string $itemId): Response
+    {
+        return $this->api('POST', '/api/training/runs/'.$runId.'/pardon', $user, ['itemId' => $itemId]);
+    }
+
+    /**
+     * @return array{mixed, mixed, mixed, mixed} the answer's pardon, status, xp and pardons left
+     */
+    private function pardonOk(User $user, string $runId, string $itemId): array
+    {
+        $response = $this->pardon($user, $runId, $itemId);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+        $data = $this->json($response)['data'] ?? null;
+        self::assertIsArray($data);
+
+        return [$data['pardon'] ?? null, $data['status'] ?? null, $data['xp'] ?? null, $data['pardons'] ?? null];
+    }
+
+    private function givePardons(User $user, string $item, int $quantity): void
+    {
+        $this->connection()->executeStatement(
+            'INSERT INTO shop_inventory_item (user_id, item, quantity) VALUES (?, ?, ?)',
+            [$user->getId()->toBinary(), $item, $quantity],
+        );
+    }
+
+    private function stockOf(User $user, string $item): int
+    {
+        $quantity = $this->connection()->fetchOne(
+            'SELECT quantity FROM shop_inventory_item WHERE user_id = ? AND item = ?',
+            [$user->getId()->toBinary(), $item],
+        );
+
+        return is_numeric($quantity) ? (int) $quantity : 0;
     }
 
     private function countRows(string $sql, User $user): int

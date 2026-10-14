@@ -214,6 +214,58 @@ describe('useBlindfoldPuzzle', () => {
     expect(onResolve).toHaveBeenCalledOnce()
   })
 
+  it('a pardon after a mistake erases it and gives the peek back: solved', async () => {
+    const { game, onResolve } = await playing()
+    expect(game.canPardon.value).toBe(false)
+    expect(game.pardon()).toBe(false)
+    const wrong = wrongMove(game.fen.value, 'e1e7')
+    const uci = wrong.from + wrong.to
+
+    click(game, uci)
+    expect(game.canPardon.value).toBe(true)
+    expect(game.pardon()).toBe(true)
+    expect([game.mistakes.value, game.peeksLeft.value]).toEqual([0, 1])
+    expect(game.canPardon.value).toBe(false)
+    await vi.advanceTimersByTimeAsync(
+      (SETTINGS.visibleSeconds + SETTINGS.hiddenSeconds) * 1000
+    )
+
+    // One more mistake: the peek given back, then solved all the same.
+    expect(click(game, uci)).toBe('wrong')
+    expect(game.phase.value).toBe('show')
+    expect(game.canPardon.value).toBe(false)
+    await vi.advanceTimersByTimeAsync(
+      (SETTINGS.visibleSeconds + SETTINGS.hiddenSeconds) * 1000
+    )
+    click(game, 'e1e7')
+    await vi.advanceTimersByTimeAsync(DELAYS.reply)
+    click(game, 'e7f6')
+    expect(game.status.value).toBe('solved')
+    expect(onResolve).toHaveBeenCalledWith('solved', {
+      moves: [uci, uci, 'e1e7', 'e7f6'],
+      hintLevel: 0,
+      solutionShown: false
+    })
+  })
+
+  it('a puzzle already pardoned (a reload) offers no pardon and ends solved', async () => {
+    const game = useBlindfoldPuzzle({ delays: DELAYS })
+    game.load(MATE_IN_2, { ...SETTINGS, pardoned: true })
+    await vi.advanceTimersByTimeAsync(
+      DELAYS.opponent + (SETTINGS.visibleSeconds + SETTINGS.hiddenSeconds) * 1000
+    )
+    const wrong = wrongMove(game.fen.value, 'e1e7')
+    click(game, wrong.from + wrong.to)
+    expect(game.canPardon.value).toBe(false)
+    await vi.advanceTimersByTimeAsync(
+      (SETTINGS.visibleSeconds + SETTINGS.hiddenSeconds) * 1000
+    )
+    click(game, 'e1e7')
+    await vi.advanceTimersByTimeAsync(DELAYS.reply)
+    click(game, 'e7f6')
+    expect(game.status.value).toBe('solved')
+  })
+
   it('gives up: the solution is shown and the puzzle fails', async () => {
     const { game, onResolve } = await playing()
     game.giveUp()

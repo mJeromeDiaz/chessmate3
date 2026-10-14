@@ -113,6 +113,16 @@ class Rating
         $this->lastRatedAt = $at;
     }
 
+    /**
+     * A pardon of the store (docs/PUZZLES.md, "Erreur pardonnée"): back to the state before the
+     * last rated attempt, as if it had not been played (its date stays the last rated one).
+     */
+    public function restore(RatingState $state, \DateTimeImmutable $at): void
+    {
+        $this->apply($state, $at);
+        $this->ratedCount = max(0, $this->ratedCount - 1);
+    }
+
     public function seedFromLichess(RatingState $state, \DateTimeImmutable $at): void
     {
         $this->apply($state, $at);

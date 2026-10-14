@@ -71,9 +71,17 @@ par série d'au moins 10 réponses (choix du 2026-10-09).
 - **Clôture** : la série valide ou non (§ 2). Si elle a au moins une réponse, elle est journalisée en
   un `ExerciseCompleted` `coordinates_series` (`success` = validante, `itemCount` = réponses ;
   [ACTIVITY.md](ACTIVITY.md)), et une série validante publie `SeriesValidated`.
-- **Récapitulatif** : `metrics` `orientation`, `validated`, `answeredMs`, `averageMs`, `rules`.
-- **Bilan** (`GET /training/runs/{id}/review`) : un élément `coordinate` par réponse, `ok` ou `fail`,
-  `durationMs`, `data: {index, target, clicked}` (le ruban de fin de série).
+- **Pardon de la boutique** (2026-10-13, `coordinates_pardon`, [SHOP.md](SHOP.md)) : lancée avec
+  `config: {orientation, pardon: true}` (422 sans pardon en stock ; jamais dans une étape de
+  session), la série dépense à sa clôture un pardon sur sa **première réponse fausse**, s'il y en
+  a une (sinon rien n'est dépensé) : elle ne compte plus ni comme réponse, ni comme erreur, ni dans
+  le temps, avant le calcul de la validation (`pardoned_index`). L'élément porte `pardon` ;
+  `GET /coordinates`, le stock (`pardons`) et `pardoned` par série. Pas de pardon en cours de série
+  (`POST .../pardon` : 409 `not_offered`).
+- **Récapitulatif** : `metrics` `orientation`, `validated`, `answeredMs`, `pardonedIndex`, `averageMs`, `rules`.
+- **Bilan** (`GET /training/runs/{id}/review`) : un élément `coordinate` par réponse, `ok` ou `fail`
+  (`hint` pour la réponse pardonnée), `durationMs`, `data: {index, target, clicked, pardoned}` (le
+  ruban de fin de série).
 
 Session Builder : une étape `coordinates` dure une des `SERIES_MINUTES` (sinon 422,
 `Training\Module\BudgetChoicesInterface`), réglage `orientation`. Côté front, la carte
@@ -89,7 +97,8 @@ Accepté : rien ne dépend de ce résultat hors de l'utilisateur lui-même.
 
 `coordinates_series` : `user_id`, `run_id` (unique, cascade), `orientation`, `squares`
 (JSON), `answers` (JSON, `[{square, ms}]`, la réponse i porte sur la case i), `answer_count`,
-`success_count`, `answered_ms`, `validated`, `started_at`, `closed_at`. Index
+`success_count`, `answered_ms`, `validated`, `pardoned_index` (réponse pardonnée, null sinon),
+`started_at`, `closed_at`. Index
 `(user_id, started_at)` (historique) et `(user_id, orientation, validated)` (état). Exportée avec le
 compte (`entrainement.json`, `coordinates`).
 
@@ -97,7 +106,7 @@ compte (`entrainement.json`, `coordinates`).
 
 | Endpoint | Rôle |
 |---|---|
-| `GET /coordinates` | `{rules, orientations: [{orientation, validated, validatedAt, seriesCount, best}], history}` : seuils, état de chaque orientation (première validation, séries closes, meilleure série = le plus de bonnes réponses), 20 dernières séries closes. Clôt d'abord une série abandonnée. |
+| `GET /coordinates` | `{rules, orientations: [{orientation, validated, validatedAt, seriesCount, best}], history, pardons}` : seuils, état de chaque orientation (première validation, séries closes, meilleure série = le plus de bonnes réponses), 20 dernières séries closes. Clôt d'abord une série abandonnée. |
 
 ## 6. XP
 
@@ -111,7 +120,11 @@ orientation ([GAMIFICATION.md](GAMIFICATION.md)). Source du bonus : `coordinates
   menu) : les règles (lues dans l'API), l'état des Blancs et des Noirs, le lancement d'une série
   (`RunLauncher` avec `durations` et `default-minutes` : 1, 2, 5 ou 10 min, 2 d'abord, sans
   « Autre » ; orientation au choix, la première non validée par défaut)
-  et les 20 dernières séries, chacune avec son ruban (bilan chargé à l'ouverture).
+  et les 20 dernières séries, chacune avec son ruban (bilan chargé à l'ouverture). Interrupteur
+  « Pardon de la boutique · n » au lancement (désactivé à 0, avec « En acheter » qui ouvre la
+  feuille d'achat sur place) ; pendant la série, une mention rappelle le pardon ; une série
+  pardonnée porte le badge « Pardonnée », et la réponse pardonnée est bleu glace sur le ruban, hors
+  des totaux (`ribbonCells`, `ribbonTotals`).
 - Série : `components/coordinates/CoordinatesPlayer.vue` sur `training/[id]`. Échiquier vide
   (`ChessBoard` avec `:coordinates="false"` et `square-input` : une case cliquable par case,
   événement `square`), la case à trouver en grand, verdict immédiat (case verte, ou rouge et la

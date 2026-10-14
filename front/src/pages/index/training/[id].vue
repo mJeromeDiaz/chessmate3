@@ -111,10 +111,13 @@
         runner.phase.value === 'running' &&
         runner.item.value?.type === 'blindfold_puzzle'
       "
+      ref="blindfoldPlayer"
       :item="runner.item.value"
       :xp="runner.xp.value"
       :actions="blindfoldActions"
+      :pardons="{ count: blindfoldPardons, busy: pardonBusy }"
       @resolve="onBlindfoldResolve"
+      @pardon="onBlindfoldPardon"
     >
       <template #header>
         <RunHeader
@@ -182,14 +185,17 @@
 
     <PuzzlePlayer
       v-else-if="streakItem && (streakLive || holdEnd)"
+      ref="streakPlayer"
       :puzzle="streakItem.data.puzzle"
       :loading="loading"
       after-mistake="showSolution"
       module="puzzle_streak"
       :help="false"
+      :aids="streakAids"
       :xp="runner.xp.value"
       :actions="streakActions"
       @resolve="onStreakResolve"
+      @aid="onStreakAid"
     >
       <template #header>
         <RunHeader
@@ -228,7 +234,7 @@
         }}</span>
         <span class="play-chip lt-md"
           >Sans aide<q-tooltip
-            >Une erreur et le streak s’arrête.</q-tooltip
+            >Une erreur et le streak s’arrête. Aides et pass : boutique.</q-tooltip
           ></span
         >
       </template>
@@ -284,6 +290,16 @@
       <div v-if="error" class="text-negative">{{ error }}</div>
     </div>
 
+    <PurchaseSheet
+      :offer="purchase.sheet.value"
+      :balance="shop.state?.balance ?? 0"
+      :inventory="shop.state?.inventory ?? {}"
+      :busy="purchase.busy.value"
+      :error="purchase.error.value"
+      @close="purchase.close()"
+      @buy="purchase.buy"
+    />
+
     <OvertimeDialog
       :model-value="runner.phase.value === 'decision'"
       :streak="streakNow"
@@ -302,8 +318,9 @@
  * recap at the end. Reloading or coming back before the end resumes the same run and item. The
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
  * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series, blindfold puzzles (docs/BLINDFOLD.md),
- * positions to evaluate (docs/EVALUATION.md) or a puzzle streak (docs/PUZZLE_STREAK.md: no help, its
- * overtime asked in `OvertimeDialog`).
+ * positions to evaluate (docs/EVALUATION.md) or a puzzle streak (docs/PUZZLE_STREAK.md: no free
+ * help, the store's helps and passes, bought in place when out of stock; its overtime asked in
+ * `OvertimeDialog`).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -313,6 +330,7 @@ import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
+import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
 import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
 import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
@@ -322,8 +340,15 @@ import RunResult from '@/components/training/RunResult.vue'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
-import { puzzleStreakApi, sessionApi, woodpeckerApi } from '@/services/api'
+import { useAidPurchase } from '@/composables/shop/useAidPurchase'
+import {
+  puzzleStreakApi,
+  sessionApi,
+  trainingApi,
+  woodpeckerApi
+} from '@/services/api'
 import { useGamificationStore } from '@/stores/gamification'
+import { useShopStore } from '@/stores/shop'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
 import { levelAt } from '@/utils/puzzleStreak'
@@ -360,6 +385,7 @@ const route = useRoute()
 const $q = useQuasar()
 const store = useTrainingStore()
 const gamification = useGamificationStore()
+const shop = useShopStore()
 const runner = useTimeboxedRun()
 const loading = ref(false)
 const error = ref('')
@@ -386,8 +412,45 @@ const missActions = computed(() =>
     : []
 )
 
-/** A blindfold puzzle never moves on by itself: the final position stays to be looked at. */
+/** The store's blindfold pardons held (the item says it), and a pardon being spent. */
+const blindfoldPardons = ref(0)
+const pardonBusy = ref(false)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'blindfold_puzzle')
+      blindfoldPardons.value = item.data.pardons ?? 0
+  }
+)
+/** @type {import('vue').Ref<{pardon: () => boolean}|null>} */
+const blindfoldPlayer = ref(null)
+
+/** The blindfold puzzle just missed, still pardonable on its sheet (nothing served since). */
+const pardonableMiss = computed(() => {
+  const result = runner.result.value
+  return (
+    runner.item.value?.type === 'blindfold_puzzle' &&
+    result?.itemId === runner.item.value.id &&
+    result.data?.status === 'failed' &&
+    !result.data?.pardoned
+  )
+})
+
+/**
+ * A blindfold puzzle never moves on by itself: the final position stays to be looked at. A miss
+ * can still be pardoned there (the store's pardon).
+ */
 const blindfoldActions = computed(() => [
+  ...(pardonableMiss.value
+    ? [
+        {
+          label: `Pardonner · ${blindfoldPardons.value}`,
+          loading: pardonBusy.value,
+          testid: 'blindfold-pardon-miss',
+          onClick: onBlindfoldPardon
+        }
+      ]
+    : []),
   {
     label: 'Suivant →',
     primary: true,
@@ -396,6 +459,52 @@ const blindfoldActions = computed(() => [
     onClick: next
   }
 ])
+
+/**
+ * "Pardonner" (docs/BLINDFOLD.md): on the puzzle on screen, its mistakes are erased; on the one
+ * just missed, it counts as solved and its XP is topped up. Out of stock, the store's sheet opens
+ * in place, the clock running on.
+ */
+async function onBlindfoldPardon() {
+  const item = runner.item.value
+  const runId = runner.run.value?.id
+  if (!item || !runId || runner.phase.value !== 'running' || pardonBusy.value)
+    return
+  if (blindfoldPardons.value <= 0) {
+    await openAidSheet('blindfold_pardon')
+    return
+  }
+  pardonBusy.value = true
+  error.value = ''
+  try {
+    const answer = await trainingApi.pardon(runId, item.id)
+    blindfoldPardons.value = answer.data.pardons
+    if (answer.data.pardon === 'loss') {
+      runner.pardonResult(answer.data.xp)
+      $q.notify({
+        type: 'positive',
+        message: `Pardonné : compté comme résolu (+${answer.data.xp} XP).`
+      })
+    } else {
+      blindfoldPlayer.value?.pardon()
+    }
+  } catch (e) {
+    const detail = String(/** @type {any} */ (e)?.response?.data?.detail ?? '')
+    if (detail === 'no_pardon') {
+      blindfoldPardons.value = 0
+      await openAidSheet('blindfold_pardon')
+    } else {
+      error.value = apiErrorMessage(e, {
+        409:
+          detail === 'too_late'
+            ? 'Trop tard : un autre puzzle a été servi.'
+            : 'Ce puzzle ne peut plus être pardonné.'
+      })
+    }
+  } finally {
+    pardonBusy.value = false
+  }
+}
 
 const isRepertoire = computed(() => runner.run.value?.module === 'repertoire')
 
@@ -492,7 +601,10 @@ const streakLevel = computed(() => {
 })
 /** After a miss: a new streak (session step), or the result (the streak page, or overtime). */
 const streakActions = computed(() =>
-  (streakResult.value && !streakResult.value.success) || error.value
+  (streakResult.value &&
+    !streakResult.value.success &&
+    streakResult.value.data?.status !== 'passed') ||
+  error.value
     ? [
         {
           label:
@@ -530,6 +642,107 @@ async function onStreakResolve(_outcome, report) {
     holdEnd.value = false
     error.value = apiErrorMessage(e)
   }
+}
+
+/**
+ * The store's aids (docs/PUZZLE_STREAK.md): the stock the server announced with the puzzle, the
+ * helps spent on it (one per move to find), the aid being spent.
+ */
+const aidStock = ref({ help: 0, pass: 0 })
+const itemHelps = ref(0)
+const aidBusy = ref(/** @type {''|'help'|'pass'} */ (''))
+watch(streakItem, item => {
+  if (!item) return
+  aidStock.value = { help: 0, pass: 0, ...item.data.aids }
+  itemHelps.value = item.data.helps ?? 0
+})
+const streakAids = computed(() => {
+  const moves = streakItem.value?.data.puzzle.moves.length ?? 0
+  return {
+    ...aidStock.value,
+    canHelp: itemHelps.value < Math.floor(moves / 2),
+    busy: aidBusy.value
+  }
+})
+/** @type {import('vue').Ref<{lightPiece: () => void, pass: () => Promise<void>}|null>} */
+const streakPlayer = ref(null)
+
+/**
+ * "Aide" or "Pass": spent on the server (the help lights up the piece, the pass plays the
+ * solution, then the next puzzle comes); out of stock, the store's sheet opens in place, the
+ * clock running on.
+ *
+ * @param {'help'|'pass'} kind
+ */
+async function onStreakAid(kind) {
+  const item = streakItem.value
+  const runId = runner.run.value?.id
+  if (!item || !runId || runner.phase.value !== 'running' || aidBusy.value)
+    return
+  if (aidStock.value[kind] <= 0) {
+    await openAidSheet(`puzzle_streak_${kind}`)
+    return
+  }
+  aidBusy.value = kind
+  error.value = ''
+  try {
+    if (kind === 'help') {
+      const answer = await trainingApi.help(runId, item.id)
+      aidStock.value = answer.data.aids
+      itemHelps.value = answer.data.helps
+      streakPlayer.value?.lightPiece()
+      return
+    }
+    const result = await runner.submit({ moves: [], pass: true })
+    if (result?.data?.status !== 'passed') {
+      // Refused (none left after all) or too late: the stock as the store has it.
+      if (runner.phase.value === 'running') await syncAidStock()
+      return
+    }
+    aidStock.value = result.data.aids
+    await streakPlayer.value?.pass()
+    await next()
+  } catch (e) {
+    const detail = String(/** @type {any} */ (e)?.response?.data?.detail ?? '')
+    if (detail === 'no_help') {
+      aidStock.value = { ...aidStock.value, help: 0 }
+      await openAidSheet(`puzzle_streak_${kind}`)
+    } else {
+      error.value = apiErrorMessage(e, {
+        409:
+          detail === 'help_limit'
+            ? 'Plus d’aide possible sur ce puzzle.'
+            : 'Trop tard : ce puzzle est déjà joué.'
+      })
+    }
+  } finally {
+    aidBusy.value = ''
+  }
+}
+
+/** The stock of aids from the store (after a refused pass). */
+async function syncAidStock() {
+  const state = await shop.load().catch(() => null)
+  if (!state) return
+  aidStock.value = {
+    help: state.inventory.puzzle_streak_help ?? 0,
+    pass: state.inventory.puzzle_streak_pass ?? 0
+  }
+}
+
+/** The store's purchase sheet in place, for an aid out of stock (streak aids, blindfold pardons). */
+const purchase = useAidPurchase(inventory => {
+  aidStock.value = {
+    help: inventory.puzzle_streak_help ?? 0,
+    pass: inventory.puzzle_streak_pass ?? 0
+  }
+  blindfoldPardons.value = inventory.blindfold_pardon ?? 0
+})
+
+/** @param {string} item */
+async function openAidSheet(item) {
+  const message = await purchase.open(item)
+  if (message) error.value = message
 }
 
 const extending = ref(false)

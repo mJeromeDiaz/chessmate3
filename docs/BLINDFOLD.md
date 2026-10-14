@@ -58,7 +58,30 @@ puzzles** ; séance chronométrée (5 à 30 min) et carte du Session Builder.
   puzzle) ; réussite = `solved`. Bilan : `ok` / `hint` / `fail`, le puzzle complet (rejouable).
 - **XP** : 12 résolu, 6 avec coup d'œil, 2 raté ([GAMIFICATION.md](GAMIFICATION.md)).
 
+## 3 bis. Pardon de la boutique (2026-10-13)
+
+Le pardon (`blindfold_pardon`, [SHOP.md](SHOP.md)) couvre **tout le puzzle**, une fois par puzzle,
+par `POST /training/runs/{id}/pardon {itemId}` (`TimeboxRunner::pardon`,
+`Training\Module\PardonModuleInterface`, stock derrière `Blindfold\Pardon\PardonStockInterface`) :
+
+- **pendant le jeu** (après un coup faux) : `pardon = 'play'` ; à la soumission, ses erreurs ne
+  comptent plus (le coup d'œil reste dû) : terminé sans solution affichée → `solved` (12 XP) ;
+  « Solution » ou inachevé → `failed` quand même. Réponse `{pardon: 'play', status: 'pending', xp: 0,
+  pardons}`.
+- **sur la feuille d'échec** : seulement sur un `failed`, tant que c'est le dernier puzzle servi de
+  la séance (rien de servi depuis : sinon `too_late`) et que la séance tourne. `pardon = 'loss'`, le
+  puzzle devient `solved` (récapitulatif, bilan, statistiques) ; l'événement `PuzzlePardoned` donne
+  le complément de 10 XP (kind `pardon`, hors plafond, jour local du raté). Le journal d'activité
+  garde le raté tel qu'il a été joué. Réponse `{pardon: 'loss', status: 'solved', xp: 10, pardons}`.
+- Refus (409, rien de dépensé) : `no_pardon`, `not_pardonable` (déjà pardonné, réussi ou avec coup
+  d'œil), `too_late`. L'élément porte `pardoned` et `pardons` (le stock) ; le résultat et le bilan
+  portent `pardoned` ; l'exercice, `metadata.pardoned`.
+
 ## 4. API
+
+Colonne `blindfold_puzzle_attempt.pardon` (`play`, `loss` ou null ; migration
+`Version20261019130000`), exportée.
+
 
 | Endpoint | Rôle |
 |---|---|
@@ -67,6 +90,13 @@ puzzles** ; séance chronométrée (5 à 30 min) et carte du Session Builder.
 Exportée avec le compte (`entrainement.json`, `blindfoldPuzzles`).
 
 ## 5. Front
+
+- Pardon (§ 3 bis) : après un coup faux, « Pardonner · n » dans les contrôles
+  (`BlindfoldPuzzlePlayer`, événement `pardon`) ; accepté, `useBlindfoldPuzzle.pardon()` efface les
+  erreurs et rend le coup d'œil, et le puzzle finit `solved` (un rechargement le sait :
+  `pardoned` de l'élément). Sur la feuille d'échec, l'action « Pardonner · n » ; acceptée,
+  `runner.pardonResult(xp)` passe le verdict en réussite (compteurs, +10 XP). À 0 ou sur `no_pardon`,
+  la feuille d'achat de la boutique s'ouvre sur place (`useAidPurchase`), le chrono continue.
 
 - Page `/blindfold` (`front/src/pages/index/blindfold/index.vue`, lien « Aveugle » du menu) :
   niveau, longueur, temps pour mémoriser (tous lus

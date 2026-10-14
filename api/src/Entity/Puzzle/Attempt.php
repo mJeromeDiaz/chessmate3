@@ -107,6 +107,10 @@ class Attempt
     #[ORM\Column(options: ['default' => false])]
     private bool $solutionShown = false;
 
+    /** Missed, then pardoned with the store's pardon: the rating came back (docs/PUZZLES.md). */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $pardoned = false;
+
     #[ORM\OneToOne(targetEntity: RatingChange::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?RatingChange $ratingChange = null;
@@ -243,5 +247,27 @@ class Attempt
     public function getRatingChange(): ?RatingChange
     {
         return $this->ratingChange;
+    }
+
+    public function isPardoned(): bool
+    {
+        return $this->pardoned;
+    }
+
+    /**
+     * Whether the store's pardon may apply: a rated puzzle missed (its rating went down), not
+     * pardoned yet.
+     */
+    public function isPardonable(): bool
+    {
+        return AttemptStatus::Failed === $this->status && null !== $this->ratingChange && !$this->pardoned;
+    }
+
+    public function pardon(): void
+    {
+        if (!$this->isPardonable()) {
+            throw new \LogicException('Only a missed rated attempt is pardoned, once.');
+        }
+        $this->pardoned = true;
     }
 }

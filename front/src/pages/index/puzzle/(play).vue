@@ -112,6 +112,16 @@
       </template>
     </PuzzlePlayer>
 
+    <PurchaseSheet
+      :offer="purchase.sheet.value"
+      :balance="purchase.shop.state?.balance ?? 0"
+      :inventory="purchase.shop.state?.inventory ?? {}"
+      :busy="purchase.busy.value"
+      :error="purchase.error.value"
+      @close="purchase.close()"
+      @buy="purchase.buy"
+    />
+
     <PuzzleRunDialog v-model="runDialog" />
     <PuzzleSettingsDialog v-model="settingsOpen" />
   </q-page>
@@ -120,10 +130,13 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import PuzzleRunDialog from '@/components/puzzle/PuzzleRunDialog.vue'
 import PuzzleSettingsDialog from '@/components/puzzle/PuzzleSettingsDialog.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
+import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
+import { useAidPurchase } from '@/composables/shop/useAidPurchase'
 import { useGamificationStore } from '@/stores/gamification'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useTrainingStore } from '@/stores/training'
@@ -137,6 +150,7 @@ import {
 definePage({ meta: { auth: 'required' } })
 
 const store = usePuzzleStore()
+const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
@@ -196,9 +210,64 @@ function afterStreak(action) {
   }
 }
 
+/** The store's pardons for rated puzzles held, and a pardon being spent. */
+const pardons = ref(0)
+const pardoning = ref(false)
+const purchase = useAidPurchase(
+  inventory => (pardons.value = inventory.puzzle_pardon ?? 0)
+)
+
+/** A rated puzzle just missed that lost rating points: a pardon brings them back. */
+const pardonable = computed(
+  () =>
+    !replayId.value &&
+    store.result?.rated === true &&
+    store.result.status === 'failed' &&
+    !store.result.pardoned &&
+    (store.result.ratingDelta ?? 0) < 0
+)
+
+/**
+ * "Pardonner" on the miss sheet (docs/PUZZLES.md): the rating comes back; out of stock, the
+ * store's sheet opens in place.
+ */
+async function pardon() {
+  if (pardoning.value || !pardonable.value) return
+  if (pardons.value <= 0) {
+    const message = await purchase.open('puzzle_pardon')
+    if (message) error.value = message
+    return
+  }
+  pardoning.value = true
+  try {
+    pardons.value = await store.pardon()
+    $q.notify({
+      type: 'positive',
+      message: 'Pardonné : ton classement est revenu.'
+    })
+  } catch (e) {
+    const detail = String(/** @type {any} */ (e)?.response?.data?.detail ?? '')
+    if (detail === 'no_pardon') {
+      pardons.value = 0
+      const message = await purchase.open('puzzle_pardon')
+      if (message) error.value = message
+    } else {
+      error.value = apiErrorMessage(e, {
+        409:
+          detail === 'too_late'
+            ? 'Trop tard : un autre puzzle a été joué depuis.'
+            : 'Ce puzzle ne peut pas être pardonné.'
+      })
+    }
+  } finally {
+    pardoning.value = false
+  }
+}
+
 /**
  * The result sheet's buttons: the next puzzle once the submission answered (asking earlier would
- * hand back the same, still pending, attempt), and an unrated replay after a failure.
+ * hand back the same, still pending, attempt), an unrated replay after a failure, and the store's
+ * pardon after a rated one.
  */
 const actions = computed(() => {
   const next_ = {
@@ -211,6 +280,16 @@ const actions = computed(() => {
   const current = attempt.value
   if (store.result?.status !== 'failed' || !current) return [next_]
   return [
+    ...(pardonable.value
+      ? [
+          {
+            label: `Pardonner · ${pardons.value}`,
+            loading: pardoning.value,
+            testid: 'puzzle-pardon',
+            onClick: pardon
+          }
+        ]
+      : []),
     {
       label: 'Réessayer',
       testid: 'puzzle-retry',
@@ -300,6 +379,11 @@ async function importLichess() {
 watch(replayId, id => (id ? replay(id) : begin(() => store.next())))
 
 onMounted(() => {
+  // Read again: the stock may have moved since the menus read it.
+  purchase.shop
+    .load()
+    .then(state => (pardons.value = state?.inventory.puzzle_pardon ?? 0))
+    .catch(() => {})
   store.fetchThemes().catch(() => {})
   store.fetchRating().catch(() => {})
   if (replayId.value) replay(replayId.value)

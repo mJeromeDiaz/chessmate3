@@ -11,6 +11,7 @@ import { Chess } from 'chess.js'
  * @property {number} visibleSeconds how long the position is shown (the first time, and on a peek)
  * @property {number} hiddenSeconds the pause, position hidden, before playing
  * @property {number} peeks peeks allowed after a mistake
+ * @property {boolean} [pardoned] the store's pardon already spent on it (a reload)
  *
  * @typedef {'solved'|'helped'|'failed'} BlindfoldStatus
  *
@@ -40,7 +41,9 @@ export const EMPTY_BOARD = '8/8/8/8/8/8/8/8 w - - 0 1'
  * (legal) move: while peeks remain, the current position is shown again, hidden again, and the
  * player goes on from there; one mistake more fails the puzzle and the solution is played on the
  * visible board. An impossible move is refused without counting (the server only replays legal
- * moves). Any checkmating move wins, as in the other puzzles.
+ * moves). Any checkmating move wins, as in the other puzzles. The store's pardon, after a
+ * mistake, erases the mistakes made and gives the peeks back: the puzzle then ends solved, unless
+ * it fails all the same.
  *
  * @param {BlindfoldOptions} [options]
  */
@@ -83,6 +86,8 @@ export function useBlindfoldPuzzle(options = {}) {
   const moveLog = ref(/** @type {string[]} */ ([]))
   const solutionShown = ref(false)
   const status = ref(/** @type {BlindfoldStatus|null} */ (null))
+  /** The store's pardon was spent on the puzzle: it covers the whole puzzle. */
+  const pardoned = ref(false)
 
   /** @type {BlindfoldSettings} */
   let settings = { visibleSeconds: 10, hiddenSeconds: 3, peeks: 1 }
@@ -101,6 +106,14 @@ export function useBlindfoldPuzzle(options = {}) {
   )
   const boardFen = computed(() => (visible.value ? fen.value : EMPTY_BOARD))
   const expectedMove = computed(() => puzzle.value?.moves[cursor.value] ?? null)
+  /** A pardon may be asked: after a mistake, while the puzzle goes on, once. */
+  const canPardon = computed(
+    () =>
+      !pardoned.value &&
+      mistakes.value > 0 &&
+      status.value === null &&
+      ['show', 'hidden', 'play', 'reply'].includes(phase.value)
+  )
 
   const highlights = computed(() => {
     /** @type {Highlight[]} */
@@ -146,6 +159,7 @@ export function useBlindfoldPuzzle(options = {}) {
     moveLog.value = []
     solutionShown.value = false
     status.value = null
+    pardoned.value = !!settings.pardoned
     phase.value = 'intro'
 
     await wait(delays.opponent)
@@ -278,6 +292,23 @@ export function useBlindfoldPuzzle(options = {}) {
     return 'correct'
   }
 
+  /**
+   * The store's pardon, accepted by the server: the mistakes are erased and the peeks given back.
+   *
+   * @returns {boolean} whether it applied
+   */
+  function pardon() {
+    if (!canPardon.value) return false
+    pardoned.value = true
+    mistakes.value = 0
+    peeksLeft.value = settings.peeks
+    message.value = {
+      text: 'Pardonné : ton erreur est effacée, ton coup d’œil revient.',
+      tone: 'info'
+    }
+    return true
+  }
+
   /** Gives up: the solution is played on the visible board. Counts as failed. */
   function giveUp() {
     if (['idle', 'intro', 'solution', 'complete'].includes(phase.value)) return
@@ -344,7 +375,7 @@ export function useBlindfoldPuzzle(options = {}) {
   }
 
   function finish() {
-    status.value = mistakes.value > 0 ? 'helped' : 'solved'
+    status.value = mistakes.value > 0 && !pardoned.value ? 'helped' : 'solved'
     resolve()
     complete()
   }
@@ -396,12 +427,15 @@ export function useBlindfoldPuzzle(options = {}) {
     moveLog,
     solutionShown,
     status,
+    pardoned,
+    canPardon,
     load,
     memorized,
     clickSquare,
     promote,
     cancelPromotion,
     giveUp,
+    pardon,
     dispose
   }
 }

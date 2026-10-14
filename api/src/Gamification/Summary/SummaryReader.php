@@ -8,6 +8,7 @@ use App\Activity\Log\LocalDate;
 use App\Entity\User;
 use App\Enum\Gamification\XpKind;
 use App\Enum\Training\Module;
+use App\Gamification\Streak\StreakDays;
 use App\Gamification\Xp\XpRules;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -21,13 +22,14 @@ use Psr\Clock\ClockInterface;
  *
  * @phpstan-type ModuleLevel array{xp: int, level: int, xpInLevel: int, xpForNext: int}
  * @phpstan-type Summary array{xp: int, level: int, xpInLevel: int, xpForNext: int, rank: string, nextRank: array{rank: string, level: int}|null, modules: array<string, ModuleLevel>, streak: StreakView, today: array{date: string, exerciseXp: int, cap: int}}
- * @phpstan-type StreakView array{current: int, best: int, playedToday: bool, week: list<bool>, nextMilestone: int|null}
+ * @phpstan-type StreakView array{current: int, best: int, playedToday: bool, week: list<bool>, frozenWeek: list<bool>, protected: bool, freezeDays: int, nextMilestone: int|null}
  */
 final readonly class SummaryReader
 {
     public function __construct(
         private Connection $connection,
         private ClockInterface $clock,
+        private StreakDays $streakDays,
     ) {
     }
 
@@ -63,14 +65,12 @@ final readonly class SummaryReader
             [$id, $today, XpKind::Exercise->value],
             [ParameterType::BINARY],
         );
-        $days = array_values(array_filter($this->connection->fetchFirstColumn(
-            'SELECT DISTINCT local_date FROM activity_log_entry WHERE user_id = ? ORDER BY local_date',
-            [$id],
-            [ParameterType::BINARY],
-        ), 'is_string'));
+        // Frozen days count as kept, the ones the freezes in stock would cover too (docs/SHOP.md).
+        $streakDays = $this->streakDays->asOf($user->getId(), $today);
+        $days = $streakDays['days'];
 
         $level = XpRules::level($total);
-        $streak = Streak::of($days, $today);
+        $streak = Streak::of($days, $today, $streakDays['frozen']);
 
         return [
             'xp' => $total,
@@ -81,6 +81,9 @@ final readonly class SummaryReader
             'streak' => [
                 ...$streak,
                 'week' => Streak::week($days, $today),
+                'frozenWeek' => Streak::week($streakDays['frozen'], $today),
+                'protected' => $streakDays['protected'],
+                'freezeDays' => $streakDays['freezeDays'],
                 'nextMilestone' => Streak::nextMilestone($streak['current']),
             ],
             'today' => ['date' => $today, 'exerciseXp' => is_numeric($todayXp) ? (int) $todayXp : 0, 'cap' => XpRules::DAILY_EXERCISE_CAP],

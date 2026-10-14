@@ -42,6 +42,8 @@ final class StreakNotice
     public ?string $badge = null;
     /** @var list<bool>|null the active days of the current local week, Monday first, today included */
     public ?array $week = null;
+    /** @var list<bool>|null the days of the week a freeze covered (docs/SHOP.md) */
+    public ?array $frozenWeek = null;
     /** The next streak badge's length, null past the last one. */
     public ?int $nextMilestone = null;
     /** The user's local day (Y-m-d). */

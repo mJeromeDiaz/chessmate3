@@ -7,12 +7,13 @@
         type="button"
         class="coord-ribbon__cell"
         :class="{
-          'coord-ribbon__cell--fail': !cell.correct,
+          'coord-ribbon__cell--fail': !cell.correct && !cell.pardoned,
+          'coord-ribbon__cell--pardoned': cell.pardoned,
           'coord-ribbon__cell--picked': picked?.number === cell.number
         }"
         :title="cell.title"
         :aria-label="cell.title"
-        :data-status="cell.correct ? 'ok' : 'fail'"
+        :data-status="cell.correct ? 'ok' : cell.pardoned ? 'pardoned' : 'fail'"
         data-testid="coordinate-cell"
         @click="picked = picked?.number === cell.number ? null : cell"
       />
@@ -51,7 +52,8 @@
 /**
  * The history of a coordinates series (docs/COORDINATES.md), GitHub-like: one cell per answer in
  * the order played, green or red; a cell's tooltip (or a tap) tells the square asked, the one
- * clicked and the time it took. Totals underneath.
+ * clicked and the time it took; the answer the store's pardon took away is ice blue, out of the
+ * totals. Totals underneath.
  */
 import { computed, ref } from 'vue'
 import {
@@ -89,6 +91,10 @@ const picked = ref(null)
 
   &--fail {
     background: #ff6fae;
+  }
+
+  &--pardoned {
+    background: #4fb2ff;
   }
 
   &--picked {

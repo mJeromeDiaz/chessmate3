@@ -31,6 +31,8 @@ final class XpRules
     public const BLINDFOLD_SOLVED = 12;
     public const BLINDFOLD_HELPED = 6;
     public const BLINDFOLD_FAILED = 2;
+    /** Blindfold puzzle missed then pardoned on the miss sheet: the top-up to a solved one (uncapped). */
+    public const BLINDFOLD_PARDON = self::BLINDFOLD_SOLVED - self::BLINDFOLD_FAILED;
     /** Position evaluation: the engine's category, one away, further or no answer; bonuses. */
     public const EVALUATION_EXACT = 15;
     public const EVALUATION_CLOSE = 6;

@@ -26,6 +26,8 @@ final readonly class ItemSubmission
         public ?int $thinkMs = null,
         public array $answers = [],
         public ?array $evaluation = null,
+        /** The puzzle streak: skipped with a pass of the store, before any move (docs/PUZZLE_STREAK.md). */
+        public bool $pass = false,
     ) {
     }
 }

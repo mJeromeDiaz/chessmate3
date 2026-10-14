@@ -39,6 +39,7 @@ import {
   formatAnswerTime,
   validationText
 } from '@/utils/coordinates'
+import { streakAids } from '@/utils/runResult'
 import { unitWord } from '@/utils/repertoireTest'
 import { FREE_FORMATS, closeReasonText } from '@/utils/training'
 
@@ -148,6 +149,8 @@ const details = computed(() => {
     if (m.hardestRating)
       lines.push(`Puzzle le plus dur réussi : ${m.hardestRating}.`)
     if (m.extensions) lines.push(`Prolongé ${m.extensions} fois de 5 minutes.`)
+    const aids = streakAids(m)
+    if (aids) lines.push(`Aides de la boutique : ${aids}.`)
     return lines
   }
   if (props.run.module === 'evaluation') {

@@ -8,6 +8,7 @@
  * @property {number} previousStreak the streak before today (0: it had broken)
  * @property {string|null} badge the streak badge (trophy key) today reached
  * @property {boolean[]} week the active days of the local week, Monday first, today included
+ * @property {boolean[]} [frozenWeek] its days covered by a freeze (docs/SHOP.md)
  * @property {number|null} nextMilestone
  * @property {string} localDate Y-m-d
  *
@@ -122,16 +123,19 @@ export function weekIndex(date) {
 }
 
 /**
- * The week row: label, done, today, still to come.
+ * The week row: label, done, frozen (a freeze kept the streak: an ice ball instead of the flame's
+ * tick, docs/SHOP.md), today, still to come.
  *
  * @param {boolean[]} week Monday first
  * @param {string} today Y-m-d
+ * @param {boolean[]} [frozen] Monday first
  */
-export function weekRow(week, today) {
+export function weekRow(week, today, frozen = []) {
   const t = weekIndex(today)
   return WEEK_DAYS.map((label, i) => ({
     label,
     done: !!week[i],
+    frozen: !week[i] && !!frozen[i],
     today: i === t,
     future: i > t
   }))

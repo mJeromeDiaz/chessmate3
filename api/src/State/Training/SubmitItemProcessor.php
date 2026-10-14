@@ -11,6 +11,7 @@ use App\ApiResource\Training\SubmitItemInput;
 use App\Gamification\Xp\ExerciseXp;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
+use App\Training\Exception\AidRefusedException;
 use App\Training\Exception\InvalidItemSubmissionException;
 use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemClosedException;
@@ -29,8 +30,8 @@ use Symfony\Component\RateLimiter\RateLimiterFactory;
 /**
  * POST /training/runs/{id}/submission. 404 for an unknown run or item, 409 when the run is over
  * (closed, or time up when the submission arrived), the item already submitted or no longer
- * submittable (its classic cycle run was lost: ask for the next one), 400 for an impossible move
- * log.
+ * submittable (its classic cycle run was lost: ask for the next one) or a paid aid missing
+ * (`detail`: `no_pass`), 400 for an impossible move log.
  *
  * @implements ProcessorInterface<SubmitItemInput, RunStep>
  */
@@ -55,7 +56,7 @@ final class SubmitItemProcessor implements ProcessorInterface
         $this->exerciseXp->reset();
 
         try {
-            $step = $this->runner->submit($user, self::runId($uriVariables), new ItemSubmission($data->itemId, $data->moves, $data->hintLevel, $data->solutionShown, $data->thinkMs, $data->answers, $data->evaluation));
+            $step = $this->runner->submit($user, self::runId($uriVariables), new ItemSubmission($data->itemId, $data->moves, $data->hintLevel, $data->solutionShown, $data->thinkMs, $data->answers, $data->evaluation, $data->pass));
         } catch (RunNotFoundException) {
             throw new NotFoundHttpException('Run not found.');
         } catch (ItemNotFoundException) {
@@ -68,6 +69,8 @@ final class SubmitItemProcessor implements ProcessorInterface
             throw new ConflictHttpException('Item already submitted.');
         } catch (ItemClosedException) {
             throw new ConflictHttpException('This item can no longer be submitted; ask for the next one.');
+        } catch (AidRefusedException $e) {
+            throw new ConflictHttpException($e->reason);
         } catch (InvalidItemSubmissionException $e) {
             throw new BadRequestHttpException($e->getMessage());
         }

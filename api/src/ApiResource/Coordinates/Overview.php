@@ -12,7 +12,7 @@ use App\State\Coordinates\OverviewProvider;
  * The signed-in user's coordinates (docs/COORDINATES.md): the rules of a series, each orientation's
  * state (validated, best series) and the latest series.
  *
- * @phpstan-type SeriesView array{id: string, runId: string, orientation: string, answerCount: int, successCount: int, successRate: float|null, validated: bool, startedAt: string, closedAt: string|null}
+ * @phpstan-type SeriesView array{id: string, runId: string, orientation: string, answerCount: int, successCount: int, successRate: float|null, validated: bool, pardoned: bool, startedAt: string, closedAt: string|null}
  * @phpstan-type OrientationView array{orientation: string, validated: bool, validatedAt: string|null, seriesCount: int, best: SeriesView|null}
  */
 #[ApiResource(
@@ -32,4 +32,7 @@ final class Overview
 
     /** @var list<SeriesView> the latest closed series first */
     public array $history = [];
+
+    /** The store's coordinates pardons held (the launcher's toggle, docs/COORDINATES.md). */
+    public int $pardons = 0;
 }

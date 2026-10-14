@@ -50,6 +50,15 @@
         %</span
       >
       <span>{{ ORIENTATIONS[orientation] }} en bas</span>
+      <span
+        v-if="item.data.pardon"
+        class="coords-player__pardon"
+        data-testid="coordinates-pardon"
+        >Pardon : ta 1re erreur ne comptera pas<q-tooltip
+          >Dépensé à la fin de la série, seulement si tu fais une erreur
+          (boutique).</q-tooltip
+        ></span
+      >
     </div>
   </div>
 </template>
@@ -184,5 +193,10 @@ onBeforeUnmount(() => {
   b {
     color: var(--cm-ink);
   }
+}
+
+.coords-player__pardon {
+  color: #2d8fd9;
+  font-weight: 600;
 }
 </style>

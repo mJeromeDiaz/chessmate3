@@ -12,6 +12,7 @@ import {
   resultKind,
   resultProf,
   resultScore,
+  streakAids,
   streakNote,
   streakRing
 } from '@/utils/runResult'
@@ -63,6 +64,17 @@ describe('run result', () => {
       streakNote(streak({ bestStreak: 5, recordBefore: 0, record: true }))
     ).toBe('Ton premier record !')
     expect(streakRing(streak({ recordBefore: 0 }))).toBe(100)
+
+    // The store's aids are said (they count for records and badges).
+    expect(streakAids({ passes: 2, helps: 1 })).toBe('2 pass, 1 aide')
+    expect(streakAids({ passes: 0, helps: 3 })).toBe('3 aides')
+    expect(streakAids({})).toBe('')
+    expect(streakNote(streak({ bestStreak: 6, passes: 1 }))).toBe(
+      'Record égalé : 6 · 1 pass'
+    )
+    expect(
+      streakNote(streak({ recordBefore: 0, helps: 2 }))
+    ).toBe('2 aides')
 
     expect(resultButtons('streak', 1).secondary.action).toBe('fix')
     expect(resultButtons('record', 0).secondary.action).toBe('next')

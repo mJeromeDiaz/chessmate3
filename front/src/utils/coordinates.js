@@ -15,13 +15,14 @@
  *
  * @typedef {object} CoordinateItem an answer of the run review
  * @property {number} index 1-based
- * @property {'ok'|'fail'} status
+ * @property {'ok'|'fail'|'hint'} status hint: the wrong answer the store's pardon took away
  * @property {number|null} durationMs
- * @property {{index: number, target: string, clicked: string}} data
+ * @property {{index: number, target: string, clicked: string, pardoned?: boolean}} data
  *
  * @typedef {object} RibbonCell
  * @property {number} number 1-based
  * @property {boolean} correct
+ * @property {boolean} pardoned the store's pardon took it away: neither an answer nor an error
  * @property {string} target
  * @property {string} clicked
  * @property {string} title the tooltip: "#3 · e4 → d4 · 1,2 s"
@@ -56,14 +57,16 @@ export function formatAnswerTime(ms) {
 export function ribbonCells(items) {
   return items.map(item => {
     const correct = item.status === 'ok'
+    const pardoned = !!item.data.pardoned
     const { target, clicked } = item.data
     const what = correct ? target : `${target} → ${clicked}`
     return {
       number: item.index,
       correct,
+      pardoned,
       target,
       clicked,
-      title: `#${item.index} · ${what} · ${formatAnswerTime(item.durationMs)}`
+      title: `#${item.index} · ${what} · ${formatAnswerTime(item.durationMs)}${pardoned ? ' · pardonnée' : ''}`
     }
   })
 }
@@ -75,6 +78,8 @@ export function ribbonCells(items) {
  * @returns {{count: number, correct: number, wrong: number, rate: number|null, averageMs: number|null}}
  */
 export function ribbonTotals(items) {
+  // The pardoned answer counts neither as an answer nor as an error.
+  items = items.filter(i => !i.data.pardoned)
   const count = items.length
   const correct = items.filter(i => i.status === 'ok').length
   const timed = items.filter(i => i.durationMs !== null)

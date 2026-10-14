@@ -59,6 +59,7 @@ when@test:
         App\Repertoire\Import\Message\AnalyzeImportHandler: { autowire: true, autoconfigure: true, public: true }
         App\Repertoire\Import\Message\ApplyImportHandler: { autowire: true, autoconfigure: true, public: true }
         App\Ops\Queue\QueueDrainer: { autowire: true, public: true }
+        App\Shop\Wallet\CrownAdjustment: { autowire: true, public: true }
     parameters:
         woodpecker.min_puzzles: 5
         woodpecker.light.initial_puzzles: 10
@@ -108,6 +109,16 @@ services:
         arguments:
             index_0: '@doctrine.dbal.default_connection'
             index_3: { db_table: repertoire_explorer_cache }
+
+    # The daily streak's freezes come from the store (docs/SHOP.md): Gamification owns the interface.
+    App\Gamification\Streak\FreezeStockInterface: '@App\Shop\Freeze\FreezeStock'
+    # The puzzle streak's helps and passes too: PuzzleStreak owns the interface.
+    App\PuzzleStreak\Aid\AidStockInterface: '@App\Shop\Aid\AidStock'
+    # The pardons of rated puzzles too: Puzzle owns the interface.
+    App\Puzzle\Pardon\PardonStockInterface: '@App\Shop\Pardon\PuzzlePardons'
+    # And those of blindfold puzzles and coordinates series: each domain owns its interface.
+    App\Blindfold\Pardon\PardonStockInterface: '@App\Shop\Pardon\BlindfoldPardons'
+    App\Coordinates\Pardon\PardonStockInterface: '@App\Shop\Pardon\CoordinatesPardons'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

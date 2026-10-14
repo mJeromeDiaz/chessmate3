@@ -29,6 +29,9 @@ final class SubmitItemInput
 
     public bool $solutionShown = false;
 
+    /** The puzzle streak: the puzzle skipped with a pass of the store, before any move (docs/PUZZLE_STREAK.md). */
+    public bool $pass = false;
+
     /** Think time measured by the client, ms: lowers the server's own measure, never raises it. */
     #[Assert\Range(min: 0, max: 3_600_000)]
     public ?int $thinkMs = null;

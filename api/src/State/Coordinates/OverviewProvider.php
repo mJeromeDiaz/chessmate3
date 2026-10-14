@@ -7,6 +7,7 @@ namespace App\State\Coordinates;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\Coordinates\Overview;
+use App\Coordinates\Pardon\PardonStockInterface;
 use App\Coordinates\Series\CoordinateRules;
 use App\Entity\Coordinates\Series;
 use App\Enum\Coordinates\Orientation;
@@ -30,6 +31,7 @@ final class OverviewProvider implements ProviderInterface
         private readonly SeriesRepository $series,
         private readonly TimeboxRunner $runner,
         private readonly AuthenticatedUser $authenticatedUser,
+        private readonly PardonStockInterface $pardons,
     ) {
     }
 
@@ -52,6 +54,7 @@ final class OverviewProvider implements ProviderInterface
             ];
         }
         $view->history = array_map(self::series(...), $this->series->closedOf($user, self::HISTORY_SIZE));
+        $view->pardons = $this->pardons->stock($user->getId());
 
         return $view;
     }
@@ -71,6 +74,7 @@ final class OverviewProvider implements ProviderInterface
             'successCount' => $series->getSuccessCount(),
             'successRate' => $count > 0 ? round($series->getSuccessCount() / $count, 4) : null,
             'validated' => $series->isValidated(),
+            'pardoned' => null !== $series->getPardonedIndex(),
             'startedAt' => $series->getStartedAt()->format(\DATE_ATOM),
             'closedAt' => $series->getClosedAt()?->format(\DATE_ATOM),
         ];

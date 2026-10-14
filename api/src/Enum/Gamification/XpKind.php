@@ -23,4 +23,6 @@ enum XpKind: string
     case Validation = 'validation';
     /** A puzzle streak record beaten (docs/PUZZLE_STREAK.md). */
     case Record = 'record';
+    /** A blindfold puzzle missed then pardoned with the store's pardon: the top-up to a solved one (docs/BLINDFOLD.md). */
+    case Pardon = 'pardon';
 }

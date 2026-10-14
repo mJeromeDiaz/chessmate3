@@ -3,6 +3,7 @@
 namespace App\Repository\Puzzle;
 
 use App\Entity\Puzzle\RatingChange;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,28 +17,18 @@ class RatingChangeRepository extends ServiceEntityRepository
         parent::__construct($registry, RatingChange::class);
     }
 
-//    /**
-//     * @return RatingChange[] Returns an array of RatingChange objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('r.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?RatingChange
-//    {
-//        return $this->createQueryBuilder('r')
-//            ->andWhere('r.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * The user's latest rating change (UUID v7 ids: their order is their order of creation).
+     */
+    public function findLatestOf(User $user): ?RatingChange
+    {
+        /** @var RatingChange|null */
+        return $this->createQueryBuilder('r')
+            ->where('r.user = :user')
+            ->setParameter('user', $user->getId(), 'uuid')
+            ->orderBy('r.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

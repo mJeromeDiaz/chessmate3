@@ -150,11 +150,27 @@ export function streakRing(run) {
 export function streakNote(run) {
   const m = run.summary?.metrics ?? {}
   const before = m.recordBefore ?? 0
+  let note = before > 0 ? `Ton record : ${before}` : ''
   if (m.record)
-    return before > 0 ? `Ancien record : ${before}` : 'Ton premier record !'
-  if ((m.bestStreak ?? 0) >= before && before > 0)
-    return `Record égalé : ${before}`
-  return before > 0 ? `Ton record : ${before}` : ''
+    note = before > 0 ? `Ancien record : ${before}` : 'Ton premier record !'
+  else if ((m.bestStreak ?? 0) >= before && before > 0)
+    note = `Record égalé : ${before}`
+  const aids = streakAids(m)
+  return [note, aids].filter(Boolean).join(' · ')
+}
+
+/**
+ * The store's aids spent in a puzzle streak run: "2 pass, 1 aide", '' without any. They count
+ * for records and badges (docs/PUZZLE_STREAK.md), so they are said.
+ *
+ * @param {Record<string, any>} metrics
+ */
+export function streakAids(metrics) {
+  const parts = []
+  if (metrics.passes > 0) parts.push(`${metrics.passes} pass`)
+  if (metrics.helps > 0)
+    parts.push(`${metrics.helps} aide${metrics.helps > 1 ? 's' : ''}`)
+  return parts.join(', ')
 }
 
 /** Confetti of a perfect lesson. */

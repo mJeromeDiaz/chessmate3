@@ -96,6 +96,30 @@ describe('the ribbon', () => {
     })
   })
 
+  it('leaves the pardoned answer out of the totals, ice blue on the ribbon', () => {
+    const pardoned = {
+      ...answer(2, 'd5', 'd4', 2_400),
+      status: /** @type {'hint'} */ ('hint'),
+      data: { index: 1, target: 'd5', clicked: 'd4', pardoned: true }
+    }
+    const withPardon = [items[0], pardoned, items[2], items[3]]
+    expect(
+      ribbonCells(withPardon).map(c => [c.correct, c.pardoned, c.title])
+    ).toEqual([
+      [true, false, '#1 · e4 · 0,8 s'],
+      [false, true, '#2 · d5 → d4 · 2,4 s · pardonnée'],
+      [true, false, '#3 · a1 · —'],
+      [false, false, '#4 · d5 → e5 · 1,0 s']
+    ])
+    expect(ribbonTotals(withPardon)).toEqual({
+      count: 3,
+      correct: 2,
+      wrong: 1,
+      rate: 2 / 3,
+      averageMs: 900
+    })
+  })
+
   it('finds the squares missed most often', () => {
     expect(missedSquares(items)).toEqual([{ square: 'd5', count: 2 }])
     expect(missedSquares([answer(1, 'e4', 'e4')])).toEqual([])

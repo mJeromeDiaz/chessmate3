@@ -13,8 +13,9 @@ test('landing: a visitor sees the landing page with its own header', async ({
     "Don't Stay Rooky"
   )
 
-  // All nine modules, those not built yet tagged "Bientôt".
-  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(9)
+  // The session builder's whole catalogue (`MODULES`: ten since the puzzle streak), those not
+  // built yet tagged "Bientôt".
+  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(10)
   for (const id of ['puzzles', 'coordonnees', 'aveugle']) {
     await expect(page.getByTestId(`landing-module-${id}`)).not.toContainText(
       'Bientôt'

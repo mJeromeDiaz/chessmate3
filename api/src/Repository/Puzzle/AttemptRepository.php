@@ -49,7 +49,8 @@ class AttemptRepository extends ServiceEntityRepository
 
     /**
      * What a timed run resolved: solved, failed, active time (each attempt capped) and the rating
-     * before its first rated attempt and after its last.
+     * before its first rated attempt and after its last (before it, when it was pardoned: only the
+     * last one can be).
      *
      * @return array{solved: int, failed: int, activeMs: int, ratingBefore: float|null, ratingAfter: float|null}
      */
@@ -71,7 +72,7 @@ class AttemptRepository extends ServiceEntityRepository
             ['run' => $run->getId()->toBinary()],
         );
         $last = $connection->fetchOne(
-            'SELECT rc.rating_after FROM puzzle_attempt a JOIN puzzle_rating_change rc ON rc.id = a.rating_change_id
+            'SELECT IF(a.pardoned, rc.rating_before, rc.rating_after) FROM puzzle_attempt a JOIN puzzle_rating_change rc ON rc.id = a.rating_change_id
              WHERE a.training_run_id = :run ORDER BY rc.id DESC LIMIT 1',
             ['run' => $run->getId()->toBinary()],
         );
@@ -168,6 +169,23 @@ class AttemptRepository extends ServiceEntityRepository
         }
 
         return $attempt;
+    }
+
+    /**
+     * Whether a puzzle was served to the user after $attempt (a pardon is only for the puzzle just
+     * missed: docs/PUZZLES.md). UUID v7 ids: their order is their order of creation (dates are
+     * stored to the second, two puzzles may share one).
+     */
+    public function servedAfter(Attempt $attempt): bool
+    {
+        return null !== $this->createQueryBuilder('a')
+            ->select('a.id')
+            ->where('a.user = :user AND a.id > :id')
+            ->setParameter('user', $attempt->getUser()->getId(), 'uuid')
+            ->setParameter('id', $attempt->getId(), 'uuid')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     /**

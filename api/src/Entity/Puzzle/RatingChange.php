@@ -121,4 +121,10 @@ class RatingChange
     {
         return $this->createdAt;
     }
+
+    /** The whole rating state before this change (a pardon goes back to it). */
+    public function before(): RatingState
+    {
+        return new RatingState($this->ratingBefore, $this->deviationBefore, $this->volatilityBefore);
+    }
 }

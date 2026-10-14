@@ -104,6 +104,25 @@ describe('streak words', () => {
     expect(weekRow([], '2026-10-11')[6].today).toBe(true)
   })
 
+  it('shows the days a freeze kept as frozen, never an active one', () => {
+    const row = weekRow([true, false, false, true], '2026-10-08', [
+      true,
+      true,
+      true
+    ])
+    expect(row.map(d => d.frozen)).toEqual([
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ])
+    expect(row[0].done).toBe(true)
+    expect(weekRow([true], '2026-10-08')[1].frozen).toBe(false)
+  })
+
   it('counts the local day like the server', () => {
     const at = new Date('2026-10-07T22:30:00Z')
     expect(localToday('Europe/Paris', at)).toBe('2026-10-08')
