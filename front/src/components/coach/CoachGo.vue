@@ -7,7 +7,7 @@
           :style="{ background: moduleColor(module) }"
           data-testid="coach-go-kicker"
           ><span v-if="card.glyph" class="cs-glyph">{{ card.glyph }}</span
-          >MODULE 1 SUR {{ total }} · {{ module.minutes }} MIN</span
+          >{{ $t('coach.go.kicker', { total, n: module.minutes }) }}</span
         >
         <h1 class="cs-title">{{ heading }}</h1>
         <div class="cs-albert cs-albert--medium">
@@ -25,7 +25,9 @@
             :disabled="counting || launching"
             data-testid="coach-launch"
             @click="countdown"
-            >{{ launching ? 'Lancement…' : 'Lancer le module' }}</button
+            >{{
+              launching ? $t('coach.go.launching') : $t('coach.go.launch')
+            }}</button
           >
         </div>
         <slot name="notice" />
@@ -34,21 +36,21 @@
       <div class="cs-cols__main">
         <template v-if="module.module === 'woodpecker'">
           <div class="cs-card cs-card--night">
-            <div class="cs-kicker cs-kicker--light">LA MÉTHODE · SET LIGHT</div>
+            <div class="cs-kicker cs-kicker--light">{{
+              $t('coach.go.method')
+            }}</div>
             <ol class="cs-steps">
-              <li v-for="(line, i) in WOODPECKER_METHOD" :key="i">
+              <li v-for="(line, i) in woodpeckerMethod()" :key="i">
                 <span class="cs-steps__n">{{ i + 1 }}</span
                 ><span>{{ line }}</span>
               </li>
             </ol>
             <div class="cs-text cs-text--on-night">
-              {{ module.facts.puzzleCount }} puzzles tirés de parties jouées
-              dans ton ouverture, toujours les mêmes : tu les reconnais de plus
-              en plus vite.
+              {{ $t('coach.go.methodText', { n: module.facts.puzzleCount }) }}
             </div>
           </div>
           <div class="cs-card">
-            <div class="cs-kicker">POURQUOI ÇA VA T’AIDER</div>
+            <div class="cs-kicker">{{ $t('coach.go.why') }}</div>
             <div
               v-for="(reason, i) in WOODPECKER_REASONS"
               :key="i"
@@ -56,22 +58,23 @@
             >
               <span class="cs-reason__n">{{ i + 1 }}</span>
               <span class="cs-reason__text"
-                ><b>{{ reason.title }}.</b> {{ reason.text }}</span
+                ><b>{{ $t('coach.go.reason', { title: reason.title }) }}</b>
+                {{ reason.text }}</span
               >
             </div>
           </div>
         </template>
         <div v-else class="cs-card">
-          <div class="cs-kicker">AU PROGRAMME</div>
+          <div class="cs-kicker">{{ $t('coach.go.program') }}</div>
           <div class="cs-text">{{ card.text }}</div>
         </div>
       </div>
     </div>
 
     <div v-if="counting" class="cs-count" data-testid="coach-countdown">
-      <div class="cs-count__label"
-        >MODULE 1 · {{ card.title.toUpperCase() }}</div
-      >
+      <div class="cs-count__label">{{
+        $t('coach.go.countLabel', { title: card.title.toUpperCase() })
+      }}</div>
       <div class="cs-count__ring">
         <svg viewBox="0 0 220 220">
           <circle cx="110" cy="110" r="98" class="cs-count__track" />
@@ -87,7 +90,7 @@
           :key="count"
           class="cs-count__n"
           :class="{ 'cs-count__n--go': !count }"
-          >{{ count || 'Go !' }}</div
+          >{{ count || $t('coach.go.go') }}</div
         >
       </div>
       <div class="cs-count__sub">{{ countSub }}</div>
@@ -103,11 +106,12 @@
  */
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
-  WOODPECKER_METHOD,
   WOODPECKER_REASONS,
   moduleCard,
-  moduleColor
+  moduleColor,
+  woodpeckerMethod
 } from '@/utils/coach'
+import { t } from '@/i18n'
 import { profImage } from '@/utils/prof/images'
 
 const props = defineProps({
@@ -122,18 +126,23 @@ const emit = defineEmits(['launch'])
 const card = computed(() => moduleCard(props.module))
 const heading = computed(() =>
   props.module.module === 'woodpecker' && props.module.facts.opening
-    ? `Woodpecker · ${props.module.facts.opening.family}`
+    ? t('coach.card.woodpeckerNamed', {
+        family: props.module.facts.opening.family
+      })
     : card.value.title
 )
 const says = computed(() =>
   props.module.module === 'woodpecker'
-    ? 'Des tactiques de parties jouées dans ton ouverture, répétées jusqu’à devenir des réflexes. Vite, mais juste.'
-    : 'On démarre. Concentre-toi sur la justesse avant la vitesse.'
+    ? t('coach.go.woodpeckerSays')
+    : t('coach.go.says')
 )
 const countSub = computed(() =>
   props.module.module === 'woodpecker'
-    ? `${props.module.facts.opening?.family ?? ''} · ${props.module.facts.puzzleCount} puzzles`
-    : `${props.module.minutes} min`
+    ? t('coach.go.countWoodpecker', {
+        family: props.module.facts.opening?.family ?? '',
+        n: props.module.facts.puzzleCount
+      })
+    : t('coach.compose.minutes', { n: props.module.minutes })
 )
 
 const counting = ref(false)

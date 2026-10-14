@@ -1,0 +1,76 @@
+{
+  "choices": {
+    "2": {
+      "label": "Blancs gagnent",
+      "short": "Blancs ++"
+    },
+    "1": {
+      "label": "Avantage Blancs",
+      "short": "Blancs +"
+    },
+    "0": {
+      "label": "Équilibré",
+      "short": "Égal"
+    },
+    "-1": {
+      "label": "Avantage Noirs",
+      "short": "Noirs +"
+    },
+    "-2": {
+      "label": "Noirs gagnent",
+      "short": "Noirs ++"
+    }
+  },
+  "winTitles": ["Promotion !", "Analyse royale !", "Œil de grand maître !"],
+  "verdicts": {
+    "exact": "Bien vu !",
+    "close": "Presque !",
+    "miss": "Pas cette fois",
+    "timeout": "Temps écoulé"
+  },
+  "feedback": {
+    "exactPlan": "Évaluation et plan exacts",
+    "exact": "Évaluation exacte · {time}",
+    "kicker": "CORRECTION",
+    "exactBubble": "Exactement mon analyse. Tu as l’œil !",
+    "lookAgain": "Regarde les idées clés : ce sont elles qui font pencher la balance.",
+    "closeSub": "À un cran du moteur ({engine})",
+    "missSub": "Le moteur dit {engine} · relis les idées clés"
+  },
+  "plan": {
+    "none": "aucun plan choisi",
+    "ok": "✓ bien trouvé (+5 XP)",
+    "chosen": "tu avais choisi « {plan} »"
+  },
+  "sides": {
+    "both": "Les deux",
+    "white": "Blancs",
+    "black": "Noirs"
+  },
+  "results": {
+    "none": "Aucune position jouée.",
+    "played": "{n} position | {n} positions",
+    "exact": "{n} exacte ({rate}) | {n} exactes ({rate})",
+    "close": "{n} à un cran",
+    "plans": "{n} plan trouvé | {n} plans trouvés"
+  },
+  "player": {
+    "question": "Qui est mieux ?",
+    "plan": "Le plan",
+    "optional": "(facultatif)",
+    "validate": "Valider mon évaluation",
+    "you": "Toi : {value}",
+    "engine": "Moteur : {value}",
+    "bestPlan": "Meilleur plan :",
+    "tipKicker": "CONSEIL",
+    "tip": "Compte le matériel, puis regarde la sécurité des rois et l’activité des pièces."
+  },
+  "page": {
+    "title": "Évaluation de position",
+    "lead": "Aaron te montre une position : qui est mieux ? Cinq réponses, du point de vue des Blancs : égalité sous {advantage} pion, avantage jusqu’à {winning} pions, gain au-delà (un mat ou une finale gagnée compte comme un gain). Quand la position en a un, trouve aussi le plan (facultatif, en bonus). Chaque séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent, prends le temps qu’il faut sur chacune ; celle à l’écran à la fin ne compte pas.",
+    "new": "Nouvelle séance",
+    "level": "Niveau des positions : {elo}",
+    "side": "Trait",
+    "empty": "Aucune position pour ce trait pour l’instant."
+  }
+}

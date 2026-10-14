@@ -1,13 +1,14 @@
 <template>
   <q-page padding>
     <div class="coordinates-page q-gutter-y-md">
-      <div class="text-h5">Coordonnées</div>
+      <div class="text-h5">{{ $t('coordinates.page.title') }}</div>
       <p class="text-body2 text-grey-8">
-        Connais l’échiquier par cœur : trouve les cases sur un échiquier vide,
-        sans coordonnées. Une série dure
-        {{ state ? durationsText(state.rules) : '…' }} ; elle valide son
-        orientation avec {{ state ? rulesText(state.rules) : '…' }}. Valide les
-        Blancs et les Noirs !
+        {{
+          $t('coordinates.page.lead', {
+            lengths: state ? durationsText(state.rules) : '…',
+            rules: state ? rulesText(state.rules) : '…'
+          })
+        }}
       </p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -32,27 +33,44 @@
             >
               <q-card-section>
                 <div class="row items-center">
-                  <div class="text-h6"
-                    >{{ ORIENTATIONS[o.orientation] }} en bas</div
-                  >
+                  <div class="text-h6">{{
+                    $t('coordinates.player.bottom', {
+                      side: ORIENTATIONS[o.orientation]
+                    })
+                  }}</div>
                   <q-space />
                   <q-badge
                     :color="o.validated ? 'positive' : 'grey-6'"
                     data-testid="orientation-status"
-                    >{{ o.validated ? 'Validé' : 'À valider' }}</q-badge
+                    >{{
+                      o.validated
+                        ? $t('coordinates.page.validated')
+                        : $t('coordinates.page.toValidate')
+                    }}</q-badge
                   >
                 </div>
                 <div class="text-caption text-grey">
-                  <span v-if="o.validatedAt"
-                    >Validé le {{ formatDate(o.validatedAt) }} ·
-                  </span>
-                  {{ o.seriesCount }} série{{ o.seriesCount > 1 ? 's' : '' }}
+                  <span v-if="o.validatedAt">{{
+                    $t('coordinates.page.validatedOn', {
+                      date: formatDate(o.validatedAt)
+                    })
+                  }}</span>
+                  {{ $t('coordinates.page.series', o.seriesCount) }}
                 </div>
                 <div v-if="o.best" class="q-mt-sm">
-                  Meilleure série : <b>{{ o.best.successCount }}</b> justes sur
-                  {{ o.best.answerCount }} ({{
-                    formatRate(o.best.successRate)
-                  }})
+                  <i18n-t
+                    keypath="coordinates.page.best"
+                    tag="span"
+                    scope="global"
+                  >
+                    <template #n>
+                      <b>{{ o.best.successCount }}</b>
+                    </template>
+                    <template #total>{{ o.best.answerCount }}</template>
+                    <template #rate>{{
+                      formatRate(o.best.successRate)
+                    }}</template>
+                  </i18n-t>
                 </div>
               </q-card-section>
             </q-card>
@@ -61,7 +79,7 @@
 
         <q-card flat bordered>
           <q-card-section class="q-gutter-y-sm">
-            <div class="text-subtitle1">Nouvelle série</div>
+            <div class="text-subtitle1">{{ $t('coordinates.page.new') }}</div>
             <q-btn-toggle
               v-model="orientation"
               no-caps
@@ -74,13 +92,10 @@
               <q-toggle
                 v-model="withPardon"
                 :disable="!state.pardons"
-                :label="`Pardon de la boutique · ${state.pardons}`"
+                :label="$t('coordinates.page.pardon', { n: state.pardons })"
                 data-testid="coordinates-pardon-toggle"
               >
-                <q-tooltip
-                  >Ta première erreur ne comptera pas : dépensé à la fin de la
-                  série, seulement si tu en fais une.</q-tooltip
-                >
+                <q-tooltip>{{ $t('coordinates.page.pardonTip') }}</q-tooltip>
               </q-toggle>
               <q-btn
                 v-if="!state.pardons"
@@ -88,7 +103,7 @@
                 dense
                 no-caps
                 color="primary"
-                label="En acheter"
+                :label="$t('coordinates.page.buy')"
                 data-testid="coordinates-pardon-buy"
                 @click="buyPardon"
               />
@@ -100,13 +115,13 @@
               :config="launchConfig"
               :durations="state.rules.seriesMinutes"
               :default-minutes="state.rules.defaultMinutes"
-              label="Lancer la série"
+              :label="$t('coordinates.page.launch')"
             />
           </q-card-section>
         </q-card>
 
         <div v-if="state.history.length" class="q-gutter-y-sm">
-          <div class="text-subtitle1">Dernières séries</div>
+          <div class="text-subtitle1">{{ $t('coordinates.page.history') }}</div>
           <q-list bordered separator data-testid="coordinates-history">
             <q-expansion-item
               v-for="s in state.history"
@@ -116,15 +131,23 @@
             >
               <template #header>
                 <q-item-section>
-                  <q-item-label
-                    >{{ formatDate(s.startedAt) }} ·
-                    {{ ORIENTATIONS[s.orientation] }}</q-item-label
-                  >
+                  <q-item-label>{{
+                    $t('coordinates.page.historyRow', {
+                      date: formatDate(s.startedAt),
+                      side: ORIENTATIONS[s.orientation]
+                    })
+                  }}</q-item-label>
                   <q-item-label caption>
-                    {{ s.successCount }} justes sur {{ s.answerCount }}
-                    <span v-if="s.successRate !== null"
-                      >({{ formatRate(s.successRate) }})</span
-                    >
+                    {{
+                      $t('coordinates.page.score', {
+                        n: s.successCount,
+                        total: s.answerCount
+                      })
+                    }}<span v-if="s.successRate !== null">{{
+                      $t('coordinates.page.rate', {
+                        rate: formatRate(s.successRate)
+                      })
+                    }}</span>
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side>
@@ -133,23 +156,23 @@
                       v-if="s.pardoned"
                       class="coordinates-page__pardoned"
                       data-testid="series-pardoned"
-                      >Pardonnée</q-badge
+                      >{{ $t('coordinates.page.pardoned') }}</q-badge
                     >
-                    <q-badge v-if="s.validated" color="positive"
-                      >Validante</q-badge
-                    >
+                    <q-badge v-if="s.validated" color="positive">{{
+                      $t('coordinates.page.validating')
+                    }}</q-badge>
                   </div>
                 </q-item-section>
               </template>
               <q-card-section>
                 <div v-if="ribbons[s.runId] === undefined" class="text-grey">
-                  Chargement…
+                  {{ $t('common.loading') }}
                 </div>
                 <div
                   v-else-if="ribbons[s.runId] === null"
                   class="text-negative"
                 >
-                  Impossible de charger la série.
+                  {{ $t('coordinates.page.ribbonError') }}
                 </div>
                 <CoordinateRibbon v-else :items="ribbons[s.runId]" />
               </q-card-section>
@@ -191,8 +214,8 @@ import { formatDate, formatRate } from '@/utils/format'
 
 definePage({ meta: { auth: 'required' } })
 
-const ORIENTATION_OPTIONS = Object.entries(ORIENTATIONS).map(
-  ([value, label]) => ({ value, label })
+const ORIENTATION_OPTIONS = computed(() =>
+  Object.entries(ORIENTATIONS).map(([value, label]) => ({ value, label }))
 )
 
 const auth = useAuthStore()

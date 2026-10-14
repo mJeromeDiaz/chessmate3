@@ -1,0 +1,76 @@
+{
+  "levels": {
+    "easy": "Facile",
+    "medium": "Moyen",
+    "hard": "Difficile"
+  },
+  "level": "{name} · {min}–{max}",
+  "length": "{n} coups",
+  "lengthMore": "{n} coups et +",
+  "counts": {
+    "none": "Aucun puzzle joué.",
+    "solved": "{n} résolu sur {played} ({rate}) | {n} résolus sur {played} ({rate})",
+    "helped": " · {n} avec coup d’œil"
+  },
+  "game": {
+    "missed": "{move} : raté.",
+    "wrongMove": "{move} n’est pas le bon coup. Regarde encore la position.",
+    "good": "{move} : bien vu !",
+    "reply": "L’adversaire joue {move}.",
+    "pardoned": "Pardonné : ton erreur est effacée, ton coup d’œil revient."
+  },
+  "player": {
+    "hidden": "Position cachée",
+    "seconds": "{n} s",
+    "memorized": "J’ai mémorisé",
+    "pardon": "Pardonner · {n}",
+    "pardonTip": "Ton erreur est effacée et ton coup d’œil revient : le puzzle compte comme résolu (boutique).",
+    "solution": "Solution",
+    "promotion": "Promotion en",
+    "pieces": {
+      "q": "Dame",
+      "r": "Tour",
+      "b": "Fou",
+      "n": "Cavalier"
+    },
+    "kickers": {
+      "peek": "COUP D’ŒIL",
+      "memorize": "MÉMORISE",
+      "visualize": "VISUALISE",
+      "yourTurn": "À TOI"
+    },
+    "white": "les Blancs",
+    "black": "les Noirs",
+    "opponent": "Au tour de l’adversaire…",
+    "peekText": "Coup d’œil : la position actuelle. Mémorise-la !",
+    "memorizeText": "Mémorise la position : {side} jouent.",
+    "visualizeText": "Visualise la position…",
+    "from": "Départ {square} : clique la case d’arrivée.",
+    "play": "À toi : clique la case de départ, puis la case d’arrivée.",
+    "replying": "L’adversaire répond…",
+    "solutionText": "Solution…",
+    "solved": "Résolu de mémoire, bravo !",
+    "helped": "Résolu avec un coup d’œil.",
+    "failed": "Puzzle raté : voici la solution.",
+    "toMemorize": "{n} s pour mémoriser",
+    "peeks": "{n} coup d’œil | {n} coups d’œil",
+    "noPeek": "plus de coup d’œil"
+  },
+  "page": {
+    "title": "Jeu à l’aveugle",
+    "lead": "Des puzzles résolus de mémoire : la position s’affiche le temps choisi, disparaît {hidden}, puis tu joues la solution sur un échiquier vide (coordonnées affichées) : clique la case de départ, puis la case d’arrivée.",
+    "hidden": "{n} s",
+    "unrated": "Aucun effet sur ton classement puzzles.",
+    "new": "Nouvelle séance",
+    "level": "Niveau",
+    "length": "Longueur de la solution",
+    "memorize": "Temps pour mémoriser",
+    "byLevel": "Tes résultats par niveau",
+    "levelRow": "{level} :",
+    "peeks": {
+      "none": "Une erreur, et le puzzle est raté.",
+      "one": "Après une erreur, un coup d’œil sur la position ; une deuxième erreur, et le puzzle est raté.",
+      "many": "Après une erreur, un coup d’œil sur la position ({n} au plus)."
+    }
+  }
+}

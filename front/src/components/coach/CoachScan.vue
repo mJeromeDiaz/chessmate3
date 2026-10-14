@@ -33,8 +33,10 @@
           </div>
           <div class="cs-meter__side">
             <div class="cs-meter__line">
-              <span>parties lues</span
-              ><span class="cs-meter__of">sur {{ maxGames }}</span>
+              <span>{{ $t('coach.scanScreen.read') }}</span
+              ><span class="cs-meter__of">{{
+                $t('coach.scanScreen.of', { n: maxGames })
+              }}</span>
             </div>
             <div class="cs-meter__track">
               <div
@@ -44,7 +46,9 @@
             </div>
             <div class="cs-meter__state">
               <span class="cs-meter__dot" />{{
-                done ? 'Analyse terminée' : 'Lecture en cours…'
+                done
+                  ? $t('coach.scanScreen.done')
+                  : $t('coach.scanScreen.reading')
               }}
             </div>
           </div>
@@ -58,9 +62,9 @@
         }}</div>
         <div v-if="error" class="cs-error" role="alert">
           {{ error }}
-          <button type="button" class="cs-link" @click="emit('restart')"
-            >Recommencer</button
-          >
+          <button type="button" class="cs-link" @click="emit('restart')">{{
+            $t('coach.scanScreen.restart')
+          }}</button>
         </div>
         <div v-if="done" class="cs-actions">
           <button
@@ -68,13 +72,15 @@
             class="cs-cta cs-cta--accent cs-cta--big cs-up"
             data-testid="coach-compose"
             @click="emit('compose')"
-            >Composer ma séance</button
+            >{{ $t('coach.scanScreen.compose') }}</button
           >
         </div>
       </div>
 
       <div class="cs-cols__main">
-        <div class="cs-kicker cs-kicker--light">OUVERTURES REPÉRÉES</div>
+        <div class="cs-kicker cs-kicker--light">{{
+          $t('coach.scanScreen.openings')
+        }}</div>
         <div
           v-for="row in openingRows"
           :key="row.color"
@@ -96,14 +102,14 @@
           >
         </div>
 
-        <div class="cs-kicker cs-kicker--light q-mt-sm"
-          >FINALES DÉTECTÉES · {{ endgameCards.length }}</div
-        >
+        <div class="cs-kicker cs-kicker--light q-mt-sm">{{
+          $t('coach.scanScreen.endgames', { n: endgameCards.length })
+        }}</div>
         <div v-if="!endgameCards.length" class="cs-pending">
           <span class="cs-spinner" />{{
             done
-              ? 'Aucune finale dans ces parties.'
-              : 'En attente des premières finales…'
+              ? $t('coach.scanScreen.noEndgame')
+              : $t('coach.scanScreen.waiting')
           }}
         </div>
         <div v-else class="cs-endgames">
@@ -116,20 +122,23 @@
           >
             <div class="cs-endgame__head">
               <span>{{ e.label }}</span>
-              <span v-if="e.weak" class="cs-endgame__badge">POINT FAIBLE</span>
+              <span v-if="e.weak" class="cs-endgame__badge">{{
+                $t('coach.scanScreen.weak')
+              }}</span>
             </div>
             <span class="cs-endgame__sub">{{
-              e.games > 1 ? `${e.games} parties` : `${e.games} partie`
+              $t('coach.scanScreen.games', e.games)
             }}</span>
             <span v-if="e.slip" class="cs-endgame__slip">{{ e.slip }}</span>
           </div>
         </div>
         <p v-if="done && diagnosis" class="cs-footnote">
-          Avantage : +2 selon l’analyse Lichess quand la partie en a une ({{
-            diagnosis.analysed
+          {{
+            $t('coach.scanScreen.footnote', {
+              analysed: diagnosis.analysed,
+              games: diagnosis.games
+            })
           }}
-          sur {{ diagnosis.games }}), sinon 2 points de matériel de plus à
-          l’entrée en finale. Laissé filer : la partie n’a pas été gagnée.
         </p>
       </div>
     </div>

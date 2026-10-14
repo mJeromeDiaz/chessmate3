@@ -1,0 +1,63 @@
+{
+  "orientations": {
+    "white": "Blancs",
+    "black": "Noirs"
+  },
+  "time": {
+    "tenths": "{n} s",
+    "seconds": "{n} s",
+    "minutes": "{m} min {s}"
+  },
+  "cell": "#{n} · {what} · {time}",
+  "pardoned": " · pardonnée",
+  "validation": {
+    "white": "Blancs validés !",
+    "black": "Noirs validés !",
+    "none": "Série non validante.",
+    "stopped": "Série arrêtée avant la fin : elle ne valide pas.",
+    "tooFew": "{n} réponses : il en faut {min} pour valider.",
+    "rate": "{pct} % de réussite : il faut {min} % pour valider."
+  },
+  "rules": "au moins {n} réponses par minute et {pct} % de réussite, sans arrêter la série",
+  "lengths": {
+    "one": "{n} min",
+    "many": "{list} ou {last} min"
+  },
+  "player": {
+    "find": "Trouve la case",
+    "answers": "réponse | réponses",
+    "correct": "juste | justes",
+    "percent": "{n} %",
+    "bottom": "{side} en bas",
+    "pardon": "Pardon : ta 1re erreur ne comptera pas",
+    "pardonTip": "Dépensé à la fin de la série, seulement si tu fais une erreur (boutique).",
+    "right": "Juste !",
+    "wrong": "Raté : c’était {square}"
+  },
+  "ribbon": {
+    "correct": "{n} juste | {n} justes",
+    "wrong": "{n} erreur | {n} erreurs",
+    "perSquare": "{time} / case"
+  },
+  "page": {
+    "title": "Coordonnées",
+    "lead": "Connais l’échiquier par cœur : trouve les cases sur un échiquier vide, sans coordonnées. Une série dure {lengths} ; elle valide son orientation avec {rules}. Valide les Blancs et les Noirs !",
+    "validated": "Validé",
+    "toValidate": "À valider",
+    "validatedOn": "Validé le {date} · ",
+    "series": "{n} série | {n} séries",
+    "best": "Meilleure série : {n} justes sur {total} ({rate})",
+    "new": "Nouvelle série",
+    "pardon": "Pardon de la boutique · {n}",
+    "pardonTip": "Ta première erreur ne comptera pas : dépensé à la fin de la série, seulement si tu en fais une.",
+    "buy": "En acheter",
+    "launch": "Lancer la série",
+    "history": "Dernières séries",
+    "historyRow": "{date} · {side}",
+    "score": "{n} justes sur {total}",
+    "rate": " ({rate})",
+    "pardoned": "Pardonnée",
+    "validating": "Validante",
+    "ribbonError": "Impossible de charger la série."
+  }
+}

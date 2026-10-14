@@ -72,9 +72,9 @@
         </div>
         <div v-if="error" class="cs-error" role="alert">
           {{ error }}
-          <button type="button" class="cs-link" @click="emit('retry')"
-            >Réessayer</button
-          >
+          <button type="button" class="cs-link" @click="emit('retry')">{{
+            $t('coach.compose.retry')
+          }}</button>
         </div>
         <div v-if="composed" class="cs-actions">
           <button
@@ -82,22 +82,23 @@
             class="cs-cta cs-cta--accent cs-cta--big cs-up"
             data-testid="coach-to-session"
             @click="emit('next')"
-            >Voir ma séance</button
+            >{{ $t('coach.compose.next') }}</button
           >
         </div>
       </div>
 
       <div class="cs-cols__main">
         <div class="cs-forge__total">
-          <span class="cs-kicker cs-kicker--light"
-            >TA SÉANCE ·
-            {{
-              shownModules.length
-                ? `${shownModules.length} module${shownModules.length > 1 ? 's' : ''}`
-                : 'vide'
-            }}</span
-          >
-          <span class="cs-forge__minutes">{{ minutes }} min</span>
+          <span class="cs-kicker cs-kicker--light">{{
+            $t('coach.compose.total', {
+              modules: shownModules.length
+                ? $t('coach.compose.modules', shownModules.length)
+                : $t('coach.compose.empty')
+            })
+          }}</span>
+          <span class="cs-forge__minutes">{{
+            $t('coach.compose.minutes', { n: minutes })
+          }}</span>
         </div>
         <div
           v-for="(m, i) in shownModules"
@@ -111,7 +112,9 @@
           <span class="cs-mod__text">
             <b>{{ moduleCard(m).title }}</b>
             <span>{{
-              m.included ? needText(m, composition) : 'Pas cette fois'
+              m.included
+                ? needText(m, composition)
+                : $t('coach.compose.notThisTime')
             }}</span>
           </span>
           <span class="cs-mod__min">{{
@@ -121,8 +124,8 @@
         <div v-if="!composed && !error" class="cs-slot">
           <span class="cs-spinner" />{{
             composition && current >= revealed
-              ? 'Création du module…'
-              : 'Recherche d’un besoin…'
+              ? $t('coach.compose.creating')
+              : $t('coach.compose.searching')
           }}
         </div>
       </div>
@@ -138,6 +141,7 @@
 import { computed } from 'vue'
 import CoachScramble from '@/components/coach/CoachScramble.vue'
 import { moduleCard, moduleColor, needText } from '@/utils/coach'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/utils/coach').Composition|null>} */
@@ -175,19 +179,19 @@ const orbColor = computed(() =>
 )
 const needLabel = computed(() =>
   props.composed
-    ? 'SÉANCE COMPOSÉE'
+    ? t('coach.compose.composed')
     : currentModule.value
-      ? `BESOIN N°${props.current + 1}`
-      : 'JE CROISE TES PARTIES'
+      ? t('coach.compose.need', { n: props.current + 1 })
+      : t('coach.compose.crossing')
 )
 const needWords = computed(() => {
   if (props.composed && props.composition) {
     const n = props.composition.modules.filter(m => m.included).length
-    return `${n} module${n > 1 ? 's' : ''}, rien que pour toi.`
+    return t('coach.compose.done', { n }, n)
   }
   return currentModule.value && props.composition
     ? needText(currentModule.value, props.composition)
-    : 'Je cherche ce dont tu as besoin…'
+    : t('coach.compose.looking')
 })
 </script>
 

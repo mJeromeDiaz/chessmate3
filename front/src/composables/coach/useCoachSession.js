@@ -2,6 +2,7 @@ import { computed, onScopeDispose, ref, shallowRef } from 'vue'
 import { coachApi, repertoireApi } from '@/services/api'
 import { COACH_GAMES, COACH_PERFS, coachErrorText } from '@/utils/coach'
 import { feedPace } from '@/utils/repertoireAuto'
+import { t } from '@/i18n'
 
 /** The analysis in progress, kept for a reload of the page (same tab). */
 export const STORAGE_KEY = 'dontstayrooky.coach'
@@ -204,7 +205,7 @@ export function useCoachSession() {
           return
         }
         const delay = retryDelay(e)
-        waiting.value = `Lichess finit de traiter une demande précédente : je reprends dans ${Math.round(delay / 1000)} s…`
+        waiting.value = t('coach.waiting', { n: Math.round(delay / 1000) })
         await sleep(delay)
       }
     }

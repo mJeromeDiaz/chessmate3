@@ -1,17 +1,14 @@
 <template>
   <q-page padding>
     <div class="evaluation-page q-gutter-y-md">
-      <div class="text-h5">Évaluation de position</div>
+      <div class="text-h5">{{ $t('evaluation.page.title') }}</div>
       <p class="text-body2 text-grey-8">
-        Aaron te montre une position : qui est mieux ? Cinq réponses, du point
-        de vue des Blancs : égalité sous
-        {{ overview ? pawns(overview.rules.advantageCp) : '…' }} pion, avantage
-        jusqu’à {{ overview ? pawns(overview.rules.winningCp) : '…' }} pions,
-        gain au-delà (un mat ou une finale gagnée compte comme un gain). Quand
-        la position en a un, trouve aussi le plan (facultatif, en bonus). Chaque
-        séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent, prends
-        le temps qu’il faut sur chacune ; celle à l’écran à la fin ne compte
-        pas.
+        {{
+          $t('evaluation.page.lead', {
+            advantage: overview ? pawns(overview.rules.advantageCp) : '…',
+            winning: overview ? pawns(overview.rules.winningCp) : '…'
+          })
+        }}
       </p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -23,14 +20,16 @@
 
       <q-card v-if="overview" flat bordered data-testid="evaluation-settings">
         <q-card-section class="q-gutter-y-sm">
-          <div class="text-subtitle1">Nouvelle séance</div>
+          <div class="text-subtitle1">{{ $t('evaluation.page.new') }}</div>
           <p
             class="text-caption text-grey q-mb-none"
             data-testid="evaluation-results"
             >{{ resultsText(overview.results) }}</p
           >
 
-          <div class="text-subtitle2">Niveau des positions : {{ elo }}</div>
+          <div class="text-subtitle2">{{
+            $t('evaluation.page.level', { elo })
+          }}</div>
           <q-slider
             v-model="elo"
             :min="overview.rules.minElo"
@@ -39,7 +38,7 @@
             snap
             data-testid="evaluation-elo"
           />
-          <div class="text-subtitle2">Trait</div>
+          <div class="text-subtitle2">{{ $t('evaluation.page.side') }}</div>
           <q-btn-toggle
             v-model="side"
             no-caps
@@ -53,7 +52,7 @@
             class="text-caption text-warning q-mb-none"
             data-testid="evaluation-short"
           >
-            Aucune position pour ce trait pour l’instant.
+            {{ $t('evaluation.page.empty') }}
           </p>
           <RunLauncher
             v-if="subjectId"

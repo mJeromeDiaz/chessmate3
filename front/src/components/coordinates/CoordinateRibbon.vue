@@ -26,24 +26,23 @@
     >
     <div class="coord-ribbon__totals" data-testid="coordinate-totals">
       <span
-        ><b>{{ totals.count }}</b> réponse{{
-          totals.count > 1 ? 's' : ''
-        }}</span
+        ><b>{{ totals.count }}</b>
+        {{ $t('coordinates.player.answers', totals.count) }}</span
       >
       <span class="coord-ribbon__ok"
-        ><i />{{ totals.correct }} juste{{
-          totals.correct > 1 ? 's' : ''
-        }}</span
+        ><i />{{ $t('coordinates.ribbon.correct', totals.correct) }}</span
       >
       <span class="coord-ribbon__fail"
-        ><i />{{ totals.wrong }} erreur{{ totals.wrong > 1 ? 's' : '' }}</span
+        ><i />{{ $t('coordinates.ribbon.wrong', totals.wrong) }}</span
       >
-      <span v-if="totals.rate !== null"
-        >{{ Math.floor(totals.rate * 100) }} %</span
-      >
-      <span v-if="totals.averageMs !== null"
-        >{{ formatAnswerTime(totals.averageMs) }} / case</span
-      >
+      <span v-if="totals.rate !== null">{{
+        $t('coordinates.player.percent', { n: Math.floor(totals.rate * 100) })
+      }}</span>
+      <span v-if="totals.averageMs !== null">{{
+        $t('coordinates.ribbon.perSquare', {
+          time: formatAnswerTime(totals.averageMs)
+        })
+      }}</span>
     </div>
   </div>
 </template>

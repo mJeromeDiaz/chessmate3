@@ -1,3 +1,5 @@
+import { intlLocale, t } from '@/i18n'
+
 /**
  * The coordinates series (docs/COORDINATES.md), what the pages show. Pure. The thresholds are never
  * written here: they come from the API (`rules`).
@@ -29,10 +31,15 @@
  */
 
 /** The orientations, as the API names them. */
-export const ORIENTATIONS = {
-  white: 'Blancs',
-  black: 'Noirs'
-}
+export const ORIENTATIONS = Object.defineProperties(
+  {},
+  Object.fromEntries(
+    ['white', 'black'].map(side => [
+      side,
+      { get: () => t(`coordinates.orientations.${side}`), enumerable: true }
+    ])
+  )
+)
 
 /**
  * A short time: "0,8 s", "12 s", "1 min 05".
@@ -42,10 +49,19 @@ export const ORIENTATIONS = {
  */
 export function formatAnswerTime(ms) {
   if (ms === null || ms === undefined) return '—'
-  if (ms < 10_000) return `${(ms / 1000).toFixed(1).replace('.', ',')} s`
+  if (ms < 10_000)
+    return t('coordinates.time.tenths', {
+      n: (ms / 1000).toLocaleString(intlLocale(), {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      })
+    })
   const seconds = Math.round(ms / 1000)
-  if (seconds < 60) return `${seconds} s`
-  return `${Math.floor(seconds / 60)} min ${String(seconds % 60).padStart(2, '0')}`
+  if (seconds < 60) return t('coordinates.time.seconds', { n: seconds })
+  return t('coordinates.time.minutes', {
+    m: Math.floor(seconds / 60),
+    s: String(seconds % 60).padStart(2, '0')
+  })
 }
 
 /**
@@ -66,7 +82,12 @@ export function ribbonCells(items) {
       pardoned,
       target,
       clicked,
-      title: `#${item.index} · ${what} · ${formatAnswerTime(item.durationMs)}${pardoned ? ' · pardonnée' : ''}`
+      title:
+        t('coordinates.cell', {
+          n: item.index,
+          what,
+          time: formatAnswerTime(item.durationMs)
+        }) + (pardoned ? t('coordinates.pardoned') : '')
     }
   })
 }
@@ -125,17 +146,24 @@ export function missedSquares(items, limit = 5) {
 export function validationText(run) {
   const s = run.summary
   const m = s?.metrics ?? {}
-  const orientation = ORIENTATIONS[m.orientation] ?? ''
-  if (m.validated) return `${orientation} validés !`
+  if (m.validated)
+    return t(
+      `coordinates.validation.${m.orientation === 'black' ? 'black' : 'white'}`
+    )
   /** @type {SeriesRules|undefined} */
   const rules = m.rules
-  if (!s || !rules) return 'Série non validante.'
-  if (run.closeReason === 'stopped')
-    return 'Série arrêtée avant la fin : elle ne valide pas.'
+  if (!s || !rules) return t('coordinates.validation.none')
+  if (run.closeReason === 'stopped') return t('coordinates.validation.stopped')
   if (s.itemCount < rules.minAnswers)
-    return `${s.itemCount} réponses : il en faut ${rules.minAnswers} pour valider.`
+    return t('coordinates.validation.tooFew', {
+      n: s.itemCount,
+      min: rules.minAnswers
+    })
   const pct = Math.floor((s.successCount / s.itemCount) * 100)
-  return `${pct} % de réussite : il faut ${Math.round(rules.minSuccessRate * 100)} % pour valider.`
+  return t('coordinates.validation.rate', {
+    pct,
+    min: Math.round(rules.minSuccessRate * 100)
+  })
 }
 
 /**
@@ -145,7 +173,10 @@ export function validationText(run) {
  * @returns {string}
  */
 export function rulesText(rules) {
-  return `au moins ${rules.minAnswersPerMinute} réponses par minute et ${Math.round(rules.minSuccessRate * 100)} % de réussite, sans arrêter la série`
+  return t('coordinates.rules', {
+    n: rules.minAnswersPerMinute,
+    pct: Math.round(rules.minSuccessRate * 100)
+  })
 }
 
 /**
@@ -156,6 +187,10 @@ export function rulesText(rules) {
  */
 export function durationsText(rules) {
   const minutes = rules.seriesMinutes
-  if (minutes.length < 2) return `${minutes[0] ?? '?'} min`
-  return `${minutes.slice(0, -1).join(', ')} ou ${minutes[minutes.length - 1]} min`
+  if (minutes.length < 2)
+    return t('coordinates.lengths.one', { n: minutes[0] ?? '?' })
+  return t('coordinates.lengths.many', {
+    list: minutes.slice(0, -1).join(', '),
+    last: minutes[minutes.length - 1]
+  })
 }

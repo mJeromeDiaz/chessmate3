@@ -19,44 +19,41 @@
  */
 
 import { autoErrorText } from '@/utils/repertoireAuto'
-import { intlLocale } from '@/i18n'
+import { intlLocale, t } from '@/i18n'
 
 /** Games read, and their speeds (App\Coach\CoachRules). */
 export const COACH_GAMES = 200
 export const COACH_PERFS = ['blitz', 'rapid', 'classical']
 
 /** The endgame kinds as the scan names them before the diagnosis (App\Enum\Chess\EndgameType). */
-export const ENDGAME_LABELS = {
-  pawn: 'Pions',
-  rook: 'Tours',
-  minor: 'Pièces mineures',
-  queen: 'Dames',
-  rook_minor: 'Tours et pièces mineures',
-  mixed: 'Mixtes'
-}
+export const ENDGAME_LABELS = Object.defineProperties(
+  {},
+  Object.fromEntries(
+    ['pawn', 'rook', 'minor', 'queen', 'rook_minor', 'mixed'].map(type => [
+      type,
+      { get: () => t(`coach.endgames.${type}`), enumerable: true }
+    ])
+  )
+)
 
 /** Why Woodpecker helps (the user's words, 2026-10-11). */
-export const WOODPECKER_REASONS = [
-  {
-    title: 'Automatiser la reconnaissance des motifs',
-    text: 'Le Woodpecker fait revoir plusieurs fois les mêmes tactiques jusqu’à ce que les motifs deviennent presque automatiques : fourchettes, clouages, attaques doubles, sacrifices… L’objectif est de voir plus vite les opportunités en partie.'
+export const WOODPECKER_REASONS = [0, 1, 2].map(i => ({
+  get title() {
+    return t(`coach.reasons.${i}.title`)
   },
-  {
-    title: 'Améliorer la vitesse de calcul',
-    text: 'En répétant régulièrement les mêmes exercices, tu passes progressivement de la réflexion consciente à une reconnaissance immédiate. Tu dépenses alors ton temps de réflexion sur les positions complexes plutôt que sur des tactiques élémentaires.'
-  },
-  {
-    title: 'Transformer les erreurs en automatismes positifs',
-    text: 'Le principe du Woodpecker est de rejouer les puzzles jusqu’à les résoudre rapidement et correctement. Une tactique que tu avais ratée devient progressivement un schéma que ton cerveau reconnaît naturellement. C’est particulièrement efficace pour réduire les erreurs tactiques récurrentes.'
+  get text() {
+    return t(`coach.reasons.${i}.text`)
   }
-]
+}))
 
-/** The light method, as the session plays it (docs/WOODPECKER.md). */
-export const WOODPECKER_METHOD = [
-  'Chaque séance repart du premier puzzle du set.',
-  'Tu enchaînes les puzzles jusqu’à la fin du chrono, le plus vite possible sans te tromper.',
-  'Quand tu en viens à bout, le set grandit de 20 puzzles.'
-]
+/**
+ * The light method, as the session plays it (docs/WOODPECKER.md).
+ *
+ * @returns {string[]}
+ */
+export function woodpeckerMethod() {
+  return [0, 1, 2].map(i => t(`coach.method.${i}`))
+}
 
 /**
  * The colour of each step, in the session's order: Woodpecker with White, with Black, repertoire,
@@ -77,11 +74,16 @@ export function moduleColor(module) {
 }
 
 /** @param {string} color 'white' or 'black' */
-const side = color => (color === 'black' ? 'les noirs' : 'les blancs')
+const side = color => t(`coach.sides.${color === 'black' ? 'black' : 'white'}`)
 
-/** @param {number} n @param {string} word @param {string} [plural] */
-const count = (n, word, plural = `${word}s`) =>
-  `${n.toLocaleString(intlLocale())} ${n > 1 ? plural : word}`
+/**
+ * A number of things: "12 parties" (coach.counts.<kind>).
+ *
+ * @param {number} n
+ * @param {'slips'|'games'|'repertoires'|'openings'|'endgames'} kind
+ */
+const count = (n, kind) =>
+  t(`coach.counts.${kind}`, { n: n.toLocaleString(intlLocale()) }, n)
 
 /**
  * Share of the points: wins plus half the draws.
@@ -101,7 +103,10 @@ export function score(record) {
  * @param {{advantages: number, lost: number}} endgame
  */
 export function slipText(endgame) {
-  return `${count(endgame.lost, 'avantage laissé filer', 'avantages laissés filer')} sur ${endgame.advantages}`
+  return t('coach.slip', {
+    slips: count(endgame.lost, 'slips'),
+    n: endgame.advantages
+  })
 }
 
 /**
@@ -112,20 +117,18 @@ export function slipText(endgame) {
  */
 export function scanSays(progress, diagnosis) {
   if (diagnosis) {
-    if (!diagnosis.games) {
-      return 'Je n’ai trouvé aucune partie à lire dans ces cadences.'
-    }
-    if (diagnosis.weakest) {
-      return `Trouvé ! Tes finales de type « ${diagnosis.weakest.label.toLowerCase()} » te coûtent cher : ${slipText(diagnosis.weakest)}.`
-    }
-    if (diagnosis.endgames.games) {
-      return 'Tes finales tiennent la route : aucun avantage laissé filer. On garde le cap.'
-    }
-    return 'Peu de finales dans ces parties : on travaille tes ouvertures et ta vision.'
+    if (!diagnosis.games) return t('coach.scan.none')
+    if (diagnosis.weakest)
+      return t('coach.scan.weakest', {
+        type: diagnosis.weakest.label.toLowerCase(),
+        slip: slipText(diagnosis.weakest)
+      })
+    if (diagnosis.endgames.games) return t('coach.scan.solid')
+    return t('coach.scan.few')
   }
-  if (progress < 0.3) return 'Je lis tes parties une par une…'
-  if (progress < 0.5) return 'Je repère tes ouvertures favorites…'
-  return 'Des finales apparaissent, je les classe…'
+  if (progress < 0.3) return t('coach.scan.reading')
+  if (progress < 0.5) return t('coach.scan.openings')
+  return t('coach.scan.endgames')
 }
 
 /**
@@ -139,27 +142,34 @@ export function needText(module, composition) {
   switch (module.module) {
     case 'woodpecker':
       if (!f.opening)
-        return `Aucune partie avec ${side(f.color)} : pas de Woodpecker de ce côté.`
-      return `${f.opening.family} : ta n°1 avec ${side(f.color)}, ${count(f.opening.games, 'partie')}.`
-    case 'repertoire':
-      return (
-        {
-          existing: `Tes répertoires : ${count(f.repertoires?.length ?? 0, 'répertoire')} à réviser.`,
-          generated: `Ton répertoire, tiré de tes parties : ${count(f.repertoires?.length ?? 0, 'ouverture')}.`,
-          not_asked: 'Pas encore de répertoire : il te manque.',
-          no_opening:
-            'Aucune ouverture jouée assez souvent pour un répertoire.',
-          failed: 'Le répertoire n’a pas pu être créé.'
-        }[module.missing ?? composition.repertoire.status] ?? 'Ton répertoire.'
-      )
+        return t('coach.need.noWoodpecker', { side: side(f.color) })
+      return t('coach.need.woodpecker', {
+        family: f.opening.family,
+        side: side(f.color),
+        games: count(f.opening.games, 'games')
+      })
+    case 'repertoire': {
+      const status = module.missing ?? composition.repertoire.status
+      const n = f.repertoires?.length ?? 0
+      if (status === 'existing')
+        return t('coach.need.existing', { n: count(n, 'repertoires') })
+      if (status === 'generated')
+        return t('coach.need.generated', { n: count(n, 'openings') })
+      return ['not_asked', 'no_opening', 'failed'].includes(status)
+        ? t(`coach.need.${status}`)
+        : t('coach.need.repertoire')
+    }
     case 'blindfold':
       return f.weakest
-        ? `Finales de type « ${f.weakest.label.toLowerCase()} » : ${slipText(f.weakest)}.`
-        : 'Voir sans regarder, pour calculer plus loin.'
+        ? t('coach.need.blindfoldWeak', {
+            type: f.weakest.label.toLowerCase(),
+            slip: slipText(f.weakest)
+          })
+        : t('coach.need.blindfold')
     case 'evaluation':
       return f.endgames?.lost
-        ? `En finale, tu as laissé filer ${slipText(f.endgames)}.`
-        : 'Juger une position avant de choisir un plan.'
+        ? t('coach.need.evaluationLost', { slip: slipText(f.endgames) })
+        : t('coach.need.evaluation')
     default:
       return ''
   }
@@ -176,69 +186,80 @@ export function moduleCard(module) {
   switch (module.module) {
     case 'woodpecker': {
       const glyph = f.color === 'black' ? '♚︎' : '♔︎'
+      const k = 'coach.card.'
       if (!f.opening) {
         return {
-          title: 'Woodpecker',
-          subtitle: `Avec ${side(f.color)}`,
-          text: `Aucune de tes ${COACH_GAMES} dernières parties avec ${side(f.color)} : rien à travailler de ce côté.`,
+          title: t(`${k}woodpecker`),
+          subtitle: t(`${k}with`, { side: side(f.color) }),
+          text: t(`${k}noGames`, { n: COACH_GAMES, side: side(f.color) }),
           glyph
         }
       }
       const rate = score(f.opening)
-      const subtitle = `Ta n°1 avec ${side(f.color)} · ${count(f.opening.games, 'partie')}${rate === null ? '' : ` · ${rate} % des points`}`
+      const subtitle =
+        t(`${k}first`, {
+          side: side(f.color),
+          games: count(f.opening.games, 'games')
+        }) + (rate === null ? '' : t(`${k}points`, { n: rate }))
+      const title = t(`${k}woodpeckerNamed`, { family: f.opening.family })
       if (!module.included) {
-        return {
-          title: `Woodpecker · ${f.opening.family}`,
-          subtitle,
-          text: 'Pas assez de puzzles de cette ouverture dans notre catalogue : on passe pour cette fois.',
-          glyph
-        }
+        return { title, subtitle, text: t(`${k}notEnough`), glyph }
       }
       return {
-        title: `Woodpecker · ${f.opening.family}`,
+        title,
         subtitle,
-        text: `${f.puzzleCount} puzzles tirés de parties jouées dans cette ouverture${f.bothColors ? ', des deux côtés' : `, toi avec ${side(f.color)}`}. Les mêmes, séance après séance.`,
+        text: t(`${k}puzzles`, {
+          n: f.puzzleCount,
+          who: f.bothColors
+            ? t(`${k}bothSides`)
+            : t(`${k}you`, { side: side(f.color) })
+        }),
         glyph
       }
     }
     case 'repertoire': {
       const names = (f.repertoires ?? []).map(r => r.name)
-      const texts = {
-        not_asked:
-          'Tu n’as pas encore de répertoire : génère-le depuis tes parties, puis relance l’analyse.',
-        no_opening:
-          'Aucune ouverture jouée au moins 3 fois : pas de répertoire à tirer de ces parties.',
-        failed:
-          'La création du répertoire a échoué : réessaie depuis la page Répertoire.'
-      }
+      const k = 'coach.card.'
+      const missing = ['not_asked', 'no_opening', 'failed'].includes(
+        module.missing ?? ''
+      )
+        ? module.missing
+        : 'default'
       return {
-        title: 'Répertoire',
+        title: t(`${k}repertoire`),
         subtitle: module.included
           ? names.slice(0, 2).join(', ') +
             (names.length > 2 ? ` +${names.length - 2}` : '')
-          : 'Répertoire manquant',
+          : t(`${k}missing`),
         text: module.included
-          ? 'Tes lignes à réviser d’abord (répétition espacée), tes coups préparés joués de mémoire.'
-          : (texts[module.missing] ?? 'Pas de répertoire pour cette séance.'),
+          ? t(`${k}repertoireText`)
+          : t(`${k}repertoireMissing.${missing}`),
         glyph: null
       }
     }
     case 'blindfold':
       return {
-        title: 'Jeu à l’aveugle',
-        subtitle: 'Tu joues sans voir les pièces',
+        title: t('coach.card.blindfold'),
+        subtitle: t('coach.card.blindfoldSub'),
         text: f.weakest
-          ? `Pour mieux visualiser, et calculer jusqu’au bout. Tes finales de type « ${f.weakest.label.toLowerCase()} » : ${slipText(f.weakest)}.`
-          : 'Pour mieux visualiser : la position s’affiche, disparaît, et tu joues de mémoire.',
+          ? t('coach.card.blindfoldWeak', {
+              type: f.weakest.label.toLowerCase(),
+              slip: slipText(f.weakest)
+            })
+          : t('coach.card.blindfoldText'),
         glyph: null
       }
     case 'evaluation':
       return {
-        title: 'Évaluation',
-        subtitle: 'Qui est mieux, et de combien ?',
+        title: t('coach.card.evaluation'),
+        subtitle: t('coach.card.evaluationSub'),
         text: f.endgames?.lost
-          ? `Sur ${count(f.endgames.games, 'finale')}, tu avais l’avantage dans ${f.endgames.advantages} et tu en as laissé filer ${f.endgames.lost}. Juger la position, c’est choisir le bon plan.`
-          : 'Juger une position au premier coup d’œil, avant de choisir un plan.',
+          ? t('coach.card.evaluationLost', {
+              endgames: count(f.endgames.games, 'endgames'),
+              advantages: f.endgames.advantages,
+              lost: f.endgames.lost
+            })
+          : t('coach.card.evaluationText'),
         glyph: null
       }
     default:
@@ -255,16 +276,17 @@ export function sessionSays(composition) {
   const woodpeckers = composition.modules.filter(
     m => m.module === 'woodpecker' && m.included
   ).length
-  const start =
+  const start = t(
     woodpeckers === 2
-      ? 'On commence par tes deux ouvertures phares.'
+      ? 'coach.session.two'
       : woodpeckers === 1
-        ? 'On commence par ton ouverture phare.'
-        : 'On commence par ta vision du jeu.'
+        ? 'coach.session.one'
+        : 'coach.session.none'
+  )
   const weakest = composition.diagnosis.weakest
   return weakest
-    ? `${start} Ensuite, cap sur tes finales de type « ${weakest.label.toLowerCase()} » : c’est là que tu laisses filer le plus d’avantages.`
-    : `${start} Ensuite, on entretient ta vision et ton jugement.`
+    ? t('coach.session.weakest', { start, type: weakest.label.toLowerCase() })
+    : t('coach.session.keep', { start })
 }
 
 /**
@@ -285,7 +307,7 @@ export function playedModules(composition) {
 export function coachErrorText(error) {
   const detail = error?.response?.data?.detail
   if (detail === 'limit_plans') {
-    return 'Tu as atteint la limite de 50 sessions enregistrées : supprimes-en une avant de continuer.'
+    return t('coach.errors.limit_plans')
   }
   return autoErrorText(error)
 }

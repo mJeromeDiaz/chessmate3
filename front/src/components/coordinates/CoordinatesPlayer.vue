@@ -3,7 +3,9 @@
     <slot name="header" />
 
     <div class="coords-player__ask">
-      <div class="coords-player__label">Trouve la case</div>
+      <div class="coords-player__label">{{
+        $t('coordinates.player.find')
+      }}</div>
       <div class="coords-player__target" data-testid="coordinates-target">{{
         series.target.value ?? '—'
       }}</div>
@@ -34,30 +36,27 @@
 
     <div class="coords-player__counts" data-testid="coordinates-counts">
       <span
-        ><b>{{ series.answered.value }}</b> réponse{{
-          series.answered.value > 1 ? 's' : ''
-        }}</span
+        ><b>{{ series.answered.value }}</b>
+        {{ $t('coordinates.player.answers', series.answered.value) }}</span
       >
       <span
-        ><b>{{ series.correct.value }}</b> juste{{
-          series.correct.value > 1 ? 's' : ''
-        }}</span
+        ><b>{{ series.correct.value }}</b>
+        {{ $t('coordinates.player.correct', series.correct.value) }}</span
       >
-      <span v-if="series.answered.value > 0"
-        >{{
-          Math.floor((series.correct.value / series.answered.value) * 100)
-        }}
-        %</span
-      >
-      <span>{{ ORIENTATIONS[orientation] }} en bas</span>
+      <span v-if="series.answered.value > 0">{{
+        $t('coordinates.player.percent', {
+          n: Math.floor((series.correct.value / series.answered.value) * 100)
+        })
+      }}</span>
+      <span>{{
+        $t('coordinates.player.bottom', { side: ORIENTATIONS[orientation] })
+      }}</span>
       <span
         v-if="item.data.pardon"
         class="coords-player__pardon"
         data-testid="coordinates-pardon"
-        >Pardon : ta 1re erreur ne comptera pas<q-tooltip
-          >Dépensé à la fin de la série, seulement si tu fais une erreur
-          (boutique).</q-tooltip
-        ></span
+        >{{ $t('coordinates.player.pardon')
+        }}<q-tooltip>{{ $t('coordinates.player.pardonTip') }}</q-tooltip></span
       >
     </div>
   </div>
@@ -74,6 +73,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import { useCoordinatesSeries } from '@/composables/coordinates/useCoordinatesSeries'
 import { ORIENTATIONS } from '@/utils/coordinates'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** The timed run (useTimeboxedRun). */
@@ -110,7 +110,9 @@ const highlights = computed(() => {
 const feedbackText = computed(() => {
   const f = feedback.value
   if (!f) return ' '
-  return f.correct ? 'Juste !' : `Raté : c’était ${f.target}`
+  return f.correct
+    ? t('coordinates.player.right')
+    : t('coordinates.player.wrong', { square: f.target })
 })
 
 /** @param {string} square */

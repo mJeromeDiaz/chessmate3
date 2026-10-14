@@ -3,17 +3,21 @@
     <button
       type="button"
       class="cs-header__back"
-      aria-label="Retour"
+      :aria-label="$t('repertoireAuto.header.back')"
       data-testid="coach-back"
       @click="emit('back')"
       >←</button
     >
     <div class="cs-header__main">
       <div class="cs-header__line">
-        <span class="cs-header__title">Séance sur mesure</span>
-        <span class="cs-header__step" data-testid="coach-step"
-          >{{ index + 1 }}/{{ STEPS.length }} · {{ LABELS[step] }}</span
-        >
+        <span class="cs-header__title">{{ $t('coach.header.title') }}</span>
+        <span class="cs-header__step" data-testid="coach-step">{{
+          $t('repertoireAuto.header.step', {
+            n: index + 1,
+            total: STEPS.length,
+            label: $t(`coach.header.steps.${step}`)
+          })
+        }}</span>
       </div>
       <div class="cs-header__bars" aria-hidden="true">
         <span
@@ -42,13 +46,6 @@ const props = defineProps({
 const emit = defineEmits(['back'])
 
 const STEPS = ['connect', 'scan', 'compose', 'session', 'go']
-const LABELS = {
-  connect: 'Compte',
-  scan: 'Analyse',
-  compose: 'Composition',
-  session: 'Séance',
-  go: 'Module 1'
-}
 const index = computed(() => Math.max(0, STEPS.indexOf(props.step)))
 </script>
 

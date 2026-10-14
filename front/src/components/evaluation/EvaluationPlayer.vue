@@ -41,7 +41,9 @@
         class="eval-player__card"
         data-testid="evaluation-ask"
       >
-        <div class="eval-player__question">Qui est mieux ?</div>
+        <div class="eval-player__question">{{
+          $t('evaluation.player.question')
+        }}</div>
         <div class="eval-player__choices">
           <button
             v-for="c in EVAL_CHOICES"
@@ -60,7 +62,10 @@
         </div>
         <template v-if="data.askPlan">
           <div class="eval-player__question"
-            >Le plan <span class="cm-muted">(facultatif)</span></div
+            >{{ $t('evaluation.player.plan') }}
+            <span class="cm-muted">{{
+              $t('evaluation.player.optional')
+            }}</span></div
           >
           <div class="eval-player__plans">
             <button
@@ -82,7 +87,7 @@
           no-caps
           color="dark"
           class="eval-player__validate"
-          label="Valider mon évaluation"
+          :label="$t('evaluation.player.validate')"
           :disable="guess === null || sending"
           :loading="sending"
           data-testid="evaluation-validate"
@@ -110,12 +115,14 @@
         </div>
         <div class="eval-player__legend">
           <span
-            ><i class="eval-player__dot eval-player__dot--guess" />Toi :
-            {{ choiceLabel(result.guess) }}</span
+            ><i class="eval-player__dot eval-player__dot--guess" />{{
+              $t('evaluation.player.you', { value: choiceLabel(result.guess) })
+            }}</span
           >
           <span data-testid="evaluation-engine"
-            ><i class="eval-player__dot eval-player__dot--engine" />Moteur :
-            {{ result.engine }}</span
+            ><i class="eval-player__dot eval-player__dot--engine" />{{
+              $t('evaluation.player.engine', { value: result.engine })
+            }}</span
           >
         </div>
         <ul class="eval-player__ideas" data-testid="evaluation-ideas">
@@ -127,7 +134,7 @@
           v-if="result.planLabel"
           class="eval-player__plan-line"
           data-testid="evaluation-plan-result"
-          >Meilleur plan : <b>{{ result.planLabel }}</b
+          >{{ $t('evaluation.player.bestPlan') }} <b>{{ result.planLabel }}</b
           ><template v-if="planLine"> · {{ planLine }}</template></div
         >
         <div v-if="result.source" class="eval-player__source">{{
@@ -166,6 +173,7 @@ import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { feedbackProf } from '@/utils/feedback'
 import { playOutcomeSound } from '@/utils/sounds'
+import { t } from '@/i18n'
 import {
   EVAL_CHOICES,
   VERDICTS,
@@ -262,10 +270,8 @@ const bubble = computed(() =>
   props.result
     ? { kicker: feedback.value.kicker, text: feedback.value.bubble }
     : {
-        kicker: 'CONSEIL',
-        text:
-          data.value.tip ??
-          'Compte le matériel, puis regarde la sécurité des rois et l’activité des pièces.'
+        kicker: t('evaluation.player.tipKicker'),
+        text: data.value.tip ?? t('evaluation.player.tip')
       }
 )
 </script>

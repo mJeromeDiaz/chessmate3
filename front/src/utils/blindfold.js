@@ -1,4 +1,5 @@
 import { formatRate } from '@/utils/format'
+import { t } from '@/i18n'
 
 /**
  * Blindfold puzzles (docs/BLINDFOLD.md), what the pages show. Pure. The rules come from the API.
@@ -14,11 +15,15 @@ import { formatRate } from '@/utils/format'
  */
 
 /** The levels, as the API names them. */
-export const LEVELS = {
-  easy: 'Facile',
-  medium: 'Moyen',
-  hard: 'Difficile'
-}
+export const LEVELS = Object.defineProperties(
+  {},
+  Object.fromEntries(
+    ['easy', 'medium', 'hard'].map(level => [
+      level,
+      { get: () => t(`blindfold.levels.${level}`), enumerable: true }
+    ])
+  )
+)
 
 /**
  * A level with its ratings: "Facile · 600–1000".
@@ -26,7 +31,11 @@ export const LEVELS = {
  * @param {{key: string, min: number, max: number}} level
  */
 export function levelText(level) {
-  return `${LEVELS[level.key] ?? level.key} · ${level.min}–${level.max}`
+  return t('blindfold.level', {
+    name: LEVELS[level.key] ?? level.key,
+    min: level.min,
+    max: level.max
+  })
 }
 
 /**
@@ -37,7 +46,7 @@ export function levelText(level) {
  */
 export function lengthText(length, lengths = []) {
   const more = lengths.length > 0 && length === Math.max(...lengths)
-  return `${length} coups${more ? ' et +' : ''}`
+  return t(more ? 'blindfold.lengthMore' : 'blindfold.length', { n: length })
 }
 
 /**
@@ -46,8 +55,16 @@ export function lengthText(length, lengths = []) {
  * @param {PuzzleCounts} counts
  */
 export function puzzleCountsText(counts) {
-  if (!counts.played) return 'Aucun puzzle joué.'
+  if (!counts.played) return t('blindfold.counts.none')
   const rate = formatRate(counts.solved / counts.played)
-  const helped = counts.helped ? ` · ${counts.helped} avec coup d’œil` : ''
-  return `${counts.solved} résolu${counts.solved > 1 ? 's' : ''} sur ${counts.played} (${rate})${helped}`
+  const helped = counts.helped
+    ? t('blindfold.counts.helped', { n: counts.helped })
+    : ''
+  return (
+    t(
+      'blindfold.counts.solved',
+      { n: counts.solved, played: counts.played, rate },
+      counts.solved
+    ) + helped
+  )
 }

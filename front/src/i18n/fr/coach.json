@@ -1,0 +1,183 @@
+{
+  "endgames": {
+    "pawn": "Pions",
+    "rook": "Tours",
+    "minor": "Pièces mineures",
+    "queen": "Dames",
+    "rook_minor": "Tours et pièces mineures",
+    "mixed": "Mixtes"
+  },
+  "reasons": [
+    {
+      "title": "Automatiser la reconnaissance des motifs",
+      "text": "Le Woodpecker fait revoir plusieurs fois les mêmes tactiques jusqu’à ce que les motifs deviennent presque automatiques : fourchettes, clouages, attaques doubles, sacrifices… L’objectif est de voir plus vite les opportunités en partie."
+    },
+    {
+      "title": "Améliorer la vitesse de calcul",
+      "text": "En répétant régulièrement les mêmes exercices, tu passes progressivement de la réflexion consciente à une reconnaissance immédiate. Tu dépenses alors ton temps de réflexion sur les positions complexes plutôt que sur des tactiques élémentaires."
+    },
+    {
+      "title": "Transformer les erreurs en automatismes positifs",
+      "text": "Le principe du Woodpecker est de rejouer les puzzles jusqu’à les résoudre rapidement et correctement. Une tactique que tu avais ratée devient progressivement un schéma que ton cerveau reconnaît naturellement. C’est particulièrement efficace pour réduire les erreurs tactiques récurrentes."
+    }
+  ],
+  "method": [
+    "Chaque séance repart du premier puzzle du set.",
+    "Tu enchaînes les puzzles jusqu’à la fin du chrono, le plus vite possible sans te tromper.",
+    "Quand tu en viens à bout, le set grandit de 20 puzzles."
+  ],
+  "sides": {
+    "white": "les blancs",
+    "black": "les noirs"
+  },
+  "counts": {
+    "slips": "{n} avantage laissé filer | {n} avantages laissés filer",
+    "games": "{n} partie | {n} parties",
+    "repertoires": "{n} répertoire | {n} répertoires",
+    "openings": "{n} ouverture | {n} ouvertures",
+    "endgames": "{n} finale | {n} finales"
+  },
+  "slip": "{slips} sur {n}",
+  "scan": {
+    "none": "Je n’ai trouvé aucune partie à lire dans ces cadences.",
+    "weakest": "Trouvé ! Tes finales de type « {type} » te coûtent cher : {slip}.",
+    "solid": "Tes finales tiennent la route : aucun avantage laissé filer. On garde le cap.",
+    "few": "Peu de finales dans ces parties : on travaille tes ouvertures et ta vision.",
+    "reading": "Je lis tes parties une par une…",
+    "openings": "Je repère tes ouvertures favorites…",
+    "endgames": "Des finales apparaissent, je les classe…"
+  },
+  "need": {
+    "noWoodpecker": "Aucune partie avec {side} : pas de Woodpecker de ce côté.",
+    "woodpecker": "{family} : ta n°1 avec {side}, {games}.",
+    "existing": "Tes répertoires : {n} à réviser.",
+    "generated": "Ton répertoire, tiré de tes parties : {n}.",
+    "not_asked": "Pas encore de répertoire : il te manque.",
+    "no_opening": "Aucune ouverture jouée assez souvent pour un répertoire.",
+    "failed": "Le répertoire n’a pas pu être créé.",
+    "repertoire": "Ton répertoire.",
+    "blindfoldWeak": "Finales de type « {type} » : {slip}.",
+    "blindfold": "Voir sans regarder, pour calculer plus loin.",
+    "evaluationLost": "En finale, tu as laissé filer {slip}.",
+    "evaluation": "Juger une position avant de choisir un plan."
+  },
+  "card": {
+    "woodpecker": "Woodpecker",
+    "woodpeckerNamed": "Woodpecker · {family}",
+    "with": "Avec {side}",
+    "noGames": "Aucune de tes {n} dernières parties avec {side} : rien à travailler de ce côté.",
+    "first": "Ta n°1 avec {side} · {games}",
+    "points": " · {n} % des points",
+    "notEnough": "Pas assez de puzzles de cette ouverture dans notre catalogue : on passe pour cette fois.",
+    "puzzles": "{n} puzzles tirés de parties jouées dans cette ouverture{who}. Les mêmes, séance après séance.",
+    "bothSides": ", des deux côtés",
+    "you": ", toi avec {side}",
+    "repertoire": "Répertoire",
+    "missing": "Répertoire manquant",
+    "repertoireText": "Tes lignes à réviser d’abord (répétition espacée), tes coups préparés joués de mémoire.",
+    "repertoireMissing": {
+      "not_asked": "Tu n’as pas encore de répertoire : génère-le depuis tes parties, puis relance l’analyse.",
+      "no_opening": "Aucune ouverture jouée au moins 3 fois : pas de répertoire à tirer de ces parties.",
+      "failed": "La création du répertoire a échoué : réessaie depuis la page Répertoire.",
+      "default": "Pas de répertoire pour cette séance."
+    },
+    "blindfold": "Jeu à l’aveugle",
+    "blindfoldSub": "Tu joues sans voir les pièces",
+    "blindfoldWeak": "Pour mieux visualiser, et calculer jusqu’au bout. Tes finales de type « {type} » : {slip}.",
+    "blindfoldText": "Pour mieux visualiser : la position s’affiche, disparaît, et tu joues de mémoire.",
+    "evaluation": "Évaluation",
+    "evaluationSub": "Qui est mieux, et de combien ?",
+    "evaluationLost": "Sur {endgames}, tu avais l’avantage dans {advantages} et tu en as laissé filer {lost}. Juger la position, c’est choisir le bon plan.",
+    "evaluationText": "Juger une position au premier coup d’œil, avant de choisir un plan."
+  },
+  "session": {
+    "two": "On commence par tes deux ouvertures phares.",
+    "one": "On commence par ton ouverture phare.",
+    "none": "On commence par ta vision du jeu.",
+    "weakest": "{start} Ensuite, cap sur tes finales de type « {type} » : c’est là que tu laisses filer le plus d’avantages.",
+    "keep": "{start} Ensuite, on entretient ta vision et ton jugement."
+  },
+  "errors": {
+    "limit_plans": "Tu as atteint la limite de 50 sessions enregistrées : supprimes-en une avant de continuer."
+  },
+  "header": {
+    "title": "Séance sur mesure",
+    "steps": {
+      "connect": "Compte",
+      "scan": "Analyse",
+      "compose": "Composition",
+      "session": "Séance",
+      "go": "Module 1"
+    }
+  },
+  "connect": {
+    "bubble": "Donne-moi tes {n} dernières parties. Je trouve ce qui te coûte des points et je compose ta séance du jour.",
+    "title": "Une séance taillée pour toi",
+    "start": "Analyser mes {n} parties",
+    "account": "COMPTE LICHESS · OBLIGATOIRE",
+    "noGames": "Sans tes parties, je ne peux rien composer. Je lis seulement, je ne publie rien.",
+    "noAccount": "Pas encore de compte ? Il est créé avec ton compte Lichess.",
+    "repertoire": "Générer aussi mon répertoire",
+    "repertoireHint": "Tiré des mêmes parties : ton ouverture la plus jouée avec les blancs et avec les noirs. Tu pourras l’affiner ensuite.",
+    "watch": "CE QUE JE REGARDE",
+    "watchOpenings": "Tes ouvertures les plus jouées, avec chaque couleur.",
+    "watchEndgames": "Tes finales : leur type, et les avantages que tu as laissé filer.",
+    "watchGames": "Tes {n} dernières parties en blitz, rapide et classique."
+  },
+  "scanScreen": {
+    "read": "parties lues",
+    "of": "sur {n}",
+    "done": "Analyse terminée",
+    "reading": "Lecture en cours…",
+    "restart": "Recommencer",
+    "compose": "Composer ma séance",
+    "openings": "OUVERTURES REPÉRÉES",
+    "endgames": "FINALES DÉTECTÉES · {n}",
+    "noEndgame": "Aucune finale dans ces parties.",
+    "waiting": "En attente des premières finales…",
+    "weak": "POINT FAIBLE",
+    "games": "{n} partie | {n} parties",
+    "footnote": "Avantage : +2 selon l’analyse Lichess quand la partie en a une ({analysed} sur {games}), sinon 2 points de matériel de plus à l’entrée en finale. Laissé filer : la partie n’a pas été gagnée."
+  },
+  "waiting": "Lichess finit de traiter une demande précédente : je reprends dans {n} s…",
+  "compose": {
+    "retry": "Réessayer",
+    "next": "Voir ma séance",
+    "total": "TA SÉANCE · {modules}",
+    "modules": "{n} module | {n} modules",
+    "empty": "vide",
+    "minutes": "{n} min",
+    "notThisTime": "Pas cette fois",
+    "creating": "Création du module…",
+    "searching": "Recherche d’un besoin…",
+    "composed": "SÉANCE COMPOSÉE",
+    "need": "BESOIN N°{n}",
+    "crossing": "JE CROISE TES PARTIES",
+    "done": "{n} module, rien que pour toi. | {n} modules, rien que pour toi.",
+    "looking": "Je cherche ce dont tu as besoin…"
+  },
+  "sessionScreen": {
+    "title": "Ta séance du jour",
+    "games": "tirée de {n} parties",
+    "begin": "Commencer la séance",
+    "saved": "Enregistrée dans Mes sessions : « Ma séance sur mesure », relançable quand tu veux.",
+    "restart": "Refaire l’analyse",
+    "absent": "Absent",
+    "generate": "Générer mon répertoire →"
+  },
+  "go": {
+    "kicker": "MODULE 1 SUR {total} · {n} MIN",
+    "launching": "Lancement…",
+    "launch": "Lancer le module",
+    "method": "LA MÉTHODE · SET LIGHT",
+    "methodText": "{n} puzzles tirés de parties jouées dans ton ouverture, toujours les mêmes : tu les reconnais de plus en plus vite.",
+    "why": "POURQUOI ÇA VA T’AIDER",
+    "reason": "{title}.",
+    "program": "AU PROGRAMME",
+    "countLabel": "MODULE 1 · {title}",
+    "go": "Go !",
+    "woodpeckerSays": "Des tactiques de parties jouées dans ton ouverture, répétées jusqu’à devenir des réflexes. Vite, mais juste.",
+    "says": "On démarre. Concentre-toi sur la justesse avant la vitesse.",
+    "countWoodpecker": "{family} · {n} puzzles"
+  }
+}

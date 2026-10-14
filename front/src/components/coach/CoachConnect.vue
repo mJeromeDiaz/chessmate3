@@ -9,11 +9,10 @@
             class="cs-albert__img cs-bob"
           />
           <div class="cs-bubble">
-            Donne-moi tes {{ COACH_GAMES }} dernières parties. Je trouve ce qui
-            te coûte des points et je compose ta séance du jour.
+            {{ $t('coach.connect.bubble', { n: COACH_GAMES }) }}
           </div>
         </div>
-        <h1 class="cs-title">Une séance taillée pour toi</h1>
+        <h1 class="cs-title">{{ $t('coach.connect.title') }}</h1>
         <div class="cs-actions">
           <button
             type="button"
@@ -21,7 +20,7 @@
             :disabled="!identity || busy"
             data-testid="coach-start"
             @click="emit('start')"
-            >Analyser mes {{ COACH_GAMES }} parties</button
+            >{{ $t('coach.connect.start', { n: COACH_GAMES }) }}</button
           >
         </div>
         <div v-if="error" class="cs-error" role="alert">{{ error }}</div>
@@ -29,7 +28,7 @@
 
       <div class="cs-cols__main">
         <div class="cs-card">
-          <div class="cs-kicker">COMPTE LICHESS · OBLIGATOIRE</div>
+          <div class="cs-kicker">{{ $t('coach.connect.account') }}</div>
           <div
             v-if="identity"
             class="cs-account cs-fade"
@@ -41,13 +40,14 @@
               <span v-if="ratings" class="cs-account__sub">{{ ratings }}</span>
             </div>
             <span class="cs-account__on"
-              ><span class="cs-account__dot" />Connecté</span
+              ><span class="cs-account__dot" />{{
+                $t('repertoireAuto.connect.connected')
+              }}</span
             >
           </div>
           <template v-else>
             <div class="cs-text">
-              Sans tes parties, je ne peux rien composer. Je lis seulement, je
-              ne publie rien.
+              {{ $t('coach.connect.noGames') }}
             </div>
             <a
               v-if="!signedIn"
@@ -55,7 +55,8 @@
               class="cs-cta cs-cta--night"
               data-testid="coach-sign-in"
               @click="markAfterSignIn(COACH_PATH)"
-              ><span class="cs-glyph">♞︎</span>Connecter Lichess</a
+              ><span class="cs-glyph">♞︎</span
+              >{{ $t('repertoireAuto.connect.link') }}</a
             >
             <button
               v-else
@@ -66,10 +67,14 @@
               @click="emit('link')"
             >
               <span class="cs-glyph">♞︎</span
-              >{{ linking ? 'Connexion à Lichess…' : 'Connecter Lichess' }}
+              >{{
+                linking
+                  ? $t('repertoireAuto.connect.linking')
+                  : $t('repertoireAuto.connect.link')
+              }}
             </button>
             <div v-if="!signedIn" class="cs-text cs-text--small">
-              Pas encore de compte ? Il est créé avec ton compte Lichess.
+              {{ $t('coach.connect.noAccount') }}
             </div>
           </template>
         </div>
@@ -92,26 +97,19 @@
             "
           />
           <span class="cs-option__text">
-            <b>Générer aussi mon répertoire</b>
-            <span class="cs-text cs-text--small"
-              >Tiré des mêmes parties : ton ouverture la plus jouée avec les
-              blancs et avec les noirs. Tu pourras l’affiner ensuite.</span
-            >
+            <b>{{ $t('coach.connect.repertoire') }}</b>
+            <span class="cs-text cs-text--small">{{
+              $t('coach.connect.repertoireHint')
+            }}</span>
           </span>
         </label>
 
         <div class="cs-card">
-          <div class="cs-kicker">CE QUE JE REGARDE</div>
+          <div class="cs-kicker">{{ $t('coach.connect.watch') }}</div>
           <ul class="cs-list">
-            <li>Tes ouvertures les plus jouées, avec chaque couleur.</li>
-            <li
-              >Tes finales : leur type, et les avantages que tu as laissé
-              filer.</li
-            >
-            <li
-              >Tes {{ COACH_GAMES }} dernières parties en blitz, rapide et
-              classique.</li
-            >
+            <li>{{ $t('coach.connect.watchOpenings') }}</li>
+            <li>{{ $t('coach.connect.watchEndgames') }}</li>
+            <li>{{ $t('coach.connect.watchGames', { n: COACH_GAMES }) }}</li>
           </ul>
         </div>
       </div>
@@ -130,6 +128,7 @@ import { authApi } from '@/services/api'
 import { COACH_PATH, markAfterSignIn } from '@/utils/auth/authFlow'
 import { COACH_GAMES } from '@/utils/coach'
 import { profImage } from '@/utils/prof/images'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<any>} the linked Lichess identity, if any */
@@ -144,15 +143,18 @@ const props = defineProps({
 })
 const emit = defineEmits(['start', 'link', 'update:withRepertoire'])
 
-const SPEEDS = { blitz: 'Blitz', rapid: 'Rapide', classical: 'Classique' }
+/** Speeds shown with their rating (labels: repertoireAuto.speeds). */
+const SPEEDS = ['blitz', 'rapid', 'classical']
 
 /** "Blitz 1842 · Rapide 1910", from the ratings the profile knows. */
 const ratings = computed(() =>
   Object.entries(props.identity?.ratings ?? {})
-    .filter(([perf]) => SPEEDS[perf])
-    .map(
-      ([perf, r]) =>
-        `${SPEEDS[perf]} ${/** @type {any} */ (r).rating}${/** @type {any} */ (r).provisional ? '?' : ''}`
+    .filter(([perf]) => SPEEDS.includes(perf))
+    .map(([perf, r]) =>
+      t('repertoireAuto.connect.rating', {
+        speed: t(`repertoireAuto.speeds.${perf}`),
+        rating: `${/** @type {any} */ (r).rating}${/** @type {any} */ (r).provisional ? '?' : ''}`
+      })
     )
     .join(' · ')
 )

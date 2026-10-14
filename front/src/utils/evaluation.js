@@ -20,26 +20,39 @@
  */
 
 import { formatRate } from '@/utils/format'
+import { intlLocale, t } from '@/i18n'
 
 /** The answers, White's point of view, from White winning to Black winning. */
 export const EVAL_CHOICES = [
-  { value: 2, sym: '+−', label: 'Blancs gagnent', short: 'Blancs ++' },
-  { value: 1, sym: '±', label: 'Avantage Blancs', short: 'Blancs +' },
-  { value: 0, sym: '=', label: 'Équilibré', short: 'Égal' },
-  { value: -1, sym: '∓', label: 'Avantage Noirs', short: 'Noirs +' },
-  { value: -2, sym: '−+', label: 'Noirs gagnent', short: 'Noirs ++' }
-]
+  [2, '+−'],
+  [1, '±'],
+  [0, '='],
+  [-1, '∓'],
+  [-2, '−+']
+].map(([value, sym]) => ({
+  value,
+  sym,
+  get label() {
+    return t(`evaluation.choices.${value}.label`)
+  },
+  get short() {
+    return t(`evaluation.choices.${value}.short`)
+  }
+}))
 
-/** Titles of an exact answer, in turn. */
-const WIN_TITLES = ['Promotion !', 'Analyse royale !', 'Œil de grand maître !']
+/** Titles of an exact answer, in turn (evaluation.winTitles). */
+const WIN_TITLES = 3
 
 /** The verdict in the correction card. */
-export const VERDICTS = {
-  exact: 'Bien vu !',
-  close: 'Presque !',
-  miss: 'Pas cette fois',
-  timeout: 'Temps écoulé'
-}
+export const VERDICTS = Object.defineProperties(
+  {},
+  Object.fromEntries(
+    ['exact', 'close', 'miss', 'timeout'].map(status => [
+      status,
+      { get: () => t(`evaluation.verdicts.${status}`), enumerable: true }
+    ])
+  )
+)
 
 /**
  * "1:05"
@@ -90,24 +103,25 @@ export function evaluationFeedback(result, index) {
       kind: /** @type {'win'} */ ('win'),
       palette: null,
       badge: '?',
-      title: WIN_TITLES[(index - 1) % WIN_TITLES.length],
+      title: t(`evaluation.winTitles.${(index - 1) % WIN_TITLES}`),
       sub: result.planOk
-        ? 'Évaluation et plan exacts'
-        : `Évaluation exacte · ${clock(result.durationMs ?? 0)}`,
-      kicker: 'CORRECTION',
-      bubble: 'Exactement mon analyse. Tu as l’œil !'
+        ? t('evaluation.feedback.exactPlan')
+        : t('evaluation.feedback.exact', {
+            time: clock(result.durationMs ?? 0)
+          }),
+      kicker: t('evaluation.feedback.kicker'),
+      bubble: t('evaluation.feedback.exactBubble')
     }
   }
-  const lookAgain =
-    'Regarde les idées clés : ce sont elles qui font pencher la balance.'
+  const lookAgain = t('evaluation.feedback.lookAgain')
   if (result.status === 'close') {
     return {
       kind: /** @type {'miss'} */ ('miss'),
       palette: /** @type {'help'} */ ('help'),
       badge: '?!',
-      title: 'Presque !',
-      sub: `À un cran du moteur (${result.engine})`,
-      kicker: 'CORRECTION',
+      title: t('evaluation.verdicts.close'),
+      sub: t('evaluation.feedback.closeSub', { engine: result.engine }),
+      kicker: t('evaluation.feedback.kicker'),
       bubble: lookAgain
     }
   }
@@ -116,8 +130,8 @@ export function evaluationFeedback(result, index) {
     palette: null,
     badge: result.status === 'timeout' ? '⏱︎' : '?',
     title: VERDICTS[result.status],
-    sub: `Le moteur dit ${result.engine} · relis les idées clés`,
-    kicker: 'CORRECTION',
+    sub: t('evaluation.feedback.missSub', { engine: result.engine }),
+    kicker: t('evaluation.feedback.kicker'),
     bubble: lookAgain
   }
 }
@@ -130,19 +144,20 @@ export function evaluationFeedback(result, index) {
  */
 export function planResult(result, plans) {
   if (!result.plan) return ''
-  if (!result.chosenPlan) return 'aucun plan choisi'
-  if (result.planOk) return '✓ bien trouvé (+5 XP)'
+  if (!result.chosenPlan) return t('evaluation.plan.none')
+  if (result.planOk) return t('evaluation.plan.ok')
   const chosen =
     plans.find(p => p.value === result.chosenPlan)?.label ?? result.chosenPlan
-  return `tu avais choisi « ${chosen} »`
+  return t('evaluation.plan.chosen', { plan: chosen })
 }
 
 /** The side to move asked, as the run's `side` names it. */
-export const SIDE_OPTIONS = [
-  { value: 'both', label: 'Les deux' },
-  { value: 'white', label: 'Blancs' },
-  { value: 'black', label: 'Noirs' }
-]
+export const SIDE_OPTIONS = ['both', 'white', 'black'].map(value => ({
+  value,
+  get label() {
+    return t(`evaluation.sides.${value}`)
+  }
+}))
 
 /**
  * Positions available for a side to move.
@@ -162,17 +177,19 @@ export function positionsFor(positions, side) {
  * @param {{played: number, exact: number, close: number, miss: number, timeout: number, planOk: number}} results
  */
 export function resultsText(results) {
-  if (!results.played) return 'Aucune position jouée.'
-  const s = (/** @type {number} */ n) => (n > 1 ? 's' : '')
+  const r = 'evaluation.results.'
+  if (!results.played) return t(`${r}none`)
   const parts = [
-    `${results.played} position${s(results.played)}`,
-    `${results.exact} exacte${s(results.exact)} (${formatRate(results.exact / results.played)})`
-  ]
-  if (results.close) parts.push(`${results.close} à un cran`)
-  if (results.planOk)
-    parts.push(
-      `${results.planOk} plan${s(results.planOk)} trouvé${s(results.planOk)}`
+    t(`${r}played`, { n: results.played }, results.played),
+    t(
+      `${r}exact`,
+      { n: results.exact, rate: formatRate(results.exact / results.played) },
+      results.exact
     )
+  ]
+  if (results.close) parts.push(t(`${r}close`, { n: results.close }))
+  if (results.planOk)
+    parts.push(t(`${r}plans`, { n: results.planOk }, results.planOk))
   return parts.join(' · ')
 }
 
@@ -182,5 +199,5 @@ export function resultsText(results) {
  * @param {number} cp
  */
 export function pawns(cp) {
-  return String(cp / 100).replace('.', ',')
+  return (cp / 100).toLocaleString(intlLocale(), { maximumFractionDigits: 2 })
 }

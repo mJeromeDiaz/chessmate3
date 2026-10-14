@@ -1,15 +1,17 @@
 <template>
   <q-page padding>
     <div class="blindfold-page q-gutter-y-md">
-      <div class="text-h5">Jeu à l’aveugle</div>
+      <div class="text-h5">{{ $t('blindfold.page.title') }}</div>
       <p class="text-body2 text-grey-8">
-        Des puzzles résolus de mémoire : la position s’affiche le temps choisi,
-        disparaît
-        {{ puzzles ? `${puzzles.rules.hiddenSeconds} s` : '…' }}, puis tu joues
-        la solution sur un échiquier vide (coordonnées affichées) : clique la
-        case de départ, puis la case d’arrivée.
+        {{
+          $t('blindfold.page.lead', {
+            hidden: puzzles
+              ? $t('blindfold.page.hidden', { n: puzzles.rules.hiddenSeconds })
+              : '…'
+          })
+        }}
         <template v-if="puzzles">{{ peeksText(puzzles.rules.peeks) }}</template>
-        Aucun effet sur ton classement puzzles.
+        {{ $t('blindfold.page.unrated') }}
       </p>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -21,14 +23,14 @@
 
       <q-card v-if="puzzles" flat bordered data-testid="blindfold-puzzles">
         <q-card-section class="q-gutter-y-sm">
-          <div class="text-subtitle1">Nouvelle séance</div>
+          <div class="text-subtitle1">{{ $t('blindfold.page.new') }}</div>
           <p
             class="text-caption text-grey q-mb-none"
             data-testid="blindfold-puzzles-total"
             >{{ puzzleCountsText(puzzles.total) }}</p
           >
 
-          <div class="text-subtitle2">Niveau</div>
+          <div class="text-subtitle2">{{ $t('blindfold.page.level') }}</div>
           <q-btn-toggle
             v-model="level"
             no-caps
@@ -37,7 +39,7 @@
             :options="levelOptions"
             data-testid="blindfold-level"
           />
-          <div class="text-subtitle2">Longueur de la solution</div>
+          <div class="text-subtitle2">{{ $t('blindfold.page.length') }}</div>
           <q-btn-toggle
             v-model="length"
             no-caps
@@ -46,7 +48,7 @@
             :options="lengthOptions"
             data-testid="blindfold-length"
           />
-          <div class="text-subtitle2">Temps pour mémoriser</div>
+          <div class="text-subtitle2">{{ $t('blindfold.page.memorize') }}</div>
           <q-btn-toggle
             v-model="visibleSeconds"
             no-caps
@@ -64,14 +66,18 @@
         </q-card-section>
         <q-separator />
         <q-card-section>
-          <div class="text-subtitle2 q-mb-xs">Tes résultats par niveau</div>
+          <div class="text-subtitle2 q-mb-xs">{{
+            $t('blindfold.page.byLevel')
+          }}</div>
           <div
             v-for="l in puzzles.rules.levels"
             :key="l.key"
             class="text-body2"
             :data-testid="`blindfold-stats-${l.key}`"
           >
-            <b>{{ LEVELS[l.key] ?? l.key }}</b> :
+            <b>{{
+              $t('blindfold.page.levelRow', { level: LEVELS[l.key] ?? l.key })
+            }}</b>
             {{ puzzleCountsText(puzzles.byLevel[l.key]) }}
           </div>
         </q-card-section>
@@ -96,6 +102,7 @@ import {
   levelText,
   puzzleCountsText
 } from '@/utils/blindfold'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -119,15 +126,18 @@ const lengthOptions = computed(() => {
   return lengths.map(l => ({ value: l, label: lengthText(l, lengths) }))
 })
 const visibleOptions = computed(() =>
-  (rules.value?.visibleSeconds ?? []).map(s => ({ value: s, label: `${s} s` }))
+  (rules.value?.visibleSeconds ?? []).map(s => ({
+    value: s,
+    label: t('blindfold.page.hidden', { n: s })
+  }))
 )
 
 /** @param {number} peeks */
 function peeksText(peeks) {
-  if (!peeks) return 'Une erreur, et le puzzle est raté.'
+  if (!peeks) return t('blindfold.page.peeks.none')
   return peeks === 1
-    ? 'Après une erreur, un coup d’œil sur la position ; une deuxième erreur, et le puzzle est raté.'
-    : `Après une erreur, un coup d’œil sur la position (${peeks} au plus).`
+    ? t('blindfold.page.peeks.one')
+    : t('blindfold.page.peeks.many', { n: peeks })
 }
 
 onMounted(async () => {

@@ -2,17 +2,17 @@
   <div class="cs-screen cs-up">
     <div class="cs-cols">
       <div class="cs-cols__side">
-        <h1 class="cs-title">Ta séance du jour</h1>
+        <h1 class="cs-title">{{ $t('coach.sessionScreen.title') }}</h1>
         <div class="cs-pills">
-          <span class="cs-pill cs-pill--accent" data-testid="coach-minutes"
-            >{{ composition.minutes }} min</span
-          >
-          <span class="cs-pill"
-            >{{ played.length }} module{{ played.length > 1 ? 's' : '' }}</span
-          >
-          <span class="cs-pill"
-            >tirée de {{ composition.diagnosis.games }} parties</span
-          >
+          <span class="cs-pill cs-pill--accent" data-testid="coach-minutes">{{
+            $t('coach.compose.minutes', { n: composition.minutes })
+          }}</span>
+          <span class="cs-pill">{{
+            $t('coach.compose.modules', played.length)
+          }}</span>
+          <span class="cs-pill">{{
+            $t('coach.sessionScreen.games', { n: composition.diagnosis.games })
+          }}</span>
         </div>
         <div v-if="played.length" class="cs-strip" aria-hidden="true">
           <div
@@ -41,16 +41,17 @@
             data-testid="coach-begin"
             @click="emit('begin')"
           >
-            Commencer la séance
-            <span class="cs-cta__badge">{{ composition.minutes }} min</span>
+            {{ $t('coach.sessionScreen.begin') }}
+            <span class="cs-cta__badge">{{
+              $t('coach.compose.minutes', { n: composition.minutes })
+            }}</span>
           </button>
-          <router-link to="/session" class="cs-text cs-text--small cs-saved"
-            >Enregistrée dans Mes sessions : « Ma séance sur mesure »,
-            relançable quand tu veux.</router-link
-          >
-          <button type="button" class="cs-link" @click="emit('restart')"
-            >Refaire l’analyse</button
-          >
+          <router-link to="/session" class="cs-text cs-text--small cs-saved">{{
+            $t('coach.sessionScreen.saved')
+          }}</router-link>
+          <button type="button" class="cs-link" @click="emit('restart')">{{
+            $t('coach.sessionScreen.restart')
+          }}</button>
         </div>
       </div>
 
@@ -77,11 +78,11 @@
               ><span v-if="moduleCard(m).glyph" class="cs-glyph">{{
                 moduleCard(m).glyph
               }}</span
-              >{{ m.minutes }} min</span
+              >{{ $t('coach.compose.minutes', { n: m.minutes }) }}</span
             >
-            <span v-else class="cs-mcard__time cs-mcard__time--off"
-              >Absent</span
-            >
+            <span v-else class="cs-mcard__time cs-mcard__time--off">{{
+              $t('coach.sessionScreen.absent')
+            }}</span>
           </div>
           <div class="cs-text">{{ moduleCard(m).text }}</div>
           <router-link
@@ -89,7 +90,7 @@
             to="/repertoire/auto"
             class="cs-link cs-link--inline"
             data-testid="coach-repertoire-missing"
-            >Générer mon répertoire →</router-link
+            >{{ $t('coach.sessionScreen.generate') }}</router-link
           >
         </article>
       </div>

@@ -1,5 +1,6 @@
 import { computed, ref, shallowRef } from 'vue'
 import { Chess } from 'chess.js'
+import { t } from '@/i18n'
 
 /**
  * @typedef {object} BlindfoldPuzzleData
@@ -254,13 +255,16 @@ export function useBlindfoldPuzzle(options = {}) {
         { square: played.to, type: 'error' }
       ])
       if (mistakes.value > settings.peeks) {
-        message.value = { text: `${played.san} : raté.`, tone: 'error' }
+        message.value = {
+          text: t('blindfold.game.missed', { move: played.san }),
+          tone: 'error'
+        }
         fail()
         return 'wrong'
       }
       peeksLeft.value--
       message.value = {
-        text: `${played.san} n’est pas le bon coup. Regarde encore la position.`,
+        text: t('blindfold.game.wrongMove', { move: played.san }),
         tone: 'error'
       }
       peeking.value = true
@@ -269,7 +273,10 @@ export function useBlindfoldPuzzle(options = {}) {
     }
 
     apply(uci)
-    message.value = { text: `${played.san} : bien vu !`, tone: 'success' }
+    message.value = {
+      text: t('blindfold.game.good', { move: played.san }),
+      tone: 'success'
+    }
     lit([{ square: played.to, type: 'success' }])
     if (mates || cursor.value >= data.moves.length) {
       finish()
@@ -281,7 +288,10 @@ export function useBlindfoldPuzzle(options = {}) {
     wait(delays.reply).then(() => {
       if (run !== generation || !puzzle.value) return
       const reply = apply(puzzle.value.moves[cursor.value])
-      message.value = { text: `L’adversaire joue ${reply.san}.`, tone: 'info' }
+      message.value = {
+        text: t('blindfold.game.reply', { move: reply.san }),
+        tone: 'info'
+      }
       lit([
         { square: reply.from, type: 'lastMove' },
         { square: reply.to, type: 'lastMove' }
@@ -303,7 +313,7 @@ export function useBlindfoldPuzzle(options = {}) {
     mistakes.value = 0
     peeksLeft.value = settings.peeks
     message.value = {
-      text: 'Pardonné : ton erreur est effacée, ton coup d’œil revient.',
+      text: t('blindfold.game.pardoned'),
       tone: 'info'
     }
     return true

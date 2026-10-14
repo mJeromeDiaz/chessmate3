@@ -46,7 +46,9 @@
           class="blind-player__veil"
           data-testid="blindfold-veil"
         >
-          <div class="blind-player__veil-label">Position cachée</div>
+          <div class="blind-player__veil-label">{{
+            $t('blindfold.player.hidden')
+          }}</div>
           <div class="blind-player__veil-count">{{ game.countdown.value }}</div>
         </div>
       </div>
@@ -54,14 +56,14 @@
 
     <template v-if="game.phase.value !== 'complete'" #controls>
       <template v-if="game.phase.value === 'show'">
-        <div class="blind-player__count" data-testid="blindfold-countdown"
-          >{{ game.countdown.value }} s</div
-        >
+        <div class="blind-player__count" data-testid="blindfold-countdown">{{
+          $t('blindfold.player.seconds', { n: game.countdown.value })
+        }}</div>
         <q-btn
           unelevated
           no-caps
           class="play-btn play-btn--skip"
-          label="J’ai mémorisé"
+          :label="$t('blindfold.player.memorized')"
           data-testid="blindfold-memorized"
           @click="game.memorized()"
         />
@@ -71,22 +73,19 @@
         unelevated
         no-caps
         class="play-btn play-btn--hint"
-        :label="`Pardonner · ${pardons.count}`"
+        :label="$t('blindfold.player.pardon', { n: pardons.count })"
         :loading="pardons.busy"
         :disable="pardons.busy"
         data-testid="blindfold-pardon"
         @click="emit('pardon')"
       >
-        <q-tooltip
-          >Ton erreur est effacée et ton coup d’œil revient : le puzzle compte
-          comme résolu (boutique).</q-tooltip
-        >
+        <q-tooltip>{{ $t('blindfold.player.pardonTip') }}</q-tooltip>
       </q-btn>
       <q-btn
         unelevated
         no-caps
         class="play-btn play-btn--solution"
-        label="Solution"
+        :label="$t('blindfold.player.solution')"
         :disable="!canGiveUp"
         data-testid="blindfold-give-up"
         @click="game.giveUp()"
@@ -115,14 +114,14 @@
         class="row items-center q-gutter-sm"
         data-testid="blindfold-promotion"
       >
-        <span>Promotion en</span>
+        <span>{{ $t('blindfold.player.promotion') }}</span>
         <q-btn
           v-for="p in PROMOTIONS"
           :key="p.piece"
           outline
           no-caps
           dense
-          :label="p.label"
+          :label="$t(`blindfold.player.pieces.${p.piece}`)"
           :data-testid="`blindfold-promote-${p.piece}`"
           @click="game.promote(p.piece)"
         />
@@ -130,7 +129,7 @@
           flat
           dense
           no-caps
-          label="Annuler"
+          :label="$t('common.actions.cancel')"
           @click="game.cancelPromotion()"
         />
       </div>
@@ -193,6 +192,7 @@ import {
 } from '@/utils/feedback'
 import { moveKind, playMoveSound } from '@/utils/chess/moveSounds'
 import { playOutcomeSound } from '@/utils/sounds'
+import { t } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/composables/training/useTimeboxedRun').RunItem>} the blindfold_puzzle item; a new one starts a new puzzle */
@@ -219,12 +219,8 @@ const emit = defineEmits({
   pardon: null
 })
 
-const PROMOTIONS = [
-  { piece: 'q', label: 'Dame' },
-  { piece: 'r', label: 'Tour' },
-  { piece: 'b', label: 'Fou' },
-  { piece: 'n', label: 'Cavalier' }
-]
+/** Promotion pieces (their names: blindfold.player.pieces). */
+const PROMOTIONS = ['q', 'r', 'b', 'n'].map(piece => ({ piece }))
 
 const { soundOn } = useBoardPreferences()
 const timeline = useFeedbackTimeline()
@@ -264,42 +260,46 @@ const bubble = computed(() => {
   const kicker =
     game.phase.value === 'show'
       ? game.peeking.value
-        ? 'COUP D’ŒIL'
-        : 'MÉMORISE'
+        ? t('blindfold.player.kickers.peek')
+        : t('blindfold.player.kickers.memorize')
       : game.phase.value === 'hidden'
-        ? 'VISUALISE'
-        : 'À TOI'
+        ? t('blindfold.player.kickers.visualize')
+        : t('blindfold.player.kickers.yourTurn')
   return { kicker, text: statusText.value }
 })
 
 const side = computed(() =>
-  game.orientation.value === 'white' ? 'les Blancs' : 'les Noirs'
+  t(
+    game.orientation.value === 'white'
+      ? 'blindfold.player.white'
+      : 'blindfold.player.black'
+  )
 )
 
 const statusText = computed(() => {
   switch (game.phase.value) {
     case 'intro':
-      return 'Au tour de l’adversaire…'
+      return t('blindfold.player.opponent')
     case 'show':
       return game.peeking.value
-        ? 'Coup d’œil : la position actuelle. Mémorise-la !'
-        : `Mémorise la position : ${side.value} jouent.`
+        ? t('blindfold.player.peekText')
+        : t('blindfold.player.memorizeText', { side: side.value })
     case 'hidden':
-      return 'Visualise la position…'
+      return t('blindfold.player.visualizeText')
     case 'play':
       return game.selected.value
-        ? `Départ ${game.selected.value} : clique la case d’arrivée.`
-        : 'À toi : clique la case de départ, puis la case d’arrivée.'
+        ? t('blindfold.player.from', { square: game.selected.value })
+        : t('blindfold.player.play')
     case 'reply':
-      return 'L’adversaire répond…'
+      return t('blindfold.player.replying')
     case 'solution':
-      return 'Solution…'
+      return t('blindfold.player.solutionText')
     case 'complete':
       return game.status.value === 'solved'
-        ? 'Résolu de mémoire, bravo !'
+        ? t('blindfold.player.solved')
         : game.status.value === 'helped'
-          ? 'Résolu avec un coup d’œil.'
-          : 'Puzzle raté : voici la solution.'
+          ? t('blindfold.player.helped')
+          : t('blindfold.player.failed')
     default:
       return ''
   }
@@ -323,10 +323,10 @@ const infoChips = computed(() => {
   const peeks = game.peeksLeft.value
   return [
     LEVELS[d.level] ?? d.level,
-    `${d.visibleSeconds} s pour mémoriser`,
+    t('blindfold.player.toMemorize', { n: d.visibleSeconds }),
     peeks > 0
-      ? `${peeks} coup${peeks > 1 ? 's' : ''} d’œil`
-      : 'plus de coup d’œil'
+      ? t('blindfold.player.peeks', { n: peeks }, peeks)
+      : t('blindfold.player.noPeek')
   ]
 })
 
