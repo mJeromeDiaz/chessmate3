@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { i18n } from '@/i18n'
 import { createHttpClient } from '@/services/http'
 
 /**
@@ -247,5 +248,26 @@ describe('createHttpClient', () => {
     })
 
     expect(client.defaults.withCredentials).toBe(true)
+  })
+})
+
+describe('language of the calls (docs/I18N.md, § 5)', () => {
+  it('says the language shown in Accept-Language, public calls included', async () => {
+    const seen = []
+    const server = fakeServer(config => {
+      seen.push(config.headers.get('Accept-Language'))
+      return [200, {}]
+    })
+    const client = createHttpClient(
+      { getAccessToken: () => null, refresh: vi.fn(), onAuthFailure: vi.fn() },
+      { adapter: server.adapter }
+    )
+
+    await client.get('/a')
+    i18n.global.locale.value = 'en'
+    await client.get('/b', { skipAuthRefresh: true })
+    i18n.global.locale.value = 'fr'
+
+    expect(seen).toEqual(['fr', 'en'])
   })
 })

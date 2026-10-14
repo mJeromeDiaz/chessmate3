@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { currentLocale } from '@/i18n'
 
 /**
  * @typedef {object} AuthHandlers
@@ -57,6 +58,15 @@ export function createHttpClient(handlers, config = {}) {
 
     return refreshInFlight
   }
+
+  // Every call says the language shown (docs/I18N.md, § 5): the API's emails and messages follow
+  // it, public calls (sign-up, waiting list) included.
+  client.interceptors.request.use(request => {
+    if (!request.headers.has('Accept-Language')) {
+      request.headers.set('Accept-Language', currentLocale())
+    }
+    return request
+  })
 
   client.interceptors.request.use(async request => {
     if (request.skipAuthRefresh) return request

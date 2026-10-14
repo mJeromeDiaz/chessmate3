@@ -1,0 +1,12 @@
+# Languages of the API (docs/I18N.md, § 5): English by default and as the fallback, never French
+# unless asked. A request's language comes from its Accept-Language (the SPA sends its own), among
+# the enabled ones; what is sent later (queued emails, reminders, push) takes the account's
+# (App\I18n\UserLocale).
+framework:
+    default_locale: en
+    enabled_locales: [en, fr]
+    set_locale_from_accept_language: true
+    translator:
+        default_path: '%kernel.project_dir%/translations'
+        fallbacks: [en]
+        providers:
