@@ -83,8 +83,8 @@
           @click="emit('aid', 'pass')"
         >
           <q-tooltip
-            >Avant ton premier coup : la solution s’affiche, ton streak
-            continue (boutique).</q-tooltip
+            >Avant ton premier coup : la solution s’affiche, ton streak continue
+            (boutique).</q-tooltip
           >
         </q-btn>
       </template>

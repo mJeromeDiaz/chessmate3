@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * Saved sessions (docs/TRAINING.md): their settings and how they read.
  *
@@ -148,13 +150,16 @@ export function repetitionText(s) {
   return `${text.charAt(0).toUpperCase()}${text.slice(1)} à ${s.time}`
 }
 
-const nextFormat = new Intl.DateTimeFormat('fr-FR', {
-  weekday: 'short',
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit'
-})
+const nextFormat = {
+  format: d =>
+    new Intl.DateTimeFormat(intlLocale(), {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(d)
+}
 
 /**
  * "Prochaine : mar. 29 sept., 18:30" in the browser's time, or ''.

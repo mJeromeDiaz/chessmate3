@@ -252,7 +252,8 @@ describe('useBlindfoldPuzzle', () => {
     const game = useBlindfoldPuzzle({ delays: DELAYS })
     game.load(MATE_IN_2, { ...SETTINGS, pardoned: true })
     await vi.advanceTimersByTimeAsync(
-      DELAYS.opponent + (SETTINGS.visibleSeconds + SETTINGS.hiddenSeconds) * 1000
+      DELAYS.opponent +
+        (SETTINGS.visibleSeconds + SETTINGS.hiddenSeconds) * 1000
     )
     const wrong = wrongMove(game.fen.value, 'e1e7')
     click(game, wrong.from + wrong.to)

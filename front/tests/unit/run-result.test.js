@@ -72,9 +72,7 @@ describe('run result', () => {
     expect(streakNote(streak({ bestStreak: 6, passes: 1 }))).toBe(
       'Record égalé : 6 · 1 pass'
     )
-    expect(
-      streakNote(streak({ recordBefore: 0, helps: 2 }))
-    ).toBe('2 aides')
+    expect(streakNote(streak({ recordBefore: 0, helps: 2 }))).toBe('2 aides')
 
     expect(resultButtons('streak', 1).secondary.action).toBe('fix')
     expect(resultButtons('record', 0).secondary.action).toBe('next')

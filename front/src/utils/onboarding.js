@@ -4,6 +4,7 @@ import {
   TOUR_PATH
 } from '@/utils/auth/authFlow'
 import { profImage } from '@/utils/prof/images'
+import { intlLocale } from '@/i18n'
 
 /**
  * The guided tour (design "Visite guidée", docs/ONBOARDING.md): its screens, the professors' lines
@@ -371,7 +372,8 @@ export const END_CHOICES = [
 /** Lichess' speeds, as said on the level screen. */
 const PERFS = { rapid: 'rapide', blitz: 'blitz', classical: 'classique' }
 
-const number = new Intl.NumberFormat('fr-FR')
+/** Numbers in the current language (docs/I18N.md). */
+const number = { format: n => new Intl.NumberFormat(intlLocale()).format(n) }
 
 /**
  * The segment a screen belongs to.

@@ -15,6 +15,7 @@
         >
       </nav>
       <div class="landing-header__actions">
+        <LocaleMenu />
         <ThemeMenu />
         <router-link
           to="/login"
@@ -28,6 +29,7 @@
 </template>
 
 <script setup>
+import LocaleMenu from '@/components/theme/LocaleMenu.vue'
 import ThemeMenu from '@/components/theme/ThemeMenu.vue'
 import { LANDING_ANCHORS } from '@/utils/landing/content'
 

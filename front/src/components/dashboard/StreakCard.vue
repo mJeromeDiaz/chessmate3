@@ -299,7 +299,12 @@ const hint = computed(() => {
   }
 
   .streak-card__day--frozen & {
-    background: radial-gradient(circle at 35% 30%, #ffffff 0, #b9ddfb 45%, #4fb2ff 100%);
+    background: radial-gradient(
+      circle at 35% 30%,
+      #ffffff 0,
+      #b9ddfb 45%,
+      #4fb2ff 100%
+    );
     color: #0f6bba;
   }
 

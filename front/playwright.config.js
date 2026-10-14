@@ -18,6 +18,8 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: `http://localhost:${FRONT_PORT}`,
+    // A French browser: the SPA speaks French, the texts the tests look for (docs/I18N.md).
+    locale: 'fr-FR',
     trace: 'retain-on-failure'
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

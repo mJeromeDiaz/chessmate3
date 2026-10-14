@@ -19,6 +19,7 @@
  */
 
 import { autoErrorText } from '@/utils/repertoireAuto'
+import { intlLocale } from '@/i18n'
 
 /** Games read, and their speeds (App\Coach\CoachRules). */
 export const COACH_GAMES = 200
@@ -80,7 +81,7 @@ const side = color => (color === 'black' ? 'les noirs' : 'les blancs')
 
 /** @param {number} n @param {string} word @param {string} [plural] */
 const count = (n, word, plural = `${word}s`) =>
-  `${n.toLocaleString('fr-FR')} ${n > 1 ? plural : word}`
+  `${n.toLocaleString(intlLocale())} ${n > 1 ? plural : word}`
 
 /**
  * Share of the points: wins plus half the draws.

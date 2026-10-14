@@ -282,7 +282,9 @@ const note = computed(() => rewardNote(props.reward))
 
 const wrapClass = computed(() => {
   if (open.value) return 'chest__body--open'
-  return hits.value === 0 ? 'chest__body--idle' : `chest__body--hit${hits.value}`
+  return hits.value === 0
+    ? 'chest__body--idle'
+    : `chest__body--hit${hits.value}`
 })
 
 const sparkles = computed(() => {
@@ -459,7 +461,8 @@ onMounted(async () => {
   if (!state) return
   base = Math.max(0, state.balance - props.reward.crowns)
   // Opened already (reduced motion), or a reload raced the tween: the final balance.
-  wallet.value = open.value && shown.value >= props.reward.crowns ? state.balance : base
+  wallet.value =
+    open.value && shown.value >= props.reward.crowns ? state.balance : base
 })
 
 onBeforeUnmount(() => {
@@ -764,7 +767,11 @@ $grain: repeating-linear-gradient(
   bottom: 150px;
   height: 400px;
   transform-origin: 50% 100%;
-  background: linear-gradient(0deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
+  background: linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
   clip-path: polygon(25% 100%, 75% 100%, 100% 0, 0 0);
   animation: cf-beam 0.5s ease-out 0.35s both;
 }
@@ -840,9 +847,7 @@ $grain: repeating-linear-gradient(
   position: absolute;
   inset: 0;
   border-radius: 50% 50% 8px 8px / 70% 70% 8px 8px;
-  background:
-    $grain,
-    linear-gradient(180deg, #5e3010, #3a1c06);
+  background: $grain, linear-gradient(180deg, #5e3010, #3a1c06);
   box-shadow:
     0 0 0 5px $ink,
     inset 0 -14px 0 #e7a900;
@@ -884,8 +889,7 @@ $grain: repeating-linear-gradient(
   border-radius: 8px 8px 18px 18px;
   background:
     repeating-linear-gradient(180deg, transparent 0 40px, #4a2408 40px 44px),
-    $grain,
-    linear-gradient(180deg, #a8642c, #7a4116 60%, #5e3010);
+    $grain, linear-gradient(180deg, #a8642c, #7a4116 60%, #5e3010);
   box-shadow:
     0 0 0 5px $ink,
     inset 0 -10px 0 rgba(27, 21, 48, 0.3);
@@ -953,9 +957,7 @@ $grain: repeating-linear-gradient(
   position: absolute;
   inset: 0;
   border-radius: 50% 50% 8px 8px / 72% 72% 8px 8px;
-  background:
-    $grain,
-    linear-gradient(180deg, #c07a3a, #a8642c 45%, #7a4116);
+  background: $grain, linear-gradient(180deg, #c07a3a, #a8642c 45%, #7a4116);
   box-shadow:
     0 0 0 5px $ink,
     inset 0 10px 0 rgba(255, 255, 255, 0.14);

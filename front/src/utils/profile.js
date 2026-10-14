@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * Display helpers of the profile page (design "Profil").
  */
@@ -115,7 +117,7 @@ export function handleStatus(handle, current, check) {
  * @returns {string}
  */
 export function formatMonth(iso) {
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(intlLocale(), {
     month: 'long',
     year: 'numeric'
   }).format(new Date(iso))
@@ -194,7 +196,7 @@ export function sessionLine(session, now = new Date()) {
  * @returns {string}
  */
 export function relativeDay(date, now) {
-  const time = new Intl.DateTimeFormat('fr-FR', {
+  const time = new Intl.DateTimeFormat(intlLocale(), {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date)
@@ -204,7 +206,7 @@ export function relativeDay(date, now) {
   if (days === 0) return `aujourd’hui, ${time}`
   if (days === 1) return `hier, ${time}`
 
-  const dayLabel = new Intl.DateTimeFormat('fr-FR', {
+  const dayLabel = new Intl.DateTimeFormat(intlLocale(), {
     day: 'numeric',
     month: 'short',
     ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' })
@@ -221,7 +223,7 @@ export function relativeDay(date, now) {
  */
 export function deletionDay(iso) {
   if (!iso) return ''
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
+  return new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'long' }).format(
     new Date(iso)
   )
 }

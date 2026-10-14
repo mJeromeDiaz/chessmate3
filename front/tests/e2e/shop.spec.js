@@ -6,7 +6,7 @@ const isRunNext = r =>
   /\/api\/training\/runs\/[^/]+\/next$/.test(r.url()) &&
   r.request().method() === 'POST'
 const isPardon = r =>
-  /\/pardon$/.test(r.url()) && r.request().method() === 'POST'
+  r.url().endsWith('/pardon') && r.request().method() === 'POST'
 
 /**
  * A legal move of the side to move that is neither `expected` nor a mate (a mistake).
@@ -235,16 +235,23 @@ test('a completed session opens a chest of crowns, then the results and the stor
   await expect(chest).toContainText('RÉCOMPENSE DE SESSION')
   await expect(page.getByTestId('run-end')).toBeHidden()
   const opened = page.waitForResponse(
-    r => /\/api\/shop\/rewards\/[^/]+\/open$/.test(r.url()) && r.request().method() === 'POST'
+    r =>
+      /\/api\/shop\/rewards\/[^/]+\/open$/.test(r.url()) &&
+      r.request().method() === 'POST'
   )
-  for (let i = 0; i < 3; i++) await chest.getByTestId('chest-hit').click({ force: true })
+  for (let i = 0; i < 3; i++)
+    await chest.getByTestId('chest-hit').click({ force: true })
   const reward = await (await opened).json()
   expect(reward.crowns).toBeGreaterThan(0)
   expect(reward.tier).toBe('perfect')
   await expect(chest).toContainText('Quel')
   await expect(chest).not.toContainText(/champion/i)
-  await expect(chest.getByTestId('chest-amount')).toHaveText(`+${reward.crowns}`)
-  await expect(chest.getByTestId('chest-wallet')).toHaveText(String(reward.balance))
+  await expect(chest.getByTestId('chest-amount')).toHaveText(
+    `+${reward.crowns}`
+  )
+  await expect(chest.getByTestId('chest-wallet')).toHaveText(
+    String(reward.balance)
+  )
   expect(reward.balance).toBe(reward.crowns)
 
   // "Voir mes résultats": the run's result.
@@ -256,11 +263,17 @@ test('a completed session opens a chest of crowns, then the results and the stor
 
   // The session's recap says it, without the chest again.
   await page.getByTestId('session-open').click()
-  await expect(page.getByTestId('session-reward')).toContainText(`+${reward.crowns} couronnes`)
+  await expect(page.getByTestId('session-reward')).toContainText(
+    `+${reward.crowns} couronnes`
+  )
   await expect(page.getByTestId('treasure-chest')).toHaveCount(0)
 
   // The store tells how crowns are earned.
   await page.goto('/#/boutique')
-  await expect(page.getByTestId('shop-balance')).toContainText(String(reward.crowns))
-  await expect(page.getByTestId('shop-earn')).toContainText('Gagner des couronnes')
+  await expect(page.getByTestId('shop-balance')).toContainText(
+    String(reward.crowns)
+  )
+  await expect(page.getByTestId('shop-earn')).toContainText(
+    'Gagner des couronnes'
+  )
 })

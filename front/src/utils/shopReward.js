@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * The crowns of a completed session (design "Coffre", docs/SHOP.md, § 4 bis): the chest's stages,
  * coloured by the amount on the first one and titled by the tier on the last one, and the store's
@@ -39,7 +41,7 @@ const DEFAULT_EARNING = {
  * @param {Partial<import('@/utils/shop').ShopEarning>|null|undefined} earning
  */
 export function dailyMax(earning) {
-  const e = { ...DEFAULT_EARNING, ...(earning ?? {}) }
+  const e = { ...DEFAULT_EARNING, ...earning }
   return Math.round(
     (e.crownsPerHour * e.perfectPercent * e.dailyMinutes) / (100 * 60)
   )
@@ -167,7 +169,7 @@ export function rewardLine(reward) {
   if (!reward) return ''
   if (reward.crowns === 0)
     return 'Plafond du jour atteint : pas de couronnes pour cette session.'
-  return `+${new Intl.NumberFormat('fr-FR').format(reward.crowns)} couronnes · ${rewardNote(reward)}`
+  return `+${new Intl.NumberFormat(intlLocale()).format(reward.crowns)} couronnes · ${rewardNote(reward)}`
 }
 
 /**

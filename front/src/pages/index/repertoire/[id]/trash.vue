@@ -167,6 +167,7 @@ import { useQuasar } from 'quasar'
 import { useRepertoireStore } from '@/stores/repertoire'
 import { apiErrorMessage } from '@/utils/apiError'
 import { pathText } from '@/utils/repertoireImport'
+import { intlLocale } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -247,7 +248,7 @@ function suiteText(suite) {
 
 /** @param {string} iso */
 function formatDate(iso) {
-  return new Date(iso).toLocaleString('fr-FR', {
+  return new Date(iso).toLocaleString(intlLocale(), {
     dateStyle: 'medium',
     timeStyle: 'short'
   })

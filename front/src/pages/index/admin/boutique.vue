@@ -81,13 +81,17 @@
             </td>
             <td class="text-right">
               {{ o.sales
-              }}<div v-if="o.crowns" class="cm-muted">{{ crowns(o.crowns) }}</div>
+              }}<div v-if="o.crowns" class="cm-muted">{{
+                crowns(o.crowns)
+              }}</div>
             </td>
             <td>
               <span
                 :class="[
                   'admin__status',
-                  offerStatus(o).tone ? `admin__status--${offerStatus(o).tone}` : ''
+                  offerStatus(o).tone
+                    ? `admin__status--${offerStatus(o).tone}`
+                    : ''
                 ]"
                 >{{ offerStatus(o).label }}</span
               >
@@ -131,24 +135,27 @@
         </thead>
         <tbody>
           <tr v-if="(catalog?.slides ?? []).length === 0">
-            <td colspan="6" class="cm-muted">Aucun slide : le carrousel est masqué.</td>
+            <td colspan="6" class="cm-muted"
+              >Aucun slide : le carrousel est masqué.</td
+            >
           </tr>
           <tr
             v-for="s in catalog?.slides ?? []"
             :key="s.id"
             data-testid="slide-row"
           >
-            <td><img :src="profImage(s.image)" alt="" class="shop-admin__prof" /></td>
+            <td
+              ><img :src="profImage(s.image)" alt="" class="shop-admin__prof"
+            /></td>
             <td>{{ s.tag }}</td>
             <td>{{ s.offerName }}</td>
             <td class="text-right">{{ s.position }}</td>
             <td>
               <span
-                :class="[
-                  'admin__status',
-                  s.shown ? 'admin__status--used' : ''
-                ]"
-                >{{ s.shown ? 'Affiché' : s.suspended ? 'Suspendu' : 'Masqué' }}</span
+                :class="['admin__status', s.shown ? 'admin__status--used' : '']"
+                >{{
+                  s.shown ? 'Affiché' : s.suspended ? 'Suspendu' : 'Masqué'
+                }}</span
               >
             </td>
             <td class="text-right no-wrap">
@@ -219,6 +226,7 @@ import {
 } from '@/utils/admin/shop'
 import { profImage } from '@/utils/prof/images'
 import { ITEMS, crowns } from '@/utils/shop'
+import { intlLocale } from '@/i18n'
 
 definePage({ meta: { auth: 'admin' } })
 
@@ -236,7 +244,10 @@ const slideOpen = ref(false)
 /** @type {import('vue').Ref<import('@/utils/admin/shop').AdminSlide|null>} */
 const slide = ref(null)
 
-const date = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' })
+const date = {
+  format: d =>
+    new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'medium' }).format(d)
+}
 
 /** @param {string} iso */
 function when(iso) {

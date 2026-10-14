@@ -85,7 +85,10 @@
       <section class="cm-card q-mt-md">
         <h2 class="cm-card__title q-mb-sm">Objets détenus</h2>
         <div class="shop-stats__held">
-          <span v-for="(qty, item) in stats.held" :key="item" class="admin__status"
+          <span
+            v-for="(qty, item) in stats.held"
+            :key="item"
+            class="admin__status"
             >{{ ITEMS[item]?.label ?? item }} × {{ crowns(qty) }}</span
           >
           <span v-if="Object.keys(stats.held).length === 0" class="cm-muted"

@@ -49,23 +49,7 @@
     </div>
 
     <ThemeSection />
-
-    <div class="profile-block">
-      <div class="profile-row__title">
-        Langue <span class="profile-soon">Bientôt</span>
-      </div>
-      <div class="profile-lang" data-testid="profile-language">
-        <button
-          v-for="lang in LANGUAGES"
-          :key="lang.code"
-          type="button"
-          class="profile-lang__option"
-          :class="{ 'profile-lang__option--on': lang.code === 'fr' }"
-          disabled
-          >{{ lang.label }}</button
-        >
-      </div>
-    </div>
+    <LocaleSection />
 
     <div class="profile-row">
       <div class="profile-row__text">
@@ -107,6 +91,7 @@ import {
   boardTheme,
   previewSquares
 } from '@/utils/chess/boardThemes'
+import LocaleSection from '@/components/profile/LocaleSection.vue'
 import ThemeSection from '@/components/profile/ThemeSection.vue'
 import TimezoneSection from '@/components/profile/TimezoneSection.vue'
 
@@ -114,13 +99,6 @@ const props = defineProps({
   /** The /api/profile payload. */
   profile: { type: Object, required: true }
 })
-
-const LANGUAGES = [
-  { code: 'fr', label: 'Français' },
-  { code: 'en', label: 'English' },
-  { code: 'es', label: 'Español' },
-  { code: 'de', label: 'Deutsch' }
-]
 
 const auth = useAuthStore()
 const error = ref('')
@@ -205,35 +183,6 @@ async function choose(changes) {
 
   @media (min-width: $breakpoint-md-min) {
     font-size: 12.5px;
-  }
-}
-
-.profile-lang {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: var(--cm-subtle);
-}
-
-.profile-lang__option {
-  flex: 1;
-  min-width: 0;
-  height: 34px;
-  border: none;
-  border-radius: 11px;
-  background: transparent;
-  color: var(--cm-ink);
-  font: inherit;
-  font-weight: 700;
-  font-size: 13px;
-  opacity: 0.55;
-  cursor: not-allowed;
-
-  &--on {
-    background: var(--cm-ink);
-    color: var(--cm-surface);
-    opacity: 1;
   }
 }
 </style>

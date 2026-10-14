@@ -16,6 +16,7 @@
   "type": "module",
   "scripts": {
     "lint": "oxfmt && oxlint --fix",
+    "i18n:missing": "node scripts/i18n-missing.mjs",
     "lint:check": "oxfmt --check && oxlint",
     "dev": "quasar dev",
     "build": "quasar build",

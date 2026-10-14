@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * The statistics page (docs/DASHBOARD.md § 6, lot B): periods, the weekly training-time chart and
  * the figures of each block, computed from the API's answers. Pure, so that it can be tested alone.
@@ -82,7 +84,7 @@ export function formatHours(ms) {
  * @returns {string}
  */
 export function dayLabel(date) {
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(intlLocale(), {
     day: 'numeric',
     month: 'short',
     timeZone: 'UTC'

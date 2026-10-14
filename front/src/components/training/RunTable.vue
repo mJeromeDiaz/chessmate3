@@ -70,6 +70,7 @@
 import { computed } from 'vue'
 import { formatDate, formatDuration, formatPercent } from '@/utils/format'
 import { runTrends } from '@/utils/training'
+import { intlLocale } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<{id: string, startedAt: string, summary: import('@/composables/training/useTimeboxedRun').RunSummary|null}[]>} newest first */
@@ -82,7 +83,7 @@ const rows = computed(() => runTrends(props.runs))
 function perMinute(value) {
   return value === null || value === undefined
     ? '—'
-    : value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })
+    : value.toLocaleString(intlLocale(), { maximumFractionDigits: 2 })
 }
 </script>
 

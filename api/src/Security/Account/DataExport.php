@@ -224,6 +224,7 @@ final readonly class DataExport
             'avatar' => $user->getAvatar()?->value,
             'timezone' => $user->getTimezone(),
             'theme' => $user->getTheme()?->value,
+            'locale' => $user->getLocale()?->value,
             'boardTheme' => $user->getBoardTheme()->value,
             'moveSound' => $user->hasMoveSound(),
             'publicProfile' => $user->isPublicProfile(),

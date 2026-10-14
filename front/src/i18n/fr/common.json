@@ -1,0 +1,7 @@
+{
+  "locale": {
+    "title": "Langue",
+    "hint": "Ton choix est gardé sur ton compte et s’applique sur tes autres appareils.",
+    "menu": "Langue : {name}"
+  }
+}

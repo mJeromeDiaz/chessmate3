@@ -2,6 +2,7 @@ import { profImage } from '@/utils/prof/images'
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
 import { PUZZLE_STREAK_BADGES } from '@/utils/puzzleStreak'
 import { STREAK_BADGES } from '@/utils/streak'
+import { intlLocale } from '@/i18n'
 
 /**
  * Display helpers of the gamification (docs/GAMIFICATION.md): level bar, trophies, weekly quest.
@@ -45,7 +46,8 @@ import { STREAK_BADGES } from '@/utils/streak'
  * @property {string} weekEnd
  */
 
-const number = new Intl.NumberFormat('fr-FR')
+/** Numbers in the current language (docs/I18N.md). */
+const number = { format: n => new Intl.NumberFormat(intlLocale()).format(n) }
 
 /**
  * The level bar: "Niveau 12 · Tacticien", "2 340 / 3 000 XP", what is left before the next rank.
@@ -206,7 +208,7 @@ export function trophyCards(trophies) {
       key: t.key,
       unlocked: t.unlocked,
       progress: t.unlocked
-        ? `Le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(t.unlockedAt ?? ''))}`
+        ? `Le ${new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'medium' }).format(new Date(t.unlockedAt ?? ''))}`
         : t.key === 'iron_memory' && t.ratio !== null
           ? `${t.current}/${t.goal} tests · ${Math.round(t.ratio * 100)} %`
           : TROPHIES[t.key].streak

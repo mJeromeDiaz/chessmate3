@@ -31,12 +31,23 @@ test('the profile shows the design cards with the account data', async ({
   await expect(page.getByTestId('calendar-section')).toBeVisible()
   await expect(page.getByTestId('profile-email')).toContainText('@example.com')
 
-  // Not built yet: the language is shown disabled.
-  await expect(
-    page
-      .getByTestId('profile-language')
-      .getByRole('button', { name: 'English' })
-  ).toBeDisabled()
+  // The language: saved on the account, the page's lang follows (docs/I18N.md).
+  const isLocalePut = r =>
+    r.url().endsWith('/api/profile/locale') && r.request().method() === 'PUT'
+  const savedEn = page.waitForResponse(isLocalePut)
+  await page
+    .getByTestId('profile-locale')
+    .getByRole('button', { name: 'English' })
+    .click()
+  expect((await (await savedEn).json()).locale).toBe('en')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  const savedFr = page.waitForResponse(isLocalePut)
+  await page
+    .getByTestId('profile-locale')
+    .getByRole('button', { name: 'Français' })
+    .click()
+  expect((await (await savedFr).json()).locale).toBe('fr')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
   await expect(page.getByTestId('profile-export')).toBeEnabled()
   await expect(page.getByTestId('profile-delete')).toBeEnabled()
 

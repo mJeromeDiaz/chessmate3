@@ -76,6 +76,7 @@ import { useAuthStore } from '@/stores/auth'
 import { providerLabel } from '@/utils/format'
 import { apiErrorMessage } from '@/utils/apiError'
 import { connectionRows, identityDetail } from '@/utils/profile'
+import { intlLocale } from '@/i18n'
 
 const props = defineProps({
   /** The /api/profile payload. */
@@ -95,7 +96,7 @@ const locked = computed(() => props.profile.identities.some(i => !i.removable))
 
 /** @param {string} iso */
 function formatDay(iso) {
-  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
+  return new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'long' }).format(
     new Date(iso)
   )
 }

@@ -42,6 +42,7 @@ import {
 import { streakAids } from '@/utils/runResult'
 import { unitWord } from '@/utils/repertoireTest'
 import { FREE_FORMATS, closeReasonText } from '@/utils/training'
+import { intlLocale } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/composables/training/useTimeboxedRun').TrainingRun>} */
@@ -79,7 +80,7 @@ const stats = computed(() => {
       value:
         s.itemsPerMinute === null
           ? '—'
-          : s.itemsPerMinute.toLocaleString('fr-FR'),
+          : s.itemsPerMinute.toLocaleString(intlLocale()),
       testid: 'run-per-minute'
     }
   ]

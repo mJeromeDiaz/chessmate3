@@ -1,14 +1,21 @@
+import { watch } from 'vue'
 import { defineBoot } from '#q-app'
-import { createI18n } from 'vue-i18n'
-import messages from '@/i18n'
+import { i18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
+import { useLocaleStore } from '@/stores/locale'
 
-export default defineBoot(({ app }) => {
-  const i18n = createI18n({
-    locale: 'en-US',
-    globalInjection: true,
-    messages
-  })
-
-  // Set i18n instance on app
+/**
+ * The languages (docs/I18N.md): the language chosen in this browser (or detected) applies before
+ * the app mounts, then follows the account's choice whenever the profile is loaded.
+ */
+export default defineBoot(({ app, store }) => {
   app.use(i18n)
+  const locale = useLocaleStore(store)
+  locale.apply()
+
+  const auth = useAuthStore(store)
+  watch(
+    () => auth.profile,
+    profile => locale.adopt(profile)
+  )
 })

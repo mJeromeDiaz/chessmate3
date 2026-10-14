@@ -9,6 +9,8 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     include: ['tests/unit/**/*.test.js'],
+    // French messages, as the texts the tests expect (docs/I18N.md).
+    setupFiles: ['tests/unit/setup.js'],
     restoreMocks: true
   }
 })

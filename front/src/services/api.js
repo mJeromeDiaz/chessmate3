@@ -150,6 +150,9 @@ export const profileApi = {
   /** @param {'auto'|'light'|'dark'} theme */
   setTheme: theme =>
     http.put('/api/profile/theme', { theme }).then(r => r.data),
+  /** @param {'fr'|'en'} locale the language (docs/I18N.md) */
+  setLocale: locale =>
+    http.put('/api/profile/locale', { locale }).then(r => r.data),
   /**
    * Display name, handle and avatar (each replaced; null or empty clears it).
    *
@@ -1278,9 +1281,7 @@ export const adminApi = {
    * @param {{crownsPerHour: number, perfectPercent: number, nearPercent: number, missedPercent: number, dailyMinutes: number}} rule
    */
   saveShopRewardRule: rule =>
-    http
-      .put('/api/admin/shop/reward-rule', rule, JSON_LD)
-      .then(r => r.data),
+    http.put('/api/admin/shop/reward-rule', rule, JSON_LD).then(r => r.data),
   /**
    * Checks a FEN and its evaluation against Lichess, nothing saved: `{verdict, source, lichess,
    * lichessCategory, category, nearBorder, fen, turn}`.

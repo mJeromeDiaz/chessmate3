@@ -6,6 +6,7 @@ namespace App\Entity;
 
 use App\Enum\Avatar;
 use App\Enum\BoardTheme;
+use App\Enum\Locale;
 use App\Enum\Theme;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -74,6 +75,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /** The colour theme chosen in the SPA; null until the user picks one. */
     #[ORM\Column(length: 8, nullable: true, enumType: Theme::class)]
     private ?Theme $theme = null;
+
+    /** The language chosen in the SPA (docs/I18N.md); null until the user picks one. */
+    #[ORM\Column(length: 5, nullable: true, enumType: Locale::class)]
+    private ?Locale $locale = null;
 
     /** The name shown on the profile; null until chosen (the SPA then shows the email's local part). */
     #[ORM\Column(length: 40, nullable: true)]
@@ -327,6 +332,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTheme(?Theme $theme): static
     {
         $this->theme = $theme;
+
+        return $this;
+    }
+
+    public function getLocale(): ?Locale
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(?Locale $locale): static
+    {
+        $this->locale = $locale;
 
         return $this;
     }

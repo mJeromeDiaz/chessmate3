@@ -82,6 +82,7 @@
 import { toRef } from 'vue'
 import { useCloudEval } from '@/composables/repertoire/useExplorer'
 import { evalSide, formatEval, numberedLine } from '@/utils/chess/lichess'
+import { intlLocale } from '@/i18n'
 
 const props = defineProps({
   /** Normalized FEN of the position, null for none. */
@@ -106,7 +107,7 @@ const unbreakable = text => text.replace(/-/g, '\u2011')
 
 /** @param {number} knodes thousands of positions searched */
 const millions = knodes =>
-  `${(knodes / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} M`
+  `${(knodes / 1000).toLocaleString(intlLocale(), { maximumFractionDigits: 0 })} M`
 
 const { data, loading, failure, retry } = useCloudEval(
   toRef(props, 'fen'),

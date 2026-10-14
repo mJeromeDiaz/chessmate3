@@ -1,4 +1,5 @@
 import { addDays } from '@/utils/dashboard/days'
+import { intlLocale } from '@/i18n'
 
 /**
  * A rating curve drawn in a 100 × 100 SVG box stretched to its card (design "Dashboard"): x is
@@ -77,7 +78,7 @@ export function monthTicks(from, today) {
   const ticks = []
   let date = `${from.slice(0, 7)}-01`
   if (date < from) date = addMonth(date)
-  const format = new Intl.DateTimeFormat('fr-FR', {
+  const format = new Intl.DateTimeFormat(intlLocale(), {
     month: 'long',
     timeZone: 'UTC'
   })

@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * Woodpecker set page helpers (docs/WOODPECKER.md): the cycle lengths, the last day of a
  * deadline and the explanation of the method, worded from the set's own settings.
@@ -49,7 +51,7 @@ export function cycleSchedule(set) {
  * @returns {string}
  */
 export function deadlineDay(deadlineAt, timeZone) {
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(intlLocale(), {
     timeZone,
     weekday: 'long',
     day: 'numeric',

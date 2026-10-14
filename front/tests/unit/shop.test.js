@@ -174,7 +174,12 @@ describe('the carousel', () => {
   it('pairs each slide with its listed offer and picture', () => {
     const state = {
       slides: [
-        { id: 's1', offerId: 'o1', tag: 'OFFRE DU MOMENT', image: 'albert-cool' },
+        {
+          id: 's1',
+          offerId: 'o1',
+          tag: 'OFFRE DU MOMENT',
+          image: 'albert-cool'
+        },
         { id: 's2', offerId: 'gone', tag: 'X', image: 'lizy-joy' }
       ],
       offers: [{ id: 'o1', slug: 'pack_holidays' }]

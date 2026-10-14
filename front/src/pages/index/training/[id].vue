@@ -242,7 +242,8 @@
         }}</span>
         <span class="play-chip lt-md"
           >Sans aide<q-tooltip
-            >Une erreur et le streak s’arrête. Aides et pass : boutique.</q-tooltip
+            >Une erreur et le streak s’arrête. Aides et pass :
+            boutique.</q-tooltip
           ></span
         >
       </template>

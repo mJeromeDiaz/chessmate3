@@ -74,7 +74,8 @@
           class="streak__day"
           :class="{
             'streak__day--today': day.today,
-            'streak__day--on': day.done && (day.today ? phase >= 6 : phase >= 5),
+            'streak__day--on':
+              day.done && (day.today ? phase >= 6 : phase >= 5),
             'streak__day--frozen': day.frozen && phase >= 5
           }"
           :style="{ '--delay': `${day.today ? 0 : i * 90}ms` }"
@@ -543,7 +544,12 @@ onBeforeUnmount(clear)
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ffffff 0, #b9ddfb 45%, #4fb2ff 100%);
+  background: radial-gradient(
+    circle at 35% 30%,
+    #ffffff 0,
+    #b9ddfb 45%,
+    #4fb2ff 100%
+  );
   color: #0f6bba;
   font-size: 20px;
   transform: scale(0);

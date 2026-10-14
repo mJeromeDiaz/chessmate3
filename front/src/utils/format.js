@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * @param {string|null|undefined} iso an ISO 8601 date from the API
  * @returns {string} e.g. "26/09/2026 14:05", or "—"
@@ -5,7 +7,7 @@
 export function formatDate(iso) {
   if (!iso) return '—'
 
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(intlLocale(), {
     dateStyle: 'short',
     timeStyle: 'short'
   }).format(new Date(iso))

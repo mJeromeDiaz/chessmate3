@@ -27,14 +27,19 @@
         :data-testid="`reward-rule-${field.key}`"
       />
     </div>
-    <p v-if="form" class="reward-rule__preview" data-testid="reward-rule-preview">
+    <p
+      v-if="form"
+      class="reward-rule__preview"
+      data-testid="reward-rule-preview"
+    >
       Exemple, 20 minutes payées :
       {{ crowns(preview.perfect) }} parfaite ·
-      {{ crowns(preview.near) }} presque ·
-      {{ crowns(preview.missed) }} en dessous.
+      {{ crowns(preview.near) }} presque · {{ crowns(preview.missed) }} en
+      dessous.
     </p>
     <div v-if="saved" class="cm-muted reward-rule__saved">
-      Modifié {{ saved.updatedAt ? formatDate(saved.updatedAt) : 'jamais' }}{{
+      Modifié {{ saved.updatedAt ? formatDate(saved.updatedAt) : 'jamais'
+      }}{{
         saved.updatedBy ? ` par ${saved.updatedBy}` : ' (valeurs par défaut)'
       }}
     </div>

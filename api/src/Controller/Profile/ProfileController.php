@@ -6,6 +6,7 @@ namespace App\Controller\Profile;
 
 use App\Dto\Profile\AddPasswordRequest;
 use App\Dto\Profile\InfoRequest;
+use App\Dto\Profile\LocaleRequest;
 use App\Dto\Profile\PreferencesRequest;
 use App\Dto\Profile\ThemeRequest;
 use App\Dto\Profile\TimezoneRequest;
@@ -14,6 +15,7 @@ use App\Entity\User;
 use App\Enum\AuthProvider;
 use App\Enum\Avatar;
 use App\Enum\BoardTheme;
+use App\Enum\Locale;
 use App\Enum\Theme;
 use App\Security\Password\PasswordAdder;
 use App\Security\Profile\HandleChecker;
@@ -113,6 +115,19 @@ final class ProfileController extends AbstractController
     public function setTheme(#[MapRequestPayload] ThemeRequest $payload, #[CurrentUser] User $user): JsonResponse
     {
         $user->setTheme(Theme::from($payload->theme));
+        $this->entityManager->flush();
+
+        return $this->json($this->describe($user));
+    }
+
+    /**
+     * Sets the language (docs/I18N.md), so the SPA finds it again on another device (the browser
+     * keeps its own copy to choose before the profile is loaded).
+     */
+    #[Route('/locale', name: 'app_profile_locale', methods: ['PUT'])]
+    public function setLocale(#[MapRequestPayload] LocaleRequest $payload, #[CurrentUser] User $user): JsonResponse
+    {
+        $user->setLocale(Locale::from($payload->locale));
         $this->entityManager->flush();
 
         return $this->json($this->describe($user));
@@ -225,6 +240,7 @@ final class ProfileController extends AbstractController
             'isAdmin' => \in_array('ROLE_ADMIN', $user->getRoles(), true),
             'timezone' => $user->getTimezone(),
             'theme' => $user->getTheme()?->value,
+            'locale' => $user->getLocale()?->value,
             'displayName' => $user->getDisplayName(),
             'handle' => $user->getHandle(),
             'avatar' => $user->getAvatar()?->value,

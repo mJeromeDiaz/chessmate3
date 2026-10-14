@@ -119,15 +119,17 @@
         </div>
         <div v-if="detail.freezes.length" class="cm-muted q-mt-xs">
           Gels :
-          {{
-            detail.freezes.map(f => `${f.daysLeft}/${f.days} j`).join(' · ')
-          }}
+          {{ detail.freezes.map(f => `${f.daysLeft}/${f.days} j`).join(' · ') }}
         </div>
 
         <div class="shop-players__label">Mouvements</div>
         <q-markup-table flat dense class="admin__table">
           <tbody>
-            <tr v-for="(l, i) in detail.ledger" :key="i" data-testid="shop-ledger-row">
+            <tr
+              v-for="(l, i) in detail.ledger"
+              :key="i"
+              data-testid="shop-ledger-row"
+            >
               <td class="no-wrap">{{ when(l.createdAt) }}</td>
               <td>
                 <span
@@ -176,6 +178,7 @@ import { adminApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { LEDGER_KINDS } from '@/utils/admin/shop'
 import { ITEMS, crowns } from '@/utils/shop'
+import { intlLocale } from '@/i18n'
 
 const search = ref('')
 /** @type {import('vue').Ref<any[]>} */
@@ -190,10 +193,13 @@ const reason = ref('')
 const saving = ref(false)
 const adjustError = ref('')
 
-const dateTime = new Intl.DateTimeFormat('fr-FR', {
-  dateStyle: 'short',
-  timeStyle: 'short'
-})
+const dateTime = {
+  format: d =>
+    new Intl.DateTimeFormat(intlLocale(), {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }).format(d)
+}
 
 /** @param {string} iso */
 function when(iso) {

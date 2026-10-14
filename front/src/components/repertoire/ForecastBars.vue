@@ -21,6 +21,7 @@
  * Cards falling due over the next local days (today includes the overdue ones), as bars.
  */
 import { computed } from 'vue'
+import { intlLocale } from '@/i18n'
 
 const props = defineProps({
   /** @type {import('vue').PropType<{date: string, due: number}[]>} */
@@ -32,7 +33,7 @@ const max = computed(() => Math.max(1, ...props.days.map(d => d.due)))
 /** @param {string} date YYYY-MM-DD (a local day of the user) */
 function dayName(date) {
   const [y, m, d] = date.split('-').map(Number)
-  return new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(
+  return new Intl.DateTimeFormat(intlLocale(), { weekday: 'short' }).format(
     new Date(y, m - 1, d)
   )
 }

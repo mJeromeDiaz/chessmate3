@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * Display helpers of the Lichess panels (opening explorer, cloud evaluation).
  */
@@ -69,7 +71,7 @@ export function formatGames(count) {
       .replace('.', ',')}${unit}`
   if (count >= 1_000_000) return short(count / 1_000_000, 'M')
   if (count >= 10_000) return short(count / 1_000, 'k')
-  return count.toLocaleString('fr-FR')
+  return count.toLocaleString(intlLocale())
 }
 
 /**

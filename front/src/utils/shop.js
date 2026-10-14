@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * The store (design "Boutique", docs/SHOP.md): what each coded item looks like and how it works,
  * the sections and their order, prices and savings. Pure. The offers, the balance and the
@@ -207,7 +209,8 @@ export const ITEMS = {
   }
 }
 
-const number = new Intl.NumberFormat('fr-FR')
+/** Numbers in the current language (docs/I18N.md). */
+const number = { format: n => new Intl.NumberFormat(intlLocale()).format(n) }
 
 /**
  * "1 250"
@@ -305,8 +308,7 @@ export function aidOffer(offers, item) {
   return (
     offers
       .filter(
-        o =>
-          !o.comingSoon && o.items.length === 1 && o.items[0].item === item
+        o => !o.comingSoon && o.items.length === 1 && o.items[0].item === item
       )
       .sort(
         (a, b) =>

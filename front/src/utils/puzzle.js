@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n'
+
 /**
  * @typedef {object} ThemeGroup
  * @property {string} category
@@ -33,7 +35,9 @@ export function groupThemes(themes) {
  * @param {number} count
  */
 export function formatCount(count) {
-  return new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(count)
+  return new Intl.NumberFormat(intlLocale(), { notation: 'compact' }).format(
+    count
+  )
 }
 
 /** The relative difficulty of the next puzzles. */

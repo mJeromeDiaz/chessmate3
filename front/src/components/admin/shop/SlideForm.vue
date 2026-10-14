@@ -1,8 +1,5 @@
 <template>
-  <q-dialog
-    :model-value="open"
-    @update:model-value="!$event && emit('close')"
-  >
+  <q-dialog :model-value="open" @update:model-value="!$event && emit('close')">
     <q-card class="slide-form" data-testid="slide-form">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">{{

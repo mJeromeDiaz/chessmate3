@@ -48,7 +48,11 @@ describe('store administration', () => {
 
   it('turns an offer into a form and back', () => {
     const form = offerForm(offer)
-    expect(form).toMatchObject({ slug: 'pack_holidays', subtitle: '', startsAt: '' })
+    expect(form).toMatchObject({
+      slug: 'pack_holidays',
+      subtitle: '',
+      startsAt: ''
+    })
     form.contents[1].quantity = /** @type {any} */ ('4')
     expect(offerPayload(form)).toEqual({
       slug: 'pack_holidays',
@@ -83,13 +87,19 @@ describe('store administration', () => {
   it('says where an offer stands', () => {
     const now = new Date('2026-10-13T12:00:00Z')
     expect(offerStatus(offer, now)).toEqual({ label: 'En vente', tone: 'used' })
-    expect(offerStatus({ ...offer, suspended: true }, now).label).toBe('Suspendue')
+    expect(offerStatus({ ...offer, suspended: true }, now).label).toBe(
+      'Suspendue'
+    )
     expect(
-      offerStatus({ ...offer, listed: false, startsAt: '2026-11-01T00:00:00Z' }, now)
-        .label
+      offerStatus(
+        { ...offer, listed: false, startsAt: '2026-11-01T00:00:00Z' },
+        now
+      ).label
     ).toBe('Programmée')
     expect(offerStatus({ ...offer, listed: false }, now).label).toBe('Terminée')
-    expect(offerStatus({ ...offer, comingSoon: true }, now).label).toBe('Bientôt')
+    expect(offerStatus({ ...offer, comingSoon: true }, now).label).toBe(
+      'Bientôt'
+    )
   })
 
   it('finds a field’s message among the violations', () => {
@@ -120,7 +130,11 @@ describe('the reward rule', () => {
       nearPercent: 100,
       missedPercent: 50
     }
-    expect(rewardPreview(rule, 20)).toEqual({ perfect: 60, near: 40, missed: 20 })
+    expect(rewardPreview(rule, 20)).toEqual({
+      perfect: 60,
+      near: 40,
+      missed: 20
+    })
     expect(rewardPreview({ ...rule, crownsPerHour: 0 }, 20).perfect).toBe(0)
     expect(REWARD_RULE_FIELDS.map(f => f.key)).toEqual([
       'crownsPerHour',

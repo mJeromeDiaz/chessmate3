@@ -44,9 +44,11 @@ describe('the chest (design "Coffre")', () => {
     const small = chestStages(reward({ crowns: 9 }), EARNING)
     const big = chestStages(reward({ crowns: 150 }), EARNING)
     expect(small).toHaveLength(CHEST_HITS + 1)
-    expect([small[0].bg, chestStages(reward({}), EARNING)[0].bg, big[0].bg]).toEqual(
-      ['#1E2A4A', '#2B2250', '#4A1550']
-    )
+    expect([
+      small[0].bg,
+      chestStages(reward({}), EARNING)[0].bg,
+      big[0].bg
+    ]).toEqual(['#1E2A4A', '#2B2250', '#4A1550'])
     expect(big[0].title).toEqual(['Un gros trésor', 'pour toi !'])
     expect(small[1]).toEqual(big[1])
     expect(
@@ -83,9 +85,9 @@ describe('the chest (design "Coffre")', () => {
 describe('the reward in words', () => {
   it('says the paid time, the tier and the cap', () => {
     expect(rewardNote(reward({}))).toBe('20 min payées · Session parfaite')
-    expect(rewardNote(reward({ paidMinutes: 1, tier: 'missed', capped: true }))).toBe(
-      '1 min payée · Session terminée · plafond du jour atteint'
-    )
+    expect(
+      rewardNote(reward({ paidMinutes: 1, tier: 'missed', capped: true }))
+    ).toBe('1 min payée · Session terminée · plafond du jour atteint')
     expect(rewardLine(reward({ crowns: 1250 }))).toBe(
       '+1 250 couronnes · 20 min payées · Session parfaite'
     )

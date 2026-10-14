@@ -1,5 +1,6 @@
 import { MODULES_BY_ID } from '@/utils/session/catalog'
 import { moduleLevel } from '@/utils/gamification'
+import { intlLocale } from '@/i18n'
 
 /**
  * The dashboard's "Progression par module" rows (design "Dashboard"): the catalogue's look, the
@@ -33,7 +34,8 @@ export const DASHBOARD_MODULES = [
   'analyse'
 ]
 
-const number = new Intl.NumberFormat('fr-FR')
+/** Numbers in the current language (docs/I18N.md). */
+const number = { format: n => new Intl.NumberFormat(intlLocale()).format(n) }
 
 /**
  * @param {number} ratio

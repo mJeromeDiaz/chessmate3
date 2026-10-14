@@ -97,7 +97,7 @@ export default defineConfig(ctx => {
             ssr: ctx.mode.ssr || ctx.mode.ssg,
 
             // you need to set i18n resource including paths !
-            include: [ctx.appPaths.resolve.app('src/i18n')]
+            include: [ctx.appPaths.resolve.app('src/i18n/**/*.json')]
           }
         ]
       ]

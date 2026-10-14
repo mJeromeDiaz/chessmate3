@@ -1,4 +1,5 @@
 import { dayLabel } from '@/utils/dashboard/stats'
+import { intlLocale } from '@/i18n'
 
 /**
  * The admin dashboard's charts and figures (docs/EARLY_ACCESS.md), computed from GET /api/admin/stats.
@@ -243,7 +244,7 @@ export function funnelRows(inv) {
  */
 export function formatCount(n) {
   if (n === null || n === undefined) return '—'
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat(intlLocale(), {
     notation: Math.abs(n) >= 10_000 ? 'compact' : 'standard',
     maximumFractionDigits: 1
   }).format(n)

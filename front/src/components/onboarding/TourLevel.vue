@@ -67,6 +67,7 @@
  */
 import { computed } from 'vue'
 import { LEVELS, levelOf, ratingNote } from '@/utils/onboarding'
+import { intlLocale } from '@/i18n'
 
 const props = defineProps({
   /** The level chosen. */
@@ -92,7 +93,7 @@ const perfLabel = computed(
   () => PERFS[lichess.value.perf ?? ''] ?? lichess.value.perf ?? ''
 )
 const eloText = computed(() =>
-  new Intl.NumberFormat('fr-FR').format(lichess.value.rating ?? 0)
+  new Intl.NumberFormat(intlLocale()).format(lichess.value.rating ?? 0)
 )
 const suggested = computed(() => levelOf(props.answers?.suggestedLevel))
 const note = computed(() => ratingNote(props.modelValue, props.answers))
