@@ -42,6 +42,21 @@
         }}</span>
       </router-link>
 
+      <router-link
+        to="/parcours"
+        class="plans-page__parcours cm-card"
+        data-testid="plans-parcours"
+      >
+        <img :src="PROFS.lizy.bust" alt="" class="plans-page__parcours-prof" />
+        <span class="plans-page__parcours-body">
+          <strong>{{ $t('parcours.card.title') }}</strong>
+          <span>{{ $t('parcours.card.desc') }}</span>
+        </span>
+        <span class="plans-page__current-go"
+          >{{ $t('parcours.card.go') }} →</span
+        >
+      </router-link>
+
       <div
         v-if="launcher.inProgress.value"
         class="plans-page__notice"
@@ -218,6 +233,7 @@ import {
   repetitionText
 } from '@/utils/session/plans'
 import { sessionProgressText, stepModule } from '@/utils/session/steps'
+import { PROFS } from '@/utils/prof/profs'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -343,6 +359,32 @@ onMounted(async () => {
 
 .plans-page__current-go {
   font-weight: 800;
+}
+
+.plans-page__parcours {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.plans-page__parcours-prof {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #ff8a3d;
+  object-fit: cover;
+}
+
+.plans-page__parcours-body {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
 }
 
 .plans-page__notice {

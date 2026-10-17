@@ -84,9 +84,19 @@ class Session
     private ?Plan $plan = null;
 
     /**
-     * @param list<array{module: Module, minutes: int, notes: string, settings: array<string, mixed>}> $steps
+     * A parcours (docs/PARCOURS.md): `{theme, effort, repertoireId}`, its steps being its tiers, ended
+     * by their counts; null for any other session.
+     *
+     * @var array{theme: string, effort: string, repertoireId: string|null}|null
      */
-    public function __construct(User $user, string $title, string $description, array $steps, \DateTimeImmutable $startedAt, \DateTimeImmutable $expiresAt, ?Plan $plan = null)
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $parcours = null;
+
+    /**
+     * @param list<array{module: Module, minutes: int, notes: string, settings: array<string, mixed>}> $steps
+     * @param array{theme: string, effort: string, repertoireId: string|null}|null                  $parcours
+     */
+    public function __construct(User $user, string $title, string $description, array $steps, \DateTimeImmutable $startedAt, \DateTimeImmutable $expiresAt, ?Plan $plan = null, ?array $parcours = null)
     {
         if ([] === $steps || \count($steps) > self::MAX_STEPS) {
             throw new \InvalidArgumentException(sprintf('A session has 1 to %d steps.', self::MAX_STEPS));
@@ -107,11 +117,25 @@ class Session
         $this->startedAt = $startedAt;
         $this->expiresAt = $expiresAt;
         $this->plan = $plan;
+        $this->parcours = $parcours;
     }
 
     public function getPlan(): ?Plan
     {
         return $this->plan;
+    }
+
+    /**
+     * @return array{theme: string, effort: string, repertoireId: string|null}|null
+     */
+    public function getParcours(): ?array
+    {
+        return $this->parcours;
+    }
+
+    public function isParcours(): bool
+    {
+        return null !== $this->parcours;
     }
 
     public function getId(): Uuid

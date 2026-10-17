@@ -17,6 +17,8 @@ final readonly class Scope
 {
     public const MAX_REPERTOIRES = 50;
     public const MAX_SEGMENTS = 500;
+    /** Units a run may be limited to (a parcours tier, docs/PARCOURS.md). */
+    public const MAX_LIMIT = 50;
 
     /**
      * @param list<string>             $repertoireIds RFC 4122
@@ -27,6 +29,8 @@ final readonly class Scope
         public TestUnit $unit,
         public ?string $rootPositionId = null,
         public ?array $segmentIds = null,
+        /** The run closes after that many units played (a parcours tier), not at its time; no retry then. */
+        public ?int $limit = null,
     ) {
     }
 
@@ -37,7 +41,7 @@ final readonly class Scope
      */
     public static function fromConfig(array $config): self
     {
-        $unknown = array_diff(array_keys($config), ['repertoireIds', 'unit', 'rootPositionId', 'segmentIds']);
+        $unknown = array_diff(array_keys($config), ['repertoireIds', 'unit', 'rootPositionId', 'segmentIds', 'limit']);
         if ([] !== $unknown) {
             throw new InvalidRunConfigException(sprintf('Unknown option "%s".', implode('", "', $unknown)));
         }
@@ -58,17 +62,22 @@ final readonly class Scope
             throw new InvalidRunConfigException('rootPositionId needs a single repertoire.');
         }
         $segmentIds = self::uuids($config['segmentIds'] ?? null, 'segmentIds', self::MAX_SEGMENTS);
+        $limit = $config['limit'] ?? null;
+        if (null !== $limit && (!\is_int($limit) || $limit < 1 || $limit > self::MAX_LIMIT)) {
+            throw new InvalidRunConfigException(sprintf('limit is 1 to %d.', self::MAX_LIMIT));
+        }
 
         return new self(
             array_values(array_unique($repertoireIds)),
             $unit,
             null === $root ? null : Uuid::fromString($root)->toRfc4122(),
             null === $segmentIds ? null : array_fill_keys($segmentIds, true),
+            $limit,
         );
     }
 
     /**
-     * @return array{repertoireIds: list<string>, unit: string, rootPositionId: string|null, segmentIds: list<string>|null}
+     * @return array{repertoireIds: list<string>, unit: string, rootPositionId: string|null, segmentIds: list<string>|null, limit: int|null}
      */
     public function toArray(): array
     {
@@ -77,6 +86,7 @@ final readonly class Scope
             'unit' => $this->unit->value,
             'rootPositionId' => $this->rootPositionId,
             'segmentIds' => null === $this->segmentIds ? null : array_keys($this->segmentIds),
+            'limit' => $this->limit,
         ];
     }
 

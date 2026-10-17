@@ -15,11 +15,14 @@ use App\PuzzleStreak\Event\RecordBeaten;
 use App\Training\Event\SessionClosed;
 use App\Woodpecker\Event\CycleCompleted;
 use App\Woodpecker\Event\SetCompleted;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The bonuses (docs/GAMIFICATION.md): a session completed to its end, a Woodpecker cycle
+ * The bonuses (docs/GAMIFICATION.md): a session completed to its end (a parcours with none of its
+ * tiers skipped, docs/PARCOURS.md), a Woodpecker cycle
  * completed in time, a Woodpecker set completed, an orientation of the coordinates validated for
  * the first time, a puzzle streak record beaten, a blindfold puzzle pardoned after its miss.
  * Idempotent on their source (the cycle by set, number and run, the validation by user and
@@ -32,8 +35,10 @@ final class AwardBonusXp
     public const RECORD_SOURCE = 'puzzle_streak';
     public const PARDON_SOURCE = 'blindfold_pardon';
 
-    public function __construct(private readonly XpLedger $ledger)
-    {
+    public function __construct(
+        private readonly XpLedger $ledger,
+        private readonly Connection $connection,
+    ) {
     }
 
     #[AsMessageHandler]
@@ -42,7 +47,18 @@ final class AwardBonusXp
         if (SessionStatus::Completed->value !== $event->status) {
             return;
         }
-        $this->ledger->awardBonus($event->userId, XpKind::Session, null, XpRules::SESSION_COMPLETED, 'training_session', $event->sessionId, $event->occurredAt);
+        // A parcours' bonus depends on its effort (docs/PARCOURS.md).
+        $effort = $this->connection->fetchOne(
+            "SELECT JSON_UNQUOTE(JSON_EXTRACT(parcours, '$.effort')) FROM training_session WHERE id = ?",
+            [Uuid::fromString($event->sessionId)->toBinary()],
+            [ParameterType::BINARY],
+        );
+        // A parcours earns it played to its end only: none of its tiers skipped.
+        if (\is_string($effort) && $event->skippedCount > 0) {
+            return;
+        }
+        $xp = XpRules::sessionBonus(\is_string($effort) ? $effort : null);
+        $this->ledger->awardBonus($event->userId, XpKind::Session, null, $xp, 'training_session', $event->sessionId, $event->occurredAt);
     }
 
     #[AsMessageHandler]

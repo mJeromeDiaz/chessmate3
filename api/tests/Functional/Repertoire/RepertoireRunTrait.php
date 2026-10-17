@@ -26,9 +26,9 @@ use Symfony\Component\Uid\Uuid;
  * @phpstan-type Played array{uci: string, san: string}
  * @phpstan-type Label array{opening: array{eco: string, name: string}|null, move: string|null}
  * @phpstan-type Start array{unit: string, orientation: string, context: list<Played>, deviation: bool, label: Label, rank: int, round: int, retry: bool, newRound: bool}
- * @phpstan-type Item array{id: string, type: string, data: array{unitId: string, repertoireId: string, segmentId: string, index: int, total: int, play: list<Played>, fen: string, ply: int, unit: string, orientation: string, label: Label, start: Start|null}}
+ * @phpstan-type Item array{id: string, type: string, data: array{unitId: string, repertoireId: string, segmentId: string, index: int, total: int, play: list<Played>, fen: string, ply: int, unit: string, orientation: string, label: Label, start: Start|null, played?: int, limit?: int}}
  * @phpstan-type Result array{itemId: string, success: bool, data: array{status: string, correct: bool|null, expected: Played|null, comment: string|null, rating: string|null, unitDone: bool, unitSuccess: bool|null, retry: bool}}
- * @phpstan-type Summary array{durationMs: int, itemCount: int, successCount: int, failureCount: int, metrics: array<string, mixed>}
+ * @phpstan-type Summary array{durationMs: int, itemCount: int, successCount: int, failureCount: int, metrics: array<string, mixed>, context: array<string, mixed>}
  * @phpstan-type RunJson array{id: string, status: string, closeReason: string|null, summary: Summary|null}
  */
 trait RepertoireRunTrait

@@ -65,7 +65,19 @@
             >{{ stepModule(step)?.glyph }}</span
           >
           <div class="session-page__step-body">
-            <div class="session-page__step-title">
+            <div
+              v-if="session.parcours"
+              class="session-page__step-title"
+              data-testid="session-tier"
+            >
+              {{
+                $t('parcours.session.step', {
+                  n: step.index + 1,
+                  name: tierName(stepPlan(step))
+                })
+              }}
+            </div>
+            <div v-else class="session-page__step-title">
               {{
                 $t('session.page.stepTitle', {
                   n: String(step.index + 1).padStart(2, '0'),
@@ -124,7 +136,10 @@
           @click="step.start(session.id)"
         />
         <q-btn
-          v-if="current.status === 'pending'"
+          v-if="
+            current.status === 'pending' &&
+            (!session.parcours || current.blocked)
+          "
           outline
           color="primary"
           no-caps
@@ -251,6 +266,7 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
 import { formatDate, formatDuration } from '@/utils/format'
 import { chestToOpen, rewardLine } from '@/utils/shopReward'
+import { stepPlan, tierName } from '@/utils/parcours'
 import {
   blockedText,
   sessionProgressText,

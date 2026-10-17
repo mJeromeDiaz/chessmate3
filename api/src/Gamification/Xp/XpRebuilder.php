@@ -112,11 +112,17 @@ final readonly class XpRebuilder
         $zone = $user->getDateTimeZone();
         $rows = [];
         foreach ($this->connection->fetchAllAssociative(
-            'SELECT BIN_TO_UUID(id) AS id, closed_at FROM training_session WHERE user_id = ? AND status = ? AND closed_at IS NOT NULL',
+            "SELECT BIN_TO_UUID(id) AS id, closed_at, JSON_UNQUOTE(JSON_EXTRACT(parcours, '$.effort')) AS effort,
+                    JSON_CONTAINS(JSON_EXTRACT(steps, '$[*].status'), '\"skipped\"') AS skipped
+               FROM training_session WHERE user_id = ? AND status = ? AND closed_at IS NOT NULL",
             [$id, SessionStatus::Completed->value],
             [ParameterType::BINARY],
         ) as $row) {
-            $rows[] = [XpKind::Session, null, XpRules::SESSION_COMPLETED, 'training_session', self::string($row['id']), null, null, self::string($row['closed_at'])];
+            // As AwardBonusXp: a parcours with a tier skipped earns no bonus.
+            if (\is_string($row['effort']) && \in_array($row['skipped'], [1, '1'], true)) {
+                continue;
+            }
+            $rows[] = [XpKind::Session, null, XpRules::sessionBonus(\is_string($row['effort']) ? $row['effort'] : null), 'training_session', self::string($row['id']), null, null, self::string($row['closed_at'])];
         }
         foreach ($this->connection->fetchAllAssociative(
             'SELECT BIN_TO_UUID(s.id) AS set_id, c.number, c.run, c.completed_at

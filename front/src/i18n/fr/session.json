@@ -39,6 +39,10 @@
         "title": "Évaluation de position",
         "desc": "Juger des positions, en 1 à 10 minutes."
       },
+      "parcours": {
+        "title": "Parcours",
+        "desc": "Cinq paliers d'un thème, du plus simple au plus dur, sans chrono."
+      },
       "analyse": {
         "title": "Analyse de parties",
         "desc": "Revenir sur tes parties et en tirer des leçons."

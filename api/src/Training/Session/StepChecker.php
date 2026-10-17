@@ -29,12 +29,16 @@ final class StepChecker
 
     /**
      * @param list<array{module: Module, minutes: int, notes: string, settings: array<string, mixed>}> $steps
+     * @param bool                                                                                     $parcours the steps of a parcours (docs/PARCOURS.md): its tiers of puzzles are played there only
      *
      * @throws InvalidSessionException a step is invalid (its number in the message)
      */
-    public function check(User $user, array $steps, bool $playableNow): void
+    public function check(User $user, array $steps, bool $playableNow, bool $parcours = false): void
     {
         foreach ($steps as $i => $step) {
+            if (Module::ParcoursPuzzles === $step['module'] && !$parcours) {
+                throw new InvalidSessionException(sprintf('Step %d: a parcours tier is played in a parcours only.', $i + 1));
+            }
             if ($step['minutes'] < 1 || $step['minutes'] * 60 > TimeboxRunner::MAX_BUDGET_SECONDS) {
                 throw new InvalidSessionException(sprintf('Step %d: 1 to %d minutes.', $i + 1, intdiv(TimeboxRunner::MAX_BUDGET_SECONDS, 60)));
             }

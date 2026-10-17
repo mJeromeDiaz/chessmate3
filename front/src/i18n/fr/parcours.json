@@ -1,0 +1,98 @@
+{
+  "page": {
+    "kicker": "Avec Lizy",
+    "title": "Parcours",
+    "lead": "Cinq paliers d'un thème, enchaînés sans chrono. Dans chaque palier : un tiers sous ton niveau, un tiers à ton niveau, un tiers au-dessus. Une erreur ? La solution s'affiche et tu continues.",
+    "theme": "Thème",
+    "effort": "Effort",
+    "repertoire": "Répertoire",
+    "noRepertoire": "Il te faut un répertoire pour un parcours d'ouverture.",
+    "createRepertoire": "Créer un répertoire",
+    "noOpening": "Pas assez de puzzles de cette ouverture",
+    "effortLine": "{perTier} par palier · {total} en tout · +{bonus} XP à l'arrivée",
+    "rating": "Ton niveau en puzzles : {rating}. Les puzzles vont de {low} à {high} environ.",
+    "launch": "Lancer le parcours",
+    "inProgress": "Un parcours est en cours aujourd'hui : {title}.",
+    "resume": "Reprendre",
+    "untilMidnight": "Tu peux le reprendre jusqu'à minuit.",
+    "unrated": "Les puzzles d'un parcours ne changent pas ton classement."
+  },
+  "themes": {
+    "mates": {
+      "name": "Mats",
+      "desc": "Du mat en 1 au mat en 5."
+    },
+    "opening": {
+      "name": "Ouverture",
+      "desc": "Les lignes de ton répertoire, puis les puzzles de son ouverture, en alternance."
+    },
+    "endgames": {
+      "name": "Finales",
+      "desc": "Pions, tours, fous, cavaliers, dames."
+    },
+    "tactics": {
+      "name": "Tactique",
+      "desc": "Fourchette, clouage, enfilade, attaque à la découverte, déviation."
+    }
+  },
+  "efforts": {
+    "light": "Léger",
+    "steady": "Soutenu",
+    "intense": "Intense"
+  },
+  "tier": {
+    "lines": "Lignes du répertoire",
+    "openingPuzzles": "Puzzles de l'ouverture",
+    "themes": {
+      "mateIn1": "Mat en 1",
+      "mateIn2": "Mat en 2",
+      "mateIn3": "Mat en 3",
+      "mateIn4": "Mat en 4",
+      "mateIn5": "Mat en 5",
+      "pawnEndgame": "Finales de pions",
+      "rookEndgame": "Finales de tours",
+      "bishopEndgame": "Finales de fous",
+      "knightEndgame": "Finales de cavaliers",
+      "queenEndgame": "Finales de dames",
+      "fork": "Fourchette",
+      "pin": "Clouage",
+      "skewer": "Enfilade",
+      "discoveredAttack": "Attaque à la découverte",
+      "deflection": "Déviation"
+    }
+  },
+  "run": {
+    "tier": "Palier {n}/{total}",
+    "progress": "{n}/{count}",
+    "zones": {
+      "below": "Sous ton niveau",
+      "at": "À ton niveau",
+      "above": "Au-dessus de ton niveau"
+    },
+    "stop": "Terminer arrête le parcours : les paliers non joués sont perdus, pas l'XP déjà gagnée."
+  },
+  "banner": {
+    "done": "Palier {n} terminé · {solved}/{count}",
+    "next": "Palier {n} : {name}",
+    "starting": "Ça repart dans un instant…",
+    "continue": "Continuer",
+    "lines": {
+      "perfect": "Sans faute, on monte d'un cran !",
+      "good": "Bien joué, on continue.",
+      "hard": "Pas facile, celui-là. Le suivant t'attend."
+    }
+  },
+  "session": {
+    "step": "Palier {n} · {name}"
+  },
+  "card": {
+    "title": "Parcours",
+    "desc": "Mats, ouverture, finales ou tactique : 15, 30 ou 50 exercices en 5 paliers, sans chrono.",
+    "go": "Choisir un parcours"
+  },
+  "errors": {
+    "no_opening": "Pas assez de puzzles de l'ouverture de ce répertoire pour un parcours.",
+    "empty_repertoire": "Ce répertoire n'a pas encore de lignes à réviser.",
+    "repertoire": "Ce répertoire n'existe plus."
+  }
+}

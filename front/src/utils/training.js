@@ -25,7 +25,8 @@ const UNAVAILABLE = [
   'puzzles',
   'blindfold',
   'evaluation',
-  'puzzle_streak'
+  'puzzle_streak',
+  'parcours_puzzles'
 ]
 
 /** Modules with their own "back" label (training.back). */
@@ -36,7 +37,8 @@ const BACK_MODULES = [
   'coordinates',
   'blindfold',
   'evaluation',
-  'puzzle_streak'
+  'puzzle_streak',
+  'parcours_puzzles'
 ]
 
 /**
@@ -59,6 +61,12 @@ export function closeReasonText(run) {
       if (run.module === 'coordinates')
         return t('training.close.coordinatesDone')
       if (run.module === 'evaluation') return t('training.close.evaluationDone')
+      // A parcours tier (docs/PARCOURS.md): its count played, of puzzles or of lines.
+      if (
+        run.module === 'parcours_puzzles' ||
+        run.summary?.context?.reason === 'limit_reached'
+      )
+        return t('training.close.tierDone')
       return t('training.close.setDone')
     case 'subject_resting':
       return t('training.close.resting', {
@@ -88,6 +96,7 @@ export function subjectPath(run) {
   if (run.subjectType === 'blindfold_player') return '/blindfold'
   if (run.subjectType === 'evaluation_player') return '/evaluation'
   if (run.subjectType === 'puzzle_streak_player') return '/streak'
+  if (run.subjectType === 'parcours_player') return '/parcours'
   return '/'
 }
 

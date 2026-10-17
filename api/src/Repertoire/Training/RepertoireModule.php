@@ -34,12 +34,13 @@ use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
+use App\Training\Module\CountedModuleInterface;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
 use App\Training\Module\PreparedStep;
-use App\Training\Module\ReviewItem;
 use App\Training\Module\ReviewableModuleInterface;
+use App\Training\Module\ReviewItem;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use Doctrine\DBAL\Connection;
@@ -58,7 +59,7 @@ use Symfony\Component\Uid\Uuid;
  * mistake it is failed. A unit whose prepared move changed meanwhile (the editor, in another tab)
  * is dropped without penalty.
  */
-final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModuleInterface
+final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModuleInterface, CountedModuleInterface
 {
     public const SUBJECT_TYPE = 'repertoire_owner';
     public const ITEM_TYPE = 'repertoire_move';
@@ -91,19 +92,33 @@ final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModu
     }
 
     /**
-     * A session step tests whole repertoires (settings `repertoireIds`), by segments.
+     * A session step tests whole repertoires (settings `repertoireIds`), by segments; a parcours
+     * tier (docs/PARCOURS.md) adds `unit` (line) and `limit`, the units after which it closes.
      */
     public function prepare(User $user, array $settings, string $notes): PreparedStep
     {
-        if ([] !== array_diff(array_keys($settings), ['repertoireIds'])) {
-            throw new InvalidRunConfigException('Unknown setting: only repertoireIds is accepted.');
+        if ([] !== array_diff(array_keys($settings), ['repertoireIds', 'unit', 'limit'])) {
+            throw new InvalidRunConfigException('Unknown setting: only repertoireIds, unit and limit are accepted.');
         }
         $scope = Scope::fromConfig($settings);
         foreach ($scope->repertoireIds as $id) {
             $this->repertoires->findOwned(Uuid::fromString($id), $user) ?? throw new SubjectNotFoundException();
         }
+        $config = ['repertoireIds' => $scope->repertoireIds];
+        if (isset($settings['unit'])) {
+            $config['unit'] = $scope->unit->value;
+        }
+        if (null !== $scope->limit) {
+            $config['limit'] = $scope->limit;
+        }
 
-        return new PreparedStep($user->getId(), ['repertoireIds' => $scope->repertoireIds]);
+        return new PreparedStep($user->getId(), $config);
+    }
+
+    /** Limited to a number of units (a parcours tier): ended by its count, its clock only an expiry. */
+    public function isCounted(array $config): bool
+    {
+        return isset($config['limit']);
     }
 
     public function start(Run $run, \DateTimeImmutable $now): void
@@ -146,7 +161,7 @@ final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModu
         $question->servedAt ??= Read::instant($now);
         $state->setState($progress->toArray());
 
-        return $this->item($unit);
+        return $this->item($unit, $progress);
     }
 
     public function submit(Run $run, ItemSubmission $submission, \DateTimeImmutable $now): ItemResult
@@ -192,6 +207,9 @@ final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModu
             [$success, $retry] = $this->finish($run, $progress, $unit, $now);
         }
         $state->setState($progress->toArray());
+        // A limited run (a parcours tier) closes with its last unit.
+        $limit = $progress->scope->limit;
+        $done = null !== $limit && $unit->isDone() && ($progress->counters['succeeded'] ?? 0) + ($progress->counters['failed'] ?? 0) >= $limit;
 
         return new ItemResult($submission->itemId, $answer->correct, [
             'status' => 'answered',
@@ -202,7 +220,7 @@ final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModu
             'unitDone' => $unit->isDone(),
             'unitSuccess' => $success,
             'retry' => $retry,
-        ]);
+        ], $done ? CloseReason::SubjectFinished : null, $done ? ['reason' => 'limit_reached'] : []);
     }
 
     public function close(Run $run, CloseReason $reason, \DateTimeImmutable $now): void
@@ -365,7 +383,8 @@ final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModu
         if (!$success) {
             $progress->failed[$unit->key] = 1;
         }
-        if ($success || $closing) {
+        // A limited run (a parcours tier) shows the answer and goes on: no retry of the unit.
+        if ($success || $closing || null !== $progress->scope->limit) {
             return [$success, false];
         }
         array_splice($progress->queue, UnitQueue::retryIndex(\count($progress->queue), TestUnit::Line === $unit->unit), 0, [
@@ -451,7 +470,7 @@ final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModu
         return $items;
     }
 
-    private function item(Unit $unit): Item
+    private function item(Unit $unit, Progress $progress): Item
     {
         $question = $unit->current() ?? throw new \LogicException('A unit has questions.');
         $data = [
@@ -469,6 +488,11 @@ final class RepertoireModule implements TimeboxedModuleInterface, ReviewableModu
             'label' => $unit->label,
             'start' => null,
         ];
+        // A limited run (a parcours tier): the units played before this one, out of its limit.
+        if (null !== $progress->scope->limit) {
+            $data['played'] = ($progress->counters['succeeded'] ?? 0) + ($progress->counters['failed'] ?? 0);
+            $data['limit'] = $progress->scope->limit;
+        }
         if (0 === $unit->cursor) {
             $data['start'] = [
                 'unit' => $unit->unit->value,

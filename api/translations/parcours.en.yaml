@@ -1,0 +1,13 @@
+# Parcours (docs/PARCOURS.md): the same keys as parcours.fr.yaml.
+title: "Parcours · %theme%"
+title_opening: "Parcours · %repertoire%"
+description: "%effort% · %count% exercises in 5 tiers"
+theme:
+    mates: "Mates"
+    opening: "Opening"
+    endgames: "Endgames"
+    tactics: "Tactics"
+effort:
+    light: "Light"
+    steady: "Steady"
+    intense: "Intense"

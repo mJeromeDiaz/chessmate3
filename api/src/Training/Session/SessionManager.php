@@ -61,13 +61,14 @@ final class SessionManager
      * Launches a session: every step is checked by its module first.
      *
      * @param list<array{module: Module, minutes: int, notes: string, settings: array<string, mixed>}> $steps
+     * @param array{theme: string, effort: string, repertoireId: string|null}|null                  $parcours a parcours (docs/PARCOURS.md): its tiers end by their counts
      *
      * @throws InvalidSessionException    a step is invalid (its number in the message)
      * @throws SessionInProgressException
      */
-    public function create(User $user, string $title, string $description, array $steps, ?Plan $plan = null): Session
+    public function create(User $user, string $title, string $description, array $steps, ?Plan $plan = null, ?array $parcours = null): Session
     {
-        $this->checker->check($user, $steps, true);
+        $this->checker->check($user, $steps, true, null !== $parcours);
         $this->closeStale($user);
 
         $now = $this->now();
@@ -75,11 +76,11 @@ final class SessionManager
         $endOfDay = $now->setTimezone($timezone)->modify('tomorrow')->setTimezone(new \DateTimeZone('UTC'));
 
         try {
-            $created = $this->entityManager->wrapInTransaction(function () use ($user, $title, $description, $steps, $now, $endOfDay, $plan): ?Session {
+            $created = $this->entityManager->wrapInTransaction(function () use ($user, $title, $description, $steps, $now, $endOfDay, $plan, $parcours): ?Session {
                 if (null !== $this->sessions->findActiveOf($user)) {
                     return null;
                 }
-                $session = new Session($user, $title, $description, $steps, $now, $endOfDay, $plan);
+                $session = new Session($user, $title, $description, $steps, $now, $endOfDay, $plan, $parcours);
                 $this->entityManager->persist($session);
                 // The unique index on active_user_id rejects a concurrent second launch here.
                 $this->entityManager->flush();
@@ -148,7 +149,7 @@ final class SessionManager
 
         try {
             $prepared = $this->checker->prepare($user, $module, $step['settings'], $step['notes']);
-            $run = $this->runner->start($user, $module, $prepared->subjectId, $step['minutes'] * 60, $prepared->config, $session->getId());
+            $run = $this->runner->start($user, $module, $prepared->subjectId, $this->budget($session, $step['minutes']), $prepared->config, $session->getId());
         } catch (SubjectUnavailableException $e) {
             $reason = \is_string($e->context['reason'] ?? null) ? $e->context['reason'] : $e->reason->value;
             $this->block($user, $id, $reason, $e->getMessage());
@@ -330,6 +331,20 @@ final class SessionManager
         if (SessionStatus::Completed === $status) {
             $this->rewards->grant($session, $runs, $now);
         }
+    }
+
+    /**
+     * A step's budget: its minutes; a parcours tier, ended by its count, may last until the
+     * parcours expires (its local midnight, docs/PARCOURS.md).
+     */
+    private function budget(Session $session, int $minutes): int
+    {
+        if (!$session->isParcours()) {
+            return $minutes * 60;
+        }
+        $left = $session->getExpiresAt()->getTimestamp() - $this->now()->getTimestamp();
+
+        return max(TimeboxRunner::MIN_BUDGET_SECONDS, min(TimeboxRunner::MAX_COUNTED_BUDGET_SECONDS, $left));
     }
 
     private function now(): \DateTimeImmutable

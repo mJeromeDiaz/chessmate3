@@ -18,6 +18,7 @@ use App\Training\Exception\RunInProgressException;
 use App\Training\Exception\RunNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
 use App\Training\Exception\SubmissionTooLateException;
+use App\Training\Module\CountedModuleInterface;
 use App\Training\Module\HelpModuleInterface;
 use App\Training\Module\ItemSubmission;
 use App\Training\Module\ModuleRegistry;
@@ -52,6 +53,8 @@ final class TimeboxRunner
     public const SUBMISSION_TOLERANCE_MS = 2_000;
     public const MIN_BUDGET_SECONDS = 60;
     public const MAX_BUDGET_SECONDS = 3_600;
+    /** A run ended by its count of exercises (a parcours tier): a day at most, its clock only an expiry. */
+    public const MAX_COUNTED_BUDGET_SECONDS = 86_400;
     public const DECISION_SECONDS = 60;
     public const EXTENSION_SECONDS = 300;
 
@@ -75,11 +78,12 @@ final class TimeboxRunner
      */
     public function start(User $user, Module $module, Uuid $subjectId, int $budgetSeconds, array $config = [], ?Uuid $parentId = null): Run
     {
-        if ($budgetSeconds < self::MIN_BUDGET_SECONDS || $budgetSeconds > self::MAX_BUDGET_SECONDS) {
+        $implementation = $this->modules->for($module);
+        $max = $implementation instanceof CountedModuleInterface && $implementation->isCounted($config) ? self::MAX_COUNTED_BUDGET_SECONDS : self::MAX_BUDGET_SECONDS;
+        if ($budgetSeconds < self::MIN_BUDGET_SECONDS || $budgetSeconds > $max) {
             throw new \InvalidArgumentException('Budget out of range.');
         }
         $this->closeExpired($user);
-        $implementation = $this->modules->for($module);
 
         try {
             return $this->entityManager->wrapInTransaction(function () use ($user, $module, $implementation, $subjectId, $budgetSeconds, $config, $parentId): Run {

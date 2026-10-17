@@ -557,7 +557,30 @@ export function upgradeValues(module, values) {
 }
 
 /** @type {Record<string, Module>} */
-export const MODULES_BY_ID = Object.fromEntries(MODULES.map(m => [m.id, m]))
+/**
+ * Modules played only through their own page, never added by hand to a session: the parcours
+ * (docs/PARCOURS.md), whose tiers of puzzles are steps of the session it launches.
+ *
+ * @type {Module[]}
+ */
+export const OWN_PAGE_MODULES = [
+  defineModule({
+    id: 'parcours',
+    ...byProf('lizy'),
+    glyph: glyph('♚'),
+    available: true,
+    bg: '#FF8A3D',
+    ink: '#1B1530',
+    soft: '#FFEBDD',
+    deep: '#E0601A',
+    accentInk: '#B84A0E',
+    fields: []
+  })
+]
+
+export const MODULES_BY_ID = Object.fromEntries(
+  [...MODULES, ...OWN_PAGE_MODULES].map(m => [m.id, m])
+)
 
 /**
  * "45 s", "1 min", "1 min 30 s".
@@ -788,7 +811,8 @@ export const API_MODULES = {
   coordonnees: 'coordinates',
   aveugle: 'blindfold',
   evaluation: 'evaluation',
-  streak: 'puzzle_streak'
+  streak: 'puzzle_streak',
+  parcours: 'parcours_puzzles'
 }
 
 /**
@@ -851,7 +875,7 @@ export const CATALOG_MODULES = Object.fromEntries(
 export function fromStep(step) {
   const moduleId = CATALOG_MODULES[step.module]
   const module = MODULES_BY_ID[moduleId]
-  if (!module) return null
+  if (!module || OWN_PAGE_MODULES.includes(module)) return null
   const values = defaultValues(module)
   values.duree = step.minutes
   values.notes = step.notes ?? ''

@@ -6,6 +6,7 @@
     "streakDone": "Streak terminé.",
     "coordinatesDone": "Toutes les cases de la série sont faites !",
     "evaluationDone": "Toutes les positions sont évaluées !",
+    "tierDone": "Palier terminé !",
     "setDone": "Set terminé, bravo !",
     "resting": "Cycle terminé. Repos : prochain cycle le {date}.",
     "unavailable": {
@@ -14,6 +15,7 @@
       "blindfold": "Plus aucun puzzle à l’aveugle à ce niveau et de cette longueur : séance close.",
       "evaluation": "Plus aucune position pour ces réglages : séance close.",
       "puzzle_streak": "La sélection des puzzles est en cours de mise à jour : séance close.",
+      "parcours_puzzles": "Plus aucun puzzle pour ce palier : palier clos.",
       "woodpecker": "Le set a été mis en pause ou abandonné : séance close."
     }
   },
@@ -25,6 +27,7 @@
     "blindfold": "Retour au jeu à l’aveugle",
     "evaluation": "Retour à l’évaluation",
     "puzzle_streak": "Retour au streak",
+    "parcours_puzzles": "Retour aux parcours",
     "home": "Retour à l’accueil"
   },
   "result": {

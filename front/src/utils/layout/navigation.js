@@ -33,6 +33,14 @@ export const NAV_LINKS = [
     header: true
   },
   {
+    to: '/parcours',
+    get label() {
+      return t('layout.nav.parcours')
+    },
+    icon: 'route',
+    header: true
+  },
+  {
     to: '/puzzle',
     get label() {
       return t('layout.nav.puzzles')

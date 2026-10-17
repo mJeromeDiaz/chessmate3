@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Gamification\Xp;
 
 use App\Enum\Activity\ExerciseType;
+use App\Enum\Parcours\Effort;
 use App\Enum\Training\Module;
 
 /**
@@ -92,8 +93,19 @@ final class XpRules
                 default => self::EVALUATION_MISS,
             } + (true === ($metadata['planOk'] ?? null) ? self::EVALUATION_PLAN : 0)
               + (true === ($metadata['fast'] ?? null) ? self::EVALUATION_FAST : 0),
-            ExerciseType::StreakPuzzle => $success ? self::streakPuzzle(\is_int($metadata['rating'] ?? null) ? $metadata['rating'] : 0) : 0,
+            ExerciseType::StreakPuzzle, ExerciseType::ParcoursPuzzle => $success ? self::streakPuzzle(\is_int($metadata['rating'] ?? null) ? $metadata['rating'] : 0) : 0,
         };
+    }
+
+    /**
+     * The bonus of a completed session: a parcours' (docs/PARCOURS.md) by its effort, else
+     * SESSION_COMPLETED.
+     *
+     * @param string|null $parcoursEffort the parcours' effort, null for another session
+     */
+    public static function sessionBonus(?string $parcoursEffort): int
+    {
+        return (null === $parcoursEffort ? null : Effort::tryFrom($parcoursEffort))?->bonusXp() ?? self::SESSION_COMPLETED;
     }
 
     /**
@@ -118,6 +130,7 @@ final class XpRules
             ExerciseType::BlindfoldPuzzle => Module::Blindfold,
             ExerciseType::PositionEvaluation => Module::Evaluation,
             ExerciseType::StreakPuzzle => Module::PuzzleStreak,
+            ExerciseType::ParcoursPuzzle => Module::ParcoursPuzzles,
         };
     }
 

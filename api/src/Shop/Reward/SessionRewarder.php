@@ -51,6 +51,10 @@ final readonly class SessionRewarder implements SessionRewardInterface
         if (0 === $tally['itemCount']) {
             return;
         }
+        // A parcours (docs/PARCOURS.md) pays as a session of a minute per exercise, however fast.
+        if ($session->isParcours()) {
+            $tally['paidSeconds'] = $tally['itemCount'] * RewardCalculator::SECONDS_PER_EXERCISE;
+        }
 
         $user = $session->getUser();
         $userId = $user->getId();

@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { planApi, sessionApi } from '@/services/api'
+import { parcoursApi, planApi, sessionApi } from '@/services/api'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { requestNotifications } from '@/utils/alerts'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -8,9 +8,9 @@ import { replayProgram } from '@/utils/session/steps'
 import { t } from '@/i18n'
 
 /**
- * Launches a saved session, or replays a played one, and starts its first module. Another session
- * in progress today: it is offered (`inProgress`) to resume or abandon; a module that cannot be
- * played now: an error.
+ * Launches a saved session, a parcours (docs/PARCOURS.md), or replays a played one, and starts its
+ * first module. Another session in progress today: it is offered (`inProgress`) to resume or
+ * abandon; a module that cannot be played now: an error.
  */
 export function usePlanLaunch() {
   const router = useRouter()
@@ -26,8 +26,9 @@ export function usePlanLaunch() {
   /**
    * @param {string} key what `launching` holds meanwhile
    * @param {() => Promise<{id: string}>} create creates the session to play
+   * @param {(e: any) => string} [refusal] the creator's own refusals, for the user ('' for others)
    */
-  async function begin(key, create) {
+  async function begin(key, create, refusal) {
     // Still in the click: browsers only ask for the permission from a user gesture.
     requestNotifications().catch(() => {})
     launching.value = key
@@ -39,17 +40,20 @@ export function usePlanLaunch() {
         await router.push(`/session/${created.id}`)
       }
     } catch (e) {
+      const own = refusal?.(e) ?? ''
       const status = /** @type {any} */ (e)?.response?.status
-      if (status === 409) {
+      if (status === 409 && !own) {
         inProgress.value = await sessionApi.current().catch(() => null)
-        pending = () => begin(key, create)
+        pending = () => begin(key, create, refusal)
       }
       if (!inProgress.value) {
-        error.value = apiErrorMessage(e, {
-          404: t('session.launchErrors.notFound'),
-          409: t('session.launchErrors.inProgress'),
-          422: t('session.launchErrors.unplayable')
-        })
+        error.value =
+          own ||
+          apiErrorMessage(e, {
+            404: t('session.launchErrors.notFound'),
+            409: t('session.launchErrors.inProgress'),
+            422: t('session.launchErrors.unplayable')
+          })
       }
     } finally {
       launching.value = null
@@ -62,12 +66,14 @@ export function usePlanLaunch() {
   }
 
   /**
-   * Plays a session again: its saved session as it is now when it still exists, else the very
-   * program it played.
+   * Plays a session again: a parcours launched anew (its tiers drawn again), its saved session as
+   * it is now when it still exists, else the very program it played.
    *
    * @param {import('@/utils/session/steps').TrainingSession} session
    */
   function replay(session) {
+    const parcours = session.parcours
+    if (parcours) return begin(session.id, () => parcoursApi.launch(parcours))
     return session.planId
       ? begin(session.id, () =>
           planApi.launch(/** @type {string} */ (session.planId))
@@ -84,5 +90,13 @@ export function usePlanLaunch() {
     await retry()
   }
 
-  return { launching, error, inProgress, launch, replay, abandonAndLaunch }
+  return {
+    launching,
+    error,
+    inProgress,
+    launch,
+    begin,
+    replay,
+    abandonAndLaunch
+  }
 }

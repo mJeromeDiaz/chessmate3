@@ -203,6 +203,25 @@ final class RepertoireRunTest extends RepertoireWebTestCase
         self::assertSame([2, 1, 'line'], [$summary['itemCount'] ?? null, $summary['successCount'] ?? null, $summary['metrics']['unit'] ?? null], 'the recap counts lines');
     }
 
+    public function testALimitedRunClosesAfterItsUnitsWithoutRetry(): void
+    {
+        $alice = $this->createUser('alice@example.com');
+        $repertoire = $this->openBook($alice);
+        // As in a parcours tier (docs/PARCOURS.md): two lines.
+        $run = $this->start($alice, ['repertoireIds' => [$repertoire->getId()->toRfc4122()], 'unit' => 'line', 'limit' => 2]);
+
+        $first = $this->next($alice, $run['id']);
+        self::assertSame([0, 2], [$first['data']['played'] ?? null, $first['data']['limit'] ?? null], 'the item tells the lines played out of the limit');
+        $failed = $this->playUnit($alice, $run['id'], fail: true, first: $first);
+        $second = $this->next($alice, $run['id']);
+        self::assertSame(1, $second['data']['played'] ?? null);
+        self::assertNotSame($failed, $this->playUnit($alice, $run['id'], first: $second), 'the answer is shown and the parcours goes on: no retry');
+
+        $closed = $this->step($alice, $run['id'])['run'];
+        self::assertSame(['closed', 'subject_finished', 'limit_reached'], [$closed['status'], $closed['closeReason'], $closed['summary']['context']['reason'] ?? null]);
+        self::assertSame([2, 1], [$closed['summary']['itemCount'] ?? null, $closed['summary']['successCount'] ?? null]);
+    }
+
     public function testAtTheEndOfTimeAUnitWithoutMistakeIsIgnoredAndWithOneIsFailed(): void
     {
         $alice = $this->createUser('alice@example.com');

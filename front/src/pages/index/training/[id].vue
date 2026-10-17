@@ -1,7 +1,24 @@
 <template>
   <q-page padding>
+    <TierBanner
+      v-if="tierBetween && runner.run.value"
+      :key="runner.run.value.id"
+      :tier="parcoursRun.tier.value"
+      :solved="runner.run.value.summary?.successCount ?? 0"
+      :count="parcoursRun.count.value"
+      :next-name="nextTierName"
+      :starting="sessionStep.starting.value"
+      :error="sessionStep.error.value"
+      @continue="sessionStep.start(String(runner.run.value.parentId))"
+    />
+
     <div
-      v-if="runner.phase.value === 'ended' && runner.run.value && !holdEnd"
+      v-else-if="
+        runner.phase.value === 'ended' &&
+        runner.run.value &&
+        !holdEnd &&
+        !(parcoursRun.active.value && !session)
+      "
       class="training-page"
     >
       <RunRecap :run="runner.run.value">
@@ -63,9 +80,10 @@
         class="q-mt-md"
       />
       <RunResult
-        v-if="hasResult"
+        v-if="hasResult && resultRun"
         v-model="endOpen"
-        :run="runner.run.value"
+        :run="resultRun"
+        :reviewable="!parcoursOver"
         :live="seenRunning.has(runner.run.value.id)"
         :next-step="nextStep"
         :starting="sessionStep.starting.value"
@@ -93,7 +111,17 @@
       :runner="runner"
     >
       <template #header>
+        <ParcoursHeader
+          v-if="parcoursRun.active.value"
+          :tier="parcoursRun.tier.value"
+          :tiers="parcoursRun.tiers"
+          :name="parcoursRun.name.value"
+          :exercise="parcoursRun.exercise.value"
+          :count="parcoursRun.count.value"
+          @stop="confirmStop"
+        />
         <RunHeader
+          v-else
           :remaining-ms="runner.remainingMs.value"
           :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
           @stop="confirmStop"
@@ -270,6 +298,39 @@
     </PuzzlePlayer>
 
     <PuzzlePlayer
+      v-else-if="parcoursItem && (runner.phase.value === 'running' || holdEnd)"
+      :puzzle="parcoursItem.data.puzzle"
+      :loading="loading"
+      after-mistake="showSolution"
+      module="parcours_puzzles"
+      :xp="runner.xp.value"
+      :actions="parcoursActions"
+      @resolve="onParcoursResolve"
+    >
+      <template #header>
+        <ParcoursHeader
+          :tier="parcoursItem.data.tier"
+          :tiers="parcoursRun.tiers"
+          :name="parcoursRun.name.value"
+          :exercise="parcoursItem.data.position + 1"
+          :count="parcoursItem.data.count"
+          @stop="confirmStop"
+        />
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+
+      <template #chips>
+        <span class="play-chip" data-testid="parcours-zone">{{
+          $t(
+            `parcours.run.zones.${ratingZone(parcoursItem.data.position, parcoursItem.data.count)}`
+          )
+        }}</span>
+      </template>
+    </PuzzlePlayer>
+
+    <PuzzlePlayer
       v-else-if="runner.phase.value === 'running' && puzzle"
       :puzzle="puzzle"
       :loading="loading"
@@ -350,9 +411,10 @@
  * recap at the end. Reloading or coming back before the end resumes the same run and item. The
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
  * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series, blindfold puzzles (docs/BLINDFOLD.md),
- * positions to evaluate (docs/EVALUATION.md) or a puzzle streak (docs/PUZZLE_STREAK.md: no free
+ * positions to evaluate (docs/EVALUATION.md), a puzzle streak (docs/PUZZLE_STREAK.md: no free
  * help, the store's helps and passes, bought in place when out of stock; its overtime asked in
- * `OvertimeDialog`).
+ * `OvertimeDialog`) or a tier of a parcours (docs/PARCOURS.md: no clock, its count of puzzles or
+ * lines; between two tiers, Lizy's banner starts the next one; "Terminer" abandons the parcours).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -362,6 +424,8 @@ import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
+import ParcoursHeader from '@/components/parcours/ParcoursHeader.vue'
+import TierBanner from '@/components/parcours/TierBanner.vue'
 import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
 import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
@@ -374,6 +438,7 @@ import { useSessionStep } from '@/composables/session/useSessionStep'
 import { useRunAlerts } from '@/composables/training/useRunAlerts'
 import { useTimeboxedRun } from '@/composables/training/useTimeboxedRun'
 import { useAidPurchase } from '@/composables/shop/useAidPurchase'
+import { useParcoursRun } from '@/composables/parcours/useParcoursRun'
 import {
   puzzleStreakApi,
   sessionApi,
@@ -386,6 +451,7 @@ import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
 import { levelAt } from '@/utils/puzzleStreak'
+import { ratingZone, stepPlan, tierName } from '@/utils/parcours'
 import { stepModule } from '@/utils/session/steps'
 import { resultKind } from '@/utils/runResult'
 import { chestToOpen } from '@/utils/shopReward'
@@ -677,6 +743,67 @@ async function onStreakResolve(_outcome, report) {
 }
 
 /**
+ * A parcours' puzzle on screen, kept once its tier closed on it: its solution (or its success)
+ * stays on screen (`holdEnd`) before Lizy's banner.
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const parcoursItem = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'parcours_puzzle') parcoursItem.value = item
+    else if (item) parcoursItem.value = null
+  }
+)
+/** After a miss: the next puzzle, or, the tier over, what comes next. */
+const parcoursActions = computed(() => {
+  const result = runner.result.value
+  const missed =
+    !!parcoursItem.value &&
+    result?.itemId === parcoursItem.value.id &&
+    !result.success
+  return missed || error.value
+    ? [
+        {
+          label: t('training.page.next'),
+          primary: true,
+          disable: loading.value,
+          testid: 'run-next',
+          onClick: async () => {
+            holdEnd.value = false
+            if (runner.phase.value === 'running') await next()
+          }
+        }
+      ]
+    : []
+})
+
+/**
+ * A parcours' puzzle answered: solved, the next one comes by itself (the tier's last one shows its
+ * success first); missed, its solution waits for "Suivant".
+ *
+ * @param {string} _outcome
+ * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
+ */
+async function onParcoursResolve(_outcome, report) {
+  holdEnd.value = true
+  try {
+    const result = await runner.submit(report)
+    if (!result) holdEnd.value = false
+    else if (result.success) {
+      if (runner.phase.value === 'running') {
+        holdEnd.value = false
+        setTimeout(next, AUTO_NEXT_MS)
+      } else setTimeout(() => (holdEnd.value = false), AUTO_NEXT_MS)
+    } else if (runner.phase.value === 'running') holdEnd.value = false
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+  }
+}
+
+/**
  * The store's aids (docs/PUZZLE_STREAK.md): the stock the server announced with the puzzle, the
  * helps spent on it (one per move to find), the aid being spent.
  */
@@ -877,6 +1004,14 @@ async function next() {
 }
 
 function confirmStop() {
+  if (parcoursRun.active.value) {
+    $q.dialog({
+      title: t('training.page.stopTitle'),
+      message: t('parcours.run.stop'),
+      cancel: true
+    }).onOk(stopParcours)
+    return
+  }
   $q.dialog({
     title: t('training.page.stopTitle'),
     message: t(
@@ -891,22 +1026,74 @@ function confirmStop() {
 const session = ref(null)
 const sessionStep = useSessionStep()
 useRunAlerts(runner, { session })
+const parcoursRun = useParcoursRun(runner, session)
+/** The parcours abandoned from this page ("Terminer"), its session read again meanwhile. */
+const abandonedSession = ref(/** @type {string|null} */ (null))
+
+/** "Terminer" in a parcours: the tier closed, then the whole parcours abandoned (no bonus). */
+async function stopParcours() {
+  const parentId = runner.run.value?.parentId ?? null
+  abandonedSession.value = parentId
+  try {
+    await runner.stop()
+    if (!parentId) return
+    session.value = await sessionApi.abandon(parentId)
+  } catch (e) {
+    error.value = apiErrorMessage(e)
+  }
+}
 
 /** The session's next module to play, if it goes on. */
 const nextStep = computed(() => {
   const s = session.value
-  if (!s || s.status !== 'active') return null
+  if (!s || s.status !== 'active' || s.id === abandonedSession.value)
+    return null
   const step = s.steps[s.currentIndex]
   return step && step.status === 'pending' ? step : null
 })
 
+/** A parcours' tier over, the next one to come: Lizy's banner instead of the recap. */
+const tierBetween = computed(
+  () =>
+    runner.phase.value === 'ended' &&
+    !holdEnd.value &&
+    parcoursRun.active.value &&
+    !!nextStep.value
+)
+const nextTierName = computed(() =>
+  nextStep.value ? tierName(stepPlan(nextStep.value)) : ''
+)
+/** The parcours is over (completed, abandoned or expired): its result is the whole score. */
+const parcoursOver = computed(
+  () =>
+    parcoursRun.active.value &&
+    !!session.value?.parcours &&
+    (session.value.status !== 'active' ||
+      session.value.id === abandonedSession.value)
+)
+/** The run whose result is shown: this one, or a whole parcours' score on its last run. */
+const resultRun = computed(() => {
+  const run = runner.run.value
+  const score = parcoursRun.score.value
+  if (!run || !parcoursOver.value || !score) return run
+  return {
+    ...run,
+    module: 'parcours_puzzles',
+    summary: {
+      ...run.summary,
+      itemCount: score.played,
+      successCount: score.solved
+    }
+  }
+})
+
 /**
  * The end-of-run result (`RunResult`): opens when the run is over (also on a run reopened once
- * over), unless nothing was played.
+ * over), unless nothing was played; for a parcours, only once it is over.
  */
 const endOpen = ref(false)
 const hasResult = computed(
-  () => !!runner.run.value && resultKind(runner.run.value) !== null
+  () => !!resultRun.value && resultKind(resultRun.value) !== null
 )
 /** The review waits for the last correction to be left (`holdEnd`). */
 let endWaiting = false
@@ -931,7 +1118,7 @@ function openEnd() {
     .then(() => sessionLoading)
     .catch(() => {})
     .then(() => {
-      if (runner.run.value?.id !== run?.id) return
+      if (runner.run.value?.id !== run?.id || tierBetween.value) return
       if (chestToOpen(session.value, shop.seenChests)) chestOpen.value = true
       else if (hasResult.value) endOpen.value = true
     })
@@ -993,6 +1180,7 @@ watch(
     holdEnd.value = false
     evalItem.value = null
     streakItem.value = null
+    parcoursItem.value = null
     try {
       await runner.resume(String(id))
     } catch (e) {

@@ -38,6 +38,8 @@ const BLOCKED_REASONS = [
  * @property {SessionStep[]} steps
  * @property {import('@/utils/shopReward').SessionReward|null} [reward] the crowns of a completed
  *   session (docs/SHOP.md, § 4 bis)
+ * @property {import('@/utils/parcours').SessionParcours|null} [parcours] a parcours' theme, effort
+ *   and repertoire (docs/PARCOURS.md); null for any other session
  */
 
 /**

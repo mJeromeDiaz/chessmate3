@@ -23,6 +23,8 @@ enum Module: string
     case Evaluation = 'evaluation';
     /** Puzzle streak: easy to hard, one miss breaks it (docs/PUZZLE_STREAK.md). */
     case PuzzleStreak = 'puzzle_streak';
+    /** A tier of puzzles of a parcours, ended by its count (docs/PARCOURS.md); never in a hand-made session. */
+    case ParcoursPuzzles = 'parcours_puzzles';
 
     /**
      * @return list<string>

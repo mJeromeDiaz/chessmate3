@@ -52,7 +52,8 @@
  * replay one after the other, client side only (`RunEndReplay`). The next lesson is the session's
  * next module, the session's review, or the module's page. Confetti only for a perfect run whose
  * end was seen on the page, once. A puzzle streak shows its best streak and its record instead of a
- * share (every streak ends on a miss); confetti for a record.
+ * share (every streak ends on a miss); confetti for a record. A whole parcours shows its tiers'
+ * score, without mistakes to correct.
  */
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -81,7 +82,12 @@ const props = defineProps({
   /** The session's next step, when the run is a step of a session that goes on. */
   nextStep: { type: Object, default: null },
   starting: { type: Boolean, default: false },
-  nextError: { type: String, default: '' }
+  nextError: { type: String, default: '' },
+  /**
+   * Its mistakes can be read and corrected; not for a whole parcours (docs/PARCOURS.md), whose
+   * score adds up its tiers' runs.
+   */
+  reviewable: { type: Boolean, default: true }
 })
 
 const emit = defineEmits({
@@ -123,7 +129,12 @@ const nextFixable = computed(() => {
 
 /** The missed items, for their count and replay (no review for free study). */
 async function load() {
-  if (loadedRun === props.run.id || props.run.module === 'free') return
+  if (
+    loadedRun === props.run.id ||
+    props.run.module === 'free' ||
+    !props.reviewable
+  )
+    return
   const runId = props.run.id
   try {
     const [review] = await Promise.all([
