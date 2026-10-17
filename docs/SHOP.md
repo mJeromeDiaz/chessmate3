@@ -103,7 +103,7 @@ Règles validées (2026-10-14, maquette « Coffre ») :
   session, non plus.
 - **Minutes payées** : chaque séance de la session paie sa durée réelle, mais **au plus une minute
   par exercice terminé** (`RewardCalculator::SECONDS_PER_EXERCISE`) : un chrono laissé tourner ne
-  rapporte rien. Le **temps libre** ne compte ni dans les minutes ni dans le palier.
+  rapporte rien. Un parcours ([PARCOURS.md](PARCOURS.md)) paie toujours une minute par exercice. Le **temps libre** ne compte ni dans les minutes ni dans le palier.
 - **Palier** de toute la session (exercices réussis / terminés, seuils de l'écran de résultat) :
   parfait (100 %) ×1,5, presque (80 à 99 %) ×1, en dessous ×0,5.
 - Couronnes = secondes payées × couronnes par heure × coefficient, arrondi au plus proche ; par

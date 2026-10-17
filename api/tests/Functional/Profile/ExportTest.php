@@ -100,7 +100,10 @@ final class ExportTest extends WebTestCase
         self::assertIsString($startedAt);
         self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $startedAt, 'UTC, ISO 8601');
         self::assertCount(1, $this->listOf($this->json($zip, 'activite.json')['entries']));
-        self::assertSame('Matinale', $this->listOf($this->json($zip, 'entrainement.json')['sessions'])[0]['title']);
+        $training = $this->json($zip, 'entrainement.json');
+        self::assertSame('Matinale', $this->listOf($training['sessions'])[0]['title']);
+        self::assertArrayHasKey('parcours', $this->listOf($training['sessions'])[0], 'a session says whether it is a parcours');
+        self::assertSame([], $training['parcoursPuzzles']);
         self::assertSame('Italienne', $this->listOf($this->json($zip, 'repertoires.json')['repertoires'])[0]['name']);
 
         $everything = '';

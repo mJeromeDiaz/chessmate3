@@ -16,8 +16,9 @@ readme:
         - repertoires.json : vos répertoires (et leur origine quand ils viennent de vos parties Lichess),
           leurs cartes de révision (FSRS), vos réponses, vos tests et les statistiques de vos parties ;
           repertoires/*.pgn : chaque répertoire au format PGN.
-        - entrainement.json : vos séances chronométrées, sessions, sessions enregistrées, séries
-          de coordonnées et puzzles à l'aveugle.
+        - entrainement.json : vos séances chronométrées, sessions (parcours compris), sessions
+          enregistrées, séries de coordonnées, puzzles à l'aveugle, puzzle streaks et puzzles de
+          parcours.
         - boutique.json : vos couronnes (chaque mouvement, celles gagnées par vos sessions), vos
           objets, vos gels de série et les jours qu'ils ont couverts.
         - activite.json : le journal de vos exercices terminés.

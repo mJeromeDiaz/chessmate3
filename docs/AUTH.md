@@ -420,7 +420,7 @@ le serveur ; extension PHP `zip` requise) :
 | `puzzles.json` | Classement, historique du classement, tentatives (puzzle désigné par son identifiant Lichess) |
 | `woodpecker.json` | Sets, puzzles des sets, cycles, tentatives, agrandissements |
 | `repertoires.json` + `repertoires/NN-nom.pgn` | Répertoires, cartes FSRS, réponses, tests (présentations) ; chaque répertoire en PGN |
-| `entrainement.json` | Séances chronométrées, sessions, sessions enregistrées |
+| `entrainement.json` | Séances chronométrées, sessions (dont les parcours), sessions enregistrées, séries de coordonnées, puzzles à l'aveugle, puzzle streaks, puzzles de parcours |
 | `activite.json` | Journal d'activité |
 
 Colonnes choisies une à une : jamais d'empreinte de mot de passe, de jeton, d'empreinte de jeton ni de

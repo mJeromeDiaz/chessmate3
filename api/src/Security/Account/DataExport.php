@@ -118,10 +118,10 @@ final readonly class DataExport
                 ['config', 'summary'],
             ),
             'sessions' => $this->rows(
-                'SELECT BIN_TO_UUID(id) AS id, title, description, steps, status, started_at, expires_at, closed_at, BIN_TO_UUID(plan_id) AS plan_id
+                'SELECT BIN_TO_UUID(id) AS id, title, description, steps, parcours, status, started_at, expires_at, closed_at, BIN_TO_UUID(plan_id) AS plan_id
                    FROM training_session WHERE user_id = ? ORDER BY started_at',
                 $id,
-                ['steps'],
+                ['steps', 'parcours'],
             ),
             'plans' => $this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, title, description, steps, repetition, time, weekdays, public, reminder_enabled, reminder_channels,
@@ -154,6 +154,14 @@ final readonly class DataExport
                 'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(streak_id) AS streak_id, puzzle_id AS puzzle, puzzle_rating, position, target_rating,
                         status, started_at, submitted_at, duration_ms, moves, mistakes, helps
                    FROM puzzle_streak_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['moves'],
+            )),
+            // The puzzles of the parcours' tiers (docs/PARCOURS.md); the parcours are the sessions above.
+            'parcoursPuzzles' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, puzzle_id AS puzzle, puzzle_rating, position, target_rating,
+                        status, started_at, submitted_at, duration_ms, moves, mistakes, helped
+                   FROM parcours_attempt WHERE user_id = ? ORDER BY started_at',
                 $id,
                 ['moves'],
             )),

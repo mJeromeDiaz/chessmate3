@@ -15,8 +15,8 @@ readme:
         - repertoires.json: your repertoires (and their origin when they come from your Lichess
           games), their review cards (FSRS), your answers, your tests and the statistics of your
           games; repertoires/*.pgn: each repertoire as PGN.
-        - entrainement.json: your timed runs, sessions, saved sessions, coordinates series and
-          blindfold puzzles.
+        - entrainement.json: your timed runs, sessions (parcours included), saved sessions,
+          coordinates series, blindfold puzzles, puzzle streaks and parcours puzzles.
         - boutique.json: your crowns (each movement, those earned by your sessions), your items,
           your streak freezes and the days they covered.
         - activite.json: the log of your finished exercises.
