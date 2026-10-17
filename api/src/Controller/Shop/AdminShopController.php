@@ -27,6 +27,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The store's administration (docs/SHOP.md), admins only: the catalogue (offers, carousel), the
@@ -52,6 +53,7 @@ final class AdminShopController extends AbstractController
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.admin_write')]
         private readonly RateLimiterFactory $adminWriteLimiter,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -133,7 +135,7 @@ final class AdminShopController extends AbstractController
             $payload = new Payload($request->toArray());
             $delta = $payload->int('delta', -1_000_000, 1_000_000);
             if (0 === $delta) {
-                $payload->fail('delta', 'Un nombre différent de 0 est attendu.');
+                $payload->fail('delta', 'shop.nonzero');
             }
             $reason = $payload->string('reason', 255);
             $payload->done();
@@ -196,7 +198,11 @@ final class AdminShopController extends AbstractController
         try {
             return $write();
         } catch (InvalidPayload $invalid) {
-            return $this->json(['violations' => $invalid->violations], Response::HTTP_UNPROCESSABLE_ENTITY);
+            // In the language of the admin's request (docs/I18N.md, § 5).
+            return $this->json(['violations' => array_map(fn (array $violation): array => [
+                'propertyPath' => $violation['propertyPath'],
+                'title' => $this->translator->trans($violation['message'], $violation['parameters'], 'admin'),
+            ], $invalid->violations)], Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (\Symfony\Component\HttpFoundation\Exception\JsonException) {
             return $this->json(['detail' => 'Invalid JSON.'], Response::HTTP_BAD_REQUEST);
         }

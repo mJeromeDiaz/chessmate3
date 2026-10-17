@@ -153,7 +153,20 @@ final class ChangePasswordControllerTest extends AuthWebTestCase
         $this->createVerifiedUser('alice@example.com', self::PASSWORD);
         $accessToken = $this->loginAndGetAccessToken('alice@example.com', self::PASSWORD);
 
-        self::assertSame(422, $this->changePassword($accessToken, self::PASSWORD, self::PASSWORD)->getStatusCode());
+        $response = $this->changePassword($accessToken, self::PASSWORD, self::PASSWORD);
+        self::assertSame(422, $response->getStatusCode());
+        self::assertStringContainsString('The new password must differ from the current one.', self::readable($response));
+
+        // The SPA's language (docs/I18N.md, § 5): the app's own messages, Symfony's too.
+        $french = $this->changePassword($accessToken, self::PASSWORD, self::PASSWORD, 'fr');
+        self::assertStringContainsString('Le nouveau mot de passe doit être différent', self::readable($french));
+        self::assertStringContainsString('Cette chaîne est trop courte', self::readable($this->changePassword($accessToken, self::PASSWORD, 'short', 'fr')));
+    }
+
+    /** The response's JSON with its accents unescaped. */
+    private static function readable(Response $response): string
+    {
+        return (string) json_encode(json_decode((string) $response->getContent(), true), \JSON_UNESCAPED_UNICODE);
     }
 
     public function testAccountWithoutPasswordIsRefused(): void
@@ -168,12 +181,12 @@ final class ChangePasswordControllerTest extends AuthWebTestCase
         self::assertNull($this->reloadUser($user)->getPassword());
     }
 
-    private function changePassword(string $accessToken, string $current, string $new): Response
+    private function changePassword(string $accessToken, string $current, string $new, string $language = 'en'): Response
     {
         return $this->postJson('/api/auth/password/change', [
             'currentPassword' => $current,
             'newPassword' => $new,
-        ], ['HTTP_AUTHORIZATION' => 'Bearer '.$accessToken]);
+        ], ['HTTP_AUTHORIZATION' => 'Bearer '.$accessToken, 'HTTP_ACCEPT_LANGUAGE' => $language]);
     }
 
     private function reloadUser(User $user): User

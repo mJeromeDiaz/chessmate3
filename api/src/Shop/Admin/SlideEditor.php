@@ -80,18 +80,18 @@ final readonly class SlideEditor
         $offerId = $payload->string('offerId', 36);
         $offer = null !== $offerId && Uuid::isValid($offerId) ? $this->offers->find(Uuid::fromString($offerId)) : null;
         if (null !== $offerId && null === $offer) {
-            $payload->fail('offerId', 'Offre inconnue.');
+            $payload->fail('offerId', 'shop.unknown_offer');
         }
         $tag = $payload->string('tag', 40);
         $image = $payload->string('image', 40);
         if (null !== $image && 1 !== preg_match('/^[a-z0-9-]+$/', $image)) {
-            $payload->fail('image', 'Un nom d’image de prof (ex. albert-cool).');
+            $payload->fail('image', 'shop.image');
         }
         $position = $payload->int('position', -999, 999, false) ?? 0;
         $startsAt = $payload->instant('startsAt');
         $endsAt = $payload->instant('endsAt');
         if (null !== $startsAt && null !== $endsAt && $endsAt <= $startsAt) {
-            $payload->fail('endsAt', 'La fin doit suivre le début.');
+            $payload->fail('endsAt', 'shop.ends_after_start');
         }
         $suspended = $payload->bool('suspended');
         $payload->done();

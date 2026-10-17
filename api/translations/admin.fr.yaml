@@ -1,0 +1,21 @@
+# Administration (docs/I18N.md, § 5): the refusals of the shop's admin forms (App\Shop\Admin\Payload),
+# shown under their field.
+shop:
+    required: "Ce champ est obligatoire."
+    text: "Un texte est attendu."
+    max_length: "%max% caractères au plus."
+    integer: "Un nombre entier de %min% à %max% est attendu."
+    date: "Une date est attendue."
+    list: "Une liste est attendue."
+    unknown_offer: "Offre inconnue."
+    image: "Un nom d’image de prof (ex. albert-cool)."
+    ends_after_start: "La fin doit suivre le début."
+    slug_format: "Lettres minuscules, chiffres et _ seulement."
+    slug_taken: "Ce slug existe déjà."
+    unknown_section: "Rayon inconnu."
+    was_price: "Le prix barré doit dépasser le prix."
+    unknown_item: "Objet inconnu."
+    quantity: "De 1 à %max%."
+    duplicate_item: "Cet objet est déjà dans l’offre."
+    empty_offer: "Une offre en vente contient au moins un objet."
+    nonzero: "Un nombre différent de 0 est attendu."

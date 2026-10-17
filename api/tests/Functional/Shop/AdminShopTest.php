@@ -38,6 +38,17 @@ final class AdminShopTest extends WebTestCase
         }
     }
 
+    public function testARefusalIsWrittenInTheLanguageOfTheRequest(): void
+    {
+        $offer = ['slug' => 'pack_x', 'section' => 'packs', 'name' => 'X', 'description' => 'x', 'contents' => [['item' => 'puzzle_pardon', 'quantity' => 1]], 'price' => 100, 'wasPrice' => 90];
+
+        $titles = fn (Response $response): array => array_column($this->listOf($this->json($response)['violations']), 'title', 'propertyPath');
+        self::assertSame(['wasPrice' => 'The struck-through price must be above the price.'], $titles($this->call($this->admin, 'POST', '/api/admin/shop/offers', $offer)));
+        self::assertSame(['wasPrice' => 'Le prix barré doit dépasser le prix.'], $titles($this->call($this->admin, 'POST', '/api/admin/shop/offers', $offer, 'fr')));
+        $long = $this->call($this->admin, 'POST', '/api/admin/shop/offers', ['name' => str_repeat('x', 200)] + $offer, 'fr');
+        self::assertStringEndsWith('caractères au plus.', (string) ($titles($long)['name'] ?? ''));
+    }
+
     public function testAnOfferIsCreatedCheckedAndSuspended(): void
     {
         $catalog = $this->json($this->call($this->admin, 'GET', '/api/admin/shop/catalog'));
@@ -187,13 +198,15 @@ final class AdminShopTest extends WebTestCase
 
     /**
      * @param array<string, mixed>|null $body
+     * @param string                    $language the Accept-Language the SPA sends
      */
-    private function call(User $user, string $method, string $uri, ?array $body = null): Response
+    private function call(User $user, string $method, string $uri, ?array $body = null, string $language = 'en'): Response
     {
         $this->client->request($method, $uri, server: [
             'HTTP_AUTHORIZATION' => 'Bearer '.self::getContainer()->get(JWTTokenManagerInterface::class)->create($user),
             'HTTP_ACCEPT' => 'application/ld+json',
             'CONTENT_TYPE' => 'application/ld+json',
+            'HTTP_ACCEPT_LANGUAGE' => $language,
         ], content: null === $body ? null : json_encode($body, \JSON_THROW_ON_ERROR));
 
         return $this->client->getResponse();

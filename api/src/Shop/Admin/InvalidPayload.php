@@ -10,15 +10,11 @@ namespace App\Shop\Admin;
 final class InvalidPayload extends \RuntimeException
 {
     /**
-     * @param list<array{propertyPath: string, title: string}> $violations
+     * @param list<array{propertyPath: string, message: string, parameters: array<string, int|string>}> $violations
+     *        each message a key of the "admin" domain, translated when answered
      */
     public function __construct(public readonly array $violations)
     {
         parent::__construct('Invalid payload.');
-    }
-
-    public static function field(string $path, string $title): self
-    {
-        return new self([['propertyPath' => $path, 'title' => $title]]);
     }
 }

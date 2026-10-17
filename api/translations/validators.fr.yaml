@@ -1,0 +1,9 @@
+# Validation messages written for this app (docs/I18N.md, § 5). The validator translates a message
+# through the "validators" domain, the English text being the key; Symfony's own constraints come
+# translated with the framework. English needs no file: a missing key is shown as is.
+"The code must be 6 digits.": "Le code doit comporter 6 chiffres."
+"The display name cannot contain control characters.": "Le nom affiché ne peut pas contenir de caractères de contrôle."
+"The new password must differ from the current one.": "Le nouveau mot de passe doit être différent de l’actuel."
+"Give both rating bounds, at least 100 apart, or none.": "Donne les deux bornes de classement, écartées d’au moins 100, ou aucune."
+"Either a PGN text, or a Lichess study URL.": "Soit un texte PGN, soit l’adresse d’une étude Lichess."
+"Either a repertoire (repertoireId), or a name and a color for a new one.": "Soit un répertoire existant, soit un nom et une couleur pour en créer un."

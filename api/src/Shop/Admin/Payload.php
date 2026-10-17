@@ -6,11 +6,12 @@ namespace App\Shop\Admin;
 
 /**
  * Reads an admin form's JSON fields, collecting what is wrong (docs/SHOP.md): every problem is
- * reported at once, then {@see done()} throws them.
+ * reported at once, then {@see done()} throws them. A problem is a message key of the "admin"
+ * domain (translations/admin.<locale>.yaml), written in the request's language when answered.
  */
 final class Payload
 {
-    /** @var list<array{propertyPath: string, title: string}> */
+    /** @var list<array{propertyPath: string, message: string, parameters: array<string, int|string>}> */
     private array $violations = [];
 
     /**
@@ -28,18 +29,18 @@ final class Payload
         }
         if (null === $value || '' === $value) {
             if ($required) {
-                $this->fail($field, 'Ce champ est obligatoire.');
+                $this->fail($field, 'shop.required');
             }
 
             return null;
         }
         if (!\is_string($value)) {
-            $this->fail($field, 'Un texte est attendu.');
+            $this->fail($field, 'shop.text');
 
             return null;
         }
         if (mb_strlen($value) > $max) {
-            $this->fail($field, \sprintf('%d caractères au plus.', $max));
+            $this->fail($field, 'shop.max_length', ['%max%' => $max]);
         }
 
         return $value;
@@ -50,13 +51,13 @@ final class Payload
         $value = $this->data[$field] ?? null;
         if (null === $value) {
             if ($required) {
-                $this->fail($field, 'Ce champ est obligatoire.');
+                $this->fail($field, 'shop.required');
             }
 
             return null;
         }
         if (!\is_int($value) || $value < $min || $value > $max) {
-            $this->fail($field, \sprintf('Un nombre entier de %d à %d est attendu.', $min, $max));
+            $this->fail($field, 'shop.integer', ['%min%' => $min, '%max%' => $max]);
 
             return null;
         }
@@ -77,14 +78,14 @@ final class Payload
             return null;
         }
         if (!\is_string($value)) {
-            $this->fail($field, 'Une date est attendue.');
+            $this->fail($field, 'shop.date');
 
             return null;
         }
         try {
             return (new \DateTimeImmutable($value))->setTimezone(new \DateTimeZone('UTC'));
         } catch (\Exception) {
-            $this->fail($field, 'Une date est attendue.');
+            $this->fail($field, 'shop.date');
 
             return null;
         }
@@ -97,7 +98,7 @@ final class Payload
     {
         $value = $this->data[$field] ?? [];
         if (!\is_array($value) || !array_is_list($value)) {
-            $this->fail($field, 'Une liste est attendue.');
+            $this->fail($field, 'shop.list');
 
             return [];
         }
@@ -105,9 +106,13 @@ final class Payload
         return $value;
     }
 
-    public function fail(string $field, string $title): void
+    /**
+     * @param string                    $message    a key of the "admin" domain ("shop.required")
+     * @param array<string, int|string> $parameters
+     */
+    public function fail(string $field, string $message, array $parameters = []): void
     {
-        $this->violations[] = ['propertyPath' => $field, 'title' => $title];
+        $this->violations[] = ['propertyPath' => $field, 'message' => $message, 'parameters' => $parameters];
     }
 
     /**

@@ -41,9 +41,9 @@ final readonly class OfferEditor
         $payload = new Payload($data);
         $slug = $payload->string('slug', 40);
         if (null !== $slug && 1 !== preg_match('/^[a-z0-9_]{2,40}$/', $slug)) {
-            $payload->fail('slug', 'Lettres minuscules, chiffres et _ seulement.');
+            $payload->fail('slug', 'shop.slug_format');
         } elseif (null !== $slug && null !== $this->offers->findOneBy(['slug' => $slug])) {
-            $payload->fail('slug', 'Ce slug existe déjà.');
+            $payload->fail('slug', 'shop.slug_taken');
         }
         $fields = $this->read($payload);
         $payload->done();
@@ -95,7 +95,7 @@ final readonly class OfferEditor
         $sectionValue = $payload->string('section', 16);
         $section = null === $sectionValue ? null : Section::tryFrom($sectionValue);
         if (null !== $sectionValue && null === $section) {
-            $payload->fail('section', 'Rayon inconnu.');
+            $payload->fail('section', 'shop.unknown_section');
         }
         $name = $payload->string('name', 80);
         $subtitle = $payload->string('subtitle', 80, false);
@@ -103,13 +103,13 @@ final readonly class OfferEditor
         $price = $payload->int('price', 0, self::MAX_PRICE);
         $wasPrice = $payload->int('wasPrice', 1, self::MAX_PRICE, false);
         if (null !== $price && null !== $wasPrice && $wasPrice <= $price) {
-            $payload->fail('wasPrice', 'Le prix barré doit dépasser le prix.');
+            $payload->fail('wasPrice', 'shop.was_price');
         }
         $position = $payload->int('position', -999, 999, false) ?? 0;
         $startsAt = $payload->instant('startsAt');
         $endsAt = $payload->instant('endsAt');
         if (null !== $startsAt && null !== $endsAt && $endsAt <= $startsAt) {
-            $payload->fail('endsAt', 'La fin doit suivre le début.');
+            $payload->fail('endsAt', 'shop.ends_after_start');
         }
         $comingSoon = $payload->bool('comingSoon');
 
@@ -120,18 +120,18 @@ final readonly class OfferEditor
             $item = \is_array($line) && \is_string($line['item'] ?? null) ? ItemType::tryFrom($line['item']) : null;
             $quantity = \is_array($line) ? ($line['quantity'] ?? null) : null;
             if (null === $item) {
-                $payload->fail("contents[$i].item", 'Objet inconnu.');
+                $payload->fail("contents[$i].item", 'shop.unknown_item');
             } elseif (!\is_int($quantity) || $quantity < 1 || $quantity > self::MAX_ITEM_QUANTITY) {
-                $payload->fail("contents[$i].quantity", \sprintf('De 1 à %d.', self::MAX_ITEM_QUANTITY));
+                $payload->fail("contents[$i].quantity", 'shop.quantity', ['%max%' => self::MAX_ITEM_QUANTITY]);
             } elseif (isset($seen[$item->value])) {
-                $payload->fail("contents[$i].item", 'Cet objet est déjà dans l’offre.');
+                $payload->fail("contents[$i].item", 'shop.duplicate_item');
             } else {
                 $seen[$item->value] = true;
                 $contents[] = ['item' => $item->value, 'quantity' => $quantity];
             }
         }
         if ([] === $contents && !$comingSoon) {
-            $payload->fail('contents', 'Une offre en vente contient au moins un objet.');
+            $payload->fail('contents', 'shop.empty_offer');
         }
 
         if (null === $section || null === $name || null === $description || null === $price) {
