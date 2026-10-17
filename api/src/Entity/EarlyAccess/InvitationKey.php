@@ -7,6 +7,7 @@ namespace App\Entity\EarlyAccess;
 use App\Entity\User;
 use App\Enum\EarlyAccess\EmailStatus;
 use App\Enum\EarlyAccess\InvitationStatus;
+use App\Enum\Locale;
 use App\Repository\EarlyAccess\InvitationKeyRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -80,6 +81,13 @@ class InvitationKey
     /** Emails queued: 1 at creation, +1 per resend. */
     #[ORM\Column(type: 'smallint', options: ['unsigned' => true])]
     private int $sendCount = 1;
+
+    /**
+     * The language of its email (docs/I18N.md, § 5): the visitor's for a waiting-list request, the
+     * admin's for a manual invitation; null before 2026-10-17 (English).
+     */
+    #[ORM\Column(length: 5, nullable: true, enumType: Locale::class)]
+    private ?Locale $locale = null;
 
     public function __construct(string $email, string $keyHash, string $keyHint, ?User $createdBy, \DateTimeImmutable $now, ?\DateTimeImmutable $expiresAt)
     {
@@ -155,6 +163,18 @@ class InvitationKey
     public function getSendCount(): int
     {
         return $this->sendCount;
+    }
+
+    public function getLocale(): ?Locale
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(?Locale $locale): static
+    {
+        $this->locale = $locale;
+
+        return $this;
     }
 
     public function getStatus(\DateTimeImmutable $now): InvitationStatus

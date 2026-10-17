@@ -1,5 +1,6 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-La suppression de votre compte Don't Stay Rooky a été annulée : votre compte et vos données sont conservés.
+{{ 'account_deletion_cancelled.body'|trans }}
 
-Si vous n'êtes pas à l'origine de cette annulation, changez votre mot de passe.
+{{ 'account_deletion_cancelled.warning'|trans }}

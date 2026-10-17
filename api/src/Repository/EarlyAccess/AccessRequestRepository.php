@@ -6,6 +6,7 @@ namespace App\Repository\EarlyAccess;
 
 use App\Entity\EarlyAccess\AccessRequest;
 use App\Entity\User;
+use App\Enum\Locale;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\QueryBuilder;
@@ -26,12 +27,12 @@ class AccessRequestRepository extends ServiceEntityRepository
      * Records a request, once per address: a second one for the same address changes nothing
      * (INSERT IGNORE on the unique email, so two simultaneous requests can't fail either).
      */
-    public function add(string $email, \DateTimeImmutable $now): void
+    public function add(string $email, Locale $locale, \DateTimeImmutable $now): void
     {
         $this->getEntityManager()->getConnection()->executeStatement(
-            'INSERT IGNORE INTO early_access_request (id, email, created_at) VALUES (?, ?, ?)',
-            [Uuid::v7(), $email, $now],
-            ['uuid', Types::STRING, Types::DATETIME_IMMUTABLE],
+            'INSERT IGNORE INTO early_access_request (id, email, locale, created_at) VALUES (?, ?, ?, ?)',
+            [Uuid::v7(), $email, $locale->value, $now],
+            ['uuid', Types::STRING, Types::STRING, Types::DATETIME_IMMUTABLE],
         );
     }
 

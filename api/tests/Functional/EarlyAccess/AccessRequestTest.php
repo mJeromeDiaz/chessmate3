@@ -76,7 +76,8 @@ final class AccessRequestTest extends EarlyAccessWebTestCase
 
     public function testInvitingARequestEmailsAKeyOnce(): void
     {
-        $this->ask('guest@example.com');
+        // A French visitor; the admin's requests send no language (English).
+        $this->ask('guest@example.com', language: 'fr');
         $request = $this->list()[0];
 
         $response = $this->api('POST', '/api/admin/access-requests/'.$request['id'].'/invite', $this->admin);
@@ -95,6 +96,7 @@ final class AccessRequestTest extends EarlyAccessWebTestCase
         $emails = $this->emails();
         self::assertCount(1, $emails);
         self::assertSame('guest@example.com', $emails[0]->getTo()[0]->getAddress());
+        self::assertSame("Ton invitation à l'accès anticipé de Don't Stay Rooky", $emails[0]->getSubject(), 'In the visitor\'s language.');
         self::assertStringContainsString('/#/register?key='.$invited['key'], (string) $emails[0]->getTextBody());
 
         $invitation = $this->invitation($invited['invitation']['id']);
@@ -140,9 +142,9 @@ final class AccessRequestTest extends EarlyAccessWebTestCase
         self::assertSame(['guest@example.com'], $this->storedEmails());
     }
 
-    private function ask(string $email, ?string $website = null): Response
+    private function ask(string $email, ?string $website = null, string $language = 'en'): Response
     {
-        $this->client->request('POST', '/api/auth/invitation/request', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode(['email' => $email, 'website' => $website], \JSON_THROW_ON_ERROR));
+        $this->client->request('POST', '/api/auth/invitation/request', server: ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT_LANGUAGE' => $language], content: json_encode(['email' => $email, 'website' => $website], \JSON_THROW_ON_ERROR));
 
         return $this->client->getResponse();
     }

@@ -1,0 +1,113 @@
+# Emails (docs/I18N.md, § 5): the subject is "<email>.subject", the bodies are
+# templates/emails/<email>.{html,txt}.twig. French is the source text; emails.en.yaml has the same keys.
+# Placeholders: %date% (d/m/Y) and %time% (H:i), the others named after what they hold; in the
+# HTML bodies, a placeholder may carry a link or bold text built by the template.
+greeting: "Bonjour,"
+ignore: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email."
+
+mfa_code:
+    subject: "Votre code de connexion Don't Stay Rooky"
+    intro: "Voici votre code de connexion Don't Stay Rooky :"
+    validity: "Ce code est valable 10 minutes et ne peut être utilisé qu'une seule fois."
+    requested: "Demandé le %date% à %time% depuis %device% (adresse IP %ip%)."
+    warning: "Si ce n'est pas vous, changez votre mot de passe dès que possible."
+
+verify_email:
+    subject: "Confirmez votre adresse email"
+    intro: "Merci de confirmer votre adresse email pour activer votre compte Don't Stay Rooky :"
+    intro_text: "Merci de confirmer votre adresse email pour activer votre compte Don't Stay Rooky en ouvrant ce lien :"
+    button: "Confirmer mon adresse email"
+    expires: "Ce lien expire dans %count% minute.|Ce lien expire dans %count% minutes."
+    ignore: "Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email."
+
+account_linked:
+    subject: "Un nouveau compte a été lié à votre compte Don't Stay Rooky"
+    body: "Un compte %provider% a été lié à votre compte Don't Stay Rooky le %date% à %time%. Il permet désormais de vous connecter."
+    warning: "Si vous n'êtes pas à l'origine de cette liaison, retirez ce compte depuis votre %profile% et changez votre mot de passe."
+    warning_text: "Si vous n'êtes pas à l'origine de cette liaison, retirez ce compte depuis votre profil et changez votre mot de passe :"
+    profile: "profil"
+
+password_changed:
+    subject: "Votre mot de passe Don't Stay Rooky a été modifié"
+    body: "Le mot de passe de votre compte Don't Stay Rooky a été modifié le %date% à %time% depuis %device% (adresse IP %ip%)."
+    sessions: "Par sécurité, toutes vos sessions ont été fermées et vos appareils de confiance révoqués."
+    warning: "Si vous n'êtes pas à l'origine de ce changement, réinitialisez immédiatement votre mot de passe :"
+    button: "Réinitialiser mon mot de passe"
+
+password_added:
+    subject: "Un mot de passe a été ajouté à votre compte Don't Stay Rooky"
+    body: "Un mot de passe a été ajouté à votre compte Don't Stay Rooky le %date% à %time% depuis %device% (adresse IP %ip%). Vous pouvez désormais vous connecter avec votre email et ce mot de passe, un code de vérification vous étant envoyé à chaque connexion."
+    warning: "Si vous n'êtes pas à l'origine de cet ajout, %reset% et vérifiez les comptes liés depuis votre %profile%."
+    warning_text: "Si vous n'êtes pas à l'origine de cet ajout, réinitialisez ce mot de passe et vérifiez les comptes liés depuis votre profil :"
+    reset: "réinitialisez ce mot de passe"
+    profile: "profil"
+
+email_already_in_use:
+    subject: "Votre adresse email Don't Stay Rooky"
+    body: "Quelqu'un a essayé, le %date% à %time%, d'associer votre adresse email à un autre compte Don't Stay Rooky. Elle est déjà celle de votre compte : rien n'a été modifié."
+    advice: "Si c'était vous, %login% ; vous pourrez y lier Lichess ou Google depuis votre profil. Sinon, vous pouvez ignorer cet email."
+    login: "connectez-vous à votre compte existant"
+
+reset_password:
+    subject: "Réinitialisation de votre mot de passe Don't Stay Rooky"
+    requested: "Une réinitialisation du mot de passe de votre compte Don't Stay Rooky a été demandée le %date% à %time% depuis %device% (adresse IP %ip%)."
+    button: "Choisir un nouveau mot de passe"
+    button_text: "Pour choisir un nouveau mot de passe, ouvrez ce lien :"
+    expires: "Ce lien expire dans %count% minute et ne peut être utilisé qu'une seule fois.|Ce lien expire dans %count% minutes et ne peut être utilisé qu'une seule fois."
+    ignore: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe reste inchangé."
+
+reset_password_no_password:
+    subject: "Réinitialisation de votre mot de passe Don't Stay Rooky"
+    no_password: "Votre compte n'a pas de mot de passe : vous vous connectez avec Google ou Lichess. Utilisez le bouton correspondant sur la %login%."
+    no_password_text: "Votre compte n'a pas de mot de passe : vous vous connectez avec Google ou Lichess. Utilisez le bouton correspondant sur la page de connexion :"
+    login: "page de connexion"
+    add: "Une fois connecté, vous pouvez ajouter un mot de passe depuis votre profil."
+
+account_deletion_code:
+    subject: "Confirmez la suppression de votre compte Don't Stay Rooky"
+    intro: "Vous avez demandé la suppression de votre compte Don't Stay Rooky. Pour la confirmer, saisissez ce code :"
+    requested: "Il est valable 10 minutes. Demande faite le %date% à %time% depuis %device% (adresse IP %ip%)."
+    grace: "Une fois confirmée, votre compte sera gelé puis supprimé définitivement après %days% jours ; vous pourrez annuler d'ici là en vous reconnectant."
+    warning: "Si vous n'êtes pas à l'origine de cette demande, ne communiquez ce code à personne et changez votre mot de passe."
+
+account_deletion_scheduled:
+    subject: "Suppression de votre compte Don't Stay Rooky programmée"
+    body: "La suppression de votre compte Don't Stay Rooky est programmée : il sera effacé définitivement le %date%, avec toutes vos données (puzzles, répertoires, sessions, statistiques)."
+    cancel: "Toutes vos sessions ont été fermées. Jusqu'à cette date, vous pouvez annuler la suppression ou exporter vos données en vous reconnectant :"
+    button: "Me reconnecter"
+
+account_deletion_cancelled:
+    subject: "Suppression de votre compte Don't Stay Rooky annulée"
+    body: "La suppression de votre compte Don't Stay Rooky a été annulée : votre compte et vos données sont conservés."
+    warning: "Si vous n'êtes pas à l'origine de cette annulation, changez votre mot de passe."
+
+early_access_invitation:
+    subject: "Ton invitation à l'accès anticipé de Don't Stay Rooky"
+    welcome: "Bienvenue dans l'accès anticipé de %brand% : puzzles, méthode Woodpecker, répertoires d'ouvertures et sessions d'entraînement, avant tout le monde."
+    personal: "Ton invitation est personnelle et ne sert qu'une fois : avec elle, tu crées ton compte avec l'adresse de ton choix, ou avec Google ou Lichess."
+    button: "Créer mon compte"
+    button_text: "Créer mon compte :"
+    expires: "Elle est valable jusqu'au %date% à %time% (%timezone%)."
+    unexpected: "Tu ne t'attendais pas à ce message ? Ignore-le simplement."
+
+session_reminder:
+    subject: "Rappel : %title% %when%"
+    default_title: "Ta session"
+    when:
+        today: "à %time%"
+        tomorrow: "demain à %time%"
+        later: "le %date% à %time%"
+    starts: "Rappel : « %title% » commence %when% (%minutes% min)."
+    button: "Lance-la depuis Mes sessions"
+    button_text: "Lance-la depuis Mes sessions :"
+    unsubscribe: "Pour ne plus recevoir ce rappel, désactive-le dans les paramètres de la session."
+
+streak_reminder:
+    subject: "Ta série de %days% s’arrête à minuit"
+    days: "%count% jour|%count% jours"
+    body: "Ta série de %days% s’arrête à minuit : un seul exercice suffit pour la garder."
+    button: "Faire un exercice"
+    button_text: "Faire un exercice :"
+    settings: "Pour changer l’heure de ce rappel ou ne plus le recevoir par email, va dans %profile%."
+    settings_text: "Pour changer l’heure de ce rappel ou ne plus le recevoir par email, va dans ton profil :"
+    profile: "ton profil"

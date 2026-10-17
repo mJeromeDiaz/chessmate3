@@ -214,7 +214,7 @@ final class AccountDeletionTest extends OAuthWebTestCase
     {
         $messages = array_values(array_filter(
             self::getMailerMessages(),
-            static fn ($message): bool => $message instanceof Email && str_starts_with((string) $message->getSubject(), 'Confirmez la suppression'),
+            static fn ($message): bool => $message instanceof Email && str_starts_with((string) $message->getSubject(), 'Confirm the deletion'),
         ));
         $message = end($messages);
         self::assertInstanceOf(Email::class, $message, 'No deletion code was emailed.');

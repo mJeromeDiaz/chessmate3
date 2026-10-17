@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace App\Training\Plan\Reminder;
 
 use App\Enum\Training\Module;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Notification\Push\PushMessage;
 use App\Notification\Push\PushSender;
 use App\Repository\Training\PlanRepository;
 use Psr\Clock\ClockInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Sends the reminder of a saved session on the channels the user chose (docs/TRAINING.md): an
@@ -27,6 +29,9 @@ final readonly class SessionReminderHandler
     public function __construct(
         private PlanRepository $plans,
         private MailerInterface $mailer,
+        private EmailTemplates $emails,
+        private UserLocale $userLocale,
+        private TranslatorInterface $translator,
         private PushSender $push,
         private ClockInterface $clock,
         #[Autowire('%env(MAILER_FROM_ADDRESS)%')]
@@ -53,32 +58,30 @@ final readonly class SessionReminderHandler
             return;
         }
         $local = $occursAt->setTimezone($user->getDateTimeZone());
-        $title = '' !== $plan->getTitle() ? $plan->getTitle() : 'Ta session';
-        $when = self::when($local, $now->setTimezone($user->getDateTimeZone()));
+        // A cron or a worker: the account's language, English if it chose none (docs/I18N.md, § 5).
+        $locale = $this->userLocale->of($user);
+        $title = '' !== $plan->getTitle() ? $plan->getTitle() : $this->translator->trans('session_reminder.default_title', [], 'emails', $locale);
+        $when = $this->when($local, $now->setTimezone($user->getDateTimeZone()), $locale);
         $url = $this->frontendUrl.'/#/session';
 
         if (\in_array('email', $plan->getReminderChannels(), true) && null !== $user->getEmail() && $user->isEmailVerified()) {
-            $this->mailer->send((new TemplatedEmail())
+            $this->mailer->send($this->emails->compose('session_reminder', $locale, [
+                'title' => $title,
+                'when' => $when,
+                'steps' => array_map(fn (array $step): array => [
+                    'label' => null === Module::tryFrom($step['module']) ? $step['module'] : $this->translator->trans('module.'.$step['module'], [], 'training', $locale),
+                    'minutes' => $step['minutes'],
+                ], $plan->getSteps()),
+                'totalMinutes' => array_sum(array_column($plan->getSteps(), 'minutes')),
+                'url' => $url,
+            ], ['%title%' => $title, '%when%' => $when])
                 ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-                ->to($user->getEmail())
-                ->subject(sprintf('Rappel : %s %s', $title, $when))
-                ->htmlTemplate('emails/session_reminder.html.twig')
-                ->textTemplate('emails/session_reminder.txt.twig')
-                ->context([
-                    'title' => $title,
-                    'when' => $when,
-                    'steps' => array_map(static fn (array $step): array => [
-                        'label' => Module::tryFrom($step['module'])?->label() ?? $step['module'],
-                        'minutes' => $step['minutes'],
-                    ], $plan->getSteps()),
-                    'totalMinutes' => array_sum(array_column($plan->getSteps(), 'minutes')),
-                    'url' => $url,
-                ]));
+                ->to($user->getEmail()));
         }
         if (\in_array('push', $plan->getReminderChannels(), true)) {
             $this->push->send($user, new PushMessage(
                 title: $title,
-                body: sprintf('Ta session commence %s.', $when),
+                body: $this->translator->trans('session_reminder.body', ['%when%' => $when], 'notifications', $locale),
                 url: '/#/session',
                 tag: 'session-reminder-'.$plan->getId()->toRfc4122(),
                 ttlSeconds: max(60, $occursAt->getTimestamp() - $now->getTimestamp()),
@@ -87,16 +90,17 @@ final readonly class SessionReminderHandler
     }
 
     /**
-     * "à 18:30", "demain à 07:00", "le 12/10 à 18:30" (local times).
+     * "à 18:30", "demain à 07:00", "le 12/10 à 18:30" (local times), in the language given.
      */
-    private static function when(\DateTimeImmutable $at, \DateTimeImmutable $now): string
+    private function when(\DateTimeImmutable $at, \DateTimeImmutable $now, string $locale): string
     {
         $days = (int) $now->setTime(0, 0)->diff($at->setTime(0, 0))->format('%r%a');
-
-        return match ($days) {
-            0 => 'à '.$at->format('H:i'),
-            1 => 'demain à '.$at->format('H:i'),
-            default => sprintf('le %s à %s', $at->format('d/m'), $at->format('H:i')),
+        $key = match ($days) {
+            0 => 'today',
+            1 => 'tomorrow',
+            default => 'later',
         };
+
+        return $this->translator->trans('session_reminder.when.'.$key, ['%date%' => $at->format('d/m'), '%time%' => $at->format('H:i')], 'emails', $locale);
     }
 }

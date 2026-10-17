@@ -1,0 +1,7 @@
+# Web Push notifications (docs/I18N.md, § 5; docs/NOTIFICATIONS.md). The texts they share with the
+# reminder emails (when, default title, days) are in emails.fr.yaml.
+session_reminder:
+    body: "Ta session commence %when%."
+streak_reminder:
+    title: "Ta série est en danger 🔥"
+    body: "Ta série de %days% s’arrête à minuit. Un exercice suffit pour la garder !"

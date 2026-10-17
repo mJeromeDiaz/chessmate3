@@ -1,8 +1,9 @@
+{% trans_default_domain 'emails' %}
 <!DOCTYPE html>
 <html>
     <body style="font-family: sans-serif;">
-        <p>Bonjour,</p>
-        <p>Un compte {{ provider }}{% if providerEmail %} ({{ providerEmail }}){% endif %} a été lié à votre compte Don't Stay Rooky le {{ linkedAt|date('d/m/Y à H:i') }}. Il permet désormais de vous connecter.</p>
-        <p><strong>Si vous n'êtes pas à l'origine de cette liaison, retirez ce compte depuis votre <a href="{{ profileUrl }}">profil</a> et changez votre mot de passe.</strong></p>
+        <p>{{ 'greeting'|trans }}</p>
+        <p>{{ 'account_linked.body'|trans({'%provider%': provider ~ (providerEmail ? ' (' ~ providerEmail ~ ')' : ''), '%date%': linkedAt|date('d/m/Y'), '%time%': linkedAt|date('H:i')}) }}</p>
+        <p><strong>{{ 'account_linked.warning'|trans({'%profile%': '<a href="' ~ profileUrl|e('html_attr') ~ '">' ~ 'account_linked.profile'|trans|e ~ '</a>'})|raw }}</strong></p>
     </body>
 </html>

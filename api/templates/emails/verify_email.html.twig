@@ -1,10 +1,11 @@
+{% trans_default_domain 'emails' %}
 <!DOCTYPE html>
 <html>
     <body style="font-family: sans-serif;">
-        <p>Bonjour,</p>
-        <p>Merci de confirmer votre adresse email pour activer votre compte Don't Stay Rooky :</p>
-        <p><a href="{{ signedUrl }}">Confirmer mon adresse email</a></p>
-        <p>Ce lien expire dans {{ expiresInMinutes }} minute{{ expiresInMinutes > 1 ? 's' : '' }}.</p>
-        <p>Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email.</p>
+        <p>{{ 'greeting'|trans }}</p>
+        <p>{{ 'verify_email.intro'|trans }}</p>
+        <p><a href="{{ signedUrl }}">{{ 'verify_email.button'|trans }}</a></p>
+        <p>{{ 'verify_email.expires'|trans({'%count%': expiresInMinutes}) }}</p>
+        <p>{{ 'verify_email.ignore'|trans }}</p>
     </body>
 </html>

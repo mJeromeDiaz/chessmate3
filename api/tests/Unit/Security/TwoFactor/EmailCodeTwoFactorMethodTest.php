@@ -6,13 +6,17 @@ namespace App\Tests\Unit\Security\TwoFactor;
 
 use App\Entity\MfaChallenge;
 use App\Entity\User;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Mailer\SyncMailer;
 use App\Security\TwoFactor\EmailCodeTwoFactorMethod;
 use App\Security\UserAgent\UserAgentSummarizer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\RawMessage;
+use Symfony\Component\Translation\IdentityTranslator;
 
 final class EmailCodeTwoFactorMethodTest extends TestCase
 {
@@ -114,7 +118,7 @@ final class EmailCodeTwoFactorMethodTest extends TestCase
             return null;
         });
 
-        return new EmailCodeTwoFactorMethod(new SyncMailer($transport), new UserAgentSummarizer(), 'no-reply@example.com', self::SECRET);
+        return new EmailCodeTwoFactorMethod(new SyncMailer($transport), new EmailTemplates(new IdentityTranslator()), new UserLocale(new RequestStack()), new UserAgentSummarizer(), 'no-reply@example.com', self::SECRET);
     }
 
     private function newChallenge(): MfaChallenge

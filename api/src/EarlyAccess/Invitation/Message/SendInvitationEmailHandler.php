@@ -9,12 +9,13 @@ use App\Entity\EarlyAccess\InvitationKey;
 use App\Entity\EarlyAccess\InvitationLog;
 use App\Enum\EarlyAccess\InvitationAction;
 use App\Enum\EarlyAccess\InvitationStatus;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Mailer\SyncMailer;
 use App\Repository\EarlyAccess\InvitationKeyRepository;
 use App\Security\Crypto\SecretBox;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Address;
@@ -36,6 +37,7 @@ final readonly class SendInvitationEmailHandler
         private EntityManagerInterface $entityManager,
         private SecretBox $secretBox,
         private SyncMailer $mailer,
+        private EmailTemplates $emails,
         private ClockInterface $clock,
         #[Autowire('%env(MAILER_FROM_ADDRESS)%')]
         private string $fromAddress,
@@ -58,16 +60,15 @@ final readonly class SendInvitationEmailHandler
 
         $timezone = $invitation->getCreatedBy()?->getDateTimeZone() ?? new \DateTimeZone('UTC');
         $expiresAt = $invitation->getExpiresAt()?->setTimezone($timezone);
-        $this->mailer->send((new TemplatedEmail())
+        $locale = $invitation->getLocale() ?? UserLocale::DEFAULT;
+        $this->mailer->send($this->emails->compose('early_access_invitation', $locale->value, [
+            'url' => $this->frontendUrl.'/#/register?key='.$key,
+            // In the admin's timezone, which the email names.
+            'expiresAt' => $expiresAt,
+            'timezone' => $timezone->getName(),
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($invitation->getEmail())
-            ->subject('Ton invitation à l\'accès anticipé de Don\'t Stay Rooky')
-            ->htmlTemplate('emails/early_access_invitation.html.twig')
-            ->textTemplate('emails/early_access_invitation.txt.twig')
-            ->context([
-                'url' => $this->frontendUrl.'/#/register?key='.$key,
-                'expiresAt' => null === $expiresAt ? null : \sprintf('%s à %s (%s)', $expiresAt->format('d/m/Y'), $expiresAt->format('H:i'), $timezone->getName()),
-            ]));
+            ->to($invitation->getEmail()));
 
         $invitation->markSent($now);
         $this->entityManager->persist(new InvitationLog($invitation, InvitationAction::KeySent, null, $now, [

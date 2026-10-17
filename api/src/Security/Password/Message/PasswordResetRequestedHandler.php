@@ -6,10 +6,10 @@ namespace App\Security\Password\Message;
 
 use App\Entity\User;
 use App\Enum\AuditEventType;
+use App\Mailer\EmailTemplates;
 use App\Repository\UserRepository;
 use App\Security\Audit\AuditLogger;
 use App\Security\UserAgent\UserAgentSummarizer;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -29,6 +29,7 @@ final readonly class PasswordResetRequestedHandler
         private UserRepository $userRepository,
         private ResetPasswordHelperInterface $resetPasswordHelper,
         private MailerInterface $mailer,
+        private EmailTemplates $emails,
         private AuditLogger $auditLogger,
         private UserAgentSummarizer $userAgentSummarizer,
         #[Autowire('%env(MAILER_FROM_ADDRESS)%')]
@@ -49,7 +50,7 @@ final readonly class PasswordResetRequestedHandler
         if (!$user->hasPassword()) {
             // OAuth-only account: a password can only be added from the profile, never through an
             // emailed link — so explain instead of sending one.
-            $this->send($message, 'emails/reset_password_no_password', ['frontendUrl' => $this->frontendUrl]);
+            $this->send($user, $message, 'reset_password_no_password', ['frontendUrl' => $this->frontendUrl]);
             $this->audit($user, $message, ['outcome' => 'no_password']);
 
             return;
@@ -65,7 +66,7 @@ final readonly class PasswordResetRequestedHandler
 
         // Hash-mode SPA route: the token sits in the URL fragment, which browsers never send to any
         // server (no access log, no Referer leak).
-        $this->send($message, 'emails/reset_password', [
+        $this->send($user, $message, 'reset_password', [
             'resetUrl' => $this->frontendUrl.'/#/reset-password?token='.rawurlencode($token->getToken()),
             'expiresInMinutes' => intdiv($this->resetPasswordHelper->getTokenLifetime(), 60),
         ]);
@@ -75,19 +76,17 @@ final readonly class PasswordResetRequestedHandler
     /**
      * @param array<string, mixed> $context
      */
-    private function send(PasswordResetRequested $message, string $template, array $context): void
+    private function send(User $user, PasswordResetRequested $message, string $template, array $context): void
     {
-        $this->mailer->send((new TemplatedEmail())
+        // Out of the request: the account's language, else the one the reset was asked in.
+        $locale = $user->getLocale()->value ?? $message->locale;
+        $this->mailer->send($this->emails->compose($template, $locale, $context + [
+            'requestedAt' => $message->requestedAt,
+            'device' => $this->userAgentSummarizer->summarize($message->userAgent),
+            'ip' => $message->ip ?? 'unknown',
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($message->email)
-            ->subject('Réinitialisation de votre mot de passe Don\'t Stay Rooky')
-            ->htmlTemplate($template.'.html.twig')
-            ->textTemplate($template.'.txt.twig')
-            ->context($context + [
-                'requestedAt' => $message->requestedAt,
-                'device' => $this->userAgentSummarizer->summarize($message->userAgent),
-                'ip' => $message->ip ?? 'unknown',
-            ]));
+            ->to($message->email));
     }
 
     /**

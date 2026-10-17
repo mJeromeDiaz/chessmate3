@@ -1,6 +1,7 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-La suppression de votre compte Don't Stay Rooky est programmée : il sera effacé définitivement le {{ scheduledAt|date('d/m/Y') }}, avec toutes vos données (puzzles, répertoires, sessions, statistiques).
+{{ 'account_deletion_scheduled.body'|trans({'%date%': scheduledAt|date('d/m/Y')}) }}
 
-Toutes vos sessions ont été fermées. Jusqu'à cette date, vous pouvez annuler la suppression ou exporter vos données en vous reconnectant :
+{{ 'account_deletion_scheduled.cancel'|trans }}
 {{ loginUrl }}

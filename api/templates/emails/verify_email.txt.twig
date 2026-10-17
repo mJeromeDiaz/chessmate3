@@ -1,8 +1,9 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-Merci de confirmer votre adresse email pour activer votre compte Don't Stay Rooky en ouvrant ce lien :
+{{ 'verify_email.intro_text'|trans }}
 {{ signedUrl }}
 
-Ce lien expire dans {{ expiresInMinutes }} minute{{ expiresInMinutes > 1 ? 's' : '' }}.
+{{ 'verify_email.expires'|trans({'%count%': expiresInMinutes}) }}
 
-Si vous n'êtes pas à l'origine de cette inscription, vous pouvez ignorer cet email.
+{{ 'verify_email.ignore'|trans }}

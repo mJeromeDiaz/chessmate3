@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity\EarlyAccess;
 
+use App\Enum\Locale;
 use App\Repository\EarlyAccess\AccessRequestRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -33,6 +34,10 @@ class AccessRequest
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $invitedAt = null;
+
+    /** The visitor's language when asking (docs/I18N.md, § 5), for the invitation; null before 2026-10-17. */
+    #[ORM\Column(length: 5, nullable: true, enumType: Locale::class)]
+    private ?Locale $locale = null;
 
     /** The invitation created from it (invitations are never deleted). */
     #[ORM\ManyToOne(targetEntity: InvitationKey::class)]
@@ -64,6 +69,11 @@ class AccessRequest
     public function getInvitedAt(): ?\DateTimeImmutable
     {
         return $this->invitedAt;
+    }
+
+    public function getLocale(): ?Locale
+    {
+        return $this->locale;
     }
 
     public function getInvitation(): ?InvitationKey

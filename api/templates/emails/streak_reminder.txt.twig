@@ -1,9 +1,10 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-Ta série de {{ days }} s’arrête à minuit : un seul exercice suffit pour la garder.
+{{ 'streak_reminder.body'|trans({'%days%': days}) }}
 
-Faire un exercice :
+{{ 'streak_reminder.button_text'|trans }}
 {{ url }}
 
-Pour changer l’heure de ce rappel ou ne plus le recevoir par email, va dans ton profil :
+{{ 'streak_reminder.settings_text'|trans }}
 {{ profileUrl }}

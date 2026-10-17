@@ -1,10 +1,11 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-Rappel : « {{ title }} » commence {{ when }} ({{ totalMinutes }} min).
+{{ 'session_reminder.starts'|trans({'%title%': title, '%when%': when, '%minutes%': totalMinutes}) }}
 
 {% for step in steps %}- {{ step.label }} · {{ step.minutes }} min
 {% endfor %}
-Lance-la depuis Mes sessions :
+{{ 'session_reminder.button_text'|trans }}
 {{ url }}
 
-Pour ne plus recevoir ce rappel, désactive-le dans les paramètres de la session.
+{{ 'session_reminder.unsubscribe'|trans }}

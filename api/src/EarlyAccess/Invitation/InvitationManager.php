@@ -11,6 +11,8 @@ use App\Entity\EarlyAccess\InvitationLog;
 use App\Entity\User;
 use App\Enum\EarlyAccess\InvitationAction;
 use App\Enum\EarlyAccess\InvitationStatus;
+use App\Enum\Locale;
+use App\I18n\UserLocale;
 use App\Repository\EarlyAccess\AccessRequestRepository;
 use App\Repository\EarlyAccess\InvitationKeyRepository;
 use App\Security\Crypto\SecretBox;
@@ -41,6 +43,7 @@ final readonly class InvitationManager
         private SecretBox $secretBox,
         private MessageBusInterface $bus,
         private ClockInterface $clock,
+        private UserLocale $userLocale,
     ) {
     }
 
@@ -57,6 +60,8 @@ final readonly class InvitationManager
         $expiresAt = $this->expiry($now, $expiresAt, $neverExpires);
         $key = $this->keyGenerator->generate();
         $invitation = new InvitationKey(mb_strtolower(trim($email)), KeyGenerator::hash($key), KeyGenerator::hint($key), $admin, $now, $expiresAt);
+        // Its email in the language the admin is using (docs/I18N.md, § 5).
+        $invitation->setLocale($this->adminLocale());
 
         $this->entityManager->wrapInTransaction(function () use ($invitation, $admin, $now, $key): void {
             $this->persistNew($invitation, $admin, $now, $key);
@@ -81,6 +86,8 @@ final readonly class InvitationManager
         $now = $this->clock->now();
         $key = $this->keyGenerator->generate();
         $invitation = new InvitationKey($request->getEmail(), KeyGenerator::hash($key), KeyGenerator::hint($key), $admin, $now, $now->modify(InvitationKey::DEFAULT_LIFETIME));
+        // Its email in the visitor's language (the admin's for a request older than that column).
+        $invitation->setLocale($request->getLocale() ?? $this->adminLocale());
 
         // The refusal is returned, not thrown: a transaction closes the entity manager on any exception.
         $claimed = $this->entityManager->wrapInTransaction(function () use ($invitation, $admin, $now, $key, $request): bool {
@@ -196,6 +203,11 @@ final readonly class InvitationManager
         ] + $details));
         $this->entityManager->flush();
         $this->queueEmail($invitation, $key);
+    }
+
+    private function adminLocale(): Locale
+    {
+        return Locale::from($this->userLocale->ofRequest());
     }
 
     private function queueEmail(InvitationKey $invitation, #[\SensitiveParameter] string $key): void

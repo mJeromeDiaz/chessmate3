@@ -6,9 +6,10 @@ namespace App\Security\TwoFactor;
 
 use App\Entity\MfaChallenge;
 use App\Entity\User;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Mailer\SyncMailer;
 use App\Security\UserAgent\UserAgentSummarizer;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mime\Address;
 
@@ -25,6 +26,8 @@ final readonly class EmailCodeTwoFactorMethod implements TwoFactorMethodInterfac
 
     public function __construct(
         private SyncMailer $mailer,
+        private EmailTemplates $emails,
+        private UserLocale $userLocale,
         private UserAgentSummarizer $userAgentSummarizer,
         #[Autowire('%env(MAILER_FROM_ADDRESS)%')]
         private string $fromAddress,
@@ -51,18 +54,15 @@ final readonly class EmailCodeTwoFactorMethod implements TwoFactorMethodInterfac
         $code = self::generateCode();
         $challenge->setCodeHash($this->hashCode($code));
 
-        $message = (new TemplatedEmail())
+        $user = $challenge->getUser();
+        $message = $this->emails->compose('mfa_code', $this->userLocale->of($user), [
+            'code' => $code,
+            'requestedAt' => $challenge->getLastSentAt(),
+            'device' => $this->userAgentSummarizer->summarize($challenge->getUserAgent()),
+            'ip' => $challenge->getIp() ?? 'unknown',
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to((string) $challenge->getUser()->getEmail())
-            ->subject('Votre code de connexion Don\'t Stay Rooky')
-            ->htmlTemplate('emails/mfa_code.html.twig')
-            ->textTemplate('emails/mfa_code.txt.twig')
-            ->context([
-                'code' => $code,
-                'requestedAt' => $challenge->getLastSentAt(),
-                'device' => $this->userAgentSummarizer->summarize($challenge->getUserAgent()),
-                'ip' => $challenge->getIp() ?? 'unknown',
-            ]);
+            ->to((string) $user->getEmail());
 
         $this->mailer->send($message);
     }

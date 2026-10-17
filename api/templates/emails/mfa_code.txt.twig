@@ -1,9 +1,10 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-Voici votre code de connexion Don't Stay Rooky : {{ code }}
+{{ 'mfa_code.intro'|trans }} {{ code }}
 
-Ce code est valable 10 minutes et ne peut être utilisé qu'une seule fois.
+{{ 'mfa_code.validity'|trans }}
 
-Demandé le {{ requestedAt|date('d/m/Y à H:i') }} depuis {{ device }} (adresse IP {{ ip }}).
+{{ 'mfa_code.requested'|trans({'%date%': requestedAt|date('d/m/Y'), '%time%': requestedAt|date('H:i'), '%device%': device, '%ip%': ip}) }}
 
-Si ce n'est pas vous, changez votre mot de passe dès que possible.
+{{ 'mfa_code.warning'|trans }}

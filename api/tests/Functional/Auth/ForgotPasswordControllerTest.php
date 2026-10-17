@@ -8,6 +8,7 @@ use App\Entity\AuditLogEntry;
 use App\Entity\ResetPasswordRequest;
 use App\Entity\User;
 use App\Enum\AuditEventType;
+use App\Enum\Locale;
 use App\Security\Password\Message\PasswordResetRequested;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 use Symfony\Component\Mime\Email;
@@ -38,6 +39,28 @@ final class ForgotPasswordControllerTest extends AuthWebTestCase
         self::assertStringNotContainsString(substr($token, 20), $request->getHashedToken());
 
         self::assertSame(['link_sent'], $this->auditOutcomes());
+    }
+
+    public function testTheEmailIsWrittenInTheLanguageOfTheRequest(): void
+    {
+        $this->createVerifiedUser('alice@example.com');
+
+        // Sent by a worker, out of the request: the message carries the request's language.
+        $this->requestPasswordReset('alice@example.com', ['HTTP_ACCEPT_LANGUAGE' => 'fr-FR,fr;q=0.9']);
+
+        self::assertSame("Réinitialisation de votre mot de passe Don't Stay Rooky", $this->lastEmailSubject());
+        self::assertStringContainsString('Ce lien expire dans 30 minutes', $this->lastEmailText());
+    }
+
+    public function testTheLanguageChosenOnTheAccountWinsOverTheRequests(): void
+    {
+        $this->createVerifiedUser('alice@example.com')->setLocale(Locale::English);
+        $this->entityManager->flush();
+
+        $this->requestPasswordReset('alice@example.com', ['HTTP_ACCEPT_LANGUAGE' => 'fr']);
+
+        self::assertSame("Reset your Don't Stay Rooky password", $this->lastEmailSubject());
+        self::assertStringContainsString('This link expires in 30 minutes', $this->lastEmailText());
     }
 
     public function testUnknownEmailGetsTheExactSameResponseAndNoEmail(): void
@@ -81,7 +104,7 @@ final class ForgotPasswordControllerTest extends AuthWebTestCase
         self::assertSame(202, $response->getStatusCode());
         self::assertQueuedEmailCount(1);
         $body = $this->lastEmailText();
-        self::assertStringContainsString("n'a pas de mot de passe", $body);
+        self::assertStringContainsString('Your account has no password', $body);
         self::assertStringNotContainsString('token=', $body);
         self::assertSame(0, $this->entityManager->getRepository(ResetPasswordRequest::class)->count([]));
     }
@@ -115,6 +138,14 @@ final class ForgotPasswordControllerTest extends AuthWebTestCase
     public function testInvalidEmailIsRejected(): void
     {
         self::assertSame(422, $this->postJson('/api/auth/forgot-password', ['email' => 'not-an-email'])->getStatusCode());
+    }
+
+    private function lastEmailSubject(): string
+    {
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(Email::class, $email);
+
+        return (string) $email->getSubject();
     }
 
     private function lastEmailText(): string

@@ -6,11 +6,12 @@ namespace App\Security\Password;
 
 use App\Entity\User;
 use App\Enum\AuditEventType;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Repository\UserRepository;
 use App\Security\Audit\AuditLogger;
 use App\Security\EmailVerification\EmailVerifier;
 use App\Security\UserAgent\UserAgentSummarizer;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
@@ -41,6 +42,8 @@ final readonly class PasswordAdder
         private EmailVerifier $emailVerifier,
         private AuditLogger $auditLogger,
         private MailerInterface $mailer,
+        private EmailTemplates $emails,
+        private UserLocale $userLocale,
         private RequestStack $requestStack,
         private UserAgentSummarizer $userAgentSummarizer,
         #[Autowire('%env(MAILER_FROM_ADDRESS)%')]
@@ -85,7 +88,7 @@ final readonly class PasswordAdder
         if (null !== $owner) {
             if (!$owner->getId()->equals($user->getId())) {
                 $this->auditLogger->log(AuditEventType::PasswordAdded, $user, ['outcome' => 'email_in_use']);
-                $this->notifyAddressInUse($email);
+                $this->notifyAddressInUse($owner, $email);
             }
 
             return self::RESULT_VERIFICATION_SENT;
@@ -104,32 +107,25 @@ final readonly class PasswordAdder
     {
         $request = $this->requestStack->getCurrentRequest();
 
-        $this->mailer->send((new TemplatedEmail())
+        $this->mailer->send($this->emails->compose('password_added', $this->userLocale->of($user), [
+            'addedAt' => new \DateTimeImmutable(),
+            'device' => $this->userAgentSummarizer->summarize($request?->headers->get('User-Agent')),
+            'ip' => $request?->getClientIp() ?? 'unknown',
+            'forgotPasswordUrl' => $this->frontendUrl.'/#/forgot-password',
+            'profileUrl' => $this->frontendUrl.'/#/profile',
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($email)
-            ->subject('Un mot de passe a été ajouté à votre compte Don\'t Stay Rooky')
-            ->htmlTemplate('emails/password_added.html.twig')
-            ->textTemplate('emails/password_added.txt.twig')
-            ->context([
-                'addedAt' => new \DateTimeImmutable(),
-                'device' => $this->userAgentSummarizer->summarize($request?->headers->get('User-Agent')),
-                'ip' => $request?->getClientIp() ?? 'unknown',
-                'forgotPasswordUrl' => $this->frontendUrl.'/#/forgot-password',
-                'profileUrl' => $this->frontendUrl.'/#/profile',
-            ]));
+            ->to($email));
     }
 
-    private function notifyAddressInUse(string $email): void
+    /** To the account that owns the address, in its language. */
+    private function notifyAddressInUse(User $owner, string $email): void
     {
-        $this->mailer->send((new TemplatedEmail())
+        $this->mailer->send($this->emails->compose('email_already_in_use', $this->userLocale->of($owner), [
+            'attemptedAt' => new \DateTimeImmutable(),
+            'loginUrl' => $this->frontendUrl.'/#/login',
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($email)
-            ->subject('Votre adresse email Don\'t Stay Rooky')
-            ->htmlTemplate('emails/email_already_in_use.html.twig')
-            ->textTemplate('emails/email_already_in_use.txt.twig')
-            ->context([
-                'attemptedAt' => new \DateTimeImmutable(),
-                'loginUrl' => $this->frontendUrl.'/#/login',
-            ]));
+            ->to($email));
     }
 }

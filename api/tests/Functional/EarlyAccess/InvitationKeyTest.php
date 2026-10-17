@@ -48,7 +48,8 @@ final class InvitationKeyTest extends EarlyAccessWebTestCase
         self::assertCount(1, $emails);
         self::assertSame('guest@example.com', $emails[0]->getTo()[0]->getAddress());
         self::assertStringContainsString('/#/register?key='.$invitation['key'], (string) $emails[0]->getTextBody());
-        self::assertStringContainsString('12/10/2026 à 12:00 (Europe/Paris)', (string) $emails[0]->getTextBody(), 'In the admin\'s time zone.');
+        self::assertStringContainsString('12/10/2026 at 12:00 (Europe/Paris)', (string) $emails[0]->getTextBody(), 'In the admin\'s time zone.');
+        self::assertSame('Your invitation to the Don\'t Stay Rooky early access', $emails[0]->getSubject(), 'In the admin\'s language: none sent, English.');
 
         $detail = $this->invitation($invitation['id']);
         self::assertNull($detail['key'], 'The key is shown once.');

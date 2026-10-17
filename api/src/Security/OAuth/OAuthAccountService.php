@@ -7,6 +7,8 @@ namespace App\Security\OAuth;
 use App\Entity\AuthIdentity;
 use App\Entity\User;
 use App\Enum\AuditEventType;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Repository\AuthIdentityRepository;
 use App\Repository\UserRepository;
 use App\Security\Audit\AuditLogger;
@@ -14,7 +16,6 @@ use App\Security\OAuth\Exception\OAuthFlowException;
 use App\Security\Registration\RegistrationGateInterface;
 use App\Security\Registration\RegistrationRefusedException;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
@@ -33,6 +34,8 @@ final readonly class OAuthAccountService
         private UserRepository $userRepository,
         private AuditLogger $auditLogger,
         private MailerInterface $mailer,
+        private EmailTemplates $emails,
+        private UserLocale $userLocale,
         private OAuthTokenVault $tokenVault,
         private RegistrationGateInterface $registrationGate,
         private EntityManagerInterface $entityManager,
@@ -208,17 +211,13 @@ final readonly class OAuthAccountService
             return;
         }
 
-        $this->mailer->send((new TemplatedEmail())
+        $this->mailer->send($this->emails->compose('account_linked', $this->userLocale->of($user), [
+            'provider' => ucfirst($identity->provider->value),
+            'providerEmail' => $identity->email,
+            'linkedAt' => new \DateTimeImmutable(),
+            'profileUrl' => $this->frontendUrl.'/#/profile',
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($email)
-            ->subject('Un nouveau compte a été lié à votre compte Don\'t Stay Rooky')
-            ->htmlTemplate('emails/account_linked.html.twig')
-            ->textTemplate('emails/account_linked.txt.twig')
-            ->context([
-                'provider' => ucfirst($identity->provider->value),
-                'providerEmail' => $identity->email,
-                'linkedAt' => new \DateTimeImmutable(),
-                'profileUrl' => $this->frontendUrl.'/#/profile',
-            ]));
+            ->to($email));
     }
 }

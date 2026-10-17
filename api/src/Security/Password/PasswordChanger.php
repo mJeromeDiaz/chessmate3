@@ -6,6 +6,8 @@ namespace App\Security\Password;
 
 use App\Entity\User;
 use App\Enum\AuditEventType;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Repository\MfaChallengeRepository;
 use App\Repository\UserRepository;
 use App\Security\Audit\AuditLogger;
@@ -13,7 +15,6 @@ use App\Security\RefreshToken\RefreshTokenService;
 use App\Security\TrustedDevice\TrustedDeviceService;
 use App\Security\TwoFactor\MfaFailureLimiter;
 use App\Security\UserAgent\UserAgentSummarizer;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
@@ -40,6 +41,8 @@ final readonly class PasswordChanger
         private TrustedDeviceService $trustedDeviceService,
         private AuditLogger $auditLogger,
         private MailerInterface $mailer,
+        private EmailTemplates $emails,
+        private UserLocale $userLocale,
         private RequestStack $requestStack,
         private UserAgentSummarizer $userAgentSummarizer,
         private MfaFailureLimiter $mfaFailureLimiter,
@@ -80,18 +83,14 @@ final readonly class PasswordChanger
 
         $request = $this->requestStack->getCurrentRequest();
 
-        $message = (new TemplatedEmail())
+        $message = $this->emails->compose('password_changed', $this->userLocale->of($user), [
+            'changedAt' => new \DateTimeImmutable(),
+            'device' => $this->userAgentSummarizer->summarize($request?->headers->get('User-Agent')),
+            'ip' => $request?->getClientIp() ?? 'unknown',
+            'forgotPasswordUrl' => $this->frontendUrl.'/#/forgot-password',
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($email)
-            ->subject('Votre mot de passe Don\'t Stay Rooky a été modifié')
-            ->htmlTemplate('emails/password_changed.html.twig')
-            ->textTemplate('emails/password_changed.txt.twig')
-            ->context([
-                'changedAt' => new \DateTimeImmutable(),
-                'device' => $this->userAgentSummarizer->summarize($request?->headers->get('User-Agent')),
-                'ip' => $request?->getClientIp() ?? 'unknown',
-                'forgotPasswordUrl' => $this->frontendUrl.'/#/forgot-password',
-            ]);
+            ->to($email);
 
         $this->mailer->send($message);
     }

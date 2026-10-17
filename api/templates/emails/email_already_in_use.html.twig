@@ -1,8 +1,9 @@
+{% trans_default_domain 'emails' %}
 <!DOCTYPE html>
 <html>
     <body style="font-family: sans-serif;">
-        <p>Bonjour,</p>
-        <p>Quelqu'un a essayé, le {{ attemptedAt|date('d/m/Y à H:i') }}, d'associer votre adresse email à un autre compte Don't Stay Rooky. Elle est déjà celle de votre compte : rien n'a été modifié.</p>
-        <p>Si c'était vous, <a href="{{ loginUrl }}">connectez-vous à votre compte existant</a> ; vous pourrez y lier Lichess ou Google depuis votre profil. Sinon, vous pouvez ignorer cet email.</p>
+        <p>{{ 'greeting'|trans }}</p>
+        <p>{{ 'email_already_in_use.body'|trans({'%date%': attemptedAt|date('d/m/Y'), '%time%': attemptedAt|date('H:i')}) }}</p>
+        <p>{{ 'email_already_in_use.advice'|trans({'%login%': '<a href="' ~ loginUrl|e('html_attr') ~ '">' ~ 'email_already_in_use.login'|trans|e ~ '</a>'})|raw }}</p>
     </body>
 </html>

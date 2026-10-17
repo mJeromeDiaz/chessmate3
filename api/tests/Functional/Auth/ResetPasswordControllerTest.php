@@ -36,7 +36,7 @@ final class ResetPasswordControllerTest extends AuthWebTestCase
         self::assertQueuedEmailCount(1);
         $email = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $email);
-        self::assertStringContainsString('modifié', (string) $email->getTextBody());
+        self::assertStringContainsString('was changed', (string) $email->getTextBody());
 
         self::assertSame(1, $this->entityManager->getRepository(AuditLogEntry::class)->count(['eventType' => AuditEventType::PasswordResetCompleted]));
 

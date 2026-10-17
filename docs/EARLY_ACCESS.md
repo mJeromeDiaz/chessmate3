@@ -72,6 +72,11 @@ L'email contient :
 - le lien `FRONTEND_URL/#/register?key=…` ;
 - la date d'expiration, dans le fuseau de l'admin.
 
+Il est écrit dans la langue de l'invitation (`early_access_invitation_key.locale`, docs/I18N.md,
+§ 5) : celle du visiteur pour une demande de la liste d'attente, celle qu'affiche l'admin (son
+`Accept-Language`) pour une invitation manuelle ; l'anglais pour une invitation d'avant le
+2026-10-17. Un renvoi garde la langue.
+
 ### Journal
 
 `early_access_invitation_log` enregistre les actions suivantes :
@@ -204,7 +209,10 @@ Code : `App\Entity\EarlyAccess\AccessRequest` (table `early_access_request`),
   formulaire ne dit rien de personne. **Aucun email n'est envoyé**, si bien qu'il ne peut pas servir
   à écrire à un tiers. 422 pour une adresse invalide.
 - **Une ligne par adresse** (minuscules, index unique `uniq_early_access_request_email`), insérée par
-  `INSERT IGNORE` : deux demandes simultanées ne peuvent pas échouer.
+  `INSERT IGNORE` : deux demandes simultanées ne peuvent pas échouer. La ligne garde la langue de
+  la requête (`locale`, son `Accept-Language` : `en` ou `fr`, anglais sinon ; la première demande
+  l'emporte), reprise par l'invitation ; une demande d'avant le 2026-10-17 (sans langue) prend
+  celle de l'admin qui invite.
 - **Anti-robots** : `website` est un champ piège, invisible pour une personne ; rempli, la demande
   reçoit le même 202 et n'est pas enregistrée. Limites : 5 demandes par heure et par IP
   (`access_request_ip`, relevée en e2e) et 300 par jour au total (`access_request_global`), pour

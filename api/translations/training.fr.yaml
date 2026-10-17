@@ -1,0 +1,10 @@
+# Training (docs/I18N.md, § 5): the names of the modules (App\Enum\Training\Module), by value.
+module:
+    woodpecker: "Woodpecker"
+    repertoire: "Répertoire"
+    puzzles: "Puzzles"
+    free: "Libre"
+    coordinates: "Coordonnées"
+    blindfold: "Aveugle"
+    evaluation: "Évaluation"
+    puzzle_streak: "Streak"

@@ -27,7 +27,7 @@ final readonly class UserLocale
      */
     public function of(?User $user = null): string
     {
-        return $user?->getLocale()?->value ?? $this->ofRequest();
+        return $user?->getLocale()->value ?? $this->ofRequest();
     }
 
     /** The language of the request being served, English outside of one. */

@@ -1,13 +1,14 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-Bienvenue dans l'accès anticipé de Don't Stay Rooky : puzzles, méthode Woodpecker, répertoires d'ouvertures et sessions d'entraînement, avant tout le monde.
+{{ 'early_access_invitation.welcome'|trans({'%brand%': 'Don\'t Stay Rooky'}) }}
 
-Ton invitation est personnelle et ne sert qu'une fois : avec elle, tu crées ton compte avec l'adresse de ton choix, ou avec Google ou Lichess.
+{{ 'early_access_invitation.personal'|trans }}
 
-Créer mon compte :
+{{ 'early_access_invitation.button_text'|trans }}
 {{ url }}
 {% if expiresAt %}
-Elle est valable jusqu'au {{ expiresAt }}.
+{{ 'early_access_invitation.expires'|trans({'%date%': expiresAt|date('d/m/Y', false), '%time%': expiresAt|date('H:i', false), '%timezone%': timezone}) }}
 {% endif %}
 
-Tu ne t'attendais pas à ce message ? Ignore-le simplement.
+{{ 'early_access_invitation.unexpected'|trans }}

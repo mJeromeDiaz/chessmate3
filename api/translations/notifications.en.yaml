@@ -1,0 +1,6 @@
+# Web Push notifications (docs/I18N.md, § 5): the same keys as notifications.fr.yaml.
+session_reminder:
+    body: "Your session starts %when%."
+streak_reminder:
+    title: "Your streak is in danger 🔥"
+    body: "Your %days% streak ends at midnight. One exercise is enough to keep it!"

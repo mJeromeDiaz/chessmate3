@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller\EarlyAccess;
 
 use App\Dto\EarlyAccess\AccessRequestInput;
+use App\Enum\Locale;
+use App\I18n\UserLocale;
 use App\Repository\EarlyAccess\AccessRequestRepository;
 use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
@@ -44,7 +46,7 @@ final class AccessRequestController extends AbstractController
 
         if (null === $payload->website || '' === $payload->website) {
             $this->rateLimitGuard->consume($this->globalLimiter, 'all');
-            $this->requests->add(mb_strtolower(trim($payload->email)), $this->clock->now());
+            $this->requests->add(mb_strtolower(trim($payload->email)), Locale::tryFrom($request->getLocale()) ?? UserLocale::DEFAULT, $this->clock->now());
         }
 
         return $this->json(['message' => 'Your request is recorded.'], Response::HTTP_ACCEPTED);

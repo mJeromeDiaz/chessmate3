@@ -1,11 +1,12 @@
-Bonjour,
+{% trans_default_domain 'emails' %}
+{{ 'greeting'|trans }}
 
-Vous avez demandé la suppression de votre compte Don't Stay Rooky. Pour la confirmer, saisissez ce code :
+{{ 'account_deletion_code.intro'|trans }}
 
 {{ code }}
 
-Il est valable 10 minutes. Demande faite le {{ requestedAt|date('d/m/Y à H:i') }} depuis {{ device }} (adresse IP {{ ip }}).
+{{ 'account_deletion_code.requested'|trans({'%date%': requestedAt|date('d/m/Y'), '%time%': requestedAt|date('H:i'), '%device%': device, '%ip%': ip}) }}
 
-Une fois confirmée, votre compte sera gelé puis supprimé définitivement après {{ graceDays }} jours ; vous pourrez annuler d'ici là en vous reconnectant.
+{{ 'account_deletion_code.grace'|trans({'%days%': graceDays}) }}
 
-Si vous n'êtes pas à l'origine de cette demande, ne communiquez ce code à personne et changez votre mot de passe.
+{{ 'account_deletion_code.warning'|trans }}

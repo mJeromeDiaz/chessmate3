@@ -7,6 +7,8 @@ namespace App\Security\Account;
 use App\Entity\AccountDeletionCode;
 use App\Entity\User;
 use App\Enum\AuditEventType;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Mailer\SyncMailer;
 use App\Repository\AccountDeletionCodeRepository;
 use App\Repository\UserRepository;
@@ -15,7 +17,6 @@ use App\Security\RefreshToken\RefreshTokenService;
 use App\Security\TwoFactor\EmailCodeTwoFactorMethod;
 use App\Security\UserAgent\UserAgentSummarizer;
 use Psr\Clock\ClockInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
@@ -50,6 +51,8 @@ final readonly class AccountDeletion
         private AuditLogger $auditLogger,
         private SyncMailer $syncMailer,
         private MailerInterface $mailer,
+        private EmailTemplates $emails,
+        private UserLocale $userLocale,
         private RequestStack $requestStack,
         private UserAgentSummarizer $userAgentSummarizer,
         private ClockInterface $clock,
@@ -106,19 +109,15 @@ final readonly class AccountDeletion
         $expiresAt = $now->modify(\sprintf('+%d seconds', self::CODE_TTL_SECONDS));
         $request = $this->requestStack->getCurrentRequest();
         // Delivered before being stored: if sending fails, no code is left behind.
-        $this->syncMailer->send((new TemplatedEmail())
+        $this->syncMailer->send($this->emails->compose('account_deletion_code', $this->userLocale->of($user), [
+            'code' => $code,
+            'requestedAt' => $now,
+            'device' => $this->userAgentSummarizer->summarize($request?->headers->get('User-Agent')),
+            'ip' => $request?->getClientIp() ?? 'unknown',
+            'graceDays' => self::GRACE_DAYS,
+        ])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($email)
-            ->subject('Confirmez la suppression de votre compte Don\'t Stay Rooky')
-            ->htmlTemplate('emails/account_deletion_code.html.twig')
-            ->textTemplate('emails/account_deletion_code.txt.twig')
-            ->context([
-                'code' => $code,
-                'requestedAt' => $now,
-                'device' => $this->userAgentSummarizer->summarize($request?->headers->get('User-Agent')),
-                'ip' => $request?->getClientIp() ?? 'unknown',
-                'graceDays' => self::GRACE_DAYS,
-            ]));
+            ->to($email));
 
         $this->codes->deleteForUser($user);
         $this->codes->save(new AccountDeletionCode($user, $this->hash($code), $expiresAt, $now));
@@ -176,7 +175,7 @@ final readonly class AccountDeletion
         $user->scheduleDeletion($scheduledAt)->bumpTokenVersion();
         $this->users->save($user);
         $this->auditLogger->log(AuditEventType::AccountDeletionScheduled, $user, [...$metadata, 'scheduledAt' => $scheduledAt->format(\DATE_ATOM)]);
-        $this->notify($user, 'account_deletion_scheduled', 'Suppression de votre compte Don\'t Stay Rooky programmée', ['scheduledAt' => $scheduledAt]);
+        $this->notify($user, 'account_deletion_scheduled', ['scheduledAt' => $scheduledAt]);
 
         // Last: the bulk revocation clears the entity manager, detaching $user.
         $this->refreshTokens->revokeAllSessions($user);
@@ -195,25 +194,21 @@ final readonly class AccountDeletion
         $user->cancelDeletion();
         $this->users->save($user);
         $this->auditLogger->log(AuditEventType::AccountDeletionCancelled, $user);
-        $this->notify($user, 'account_deletion_cancelled', 'Suppression de votre compte Don\'t Stay Rooky annulée', []);
+        $this->notify($user, 'account_deletion_cancelled', []);
     }
 
     /**
      * @param array<string, mixed> $context
      */
-    private function notify(User $user, string $template, string $subject, array $context): void
+    private function notify(User $user, string $template, array $context): void
     {
         $email = $user->getEmail();
         if (null === $email) {
             return;
         }
-        $this->mailer->send((new TemplatedEmail())
+        $this->mailer->send($this->emails->compose($template, $this->userLocale->of($user), [...$context, 'loginUrl' => $this->frontendUrl.'/#/login', 'graceDays' => self::GRACE_DAYS])
             ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-            ->to($email)
-            ->subject($subject)
-            ->htmlTemplate(\sprintf('emails/%s.html.twig', $template))
-            ->textTemplate(\sprintf('emails/%s.txt.twig', $template))
-            ->context([...$context, 'loginUrl' => $this->frontendUrl.'/#/login', 'graceDays' => self::GRACE_DAYS]));
+            ->to($email));
     }
 
     private function hash(string $code): string

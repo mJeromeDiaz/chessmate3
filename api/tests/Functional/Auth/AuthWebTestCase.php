@@ -119,9 +119,12 @@ abstract class AuthWebTestCase extends WebTestCase
      * transport, then a worker handles it — simulated here by running the handler directly on what
      * was queued. Returns the HTTP response of the request itself.
      */
-    protected function requestPasswordReset(string $email): Response
+    /**
+     * @param array<string, string> $server
+     */
+    protected function requestPasswordReset(string $email, array $server = []): Response
     {
-        $response = $this->postJson('/api/auth/forgot-password', ['email' => $email]);
+        $response = $this->postJson('/api/auth/forgot-password', ['email' => $email], $server);
 
         /** @var \Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport $transport */
         $transport = self::getContainer()->get('messenger.transport.async');

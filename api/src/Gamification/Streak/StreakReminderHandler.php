@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace App\Gamification\Streak;
 
 use App\Activity\Log\LocalDate;
+use App\I18n\UserLocale;
+use App\Mailer\EmailTemplates;
 use App\Notification\Push\PushMessage;
 use App\Notification\Push\PushSender;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Psr\Clock\ClockInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Sends the "streak in danger" reminder (docs/NOTIFICATIONS.md, § 5): a Web Push to each subscribed
@@ -32,6 +34,9 @@ final readonly class StreakReminderHandler
         private StreakReminders $reminders,
         private Connection $connection,
         private MailerInterface $mailer,
+        private EmailTemplates $emails,
+        private UserLocale $userLocale,
+        private TranslatorInterface $translator,
         private PushSender $push,
         private ClockInterface $clock,
         private FreezeStockInterface $freezes,
@@ -73,24 +78,22 @@ final readonly class StreakReminderHandler
             return;
         }
         $streak = (int) $last['streak'];
-        $days = \sprintf('%d jour%s', $streak, $streak > 1 ? 's' : '');
+        // A worker: the account's language, English if it chose none (docs/I18N.md, § 5).
+        $locale = $this->userLocale->of($user);
+        $days = $this->translator->trans('streak_reminder.days', ['%count%' => $streak], 'emails', $locale);
         $midnight = (new \DateTimeImmutable($today->format('Y-m-d').' 00:00:00', $timezone))->modify('+1 day');
 
         $this->push->send($user, new PushMessage(
-            title: 'Ta série est en danger 🔥',
-            body: \sprintf('Ta série de %s s’arrête à minuit. Un exercice suffit pour la garder !', $days),
+            title: $this->translator->trans('streak_reminder.title', [], 'notifications', $locale),
+            body: $this->translator->trans('streak_reminder.body', ['%days%' => $days], 'notifications', $locale),
             url: '/#/',
             tag: 'streak-reminder',
             ttlSeconds: max(60, $midnight->getTimestamp() - $now->getTimestamp()),
         ));
         if ($settings['email'] && null !== $user->getEmail() && $user->isEmailVerified()) {
-            $this->mailer->send((new TemplatedEmail())
+            $this->mailer->send($this->emails->compose('streak_reminder', $locale, ['days' => $days, 'url' => $this->frontendUrl.'/#/', 'profileUrl' => $this->frontendUrl.'/#/profile'], ['%days%' => $days])
                 ->from(new Address($this->fromAddress, 'Don\'t Stay Rooky'))
-                ->to($user->getEmail())
-                ->subject(\sprintf('Ta série de %s s’arrête à minuit', $days))
-                ->htmlTemplate('emails/streak_reminder.html.twig')
-                ->textTemplate('emails/streak_reminder.txt.twig')
-                ->context(['days' => $days, 'url' => $this->frontendUrl.'/#/', 'profileUrl' => $this->frontendUrl.'/#/profile']));
+                ->to($user->getEmail()));
         }
     }
 }

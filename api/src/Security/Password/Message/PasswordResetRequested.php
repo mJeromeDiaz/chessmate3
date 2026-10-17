@@ -15,6 +15,8 @@ final readonly class PasswordResetRequested
         public ?string $ip,
         public ?string $userAgent,
         public \DateTimeImmutable $requestedAt = new \DateTimeImmutable(),
+        /** The language of the request (docs/I18N.md, § 5), for an account that chose none. */
+        public string $locale = 'en',
     ) {
     }
 }

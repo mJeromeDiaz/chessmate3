@@ -1,0 +1,10 @@
+# Training (docs/I18N.md, § 5): the same keys as training.fr.yaml.
+module:
+    woodpecker: "Woodpecker"
+    repertoire: "Repertoire"
+    puzzles: "Puzzles"
+    free: "Free"
+    coordinates: "Coordinates"
+    blindfold: "Blindfold"
+    evaluation: "Evaluation"
+    puzzle_streak: "Streak"

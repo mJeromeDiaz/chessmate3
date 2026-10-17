@@ -34,15 +34,32 @@ final class LoginControllerTest extends AuthWebTestCase
         $this->postJson('/api/auth/login', [
             'email' => 'alice@example.com',
             'password' => 'CorrectHorseBatteryStaple9!',
-        ], ['HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36']);
+        ], [
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36',
+            // The language of the SPA, for an account that chose none (docs/I18N.md, § 5).
+            'HTTP_ACCEPT_LANGUAGE' => 'fr',
+        ]);
 
         $email = self::getMailerMessage();
         self::assertNotNull($email);
         self::assertEmailAddressContains($email, 'To', 'alice@example.com');
+        self::assertEmailHeaderSame($email, 'Subject', "Votre code de connexion Don't Stay Rooky");
         self::assertEmailTextBodyContains($email, 'Chrome on Windows');
         self::assertEmailTextBodyContains($email, (new \DateTimeImmutable())->format('d/m/Y'));
         self::assertEmailTextBodyContains($email, "Si ce n'est pas vous, changez votre mot de passe");
         self::assertEmailHtmlBodyContains($email, 'Chrome on Windows');
+    }
+
+    public function testCodeEmailIsInEnglishWithoutALanguage(): void
+    {
+        $this->createVerifiedUser('alice@example.com', 'CorrectHorseBatteryStaple9!');
+
+        $this->postJson('/api/auth/login', ['email' => 'alice@example.com', 'password' => 'CorrectHorseBatteryStaple9!']);
+
+        $email = self::getMailerMessage();
+        self::assertNotNull($email);
+        self::assertEmailHeaderSame($email, 'Subject', "Your Don't Stay Rooky sign-in code");
+        self::assertEmailTextBodyContains($email, "If this wasn't you, change your password");
     }
 
     public function testFailedLoginDoesNotSendAnyCode(): void

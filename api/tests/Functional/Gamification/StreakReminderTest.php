@@ -54,7 +54,7 @@ final class StreakReminderTest extends WoodpeckerWebTestCase
         $this->deliver();
         $emails = $this->emails();
         self::assertCount(1, $emails);
-        self::assertSame('Ta série de 1 jour s’arrête à minuit', $emails[0]->getSubject());
+        self::assertSame('Your 1-day streak ends at midnight', $emails[0]->getSubject(), 'No language chosen: English.');
         self::assertCount(1, $this->pushRequests);
         self::assertSame(self::endpoint('alice'), $this->pushRequests[0]['url']);
 

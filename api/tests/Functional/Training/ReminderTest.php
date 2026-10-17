@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Training;
 
 use App\Entity\User;
+use App\Enum\Locale;
 use App\Tests\Functional\Notification\PushTestTrait;
 use App\Tests\Functional\Woodpecker\WoodpeckerWebTestCase;
 use App\Training\Plan\Reminder\SessionReminderDue;
@@ -49,14 +50,33 @@ final class ReminderTest extends WoodpeckerWebTestCase
         $this->deliver();
         $emails = $this->emails();
         self::assertCount(1, $emails);
-        self::assertSame('Rappel : Soirs de semaine à 18:30', $emails[0]->getSubject());
-        self::assertStringContainsString('Libre · 10 min', (string) $emails[0]->getTextBody());
+        // No language chosen on the account: English (docs/I18N.md, § 5).
+        self::assertSame('Reminder: Soirs de semaine at 18:30', $emails[0]->getSubject());
+        self::assertStringContainsString('Free · 10 min', (string) $emails[0]->getTextBody());
         self::assertCount(1, $this->pushRequests);
         self::assertSame(self::endpoint('alice'), $this->pushRequests[0]['url']);
 
         // The next day, again.
         $this->travel('+1 day');
         self::assertSame(1, $this->sendReminders());
+    }
+
+    public function testTheReminderIsWrittenInTheAccountsLanguage(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $alice->setLocale(Locale::French);
+        $this->entityManager->flush();
+        $this->plan($alice, ['time' => '18:30', 'reminderMinutes' => 30, 'reminderChannels' => ['email']]);
+
+        $this->travel('+6 hours');
+        self::assertSame(1, $this->sendReminders());
+        $this->deliver();
+        $emails = $this->emails();
+        self::assertCount(1, $emails);
+        self::assertSame('Rappel : Soirs de semaine à 18:30', $emails[0]->getSubject());
+        self::assertStringContainsString('Rappel : « Soirs de semaine » commence à 18:30 (10 min).', (string) $emails[0]->getTextBody());
+        self::assertStringContainsString('Libre · 10 min', (string) $emails[0]->getTextBody());
+        self::assertStringContainsString('<strong>Soirs de semaine</strong>', (string) $emails[0]->getHtmlBody());
     }
 
     public function testASuspendedAccountGetsNoReminder(): void

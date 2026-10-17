@@ -49,7 +49,7 @@ final class ChangePasswordControllerTest extends AuthWebTestCase
         $email = self::getMailerMessage();
         self::assertInstanceOf(Email::class, $email);
         self::assertSame('alice@example.com', $email->getTo()[0]->getAddress());
-        self::assertStringContainsString('modifié', (string) $email->getTextBody());
+        self::assertStringContainsString('was changed', (string) $email->getTextBody());
         self::assertStringContainsString('/#/forgot-password', (string) $email->getTextBody());
         self::assertStringNotContainsString(self::NEW_PASSWORD, (string) $email->getTextBody());
     }

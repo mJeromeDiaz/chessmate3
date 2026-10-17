@@ -1,0 +1,110 @@
+# Emails (docs/I18N.md, § 5): the same keys as emails.fr.yaml, the source text.
+greeting: "Hello,"
+ignore: "If you did not make this request, ignore this email."
+
+mfa_code:
+    subject: "Your Don't Stay Rooky sign-in code"
+    intro: "Here is your Don't Stay Rooky sign-in code:"
+    validity: "This code is valid for 10 minutes and can only be used once."
+    requested: "Requested on %date% at %time% from %device% (IP address %ip%)."
+    warning: "If this wasn't you, change your password as soon as possible."
+
+verify_email:
+    subject: "Confirm your email address"
+    intro: "Please confirm your email address to activate your Don't Stay Rooky account:"
+    intro_text: "Please confirm your email address to activate your Don't Stay Rooky account by opening this link:"
+    button: "Confirm my email address"
+    expires: "This link expires in %count% minute.|This link expires in %count% minutes."
+    ignore: "If you did not sign up, you can ignore this email."
+
+account_linked:
+    subject: "A new account was linked to your Don't Stay Rooky account"
+    body: "A %provider% account was linked to your Don't Stay Rooky account on %date% at %time%. It can now be used to sign in."
+    warning: "If you did not link it, remove this account from your %profile% and change your password."
+    warning_text: "If you did not link it, remove this account from your profile and change your password:"
+    profile: "profile"
+
+password_changed:
+    subject: "Your Don't Stay Rooky password was changed"
+    body: "The password of your Don't Stay Rooky account was changed on %date% at %time% from %device% (IP address %ip%)."
+    sessions: "For your security, all your sessions were closed and your trusted devices revoked."
+    warning: "If you did not make this change, reset your password right away:"
+    button: "Reset my password"
+
+password_added:
+    subject: "A password was added to your Don't Stay Rooky account"
+    body: "A password was added to your Don't Stay Rooky account on %date% at %time% from %device% (IP address %ip%). You can now sign in with your email and this password, with a verification code sent to you at each sign-in."
+    warning: "If you did not add it, %reset% and check the linked accounts in your %profile%."
+    warning_text: "If you did not add it, reset this password and check the linked accounts in your profile:"
+    reset: "reset this password"
+    profile: "profile"
+
+email_already_in_use:
+    subject: "Your Don't Stay Rooky email address"
+    body: "On %date% at %time%, someone tried to use your email address for another Don't Stay Rooky account. It already belongs to your account: nothing was changed."
+    advice: "If it was you, %login%; you can link Lichess or Google to it from your profile. Otherwise, you can ignore this email."
+    login: "sign in to your existing account"
+
+reset_password:
+    subject: "Reset your Don't Stay Rooky password"
+    requested: "A password reset for your Don't Stay Rooky account was requested on %date% at %time% from %device% (IP address %ip%)."
+    button: "Choose a new password"
+    button_text: "To choose a new password, open this link:"
+    expires: "This link expires in %count% minute and can only be used once.|This link expires in %count% minutes and can only be used once."
+    ignore: "If you did not make this request, ignore this email: your password stays the same."
+
+reset_password_no_password:
+    subject: "Reset your Don't Stay Rooky password"
+    no_password: "Your account has no password: you sign in with Google or Lichess. Use the matching button on the %login%."
+    no_password_text: "Your account has no password: you sign in with Google or Lichess. Use the matching button on the sign-in page:"
+    login: "sign-in page"
+    add: "Once signed in, you can add a password from your profile."
+
+account_deletion_code:
+    subject: "Confirm the deletion of your Don't Stay Rooky account"
+    intro: "You asked to delete your Don't Stay Rooky account. To confirm, enter this code:"
+    requested: "It is valid for 10 minutes. Requested on %date% at %time% from %device% (IP address %ip%)."
+    grace: "Once confirmed, your account will be frozen, then permanently deleted after %days% days; until then, you can cancel by signing in again."
+    warning: "If you did not make this request, share this code with no one and change your password."
+
+account_deletion_scheduled:
+    subject: "Deletion of your Don't Stay Rooky account scheduled"
+    body: "The deletion of your Don't Stay Rooky account is scheduled: it will be permanently erased on %date%, with all your data (puzzles, repertoires, sessions, statistics)."
+    cancel: "All your sessions were closed. Until that date, you can cancel the deletion or export your data by signing in again:"
+    button: "Sign in again"
+
+account_deletion_cancelled:
+    subject: "Deletion of your Don't Stay Rooky account cancelled"
+    body: "The deletion of your Don't Stay Rooky account was cancelled: your account and your data are kept."
+    warning: "If you did not cancel it, change your password."
+
+early_access_invitation:
+    subject: "Your invitation to the Don't Stay Rooky early access"
+    welcome: "Welcome to the early access of %brand%: puzzles, the Woodpecker method, opening repertoires and training sessions, before everyone else."
+    personal: "Your invitation is personal and works only once: with it, you create your account with the address of your choice, or with Google or Lichess."
+    button: "Create my account"
+    button_text: "Create my account:"
+    expires: "It is valid until %date% at %time% (%timezone%)."
+    unexpected: "Not expecting this message? Simply ignore it."
+
+session_reminder:
+    subject: "Reminder: %title% %when%"
+    default_title: "Your session"
+    when:
+        today: "at %time%"
+        tomorrow: "tomorrow at %time%"
+        later: "on %date% at %time%"
+    starts: "Reminder: “%title%” starts %when% (%minutes% min)."
+    button: "Start it from My sessions"
+    button_text: "Start it from My sessions:"
+    unsubscribe: "To stop receiving this reminder, turn it off in the session's settings."
+
+streak_reminder:
+    subject: "Your %days% streak ends at midnight"
+    days: "%count%-day|%count%-day"
+    body: "Your %days% streak ends at midnight: a single exercise is enough to keep it."
+    button: "Do an exercise"
+    button_text: "Do an exercise:"
+    settings: "To change the time of this reminder or stop receiving it by email, go to %profile%."
+    settings_text: "To change the time of this reminder or stop receiving it by email, go to your profile:"
+    profile: "your profile"

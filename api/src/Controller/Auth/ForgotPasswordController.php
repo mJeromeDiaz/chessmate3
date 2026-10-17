@@ -44,7 +44,7 @@ final class ForgotPasswordController extends AbstractController
         $this->rateLimitGuard->consume($this->forgotPasswordIpLimiter, $request->getClientIp() ?? 'unknown');
         $this->rateLimitGuard->consume($this->forgotPasswordIdentifierLimiter, $email);
 
-        $this->messageBus->dispatch(new PasswordResetRequested($email, $request->getClientIp(), $request->headers->get('User-Agent')));
+        $this->messageBus->dispatch(new PasswordResetRequested($email, $request->getClientIp(), $request->headers->get('User-Agent'), locale: $request->getLocale()));
 
         return $this->json(
             ['message' => 'If an account exists for this email address, a message has been sent.'],
