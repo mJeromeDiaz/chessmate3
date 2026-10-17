@@ -12,14 +12,12 @@
       />
       <div class="eval-player__chips">
         <span class="eval-player__chip" data-testid="evaluation-turn">{{
-          data.position.turn === 'white'
-            ? 'Trait aux Blancs'
-            : 'Trait aux Noirs'
+          $t(`evaluation.player.turn.${data.position.turn}`)
         }}</span>
         <span
-          v-if="data.position.tagLabel"
+          v-if="data.position.tag"
           class="eval-player__chip eval-player__chip--tag"
-          >{{ data.position.tagLabel }}</span
+          >{{ tagLabel(data.position.tag) }}</span
         >
       </div>
     </div>
@@ -78,7 +76,7 @@
               :disabled="sending"
               :data-testid="`evaluation-plan-${p.value}`"
               @click="plan = plan === p.value ? null : p.value"
-              >{{ p.label }}</button
+              >{{ planLabel(p.value) }}</button
             >
           </div>
         </template>
@@ -121,7 +119,7 @@
           >
           <span data-testid="evaluation-engine"
             ><i class="eval-player__dot eval-player__dot--engine" />{{
-              $t('evaluation.player.engine', { value: result.engine })
+              $t('evaluation.player.engine', { value: engineLabel(result.evalCp) })
             }}</span
           >
         </div>
@@ -131,10 +129,10 @@
           >
         </ul>
         <div
-          v-if="result.planLabel"
+          v-if="result.plan"
           class="eval-player__plan-line"
           data-testid="evaluation-plan-result"
-          >{{ $t('evaluation.player.bestPlan') }} <b>{{ result.planLabel }}</b
+          >{{ $t('evaluation.player.bestPlan') }} <b>{{ planLabel(result.plan) }}</b
           ><template v-if="planLine"> · {{ planLine }}</template></div
         >
         <div v-if="result.source" class="eval-player__source">{{
@@ -178,10 +176,13 @@ import {
   EVAL_CHOICES,
   VERDICTS,
   choiceLabel,
+  engineLabel,
   evaluationFeedback,
   gaugeX,
   guessX,
-  planResult
+  planLabel,
+  planResult,
+  tagLabel
 } from '@/utils/evaluation'
 
 const props = defineProps({
@@ -254,7 +255,7 @@ const feedback = computed(() =>
       }
 )
 const planLine = computed(() =>
-  props.result ? planResult(props.result, data.value.plans) : ''
+  props.result ? planResult(props.result) : ''
 )
 
 const reacting = computed(

@@ -248,12 +248,13 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
             'askPlan' => null !== $attempt->getPosition()->getPlan(),
             'servedAt' => $attempt->getServedAt()->format(\DATE_ATOM),
             'index' => $this->attempts->countResolvedOfRun($attempt->getRun()) + 1,
-            'plans' => array_map(static fn (Plan $plan): array => ['value' => $plan->value, 'label' => $plan->label()], Plan::cases()),
+            // Values only: the SPA names them in its language (docs/I18N.md, § 5).
+            'plans' => array_map(static fn (Plan $plan): array => ['value' => $plan->value], Plan::cases()),
         ]);
     }
 
     /**
-     * @return array{fen: string, turn: string, tag: string|null, tagLabel: string|null}
+     * @return array{fen: string, turn: string, tag: string|null}
      */
     private static function position(Attempt $attempt): array
     {
@@ -263,7 +264,6 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
             'fen' => $position->getFen(),
             'turn' => $position->getTurn()->value,
             'tag' => $position->getTag()?->value,
-            'tagLabel' => $position->getTag()?->label(),
         ];
     }
 
@@ -281,9 +281,7 @@ final class EvaluationModule implements TimeboxedModuleInterface, ReviewableModu
             'guess' => $attempt->getGuess(),
             'category' => EvaluationRules::category($position->getEvalCp()),
             'evalCp' => $position->getEvalCp(),
-            'engine' => EvaluationRules::label($position->getEvalCp()),
             'plan' => $position->getPlan()?->value,
-            'planLabel' => $position->getPlan()?->label(),
             'chosenPlan' => $attempt->getPlan()?->value,
             'planOk' => $attempt->isPlanOk(),
             'ideas' => $position->getIdeas(),

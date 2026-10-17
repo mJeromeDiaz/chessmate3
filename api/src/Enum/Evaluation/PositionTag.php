@@ -15,16 +15,6 @@ enum PositionTag: string
     case Structure = 'structure';
     case Endgame = 'endgame';
 
-    public function label(): string
-    {
-        return match ($this) {
-            self::Opening => 'Ouverture',
-            self::Middlegame => 'Milieu de partie',
-            self::Structure => 'Structure',
-            self::Endgame => 'Finale',
-        };
-    }
-
     /**
      * @return list<string>
      */

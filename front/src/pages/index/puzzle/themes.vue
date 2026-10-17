@@ -44,11 +44,11 @@
             :disable="theme.puzzleCount === 0"
             dense
           >
-            <span>{{ theme.labelFr }}</span>
+            <span>{{ themeText(theme, 'label') }}</span>
             <span class="text-caption text-grey q-ml-xs">{{
               formatCount(theme.puzzleCount)
             }}</span>
-            <q-tooltip max-width="300px">{{ theme.descriptionFr }}</q-tooltip>
+            <q-tooltip max-width="300px">{{ themeText(theme, 'description') }}</q-tooltip>
           </q-checkbox>
         </div>
       </div>
@@ -61,7 +61,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { apiErrorMessage } from '@/utils/apiError'
-import { formatCount, groupThemes } from '@/utils/puzzle'
+import { formatCount, groupThemes, themeText } from '@/utils/puzzle'
 
 definePage({ meta: { auth: 'required' } })
 

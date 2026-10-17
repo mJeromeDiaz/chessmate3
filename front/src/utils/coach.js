@@ -5,7 +5,7 @@
  * claimed that the games do not say.
  *
  * @typedef {{family: string, games: number, wins: number, draws: number, losses: number}} Opening
- * @typedef {{type: string, label: string, games: number, wins: number, draws: number, losses: number, advantages: number, lost: number}} Endgame
+ * @typedef {{type: string, games: number, wins: number, draws: number, losses: number, advantages: number, lost: number}} Endgame
  * @typedef {object} Diagnosis
  * @property {number} games
  * @property {number} analysed
@@ -35,6 +35,15 @@ export const ENDGAME_LABELS = Object.defineProperties(
     ])
   )
 )
+
+/**
+ * An endgame kind inside a sentence ("tours"), from its type sent by the API.
+ *
+ * @param {{type: string}} endgame
+ */
+function endgameName(endgame) {
+  return (ENDGAME_LABELS[endgame.type] ?? endgame.type).toLowerCase()
+}
 
 /** Why Woodpecker helps (the user's words, 2026-10-11). */
 export const WOODPECKER_REASONS = [0, 1, 2].map(i => ({
@@ -120,7 +129,7 @@ export function scanSays(progress, diagnosis) {
     if (!diagnosis.games) return t('coach.scan.none')
     if (diagnosis.weakest)
       return t('coach.scan.weakest', {
-        type: diagnosis.weakest.label.toLowerCase(),
+        type: endgameName(diagnosis.weakest),
         slip: slipText(diagnosis.weakest)
       })
     if (diagnosis.endgames.games) return t('coach.scan.solid')
@@ -162,7 +171,7 @@ export function needText(module, composition) {
     case 'blindfold':
       return f.weakest
         ? t('coach.need.blindfoldWeak', {
-            type: f.weakest.label.toLowerCase(),
+            type: endgameName(f.weakest),
             slip: slipText(f.weakest)
           })
         : t('coach.need.blindfold')
@@ -243,7 +252,7 @@ export function moduleCard(module) {
         subtitle: t('coach.card.blindfoldSub'),
         text: f.weakest
           ? t('coach.card.blindfoldWeak', {
-              type: f.weakest.label.toLowerCase(),
+              type: endgameName(f.weakest),
               slip: slipText(f.weakest)
             })
           : t('coach.card.blindfoldText'),
@@ -285,7 +294,7 @@ export function sessionSays(composition) {
   )
   const weakest = composition.diagnosis.weakest
   return weakest
-    ? t('coach.session.weakest', { start, type: weakest.label.toLowerCase() })
+    ? t('coach.session.weakest', { start, type: endgameName(weakest) })
     : t('coach.session.keep', { start })
 }
 

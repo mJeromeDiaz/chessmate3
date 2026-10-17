@@ -51,6 +51,15 @@ import { intlLocale, t, t as tr } from '@/i18n'
 const number = { format: n => new Intl.NumberFormat(intlLocale()).format(n) }
 
 /**
+ * The name of a rank, sent by the API as a key ("tactician").
+ *
+ * @param {string} key
+ */
+export function rankLabel(key) {
+  return t(`gamification.ranks.${key}`)
+}
+
+/**
  * The level bar: "Niveau 12 · Tacticien", "2 340 / 3 000 XP", what is left before the next rank.
  *
  * @param {Summary} summary
@@ -59,7 +68,7 @@ export function levelBar(summary) {
   const left = Math.max(0, summary.xpForNext - summary.xpInLevel)
   return {
     level: summary.level,
-    rank: summary.rank,
+    rank: rankLabel(summary.rank),
     percent:
       summary.xpForNext > 0
         ? Math.min(100, (summary.xpInLevel / summary.xpForNext) * 100)
@@ -72,7 +81,7 @@ export function levelBar(summary) {
       ? t('gamification.level.nextRank', {
           left: number.format(left),
           level: summary.level + 1,
-          rank: summary.nextRank.rank,
+          rank: rankLabel(summary.nextRank.rank),
           rankLevel: summary.nextRank.level
         })
       : t('gamification.level.next', {

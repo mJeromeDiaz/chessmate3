@@ -9,9 +9,7 @@
  * @property {number|null} guess
  * @property {number} category
  * @property {number} evalCp
- * @property {string} engine
  * @property {string|null} plan
- * @property {string|null} planLabel
  * @property {string|null} chosenPlan
  * @property {boolean|null} planOk
  * @property {string[]} ideas
@@ -120,7 +118,7 @@ export function evaluationFeedback(result, index) {
       palette: /** @type {'help'} */ ('help'),
       badge: '?!',
       title: t('evaluation.verdicts.close'),
-      sub: t('evaluation.feedback.closeSub', { engine: result.engine }),
+      sub: t('evaluation.feedback.closeSub', { engine: engineLabel(result.evalCp) }),
       kicker: t('evaluation.feedback.kicker'),
       bubble: lookAgain
     }
@@ -130,7 +128,7 @@ export function evaluationFeedback(result, index) {
     palette: null,
     badge: result.status === 'timeout' ? '⏱︎' : '?',
     title: VERDICTS[result.status],
-    sub: t('evaluation.feedback.missSub', { engine: result.engine }),
+    sub: t('evaluation.feedback.missSub', { engine: engineLabel(result.evalCp) }),
     kicker: t('evaluation.feedback.kicker'),
     bubble: lookAgain
   }
@@ -142,13 +140,29 @@ export function evaluationFeedback(result, index) {
  * @param {EvaluationResult} result
  * @param {{value: string, label: string}[]} plans
  */
-export function planResult(result, plans) {
+export function planResult(result) {
   if (!result.plan) return ''
   if (!result.chosenPlan) return t('evaluation.plan.none')
   if (result.planOk) return t('evaluation.plan.ok')
-  const chosen =
-    plans.find(p => p.value === result.chosenPlan)?.label ?? result.chosenPlan
-  return t('evaluation.plan.chosen', { plan: chosen })
+  return t('evaluation.plan.chosen', { plan: planLabel(result.chosenPlan) })
+}
+
+/**
+ * A plan's name, from its value sent by the API (App\Enum\Evaluation\Plan).
+ *
+ * @param {string} value e.g. "king_attack"
+ */
+export function planLabel(value) {
+  return t(`evaluation.plans.${value}`)
+}
+
+/**
+ * A position's tag, from its value sent by the API (App\Enum\Evaluation\PositionTag).
+ *
+ * @param {string} value e.g. "middlegame"
+ */
+export function tagLabel(value) {
+  return t(`evaluation.tags.${value}`)
 }
 
 /** The side to move asked, as the run's `side` names it. */
@@ -200,4 +214,21 @@ export function resultsText(results) {
  */
 export function pawns(cp) {
   return (cp / 100).toLocaleString(intlLocale(), { maximumFractionDigits: 2 })
+}
+
+/** From this many centipawns, the engine says won: "+−" or "−+" (App\Evaluation\EvaluationRules::WON_CP). */
+const WON_CP = 10_000
+
+/**
+ * The engine's evaluation, White's point of view: "+1,4", "−0,3", "0,0", "+−" (won).
+ *
+ * @param {number} cp
+ */
+export function engineLabel(cp) {
+  if (Math.abs(cp) >= WON_CP) return cp > 0 ? '+−' : '−+'
+  const value = (Math.abs(cp) / 100).toLocaleString(intlLocale(), {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  })
+  return (cp > 0 ? '+' : cp < 0 ? '−' : '') + value
 }

@@ -62,8 +62,6 @@ final class AdminPosition
     /** white or black: the side to move */
     public string $turn = 'white';
     public int $evalCp = 0;
-    /** The evaluation as shown to players: "+1,4", "+−"… */
-    public string $engine = '';
     /** -2 to 2 */
     public int $category = 0;
     /** Within 0.2 of a category's border: the answer would be a coin toss. */
@@ -88,7 +86,6 @@ final class AdminPosition
         $view->fen = $position->getFen();
         $view->turn = $position->getTurn()->value;
         $view->evalCp = $position->getEvalCp();
-        $view->engine = EvaluationRules::label($position->getEvalCp());
         $view->category = EvaluationRules::category($position->getEvalCp());
         $view->nearBorder = EvaluationRules::nearBorder($position->getEvalCp());
         $view->plan = $position->getPlan()?->value;

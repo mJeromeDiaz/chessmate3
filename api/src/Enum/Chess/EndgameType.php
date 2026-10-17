@@ -22,16 +22,4 @@ enum EndgameType: string
     case RookMinor = 'rook_minor';
     /** A queen with other pieces. */
     case Mixed = 'mixed';
-
-    public function label(): string
-    {
-        return match ($this) {
-            self::Pawn => 'Pions',
-            self::Rook => 'Tours',
-            self::Minor => 'Pièces mineures',
-            self::Queen => 'Dames',
-            self::RookMinor => 'Tours et pièces mineures',
-            self::Mixed => 'Mixtes',
-        };
-    }
 }

@@ -43,8 +43,8 @@ final class AdminPositionTest extends WoodpeckerWebTestCase
     {
         // Any move counters: stored normalized.
         $created = $this->createOk(self::body(['fen' => '1K1k4/1P6/8/8/8/8/r7/2R5 w - - 12 57']));
-        self::assertSame([self::LUCENA, 'white', '+−', 2, false, 'simplify', 1500, true, 0], [
-            $created['fen'], $created['turn'], $created['engine'], $created['category'], $created['nearBorder'], $created['plan'], $created['rating'], $created['active'], $created['played'],
+        self::assertSame([self::LUCENA, 'white', 2, false, 'simplify', 1500, true, 0], [
+            $created['fen'], $created['turn'], $created['category'], $created['nearBorder'], $created['plan'], $created['rating'], $created['active'], $created['played'],
         ]);
         self::assertSame(['Le fou c8 est bloqué par ses pions.'], $created['ideas']);
 
@@ -53,7 +53,7 @@ final class AdminPositionTest extends WoodpeckerWebTestCase
         $createdId = $created['id'];
         self::assertIsString($secondId);
         self::assertIsString($createdId);
-        self::assertSame([true, null, null, null, '+1,9'], [$second['nearBorder'], $second['plan'], $second['tip'], $second['tag'], $second['engine']]);
+        self::assertSame([true, null, null, null, 190], [$second['nearBorder'], $second['plan'], $second['tip'], $second['tag'], $second['evalCp']]);
 
         $list = $this->json($this->api('GET', '/api/admin/evaluation/positions', $this->admin));
         self::assertSame(2, $list['totalItems'] ?? null);
@@ -61,7 +61,7 @@ final class AdminPositionTest extends WoodpeckerWebTestCase
         // Changed and deactivated.
         $response = $this->api('PUT', '/api/admin/evaluation/positions/'.$secondId, $this->admin, self::body(['fen' => self::START, 'evalCp' => 30, 'active' => false]));
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
-        self::assertSame(['+0,3', 0, false], [$this->json($response)['engine'] ?? null, $this->json($response)['category'] ?? null, $this->json($response)['active'] ?? null]);
+        self::assertSame([30, 0, false], [$this->json($response)['evalCp'] ?? null, $this->json($response)['category'] ?? null, $this->json($response)['active'] ?? null]);
         $active = $this->json($this->api('GET', '/api/admin/evaluation/positions?active=true', $this->admin));
         self::assertSame(1, $active['totalItems'] ?? null);
 
@@ -115,6 +115,9 @@ final class AdminPositionTest extends WoodpeckerWebTestCase
         self::assertSame('mismatch', $this->check(self::LUCENA, 0)['verdict'], 'A won endgame entered as equal.');
         $start = $this->check(self::START, 150);
         self::assertSame(['mismatch', 'cloud', 0], [$start['verdict'], $start['source'], $start['lichessCategory']]);
+        // Written as Lichess does, in every language. The cloud evaluation may come from the shared
+        // cache (another test's answer for the same position): only its form is checked.
+        self::assertMatchesRegularExpression('/^[+-]\d+\.\d{2} \(depth \d+\)$/', (string) $start['lichess']);
         self::assertSame('ok', $this->check(self::START, 20)['verdict']);
 
         self::assertSame(422, $this->api('POST', '/api/admin/evaluation/verification', $this->admin, ['fen' => 'not a fen', 'evalCp' => 0])->getStatusCode());

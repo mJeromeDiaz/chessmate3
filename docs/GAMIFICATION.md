@@ -67,6 +67,8 @@ S2 rappel, S3 front, S4 documentation.
 - **Niveaux** : passer du niveau N à N+1 demande 250 × N XP (niveau 12 : barre de 3 000, comme la
   maquette). **Niveau d'un module** : même courbe sur l'XP du module, paliers de 100 × N.
 - **Grades** : 1–4 Débutant, 5–9 Amateur, 10–14 Tacticien, 15–19 Stratège, 20–29 Expert, 30+ Maître.
+  L'API envoie leur clé (`beginner`, `amateur`, `tactician`, `strategist`, `expert`, `master`), le
+  front les nomme (`gamification.ranks.*`, docs/I18N.md, § 5).
 
 Changer une valeur : modifier `XpRules`, puis `bin/console app:gamification:rebuild`.
 
@@ -194,7 +196,7 @@ Modèles validés le 2026-10-05 :
 
 | Endpoint | Contenu |
 |---|---|
-| `GET /api/gamification/summary` | `xp`, `level`, `xpInLevel`, `xpForNext`, `rank`, `nextRank` (`{rank, level}` ou null), `modules.{woodpecker, repertoire, puzzles, free}` (`xp`, `level`, `xpInLevel`, `xpForNext`), `streak` (`current`, `best`, `playedToday`, `week` : 7 booléens du lundi au dimanche, `nextMilestone` ou null), `today` (`date` : jour local, `exerciseXp`, `cap`) |
+| `GET /api/gamification/summary` | `xp`, `level`, `xpInLevel`, `xpForNext`, `rank` (clé du grade), `nextRank` (`{rank, level}` ou null), `modules.{woodpecker, repertoire, puzzles, free}` (`xp`, `level`, `xpInLevel`, `xpForNext`), `streak` (`current`, `best`, `playedToday`, `week` : 7 booléens du lundi au dimanche, `nextMilestone` ou null), `today` (`date` : jour local, `exerciseXp`, `cap`) |
 | `GET /api/gamification/streak/notice` | L'annonce de série du jour pas encore montrée : `pending` (false : aucune, autres champs null), `streak`, `previousStreak` (0 : cassée), `badge` (clé de trophée) ou null, `week` (aujourd'hui compris), `nextMilestone`, `localDate` |
 | `POST /api/gamification/streak/notice/acknowledgement` | 204 : l'annonce du jour est montrée (idempotent) |
 | `GET /api/gamification/quest` | Le défi de la semaine : `id`, `template`, `theme`, `module`, `goal`, `current`, `reward`, `completed`, `completedAt`, `weekStart`, `weekEnd` (dimanche) ; le tire au premier affichage, le termine et verse sa récompense |

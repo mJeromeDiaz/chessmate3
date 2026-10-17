@@ -4,6 +4,7 @@ import {
   missedSquares,
   validationText
 } from '@/utils/coordinates'
+import { engineLabel, tagLabel } from '@/utils/evaluation'
 import { levelBar } from '@/utils/gamification'
 import { formatDuration, formatRatingDelta } from '@/utils/format'
 import { moodImage } from '@/utils/prof/profs'
@@ -178,8 +179,11 @@ export function itemTitle(item, themeLabel) {
   }
   if (item.type === 'evaluation_position')
     return t('training.end.engine', {
-      tag: item.data.position?.tagLabel ?? t('training.end.position'),
-      engine: item.data.engine ?? ''
+      tag: item.data.position?.tag
+        ? tagLabel(item.data.position.tag)
+        : t('training.end.position'),
+      engine:
+        typeof item.data.evalCp === 'number' ? engineLabel(item.data.evalCp) : ''
     })
   const theme = item.data.puzzle?.themes?.[0]
   return theme ? themeLabel(theme) : t('training.end.puzzle')

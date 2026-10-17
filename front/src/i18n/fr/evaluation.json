@@ -63,7 +63,11 @@
     "engine": "Moteur : {value}",
     "bestPlan": "Meilleur plan :",
     "tipKicker": "CONSEIL",
-    "tip": "Compte le matériel, puis regarde la sécurité des rois et l’activité des pièces."
+    "tip": "Compte le matériel, puis regarde la sécurité des rois et l’activité des pièces.",
+    "turn": {
+      "white": "Trait aux Blancs",
+      "black": "Trait aux Noirs"
+    }
   },
   "page": {
     "title": "Évaluation de position",
@@ -72,5 +76,18 @@
     "level": "Niveau des positions : {elo}",
     "side": "Trait",
     "empty": "Aucune position pour ce trait pour l’instant."
+  },
+  "plans": {
+    "king_attack": "Attaque sur le roi",
+    "queenside": "Jeu à l’aile dame",
+    "center_space": "Centre et espace",
+    "simplify": "Simplifier en finale",
+    "active_defense": "Défense active"
+  },
+  "tags": {
+    "opening": "Ouverture",
+    "middlegame": "Milieu de partie",
+    "structure": "Structure",
+    "endgame": "Finale"
   }
 }

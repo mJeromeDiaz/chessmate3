@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { puzzleApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { themeText } from '@/utils/puzzle'
 
 /**
  * @typedef {object} Rating
@@ -16,8 +17,11 @@ import { useAuthStore } from '@/stores/auth'
  * @property {string} key
  * @property {string} category
  * @property {string} categoryLabelFr
+ * @property {string} [categoryLabelEn]
  * @property {string} labelFr
+ * @property {string} [labelEn]
  * @property {string} descriptionFr
+ * @property {string} [descriptionEn]
  * @property {number} puzzleCount
  *
  * @typedef {object} Attempt
@@ -90,7 +94,8 @@ export const usePuzzleStore = defineStore('puzzle', () => {
 
   /** @param {string} key */
   function themeLabel(key) {
-    return themes.value.find(t => t.key === key)?.labelFr ?? key
+    const theme = themes.value.find(t => t.key === key)
+    return theme ? themeText(theme, 'label') : key
   }
 
   /** Starts (or resumes) the next rated puzzle with the current filters. */

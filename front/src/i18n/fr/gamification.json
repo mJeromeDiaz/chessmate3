@@ -106,5 +106,13 @@
   "celebration": {
     "label": "jour de série ! | jours de série !",
     "badge": "Nouveau badge : {name}"
+  },
+  "ranks": {
+    "beginner": "Débutant",
+    "amateur": "Amateur",
+    "tactician": "Tacticien",
+    "strategist": "Stratège",
+    "expert": "Expert",
+    "master": "Maître"
   }
 }

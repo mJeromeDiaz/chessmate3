@@ -55,7 +55,7 @@ final class CoachSessionTest extends WoodpeckerWebTestCase
         self::assertSame([['family' => 'Scotch Game', 'games' => 3, 'wins' => 3, 'draws' => 0, 'losses' => 0]], $diagnosis['white']);
         self::assertSame('Philidor Defense', $diagnosis['black'][0]['family'] ?? null);
         self::assertSame([3, 3, 3], [$diagnosis['endgames']['games'], $diagnosis['endgames']['advantages'], $diagnosis['endgames']['lost']]);
-        self::assertSame(['rook_minor', 'Tours et pièces mineures', 3], [$diagnosis['weakest']['type'] ?? null, $diagnosis['weakest']['label'] ?? null, $diagnosis['weakest']['lost'] ?? null]);
+        self::assertSame(['rook_minor', 3], [$diagnosis['weakest']['type'] ?? null, $diagnosis['weakest']['lost'] ?? null]);
 
         $composition = $this->compose($alice, $id, true);
         self::assertSame([['woodpecker', true], ['woodpecker', true], ['repertoire', true], ['blindfold', true], ['evaluation', true]], array_map(static fn (array $module): array => [$module['module'], $module['included']], $composition['modules']));

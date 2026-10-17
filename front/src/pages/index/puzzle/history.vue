@@ -94,6 +94,7 @@ import { puzzleApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatDuration, formatRatingDelta } from '@/utils/format'
 import { t } from '@/i18n'
+import { themeText } from '@/utils/puzzle'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -146,7 +147,7 @@ const columns = computed(() => [
 ])
 
 const themeOptions = computed(() =>
-  store.themes.map(t => ({ label: t.labelFr, value: t.key }))
+  store.themes.map(t => ({ label: themeText(t, 'label'), value: t.key }))
 )
 
 /** @param {{pagination: {page: number}}} request q-table server-side request */

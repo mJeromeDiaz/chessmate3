@@ -175,7 +175,7 @@ describe('endStats', () => {
       level: 12,
       xpInLevel: 2340,
       xpForNext: 3000,
-      rank: 'Tacticien',
+      rank: 'tactician',
       nextRank: null
     })
     const stats = endStats(

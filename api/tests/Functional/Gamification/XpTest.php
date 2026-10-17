@@ -102,8 +102,8 @@ final class XpTest extends WebTestCase
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
         /** @var array<string, mixed> $body */
         $body = json_decode((string) $response->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertSame([48, 1, 48, 250, 'Débutant'], [$body['xp'], $body['level'], $body['xpInLevel'], $body['xpForNext'], $body['rank']]);
-        self::assertSame(['rank' => 'Amateur', 'level' => 5], $body['nextRank']);
+        self::assertSame([48, 1, 48, 250, 'beginner'], [$body['xp'], $body['level'], $body['xpInLevel'], $body['xpForNext'], $body['rank']]);
+        self::assertSame(['rank' => 'amateur', 'level' => 5], $body['nextRank']);
         $modules = $body['modules'];
         self::assertIsArray($modules);
         self::assertSame(['xp' => 40, 'level' => 1, 'xpInLevel' => 40, 'xpForNext' => 100], $modules['puzzles']);

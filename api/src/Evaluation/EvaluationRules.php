@@ -91,23 +91,6 @@ final class EvaluationRules
     }
 
     /**
-     * The engine's evaluation as shown: "+1,4", "−0,3", "0,0"; a won position "+−" / "−+".
-     */
-    public static function label(int $cp): string
-    {
-        if (abs($cp) >= self::WON_CP) {
-            return $cp > 0 ? '+−' : '−+';
-        }
-        $pawns = number_format(abs($cp) / 100, 1, ',', '');
-
-        return match ($cp <=> 0) {
-            1 => '+'.$pawns,
-            -1 => '−'.$pawns,
-            default => $pawns,
-        };
-    }
-
-    /**
      * The settings' bounds, for the front.
      *
      * @return array{runMinutes: list<int>, defaultMinutes: int, minElo: int, maxElo: int, advantageCp: int, winningCp: int}

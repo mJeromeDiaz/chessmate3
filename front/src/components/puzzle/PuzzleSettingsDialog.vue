@@ -100,12 +100,12 @@
                 dense
                 data-testid="puzzle-settings-theme"
               >
-                <span>{{ theme.labelFr }}</span>
+                <span>{{ themeText(theme, 'label') }}</span>
                 <span class="text-caption text-grey q-ml-xs">{{
                   formatCount(theme.puzzleCount)
                 }}</span>
                 <q-tooltip max-width="300px">{{
-                  theme.descriptionFr
+                  themeText(theme, 'description')
                 }}</q-tooltip>
               </q-checkbox>
             </div>
@@ -149,7 +149,8 @@ import {
   DIFFICULTIES,
   LICHESS_IMPORT_ERRORS,
   formatCount,
-  groupThemes
+  groupThemes,
+  themeText
 } from '@/utils/puzzle'
 
 defineProps({

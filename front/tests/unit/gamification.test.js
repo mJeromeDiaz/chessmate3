@@ -19,8 +19,8 @@ function summary(overrides = {}) {
     level: 12,
     xpInLevel: 2340,
     xpForNext: 3000,
-    rank: 'Tacticien',
-    nextRank: { rank: 'Stratège', level: 15 },
+    rank: 'tactician',
+    nextRank: { rank: 'strategist', level: 15 },
     modules: {
       puzzles: { xp: 2100, level: 6, xpInLevel: 0, xpForNext: 600 },
       free: { xp: 0, level: 1, xpInLevel: 0, xpForNext: 100 }

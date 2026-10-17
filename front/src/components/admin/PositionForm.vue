@@ -35,7 +35,7 @@
             $t('admin.positionForm.lechiquierSafficheQuandLa')
           }}</div>
           <div v-if="turn" class="position-form__turn">{{
-            turn === 'white' ? 'Trait aux Blancs' : 'Trait aux Noirs'
+            $t(`evaluation.player.turn.${turn}`)
           }}</div>
         </div>
 

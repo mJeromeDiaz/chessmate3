@@ -43,11 +43,6 @@ final class EvaluationRulesTest extends TestCase
         self::assertContains(EvaluationRules::DEFAULT_MINUTES, EvaluationRules::RUN_MINUTES);
     }
 
-    public function testLabels(): void
-    {
-        self::assertSame(['+1,4', '−0,3', '0,0', '+−', '−+'], array_map(EvaluationRules::label(...), [140, -30, 0, 10_000, -12_000]));
-    }
-
     public function testXp(): void
     {
         $xp = static fn (array $metadata): int => XpRules::exercise(ExerciseType::PositionEvaluation, 'exact' === $metadata['status'], 30_000, 1, $metadata);

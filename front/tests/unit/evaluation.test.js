@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest'
 import {
   choiceLabel,
   clock,
+  engineLabel,
   evaluationFeedback,
   gaugeX,
   guessX,
   pawns,
+  planLabel,
   planResult,
   positionsFor,
-  resultsText
+  resultsText,
+  tagLabel
 } from '@/utils/evaluation'
 
 /** @returns {import('@/utils/evaluation').EvaluationResult} */
@@ -17,9 +20,7 @@ const result = (/** @type {object} */ over = {}) => ({
   guess: 1,
   category: 1,
   evalCp: 120,
-  engine: '+1,2',
   plan: 'king_attack',
-  planLabel: 'Attaque sur le roi',
   chosenPlan: null,
   planOk: null,
   ideas: ['Le roi noir est exposé.'],
@@ -27,11 +28,6 @@ const result = (/** @type {object} */ over = {}) => ({
   durationMs: 65_000,
   ...over
 })
-
-const PLANS = [
-  { value: 'king_attack', label: 'Attaque sur le roi' },
-  { value: 'simplify', label: 'Simplifier en finale' }
-]
 
 describe('position evaluation', () => {
   it('shows the clock rounded up, never below zero', () => {
@@ -90,14 +86,29 @@ describe('position evaluation', () => {
   })
 
   it('tells the plan’s outcome, nothing when the position asks none', () => {
-    expect(planResult(result({ plan: null }), PLANS)).toBe('')
-    expect(planResult(result(), PLANS)).toBe('aucun plan choisi')
+    expect(planResult(result({ plan: null }))).toBe('')
+    expect(planResult(result())).toBe('aucun plan choisi')
     expect(
-      planResult(result({ chosenPlan: 'king_attack', planOk: true }), PLANS)
+      planResult(result({ chosenPlan: 'king_attack', planOk: true }))
     ).toBe('✓ bien trouvé (+5 XP)')
     expect(
-      planResult(result({ chosenPlan: 'simplify', planOk: false }), PLANS)
+      planResult(result({ chosenPlan: 'simplify', planOk: false }))
     ).toBe('tu avais choisi « Simplifier en finale »')
+  })
+
+  it('writes the engine’s evaluation from centipawns, a won position as +− or −+', () => {
+    expect([140, -30, 0, 10_000, -12_000].map(engineLabel)).toEqual([
+      '+1,4',
+      '−0,3',
+      '0,0',
+      '+−',
+      '−+'
+    ])
+  })
+
+  it('names plans and tags from their values', () => {
+    expect(planLabel('king_attack')).toBe('Attaque sur le roi')
+    expect(tagLabel('middlegame')).toBe('Milieu de partie')
   })
 
   it('counts the positions of a side to move', () => {

@@ -62,7 +62,8 @@ final readonly class PositionVerifier
             // Lichess evaluations are from White's point of view.
             $cp = null !== $line['mate'] ? ($line['mate'] > 0 ? EvaluationRules::WON_CP : -EvaluationRules::WON_CP) : (int) $line['cp'];
             $category = EvaluationRules::category($cp);
-            $label = null !== $line['mate'] ? \sprintf('mate %d', $line['mate']) : EvaluationRules::label($cp).' (depth '.($answer['depth'] ?? '?').')';
+            // Written as Lichess does ("+0.18 (depth 40)", "mate 3"), the same in every language.
+            $label = null !== $line['mate'] ? \sprintf('mate %d', $line['mate']) : \sprintf('%+.2f (depth %s)', $cp / 100, $answer['depth'] ?? '?');
             $verdict = match (true) {
                 $category !== $stored => 'mismatch',
                 abs($cp) < EvaluationRules::WON_CP && abs($evalCp) < EvaluationRules::WON_CP && abs($cp - $evalCp) > self::DRIFT_CP => 'drift',

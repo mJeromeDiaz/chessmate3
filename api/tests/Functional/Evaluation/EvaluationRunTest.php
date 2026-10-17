@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
  * position), the one on screen at the end not counted, verdicts and XP, the choice of positions, a
  * plan asked only when there is one. On the 6 positions of POSITIONS.
  *
- * @phpstan-type EvalItem array{id: string, type: string, data: array{position: array{fen: string, turn: string, tag: string|null, tagLabel: string|null}, tip: string|null, askPlan: bool, servedAt: string, index: int, plans: list<array{value: string, label: string}>}}
+ * @phpstan-type EvalItem array{id: string, type: string, data: array{position: array{fen: string, turn: string, tag: string|null}, tip: string|null, askPlan: bool, servedAt: string, index: int, plans: list<array{value: string}>}}
  */
 final class EvaluationRunTest extends WoodpeckerWebTestCase
 {
@@ -61,7 +61,7 @@ final class EvaluationRunTest extends WoodpeckerWebTestCase
         foreach (['count', 'seconds', 'deadlineAt'] as $gone) {
             self::assertArrayNotHasKey($gone, $first['data'], 'No time per position, no count: the run\'s clock only.');
         }
-        foreach (['evalCp', 'engine', 'category', 'plan', 'ideas', 'source'] as $secret) {
+        foreach (['evalCp', 'category', 'plan', 'ideas', 'source'] as $secret) {
             self::assertArrayNotHasKey($secret, $first['data'], 'The correction only comes with the verdict.');
             self::assertArrayNotHasKey($secret, $first['data']['position']);
         }
@@ -74,7 +74,7 @@ final class EvaluationRunTest extends WoodpeckerWebTestCase
         $exact = $this->submitOk($alice, $run, $first['id'], ['guess' => $category, 'plan' => $position->getPlan()?->value], XpRules::EVALUATION_EXACT + XpRules::EVALUATION_PLAN);
         self::assertSame([true, 'exact', $category, true, 10_000], [$exact['success'], $exact['data']['status'], $exact['data']['category'], $exact['data']['planOk'], $exact['data']['durationMs']]);
         self::assertArrayNotHasKey('fast', $exact['data']);
-        self::assertSame(EvaluationRules::label($position->getEvalCp()), $exact['data']['engine']);
+        self::assertSame($position->getEvalCp(), $exact['data']['evalCp']);
         self::assertSame($position->getIdeas(), $exact['data']['ideas']);
         self::assertSame(409, $this->submit($alice, $run, $first['id'], ['guess' => $category])->getStatusCode(), 'Already answered.');
 

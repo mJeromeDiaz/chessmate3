@@ -53,7 +53,7 @@ final class DiagnosisTest extends TestCase
         self::assertSame([6, 4, 3], [$diagnosis['endgames']['games'], $diagnosis['endgames']['advantages'], $diagnosis['endgames']['lost']]);
         // Rooks: 2 let slip of 3 advantages; pawns: 1 of 1; minor pieces: none.
         self::assertSame(['rook', 'pawn', 'minor'], array_column($diagnosis['endgames']['types'], 'type'));
-        self::assertSame(['type' => 'rook', 'label' => 'Tours', 'games' => 3, 'wins' => 1, 'draws' => 1, 'losses' => 1, 'advantages' => 3, 'lost' => 2], $diagnosis['weakest']);
+        self::assertSame(['type' => 'rook', 'games' => 3, 'wins' => 1, 'draws' => 1, 'losses' => 1, 'advantages' => 3, 'lost' => 2], $diagnosis['weakest']);
     }
 
     public function testNothingToSayWithoutGamesOrSlips(): void

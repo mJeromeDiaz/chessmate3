@@ -202,6 +202,7 @@ import {
 } from '@/utils/feedback'
 import { playOutcomeSound } from '@/utils/sounds'
 import { t } from '@/i18n'
+import { themeText } from '@/utils/puzzle'
 
 const props = defineProps({
   /** @type {import('vue').PropType<{fen: string, moves: string[], playerColor: 'white'|'black', themes?: string[]}|null>} A new object starts a new game. */
@@ -315,7 +316,8 @@ const statusText = computed(() => {
 /** The motif's French label, once the themes are known (none for an unknown theme). */
 const motif = computed(() => {
   const key = motifTheme(props.puzzle?.themes)
-  return key ? (puzzles.themes.find(t => t.key === key)?.labelFr ?? null) : null
+  const theme = key ? puzzles.themes.find(t => t.key === key) : null
+  return theme ? themeText(theme, 'label') : null
 })
 
 /** The verdict's words, once the animation reached the title. */

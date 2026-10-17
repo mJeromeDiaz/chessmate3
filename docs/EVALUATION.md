@@ -92,8 +92,8 @@ Seuls les `ROLE_ADMIN` ([EARLY_ACCESS.md](EARLY_ACCESS.md)) saisissent les posit
   laquelle ; à fenêtre égale, une jamais vue par le joueur, sinon celle vue il y a le plus
   longtemps ; au hasard entre égales. Plus rien : la séance se clôt avant son temps
   (`subject_unavailable`, `reason: no_position`).
-- **Élément** `evaluation_position` : la position (FEN, trait, type), le conseil, `askPlan`, les
-  plans proposés, `servedAt`, `index` (numéro de la position dans la séance). **Pas de temps par
+- **Élément** `evaluation_position` : la position (FEN, trait, type `tag`), le conseil, `askPlan`, les
+  plans proposés (leurs valeurs : le front les nomme, docs/I18N.md, § 5), `servedAt`, `index` (numéro de la position dans la séance). **Pas de temps par
   position** : seule l'horloge de la séance compte. **Rien de la réponse** (évaluation, idées,
   plan) avant le verdict. Un rechargement rend la même position.
 - **Réponse** : `POST …/submission {itemId, evaluation: {guess, plan}}`, `guess` de -2 à 2 ou
@@ -101,7 +101,9 @@ Seuls les `ROLE_ADMIN` ([EARLY_ACCESS.md](EARLY_ACCESS.md)) saisissent les posit
   l'heure tant que la séance l'est (fin + 2 s de tolérance réseau du runner ; après : 409 et la
   séance se clôt). La tentative garde dans `seconds` le temps qui restait à la séance quand elle a
   été servie, plafond de `durationMs`. Le résultat porte la correction : catégorie, `evalCp`,
-  `engine` (« +1,4 »), plan et son libellé, plan choisi, `planOk`, idées, source, `durationMs`.
+  plan, plan choisi, `planOk`, idées, source, `durationMs`. Le front écrit l'évaluation (« +1,4 »,
+  « +− » à partir de `WON_CP`) depuis `evalCp` dans sa langue (`engineLabel()`,
+  `src/utils/evaluation.js`), et nomme plans et types (`evaluation.plans.*`, `evaluation.tags.*`).
 - **Fin** : temps écoulé, arrêt ou plus de position. La position à l'écran **n'est jamais
   comptée** (supprimée à la clôture). Récapitulatif : `metrics` `exact`, `close`, `miss`,
   `timeout`, `planOk`, `activeMs`, `averageMs` (les séances d'avant le 2026-10-11 ont aussi

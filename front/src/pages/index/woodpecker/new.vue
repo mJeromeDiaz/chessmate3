@@ -151,6 +151,7 @@ import { usePuzzleStore } from '@/stores/puzzle'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
 import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
+import { themeText } from '@/utils/puzzle'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -180,7 +181,7 @@ const form = ref({
 })
 
 const themeOptions = computed(() =>
-  puzzles.themes.map(t => ({ label: t.labelFr, value: t.key }))
+  puzzles.themes.map(t => ({ label: themeText(t, 'label'), value: t.key }))
 )
 
 /** Cycle lengths as the server computes them: ceil(first × factor^(n−1)), at least the minimum. */

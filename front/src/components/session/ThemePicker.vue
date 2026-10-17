@@ -32,7 +32,7 @@
           class="theme-picker__option"
           :aria-pressed="modelValue.includes(theme.key)"
           :disabled="!selectable(theme)"
-          :title="theme.descriptionFr"
+          :title="themeText(theme, 'description')"
           :data-testid="`theme-${theme.key}`"
           :style="
             modelValue.includes(theme.key)
@@ -40,7 +40,7 @@
               : {}
           "
           @click="toggle(theme.key)"
-          >{{ theme.labelFr }}</button
+          >{{ themeText(theme, 'label') }}</button
         >
       </div>
     </div>
@@ -49,6 +49,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { themeText } from '@/utils/puzzle'
 
 /**
  * Picks puzzle themes (combined with OR) for the Puzzles module: grouped by category, searchable,
@@ -88,11 +89,11 @@ const groups = computed(() => {
   /** @type {Map<string, {category: string, label: string, themes: import('@/stores/puzzle').Theme[]}>} */
   const byCategory = new Map()
   for (const theme of props.themes) {
-    if (needle && !fold(theme.labelFr).includes(needle)) continue
+    if (needle && !fold(themeText(theme, 'label')).includes(needle)) continue
     if (!byCategory.has(theme.category)) {
       byCategory.set(theme.category, {
         category: theme.category,
-        label: theme.categoryLabelFr,
+        label: themeText(theme, 'categoryLabel'),
         themes: []
       })
     }

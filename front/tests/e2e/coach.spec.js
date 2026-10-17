@@ -41,7 +41,6 @@ const feed = [
 
 const rook = {
   type: 'rook',
-  label: 'Tours',
   games: 2,
   wins: 0,
   draws: 1,

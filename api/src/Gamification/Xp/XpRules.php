@@ -57,14 +57,14 @@ final class XpRules
     public const STEP = 250;
     public const MODULE_STEP = 100;
 
-    /** [first level, rank], the highest first. */
+    /** [first level, rank], the highest first. A rank is a key, named by the SPA (gamification.ranks.*). */
     private const RANKS = [
-        [30, 'Maître'],
-        [20, 'Expert'],
-        [15, 'Stratège'],
-        [10, 'Tacticien'],
-        [5, 'Amateur'],
-        [1, 'Débutant'],
+        [30, 'master'],
+        [20, 'expert'],
+        [15, 'strategist'],
+        [10, 'tactician'],
+        [5, 'amateur'],
+        [1, 'beginner'],
     ];
 
     /**

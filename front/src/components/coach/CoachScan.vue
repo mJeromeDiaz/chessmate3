@@ -200,7 +200,7 @@ const endgameCards = computed(() => {
     const weakest = props.diagnosis.weakest?.type
     return props.diagnosis.endgames.types.map(e => ({
       type: e.type,
-      label: e.label,
+      label: ENDGAME_LABELS[e.type] ?? e.type,
       games: e.games,
       slip: e.advantages ? slipText(e) : '',
       weak: e.type === weakest

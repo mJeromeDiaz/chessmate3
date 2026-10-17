@@ -82,7 +82,7 @@
               <code class="position-fen">{{ p.fen }}</code>
             </td>
             <td class="no-wrap">
-              <strong>{{ p.engine }}</strong>
+              <strong>{{ engineLabel(p.evalCp) }}</strong>
               <span
                 v-if="p.nearBorder"
                 class="position-border"
@@ -165,6 +165,7 @@ import AdminPage from '@/components/admin/AdminPage.vue'
 import PositionForm from '@/components/admin/PositionForm.vue'
 import { apiErrorMessage } from '@/utils/apiError'
 import { PLAN_OPTIONS, TAG_OPTIONS } from '@/utils/admin/evaluation'
+import { engineLabel } from '@/utils/evaluation'
 import { t } from '@/i18n'
 
 /**

@@ -14,7 +14,6 @@ import {
 
 const rook = {
   type: 'rook',
-  label: 'Tours',
   games: 9,
   wins: 2,
   draws: 4,

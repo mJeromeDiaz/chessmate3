@@ -48,11 +48,11 @@ final class XpRulesTest extends TestCase
 
     public function testRanks(): void
     {
-        self::assertSame('Débutant', XpRules::rank(1));
-        self::assertSame('Amateur', XpRules::rank(9));
-        self::assertSame('Tacticien', XpRules::rank(12));
-        self::assertSame(['rank' => 'Stratège', 'level' => 15], XpRules::nextRank(12));
-        self::assertSame('Maître', XpRules::rank(42));
+        self::assertSame('beginner', XpRules::rank(1));
+        self::assertSame('amateur', XpRules::rank(9));
+        self::assertSame('tactician', XpRules::rank(12));
+        self::assertSame(['rank' => 'strategist', 'level' => 15], XpRules::nextRank(12));
+        self::assertSame('master', XpRules::rank(42));
         self::assertNull(XpRules::nextRank(30));
     }
 

@@ -1,4 +1,4 @@
-import { intlLocale, t } from '@/i18n'
+import { currentLocale, intlLocale, t } from '@/i18n'
 
 /**
  * @typedef {object} ThemeGroup
@@ -6,6 +6,19 @@ import { intlLocale, t } from '@/i18n'
  * @property {string} label
  * @property {import('@/stores/puzzle').Theme[]} themes
  */
+
+/**
+ * A theme's text in the current language: the API sends both (`labelFr`, `labelEn`…), French
+ * when a language has none (docs/I18N.md, § 5).
+ *
+ * @param {import('@/stores/puzzle').Theme} theme
+ * @param {'label'|'description'|'categoryLabel'} field
+ * @returns {string}
+ */
+export function themeText(theme, field) {
+  const en = currentLocale() === 'en' ? theme[`${field}En`] : null
+  return en || theme[`${field}Fr`]
+}
 
 /**
  * Themes grouped by category, in the API's order (themes page, puzzle settings).
@@ -20,7 +33,7 @@ export function groupThemes(themes) {
     if (!byCategory.has(theme.category)) {
       byCategory.set(theme.category, {
         category: theme.category,
-        label: theme.categoryLabelFr,
+        label: themeText(theme, 'categoryLabel'),
         themes: []
       })
     }

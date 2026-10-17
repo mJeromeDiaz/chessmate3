@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { filtersActive, groupThemes } from '@/utils/puzzle'
+import { afterEach, describe, expect, it } from 'vitest'
+import { i18n } from '@/i18n'
+import { filtersActive, groupThemes, themeText } from '@/utils/puzzle'
 
 /** @param {string} key @param {string} category */
 const theme = (key, category) => ({
@@ -28,6 +29,26 @@ describe('groupThemes', () => {
 
   it('returns no group without themes', () => {
     expect(groupThemes([])).toEqual([])
+  })
+})
+
+describe('themeText', () => {
+  afterEach(() => {
+    i18n.global.locale.value = 'fr'
+  })
+
+  it('reads the text of the current language, French when English has none', () => {
+    const fork = {
+      ...theme('fork', 'motifs'),
+      labelFr: 'Fourchette',
+      labelEn: 'Fork',
+      descriptionEn: ''
+    }
+    expect(themeText(fork, 'label')).toBe('Fourchette')
+    i18n.global.locale.value = 'en'
+    expect(themeText(fork, 'label')).toBe('Fork')
+    expect(themeText(fork, 'categoryLabel')).toBe('MOTIFS')
+    expect(themeText(fork, 'description')).toBe('')
   })
 })
 

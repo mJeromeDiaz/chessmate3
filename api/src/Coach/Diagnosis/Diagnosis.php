@@ -14,7 +14,7 @@ use App\Repertoire\Auto\GameRecord;
  * the weakest kind (the most advantages let slip; at equal count, the fewest converted). Pure.
  *
  * @phpstan-type Opening array{family: string, games: int, wins: int, draws: int, losses: int}
- * @phpstan-type Endgame array{type: string, label: string, games: int, wins: int, draws: int, losses: int, advantages: int, lost: int}
+ * @phpstan-type Endgame array{type: string, games: int, wins: int, draws: int, losses: int, advantages: int, lost: int}
  * @phpstan-type DiagnosisArray array{games: int, analysed: int, rating: int, white: list<Opening>, black: list<Opening>, endgames: array{games: int, advantages: int, lost: int, types: list<Endgame>}, weakest: Endgame|null}
  */
 final class Diagnosis
@@ -56,7 +56,7 @@ final class Diagnosis
                 continue;
             }
             $type = $game->endgameType->value;
-            $endgames[$type] ??= ['type' => $type, 'label' => $game->endgameType->label(), 'games' => 0, 'wins' => 0, 'draws' => 0, 'losses' => 0, 'advantages' => 0, 'lost' => 0];
+            $endgames[$type] ??= ['type' => $type, 'games' => 0, 'wins' => 0, 'draws' => 0, 'losses' => 0, 'advantages' => 0, 'lost' => 0];
             ++$endgames[$type]['games'];
             ++$endgames[$type][$outcome];
             ++$totals['games'];

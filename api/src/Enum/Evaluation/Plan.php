@@ -16,17 +16,6 @@ enum Plan: string
     case Simplify = 'simplify';
     case ActiveDefense = 'active_defense';
 
-    public function label(): string
-    {
-        return match ($this) {
-            self::KingAttack => 'Attaque sur le roi',
-            self::Queenside => 'Jeu à l’aile dame',
-            self::CenterSpace => 'Centre et espace',
-            self::Simplify => 'Simplifier en finale',
-            self::ActiveDefense => 'Défense active',
-        };
-    }
-
     /**
      * @return list<string>
      */
