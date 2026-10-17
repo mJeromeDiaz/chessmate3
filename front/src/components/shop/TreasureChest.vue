@@ -1,8 +1,10 @@
 <template>
   <div
+    ref="screen"
     class="chest-screen"
     role="dialog"
     aria-modal="true"
+    tabindex="-1"
     :aria-label="$t('shop.chestScreen.label')"
     data-testid="treasure-chest"
     :style="{ background: stage.bg, color: stage.ink }"
@@ -37,7 +39,6 @@
     <div class="chest-screen__col">
       <header class="chest-screen__top">
         <button
-          ref="closeButton"
           type="button"
           class="chest-screen__close"
           :style="{ color: stage.ink }"
@@ -328,7 +329,7 @@ let countLater
 let raf
 const canvas = ref(/** @type {HTMLCanvasElement|null} */ (null))
 const chestButton = ref(/** @type {HTMLButtonElement|null} */ (null))
-const closeButton = ref(/** @type {HTMLButtonElement|null} */ (null))
+const screen = ref(/** @type {HTMLDivElement|null} */ (null))
 
 function hit() {
   if (open.value) return
@@ -459,7 +460,9 @@ function burst() {
 }
 
 onMounted(async () => {
-  ;(reduced ? closeButton.value : chestButton.value)?.focus()
+  // The screen takes the focus (Esc closes it, Tab reaches the chest): focusing the chest itself
+  // drew its keyboard outline around it after a page load, with no click before.
+  screen.value?.focus()
   if (reduced) markOpened()
   const state = await shop.load().catch(() => null)
   if (!state) return
@@ -495,6 +498,10 @@ $grain: repeating-linear-gradient(
     background 0.5s ease,
     color 0.4s;
   font-family: 'DM Sans', system-ui, sans-serif;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .chest-screen__glow {

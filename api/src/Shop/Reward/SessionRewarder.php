@@ -104,6 +104,35 @@ final readonly class SessionRewarder implements SessionRewardInterface
     }
 
     /**
+     * The player's chests not seen yet, oldest first, with their session: the dashboard shows them
+     * so that none is missed (a run page left before its chest, docs/SHOP.md, § 4 bis).
+     *
+     * @return list<array{reward: RewardView, sessionId: string}>
+     */
+    public function unopened(Uuid $userId, int $limit = 20): array
+    {
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT id, session_id, crowns, paid_seconds, tier, capped, opened_at FROM shop_session_reward
+             WHERE user_id = ? AND opened_at IS NULL AND crowns > 0 ORDER BY created_at, id LIMIT ?',
+            [$userId->toBinary(), $limit],
+            [ParameterType::BINARY, ParameterType::INTEGER],
+        );
+
+        return array_map(static fn (array $row): array => [
+            'reward' => self::view($row),
+            'sessionId' => Uuid::fromBinary(self::string($row['session_id']))->toRfc4122(),
+        ], $rows);
+    }
+
+    /**
+     * The player's crowns now.
+     */
+    public function balance(Uuid $userId): int
+    {
+        return $this->wallets->balance($userId);
+    }
+
+    /**
      * Opens a chest of the player (idempotent).
      *
      * @return array{reward: RewardView, balance: int}|null null when it is not the player's

@@ -91,9 +91,9 @@ describe('position evaluation', () => {
     expect(
       planResult(result({ chosenPlan: 'king_attack', planOk: true }))
     ).toBe('✓ bien trouvé (+5 XP)')
-    expect(
-      planResult(result({ chosenPlan: 'simplify', planOk: false }))
-    ).toBe('tu avais choisi « Simplifier en finale »')
+    expect(planResult(result({ chosenPlan: 'simplify', planOk: false }))).toBe(
+      'tu avais choisi « Simplifier en finale »'
+    )
   })
 
   it('writes the engine’s evaluation from centipawns, a won position as +− or −+', () => {

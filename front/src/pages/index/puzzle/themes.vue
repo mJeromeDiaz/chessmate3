@@ -48,7 +48,9 @@
             <span class="text-caption text-grey q-ml-xs">{{
               formatCount(theme.puzzleCount)
             }}</span>
-            <q-tooltip max-width="300px">{{ themeText(theme, 'description') }}</q-tooltip>
+            <q-tooltip max-width="300px">{{
+              themeText(theme, 'description')
+            }}</q-tooltip>
           </q-checkbox>
         </div>
       </div>

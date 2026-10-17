@@ -118,7 +118,9 @@ export function evaluationFeedback(result, index) {
       palette: /** @type {'help'} */ ('help'),
       badge: '?!',
       title: t('evaluation.verdicts.close'),
-      sub: t('evaluation.feedback.closeSub', { engine: engineLabel(result.evalCp) }),
+      sub: t('evaluation.feedback.closeSub', {
+        engine: engineLabel(result.evalCp)
+      }),
       kicker: t('evaluation.feedback.kicker'),
       bubble: lookAgain
     }
@@ -128,7 +130,9 @@ export function evaluationFeedback(result, index) {
     palette: null,
     badge: result.status === 'timeout' ? '⏱︎' : '?',
     title: VERDICTS[result.status],
-    sub: t('evaluation.feedback.missSub', { engine: engineLabel(result.evalCp) }),
+    sub: t('evaluation.feedback.missSub', {
+      engine: engineLabel(result.evalCp)
+    }),
     kicker: t('evaluation.feedback.kicker'),
     bubble: lookAgain
   }

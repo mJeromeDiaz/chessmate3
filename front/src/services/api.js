@@ -1017,7 +1017,15 @@ export const shopApi = {
         null,
         JSON_LD
       )
-      .then(r => r.data)
+      .then(r => r.data),
+  /**
+   * The chests not seen yet, oldest first (the active session reconciled first): `{id, crowns,
+   * paidMinutes, tier, capped, opened, balance, sessionId}` each.
+   */
+  unopenedRewards: () =>
+    http
+      .get('/api/shop/rewards/unopened', JSON_LD)
+      .then(r => r.data.member ?? [])
 }
 
 /** The guided tour (docs/ONBOARDING.md): the declared level and goal. */

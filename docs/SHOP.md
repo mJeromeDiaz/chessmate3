@@ -128,11 +128,20 @@ sur son bilan (dernier module passé) montre son coffre là (« Voir le bilan »
 « +N couronnes » (ou le plafond atteint). Mouvement réduit : le coffre ouvert d'emblée. La boutique
 réaffiche « Gagner des couronnes » (la règle, les minutes restantes aujourd'hui).
 
+**Aucun coffre perdu** (2026-10-17) : le tableau de bord demande les coffres pas encore vus
+(`GET /shop/rewards/unopened`, qui clôt d'abord la session active si son dernier module est fini)
+et les montre l'un après l'autre, du plus ancien, après la célébration de la série ; « Voir le
+bilan » mène à leur session. Cas : la page de la séance quittée avant le coffre, un autre appareil.
+Un coffre n'est « vu » qu'une fois frappé ou fermé ; affiché puis quitté, il revient. L'écran du
+coffre prend lui-même le focus (Échap le ferme) : le coffre n'a son contour de focus qu'au
+clavier.
+
 ## 5. API joueur
 
 | Endpoint | Rôle |
 |---|---|
 | `GET /shop` | `{balance, offers, slides, inventory, freezes, earning}` : offres listées (en vente ou « bientôt »), `inventory` par article (un gel compte tant qu'il couvre un jour), gels un par un, `earning` (la règle des gains et `minutesLeftToday`) |
+| `GET /shop/rewards/unopened` | les coffres pas encore vus, du plus ancien (20 au plus), la session active d'abord réconciliée → `member` : `{id, crowns, paidMinutes, tier, capped, opened, balance, sessionId}` |
 | `POST /shop/rewards/{id}/open` | le coffre d'un gain vu (idempotent) → `{id, crowns, paidMinutes, tier, capped, opened, balance}` ; 404 pour celui d'un autre ; limiteur `shop_write` |
 | `POST /shop/purchases` `{offerId, quantity}` | 1 à 9 ; payé d'un coup sur le solde verrouillé, articles en stock, même transaction → l'état de la boutique ; 404 offre inconnue, 409 `detail` `insufficient` ou `not_on_sale`, 422 quantité ; limiteur `shop_write` (60 / 10 min) |
 

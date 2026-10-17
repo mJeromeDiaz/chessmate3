@@ -6,10 +6,13 @@ namespace App\ApiResource\Shop;
 
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\NotExposed;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use App\ApiResource\Woodpecker\Set;
 use App\State\Shop\OpenRewardProcessor;
+use App\State\Shop\UnopenedRewardsProvider;
 
 /**
  * The crowns a completed session earned (docs/SHOP.md, § 4 bis), credited when it closed: opening
@@ -31,6 +34,14 @@ use App\State\Shop\OpenRewardProcessor;
             deserialize: false,
             processor: OpenRewardProcessor::class,
         ),
+        new GetCollection(
+            uriTemplate: '/shop/rewards/unopened',
+            paginationEnabled: false,
+            openapi: new Operation(summary: 'The chests not seen yet, oldest first (the active session reconciled first).'),
+            provider: UnopenedRewardsProvider::class,
+        ),
+        // The items' IRI only: a reward is read through its session or the list above.
+        new NotExposed(uriTemplate: '/shop/rewards/{id}', requirements: ['id' => Set::UUID_PATTERN]),
     ],
 )]
 final class Reward
@@ -47,6 +58,8 @@ final class Reward
     public bool $opened;
     /** The player's crowns now. */
     public int $balance;
+    /** Its session (the list of unopened chests only). */
+    public ?string $sessionId = null;
 
     /**
      * @param RewardView $view

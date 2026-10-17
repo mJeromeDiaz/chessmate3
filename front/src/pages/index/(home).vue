@@ -81,17 +81,30 @@
         </template>
       </q-banner>
     </div>
+    <TreasureChest
+      v-if="chest"
+      :key="chest.id"
+      :reward="chest"
+      :results-label="$t('training.page.seeReview')"
+      @results="seeSession(chest)"
+      @close="dismissChest(chest)"
+      @shop="dismissChest(chest)"
+    />
   </q-page>
 
   <LandingPage v-else />
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { shopApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useDashboardStore } from '@/stores/dashboard'
 import { buildModuleRows } from '@/utils/dashboard/modules'
 import { useGamificationStore } from '@/stores/gamification'
+import { useShopStore } from '@/stores/shop'
+import TreasureChest from '@/components/shop/TreasureChest.vue'
 import LevelBanner from '@/components/dashboard/LevelBanner.vue'
 import ModuleProgress from '@/components/dashboard/ModuleProgress.vue'
 import RatingCard from '@/components/dashboard/RatingCard.vue'
@@ -115,6 +128,28 @@ definePage({ meta: { landing: true } })
 const auth = useAuthStore()
 const store = useDashboardStore()
 const gamification = useGamificationStore()
+const shop = useShopStore()
+const router = useRouter()
+
+/**
+ * The chests not seen yet (docs/SHOP.md, § 4 bis): a run page left before its chest, another
+ * device… none is missed. Shown one after the other, oldest first, after the streak's celebration.
+ *
+ * @type {import('vue').Ref<{id: string, crowns: number, paidMinutes: number, tier: string, capped: boolean, opened: boolean, sessionId: string}[]>}
+ */
+const chests = ref([])
+const chest = computed(() => chests.value[0] ?? null)
+
+/** @param {{id: string}} seen */
+function dismissChest(seen) {
+  chests.value = chests.value.filter(c => c.id !== seen.id)
+}
+
+/** "Voir le bilan": the session it came from. @param {{id: string, sessionId: string}} seen */
+function seeSession(seen) {
+  dismissChest(seen)
+  router.push(`/session/${seen.sessionId}`)
+}
 
 const moduleRows = computed(() =>
   buildModuleRows({
@@ -136,9 +171,15 @@ const sectionError = computed(() =>
 /** Loads the dashboard; an announcement left unseen (a run closed later, another tab) shows. */
 function loadAll() {
   store.load()
+  const unopened = shopApi.unopenedRewards().catch(() => [])
   gamification
     .load()
     .then(() => gamification.celebrateStreak({ afterExercise: false }))
+    .catch(() => {})
+    .then(() => unopened)
+    // Those already seen in this tab (the server may not know yet) are left out; one opened here
+    // stays on screen until left.
+    .then(list => (chests.value = list.filter(c => !shop.seenChests.has(c.id))))
 }
 
 onMounted(() => {

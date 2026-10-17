@@ -183,7 +183,9 @@ export function itemTitle(item, themeLabel) {
         ? tagLabel(item.data.position.tag)
         : t('training.end.position'),
       engine:
-        typeof item.data.evalCp === 'number' ? engineLabel(item.data.evalCp) : ''
+        typeof item.data.evalCp === 'number'
+          ? engineLabel(item.data.evalCp)
+          : ''
     })
   const theme = item.data.puzzle?.themes?.[0]
   return theme ? themeLabel(theme) : t('training.end.puzzle')

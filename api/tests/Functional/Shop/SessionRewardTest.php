@@ -60,6 +60,35 @@ final class SessionRewardTest extends WoodpeckerWebTestCase
         self::assertSame(404, $this->api('POST', '/api/shop/rewards/'.Uuid::v7()->toRfc4122().'/open', $alice)->getStatusCode());
     }
 
+    public function testTheDashboardListsTheChestsNotSeenTheActiveSessionReconciledFirst(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->lightSet($alice);
+        $session = $this->launch($alice, [['module' => 'woodpecker', 'minutes' => 10, 'settings' => []]]);
+        $run = $this->nextStep($alice, $session['id']);
+        $this->travel('+1 minute');
+        $this->playInRun($alice, $run);
+        $this->travel('+1 minute');
+        // The last module ended, the session not read since: still active on the server.
+        $this->stopRun($alice, $run);
+
+        /** @var array{member: list<array{id: string, crowns: int, opened: bool, balance: int, sessionId: string}>} $unopened */
+        $unopened = $this->json($this->api('GET', '/api/shop/rewards/unopened', $alice));
+        self::assertCount(1, $unopened['member']);
+        $chest = $unopened['member'][0];
+        self::assertSame([$session['id'], false, $chest['crowns']], [$chest['sessionId'], $chest['opened'], $chest['balance']]);
+        self::assertGreaterThan(0, $chest['crowns']);
+        self::assertSame('completed', $this->getSession($alice, $session['id'])['status']);
+
+        $bob = $this->createUserIn('bob@example.com');
+        self::assertSame([], $this->json($this->api('GET', '/api/shop/rewards/unopened', $bob))['member'] ?? null);
+
+        self::assertSame(200, $this->api('POST', '/api/shop/rewards/'.$chest['id'].'/open', $alice)->getStatusCode());
+        self::assertSame([], $this->json($this->api('GET', '/api/shop/rewards/unopened', $alice))['member'] ?? null, 'seen: gone');
+        // The sibling item route is not exposed.
+        self::assertSame(404, $this->api('GET', '/api/shop/rewards/'.$chest['id'], $alice)->getStatusCode());
+    }
+
     public function testTheTierIsThatOfTheWholeSessionAndTheFreeStudyIsUnpaid(): void
     {
         $alice = $this->createUserIn('alice@example.com');

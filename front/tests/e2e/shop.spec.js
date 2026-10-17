@@ -277,3 +277,50 @@ test('a completed session opens a chest of crowns, then the results and the stor
     'Gagner des couronnes'
   )
 })
+
+test('a chest missed at the end of the run waits on the dashboard', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/session/new')
+  await page.getByTestId('session-title').fill('Coffre oublié')
+  await page.getByTestId('module-card-puzzles').click()
+  const settings = page.getByTestId('module-settings')
+  await settings.getByTestId('field-duree').locator('input').fill('5')
+  await settings.getByTestId('module-save').click()
+  await expect(settings).toBeHidden()
+
+  const served = page.waitForResponse(isRunNext)
+  await page.getByTestId('session-launch').click()
+  await expect(page).toHaveURL(/#\/training\/[^/]+$/)
+  const item = (await (await served).json()).item
+  await solve(page, item.data.puzzle)
+  await expect(page.getByTestId('run-progress')).toContainText('1 puzzles')
+  await page.waitForTimeout(15_000)
+  const stopped = page.waitForResponse(
+    r => /\/api\/training\/runs\/[^/]+\/stop$/.test(r.url()) && r.ok()
+  )
+  await page.getByTestId('run-stop').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await stopped
+  // Left at once: a chest only counts as seen once hit or closed (docs/SHOP.md, § 4 bis).
+  await page.goto('/#/boutique')
+  await expect(page.getByTestId('shop-balance')).toBeVisible()
+
+  // The dashboard shows it; "Voir le bilan" leads to its session.
+  await page.goto('/#/')
+  const chest = page.getByTestId('treasure-chest')
+  await expect(chest).toBeVisible()
+  await expect(chest).toContainText('RÉCOMPENSE DE SESSION')
+  for (let i = 0; i < 3; i++)
+    await chest.getByTestId('chest-hit').click({ force: true })
+  await chest.getByTestId('chest-results').click()
+  await expect(page).toHaveURL(/#\/session\/[^/]+$/)
+  await expect(page.getByTestId('session-reward')).toContainText('couronnes')
+
+  // Seen: not again.
+  await page.goto('/#/')
+  await expect(page.getByTestId('dashboard')).toBeVisible()
+  await expect(page.getByTestId('treasure-chest')).toHaveCount(0)
+})

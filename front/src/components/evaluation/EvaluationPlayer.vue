@@ -119,7 +119,9 @@
           >
           <span data-testid="evaluation-engine"
             ><i class="eval-player__dot eval-player__dot--engine" />{{
-              $t('evaluation.player.engine', { value: engineLabel(result.evalCp) })
+              $t('evaluation.player.engine', {
+                value: engineLabel(result.evalCp)
+              })
             }}</span
           >
         </div>
@@ -132,7 +134,8 @@
           v-if="result.plan"
           class="eval-player__plan-line"
           data-testid="evaluation-plan-result"
-          >{{ $t('evaluation.player.bestPlan') }} <b>{{ planLabel(result.plan) }}</b
+          >{{ $t('evaluation.player.bestPlan') }}
+          <b>{{ planLabel(result.plan) }}</b
           ><template v-if="planLine"> · {{ planLine }}</template></div
         >
         <div v-if="result.source" class="eval-player__source">{{
@@ -254,9 +257,7 @@ const feedback = computed(() =>
         bubble: ''
       }
 )
-const planLine = computed(() =>
-  props.result ? planResult(props.result) : ''
-)
+const planLine = computed(() => (props.result ? planResult(props.result) : ''))
 
 const reacting = computed(
   () => timeline.kind.value !== null && timeline.step.value >= 2
