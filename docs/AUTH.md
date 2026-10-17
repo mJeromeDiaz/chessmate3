@@ -415,7 +415,7 @@ le serveur ; extension PHP `zip` requise) :
 
 | Fichier | Contenu |
 |---|---|
-| `LISEZMOI.txt` | Description des fichiers |
+| `LISEZMOI.txt` (compte en français) ou `README.txt` | Description des fichiers, dans la langue du compte (`translations/export.<langue>.yaml`) ; les noms des fichiers de données ne changent pas |
 | `profil.json` | Compte, préférences, comptes liés (fournisseur, identifiant, email du fournisseur), appareils de confiance (libellé, dates) |
 | `puzzles.json` | Classement, historique du classement, tentatives (puzzle désigné par son identifiant Lichess) |
 | `woodpecker.json` | Sets, puzzles des sets, cycles, tentatives, agrandissements |

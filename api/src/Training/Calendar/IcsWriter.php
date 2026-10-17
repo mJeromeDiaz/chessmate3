@@ -8,14 +8,17 @@ use App\Entity\Training\Plan;
 use App\Entity\User;
 use App\Enum\Training\Module;
 use App\Enum\Training\Repetition;
+use App\I18n\UserLocale;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Saved sessions as an iCalendar document (RFC 5545, docs/TRAINING.md, calendar): one recurring
  * event per repeated session (RRULE WEEKLY on its days, at its local time in the user's zone), an
  * alarm when the session has a reminder. On demand sessions have no time and are left out.
- * Written by hand: the libraries at hand don't write RRULE.
+ * Written by hand: the libraries at hand don't write RRULE. In the account's language, else the
+ * request's (a calendar app's own Accept-Language), else English (docs/I18N.md, § 5).
  */
 final readonly class IcsWriter
 {
@@ -24,22 +27,27 @@ final readonly class IcsWriter
 
     public function __construct(
         private ClockInterface $clock,
+        private TranslatorInterface $translator,
+        private UserLocale $userLocale,
         #[Autowire('%env(FRONTEND_URL)%')]
         private string $frontendUrl,
     ) {
     }
 
     /**
-     * @param list<Plan> $plans the user's sessions to show
+     * @param list<Plan>  $plans the user's sessions to show
+     * @param string|null $name  the calendar's name; null: the feed's ("Don't Stay Rooky — sessions")
      */
-    public function calendar(User $user, array $plans, string $name): string
+    public function calendar(User $user, array $plans, ?string $name = null): string
     {
+        $locale = $this->userLocale->of($user);
+        $name ??= $this->translator->trans('calendar.feed_name', [], 'training', $locale);
         $timezone = $user->getDateTimeZone();
         $now = $this->clock->now();
         $lines = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
-            'PRODID:-//DontStayRooky//Sessions//FR',
+            'PRODID:-//DontStayRooky//Sessions//'.strtoupper($locale),
             'CALSCALE:GREGORIAN',
             'METHOD:PUBLISH',
             'X-WR-CALNAME:'.self::text($name),
@@ -53,11 +61,17 @@ final readonly class IcsWriter
             array_push($lines, ...TimezoneComponent::lines($timezone, (int) $now->setTimezone($timezone)->format('Y')));
         }
         foreach ($plans as $plan) {
-            array_push($lines, ...$this->event($plan, $timezone, $utc, $now));
+            array_push($lines, ...$this->event($plan, $timezone, $utc, $now, $locale));
         }
         $lines[] = 'END:VCALENDAR';
 
         return implode('', array_map(self::fold(...), $lines));
+    }
+
+    /** A session's name: its title, else "Session Don't Stay Rooky" in the user's language. */
+    public function title(User $user, Plan $plan): string
+    {
+        return '' !== $plan->getTitle() ? $plan->getTitle() : $this->translator->trans('calendar.default_title', [], 'training', $this->userLocale->of($user));
     }
 
     public static function fileName(Plan $plan): string
@@ -70,22 +84,30 @@ final readonly class IcsWriter
     /**
      * @return list<string>
      */
-    private function event(Plan $plan, \DateTimeZone $timezone, bool $utc, \DateTimeImmutable $now): array
+    private function event(Plan $plan, \DateTimeZone $timezone, bool $utc, \DateTimeImmutable $now, string $locale): array
     {
         $first = Repetition::OnDemand === $plan->getRepetition() ? null : $plan->schedule()->nextAfter($plan->getUpdatedAt());
         if (null === $first) {
             return [];
         }
-        $title = '' !== $plan->getTitle() ? $plan->getTitle() : 'Session Don\'t Stay Rooky';
+        $title = '' !== $plan->getTitle() ? $plan->getTitle() : $this->translator->trans('calendar.default_title', [], 'training', $locale);
         $minutes = max(1, array_sum(array_column($plan->getSteps(), 'minutes')));
         $days = $plan->getWeekdays();
         sort($days);
         $url = $this->frontendUrl.'/#/session/plans/'.$plan->getId()->toRfc4122();
         $program = implode(', ', array_map(
-            static fn (array $step): string => sprintf('%s %d min', Module::tryFrom($step['module'])?->label() ?? $step['module'], $step['minutes']),
+            fn (array $step): string => sprintf(
+                '%s %d min',
+                null === Module::tryFrom($step['module']) ? $step['module'] : $this->translator->trans('module.'.$step['module'], [], 'training', $locale),
+                $step['minutes'],
+            ),
             $plan->getSteps(),
         ));
-        $description = implode("\n", array_filter([$plan->getDescription(), 'Programme : '.$program, $url], static fn (string $part): bool => '' !== $part));
+        $description = implode("\n", array_filter([
+            $plan->getDescription(),
+            $this->translator->trans('calendar.program', ['%steps%' => $program], 'training', $locale),
+            $url,
+        ], static fn (string $part): bool => '' !== $part));
 
         $lines = [
             'BEGIN:VEVENT',

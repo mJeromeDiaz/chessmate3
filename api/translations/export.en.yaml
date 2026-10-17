@@ -1,0 +1,24 @@
+# The notice of the data export: the same keys as export.fr.yaml (the file names it lists stay French).
+readme:
+    file: "README.txt"
+    text: |
+        Your Don't Stay Rooky data export
+        =================================
+
+        Generated on %date% (UTC) for the account %account%.
+
+        - profil.json: your account (address, name, username, preferences), the linked accounts
+          (Google, Lichess) and the trusted devices. No password or token.
+        - puzzles.json: your rating, its history and each of your attempts (a puzzle is named by its
+          Lichess id: https://lichess.org/training/<id>).
+        - woodpecker.json: your sets, their puzzles, cycles, attempts and extensions.
+        - repertoires.json: your repertoires (and their origin when they come from your Lichess
+          games), their review cards (FSRS), your answers, your tests and the statistics of your
+          games; repertoires/*.pgn: each repertoire as PGN.
+        - entrainement.json: your timed runs, sessions, saved sessions, coordinates series and
+          blindfold puzzles.
+        - boutique.json: your crowns (each movement, those earned by your sessions), your items,
+          your streak freezes and the days they covered.
+        - activite.json: the log of your finished exercises.
+
+        Dates are in UTC (ISO 8601), identifiers are UUIDs.

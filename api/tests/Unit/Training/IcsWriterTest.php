@@ -6,12 +6,17 @@ namespace App\Tests\Unit\Training;
 
 use App\Entity\Training\Plan;
 use App\Entity\User;
+use App\Enum\Locale;
 use App\Enum\Training\Module;
 use App\Enum\Training\Repetition;
+use App\I18n\UserLocale;
 use App\Training\Calendar\IcsWriter;
 use App\Training\Calendar\TimezoneComponent;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Translation\Loader\YamlFileLoader;
+use Symfony\Component\Translation\Translator;
 
 /**
  * Saved sessions as iCalendar (docs/TRAINING.md, calendar): recurring events at the local time,
@@ -23,7 +28,7 @@ final class IcsWriterTest extends TestCase
 
     public function testARepeatedSessionIsAWeeklyEventAtItsLocalTime(): void
     {
-        $user = self::user('Europe/Paris');
+        $user = self::user('Europe/Paris')->setLocale(Locale::French);
         $plan = self::plan($user, Repetition::Daily, '18:30', [5, 1, 2], reminder: true);
 
         $ics = $this->writer()->calendar($user, [$plan], "Don't Stay Rooky");
@@ -40,6 +45,20 @@ final class IcsWriterTest extends TestCase
         self::assertContains('DESCRIPTION:Ligne 1\nLigne 2 \\\\ fin\nProgramme : Libre 10 min\, Puzzles 20 min\nhttps://app.example/#/session/plans/'.$plan->getId()->toRfc4122(), $lines);
         self::assertContains('TRIGGER:-PT60M', $lines);
         self::assertContains('TZID:Europe/Paris', $lines);
+    }
+
+    public function testTheCalendarIsWrittenInTheAccountsLanguageEnglishByDefault(): void
+    {
+        $user = self::user('Europe/Paris');
+        $plan = self::plan($user, Repetition::Daily, '18:30', [1], title: '');
+
+        $lines = self::unfold($this->writer()->calendar($user, [$plan]));
+
+        self::assertContains('PRODID:-//DontStayRooky//Sessions//EN', $lines);
+        self::assertContains("X-WR-CALNAME:Don't Stay Rooky — sessions", $lines);
+        self::assertContains("SUMMARY:Don't Stay Rooky session", $lines);
+        self::assertContains('DESCRIPTION:Ligne 1\nLigne 2 \\\\ fin\nProgram: Free 10 min\, Puzzles 20 min\nhttps://app.example/#/session/plans/'.$plan->getId()->toRfc4122(), $lines);
+        self::assertSame("Session Don't Stay Rooky", $this->writer()->title($user->setLocale(Locale::French), $plan));
     }
 
     public function testNoReminderNoAlarmAndOnDemandSessionsAreLeftOut(): void
@@ -107,7 +126,13 @@ final class IcsWriterTest extends TestCase
 
     private function writer(): IcsWriter
     {
-        return new IcsWriter(new MockClock(self::NOW, 'UTC'), 'https://app.example');
+        $translator = new Translator('en');
+        $translator->addLoader('yaml', new YamlFileLoader());
+        foreach (['fr', 'en'] as $locale) {
+            $translator->addResource('yaml', __DIR__.'/../../../translations/training.'.$locale.'.yaml', $locale, 'training');
+        }
+
+        return new IcsWriter(new MockClock(self::NOW, 'UTC'), $translator, new UserLocale(new RequestStack()), 'https://app.example');
     }
 
     private static function user(string $timezone): User

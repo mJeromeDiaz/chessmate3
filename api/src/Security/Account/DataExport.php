@@ -7,12 +7,14 @@ namespace App\Security\Account;
 use App\Entity\AuthIdentity;
 use App\Entity\TrustedDevice;
 use App\Entity\User;
+use App\I18n\UserLocale;
+use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Repertoire\Pgn\Exporter as PgnExporter;
 use App\Repository\Repertoire\RepertoireRepository;
-use App\Puzzle\Catalog\PuzzleCatalog;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Psr\Clock\ClockInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * The export of a user's data (docs/AUTH.md, profile): a ZIP of JSON files, one per domain, and a
@@ -25,35 +27,14 @@ final readonly class DataExport
     /** UTC instants as MySQL returns them. */
     private const DATETIME = '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/';
 
-    private const README = <<<'TXT'
-        Export de vos données Don't Stay Rooky
-        ===============================
-
-        Généré le %s (UTC) pour le compte %s.
-
-        - profil.json : votre compte (adresse, nom, pseudo, préférences), les comptes liés (Google,
-          Lichess) et les appareils de confiance. Aucun mot de passe ni jeton.
-        - puzzles.json : votre classement, son historique et chacune de vos tentatives (le puzzle est
-          désigné par son identifiant Lichess : https://lichess.org/training/<identifiant>).
-        - woodpecker.json : vos sets, leurs puzzles, cycles, tentatives et agrandissements.
-        - repertoires.json : vos répertoires (et leur origine quand ils viennent de vos parties Lichess),
-          leurs cartes de révision (FSRS), vos réponses, vos tests et les statistiques de vos parties ;
-          repertoires/*.pgn : chaque répertoire au format PGN.
-        - entrainement.json : vos séances chronométrées, sessions, sessions enregistrées, séries
-          de coordonnées et puzzles à l'aveugle.
-        - boutique.json : vos couronnes (chaque mouvement, celles gagnées par vos sessions), vos
-          objets, vos gels de série et les jours qu'ils ont couverts.
-        - activite.json : le journal de vos exercices terminés.
-
-        Les dates sont en UTC (ISO 8601), les identifiants des UUID.
-        TXT;
-
     public function __construct(
         private Connection $connection,
         private RepertoireRepository $repertoires,
         private PgnExporter $pgn,
         private ClockInterface $clock,
         private PuzzleCatalog $catalog,
+        private TranslatorInterface $translator,
+        private UserLocale $userLocale,
     ) {
     }
 
@@ -72,7 +53,12 @@ final readonly class DataExport
         }
         $id = $user->getId()->toBinary();
 
-        $zip->addFromString('LISEZMOI.txt', \sprintf(self::README, $this->now(), $user->getEmail() ?? $user->getId()->toRfc4122()));
+        // The notice in the account's language (docs/I18N.md, § 5); the data files keep their names.
+        $locale = $this->userLocale->of($user);
+        $zip->addFromString(
+            $this->translator->trans('readme.file', [], 'export', $locale),
+            $this->translator->trans('readme.text', ['%date%' => $this->now(), '%account%' => $user->getEmail() ?? $user->getId()->toRfc4122()], 'export', $locale),
+        );
         $zip->addFromString('profil.json', self::json($this->profile($user)));
         $zip->addFromString('puzzles.json', self::json([
             'rating' => $this->rows('SELECT rating, deviation, volatility, rated_count, last_rated_at, source, updated_at FROM puzzle_rating WHERE user_id = ?', $id)[0] ?? null,

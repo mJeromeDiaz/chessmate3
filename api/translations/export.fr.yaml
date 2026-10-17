@@ -1,0 +1,25 @@
+# The notice of the data export (App\Security\Account\DataExport, docs/I18N.md, § 5). The data
+# files keep the same names in every language; only the notice's name and text change.
+readme:
+    file: "LISEZMOI.txt"
+    text: |
+        Export de vos données Don't Stay Rooky
+        ===============================
+
+        Généré le %date% (UTC) pour le compte %account%.
+
+        - profil.json : votre compte (adresse, nom, pseudo, préférences), les comptes liés (Google,
+          Lichess) et les appareils de confiance. Aucun mot de passe ni jeton.
+        - puzzles.json : votre classement, son historique et chacune de vos tentatives (le puzzle est
+          désigné par son identifiant Lichess : https://lichess.org/training/<identifiant>).
+        - woodpecker.json : vos sets, leurs puzzles, cycles, tentatives et agrandissements.
+        - repertoires.json : vos répertoires (et leur origine quand ils viennent de vos parties Lichess),
+          leurs cartes de révision (FSRS), vos réponses, vos tests et les statistiques de vos parties ;
+          repertoires/*.pgn : chaque répertoire au format PGN.
+        - entrainement.json : vos séances chronométrées, sessions, sessions enregistrées, séries
+          de coordonnées et puzzles à l'aveugle.
+        - boutique.json : vos couronnes (chaque mouvement, celles gagnées par vos sessions), vos
+          objets, vos gels de série et les jours qu'ils ont couverts.
+        - activite.json : le journal de vos exercices terminés.
+
+        Les dates sont en UTC (ISO 8601), les identifiants des UUID.

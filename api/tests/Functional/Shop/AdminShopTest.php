@@ -46,7 +46,9 @@ final class AdminShopTest extends WebTestCase
         self::assertSame(['wasPrice' => 'The struck-through price must be above the price.'], $titles($this->call($this->admin, 'POST', '/api/admin/shop/offers', $offer)));
         self::assertSame(['wasPrice' => 'Le prix barré doit dépasser le prix.'], $titles($this->call($this->admin, 'POST', '/api/admin/shop/offers', $offer, 'fr')));
         $long = $this->call($this->admin, 'POST', '/api/admin/shop/offers', ['name' => str_repeat('x', 200)] + $offer, 'fr');
-        self::assertStringEndsWith('caractères au plus.', (string) ($titles($long)['name'] ?? ''));
+        $name = $titles($long)['name'] ?? null;
+        self::assertIsString($name);
+        self::assertStringEndsWith('caractères au plus.', $name);
     }
 
     public function testAnOfferIsCreatedCheckedAndSuspended(): void

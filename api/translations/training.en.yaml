@@ -8,3 +8,8 @@ module:
     blindfold: "Blindfold"
     evaluation: "Evaluation"
     puzzle_streak: "Streak"
+# The iCalendar feed and files (App\Training\Calendar\IcsWriter).
+calendar:
+    feed_name: "Don't Stay Rooky — sessions"
+    default_title: "Don't Stay Rooky session"
+    program: "Program: %steps%"

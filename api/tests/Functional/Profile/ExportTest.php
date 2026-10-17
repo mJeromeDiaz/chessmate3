@@ -13,6 +13,7 @@ use App\Entity\Training\Session;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\AuthProvider;
+use App\Enum\Locale;
 use App\Enum\Repertoire\Color;
 use App\Enum\Training\Module;
 use App\Repertoire\RepertoireManager;
@@ -80,7 +81,10 @@ final class ExportTest extends WebTestCase
             $names[] = (string) $zip->getNameIndex($i);
         }
         sort($names);
-        self::assertSame(['LISEZMOI.txt', 'activite.json', 'boutique.json', 'entrainement.json', 'profil.json', 'puzzles.json', 'repertoires.json', 'repertoires/01-italienne.pgn', 'woodpecker.json'], $names);
+        // No language chosen: the notice in English; the data files keep their names (docs/I18N.md, § 5).
+        self::assertSame(['README.txt', 'activite.json', 'boutique.json', 'entrainement.json', 'profil.json', 'puzzles.json', 'repertoires.json', 'repertoires/01-italienne.pgn', 'woodpecker.json'], $names);
+
+        self::assertStringContainsString('Generated on', (string) $zip->getFromName('README.txt'));
 
         $profile = $this->json($zip, 'profil.json');
         self::assertSame('alice@example.com', $profile['email']);
@@ -107,6 +111,18 @@ final class ExportTest extends WebTestCase
         self::assertStringNotContainsString('$2y$', $everything, 'no password hash');
         self::assertStringNotContainsString('bob@example.com', $everything);
         self::assertStringNotContainsStringIgnoringCase('token', $this->rawJson($zip, 'profil.json'));
+    }
+
+    public function testTheNoticeIsWrittenInTheAccountsLanguage(): void
+    {
+        $alice = $this->createUser('alice@example.com')->setLocale(Locale::French);
+        $this->entityManager->flush();
+
+        $zip = $this->export($alice);
+
+        self::assertFalse($zip->getFromName('README.txt'));
+        self::assertStringContainsString('Généré le', (string) $zip->getFromName('LISEZMOI.txt'));
+        self::assertNotFalse($zip->getFromName('profil.json'));
     }
 
     public function testAFrozenAccountExportsAndThreeExportsADay(): void

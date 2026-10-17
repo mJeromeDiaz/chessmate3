@@ -448,6 +448,9 @@ Règles validées (2026-10-04) :
   ponctuel, qui ne suit pas les changements.
 - Écrivain maison (`IcsWriter`) : les bibliothèques disponibles n'écrivent pas de `RRULE`. Lignes
   pliées à 75 octets sans couper un caractère UTF-8, texte échappé (RFC 5545).
+- Langue (docs/I18N.md, § 5) : celle du compte, sinon l'`Accept-Language` de la requête (l'agenda
+  qui lit le flux, le SPA pour le téléchargement), sinon l'anglais : nom du flux, titre d'une
+  session sans titre, « Programme : » et noms des modules (`translations/training.<langue>.yaml`).
 
 | Couche | Emplacement |
 |---|---|

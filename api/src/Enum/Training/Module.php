@@ -24,21 +24,6 @@ enum Module: string
     /** Puzzle streak: easy to hard, one miss breaks it (docs/PUZZLE_STREAK.md). */
     case PuzzleStreak = 'puzzle_streak';
 
-    /** Its name for the user (emails, calendar). */
-    public function label(): string
-    {
-        return match ($this) {
-            self::Woodpecker => 'Woodpecker',
-            self::Repertoire => 'Répertoire',
-            self::Puzzles => 'Puzzles',
-            self::Free => 'Libre',
-            self::Coordinates => 'Coordonnées',
-            self::Blindfold => 'Aveugle',
-            self::Evaluation => 'Évaluation',
-            self::PuzzleStreak => 'Streak',
-        };
-    }
-
     /**
      * @return list<string>
      */

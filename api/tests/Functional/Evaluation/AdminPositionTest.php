@@ -117,7 +117,8 @@ final class AdminPositionTest extends WoodpeckerWebTestCase
         self::assertSame(['mismatch', 'cloud', 0], [$start['verdict'], $start['source'], $start['lichessCategory']]);
         // Written as Lichess does, in every language. The cloud evaluation may come from the shared
         // cache (another test's answer for the same position): only its form is checked.
-        self::assertMatchesRegularExpression('/^[+-]\d+\.\d{2} \(depth \d+\)$/', (string) $start['lichess']);
+        self::assertIsString($start['lichess']);
+        self::assertMatchesRegularExpression('/^[+-]\d+\.\d{2} \(depth \d+\)$/', $start['lichess']);
         self::assertSame('ok', $this->check(self::START, 20)['verdict']);
 
         self::assertSame(422, $this->api('POST', '/api/admin/evaluation/verification', $this->admin, ['fen' => 'not a fen', 'evalCp' => 0])->getStatusCode());
