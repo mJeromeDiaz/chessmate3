@@ -96,6 +96,15 @@ class AutoBuild
     #[ORM\Column(type: Types::JSON)]
     private array $repertoireIds = [];
 
+    /**
+     * The exploration of the opponents' replies (App\Repertoire\Auto\Exploration::toArray()): the
+     * rule frozen at its start, the explorer's answers by normalized FEN, the calls made and allowed.
+     *
+     * @var array<string, mixed>
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $exploration = null;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -243,6 +252,22 @@ class AutoBuild
     {
         $this->repertoireIds = $repertoireIds;
         $this->status = AutoBuildStatus::Applied;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getExploration(): ?array
+    {
+        return $this->exploration;
+    }
+
+    /**
+     * @param array<string, mixed> $exploration
+     */
+    public function explored(array $exploration): void
+    {
+        $this->exploration = $exploration;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

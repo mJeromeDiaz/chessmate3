@@ -10,6 +10,15 @@ namespace App\Repertoire;
  */
 final readonly class Limits
 {
+    /**
+     * Repertoire from my games: the Lichess explorer filters the opponents' replies are read with
+     * (named, so that others can be added; one only for now, which repertoire_opening_stats holds).
+     */
+    public const EXPLORER_PRESETS = [
+        'strong' => ['speeds' => ['blitz', 'rapid', 'classical'], 'ratings' => [2000, 2200, 2500]],
+    ];
+    public const AUTO_EXPLORER_PRESET = 'strong';
+
     public function __construct(
         public int $maxRepertoires = 50,
         /** Positions per repertoire, the initial one included. */
@@ -52,6 +61,20 @@ final readonly class Limits
         /** ...a "weapon" from this score (%) with an evaluation not below 0, "draws" from this share of draws (%). */
         public int $autoWeaponScore = 60,
         public int $autoDrawShare = 30,
+        /** Repertoire from my games: an opponent's reply from the explorer kept from this share of the position's games (%)... */
+        public float $autoReplyMinShare = 5.0,
+        /** ...and this many games; at most this many replies per position. */
+        public int $autoReplyMinGames = 100,
+        public int $autoMaxReplies = 4,
+        /** Repertoire from my games: real explorer calls of an analysis (or of a resume, or of "explore further" on a line); 500 and 1 000 are kept for deeper settings. */
+        public int $autoMaxExplorerCalls = 300,
+        /** Repertoire from my games: explorer calls per request (the SPA asks again until the analysis is explored). */
+        public int $autoExplorerCallsPerRequest = 10,
+        /** Repertoire from my games: a line shorter than this (plies) is kept only once the user confirmed it. */
+        public int $autoShortLinePlies = 20,
+        /** Precomputed first moves (repertoire_opening_stats): plies from the initial position, and days before a row is refreshed. */
+        public int $openingStatsPlies = 4,
+        public int $openingStatsTtlDays = 30,
     ) {
     }
 }

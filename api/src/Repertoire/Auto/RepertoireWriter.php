@@ -7,7 +7,9 @@ namespace App\Repertoire\Auto;
 use App\Chess\Position\PositionKey;
 use App\Chess\Rules;
 use App\Entity\Repertoire\AutoBuild;
+use App\Entity\Repertoire\Pending;
 use App\Entity\Repertoire\Repertoire;
+use App\Enum\Repertoire\PendingReason;
 use App\Entity\User;
 use App\Repertoire\Exception\LimitReachedException;
 use App\Repertoire\Import\ImportApplier;
@@ -23,8 +25,9 @@ use Symfony\Component\Uid\Uuid;
 /**
  * Creates the repertoires of a build (docs/REPERTOIRE.md, "Repertoire from my games"): one new
  * repertoire per opening family kept, through the import path (one change, undoable), with the
- * statistics of its moves (repertoire_game_stat) and its origin. All of them or none: one
- * transaction, the repertoire limit checked before the first write.
+ * statistics of its moves (repertoire_game_stat), its origin and its pending positions
+ * (repertoire_pending: never in the repertoire until the user answers them). All of them or none:
+ * one transaction, the repertoire limit checked before the first write.
  */
 final readonly class RepertoireWriter
 {
@@ -67,7 +70,11 @@ final readonly class RepertoireWriter
                 $taken[] = $name;
                 $id = $this->applier->apply($user, self::imported($tree), ['name' => $name, 'color' => $tree->color]);
                 // Through the entity, not raw SQL: the repertoire just created is in the identity map.
-                $this->repertoires->find($id)?->setOrigin(['source' => 'lichess_games', 'username' => $build->getUsername(), 'games' => $tree->root['games'], 'perfs' => $build->getPerfs(), 'builtAt' => $now->format(\DATE_ATOM)]);
+                $repertoire = $this->repertoires->find($id);
+                $repertoire?->setOrigin(['source' => 'lichess_games', 'username' => $build->getUsername(), 'games' => $tree->root['games'], 'perfs' => $build->getPerfs(), 'builtAt' => $now->format(\DATE_ATOM)]);
+                if (null !== $repertoire) {
+                    $this->pending($repertoire, $tree, $now);
+                }
                 $this->entityManager->flush();
                 $this->stats($id, $tree, $evaluations, $now);
                 $ids[] = $id->toRfc4122();
@@ -107,6 +114,27 @@ final readonly class RepertoireWriter
         }
 
         return $imported;
+    }
+
+    /**
+     * The tree's pending positions, but those the repertoire answers already (a transposition
+     * into a position where the user has their move).
+     */
+    private function pending(Repertoire $repertoire, Tree $tree, \DateTimeImmutable $now): void
+    {
+        $initial = Rules::initial()->normalizedFen();
+        $answered = [];
+        foreach ($tree->nodes as $node) {
+            if ($node['user']) {
+                $answered['' === $node['parent'] ? $initial : $tree->nodes[$node['parent']]['fen']] = true;
+            }
+        }
+        foreach ($tree->pending as $pending) {
+            if (isset($answered[$pending['fen']])) {
+                continue;
+            }
+            $this->entityManager->persist(new Pending($repertoire, $pending['fen'], $pending['sans'], PendingReason::from($pending['reason']), $pending['games'], $pending['share'], $pending['score'], $now));
+        }
     }
 
     /**

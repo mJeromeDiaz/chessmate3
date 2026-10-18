@@ -20,6 +20,8 @@ final class AutoBuildException extends \RuntimeException
     public const ALREADY_APPLIED = 'already_applied';
     /** No opening chosen, or the chosen ones give no line. */
     public const NOTHING_SELECTED = 'nothing_selected';
+    /** A short line neither kept nor set aside yet. */
+    public const UNCONFIRMED_LINES = 'unconfirmed_lines';
 
     public function __construct(
         public readonly string $reason,

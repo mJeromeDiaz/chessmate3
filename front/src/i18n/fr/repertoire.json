@@ -248,7 +248,8 @@
     "renameTitle": "Renommer le répertoire",
     "deleteTitle": "Supprimer « {name} » ?",
     "deleteMessage": "Le répertoire et toutes ses statistiques seront supprimés définitivement.",
-    "deleteOk": "Supprimer définitivement"
+    "deleteOk": "Supprimer définitivement",
+    "pending": "En suspens"
   },
   "new": {
     "title": "Nouveau répertoire",
@@ -419,6 +420,28 @@
       "tooMany": "Trop de modifications en peu de temps : patientez un peu. Le répertoire a été rechargé.",
       "offline": "Serveur injoignable : la dernière modification n’a pas été enregistrée.",
       "notSaved": "La dernière modification n’a pas été enregistrée : le répertoire a été rechargé."
-    }
+    },
+    "pending": "En suspens",
+    "pendingTip": "Positions en suspens : réponses fréquentes sur Lichess à préparer"
+  },
+  "pending": {
+    "title": "En suspens",
+    "named": "En suspens · {name}",
+    "back": "Retour à l’éditeur",
+    "lead": "Des réponses fréquentes sur Lichess (5 % des parties et 100 parties au moins) que tes parties ne couvraient pas. Rien n’entre dans le répertoire sans ta réponse.",
+    "empty": "Aucune position en suspens.",
+    "open": "{n} à préparer",
+    "answer": "Répondre",
+    "dismiss": "Ignorer",
+    "restore": "Rétablir",
+    "answered": "Répondue",
+    "share": "{share} % des parties",
+    "score": "ton score {n} %",
+    "answerTitle": "Ton coup après {path}",
+    "answerHint": "Joue ton coup sur l’échiquier : il entre dans le répertoire avec les coups qui y mènent.",
+    "added": "Coup ajouté après {path}.",
+    "openEditor": "Voir dans l’éditeur",
+    "occupied": "Cette position a déjà un coup préparé : remplace-le dans l’éditeur.",
+    "refused": "Ce coup n’a pas pu être ajouté."
   }
 }

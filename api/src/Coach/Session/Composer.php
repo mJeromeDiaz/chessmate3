@@ -177,7 +177,8 @@ final class Composer
         }
         try {
             $this->builds->select($build, array_values($families), [], []);
-            $ids = $this->builds->apply($build);
+            // The coach builds without asking: its short lines are kept, nothing is explored.
+            $ids = $this->builds->apply($build, confirmShortLines: false);
         } catch (AutoBuildException|LimitReachedException) {
             return ['status' => 'failed', 'repertoires' => []];
         }

@@ -49,10 +49,51 @@
           <button
             type="button"
             class="ra-cta ra-cta--accent ra-cta--wide"
-            :disabled="busy || !lines.length"
+            :disabled="busy || !lines.length || unconfirmed.length > 0"
             data-testid="auto-validate"
             @click="emit('validate')"
             >{{ $t('repertoireAuto.treeScreen.validate') }}</button
+          >
+        </div>
+
+        <div
+          v-if="unconfirmed.length"
+          class="ra-notice"
+          data-testid="auto-unconfirmed"
+        >
+          <span>{{
+            $t('repertoireAuto.short.toConfirm', unconfirmed.length)
+          }}</span>
+          <button
+            type="button"
+            class="ra-link"
+            :disabled="busy"
+            data-testid="auto-short-keep-all"
+            @click="emit('keepAll')"
+            >{{ $t('repertoireAuto.short.keepAll') }}</button
+          >
+        </div>
+
+        <div
+          v-if="exploring || exploreFailed || exploreSay"
+          class="ra-notice"
+          data-testid="auto-exploration"
+        >
+          <span v-if="exploreFailed">{{
+            $t('repertoireAuto.explore.failed')
+          }}</span>
+          <span v-else-if="exploring && !exploration?.capped">{{
+            $t('repertoireAuto.explore.exploring')
+          }}</span>
+          <span v-else>{{ exploreSay }}</span>
+          <button
+            v-if="exploreFailed || exploration?.capped"
+            type="button"
+            class="ra-link"
+            :disabled="exploring"
+            data-testid="auto-explore-resume"
+            @click="emit(exploration?.capped ? 'resume' : 'explore')"
+            >{{ $t('repertoireAuto.explore.resume') }}</button
           >
         </div>
 
@@ -71,6 +112,38 @@
             >{{ $t('common.actions.retry') }}</button
           >
         </div>
+
+        <template v-if="pending.length">
+          <div class="ra-kicker" data-testid="auto-pending-count">{{
+            $t('repertoireAuto.pending.title') +
+            ' · ' +
+            $t('repertoireAuto.pending.count', { n: pending.length })
+          }}</div>
+          <div class="ra-text ra-text--small">{{
+            $t('repertoireAuto.pending.lead')
+          }}</div>
+          <ul class="ra-pending" data-testid="auto-pending-list">
+            <li
+              v-for="p in pending"
+              :key="`${p.key}:${p.fen}`"
+              class="ra-pending__item"
+              data-testid="auto-pending-item"
+            >
+              <span class="ra-pending__path">{{ sanPath(p.sans) }}</span>
+              <span class="ra-pending__meta"
+                >{{ pendingReasonText(p.reason)
+                }}<template v-if="p.share !== null">
+                  ·
+                  {{
+                    $t('repertoireAuto.pending.share', {
+                      share: formatShare(p.share)
+                    })
+                  }}</template
+                ></span
+              >
+            </li>
+          </ul>
+        </template>
 
         <template v-if="moments.length">
           <div class="ra-kicker">{{
@@ -184,6 +257,41 @@
                   ><span class="ra-lock__arc" /><span class="ra-lock__body"
                 /></span>
               </button>
+              <div
+                v-if="line.short && !line.locked"
+                class="ra-row__short"
+                data-testid="auto-short"
+              >
+                <span class="ra-pill ra-pill--small">{{
+                  $t('repertoireAuto.short.badge')
+                }}</span>
+                <span class="ra-row__stop" data-testid="auto-short-stop">{{
+                  stopText(line)
+                }}</span>
+                <span class="ra-row__choices">
+                  <button
+                    type="button"
+                    class="ra-link"
+                    :class="{ 'ra-link--on': line.confirmed }"
+                    :disabled="busy"
+                    data-testid="auto-short-keep"
+                    @click="emit('confirm', tree.key, line, 'keep')"
+                    >{{
+                      line.confirmed
+                        ? '✓ ' + $t('repertoireAuto.short.kept')
+                        : $t('repertoireAuto.short.keep')
+                    }}</button
+                  >
+                  <button
+                    type="button"
+                    class="ra-link"
+                    :disabled="busy"
+                    data-testid="auto-short-suspend"
+                    @click="emit('confirm', tree.key, line, 'suspend')"
+                    >{{ $t('repertoireAuto.short.suspend') }}</button
+                  >
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -209,16 +317,25 @@
 /**
  * Fifth step: the repertoire built, per opening (collapsible): its lines numbered and coloured by
  * tag, the critical moments, the lines beyond the free ones locked (when there is such a limit).
- * A line opens its sheet.
+ * A short line shows where it stops and asks to be kept or set aside (validating waits for it);
+ * the pending positions are listed (answered later, in the editor); the exploration of the
+ * opponents' replies says where it stands (resumed after its cap). A line opens its sheet.
  */
 import { computed, reactive } from 'vue'
+import { intlLocale } from '@/i18n'
 import { profImage } from '@/utils/prof/images'
 import {
   TAGS,
   criticalMoments,
+  explorationSay,
+  pendingItems,
+  pendingReasonText,
+  sanPath,
   score,
   sequence,
-  treeSay
+  stopText,
+  treeSay,
+  unconfirmedLines
 } from '@/utils/repertoireAuto'
 
 const props = defineProps({
@@ -232,9 +349,22 @@ const props = defineProps({
   /** Lines shown in full without a subscription (null: all). */
   freeLines: { type: Number, default: null },
   busy: { type: Boolean, default: false },
-  error: { type: String, default: '' }
+  error: { type: String, default: '' },
+  /** @type {import('vue').PropType<{calls: number, budget: number, capped: boolean, frontier: number, explored: number}|null>} */
+  exploration: { type: Object, default: null },
+  exploring: { type: Boolean, default: false },
+  exploreFailed: { type: Boolean, default: false }
 })
-const emit = defineEmits(['open', 'select', 'validate', 'evaluate'])
+const emit = defineEmits([
+  'open',
+  'select',
+  'validate',
+  'evaluate',
+  'confirm',
+  'keepAll',
+  'resume',
+  'explore'
+])
 
 const MOMENT_COLORS = {
   risk: TAGS.risk.color,
@@ -248,6 +378,13 @@ const collapsed = reactive({})
 const lines = computed(() => props.trees.flatMap(t => t.lines))
 const locked = computed(() => lines.value.filter(l => l.locked))
 const moments = computed(() => criticalMoments(lines.value))
+const pending = computed(() => pendingItems(props.trees))
+const unconfirmed = computed(() => unconfirmedLines(props.trees))
+const exploreSay = computed(() => explorationSay(props.exploration))
+
+/** @param {number} share a percentage */
+const formatShare = share =>
+  share.toLocaleString(intlLocale(), { maximumFractionDigits: 1 })
 
 /** @param {string} tag */
 const count = tag => lines.value.filter(l => l.tag === tag).length
@@ -285,6 +422,59 @@ function lineMoves(tree, line) {
 </script>
 
 <style scoped lang="scss">
+.ra-row__short {
+  // Under the line, past its trunk.
+  flex-basis: 100%;
+  margin-left: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 2px 0 8px 8px;
+  font-size: 12px;
+}
+
+.ra-row__stop {
+  flex: 1 1 200px;
+  opacity: 0.8;
+}
+
+.ra-row__choices {
+  display: flex;
+  gap: 12px;
+}
+
+.ra-link--on {
+  font-weight: 700;
+}
+
+.ra-pending {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ra-pending__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--ra-card, rgba(127, 127, 127, 0.08));
+}
+
+.ra-pending__path {
+  font-weight: 700;
+}
+
+.ra-pending__meta {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
 .ra-tree__head {
   display: flex;
   align-items: flex-end;
@@ -446,6 +636,7 @@ function lineMoves(tree, line) {
 
 .ra-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
 
   &--locked {

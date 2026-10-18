@@ -8,6 +8,7 @@ use App\ApiResource\Repertoire\AutoBuild;
 use App\Entity\Repertoire\AutoBuild as AutoBuildEntity;
 use App\Enum\Repertoire\AutoBuildStatus;
 use App\Repertoire\Auto\AutoBuildService;
+use App\Repertoire\Auto\Exploration;
 use App\Repertoire\Auto\GameRecord;
 use App\Repertoire\Auto\LineTag;
 use App\Repertoire\Auto\Selection;
@@ -56,13 +57,26 @@ final readonly class AutoBuildViews
         if (null === $build->getSelection()) {
             return $view;
         }
-        $view->selection = Selection::fromStored($build->getSelection())->toArray();
+        $selection = Selection::fromStored($build->getSelection());
+        $view->selection = $selection->toArray();
         $families = array_column($view->synthesis['families'], null, 'key');
         $evaluations = $build->getEvaluations();
         $trees = $this->builds->trees($build);
         $view->pendingEvaluations = \count($this->builds->pendingEvaluations($build, $trees));
+        $exploration = Exploration::fromStored($build->getExploration(), $this->limits);
+        $view->exploration = [
+            'calls' => $exploration->calls,
+            'budget' => $exploration->budget,
+            'capped' => $exploration->capped,
+            'frontier' => \count($this->builds->frontier($trees)),
+            'explored' => \count($exploration->replies),
+            'rule' => $exploration->rule->toArray(),
+        ];
+        $view->unconfirmedLines = array_sum(array_map('count', $this->builds->unconfirmedLines($build, $trees)));
         $number = 0;
         foreach ($trees as $key => $tree) {
+            $kept = array_flip($selection->kept[$key] ?? []);
+            $view->pendingCount += \count($tree->pending);
             $lines = [];
             foreach ($tree->lines as $line) {
                 ++$number;
@@ -70,6 +84,7 @@ final readonly class AutoBuildViews
                 $evaluation = LineTag::forUser($evaluations[$line['fen']] ?? null, $tree->color);
                 $lines[] = [
                     ...$line,
+                    'confirmed' => isset($kept[$line['path']]),
                     'number' => $number,
                     'tag' => $this->tags->of($line['games'], $line['wins'], $line['draws'], $evaluation['cp'], $evaluation['mate']),
                     'evaluated' => $evaluated,
@@ -90,6 +105,7 @@ final readonly class AutoBuildViews
                 'trunk' => $tree->trunk,
                 'nodes' => array_values($tree->nodes),
                 'lines' => $lines,
+                'pending' => $tree->pending,
             ];
         }
 

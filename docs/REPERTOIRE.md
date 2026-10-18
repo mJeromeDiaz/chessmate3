@@ -85,6 +85,8 @@ arbre. Mesure : 1 Mo de PGN analysé en 87 ms, 0,27 ms par coup rejoué et norma
 | `repertoire_opening` | Noms d'ouverture (`lichess-org/chess-openings`, CC0) par FEN normalisée | par empreinte de FEN (`epd_hash`) |
 | `repertoire_import` | Import en cours (§ 12) : état, texte PGN puis arbre analysé (JSON), progression, demande d'application, expiration | `idx_repertoire_import_user`, `idx_repertoire_import_expires` |
 | `repertoire_explorer_cache` | Pool de cache Symfony (adaptateur DBAL) des réponses Lichess (§ 11) | clé primaire `item_id` |
+| `repertoire_opening_stats` | Premiers coups précalculés de l'explorateur Lichess pour le préréglage des analyses (§ 12 bis) : réponses en JSON (coup, parties, part, résultats), date de récupération | `uniq_repertoire_opening_stats_fen (fen_hash)` |
+| `repertoire_pending` | Positions en suspens d'un répertoire construit depuis les parties (§ 12 bis) : FEN, chemin SAN, raison, parties, part et score Lichess, statut (`open`, `answered`, `dismissed`), coup répondu | `uniq_repertoire_pending_position (repertoire_id, fen_hash)` |
 
 Identifiants UUID v7 partout : leur ordre est l'ordre de création (utilisé par le choix du chemin
 canonique), et une ligne supprimée peut être restaurée avec son identifiant. Colonnes générées
@@ -246,6 +248,11 @@ tronçons est en SQL et n'écrit que ce qui change (hydrater les 2 672 tronçons
 | Depuis mes parties : demi-coups lus par partie (longueur des lignes) | 40 |
 | Depuis mes parties : fins de ligne évaluées par appel ; durée de vie d'une analyse | 5 ; 24 h |
 | Depuis mes parties : lignes gratuites (verrou d'abonnement) | aucune limite (`null`) |
+| Depuis mes parties : réponse adverse de l'explorateur gardée (part ; parties ; au plus) | 5 % ; 100 ; 4 |
+| Depuis mes parties : vrais appels à l'explorateur par analyse (ou par relance, ou par « Explorer la suite ») ; par requête | 300 (500 et 1 000 réservés aux réglages de profondeur 15 et 20) ; 10 |
+| Depuis mes parties : ligne courte (confirmation demandée) | moins de 20 demi-coups (10 coups) |
+| Premiers coups précalculés : demi-coups ; durée de vie d'une ligne | 4 ; 30 jours |
+| Préréglage de l'explorateur des analyses (`Limits::EXPLORER_PRESETS`, `strong`) | cadences blitz, rapide, classique ; classements 2000, 2200, 2500 |
 
 Un seul endroit, prévu pour recevoir plus tard des limites freemium par utilisateur.
 
@@ -343,6 +350,15 @@ Le front n'appelle jamais Lichess et ne voit jamais de jeton. Tout passe par `Li
   du cache de l'explorateur sont préfixées `explorer2.` : les réponses d'avant ne sont plus lues.
 - Pool `repertoire.explorer_cache` (table `repertoire_explorer_cache`) : les lignes expirées sont
   purgées par `bin/console cache:pool:prune` (**cron quotidien** en production).
+- **Premiers coups précalculés** (`repertoire_opening_stats`, `Auto\OpeningStatsReader`) : lue avant
+  tout appel de l'explorateur par une analyse (§ 12 bis), le cache MySQL restant en dessous. Une ligne
+  de plus de 30 jours est rafraîchie à la demande (jamais servie figée).
+  `app:repertoire:refresh-opening-stats [--plies=4] [--max-calls=100]` la remplit depuis la position
+  initiale, coups populaires des deux camps, et ne redemande que les lignes absentes ou périmées
+  (**cron quotidien**, `bin/cron-daily.php` sur OVH ; premier remplissage ≈ 85 appels). Conditions de
+  Lichess vérifiées le 2026-10-18 : aucune limite de conservation (API : une requête à la fois, pause
+  après un 429 ; conditions d'utilisation : usage commercial dans une application permis ; parties
+  sous CC0) : les 30 jours sont un choix de fraîcheur.
 - Réponses : 422 (position ou filtre invalide), **503** avec `Retry-After` et l'en-tête
   **`X-Lichess-Unavailable`** (`rate_limited`, `busy`, `down`, `no_token`) : en production API
   Platform masque le détail de tout 5xx, et le front a besoin de la raison (compte à lier ou panne).
@@ -456,8 +472,9 @@ répertoire » de la landing, qui l'inscrit par Lichess, docs/EARLY_ACCESS.md), 
 | Compte | `POST /repertoires/auto-builds` `{maxGames: 50\|100\|200\|500\|1000\|2000, perfs: [bullet, blitz, rapid, classical]}` | Crée l'**analyse** (`repertoire_auto_build`), une par utilisateur (la nouvelle remplace l'ancienne), oubliée après 24 h. 409 `lichess_not_linked`, 422 `invalid_settings`. |
 | Analyse | `POST …/{id}/fetch`, répété jusqu'à `status: ready` | Un **paquet de 50 parties** (`GamesClient`, `GET /api/games/user/{id}` en ndjson, avec le jeton de l'utilisateur : 60 parties/s pour ses propres parties ; anonyme après un 401). Le paquet garde le verrou Lichess de l'application environ 1 s : pas de worker, compatible avec le mutualisé. Renvoie les parties gardées (`batch`) pour le flux en direct. 503 + `X-Lichess-Unavailable` : le front attend `Retry-After` et reprend. |
 | Sélection | `GET …/{id}` (synthèse), puis `POST …/{id}/selection` `{families, choices, removed}` | Synthèse par **famille d'ouverture et couleur** (nom Lichess avant le « : », « white:Italian Game »), familles jouées au moins 3 fois (`Limits::$autoFamilyMinGames`) ; l'écran coche d'abord la plus jouée avec les blancs et la plus jouée avec les noirs. La sélection remplace la précédente et renvoie les arbres (`trees`) des familles gardées. 409 `not_ready`/`already_applied`, 422 `invalid_selection`. |
+| Exploration | `POST …/{id}/explore` `{resume?, family?, cut?}`, répété tant que `exploration.frontier > 0` | Les réponses adverses de l'explorateur Lichess (« Explorer » ci-dessous), 10 vrais appels par requête. Au plafond (`exploration.capped`) : « analyse arrêtée à 300 requêtes, relance pour continuer », `resume: true` repart de l'état gardé. `family` + `cut` (ceux d'une ligne) : « Explorer la suite », cette ligne seule, avec ses propres appels. 503 + `X-Lichess-Unavailable` si rien n'a été appris. |
 | Génération | `POST …/{id}/evaluate`, répété tant que `pendingEvaluations > 0` | Évaluation du nuage Lichess de la fin de chaque ligne (5 par appel, cache de 7 jours). Ce qui est appris est gardé si Lichess décroche en route. |
-| Validation | `POST …/{id}/apply` | Un **nouveau répertoire par famille gardée**, « Italian Game (auto) » (daté si le nom est pris), par le chemin d'import (une modification, annulable), tous dans une transaction ; limite de 50 répertoires vérifiée avant toute écriture (422 `limit_repertoires`). |
+| Validation | `POST …/{id}/apply` | Un **nouveau répertoire par famille gardée**, « Italian Game (auto) » (daté si le nom est pris), par le chemin d'import (une modification, annulable), avec ses positions en suspens (`repertoire_pending`), tous dans une transaction ; limite de 50 répertoires vérifiée avant toute écriture (422 `limit_repertoires`) ; 422 `unconfirmed_lines` tant qu'une ligne courte n'est ni conservée ni mise en suspens (la séance perso, docs/COACH.md, les conserve toutes sans demander). |
 
 Les parties sont relues de l'export (`GameReader`) : variante standard, partie terminée, ouverture
 nommée ; coups rejoués et gardés en UCI sur 40 demi-coups ; **temps de réflexion** de l'utilisateur
@@ -471,9 +488,10 @@ de l'utilisateur dans les parties analysées. Gardées compactes en JSON avec l'
 - Les parties d'une famille fusionnent coup par coup (un nœud = le chemin UCI depuis la position
   initiale, coups séparés par des espaces).
 - Là où l'**adversaire** a le trait : chaque réponse jouée au moins **2 fois** (`Limits::$autoMinGames`)
-  ouvre une branche (3 jusqu'au 2026-10-09 : sur 500 parties, les lignes s'arrêtaient après 4 à 7 coups,
-  d'où aussi les analyses de 1000 et 2000 parties). Là où l'**utilisateur** a le trait : **un seul coup** (règle du répertoire), son plus
-  joué (à égalité, l'ordre UCI), ou celui qu'il a choisi dans la fiche de la ligne parmi ses autres coups
+  ouvre une branche, si l'utilisateur a un coup après elle (3 jusqu'au 2026-10-09 : sur 500 parties, les lignes s'arrêtaient après 4 à 7 coups,
+  d'où aussi les analyses de 1000 et 2000 parties). Ses réponses rares sur Lichess restent : les seuils de l'explorateur ne servent qu'à **ajouter**
+  (2026-10-18). Là où l'**utilisateur** a le trait : **un seul coup** (règle du répertoire), son plus
+  joué **s'il l'a joué au moins 2 fois** (2026-10-18 ; à égalité, l'ordre UCI), ou celui qu'il a choisi dans la fiche de la ligne parmi ses autres coups
   (joués au moins 2 fois) et les meilleurs coups donnés par Lichess à la place de ses erreurs (la ligne
   s'arrête alors après ce coup, jamais joué). 40 demi-coups au plus ; un coup qui ramène à une position de
   la ligne l'arrête.
@@ -485,8 +503,47 @@ de l'utilisateur dans les parties analysées. Gardées compactes en JSON avec l'
 - **Étiquettes** (`LineTag`, seuils dans `Limits`) depuis le score (victoires + ½ nulles) et l'éval de
   fin de ligne, du point de vue de l'utilisateur : `risk` (score < 40 % ou éval ≤ −1, ou mat contre lui),
   `weapon` (score ≥ 60 % et éval ≥ 0 ou inconnue), `draws` (≥ 30 % de nulles), `solid` sinon.
+- **Lignes courtes** : une ligne de moins de 20 demi-coups (`Limits::$autoShortLinePlies`) n'est
+  gardée qu'une fois confirmée, ligne entière. Elle montre son point d'arrêt (`stop`) : la réponse
+  populaire qui la coupe (`reply_uncovered`, `no_user_move`), aucune réponse au-dessus des seuils
+  (`no_popular_reply`), position pas encore explorée (`unexplored`), coup choisi jamais joué
+  (`unplayed`). Choix : **conserver** (`kept`, chemin de la ligne) ou **mettre en suspens**
+  (`suspended`, son `cut` : retirée comme une ligne, une position en suspens `short_line` là où elle
+  quittait les autres, ou la position initiale pour la seule ligne).
 - **Verrou** d'abonnement prévu (`Limits::$autoFreeLines`, `locked` sur chaque ligne) mais désactivé
   (`null`) : il n'y a pas d'abonnement.
+
+### Explorer (`TreeBuilder`, `ExplorationRunner`, `Exploration`)
+
+- Le parcours part des **parties du joueur**, sans Lichess : ses coups et les réponses qu'il a
+  rencontrées. L'explorateur Lichess n'est interrogé que pour les positions **adverses réellement
+  atteintes** par l'arbre (la **frontière**, `Tree::$frontier`), la moins profonde d'abord, avec le
+  préréglage `strong`. Une réponse est **populaire** à au moins 5 % des parties de la position **et**
+  100 parties, 4 au plus (`ReplyRule`) ; seuils et préréglage sont **figés** dans l'analyse au premier
+  appel (`exploration.rule`).
+- Une réponse populaire absente de ses parties ne devient jamais une branche : c'est une **position
+  en suspens** (`Tree::$pending`), là où il aurait le trait : `reply_uncovered` (jamais rencontrée) ou
+  `no_user_move` (rencontrée, sans coup joué 2 fois après). Avec sa part, ses parties et le score de
+  l'utilisateur sur Lichess.
+- **Élagage** : une branche sous le seuil n'est pas développée, donc jamais interrogée ; une position
+  déjà interrogée ne l'est plus (réponses gardées par FEN normalisée : transpositions).
+- **Plafond** : 300 **vrais** appels par analyse (la table précalculée et le cache sont gratuits).
+  L'état (`repertoire_auto_build.exploration` : réponses connues, appels faits et permis) est gardé :
+  la relance ouvre 300 appels de plus et repart de là, sans rien redemander. « Explorer la suite »
+  d'une ligne compte ses propres appels (300 au plus), jamais ceux de l'analyse.
+
+### En suspens (`repertoire_pending`, `Auto\PendingService`)
+
+Écrites à la validation pour chaque répertoire créé (sauf une position où l'arbre a déjà le coup de
+l'utilisateur, par transposition) ; elles ne modifient **jamais** le répertoire seules.
+
+| Appel | Rôle |
+|---|---|
+| `GET /repertoires/{id}/pending` | La liste (`open`, `items` : FEN, chemin SAN, raison, parties, part, score, statut, coup répondu), la réponse la plus jouée d'abord. Le statut suit le répertoire : une position qui a reçu son coup (dans l'éditeur aussi) est `answered`, une réponse annulée redevient `open`. |
+| `POST /repertoires/{id}/pending/{pid}/answer` `{uci, baseVersion?}` | Un coup légal, vérifié côté serveur, ajouté avec le chemin qui y mène par le chemin d'import : **une modification**, annulable, réponse `RepertoireChange`. 409 `position_occupied` si la position (ou une position du chemin) a déjà un autre coup préparé, 409 `pending_not_open`, 422 coup illégal ou retour à une position de la ligne. |
+| `POST …/{pid}/dismiss`, `…/restore` | Ignorer (`dismissed`), rétablir (`open`) ; 409 `pending_not_open` sinon. |
+
+Exportées avec le compte (`repertoires.json` : `pending`).
 
 ### Statistiques gardées
 
@@ -512,6 +569,16 @@ l'OAuth (`markLinkReturn`, pages autorisées seulement). Fiche d'une ligne : ple
 fenêtre à deux colonnes sur PC (échiquier entier, coups, fréquence, score, V/N/D, erreurs, éval,
 « ce qui s'est passé », autres coups à jouer, retrait). « S'entraîner » ouvre le test sur les répertoires
 créés.
+
+Exploration et suspens (2026-10-18) : la 2ᵉ phase de la génération est l'exploration réelle
+(« Réponses adverses sur Lichess », `useAutoBuild.exploreAll`, pauses de Lichess attendues trois fois,
+puis « Relancer »). L'écran Répertoire montre, sous chaque ligne courte, son point d'arrêt
+(`stopText`) et « Conserver » / « Mettre en suspens », plus « Tout conserver » (Valider attend
+qu'elles soient toutes tranchées), le compteur et la liste « EN SUSPENS », et l'état de l'exploration (« analyse arrêtée à
+300 requêtes, relance pour continuer »). La fiche d'une ligne pas encore explorée propose « Explorer la
+suite ». Après la validation : page `/repertoire/{id}/pending` (menu de la liste et bouton de l'éditeur
+pour un répertoire tiré des parties) : répondre sur l'échiquier (notification avec « Annuler »),
+ignorer, rétablir.
 
 ## 13. Données de démonstration
 
@@ -739,7 +806,16 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
   `tests/Functional/Repertoire/{ImportApplierTest, ImportApiTest, StudyImportTest, ExportTest,
   LichessProxyTest, RepertoireApiTest, RoutingTest}.php`, `tests/Unit/DataFixtures/RepertoireFixturesDataTest.php`,
   répertoire depuis mes parties : `tests/Unit/Repertoire/Auto/{GameReaderTest, TreeBuilderTest,
-  LineTagAndSelectionTest}.php`, `tests/Functional/Repertoire/{AutoBuildApiTest, AutoBuildFlowTest}.php`
+  LineTagAndSelectionTest, ExplorationTest}.php` (seuils 5 % et 100 parties, 4 réponses au plus, coup
+  de référence à 2 parties, suspensions, lignes courtes, élagage, plafond puis relance),
+  `tests/Functional/Repertoire/{AutoBuildApiTest, AutoBuildFlowTest, AutoBuildExploreTest}.php` (table
+  précalculée lue avant l'explorateur et rafraîchie après 30 jours, commande, suspensions jamais dans
+  le répertoire, réponse annulable en une version, position déjà couverte refusée, ignorer puis
+  rétablir), Vitest `repertoire-auto.test.js` (liste et compteur des suspensions, confirmation d'une
+  ligne courte, message quand aucune réponse ne passe les seuils, plafond puis relance, « Explorer la
+  suite »), Playwright `repertoire-auto.spec.js` (exploration simulée : suspension listée, ligne courte
+  conservée avant de valider) et `repertoire-pending.spec.js` (API réelle, suspension créée par
+  `app:e2e:seed-pending` : réponse sur l'échiquier puis annulation)
   (fixture `tests/Fixtures/Repertoire/lichess-games.ndjson`),
   `tests/Functional/Auth/LichessOAuthTest.php` (flux `grant`). **Acceptation** : le PGN OpenBook
   importé donne exactement 3 lignes et 5 tronçons (analyse, application, API, Playwright). Lichess
@@ -778,4 +854,5 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
   `repertoire-test.spec.js` : une séance d'**1 minute menée jusqu'à son expiration réelle** (un
   tronçon raté, rejoué après les 2 autres, nouveau tour coupé par le temps : 4 unités, 3 réussies,
   « raté puis réussi », la dernière « Interrompu ») ; « Tester cette ligne » depuis l'éditeur, puis
-  les statistiques et l'historique d'un tronçon. Environ 80 s.
+  les statistiques et l'historique d'un tronçon ; un pré-coup (3.d4) saisi pendant la vérification
+  de 2.Nf3 (retenue par `page.route`), joué après 2…d6 comme la réponse suivante. Environ 80 s.

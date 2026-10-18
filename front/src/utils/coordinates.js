@@ -118,26 +118,6 @@ export function ribbonTotals(items) {
 }
 
 /**
- * The squares missed most often (target squares), the most missed first.
- *
- * @param {CoordinateItem[]} items
- * @param {number} [limit]
- * @returns {{square: string, count: number}[]}
- */
-export function missedSquares(items, limit = 5) {
-  /** @type {Map<string, number>} */
-  const counts = new Map()
-  for (const item of items) {
-    if (item.status === 'ok') continue
-    counts.set(item.data.target, (counts.get(item.data.target) ?? 0) + 1)
-  }
-  return [...counts]
-    .map(([square, count]) => ({ square, count }))
-    .sort((a, b) => b.count - a.count || a.square.localeCompare(b.square))
-    .slice(0, limit)
-}
-
-/**
  * Why a closed series validates its orientation or not, for the user.
  *
  * @param {{closeReason: string|null, summary: {itemCount: number, successCount: number, metrics: Record<string, any>}|null}} run

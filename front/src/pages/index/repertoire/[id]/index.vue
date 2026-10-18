@@ -123,6 +123,18 @@
           </q-menu>
         </q-btn>
         <q-btn
+          v-if="store.graph.origin?.source === 'lichess_games'"
+          flat
+          round
+          dense
+          icon="pending_actions"
+          :aria-label="$t('repertoire.editor.pending')"
+          data-testid="editor-pending"
+          :to="`/repertoire/${store.graph.id}/pending`"
+        >
+          <q-tooltip>{{ $t('repertoire.editor.pendingTip') }}</q-tooltip>
+        </q-btn>
+        <q-btn
           flat
           round
           dense

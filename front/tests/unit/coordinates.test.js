@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   durationsText,
   formatAnswerTime,
-  missedSquares,
   ribbonCells,
   ribbonTotals,
   rulesText,
@@ -118,11 +117,6 @@ describe('the ribbon', () => {
       rate: 2 / 3,
       averageMs: 900
     })
-  })
-
-  it('finds the squares missed most often', () => {
-    expect(missedSquares(items)).toEqual([{ square: 'd5', count: 2 }])
-    expect(missedSquares([answer(1, 'e4', 'e4')])).toEqual([])
   })
 })
 

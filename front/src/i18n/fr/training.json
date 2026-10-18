@@ -76,71 +76,10 @@
       "hint": "Avec aide",
       "fail": "Raté"
     },
-    "words": {
-      "coordinates": "{n} case | {n} cases",
-      "evaluation": "{n} position | {n} positions",
-      "puzzles": "{n} puzzle | {n} puzzles"
-    },
-    "kicker": {
-      "cycle": "SÉANCE TERMINÉE · CYCLE {n}",
-      "seriesValidated": "SÉRIE VALIDÉE · {orientation}",
-      "seriesDone": "SÉRIE TERMINÉE · {orientation}",
-      "done": "SÉANCE TERMINÉE"
-    },
-    "courage": "Courage {name} !",
-    "bravo": "Bravo {name} !",
-    "study": "{duration} d’étude",
-    "itemsIn": "{items} en {duration}",
     "position": "Position",
     "engine": "{tag} · moteur {engine}",
     "puzzle": "Puzzle",
-    "meta": "{status} · {duration}",
-    "message": {
-      "free": "{duration} d’étude ({format}). Bien joué {name} : la régularité, c’est ce qui paie.",
-      "study": "Étude",
-      "nothing": "Rien de terminé cette fois. Pas grave : on fait mieux au prochain module.",
-      "squares": "Cases à retravailler : {squares}.",
-      "noMistake": "Aucune erreur !",
-      "great": "Quelle séance, {name} !",
-      "good": "Belle séance, {name} !",
-      "hard": "Séance difficile, mais chaque erreur t’apprend quelque chose.",
-      "hanging": "Tu t’accroches, et ça paie.",
-      "clean": "{opener} {pct} % de réussite, aucune erreur à revoir.",
-      "line": "Ligne à reprendre",
-      "point": "Point à reprendre",
-      "weak": "{opener} {pct} % de réussite. {what} : {label} ({count} à revoir). On les rejoue maintenant ?"
-    },
-    "stats": {
-      "xp": "XP gagnés",
-      "level": "Niveau {level} · {pct} %",
-      "studyTime": "Temps d’étude",
-      "success": "Réussite",
-      "outOf": "{done} sur {total}",
-      "percent": "{n} %",
-      "perSquare": "Moyenne / case",
-      "total": "{duration} au total",
-      "validated": "Validée",
-      "notValidated": "Non validée",
-      "validation": "Validation",
-      "bottom": "{orientation} en bas",
-      "perUnit": "Moyenne / unité",
-      "perPuzzle": "Moyenne / puzzle",
-      "peek": "Avec coup d’œil",
-      "failed": "{n} raté | {n} ratés",
-      "rating": "Classement",
-      "points": "{delta} pts",
-      "setPuzzles": "Puzzles du set",
-      "added": "+{n} ajoutés",
-      "left": "{n} restants",
-      "graded": "Positions notées",
-      "recovered": "{n} rattrapé | {n} rattrapés"
-    },
-    "grid": {
-      "coordinates": "Cases de la série",
-      "puzzles": "Puzzles de la séance",
-      "lines": "Lignes de la séance",
-      "segments": "Tronçons de la séance"
-    }
+    "meta": "{status} · {duration}"
   },
   "replay": {
     "backToResult": "Retour au résultat",

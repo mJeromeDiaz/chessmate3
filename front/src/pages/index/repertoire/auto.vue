@@ -61,10 +61,17 @@
         :free-lines="auto.build.value?.freeLines ?? null"
         :busy="auto.busy.value"
         :error="auto.error.value"
+        :exploration="auto.exploration.value"
+        :exploring="auto.exploring.value"
+        :explore-failed="auto.exploreFailed.value"
         @open="open"
         @select="auto.toSelect"
         @validate="validate"
         @evaluate="auto.evaluatePending"
+        @confirm="auto.confirmLine"
+        @keep-all="auto.keepAllShort"
+        @resume="auto.resumeExploration"
+        @explore="() => auto.exploreAll().then(auto.evaluatePending)"
       />
 
       <AutoDone
@@ -82,9 +89,11 @@
       :tree="sheet?.tree ?? null"
       :line="sheet?.line ?? null"
       :busy="sheetBusy"
+      :exploring="auto.exploringLine.value === (sheet?.line?.cut ?? null)"
       @close="openPath = null"
       @choose="choose"
       @remove="remove"
+      @explore="exploreFurther"
     />
 
     <transition name="ra-toast">
@@ -221,6 +230,11 @@ async function choose({ treeKey, parent, uci }) {
 async function remove({ treeKey, line }) {
   openPath.value = null
   await auto.removeLine(treeKey, line)
+}
+
+/** @param {{treeKey: string, line: import('@/utils/repertoireAuto').Line}} payload */
+async function exploreFurther({ treeKey, line }) {
+  await auto.exploreLine(treeKey, line)
 }
 
 async function validate() {

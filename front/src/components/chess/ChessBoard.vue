@@ -255,7 +255,8 @@ watch(
 watch(
   () => [props.movableColor, props.premoveColor],
   () => {
-    if (!props.premoveColor) cancelPremove()
+    // The hand back (premoveColor → movableColor) plays the premove; neither (solution, end) drops it.
+    if (!props.premoveColor && !props.movableColor) cancelPremove()
     updateInput()
     playPremove()
   }

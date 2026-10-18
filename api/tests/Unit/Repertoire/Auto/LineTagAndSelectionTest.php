@@ -88,7 +88,7 @@ final class LineTagAndSelectionTest extends TestCase
     {
         $selection = Selection::checked(['white:Italian Game'], ['white:Italian Game' => ['' => 'd2d4', 'e2e4 e7e5' => 'g1f3']], ['white:Italian Game' => ['e2e4 c7c5']], ['white:Italian Game', 'black:Sicilian Defense']);
 
-        self::assertSame(['families' => ['white:Italian Game'], 'choices' => ['white:Italian Game' => ['' => 'd2d4', 'e2e4 e7e5' => 'g1f3']], 'removed' => ['white:Italian Game' => ['e2e4 c7c5']]], $selection->toArray());
+        self::assertSame(['families' => ['white:Italian Game'], 'choices' => ['white:Italian Game' => ['' => 'd2d4', 'e2e4 e7e5' => 'g1f3']], 'removed' => ['white:Italian Game' => ['e2e4 c7c5']], 'kept' => [], 'suspended' => []], $selection->toArray());
         self::assertEquals($selection, Selection::fromStored($selection->toArray()));
         self::assertEquals(new Selection(), Selection::fromStored(null));
     }

@@ -7,6 +7,7 @@ vi.mock('@/services/api', () => ({
     getAutoBuild: vi.fn(),
     fetchAutoBuild: vi.fn(),
     selectAutoBuild: vi.fn(),
+    exploreAutoBuild: vi.fn(),
     evaluateAutoBuild: vi.fn(),
     applyAutoBuild: vi.fn()
   }
@@ -20,16 +21,21 @@ const {
   criticalMoments,
   defaultFamilies,
   evalText,
+  explorationSay,
   familyNote,
   feedPace,
   formatThink,
   gameStatFacts,
   lineEvents,
   moveLabel,
+  pendingItems,
+  sanPath,
   scanSay,
   score,
   sequence,
+  stopText,
   treeSay,
+  unconfirmedLines,
   uciToSan
 } = await import('@/utils/repertoireAuto')
 
@@ -411,11 +417,29 @@ describe('useAutoBuild', () => {
     }
     repertoireApi.selectAutoBuild.mockResolvedValue({
       ...withTrees,
-      pendingEvaluations: 3
+      pendingEvaluations: 3,
+      exploration: {
+        calls: 0,
+        budget: 300,
+        capped: false,
+        frontier: 4,
+        explored: 0
+      }
     })
     repertoireApi.evaluateAutoBuild.mockResolvedValue({
       ...withTrees,
       pendingEvaluations: 0
+    })
+    repertoireApi.exploreAutoBuild.mockResolvedValue({
+      ...withTrees,
+      pendingEvaluations: 3,
+      exploration: {
+        calls: 4,
+        budget: 300,
+        capped: false,
+        frontier: 0,
+        explored: 4
+      }
     })
     const auto = run()
     await auto.start()
@@ -430,10 +454,13 @@ describe('useAutoBuild', () => {
     expect(repertoireApi.selectAutoBuild).toHaveBeenCalledWith('b1', {
       families: ['white:Italian Game'],
       choices: {},
-      removed: {}
+      removed: {},
+      kept: {},
+      suspended: {}
     })
     await vi.advanceTimersByTimeAsync(4 * PHASE_MS)
     await generating
+    expect(repertoireApi.exploreAutoBuild).toHaveBeenCalledWith('b1', {})
     expect(repertoireApi.evaluateAutoBuild).toHaveBeenCalledTimes(1)
     expect(auto.phase.value).toBe(5)
     expect(auto.step.value).toBe('tree')
@@ -464,7 +491,9 @@ describe('useAutoBuild', () => {
     expect(repertoireApi.selectAutoBuild).toHaveBeenLastCalledWith('b1', {
       families: ['white:Italian Game'],
       choices: { 'white:Italian Game': { '': 'd2d4' } },
-      removed: { 'white:Italian Game': ['e2e4 c7c5'] }
+      removed: { 'white:Italian Game': ['e2e4 c7c5'] },
+      kept: {},
+      suspended: {}
     })
     expect(auto.toast.value?.text).toBe('« Sicilian » retirée')
 
@@ -472,7 +501,9 @@ describe('useAutoBuild', () => {
     expect(repertoireApi.selectAutoBuild).toHaveBeenLastCalledWith('b1', {
       families: ['white:Italian Game'],
       choices: { 'white:Italian Game': { '': 'd2d4' } },
-      removed: {}
+      removed: {},
+      kept: {},
+      suspended: {}
     })
     expect(auto.toast.value).toBeNull()
 
@@ -480,7 +511,9 @@ describe('useAutoBuild', () => {
     expect(repertoireApi.selectAutoBuild).toHaveBeenLastCalledWith('b1', {
       families: ['white:Italian Game'],
       choices: { 'white:Italian Game': { '': 'd2d4', 'e2e4 e7e5': 'g1f3' } },
-      removed: {}
+      removed: {},
+      kept: {},
+      suspended: {}
     })
 
     await auto.removeLine('white:Italian Game', {
@@ -520,4 +553,248 @@ describe('useAutoBuild', () => {
     expect(auto.selected.value).toEqual(['white:Ruy Lopez'])
     expect(auto.shown.value).toBe(80)
   })
+})
+
+describe('repertoire from my games: exploration, short lines, pending', () => {
+  /** @type {import('vue').EffectScope} */
+  let scope
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    sessionStorage.clear()
+    Object.values(repertoireApi).forEach(fn => fn.mockReset())
+    scope = effectScope()
+  })
+
+  afterEach(() => {
+    scope.stop()
+    vi.useRealTimers()
+  })
+
+  const pendingNode = (overrides = {}) => ({
+    path: 'e2e4 c7c5',
+    parent: 'e2e4',
+    depth: 2,
+    fen: 'x',
+    uci: 'c7c5',
+    san: 'c5',
+    sans: ['e4', 'c5'],
+    reason: 'reply_uncovered',
+    games: 3000,
+    share: 30,
+    score: 48,
+    ...overrides
+  })
+  const tree = (key, lines, pending = []) => ({
+    key,
+    family: key.split(':')[1],
+    color: 'white',
+    lines,
+    pending,
+    nodes: []
+  })
+  const shortLine = (overrides = {}) =>
+    line({
+      path: 'e2e4 e7e5 g1f3',
+      cut: 'e2e4 e7e5',
+      name: 'Italian',
+      depth: 3,
+      short: true,
+      confirmed: false,
+      stop: { kind: 'no_popular_reply', san: null, path: null },
+      ...overrides
+    })
+
+  it('lists and counts the pending positions of every opening, the most played reply first', () => {
+    const items = pendingItems([
+      tree(
+        'white:Italian Game',
+        [],
+        [pendingNode({ games: 500, sans: ['e4', 'e6'] })]
+      ),
+      tree(
+        'black:Sicilian Defense',
+        [],
+        [
+          pendingNode(),
+          pendingNode({ games: null, reason: 'short_line', sans: ['d4'] })
+        ]
+      )
+    ])
+
+    expect(items.map(p => [p.family, sanPath(p.sans)])).toEqual([
+      ['Sicilian Defense', '1.e4 c5'],
+      ['Italian Game', '1.e4 e6'],
+      ['Sicilian Defense', '1.d4']
+    ])
+    expect(items).toHaveLength(3)
+  })
+
+  it('words where a short line stops, and says when no reply passes the thresholds', () => {
+    expect(stopText(shortLine())).toBe(
+      'Aucune réponse adverse ne passe les seuils Lichess (5 % et 100 parties).'
+    )
+    expect(
+      stopText(
+        shortLine({
+          stop: { kind: 'reply_uncovered', san: 'Nc6', path: 'x' }
+        })
+      )
+    ).toBe(
+      'Coupée par 2…Nc6 : une réponse fréquente que tu n’as jamais rencontrée.'
+    )
+    expect(stopText(shortLine({ stop: { kind: 'unexplored' } }))).toBe(
+      'Suite pas encore explorée sur Lichess.'
+    )
+    expect(
+      unconfirmedLines([
+        tree('white:Italian Game', [
+          shortLine(),
+          shortLine({ path: 'b', confirmed: true }),
+          line({ path: 'c', short: false })
+        ])
+      ]).map(l => [l.key, l.path])
+    ).toEqual([['white:Italian Game', 'e2e4 e7e5 g1f3']])
+  })
+
+  it('says when the exploration stopped at its cap', () => {
+    expect(
+      explorationSay({ calls: 300, budget: 300, capped: true, frontier: 12 })
+    ).toBe('Analyse arrêtée à 300 requêtes : relance pour continuer.')
+    expect(
+      explorationSay({ calls: 10, budget: 300, capped: false, frontier: 1 })
+    ).toBe('1 position adverse à explorer sur Lichess…')
+    expect(
+      explorationSay({ calls: 10, budget: 300, capped: false, frontier: 0 })
+    ).toBeNull()
+  })
+
+  const built = (exploration, lines = [shortLine()]) => ({
+    id: 'b1',
+    status: 'ready',
+    games: 6,
+    synthesis,
+    selection: {
+      families: ['white:Italian Game'],
+      choices: [],
+      removed: [],
+      kept: [],
+      suspended: []
+    },
+    trees: [tree('white:Italian Game', lines)],
+    pendingEvaluations: 0,
+    repertoireIds: [],
+    exploration
+  })
+  const done = {
+    calls: 3,
+    budget: 300,
+    capped: false,
+    frontier: 0,
+    explored: 3
+  }
+
+  it('keeps a short line, or sets it aside with an undo', async () => {
+    repertoireApi.createAutoBuild.mockResolvedValue(built(done))
+    repertoireApi.selectAutoBuild.mockResolvedValue(built(done))
+    const auto = run()
+    await auto.start()
+    expect(auto.unconfirmed.value).toHaveLength(1)
+
+    await auto.confirmLine('white:Italian Game', shortLine(), 'keep')
+    expect(repertoireApi.selectAutoBuild).toHaveBeenLastCalledWith('b1', {
+      families: ['white:Italian Game'],
+      choices: {},
+      removed: {},
+      kept: { 'white:Italian Game': ['e2e4 e7e5 g1f3'] },
+      suspended: {}
+    })
+
+    await auto.confirmLine('white:Italian Game', shortLine(), 'suspend')
+    expect(repertoireApi.selectAutoBuild).toHaveBeenLastCalledWith('b1', {
+      families: ['white:Italian Game'],
+      choices: {},
+      removed: {},
+      kept: { 'white:Italian Game': [] },
+      suspended: { 'white:Italian Game': ['e2e4 e7e5'] }
+    })
+    expect(auto.toast.value?.text).toBe('« Italian » mise en suspens.')
+    expect(repertoireApi.exploreAutoBuild).not.toHaveBeenCalled()
+  })
+
+  it('keeps every short line not answered yet at once', async () => {
+    const lines = [
+      shortLine(),
+      shortLine({ path: 'e2e4 c7c5 g1f3', cut: 'e2e4 c7c5' }),
+      shortLine({ path: 'd2d4 d7d5 c2c4', confirmed: true })
+    ]
+    repertoireApi.createAutoBuild.mockResolvedValue(built(done, lines))
+    repertoireApi.selectAutoBuild.mockResolvedValue(built(done, lines))
+    const auto = run()
+    await auto.start()
+
+    await auto.keepAllShort()
+    expect(repertoireApi.selectAutoBuild).toHaveBeenCalledTimes(1)
+    expect(repertoireApi.selectAutoBuild).toHaveBeenLastCalledWith('b1', {
+      families: ['white:Italian Game'],
+      choices: {},
+      removed: {},
+      kept: {
+        'white:Italian Game': ['e2e4 e7e5 g1f3', 'e2e4 c7c5 g1f3']
+      },
+      suspended: {}
+    })
+  })
+
+  it('stops at the cap, then goes on from there when resumed', async () => {
+    const capped = {
+      calls: 300,
+      budget: 300,
+      capped: true,
+      frontier: 5,
+      explored: 300
+    }
+    repertoireApi.createAutoBuild.mockResolvedValue(
+      built({ calls: 0, budget: 300, capped: false, frontier: 9, explored: 0 })
+    )
+    repertoireApi.exploreAutoBuild
+      .mockResolvedValueOnce(
+        built({ ...capped, capped: false, calls: 10, explored: 10 })
+      )
+      .mockResolvedValueOnce(built(capped))
+      .mockResolvedValueOnce(built(done))
+    const auto = run()
+    await auto.start()
+
+    await auto.exploreAll()
+    expect(repertoireApi.exploreAutoBuild).toHaveBeenCalledTimes(2)
+    expect(auto.exploration.value?.capped).toBe(true)
+    await auto.exploreAll()
+    expect(repertoireApi.exploreAutoBuild).toHaveBeenCalledTimes(2)
+
+    await auto.resumeExploration()
+    expect(repertoireApi.exploreAutoBuild).toHaveBeenLastCalledWith('b1', {
+      resume: true
+    })
+    expect(auto.exploration.value?.frontier).toBe(0)
+  })
+
+  it('explores further on one line only', async () => {
+    repertoireApi.createAutoBuild.mockResolvedValue(built(done))
+    repertoireApi.exploreAutoBuild
+      .mockResolvedValueOnce(built({ ...done, explored: 5 }))
+      .mockResolvedValueOnce(built({ ...done, explored: 5 }))
+    const auto = run()
+    await auto.start()
+
+    await auto.exploreLine('white:Italian Game', shortLine())
+    expect(repertoireApi.exploreAutoBuild).toHaveBeenCalledWith('b1', {
+      family: 'white:Italian Game',
+      cut: 'e2e4 e7e5'
+    })
+    expect(repertoireApi.exploreAutoBuild).toHaveBeenCalledTimes(2)
+    expect(auto.exploring.value).toBe(false)
+  })
+
+  const run = () => scope.run(() => useAutoBuild())
 })

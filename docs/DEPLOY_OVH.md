@@ -144,8 +144,9 @@ routeur à `#` : aucune réécriture d'URL n'est nécessaire.
    Vérifiez que la réponse vaut 200 `{"busy":false,…}`.
 9. **Tâche planifiée OVH quotidienne** : dans le manager, créez une tâche qui lance le script
    `dontstayrooky/api/bin/cron-daily.php`, en PHP 8.3, une fois par jour. Il exécute
-   `cache:pool:prune` et `app:account:purge`. OVH ne lance qu'un script PHP, pas une commande
-   shell.
+   `cache:pool:prune`, `app:account:purge` et `app:repertoire:refresh-opening-stats` (premiers
+   coups de l'explorateur Lichess, 100 appels au plus par passage, docs/REPERTOIRE.md § 12 bis). OVH
+   ne lance qu'un script PHP, pas une commande shell.
 10. **OAuth** : chez Google, déclarez l'URI de redirection
     `https://api.<domaine>/api/auth/oauth/google/callback`. Lichess ne demande aucune déclaration.
 11. **Emails** : `MAILER_DSN=mailfunction://default` envoie par la fonction `mail()` de PHP

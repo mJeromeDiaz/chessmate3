@@ -181,6 +181,7 @@
               <span data-testid="auto-sheet-eval">{{
                 $t('repertoireAuto.sheet.end', { value: evalText(line) })
               }}</span>
+              <span data-testid="auto-sheet-stop">{{ stopText(line) }}</span>
             </div>
           </div>
 
@@ -230,6 +231,20 @@
           </div>
 
           <button
+            v-if="line.stop?.kind === 'unexplored'"
+            type="button"
+            class="ra-further"
+            :disabled="busy || exploring"
+            data-testid="auto-explore-further"
+            @click="emit('explore', { treeKey: tree.key, line })"
+            >{{
+              exploring
+                ? $t('repertoireAuto.explore.exploring')
+                : $t('repertoireAuto.explore.further')
+            }}</button
+          >
+
+          <button
             type="button"
             class="ra-remove"
             :disabled="busy"
@@ -259,7 +274,8 @@ import {
   lineEvents,
   moveLabel,
   percent,
-  score
+  score,
+  stopText
 } from '@/utils/repertoireAuto'
 import { t } from '@/i18n'
 
@@ -292,9 +308,11 @@ const props = defineProps({
   tree: { type: Object, default: null },
   /** @type {import('vue').PropType<import('@/utils/repertoireAuto').Line|null>} */
   line: { type: Object, default: null },
-  busy: { type: Boolean, default: false }
+  busy: { type: Boolean, default: false },
+  /** "Explore further" is running on this line. */
+  exploring: { type: Boolean, default: false }
 })
-const emit = defineEmits(['close', 'choose', 'remove'])
+const emit = defineEmits(['close', 'choose', 'remove', 'explore'])
 
 const $q = useQuasar()
 /** A computer screen: a centred window, the board beside the details; a phone: full screen. */
@@ -693,6 +711,18 @@ const choices = computed(() =>
 .ra-choice__why {
   font-size: 12px;
   color: var(--ra-muted);
+}
+
+.ra-further {
+  height: 50px;
+  border-radius: 16px;
+  border: 2px solid var(--ra-accent);
+  background: var(--ra-card);
+  color: inherit;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  flex: none;
 }
 
 .ra-remove {

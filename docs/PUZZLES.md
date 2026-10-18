@@ -367,4 +367,8 @@ classée), `fetchRating()`, `fetchThemes()`, `importLichessRating()`, `setThemes
 - Vitest : `usePuzzle` (déroulé complet, erreur, mat alternatif, promotion, indices, solution,
   passer, annulation), le store et `utils/puzzle.js` (groupement des thèmes, filtres actifs).
 - Playwright (`front/tests/e2e`) : résoudre un puzzle, échouer un puzzle, passer un puzzle
-  (confirmation, échec, puzzle suivant), choisir thèmes et difficulté dans les réglages.
+  (confirmation, échec, puzzle suivant), choisir thèmes et difficulté dans les réglages ; un
+  pré-coup saisi avant le premier coup adverse puis joué tout seul, et les flèches et cercles du clic
+  droit (même flèche = effacée, effacés par la nouvelle position et par un clic gauche). Ces deux-là
+  figent l'horloge (`page.clock.pauseAt`) à l'arrivée du puzzle : le coup adverse attend
+  `page.clock.resume()`.

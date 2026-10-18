@@ -371,7 +371,9 @@ test('from the games to the repertoire: read, choose, build, look at a line, val
   expect(sent.selection[0]).toEqual({
     families: [ITALIAN],
     choices: {},
-    removed: {}
+    removed: {},
+    kept: {},
+    suspended: {}
   })
   // A line is shown whole: what the opening's lines share, then its own moves.
   await expect(page.getByTestId('auto-line-moves').first()).toContainText(
@@ -408,4 +410,127 @@ test('from the games to the repertoire: read, choose, build, look at a line, val
   await page.getByTestId('auto-validate').click()
   await expect(page.getByTestId('auto-done-text')).toContainText('2 lignes')
   await expect(page.getByTestId('auto-train')).toBeVisible()
+})
+
+test("the opponents' replies explored: a pending position listed, a short line kept before validating", async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await withLichess(page)
+  const sent = { selection: [], explore: [] }
+  const short = {
+    ...line('e2e4 e7e5 g1f3', 1, 'Italian Game', 'solid', {
+      games: 6,
+      wins: 3,
+      draws: 1,
+      losses: 2
+    }),
+    cut: 'e2e4',
+    depth: 3,
+    short: true,
+    stop: { kind: 'no_popular_reply', san: null, path: null }
+  }
+  const pendingC5 = {
+    path: 'e2e4 c7c5',
+    parent: 'e2e4',
+    depth: 2,
+    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -',
+    uci: 'c7c5',
+    san: 'c5',
+    sans: ['e4', 'c5'],
+    reason: 'reply_uncovered',
+    games: 3000,
+    share: 30,
+    score: 48
+  }
+  /** The build as the API would describe it, the short line kept or not, explored or not. */
+  const view = (selection, explored) => ({
+    ...base,
+    status: 'ready',
+    games: 6,
+    synthesis,
+    selection,
+    trees: [
+      {
+        ...trees[0],
+        trunk: 3,
+        nodes: NODES.slice(0, 3),
+        lines: [
+          {
+            ...short,
+            confirmed: (selection.kept?.[ITALIAN] ?? []).includes(short.path)
+          }
+        ],
+        pending: explored ? [pendingC5] : []
+      }
+    ],
+    exploration: {
+      calls: explored ? 2 : 0,
+      budget: 300,
+      capped: false,
+      frontier: explored ? 0 : 2,
+      explored: explored ? 2 : 0
+    },
+    unconfirmedLines: (selection.kept?.[ITALIAN] ?? []).length ? 0 : 1,
+    pendingCount: explored ? 1 : 0
+  })
+  let selection = null
+  await page.route(/\/api\/repertoires\/auto-builds.*/, async route => {
+    const request = route.request()
+    if (request.method() === 'OPTIONS') return route.fallback()
+    const url = request.url()
+    if (url.endsWith('/auto-builds'))
+      return route.fulfill({
+        status: 201,
+        json: { ...base, status: 'fetching', games: 0 }
+      })
+    if (url.endsWith('/fetch'))
+      return route.fulfill({
+        json: { ...base, status: 'ready', games: 3, batch: feed, synthesis }
+      })
+    if (url.endsWith('/selection')) {
+      selection = request.postDataJSON()
+      sent.selection.push(selection)
+      return route.fulfill({ json: view(selection, sent.explore.length > 0) })
+    }
+    if (url.endsWith('/explore')) {
+      sent.explore.push(request.postDataJSON())
+      return route.fulfill({ json: view(selection, true) })
+    }
+    return route.fulfill({ status: 404, json: {} })
+  })
+  await page.goto('/#/repertoire/auto')
+
+  await page.getByTestId('auto-count-50').click()
+  await page.getByTestId('auto-start').click()
+  await page.getByTestId('auto-to-select').click()
+  await page.getByTestId('auto-family').nth(1).click()
+  await page.getByTestId('auto-generate').click()
+
+  // Explored during the generation: the pending position is listed, never in the tree.
+  await expect(page.getByTestId('auto-line')).toHaveCount(1, {
+    timeout: 15_000
+  })
+  expect(sent.explore[0]).toEqual({})
+  await expect(page.getByTestId('auto-pending-count')).toContainText(
+    '1 en suspens'
+  )
+  await expect(page.getByTestId('auto-pending-item')).toContainText('1.e4 c5')
+  await expect(page.getByTestId('auto-pending-item')).toContainText(
+    'Jamais rencontrée · 30 % des parties'
+  )
+
+  // The short line says where it stops; validating waits for an answer.
+  await expect(page.getByTestId('auto-short-stop')).toHaveText(
+    'Aucune réponse adverse ne passe les seuils Lichess (5 % et 100 parties).'
+  )
+  await expect(page.getByTestId('auto-unconfirmed')).toBeVisible()
+  await expect(page.getByTestId('auto-validate')).toBeDisabled()
+  await expect(page.getByTestId('auto-short-keep-all')).toBeVisible()
+  await page.getByTestId('auto-short-keep').click()
+  await expect.poll(() => sent.selection.length).toBe(2)
+  expect(sent.selection[1].kept).toEqual({ [ITALIAN]: ['e2e4 e7e5 g1f3'] })
+  await expect(page.getByTestId('auto-short-keep')).toContainText('Conservée')
+  await expect(page.getByTestId('auto-validate')).toBeEnabled()
 })

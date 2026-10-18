@@ -35,15 +35,23 @@ final class ExplorerClient
     }
 
     /**
+     * @param User|null $user      whose token is tried first; null: a job of the application (its token)
+     * @param bool|null $fetched set to true when Lichess was asked (not answered from the cache)
+     *
+     * @param-out bool $fetched
+     *
      * @return ExplorerAnswer
      *
      * @throws LichessUnavailableException
      */
-    public function explore(User $user, ExplorerQuery $query): array
+    public function explore(?User $user, ExplorerQuery $query, ?bool &$fetched = null): array
     {
+        $fetched = false;
+
         /** @var ExplorerAnswer */
-        return $this->cache->get($query->cacheKey(), function (ItemInterface $item) use ($user, $query): array {
+        return $this->cache->get($query->cacheKey(), function (ItemInterface $item) use ($user, $query, &$fetched): array {
             $item->expiresAfter(ExplorerQuery::MASTERS === $query->source ? self::MASTERS_TTL : self::LICHESS_TTL);
+            $fetched = true;
 
             return self::normalize($this->fetch($user, $query));
         });
@@ -52,7 +60,7 @@ final class ExplorerClient
     /**
      * @return array<mixed>
      */
-    private function fetch(User $user, ExplorerQuery $query): array
+    private function fetch(?User $user, ExplorerQuery $query): array
     {
         $tokens = $this->tokens->candidates($user);
         if ([] === $tokens) {

@@ -3,7 +3,9 @@ import { repertoireApi } from '@/services/api'
 import {
   autoErrorText,
   defaultFamilies,
-  feedPace
+  feedPace,
+  pendingItems,
+  unconfirmedLines
 } from '@/utils/repertoireAuto'
 import { t } from '@/i18n'
 
@@ -17,10 +19,15 @@ export const PHASE_MS = 1300
 const RETRY_MS = 5000
 /** How long the "line removed" toast offers to undo. */
 export const TOAST_MS = 3500
+/** Lichess pauses waited out in a row before the exploration gives up (a retry button then). */
+const EXPLORE_RETRIES = 3
+/** Rounds of "explore further" on a line at most (each one a few calls). */
+const LINE_ROUNDS = 30
 
 /**
  * @typedef {'connect'|'scan'|'select'|'gen'|'tree'|'done'} AutoStep
- * @typedef {{families: string[], choices: Record<string, Record<string, string>>, removed: Record<string, string[]>}} SelectionPayload
+ * @typedef {{families: string[], choices: Record<string, Record<string, string>>, removed: Record<string, string[]>, kept: Record<string, string[]>, suspended: Record<string, string[]>}} SelectionPayload
+ *   kept: the short lines kept (their paths); suspended: those set aside as pending (their cuts)
  */
 
 /**
@@ -72,9 +79,10 @@ function remembered() {
 
 /**
  * The state of the "repertoire from my games" page (docs/REPERTOIRE.md): settings, the games
- * read batch by batch (live feed), the openings chosen, the generation (selection sent, line ends
- * evaluated by the Lichess cloud), the tree with its choices and removals (undoable), and the
- * repertoires created.
+ * read batch by batch (live feed), the openings chosen, the generation (selection sent, the
+ * opponents' replies explored on Lichess, line ends evaluated by the Lichess cloud), the tree with
+ * its choices, removals (undoable) and short lines kept or set aside, its pending positions, and
+ * the repertoires created.
  */
 export function useAutoBuild() {
   /** @type {import('vue').Ref<AutoStep>} */
@@ -98,6 +106,12 @@ export function useAutoBuild() {
   const phase = ref(0)
   /** Some line ends could not be evaluated (Lichess unavailable). */
   const evaluationFailed = ref(false)
+  /** The exploration of the opponents' replies is running (or a line's: its cut). */
+  const exploring = ref(false)
+  /** @type {import('vue').Ref<string|null>} the cut of the line explored further */
+  const exploringLine = ref(null)
+  /** Lichess kept refusing the exploration: a retry is offered. */
+  const exploreFailed = ref(false)
   /** @type {import('vue').Ref<{text: string, undo: SelectionPayload}|null>} */
   const toast = ref(null)
 
@@ -120,6 +134,9 @@ export function useAutoBuild() {
   )
   const trees = computed(() => build.value?.trees ?? [])
   const lines = computed(() => trees.value.flatMap(t => t.lines))
+  const exploration = computed(() => build.value?.exploration ?? null)
+  const pending = computed(() => pendingItems(trees.value))
+  const unconfirmed = computed(() => unconfirmedLines(trees.value))
 
   /** @returns {SelectionPayload} the selection as the server holds it */
   function currentSelection() {
@@ -127,7 +144,9 @@ export function useAutoBuild() {
     return {
       families: [...(selection?.families ?? [])],
       choices: structuredClone(toObject(selection?.choices)),
-      removed: structuredClone(toObject(selection?.removed))
+      removed: structuredClone(toObject(selection?.removed)),
+      kept: structuredClone(toObject(selection?.kept)),
+      suspended: structuredClone(toObject(selection?.suspended))
     }
   }
 
@@ -268,14 +287,15 @@ export function useAutoBuild() {
     try {
       const previous = currentSelection()
       const keep = key => selected.value.includes(key)
+      /** @param {Record<string, any>} byFamily */
+      const kept = byFamily =>
+        Object.fromEntries(Object.entries(byFamily).filter(([k]) => keep(k)))
       const payload = {
         families: selected.value,
-        choices: Object.fromEntries(
-          Object.entries(previous.choices).filter(([k]) => keep(k))
-        ),
-        removed: Object.fromEntries(
-          Object.entries(previous.removed).filter(([k]) => keep(k))
-        )
+        choices: kept(previous.choices),
+        removed: kept(previous.removed),
+        kept: kept(previous.kept),
+        suspended: kept(previous.suspended)
       }
       receive(
         await atLeast(
@@ -284,7 +304,7 @@ export function useAutoBuild() {
         )
       )
       phase.value = 2
-      await sleep(PHASE_MS)
+      await atLeast(exploreAll(), PHASE_MS)
       phase.value = 3
       await atLeast(evaluatePending(), PHASE_MS)
       phase.value = 4
@@ -299,6 +319,84 @@ export function useAutoBuild() {
     } finally {
       busy.value = false
     }
+  }
+
+  /**
+   * Explores the opponents' replies on Lichess, a few calls per request, until no position is left
+   * to ask, the cap is reached (a resume is offered) or nothing more is learnt. Lichess pauses are
+   * waited out, a few times.
+   *
+   * @param {boolean} [resume] go on after the cap
+   */
+  async function exploreAll(resume = false) {
+    if (exploring.value) return
+    exploring.value = true
+    exploreFailed.value = false
+    let payload = resume ? { resume: true } : {}
+    let retries = 0
+    try {
+      while (!disposed && build.value) {
+        const before = build.value.exploration
+        // Nothing selected yet: nothing to explore.
+        if (!before) return
+        if (!resume && (before.capped || before.frontier === 0)) return
+        try {
+          receive(await repertoireApi.exploreAutoBuild(build.value.id, payload))
+        } catch (e) {
+          if (!isLichessPause(e) || ++retries > EXPLORE_RETRIES) {
+            exploreFailed.value = true
+            return
+          }
+          await sleep(retryDelay(e))
+          continue
+        }
+        payload = {}
+        resume = false
+        retries = 0
+        const after = build.value.exploration
+        if (!after || after.capped || after.frontier === 0) return
+        if (after.explored === before.explored) return
+      }
+    } finally {
+      exploring.value = false
+    }
+  }
+
+  /** After the cap: another round of calls, from where the exploration stopped. */
+  async function resumeExploration() {
+    await exploreAll(true)
+    evaluatePending()
+  }
+
+  /**
+   * "Explore further" on a line: its positions only, with its own calls.
+   *
+   * @param {string} familyKey
+   * @param {{cut: string}} line
+   */
+  async function exploreLine(familyKey, line) {
+    if (exploring.value) return
+    exploring.value = true
+    exploringLine.value = line.cut
+    error.value = ''
+    try {
+      for (let round = 0; round < LINE_ROUNDS && !disposed; round++) {
+        const before = build.value?.exploration?.explored
+        receive(
+          await repertoireApi.exploreAutoBuild(build.value.id, {
+            family: familyKey,
+            cut: line.cut
+          })
+        )
+        if (build.value?.exploration?.explored === before) break
+      }
+    } catch (e) {
+      error.value = autoErrorText(e)
+    } finally {
+      exploring.value = false
+      exploringLine.value = null
+    }
+    evaluatePending()
   }
 
   /** Evaluates the line ends Lichess was not asked about yet, until none is left or it fails. */
@@ -324,7 +422,8 @@ export function useAutoBuild() {
     error.value = ''
     try {
       receive(await repertoireApi.selectAutoBuild(build.value.id, selection))
-      evaluatePending()
+      // New lines may reach positions not asked yet: explored first, then their ends evaluated.
+      exploreAll().then(evaluatePending)
       return true
     } catch (e) {
       error.value = autoErrorText(e)
@@ -354,6 +453,51 @@ export function useAutoBuild() {
         }, TOAST_MS)
       )
     }
+  }
+
+  /**
+   * A short line: kept as it is, or set aside (removed, pending where it leaves the others); the
+   * line's other answer is dropped. Setting aside is undoable for a moment.
+   *
+   * @param {string} familyKey
+   * @param {{path: string, cut: string, name: string}} line
+   * @param {'keep'|'suspend'} choice
+   */
+  async function confirmLine(familyKey, line, choice) {
+    const before = currentSelection()
+    const next = currentSelection()
+    next.kept[familyKey] = (next.kept[familyKey] ?? []).filter(
+      p => p !== line.path
+    )
+    if (choice === 'keep') {
+      next.kept[familyKey].push(line.path)
+      return send(next)
+    }
+    next.suspended[familyKey] = [
+      ...(next.suspended[familyKey] ?? []).filter(c => c !== line.cut),
+      line.cut
+    ]
+    if (!(await send(next))) return false
+    toast.value = {
+      text: t('repertoireAuto.build.suspended', { name: line.name }),
+      undo: before
+    }
+    const shownToast = toast.value
+    timers.push(
+      setTimeout(() => {
+        if (toast.value === shownToast) toast.value = null
+      }, TOAST_MS)
+    )
+    return true
+  }
+
+  /** Keeps every short line not answered yet, in one selection. */
+  async function keepAllShort() {
+    const next = currentSelection()
+    for (const line of unconfirmed.value) {
+      next.kept[line.key] = [...(next.kept[line.key] ?? []), line.path]
+    }
+    return send(next)
   }
 
   async function undo() {
@@ -426,7 +570,7 @@ export function useAutoBuild() {
       } else if (saved.selection?.families?.length) {
         selected.value = [...saved.selection.families]
         step.value = 'tree'
-        evaluatePending()
+        exploreAll().then(evaluatePending)
       } else {
         toSelect()
       }
@@ -448,6 +592,12 @@ export function useAutoBuild() {
     selected,
     phase,
     evaluationFailed,
+    exploring,
+    exploringLine,
+    exploreFailed,
+    exploration,
+    pending,
+    unconfirmed,
     toast,
     ready,
     scanDone,
@@ -459,6 +609,11 @@ export function useAutoBuild() {
     toggleAll,
     generate,
     evaluatePending,
+    exploreAll,
+    resumeExploration,
+    exploreLine,
+    confirmLine,
+    keepAllShort,
     removeLine,
     undo,
     chooseMove,

@@ -85,6 +85,7 @@ bin/console app:puzzle:rebuild-selection             # after a puzzle import or 
 bin/console app:activity:backfill                    # log past exercises in the activity log (idempotent)
 bin/console app:repertoire:sync-openings             # load/update the opening names (data/chess-openings, ~9 s; fixtures do it too)
 bin/console cache:pool:prune                         # daily cron: expired Lichess explorer/cloud-eval answers
+bin/console app:repertoire:refresh-opening-stats     # daily cron: explorer replies of the first 4 plies, rows older than 30 days (--max-calls, default 100; docs/REPERTOIRE.md § 12 bis)
 bin/console app:training:send-reminders              # cron every minute: reminders of saved sessions and of streaks in danger (docs/NOTIFICATIONS.md); on the OVH shared host, POST /api/ops/tick does it (docs/DEPLOY_OVH.md)
 bin/console app:account:purge                        # daily cron: purge the accounts whose deletion is due (docs/AUTH.md)
 bin/console app:gamification:rebuild [--user=<uuid>] # recompute the XP from what was played (after deploying, or after changing XpRules)

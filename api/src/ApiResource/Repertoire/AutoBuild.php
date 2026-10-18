@@ -22,19 +22,26 @@ use App\State\Repertoire\FetchAutoBuildProcessor;
  * my games"): created with its settings (linked Lichess account required), filled by POSTing
  * /fetch until it is ready (one batch of games each, the games kept returned for the live feed),
  * then read with the synthesis of what the user plays; then shaped (POST /selection: openings
- * kept, moves chosen, lines removed), its line ends evaluated by the Lichess cloud (POST /evaluate
- * until pendingEvaluations is 0) and applied (POST /apply: one new repertoire per opening).
+ * kept, moves chosen, lines removed, short lines kept or set aside), the opponents' replies explored
+ * on Lichess (POST /explore until exploration.frontier is 0, or capped: resume), its line ends
+ * evaluated by the Lichess cloud (POST /evaluate until pendingEvaluations is 0) and applied (POST
+ * /apply: one new repertoire per opening, with its pending positions).
  * Another user's, or an expired one: 404.
  *
  * @phpstan-import-type FeedItem from AutoBuildService
  * @phpstan-import-type SynthesisArray from Synthesis
  * @phpstan-import-type TreeNode from Tree
  * @phpstan-import-type Line from Tree
+ * @phpstan-import-type Stop from Tree
+ * @phpstan-import-type PendingNode from Tree
  *
- * @phpstan-type LineView array{path: string, cut: string, name: string, nodes: list<string>, games: int, wins: int, draws: int, losses: int, analysed: int, errored: int, fen: string, number: int, tag: string, evaluated: bool, evalCp: int|null, evalMate: int|null, locked: bool}
- *                         number: from 1 across the trees; tag: risk, weapon, draws, solid; evaluated: Lichess was asked (evalCp/evalMate null then: it has none), the user's point of view; locked: beyond the free lines
- * @phpstan-type TreeView array{key: string, family: string, color: string, games: int, wins: int, draws: int, losses: int, trunk: int, nodes: list<TreeNode>, lines: list<LineView>}
- * @phpstan-type SelectionView array{families: list<string>, choices: array<string, array<string, string>>, removed: array<string, list<string>>}
+ * @phpstan-type LineView array{path: string, cut: string, name: string, nodes: list<string>, games: int, wins: int, draws: int, losses: int, analysed: int, errored: int, fen: string, depth: int, short: bool, stop: Stop, confirmed: bool, number: int, tag: string, evaluated: bool, evalCp: int|null, evalMate: int|null, locked: bool}
+ *                         number: from 1 across the trees; tag: risk, weapon, draws, solid; evaluated: Lichess was asked (evalCp/evalMate null then: it has none), the user's point of view; locked: beyond the free lines;
+ *                         short: kept only once confirmed (confirmed: the user kept it)
+ * @phpstan-type TreeView array{key: string, family: string, color: string, games: int, wins: int, draws: int, losses: int, trunk: int, nodes: list<TreeNode>, lines: list<LineView>, pending: list<PendingNode>}
+ * @phpstan-type SelectionView array{families: list<string>, choices: array<string, array<string, string>>, removed: array<string, list<string>>, kept: array<string, list<string>>, suspended: array<string, list<string>>}
+ * @phpstan-type ExplorationView array{calls: int, budget: int, capped: bool, frontier: int, explored: int, rule: array{minShare: float, minGames: int, maxReplies: int, preset: string}}
+ *                         calls: real Lichess calls of the analysis (budget: allowed before the cap; capped: stopped there, resume to go on); frontier: positions still to ask; explored: positions answered
  */
 #[ApiResource(
     shortName: 'RepertoireAutoBuild',
@@ -72,6 +79,16 @@ use App\State\Repertoire\FetchAutoBuildProcessor;
             processor: AutoBuildActionProcessor::class,
         ),
         new Post(
+            uriTemplate: '/repertoires/auto-builds/{id}/explore',
+            requirements: ['id' => Repertoire::UUID_PATTERN],
+            status: 200,
+            openapi: new Operation(summary: 'Asks the Lichess explorer about the next positions (a few calls; a line\'s only with family and cut; resume after the cap). 409 not_ready, already_applied; 422 nothing_selected, invalid_selection; 503 when Lichess is unavailable and nothing was learnt.'),
+            input: AutoBuildExploreInput::class,
+            read: false,
+            name: 'repertoire_auto_build_explore',
+            processor: AutoBuildActionProcessor::class,
+        ),
+        new Post(
             uriTemplate: '/repertoires/auto-builds/{id}/evaluate',
             requirements: ['id' => Repertoire::UUID_PATTERN],
             status: 200,
@@ -85,7 +102,7 @@ use App\State\Repertoire\FetchAutoBuildProcessor;
             uriTemplate: '/repertoires/auto-builds/{id}/apply',
             requirements: ['id' => Repertoire::UUID_PATTERN],
             status: 200,
-            openapi: new Operation(summary: 'Creates one repertoire per opening kept (repertoireIds). 409 not_ready, already_applied; 422 nothing_selected, limit_repertoires.'),
+            openapi: new Operation(summary: 'Creates one repertoire per opening kept (repertoireIds), with its pending positions. 409 not_ready, already_applied; 422 nothing_selected, unconfirmed_lines, limit_repertoires.'),
             input: false,
             read: false,
             name: 'repertoire_auto_build_apply',
@@ -121,6 +138,12 @@ final class AutoBuild
     public array $trees = [];
     /** Line ends Lichess was not asked about yet (POST /evaluate). */
     public int $pendingEvaluations = 0;
+    /** @var ExplorationView|null once something is selected */
+    public ?array $exploration = null;
+    /** Short lines neither kept nor set aside yet (apply refuses them). */
+    public int $unconfirmedLines = 0;
+    /** Pending positions of the trees (the user to move, a popular reply unanswered). */
+    public int $pendingCount = 0;
     /** Lines shown in full without a subscription, null: all of them. */
     public ?int $freeLines = null;
     /** @var list<string> the repertoires created, once applied */

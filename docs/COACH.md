@@ -90,7 +90,8 @@ séance enregistrée :
 | Évaluation | 2 | Elo = classement arrondi à la centaine (bornes du module), les deux camps | jamais |
 
 Le répertoire (`repertoire.status`) : `existing` (les siens, `Scope::MAX_REPERTOIRES` au plus),
-`generated` (la famille la plus jouée de chaque couleur, via `AutoBuildService::select` + `apply`),
+`generated` (la famille la plus jouée de chaque couleur, via `AutoBuildService::select` + `apply`,
+sans exploration Lichess, lignes courtes conservées sans demander : `confirmShortLines: false`),
 `not_asked`, `no_opening`, `failed`.
 
 Chaque module porte ses `facts` (réglages, ouverture et ses V/N/D, nombre de puzzles, point faible…)

@@ -21,9 +21,10 @@ use Symfony\Component\HttpFoundation\Response;
  * removed lines, cloud evaluation of the line ends (Lichess simulated, never called), tags,
  * application, statistics kept.
  *
- * @phpstan-type LineJson array{path: string, cut: string, name: string, nodes: list<string>, games: int, wins: int, draws: int, losses: int, analysed: int, errored: int, fen: string, number: int, tag: string, evaluated: bool, evalCp: int|null, evalMate: int|null, locked: bool}
- * @phpstan-type TreeJson array{key: string, family: string, color: string, games: int, wins: int, draws: int, losses: int, trunk: int, nodes: list<array<string, mixed>>, lines: list<LineJson>}
- * @phpstan-type BuildJson array{id: string, status: string, selection: array<string, mixed>|null, trees: list<TreeJson>, pendingEvaluations: int, freeLines: int|null, repertoireIds: list<string>}
+ * @phpstan-type LineJson array{path: string, cut: string, name: string, nodes: list<string>, games: int, wins: int, draws: int, losses: int, analysed: int, errored: int, fen: string, depth: int, short: bool, stop: array{kind: string, san: string|null, path: string|null}, confirmed: bool, number: int, tag: string, evaluated: bool, evalCp: int|null, evalMate: int|null, locked: bool}
+ * @phpstan-type PendingJson array{path: string, parent: string, depth: int, fen: string, uci: string, san: string, sans: list<string>, reason: string, games: int|null, share: float|null, score: int|null}
+ * @phpstan-type TreeJson array{key: string, family: string, color: string, games: int, wins: int, draws: int, losses: int, trunk: int, nodes: list<array<string, mixed>>, lines: list<LineJson>, pending: list<PendingJson>}
+ * @phpstan-type BuildJson array{id: string, status: string, selection: array<string, mixed>|null, trees: list<TreeJson>, pendingEvaluations: int, freeLines: int|null, repertoireIds: list<string>, exploration: array{calls: int, budget: int, capped: bool, frontier: int, explored: int}|null, unconfirmedLines: int, pendingCount: int}
  */
 final class AutoBuildFlowTest extends RepertoireWebTestCase
 {
@@ -79,6 +80,14 @@ final class AutoBuildFlowTest extends RepertoireWebTestCase
         self::assertSame([40, null, -50], array_column($lines, 'evalCp'));
         // 3 wins and ahead; 2 losses and a draw; 3 draws, a little behind.
         self::assertSame(['weapon', 'risk', 'draws'], array_column($lines, 'tag'));
+
+        // Every line is short (under 10 moves): not applied before the user kept them.
+        self::assertSame([true, true, true], array_column($lines, 'short'));
+        self::assertSame(3, $build['unconfirmedLines']);
+        $refused = $this->api('POST', '/api/repertoires/auto-builds/'.$id.'/apply', $alice);
+        self::assertSame(422, $refused->getStatusCode());
+        self::assertStringContainsString('unconfirmed_lines', (string) $refused->getContent());
+        self::assertSame(0, $this->keepShortLines($alice, $id, $build)['unconfirmedLines']);
 
         $applied = $this->api('POST', '/api/repertoires/auto-builds/'.$id.'/apply', $alice);
         self::assertSame(200, $applied->getStatusCode(), (string) $applied->getContent());
@@ -189,7 +198,7 @@ final class AutoBuildFlowTest extends RepertoireWebTestCase
     {
         $alice = $this->createUser('alice@example.com');
         $id = $this->readyBuild($alice);
-        $this->api('POST', '/api/repertoires/auto-builds/'.$id.'/selection', $alice, ['families' => [self::ITALIAN, self::QGD]]);
+        $this->keepShortLines($alice, $id, $this->build($this->api('POST', '/api/repertoires/auto-builds/'.$id.'/selection', $alice, ['families' => [self::ITALIAN, self::QGD]])));
         $manager = self::getContainer()->get(RepertoireManager::class);
         // The requests above left $alice detached: the manager needs a managed user.
         $managed = $this->entityManager->find(User::class, $alice->getId());
@@ -247,6 +256,28 @@ final class AutoBuildFlowTest extends RepertoireWebTestCase
         $this->calls = [];
 
         return $id;
+    }
+
+    /**
+     * Keeps every short line of the build (the selection is sent again with them).
+     *
+     * @param BuildJson $build
+     *
+     * @return BuildJson
+     */
+    private function keepShortLines(User $user, string $id, array $build): array
+    {
+        $kept = [];
+        foreach ($build['trees'] as $tree) {
+            foreach ($tree['lines'] as $line) {
+                if ($line['short']) {
+                    $kept[$tree['key']][] = $line['path'];
+                }
+            }
+        }
+        $selection = $build['selection'] ?? [];
+
+        return $this->build($this->api('POST', '/api/repertoires/auto-builds/'.$id.'/selection', $user, [...$selection, 'kept' => $kept]));
     }
 
     private static function cloud(int $cp): JsonMockResponse

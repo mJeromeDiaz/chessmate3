@@ -108,7 +108,5 @@ export function premoveToMove(rules, { from, to }) {
   const candidates = rules
     .moves({ square: from, verbose: true })
     .filter(m => m.to === to)
-  return (
-    candidates.find(m => !m.promotion || m.promotion === 'q') ?? null
-  )
+  return candidates.find(m => !m.promotion || m.promotion === 'q') ?? null
 }

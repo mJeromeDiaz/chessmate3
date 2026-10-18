@@ -659,6 +659,46 @@ export const repertoireApi = {
     http
       .post(`/api/repertoires/${encodeURIComponent(id)}/undo`, payload, JSON_LD)
       .then(r => r.data),
+  /**
+   * The pending positions of a repertoire built from the user's games, the most played reply first.
+   *
+   * @param {string} id
+   * @returns {Promise<{open: number, items: import('@/stores/repertoire').PendingPosition[]}>}
+   */
+  pending: id =>
+    http
+      .get(`/api/repertoires/${encodeURIComponent(id)}/pending`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Answers a pending position with the user's move (a change of the graph).
+   *
+   * @param {string} id
+   * @param {string} pendingId
+   * @param {{uci: string, baseVersion?: number}} payload
+   */
+  answerPending: (id, pendingId, payload) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/pending/${encodeURIComponent(pendingId)}/answer`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Dismisses or restores a pending position; the list comes back.
+   *
+   * @param {string} id
+   * @param {string} pendingId
+   * @param {'dismiss'|'restore'} action
+   */
+  pendingAction: (id, pendingId, action) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/pending/${encodeURIComponent(pendingId)}/${action}`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
   /** @param {string} id suites of the trash, newest first */
   trash: id =>
     http
@@ -787,13 +827,28 @@ export const repertoireApi = {
       .then(r => r.data),
   /**
    * @param {string} id
-   * @param {{families: string[], choices: Record<string, Record<string, string>>, removed: Record<string, string[]>}} selection
+   * @param {{families: string[], choices: Record<string, Record<string, string>>, removed: Record<string, string[]>, kept?: Record<string, string[]>, suspended?: Record<string, string[]>}} selection
    */
   selectAutoBuild: (id, selection) =>
     http
       .post(
         `/api/repertoires/auto-builds/${encodeURIComponent(id)}/selection`,
         selection,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Asks the Lichess explorer about the next positions (a few calls); `resume` after the cap, a
+   * line's `family` and `cut` to explore that line only.
+   *
+   * @param {string} id
+   * @param {{resume?: boolean, family?: string, cut?: string}} [payload]
+   */
+  exploreAutoBuild: (id, payload = {}) =>
+    http
+      .post(
+        `/api/repertoires/auto-builds/${encodeURIComponent(id)}/explore`,
+        payload,
         JSON_LD
       )
       .then(r => r.data),

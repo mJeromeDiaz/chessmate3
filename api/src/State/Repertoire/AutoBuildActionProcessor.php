@@ -7,6 +7,7 @@ namespace App\State\Repertoire;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Repertoire\AutoBuild;
+use App\ApiResource\Repertoire\AutoBuildExploreInput;
 use App\ApiResource\Repertoire\AutoBuildSelectionInput;
 use App\Repertoire\Auto\AutoBuildException;
 use App\Repertoire\Auto\AutoBuildService;
@@ -20,11 +21,12 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 /**
- * POST /repertoires/auto-builds/{id}/selection, /evaluate and /apply: the build afterwards.
- * 404 unknown build; 409 not_ready, already_applied; 422 invalid_selection, nothing_selected,
- * limit_repertoires; 503 Lichess unavailable (evaluate, nothing learnt).
+ * POST /repertoires/auto-builds/{id}/selection, /explore, /evaluate and /apply: the build
+ * afterwards. 404 unknown build; 409 not_ready, already_applied; 422 invalid_selection,
+ * nothing_selected, unconfirmed_lines, limit_repertoires; 503 Lichess unavailable (explore,
+ * evaluate: nothing learnt).
  *
- * @implements ProcessorInterface<AutoBuildSelectionInput|null, AutoBuild>
+ * @implements ProcessorInterface<AutoBuildSelectionInput|AutoBuildExploreInput|null, AutoBuild>
  */
 final class AutoBuildActionProcessor implements ProcessorInterface
 {
@@ -51,7 +53,10 @@ final class AutoBuildActionProcessor implements ProcessorInterface
             $name = $operation->getName();
             if ('repertoire_auto_build_select' === $name) {
                 $input = $data instanceof AutoBuildSelectionInput ? $data : new AutoBuildSelectionInput();
-                $this->builds->select($build, $input->families, $input->choices, $input->removed);
+                $this->builds->select($build, $input->families, $input->choices, $input->removed, $input->kept, $input->suspended);
+            } elseif ('repertoire_auto_build_explore' === $name) {
+                $input = $data instanceof AutoBuildExploreInput ? $data : new AutoBuildExploreInput();
+                $this->builds->explore($build, $input->resume, $input->family, $input->cut);
             } elseif ('repertoire_auto_build_evaluate' === $name) {
                 $this->builds->evaluate($build);
             } elseif ('repertoire_auto_build_apply' === $name) {

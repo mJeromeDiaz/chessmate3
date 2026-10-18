@@ -44,6 +44,7 @@ final class RoutingTest extends RepertoireWebTestCase
         yield ['GET', '/api/repertoires/auto-builds/'.self::UUID, '_api_/repertoires/auto-builds/{id}_get'];
         yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/fetch', 'repertoire_auto_build_fetch'];
         yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/selection', 'repertoire_auto_build_select'];
+        yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/explore', 'repertoire_auto_build_explore'];
         yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/evaluate', 'repertoire_auto_build_evaluate'];
         yield ['POST', '/api/repertoires/auto-builds/'.self::UUID.'/apply', 'repertoire_auto_build_apply'];
         yield ['GET', '/api/repertoires/explorer/masters', '_api_/repertoires/explorer/{source}_get'];
@@ -51,6 +52,10 @@ final class RoutingTest extends RepertoireWebTestCase
         yield ['GET', '/api/repertoires/cloud-eval', '_api_/repertoires/cloud-eval_get'];
         yield ['GET', '/api/repertoires/stats', 'repertoire_overview'];
         yield ['GET', '/api/repertoires/'.self::UUID.'/stats', '_api_/repertoires/{id}/stats_get'];
+        yield ['GET', '/api/repertoires/'.self::UUID.'/pending', '_api_/repertoires/{id}/pending_get'];
+        yield ['POST', '/api/repertoires/'.self::UUID.'/pending/'.self::MOVE.'/answer', 'repertoire_pending_answer'];
+        yield ['POST', '/api/repertoires/'.self::UUID.'/pending/'.self::MOVE.'/dismiss', 'repertoire_pending_dismiss'];
+        yield ['POST', '/api/repertoires/'.self::UUID.'/pending/'.self::MOVE.'/restore', 'repertoire_pending_restore'];
         yield ['GET', '/api/repertoires/'.self::UUID.'/segments/'.self::MOVE, '_api_/repertoires/{repertoireId}/segments/{id}_get'];
         yield ['GET', '/api/repertoires/runs/'.self::UUID, '_api_/repertoires/runs/{id}_get'];
     }

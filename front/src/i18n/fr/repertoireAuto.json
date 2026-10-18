@@ -107,7 +107,8 @@
     "tooMany": "Trop de demandes en peu de temps : patiente quelques minutes.",
     "lichess": "Lichess ne répond pas pour le moment : réessaie dans un instant.",
     "offline": "Le serveur est injoignable. Vérifie ta connexion.",
-    "generic": "Quelque chose s’est mal passé. Réessaie."
+    "generic": "Quelque chose s’est mal passé. Réessaie.",
+    "unconfirmed_lines": "Confirme d’abord les lignes courtes : conserve-les ou mets-les en suspens."
   },
   "facts": {
     "think": "Tu réfléchis {time} en moyenne sur ce coup.",
@@ -118,7 +119,8 @@
   },
   "build": {
     "waiting": "Lichess finit de traiter une demande précédente : patiente quelques secondes, je reprends dans {n} s…",
-    "removed": "« {name} » retirée"
+    "removed": "« {name} » retirée",
+    "suspended": "« {name} » mise en suspens."
   },
   "header": {
     "back": "Retour",
@@ -171,7 +173,7 @@
     "building": "Je construis ton répertoire…",
     "phases": [
       "Reconstruction de l’arbre des coups",
-      "Fusion des lignes les plus jouées",
+      "Réponses adverses sur Lichess",
       "Évaluation des fins de ligne par Lichess",
       "Détection des moments critiques"
     ],
@@ -243,5 +245,40 @@
     "testTitle": "Tester mes nouveaux répertoires",
     "testCaption": "Les lignes tirées de tes parties, une par une.",
     "repertoire": "Répertoire"
+  },
+  "stop": {
+    "uncovered": "Coupée par {reply} : une réponse fréquente que tu n’as jamais rencontrée.",
+    "noUserMove": "Coupée par {reply} : tu n’y as pas de coup joué au moins 2 fois.",
+    "noPopular": "Aucune réponse adverse ne passe les seuils Lichess (5 % et 100 parties).",
+    "unexplored": "Suite pas encore explorée sur Lichess.",
+    "unplayed": "S’arrête sur un coup que tu n’as jamais joué.",
+    "depth": "Longueur maximale atteinte."
+  },
+  "explore": {
+    "capped": "Analyse arrêtée à {n} requêtes : relance pour continuer.",
+    "left": "{n} position adverse à explorer sur Lichess… | {n} positions adverses à explorer sur Lichess…",
+    "resume": "Relancer",
+    "failed": "Lichess ne répond pas : l’exploration est en pause.",
+    "further": "Explorer la suite",
+    "exploring": "Exploration sur Lichess…"
+  },
+  "short": {
+    "badge": "Ligne courte",
+    "keep": "Conserver",
+    "suspend": "Mettre en suspens",
+    "kept": "Conservée",
+    "toConfirm": "{n} ligne courte à confirmer avant de valider. | {n} lignes courtes à confirmer avant de valider.",
+    "keepAll": "Tout conserver"
+  },
+  "pending": {
+    "title": "EN SUSPENS",
+    "count": "{n} en suspens",
+    "lead": "Des réponses fréquentes sur Lichess que tes parties ne couvrent pas. Rien n’entre dans le répertoire sans ta réponse : tu y répondras depuis l’éditeur.",
+    "share": "{share} % des parties",
+    "reasons": {
+      "reply_uncovered": "Jamais rencontrée",
+      "no_user_move": "Pas de coup à toi",
+      "short_line": "Ligne courte mise de côté"
+    }
   }
 }

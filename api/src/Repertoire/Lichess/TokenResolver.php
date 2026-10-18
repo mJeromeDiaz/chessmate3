@@ -26,12 +26,14 @@ final class TokenResolver
     }
 
     /**
+     * @param User|null $user null: a job of the application (the application's token only)
+     *
      * @return list<string>
      */
-    public function candidates(User $user): array
+    public function candidates(?User $user): array
     {
         $tokens = [];
-        $own = $this->userToken($user);
+        $own = null === $user ? null : $this->userToken($user);
         if (null !== $own) {
             $tokens[] = $own;
         }

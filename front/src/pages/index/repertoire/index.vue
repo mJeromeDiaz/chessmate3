@@ -213,6 +213,17 @@
                     }}</q-item-section>
                   </q-item>
                   <q-item
+                    v-if="r.origin?.source === 'lichess_games'"
+                    v-close-popup
+                    clickable
+                    :to="`/repertoire/${r.id}/pending`"
+                    data-testid="repertoire-pending"
+                  >
+                    <q-item-section>{{
+                      $t('repertoire.list.pending')
+                    }}</q-item-section>
+                  </q-item>
+                  <q-item
                     v-close-popup
                     clickable
                     :to="`/repertoire/${r.id}/trash`"

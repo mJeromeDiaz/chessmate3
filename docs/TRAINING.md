@@ -277,9 +277,7 @@ Woodpecker liste ses séances (`runs`).
 
   Calculs purs dans `utils/runResult.js` (et `missedItems` de `utils/runEnd.js`) ; étapes de
   l'animation : `composables/training/useResultSteps.js` ; données de
-  `GET /training/runs/{id}/review` (§ 5 quater). L'ancien bilan détaillé (`RunEndDialog`, design
-  « Fin de séance » : message du prof, XP, grille, liste « À revoir ») est gardé dans le code mais
-  n'est plus affiché.
+  `GET /training/runs/{id}/review` (§ 5 quater).
 - `RunRecap` : récapitulatif normalisé et lignes du module ; `RunTable` : historique avec l'évolution
   des puzzles par minute d'une séance à l'autre.
 
@@ -290,7 +288,7 @@ Woodpecker liste ses séances (`runs`).
   événements, temps actif plafonné), `ClassicRunTest.php` (cycle qui avance et set tenu, repos,
   enchaînement sans repos, set terminé, pause pendant la séance, cycle perdu pendant la séance) et `RoutingTest.php`.
 - Vitest : `use-timeboxed-run.test.js` (décalage d'horloge, phases, fin de temps),
-  `training-store.test.js`, `run-end.test.js` (ratés, ancien bilan), `run-result.test.js` (écrans de résultat), `use-line-replay.test.js` (rejeu d'une unité).
+  `training-store.test.js`, `run-end.test.js` (ratés), `run-result.test.js` (écrans de résultat), `use-line-replay.test.js` (rejeu d'une unité).
 - Playwright : `tests/e2e/training.spec.js` : une séance light d'1 min terminée avec « Terminer »
   (1 réussi, 1 échoué, écran « Raté total », correction et rejeu du raté sans requête à l'API, récapitulatif, historique) et une séance classique d'1 min menée **jusqu'à son
   expiration réelle** (puzzle à l'écran non compté, cycle avancé d'un seul puzzle). Environ 75 s.

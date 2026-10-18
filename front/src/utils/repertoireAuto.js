@@ -9,8 +9,10 @@ import { intlLocale, t } from '@/i18n'
  * @typedef {{games: number, analysed: number, wins: number, draws: number, losses: number, families: Family[]}} Synthesis
  * @typedef {{uci: string, san: string, games: number, wins: number, draws: number, losses: number}} Alternative
  * @typedef {{path: string, parent: string, depth: number, uci: string, san: string, fen: string, user: boolean, games: number, wins: number, draws: number, losses: number, analysed: number, errored: number, think: number|null, moveAnalysed: number, moveErrors: number, suggested: boolean, suggestion: {uci: string, san: string}|null, alternatives: Alternative[]}} TreeNode
- * @typedef {{path: string, cut: string, name: string, nodes: string[], games: number, wins: number, draws: number, losses: number, analysed: number, errored: number, fen: string, number: number, tag: Tag, evaluated: boolean, evalCp: number|null, evalMate: number|null, locked: boolean}} Line
- * @typedef {{key: string, family: string, color: 'white'|'black', games: number, wins: number, draws: number, losses: number, trunk: number, nodes: TreeNode[], lines: Line[]}} Tree
+ * @typedef {{kind: 'reply_uncovered'|'no_user_move'|'no_popular_reply'|'unexplored'|'unplayed'|'depth', san: string|null, path: string|null}} Stop why a line ends
+ * @typedef {{path: string, cut: string, name: string, nodes: string[], games: number, wins: number, draws: number, losses: number, analysed: number, errored: number, fen: string, depth: number, short: boolean, stop: Stop, confirmed: boolean, number: number, tag: Tag, evaluated: boolean, evalCp: number|null, evalMate: number|null, locked: boolean}} Line short: kept only once confirmed (confirmed: kept)
+ * @typedef {{path: string, parent: string, depth: number, fen: string, uci: string, san: string, sans: string[], reason: string, games: number|null, share: number|null, score: number|null}} PendingNode a position left without the user's move (the user to move), reached by a popular reply
+ * @typedef {{key: string, family: string, color: 'white'|'black', games: number, wins: number, draws: number, losses: number, trunk: number, nodes: TreeNode[], lines: Line[], pending: PendingNode[]}} Tree
  * @typedef {'risk'|'weapon'|'draws'|'solid'} Tag
  * @typedef {{kind: 'error'|'key'|'good'|'alt', ply: number, text: string}} LineEvent
  * @typedef {{fen: string, uci: string, games: number, wins: number, draws: number, losses: number, analysed: number, errored: number, thinkCs: number|null, moveAnalysed: number, moveErrors: number, bestUci: string|null, evalCp: number|null, evalMate: number|null}} GameStat
@@ -494,6 +496,7 @@ export function autoErrorText(error) {
     'not_ready',
     'already_applied',
     'nothing_selected',
+    'unconfirmed_lines',
     'limit_repertoires'
   ]
   if (typeof detail === 'string' && known.includes(detail))
@@ -503,6 +506,102 @@ export function autoErrorText(error) {
   if (response?.status === 503) return t(`${e}lichess`)
   if (!response) return t(`${e}offline`)
   return t(`${e}generic`)
+}
+
+/**
+ * The SAN moves from the initial position, numbered: "1.e4 c5 2.Nf3".
+ *
+ * @param {string[]} sans
+ * @returns {string}
+ */
+export function sanPath(sans) {
+  return sans.map((san, i) => moveLabel(i + 1, san)).join(' ')
+}
+
+/**
+ * Why a position is pending, worded (App\Enum\Repertoire\PendingReason).
+ *
+ * @param {string} reason
+ * @returns {string}
+ */
+export function pendingReasonText(reason) {
+  return ['reply_uncovered', 'no_user_move', 'short_line'].includes(reason)
+    ? t(`repertoireAuto.pending.reasons.${reason}`)
+    : reason
+}
+
+/**
+ * The pending positions of the trees (the user to move, a popular reply never answered), with
+ * their opening, the most played reply first.
+ *
+ * @param {Tree[]} trees
+ * @returns {(PendingNode & {family: string, key: string})[]}
+ */
+export function pendingItems(trees) {
+  return trees
+    .flatMap(tree =>
+      (tree.pending ?? []).map(p => ({
+        ...p,
+        family: tree.family,
+        key: tree.key
+      }))
+    )
+    .sort((a, b) => (b.games ?? -1) - (a.games ?? -1))
+}
+
+/**
+ * The short lines neither kept nor set aside yet.
+ *
+ * @param {Tree[]} trees
+ * @returns {(Line & {key: string})[]}
+ */
+export function unconfirmedLines(trees) {
+  return trees.flatMap(tree =>
+    tree.lines
+      .filter(line => line.short && !line.confirmed)
+      .map(line => ({ ...line, key: tree.key }))
+  )
+}
+
+/**
+ * Where a line stops, worded: the popular reply that cuts it, or why nothing comes after it.
+ *
+ * @param {Line} line
+ * @returns {string}
+ */
+export function stopText(line) {
+  const stop = line.stop
+  const s = 'repertoireAuto.stop.'
+  const reply = stop?.san ? moveLabel(line.depth + 1, stop.san, true) : ''
+  switch (stop?.kind) {
+    case 'reply_uncovered':
+      return t(`${s}uncovered`, { reply })
+    case 'no_user_move':
+      return t(`${s}noUserMove`, { reply })
+    case 'no_popular_reply':
+      return t(`${s}noPopular`)
+    case 'unplayed':
+      return t(`${s}unplayed`)
+    case 'depth':
+      return t(`${s}depth`)
+    default:
+      return t(`${s}unexplored`)
+  }
+}
+
+/**
+ * Where the exploration of the opponents' replies stands, worded (null: nothing to say).
+ *
+ * @param {{calls: number, budget: number, capped: boolean, frontier: number}|null|undefined} exploration
+ * @returns {string|null}
+ */
+export function explorationSay(exploration) {
+  if (!exploration) return null
+  if (exploration.capped)
+    return t('repertoireAuto.explore.capped', { n: exploration.calls })
+  if (exploration.frontier > 0)
+    return t('repertoireAuto.explore.left', exploration.frontier)
+  return null
 }
 
 /**

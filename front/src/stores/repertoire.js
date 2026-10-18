@@ -52,6 +52,17 @@ import { indexGraph, reaches, removal } from '@/components/chess/moveTree'
  *
  * @typedef {{status: number|null, operation: string}} Failure
  *
+ * @typedef {object} PendingPosition a position left without the user's move (docs/REPERTOIRE.md, "En suspens")
+ * @property {string} id
+ * @property {string} fen normalized FEN, the user to move
+ * @property {string[]} path the SAN moves from the initial position
+ * @property {'reply_uncovered'|'no_user_move'|'short_line'} reason
+ * @property {number|null} games the reply leading there on Lichess: its games, share (%) and the user's score (%)
+ * @property {number|null} share
+ * @property {number|null} score
+ * @property {'open'|'answered'|'dismissed'} status
+ * @property {string|null} answerUci
+ *
  * @typedef {object} TrashedSuite a suite of the trash: a move and what only it reached
  * @property {string} id
  * @property {'replaced'|'deleted'|'imported'|'migrated'} reason
@@ -380,6 +391,41 @@ export const useRepertoireStore = defineStore('repertoire', () => {
   }
 
   /**
+   * The pending positions of the repertoire (built from the user's games).
+   *
+   * @returns {Promise<{open: number, items: PendingPosition[]}>}
+   */
+  function fetchPending() {
+    return repertoireApi.pending(requireGraph().id)
+  }
+
+  /**
+   * Answers a pending position with the user's move: the move, and the ones leading there, are
+   * added (a change of the graph, after the queued ones; undoable).
+   *
+   * @param {string} pendingId
+   * @param {string} uci
+   * @returns {Promise<Change|null>} null when refused (the graph was reloaded)
+   */
+  function answerPending(pendingId, uci) {
+    const g = requireGraph()
+    return enqueue('import', v =>
+      repertoireApi.answerPending(g.id, pendingId, { uci, baseVersion: v })
+    )
+  }
+
+  /**
+   * Dismisses or restores a pending position (not a change of the graph).
+   *
+   * @param {string} pendingId
+   * @param {'dismiss'|'restore'} action
+   * @returns {Promise<{open: number, items: PendingPosition[]}>}
+   */
+  function pendingAction(pendingId, action) {
+    return repertoireApi.pendingAction(requireGraph().id, pendingId, action)
+  }
+
+  /**
    * The suites of the trash, newest first.
    *
    * @returns {Promise<TrashedSuite[]>}
@@ -557,6 +603,9 @@ export const useRepertoireStore = defineStore('repertoire', () => {
     restore,
     discard,
     undo,
+    fetchPending,
+    answerPending,
+    pendingAction,
     idle
   }
 })

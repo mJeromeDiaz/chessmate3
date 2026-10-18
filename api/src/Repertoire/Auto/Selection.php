@@ -6,10 +6,12 @@ namespace App\Repertoire\Auto;
 
 /**
  * The user's choices on a build (docs/REPERTOIRE.md, "Repertoire from my games"): the opening
- * families kept, and per family the moves they chose instead of their most played ones and the
- * lines they removed (node paths, {@see Tree}). Stored as repertoire_auto_build.selection.
+ * families kept, and per family the moves they chose instead of their most played ones, the
+ * lines they removed (node paths, {@see Tree}), and their answer to the short lines: kept (the
+ * line's path) or set aside as pending (the line's cut, removed like a line). Stored as
+ * repertoire_auto_build.selection.
  *
- * @phpstan-type SelectionArray array{families: list<string>, choices: array<string, array<string, string>>, removed: array<string, list<string>>}
+ * @phpstan-type SelectionArray array{families: list<string>, choices: array<string, array<string, string>>, removed: array<string, list<string>>, kept: array<string, list<string>>, suspended: array<string, list<string>>}
  */
 final readonly class Selection
 {
@@ -23,39 +25,44 @@ final readonly class Selection
      * @param list<string>                         $families
      * @param array<string, array<string, string>> $choices  family key => node path => UCI
      * @param array<string, list<string>>          $removed  family key => node paths
+     * @param array<string, list<string>>          $kept      family key => paths of the short lines kept
+     * @param array<string, list<string>>          $suspended family key => cuts of the short lines set aside
      */
     public function __construct(
         public array $families = [],
         public array $choices = [],
         public array $removed = [],
+        public array $kept = [],
+        public array $suspended = [],
     ) {
     }
 
     /**
      * The selection as asked, checked against the families the build offers: unknown families,
-     * malformed paths or moves and choices or removals of a family not kept are refused.
+     * malformed paths or moves and choices, removals or short-line answers of a family not kept are
+     * refused.
      *
      * @param list<string> $offered the family keys of the synthesis
      *
      * @throws AutoBuildException invalid_selection
      */
-    public static function checked(mixed $families, mixed $choices, mixed $removed, array $offered): self
+    public static function checked(mixed $families, mixed $choices, mixed $removed, array $offered, mixed $kept = [], mixed $suspended = []): self
     {
         $invalid = new AutoBuildException(AutoBuildException::INVALID_SELECTION);
-        if (!\is_array($families) || !\is_array($choices) || !\is_array($removed)) {
+        if (!\is_array($families) || !\is_array($choices) || !\is_array($removed) || !\is_array($kept) || !\is_array($suspended)) {
             throw $invalid;
         }
-        $kept = [];
+        $keptFamilies = [];
         foreach ($families as $family) {
             if (!\is_string($family) || !\in_array($family, $offered, true)) {
                 throw $invalid;
             }
-            $kept[$family] = true;
+            $keptFamilies[$family] = true;
         }
 
         $checkedChoices = [];
         foreach ($choices as $family => $moves) {
-            if (!isset($kept[$family]) || !\is_array($moves) || \count($moves) > self::MAX_PER_FAMILY) {
+            if (!isset($keptFamilies[$family]) || !\is_array($moves) || \count($moves) > self::MAX_PER_FAMILY) {
                 throw $invalid;
             }
             foreach ($moves as $path => $uci) {
@@ -68,20 +75,39 @@ final readonly class Selection
             }
         }
 
-        $checkedRemoved = [];
-        foreach ($removed as $family => $paths) {
-            if (!isset($kept[$family]) || !\is_array($paths) || \count($paths) > self::MAX_PER_FAMILY) {
+        return new self(
+            array_keys($keptFamilies),
+            $checkedChoices,
+            self::checkedPaths($removed, $keptFamilies, $invalid),
+            self::checkedPaths($kept, $keptFamilies, $invalid),
+            self::checkedPaths($suspended, $keptFamilies, $invalid),
+        );
+    }
+
+    /**
+     * @param array<mixed>        $byFamily family key => node paths
+     * @param array<string, true> $families the families kept
+     *
+     * @return array<string, list<string>>
+     *
+     * @throws AutoBuildException
+     */
+    private static function checkedPaths(array $byFamily, array $families, AutoBuildException $invalid): array
+    {
+        $checked = [];
+        foreach ($byFamily as $family => $paths) {
+            if (!isset($families[$family]) || !\is_array($paths) || \count($paths) > self::MAX_PER_FAMILY) {
                 throw $invalid;
             }
             foreach ($paths as $path) {
                 if (!\is_string($path) || 1 !== preg_match(self::PATH_PATTERN, $path)) {
                     throw $invalid;
                 }
-                $checkedRemoved[(string) $family][] = $path;
+                $checked[(string) $family][] = $path;
             }
         }
 
-        return new self(array_keys($kept), $checkedChoices, $checkedRemoved);
+        return $checked;
     }
 
     /**
@@ -103,12 +129,20 @@ final readonly class Selection
                 }
             }
         }
-        $removed = [];
-        foreach (\is_array($stored['removed'] ?? null) ? $stored['removed'] : [] as $family => $paths) {
-            $removed[(string) $family] = array_values(array_filter(\is_array($paths) ? $paths : [], 'is_string'));
+        return new self($families, $choices, self::storedPaths($stored['removed'] ?? null), self::storedPaths($stored['kept'] ?? null), self::storedPaths($stored['suspended'] ?? null));
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private static function storedPaths(mixed $byFamily): array
+    {
+        $paths = [];
+        foreach (\is_array($byFamily) ? $byFamily : [] as $family => $list) {
+            $paths[(string) $family] = array_values(array_filter(\is_array($list) ? $list : [], 'is_string'));
         }
 
-        return new self($families, $choices, $removed);
+        return $paths;
     }
 
     /**
@@ -116,6 +150,6 @@ final readonly class Selection
      */
     public function toArray(): array
     {
-        return ['families' => $this->families, 'choices' => $this->choices, 'removed' => $this->removed];
+        return ['families' => $this->families, 'choices' => $this->choices, 'removed' => $this->removed, 'kept' => $this->kept, 'suspended' => $this->suspended];
     }
 }

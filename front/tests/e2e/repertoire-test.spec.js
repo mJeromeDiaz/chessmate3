@@ -252,3 +252,51 @@ test('"Tester cette ligne" from the editor, then the statistics and a segment hi
   await expect(rows.first()).toContainText('Interrompu')
   await expect(rows.last()).toContainText('Réussi')
 })
+
+test('a premove while the answer is checked and the opponent replies: played as the next answer', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await importItalian(page)
+
+  // The Sicilian segment only: 2.Nf3, then 3.d4 after 2...d6.
+  await page.locator('[data-testid="tree-move"]', { hasText: 'c5' }).click()
+  await page.getByTestId('editor-test').click()
+  await page.getByTestId('editor-test-line').click()
+
+  // The first answer's check is held: the premove is entered while it lasts, for sure.
+  /** @type {() => void} */
+  let release = () => {}
+  const held = new Promise(resolve => (release = () => resolve(null)))
+  let first = true
+  await page.route('**/api/training/runs/*/submission', async route => {
+    if (first) {
+      first = false
+      await held
+    }
+    await route.continue()
+  })
+  await launch(page, 5)
+
+  const q = await question(page)
+  expect([q.index, q.total, q.uci]).toEqual([1, 2, 'g1f3'])
+  await playMove(page, 'g1f3')
+  // A click move ignores clicks until its animation is over (cm-chessboard): data-fen tells.
+  const board = page.getByTestId('chess-board')
+  const afterNf3 = new Chess()
+  for (const san of ['e4', 'c5', 'Nf3']) afterNf3.move(san)
+  await expect(board).toHaveAttribute('data-fen', afterNf3.fen())
+  await playMove(page, 'd2d4')
+  await expect(board.locator('.cb-marker-premove')).toHaveCount(2)
+  release()
+
+  // Right, 2...d6 comes, then the premove goes as the user's move and ends the segment.
+  await expect(page.getByTestId('result-sheet')).toHaveAttribute(
+    'data-kind',
+    'win'
+  )
+  await expect(page.getByTestId('drill-moves')).toContainText('3.d4')
+  await expect(page.locator('.drill-move--user').last()).toContainText('d4')
+  await expect(board.locator('.cb-marker-premove')).toHaveCount(0)
+})

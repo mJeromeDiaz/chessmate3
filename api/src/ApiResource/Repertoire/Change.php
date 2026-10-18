@@ -33,6 +33,7 @@ use App\State\Repertoire\ChangeProcessor;
         // The IRI of a change (never served: 404).
         new NotExposed(uriTemplate: '/repertoires/{id}/change', requirements: ['id' => Repertoire::UUID_PATTERN]),
         new Post(uriTemplate: '/repertoires/{id}/trash/{trashId}/restore', requirements: ['id' => Repertoire::UUID_PATTERN, 'trashId' => Repertoire::UUID_PATTERN], status: 200, input: RestoreInput::class, read: false, name: 'repertoire_trash_restore', processor: ChangeProcessor::class),
+        new Post(uriTemplate: '/repertoires/{id}/pending/{pendingId}/answer', requirements: ['id' => Repertoire::UUID_PATTERN, 'pendingId' => Repertoire::UUID_PATTERN], status: 200, input: AnswerPendingInput::class, read: false, name: 'repertoire_pending_answer', processor: ChangeProcessor::class),
         new Post(uriTemplate: '/repertoires/{id}/undo', requirements: ['id' => Repertoire::UUID_PATTERN], status: 200, input: ChangeInput::class, read: false, name: 'repertoire_undo', processor: ChangeProcessor::class),
     ],
 )]
@@ -42,7 +43,7 @@ final class Change
     #[ApiProperty(identifier: true)]
     public string $id;
     public int $version;
-    /** add, replace, delete, promote, annotate, import, restore, undo; none when nothing changed */
+    /** add, replace, delete, promote, annotate, import (a pending position answered too), restore, undo; none when nothing changed */
     public string $operation;
     /** The move added (or found already there) by an add. */
     public ?string $moveId = null;

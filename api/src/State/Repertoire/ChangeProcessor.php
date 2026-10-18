@@ -7,12 +7,15 @@ namespace App\State\Repertoire;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\ApiResource\Repertoire\AddMoveInput;
+use App\ApiResource\Repertoire\AnswerPendingInput;
 use App\ApiResource\Repertoire\AnnotateInput;
 use App\ApiResource\Repertoire\ReplaceMoveInput;
 use App\ApiResource\Repertoire\RestoreInput;
 use App\ApiResource\Repertoire\Change;
 use App\ApiResource\Repertoire\ChangeInput;
 use App\Chess\InvalidPositionException;
+use App\Repertoire\Auto\PendingNotOpenException;
+use App\Repertoire\Auto\PendingService;
 use App\Repertoire\Exception\IllegalMoveException;
 use App\Repertoire\Exception\InvalidAnnotationException;
 use App\Repertoire\Exception\LimitReachedException;
@@ -38,9 +41,10 @@ use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Every change of a repertoire's graph (docs/REPERTOIRE.md): 404 unknown repertoire, move or
- * position (another user's included), 422 illegal move, repeated position, limit or annotation,
- * 409 stale baseVersion or nothing to undo, 429.
+ * Every change of a repertoire's graph (docs/REPERTOIRE.md), a pending position answered included:
+ * 404 unknown repertoire, move, position or pending position (another user's included), 422 illegal
+ * move, repeated position, limit or annotation, 409 stale baseVersion, nothing to undo, position
+ * occupied or pending position not open, 429.
  *
  * @implements ProcessorInterface<ChangeInput, Change>
  */
@@ -49,6 +53,7 @@ final class ChangeProcessor implements ProcessorInterface
     public function __construct(
         private readonly GraphEditor $editor,
         private readonly GraphReader $reader,
+        private readonly PendingService $pendings,
         private readonly RepertoireRepository $repertoires,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
@@ -81,6 +86,9 @@ final class ChangeProcessor implements ProcessorInterface
                     : throw new \LogicException('Unexpected input.'),
                 'repertoire_move_delete' => $this->editor->delete($user, $id, $move(), $data->baseVersion),
                 'repertoire_undo' => $this->editor->undo($user, $id, $data->baseVersion),
+                'repertoire_pending_answer' => $data instanceof AnswerPendingInput
+                    ? $this->pendings->answer($user, $id, RepertoireIds::fromUri($uriVariables, 'pendingId') ?? throw new NotFoundHttpException(), $data->uci, $data->baseVersion)
+                    : throw new \LogicException('Unexpected input.'),
                 default => throw new \LogicException('Unknown repertoire change.'),
             };
         } catch (RepertoireNotFoundException) {
@@ -89,6 +97,8 @@ final class ChangeProcessor implements ProcessorInterface
             throw new NotFoundHttpException($e->getMessage());
         } catch (PositionOccupiedException $e) {
             throw new ConflictHttpException('position_occupied', $e);
+        } catch (PendingNotOpenException $e) {
+            throw new ConflictHttpException('pending_not_open', $e);
         } catch (RestoreImpossibleException $e) {
             throw new ConflictHttpException('start_missing', $e);
         } catch (IllegalMoveException|InvalidPositionException $e) {

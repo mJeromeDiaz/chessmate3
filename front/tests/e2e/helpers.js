@@ -50,6 +50,31 @@ export async function signIn(
 }
 
 /**
+ * A pending position in one of the user's repertoires, as an analysis of their games would leave
+ * it (docs/REPERTOIRE.md, "En suspens"): the API's e2e-only command, no Lichess.
+ *
+ * @param {string} repertoireId
+ * @param {string} path the SAN moves leading there, e.g. "e4 c5"
+ * @returns {string} its id
+ */
+export function seedPending(repertoireId, path) {
+  return execFileSync(
+    'php',
+    [
+      '-d',
+      'xdebug.mode=off',
+      'bin/console',
+      'app:e2e:seed-pending',
+      repertoireId,
+      path
+    ],
+    { cwd: API_DIR, env: { ...process.env, APP_ENV: 'e2e' } }
+  )
+    .toString()
+    .trim()
+}
+
+/**
  * Runs the API's worker on the `async` queue for a moment, as production's would: the emails
  * (invitations, address verification) leave through it. Nothing runs it in e2e otherwise.
  *
@@ -94,6 +119,51 @@ export async function playMove(page, uci, root) {
       .locator(`[role="button"][data-piece$="${uci[4]}"]`)
       .click()
   }
+}
+
+/**
+ * Centre of a square on the board, in page coordinates.
+ *
+ * @param {import('@playwright/test').Locator} board
+ * @param {string} square
+ */
+async function squareCenter(board, square) {
+  const box = await board
+    .locator(`[data-square="${square}"]`)
+    .first()
+    .boundingBox()
+  if (!box) throw new Error(`square ${square} not on screen`)
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+}
+
+/**
+ * Clicks a square with the mouse, without Playwright's actionability checks: they wait for
+ * animation frames, which a paused clock (`page.clock.pauseAt`) stops.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} square
+ */
+export async function clickSquare(page, square) {
+  const { x, y } = await squareCenter(page.getByTestId('chess-board'), square)
+  await page.mouse.click(x, y)
+}
+
+/**
+ * Draws with the right button as a user would: an arrow from `from` to `to`, a circle when both
+ * are the same square (docs/PUZZLES.md § 6).
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} from
+ * @param {string} [to]
+ */
+export async function rightDraw(page, from, to = from) {
+  const board = page.getByTestId('chess-board')
+  const start = await squareCenter(board, from)
+  const end = await squareCenter(board, to)
+  await page.mouse.move(start.x, start.y)
+  await page.mouse.down({ button: 'right' })
+  await page.mouse.move(end.x, end.y, { steps: 5 })
+  await page.mouse.up({ button: 'right' })
 }
 
 /**

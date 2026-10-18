@@ -287,6 +287,14 @@ final readonly class DataExport
                   WHERE r.user_id = ? ORDER BY s.created_at',
                 $id,
             ),
+            'pending' => $this->rows(
+                'SELECT BIN_TO_UUID(p.repertoire_id) AS repertoire_id, p.fen, p.path, p.reason, p.games, p.share, p.score, p.status,
+                        p.answer_uci, p.created_at, p.updated_at
+                   FROM repertoire_pending p JOIN repertoire r ON r.id = p.repertoire_id
+                  WHERE r.user_id = ? ORDER BY p.created_at',
+                $id,
+                ['path'],
+            ),
         ]));
     }
 
