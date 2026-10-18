@@ -207,7 +207,7 @@
           class="session-page__reward"
           data-testid="session-reward"
         >
-          <CrownCoin :size="22" />{{ rewardLine(session.reward) }}
+          <CrystalGem :size="22" />{{ rewardLine(session.reward) }}
         </div>
         <q-btn
           color="primary"
@@ -256,7 +256,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import TreasureChest from '@/components/shop/TreasureChest.vue'
 import { sessionApi } from '@/services/api'
 import { useShopStore } from '@/stores/shop'

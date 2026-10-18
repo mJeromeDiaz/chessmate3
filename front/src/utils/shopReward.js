@@ -120,7 +120,7 @@ export function chestStages(reward, earning) {
     },
     {
       bg: '#E03C86',
-      glow: 'rgba(255,212,59,.6)',
+      glow: 'rgba(201,184,255,.65)',
       ink: '#FFFFFF',
       kicker: t('shop.chest.stages.hit2.kicker'),
       title: title('shop.chest.stages.hit2.title'),
@@ -128,12 +128,12 @@ export function chestStages(reward, earning) {
       hint: t('shop.chest.stages.hit2.hint')
     },
     {
-      bg: '#FFD43B',
+      bg: '#C9B8FF',
       glow: 'rgba(255,255,255,.9)',
       ink: '#1B1530',
       kicker: t('shop.chest.stages.open.kicker'),
       title: title(`shop.chest.open.${tier}`),
-      accent: '#C02670',
+      accent: '#5A3BE0',
       hint: ''
     }
   ]
@@ -158,7 +158,7 @@ export function rewardNote(reward) {
 }
 
 /**
- * A completed session's line in its recap: "+9 couronnes", or why none.
+ * A completed session's line in its recap: "+9 cristaux", or why none.
  *
  * @param {SessionReward|null} reward
  * @returns {string} '' without a reward

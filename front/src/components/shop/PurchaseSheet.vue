@@ -75,7 +75,7 @@
         >
           {{ busy ? $t('shop.sheet.wait') : pay.label }}
           <template v-if="!busy"
-            ><CrownCoin :size="22" />{{ crowns(pay.amount) }}</template
+            ><CrystalGem :size="22" />{{ crowns(pay.amount) }}</template
           >
         </button>
         <div
@@ -97,7 +97,7 @@
  */
 import { computed, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import { checkout, crowns, howOf, lookOf, stockOf } from '@/utils/shop'
 
 const props = defineProps({

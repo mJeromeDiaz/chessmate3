@@ -65,7 +65,7 @@
             <div class="cm-muted">{{ detail.player.email }}</div>
           </div>
           <div class="shop-players__balance" data-testid="shop-player-balance">
-            <CrownCoin :size="22" />{{ crowns(detail.player.balance) }}
+            <CrystalGem :size="22" />{{ crowns(detail.player.balance) }}
           </div>
         </div>
 
@@ -205,7 +205,7 @@
  * player's balance, crowns given or taken back with a reason, inventory, freezes and ledger.
  */
 import { onMounted, ref } from 'vue'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import { adminApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'

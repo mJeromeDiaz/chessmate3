@@ -34,7 +34,7 @@ final class ShopFixtures extends Fixture implements DependentFixtureInterface
             $this->connection->executeStatement($sql, $params);
         }
         $user = $this->getReference(DemoUserFixtures::REFERENCE, User::class);
-        $this->crowns->adjust($user->getId(), self::DEMO_CROWNS, 'Couronnes de démonstration', null);
+        $this->crowns->adjust($user->getId(), self::DEMO_CROWNS, 'Cristaux de démonstration', null);
     }
 
     public function getDependencies(): array

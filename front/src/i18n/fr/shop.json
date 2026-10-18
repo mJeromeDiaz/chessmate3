@@ -23,7 +23,7 @@
     "cosmetics": {
       "tab": "Cosmétiques",
       "title": "Cosmétiques",
-      "lead": "Pour gagner avec style. Garde tes couronnes au chaud."
+      "lead": "Pour gagner avec style. Garde tes cristaux au chaud."
     }
   },
   "moduleTabs": {
@@ -113,7 +113,7 @@
     "missing": "Il te manque",
     "missingNote": "Encore un peu d’entraînement, et reviens me voir.",
     "buy": "Acheter ·",
-    "left": "Il te restera {n} couronne | Il te restera {n} couronnes"
+    "left": "Il te restera {n} cristal | Il te restera {n} cristaux"
   },
   "chest": {
     "closed": {
@@ -142,7 +142,7 @@
         "hint": "Il va céder…"
       },
       "open": {
-        "kicker": "TRÉSOR OUVERT"
+        "kicker": "CRISTAUX TROUVÉS"
       }
     },
     "tiers": {
@@ -152,8 +152,8 @@
     },
     "paid": "{n} min payée | {n} min payées",
     "capped": "plafond du jour atteint",
-    "cappedLine": "Plafond du jour atteint : pas de couronnes pour cette session.",
-    "line": "+{n} couronnes · {note}"
+    "cappedLine": "Plafond du jour atteint : pas de cristaux pour cette session.",
+    "line": "+{n} cristaux · {note}"
   },
   "earning": {
     "perfect": "Session parfaite (100 %)",
@@ -161,14 +161,14 @@
     "missed": "En dessous de 80 %"
   },
   "page": {
-    "lead": "Dépense tes couronnes",
+    "lead": "Dépense tes cristaux",
     "title": "Boutique",
-    "balance": "{n} couronnes",
+    "balance": "{n} cristaux",
     "tabs": "Rayons",
     "soon": "BIENTÔT",
     "toProtect": "🔥︎ {n} j à protéger",
     "frozen": "❄︎ {n} jour de gel en stock | ❄︎ {n} jours de gel en stock",
-    "earnTitle": "Gagner des couronnes",
+    "earnTitle": "Gagner des cristaux",
     "earnLead": "Termine une session : un coffre t’attend à la fin. Chaque minute jouée rapporte, au plus une par exercice terminé (le temps libre ne compte pas).",
     "perHour": "{n} / h",
     "daily": "Jusqu’à {n} min payées par jour · {left}",
@@ -178,7 +178,7 @@
   },
   "errors": {
     "gone": "Cette offre n’existe plus.",
-    "unavailable": "Cette offre n’est plus en vente, ou il te manque des couronnes.",
+    "unavailable": "Cette offre n’est plus en vente, ou il te manque des cristaux.",
     "nothingToBuy": "Rien à acheter pour l’instant : la boutique n’en vend pas."
   },
   "bought": "{name} : c’est dans ton stock.",
@@ -196,7 +196,7 @@
   "chestScreen": {
     "label": "Récompense de session",
     "open": "Ouvrir le coffre",
-    "added": "couronnes ajoutées à ta bourse",
+    "added": "cristaux ajoutés à ta réserve",
     "spend": "Dépenser à la boutique",
     "results": "Voir mes résultats"
   }

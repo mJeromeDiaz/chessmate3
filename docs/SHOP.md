@@ -2,14 +2,19 @@
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
-Une monnaie, les **couronnes**, et une boutique (maquette « Boutique », 2026-10-13) : gels de la
+Une monnaie, les **cristaux**, et une boutique (maquette « Boutique », 2026-10-13) : gels de la
 série quotidienne, aides du Puzzle Streak, erreurs pardonnées, packs ; cosmétiques affichés
-« Bientôt ». Aucun argent réel. Les couronnes se gagnent en menant une session au bout (§ 4 bis,
+« Bientôt ». Aucun argent réel. Les cristaux se gagnent en menant une session au bout (§ 4 bis,
 maquette « Coffre », 2026-10-14) ; un admin peut aussi en donner.
+
+> Les cristaux s'appelaient les **couronnes** jusqu'aux maquettes « Boutique cristaux » et « Coffre
+> cristaux » (2026-10-17) : renommés à l'écran seulement (gemme `components/shop/CrystalGem.vue`,
+> textes fr et en). Le code, l'API, la base et l'export gardent `crowns` (`Wallet`,
+> `CrownAdjustment`, `reward.crowns`…).
 
 Choix validés (2026-10-13) :
 
-- **Gagner des couronnes** (2026-10-14) : à la fin d'une session terminée, un coffre (§ 4 bis) ;
+- **Gagner des cristaux** (2026-10-14) : à la fin d'une session terminée, un coffre (§ 4 bis) ;
   un admin peut aussi en donner (ou en retirer).
 - **Gel automatique** : au retour, les gels en stock couvrent les jours manqués ; la série ne
   bouge pas (un jour gelé ne compte pas) ; boule de glace à la place de la flamme.
@@ -32,7 +37,7 @@ Choix validés (2026-10-13) :
 | Gains | `App\Enum\Shop\RewardTier`, `App\Entity\Shop\{RewardRule, SessionReward}`, `App\Shop\Reward\{Rule, RewardRules, RewardCalculator, SessionRewarder}` (implémente `Training\Session\SessionRewardInterface`) |
 | API joueur | `App\ApiResource\Shop\*`, `App\State\Shop\*` |
 | Admin | `App\Controller\Shop\AdminShopController`, `App\Shop\Admin\{Payload, InvalidPayload, OfferEditor, SlideEditor, AdminCatalog, PlayerWallets, ShopStats}` |
-| Front | `front/src/pages/index/boutique.vue`, `components/shop/` (dont `TreasureChest.vue`), `stores/shop.js`, `utils/shop.js`, `utils/shopReward.js`, `composables/shop/useAidPurchase.js` ; admin : `pages/index/admin/boutique.vue`, `components/admin/shop/` (dont `RewardRuleForm.vue`), `utils/admin/shop.js` |
+| Front | `front/src/pages/index/boutique.vue`, `components/shop/` (dont `TreasureChest.vue`, `CrystalGem.vue`, `CrystalPrice.vue`), `stores/shop.js`, `utils/shop.js`, `utils/shopReward.js`, `composables/shop/useAidPurchase.js` ; admin : `pages/index/admin/boutique.vue`, `components/admin/shop/` (dont `RewardRuleForm.vue`), `utils/admin/shop.js` |
 
 Chaque domaine qui consomme un article possède son interface, implémentée par la boutique et
 reliée dans `config/services.yaml` : `Gamification\Streak\FreezeStockInterface`,
@@ -94,25 +99,25 @@ inventaire, gels, jours gelés et gains des sessions).
 - Un jour gelé ne compte pas dans la longueur de la série, mais la garde. La semaine affichée
   (carte « Série », célébration) montre une boule de glace ❄ à sa place (`weekRow`).
 
-## 4 bis. Gagner des couronnes (coffre de fin de session)
+## 4 bis. Gagner des cristaux (coffre de fin de session)
 
 Règles validées (2026-10-14, maquette « Coffre ») :
 
 - **Une session terminée** (tous ses modules joués ou passés, `SessionClosed` `completed`)
-  rapporte des couronnes ; une session abandonnée ou expirée, rien. Une séance lancée seule, hors
+  rapporte des cristaux ; une session abandonnée ou expirée, rien. Une séance lancée seule, hors
   session, non plus.
 - **Minutes payées** : chaque séance de la session paie sa durée réelle, mais **au plus une minute
   par exercice terminé** (`RewardCalculator::SECONDS_PER_EXERCISE`) : un chrono laissé tourner ne
   rapporte rien. Un parcours ([PARCOURS.md](PARCOURS.md)) paie toujours une minute par exercice. Le **temps libre** ne compte ni dans les minutes ni dans le palier.
 - **Palier** de toute la session (exercices réussis / terminés, seuils de l'écran de résultat) :
   parfait (100 %) ×1,5, presque (80 à 99 %) ×1, en dessous ×0,5.
-- Couronnes = secondes payées × couronnes par heure × coefficient, arrondi au plus proche ; par
+- Cristaux = secondes payées × cristaux par heure × coefficient, arrondi au plus proche ; par
   défaut **120 par heure**, soit 180 pour une heure parfaite.
 - **Plafond** : **60 minutes payées par jour local** du joueur ; au-delà, la session rapporte 0
   (`capped`) et son bilan le dit.
 - Taux, coefficients et plafond se règlent dans l'admin (onglet « Gains ») et valent pour les
   sessions suivantes.
-- Les couronnes sont **créditées à la clôture**, dans la transaction qui termine la session
+- Les cristaux sont **crédités à la clôture**, dans la transaction qui termine la session
   (`SessionManager::closeSession` → `SessionRewarder::grant`, idempotent par l'index unique ; le
   verrou du solde sérialise les gains d'un joueur, donc le plafond tient). Le coffre ne fait que les
   révéler : il s'affiche **une fois** (ouvert, ou fermé sans l'ouvrir : vu dans les deux cas,
@@ -122,11 +127,11 @@ Front (`components/shop/TreasureChest.vue`, calculs dans `utils/shopReward.js`) 
 dernier module, célébration de la série, puis **coffre**, puis résultat de la séance. Trois coups
 l'ouvrent ; le premier fond suit le montant rapporté au maximum du jour (moins d'un quart : bleu
 nuit, jusqu'à 60 % : violet, au-delà : pourpre et halo doré), le titre final le palier (« Quel
-jackpot ! », « Beau trésor ! », « Joli butin ! ») ; pluie de couronnes, solde qui monte, puis
+jackpot ! », « Beau trésor ! », « Joli butin ! ») ; pluie de cristaux, solde qui monte, puis
 « Voir mes résultats » (le résultat de la séance) et « Dépenser à la boutique ». Une session finie
 sur son bilan (dernier module passé) montre son coffre là (« Voir le bilan »), et le bilan affiche
-« +N couronnes » (ou le plafond atteint). Mouvement réduit : le coffre ouvert d'emblée. La boutique
-réaffiche « Gagner des couronnes » (la règle, les minutes restantes aujourd'hui).
+« +N cristaux » (ou le plafond atteint). Mouvement réduit : le coffre ouvert d'emblée. La boutique
+réaffiche « Gagner des cristaux » (la règle, les minutes restantes aujourd'hui).
 
 **Aucun coffre perdu** (2026-10-17) : le tableau de bord demande les coffres pas encore vus
 (`GET /shop/rewards/unopened`, qui clôt d'abord la session active si son dernier module est fini)
@@ -166,7 +171,7 @@ Contrôleur simple, réponses JSON ; écritures sous le limiteur `admin_write` (
 | `GET /players/{id}` | solde, inventaire, gels, mouvements |
 | `POST /players/{id}/crowns` `{delta, reason}` | donner ou retirer (motif obligatoire) ; 409 sous zéro |
 | `GET /reward-rule`, `PUT /reward-rule` `{crownsPerHour, perfectPercent, nearPercent, missedPercent, dailyMinutes}` | la règle des gains (§ 4 bis), avec la date et l'admin de la dernière modification |
-| `GET /stats?days=7\|30\|90` | totaux (en circulation, détenteurs, donné, retiré, gagné en session et sessions récompensées, dépensé, achats, acheteurs), ventes par offre, couronnes dépensées et gagnées par jour, articles détenus, jours de gel en stock |
+| `GET /stats?days=7\|30\|90` | totaux (en circulation, détenteurs, donné, retiré, gagné en session et sessions récompensées, dépensé, achats, acheteurs), ventes par offre, cristaux dépensés et gagnés par jour, articles détenus, jours de gel en stock |
 
 Page `/admin/boutique` (onglet « Boutique » de l'admin) : Offres, Carrousel, Gains, Joueurs,
 Statistiques.
@@ -191,8 +196,8 @@ Statistiques.
 `Functional/Coordinates/CoordinatesRunTest.php`, `Functional/PuzzleStreak/StreakRunTest.php` ;
 Vitest `shop.test.js`, `shop-reward.test.js`, `admin-shop.test.js`, `streak.test.js`, `use-blindfold-puzzle.test.js`,
 `use-timeboxed-run.test.js`, `coordinates.test.js` ; Playwright `tests/e2e/shop.spec.js` (un admin
-donne des couronnes, achat d'un gel ; puzzle classé raté pardonné, pardon acheté sur place ;
+donne des cristaux, achat d'un gel ; puzzle classé raté pardonné, pardon acheté sur place ;
 pardon à l'aveugle en jeu, acheté sur place, puzzle résolu ; session terminée : coffre ouvert en
-trois coups, solde, « Voir mes résultats », bilan et « Gagner des couronnes »). `closeRunEnd()`
+trois coups, solde, « Voir mes résultats », bilan et « Gagner des cristaux »). `closeRunEnd()`
 ferme le coffre d'une session s'il précède le résultat. La commande e2e
 `app:e2e:seed-user --crowns=N` crée un joueur déjà riche.

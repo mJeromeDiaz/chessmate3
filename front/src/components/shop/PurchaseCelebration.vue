@@ -10,7 +10,7 @@
         '--dy': `${coin.dy}px`,
         animationDelay: `${i * 0.045}s`
       }"
-      ><CrownCoin :size="22"
+      ><CrystalGem :size="22"
     /></span>
     <div
       class="party__rays"
@@ -44,7 +44,7 @@
  * the whole thing fades (2 s, `done` then).
  */
 import { computed, onBeforeUnmount, onMounted } from 'vue'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import { lookOf } from '@/utils/shop'
 
 const props = defineProps({

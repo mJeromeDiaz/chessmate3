@@ -26,7 +26,7 @@
           <q-item-section>{{ $t('layout.account.tour') }}</q-item-section>
         </q-item>
         <q-item v-close-popup clickable to="/boutique" data-testid="nav-shop">
-          <q-item-section avatar><CrownCoin :size="22" /></q-item-section>
+          <q-item-section avatar><CrystalGem :size="22" /></q-item-section>
           <q-item-section>{{ $t('layout.account.shop') }}</q-item-section>
           <q-item-section
             v-if="shop.state"
@@ -94,7 +94,7 @@
 <script setup>
 import { computed } from 'vue'
 import UserAvatar from '@/components/layout/UserAvatar.vue'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import { useLogout } from '@/composables/layout/useLogout'
 import { useAuthStore } from '@/stores/auth'
 import { useShopStore } from '@/stores/shop'
@@ -121,11 +121,11 @@ const current = computed(
 <style scoped lang="scss">
 .account-menu__crowns {
   font-weight: 800;
-  color: #8a6a00;
+  color: #5a3be0;
 }
 
 .body--dark .account-menu__crowns {
-  color: #ffd43b;
+  color: #c9b8ff;
 }
 
 .account-menu__name {

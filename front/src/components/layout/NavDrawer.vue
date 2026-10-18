@@ -50,7 +50,7 @@
         active-class="nav-drawer__item--on"
         data-testid="drawer-shop"
       >
-        <q-item-section avatar><CrownCoin :size="22" /></q-item-section>
+        <q-item-section avatar><CrystalGem :size="22" /></q-item-section>
         <q-item-section>{{ $t('layout.account.shop') }}</q-item-section>
         <q-item-section
           v-if="balance !== null"
@@ -108,7 +108,7 @@
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import StreakChip from '@/components/gamification/StreakChip.vue'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
 import UserAvatar from '@/components/layout/UserAvatar.vue'
 import { useLogout } from '@/composables/layout/useLogout'
@@ -157,11 +157,11 @@ watch(
 <style scoped lang="scss">
 .nav-drawer__crowns {
   font-weight: 800;
-  color: #8a6a00;
+  color: #5a3be0;
 }
 
 .body--dark .nav-drawer__crowns {
-  color: #ffd43b;
+  color: #c9b8ff;
 }
 
 .nav-drawer__who {

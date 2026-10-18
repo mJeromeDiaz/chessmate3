@@ -49,7 +49,7 @@
           ✕
         </button>
         <div v-if="wallet !== null" class="chest-screen__wallet">
-          <CrownCoin :size="30" spin /><span data-testid="chest-wallet">{{
+          <CrystalGem :size="30" spin /><span data-testid="chest-wallet">{{
             crowns(wallet)
           }}</span>
         </div>
@@ -109,7 +109,7 @@
                   top: `${c[1]}px`,
                   animationDelay: `${0.4 + i * 0.04}s`
                 }"
-                ><CrownCoin :size="c[2]" :spin="i % 3 === 0" :delay="i * 0.2"
+                ><CrystalGem :size="c[2]" :spin="i % 3 === 0" :delay="i * 0.2"
               /></span>
             </div>
             <div class="chest__front">
@@ -174,7 +174,7 @@
       <div class="chest-screen__bottom">
         <template v-if="open">
           <div class="chest-reward" data-testid="chest-reward">
-            <CrownCoin :size="54" spin />
+            <CrystalGem :size="54" spin />
             <div class="chest-reward__text">
               <div class="chest-reward__amount" data-testid="chest-amount">
                 +{{ crowns(shown) }}
@@ -218,14 +218,14 @@
 <script setup>
 /**
  * The chest of a completed session (design "Coffre", docs/SHOP.md, § 4 bis): three taps open it,
- * the crowns rain out and the wallet counts them up. The crowns were credited when the session
+ * the crystals (the `crowns` of the API) rain out and the wallet counts them up. They were credited when the session
  * completed; the chest is shown once (opened, or closed unopened: seen either way). The first
  * background follows the amount, the last title the tier; "Voir mes résultats" goes back to the
  * run's result. Reduced motion: the chest open at once.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import { useShopStore } from '@/stores/shop'
 import { prefersReducedMotion } from '@/utils/runResult'
 import { crowns, tweenAt } from '@/utils/shop'
@@ -254,8 +254,7 @@ const emit = defineEmits({
 const router = useRouter()
 const shop = useShopStore()
 
-const CHESS = "'Segoe UI Symbol','DejaVu Sans',serif"
-/** [x, y, size] of the coins in the open chest (design). */
+/** [x, y, size] of the crystals in the open chest (design). */
 const PILE = [
   [-84, 22, 24],
   [-62, 14, 30],
@@ -299,7 +298,7 @@ const sparkles = computed(() => {
     left: `${((i * 67 + 23) % 92) + 2}%`,
     top: `${12 + ((i * 101) % 70)}%`,
     fontSize: `${10 + ((i * 7) % 14)}px`,
-    color: level === CHEST_HITS ? '#fff' : '#FFD43B',
+    color: level === CHEST_HITS ? '#fff' : '#C9B8FF',
     animationDuration: `${1.4 + (i % 4) * 0.3}s`,
     animationDelay: `${(i * 0.17) % 1.4}s`
   }))
@@ -315,7 +314,7 @@ function pipStyle(i) {
     background: done
       ? open.value
         ? '#1B1530'
-        : '#FFD43B'
+        : '#C9B8FF'
       : 'rgba(255,255,255,.25)',
     boxShadow: `0 0 0 2px ${open.value ? '#1B1530' : 'rgba(255,255,255,.4)'}`
   }
@@ -366,7 +365,7 @@ function toShop() {
   router.push('/boutique')
 }
 
-/** Coins and confetti thrown from the chest (design canvas). */
+/** Crystals and confetti thrown from the chest (design canvas). */
 function burst() {
   const cv = canvas.value
   if (!cv) return
@@ -399,30 +398,42 @@ function burst() {
       })
     }
   }
+  /** A crystal turning on itself (design "Coffre cristaux"). */
   const coin = (p, sc) => {
-    const w = p.s * Math.abs(sc)
-    const h = p.s
-    ctx.fillStyle = '#C78F00'
-    ctx.beginPath()
-    ctx.ellipse(0, 2, w, h, 0, 0, 7)
+    const w = p.s * 0.85 * Math.abs(sc)
+    const r = p.s
+    const hex = k => {
+      ctx.beginPath()
+      ctx.moveTo(0, -r * k)
+      ctx.lineTo(w * k, -r * 0.5 * k)
+      ctx.lineTo(w * k, r * 0.5 * k)
+      ctx.lineTo(0, r * k)
+      ctx.lineTo(-w * k, r * 0.5 * k)
+      ctx.lineTo(-w * k, -r * 0.5 * k)
+      ctx.closePath()
+    }
+    ctx.fillStyle = '#2E1C80'
+    hex(1.08)
     ctx.fill()
-    const g = ctx.createRadialGradient(-w * 0.3, -h * 0.4, 1, 0, 0, h)
-    g.addColorStop(0, '#FFF6C2')
-    g.addColorStop(0.45, '#FFD43B')
-    g.addColorStop(1, '#E7A900')
+    const g = ctx.createLinearGradient(0, -r, 0, r)
+    g.addColorStop(0, '#EDE5FF')
+    g.addColorStop(0.45, '#A98BFF')
+    g.addColorStop(1, '#6A4CFF')
     ctx.fillStyle = g
+    hex(1)
+    ctx.fill()
+    ctx.fillStyle = 'rgba(46,28,128,.28)'
     ctx.beginPath()
-    ctx.ellipse(0, 0, w, h, 0, 0, 7)
+    ctx.moveTo(0, -r)
+    ctx.lineTo(w, -r * 0.5)
+    ctx.lineTo(w, r * 0.5)
+    ctx.lineTo(0, r)
+    ctx.closePath()
     ctx.fill()
     if (Math.abs(sc) > 0.4) {
-      ctx.fillStyle = '#8A6A00'
-      ctx.font = `${h * 1.1}px ${CHESS}`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.save()
-      ctx.scale(Math.abs(sc), 1)
-      ctx.fillText('♔', 0, 1)
-      ctx.restore()
+      ctx.fillStyle = 'rgba(255,255,255,.35)'
+      hex(0.5)
+      ctx.fill()
     }
   }
   const tick = () => {
@@ -592,7 +603,7 @@ $grain: repeating-linear-gradient(
   padding: 0 14px 0 5px;
   border-radius: 14px;
   background: $ink;
-  color: #ffd43b;
+  color: #c9b8ff;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -727,7 +738,7 @@ $grain: repeating-linear-gradient(
 .chest-reward__label {
   font-size: 13px;
   font-weight: 700;
-  color: #8a6a00;
+  color: #5a3be0;
   margin-top: 3px;
 }
 
@@ -873,8 +884,8 @@ $grain: repeating-linear-gradient(
   height: 40px;
   z-index: 1;
   border-radius: 50%;
-  background: radial-gradient(ellipse, #fff6c2, #ffd43b 60%, #c78f00);
-  box-shadow: 0 0 44px 18px rgba(255, 236, 150, 0.85);
+  background: radial-gradient(ellipse, #f4efff, #b79cff 60%, #6a4cff);
+  box-shadow: 0 0 44px 18px rgba(201, 184, 255, 0.9);
   animation: cf-in 0.3s 0.4s both;
 }
 

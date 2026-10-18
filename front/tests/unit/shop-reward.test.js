@@ -89,7 +89,7 @@ describe('the reward in words', () => {
       rewardNote(reward({ paidMinutes: 1, tier: 'missed', capped: true }))
     ).toBe('1 min payée · Session terminée · plafond du jour atteint')
     expect(rewardLine(reward({ crowns: 1250 }))).toBe(
-      '+1 250 couronnes · 20 min payées · Session parfaite'
+      '+1 250 cristaux · 20 min payées · Session parfaite'
     )
     expect(rewardLine(reward({ crowns: 0, capped: true }))).toMatch(
       /^Plafond du jour atteint/

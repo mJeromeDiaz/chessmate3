@@ -107,9 +107,9 @@ describe('store', () => {
       total: 120,
       label: 'Acheter ·',
       amount: 120,
-      note: 'Il te restera 80 couronnes'
+      note: 'Il te restera 80 cristaux'
     })
-    expect(checkout(60, 1, 61).note).toBe('Il te restera 1 couronne')
+    expect(checkout(60, 1, 61).note).toBe('Il te restera 1 cristal')
     expect(checkout(350, 1, 100)).toMatchObject({
       ok: false,
       label: 'Il te manque',

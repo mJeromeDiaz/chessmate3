@@ -1,14 +1,14 @@
 <template>
-  <span class="crown-price" :class="`crown-price--${variant}`">
-    <CrownCoin :size="coin" />{{ crowns(amount) }}
+  <span class="crystal-price" :class="`crystal-price--${variant}`">
+    <CrystalGem :size="coin" />{{ crowns(amount) }}
   </span>
 </template>
 
 <script setup>
 /**
- * A price in crowns: the coin and the amount, plain, on a pale chip or on a gold one.
+ * A price in crystals: the gem and the amount, plain, on a pale chip or on a gold one.
  */
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import { crowns } from '@/utils/shop'
 
 defineProps({
@@ -20,7 +20,7 @@ defineProps({
 </script>
 
 <style scoped lang="scss">
-.crown-price {
+.crystal-price {
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -34,7 +34,7 @@ defineProps({
     height: 34px;
     padding: 0 10px 0 4px;
     border-radius: 12px;
-    background: #fff5d1;
+    background: #efe9ff;
     color: #1b1530;
     font-size: 14px;
   }

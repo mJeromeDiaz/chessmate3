@@ -1,39 +1,34 @@
 <template>
   <span
-    class="crown-coin"
-    :style="{ width: `${size}px`, height: `${size}px` }"
+    class="crystal-gem"
+    :style="{
+      width: `${size}px`,
+      height: `${size}px`,
+      filter: `drop-shadow(0 ${size * 0.06}px 0 rgba(27,21,48,.3))`
+    }"
     aria-hidden="true"
   >
     <span
-      class="crown-coin__face"
-      :class="{ 'crown-coin__face--spin': spin }"
-      :style="{
-        boxShadow: `inset 0 ${-size * 0.1}px 0 #C78F00, 0 ${size * 0.06}px 0 rgba(27,21,48,.25)`,
-        animationDelay: `${delay}s`
-      }"
+      class="crystal-gem__body"
+      :class="{ 'crystal-gem__body--spin': spin }"
+      :style="{ animationDelay: `${delay}s` }"
     >
+      <span class="crystal-gem__layer crystal-gem__layer--edge" />
       <span
-        class="crown-coin__rim"
-        :style="{
-          inset: `${size * 0.12}px`,
-          borderWidth: `${Math.max(1, size * 0.05)}px`
-        }"
+        class="crystal-gem__layer crystal-gem__layer--face"
+        :style="{ inset: `${Math.max(1, size * 0.05)}px` }"
       />
-      <span
-        class="crown-coin__king"
-        :style="{
-          fontSize: `${size * 0.56}px`,
-          marginTop: `${-size * 0.04}px`
-        }"
-        >♔︎</span
-      >
+      <span class="crystal-gem__layer crystal-gem__layer--shade" />
+      <span class="crystal-gem__layer crystal-gem__layer--table" />
+      <span class="crystal-gem__layer crystal-gem__layer--glint" />
     </span>
   </span>
 </template>
 
 <script setup>
 /**
- * A crown (design "Boutique"): a gold coin with the king, turning on itself when `spin`.
+ * A crystal (design "Boutique cristaux"), the currency's look (stored and served as `crowns`): a
+ * violet hexagonal gem with its facets, turning on itself when `spin`.
  */
 defineProps({
   size: { type: Number, default: 28 },
@@ -44,53 +39,62 @@ defineProps({
 </script>
 
 <style scoped lang="scss">
-.crown-coin {
+$hex: polygon(50% 0, 92% 24%, 92% 76%, 50% 100%, 8% 76%, 8% 24%);
+
+.crystal-gem {
   flex: none;
   display: inline-flex;
   perspective: 200px;
 }
 
-.crown-coin__face {
+.crystal-gem__body {
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(
-    circle at 34% 28%,
-    #fff6c2 0,
-    #ffd43b 42%,
-    #e7a900 100%
-  );
 
   &--spin {
-    animation: crown-spin 3.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+    animation: crystal-spin 3.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
   }
 }
 
-.crown-coin__rim {
+.crystal-gem__layer {
   position: absolute;
-  border-radius: 50%;
-  border-style: solid;
-  border-color: rgba(138, 106, 0, 0.45);
+  inset: 0;
+
+  &--edge {
+    clip-path: $hex;
+    background: #2e1c80;
+  }
+
+  &--face {
+    clip-path: $hex;
+    background: linear-gradient(180deg, #ede5ff 0, #a98bff 45%, #6a4cff 100%);
+  }
+
+  &--shade {
+    clip-path: polygon(50% 0, 92% 24%, 92% 76%, 50% 100%);
+    background: rgba(46, 28, 128, 0.28);
+  }
+
+  &--table {
+    clip-path: polygon(50% 20%, 72% 33%, 72% 67%, 50% 80%, 28% 67%, 28% 33%);
+    background: rgba(255, 255, 255, 0.32);
+  }
+
+  &--glint {
+    clip-path: polygon(50% 0, 50% 20%, 28% 33%, 8% 24%);
+    background: rgba(255, 255, 255, 0.45);
+  }
 }
 
-.crown-coin__king {
-  position: relative;
-  line-height: 1;
-  color: #8a6a00;
-}
-
-@keyframes crown-spin {
+@keyframes crystal-spin {
   to {
     transform: rotateY(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .crown-coin__face--spin {
+  .crystal-gem__body--spin {
     animation: none;
   }
 }

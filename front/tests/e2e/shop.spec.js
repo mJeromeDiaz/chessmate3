@@ -90,13 +90,13 @@ test('store: an admin grants crowns, the player buys a freeze', async ({
 
   await page.goto('/#/boutique')
   const balance = page.getByTestId('shop-balance')
-  await expect(balance).toHaveAttribute('aria-label', '250 couronnes')
+  await expect(balance).toHaveAttribute('aria-label', '250 cristaux')
   await page.getByTestId('shop-offer-freeze_1').click()
   const sheet = page.getByTestId('shop-sheet')
   await expect(sheet).toContainText('Gel 1 jour')
   await sheet.getByTestId('shop-buy').click()
   await expect(page.getByTestId('shop-celebration')).toBeVisible()
-  await expect(balance).toHaveAttribute('aria-label', '190 couronnes')
+  await expect(balance).toHaveAttribute('aria-label', '190 cristaux')
   await expect(
     page.getByTestId('shop-offer-freeze_1').getByTestId('shop-stock')
   ).toHaveText('×1')
@@ -264,7 +264,7 @@ test('a completed session opens a chest of crowns, then the results and the stor
   // The session's recap says it, without the chest again.
   await page.getByTestId('session-open').click()
   await expect(page.getByTestId('session-reward')).toContainText(
-    `+${reward.crowns} couronnes`
+    `+${reward.crowns} cristaux`
   )
   await expect(page.getByTestId('treasure-chest')).toHaveCount(0)
 
@@ -274,7 +274,7 @@ test('a completed session opens a chest of crowns, then the results and the stor
     String(reward.crowns)
   )
   await expect(page.getByTestId('shop-earn')).toContainText(
-    'Gagner des couronnes'
+    'Gagner des cristaux'
   )
 })
 
@@ -317,7 +317,7 @@ test('a chest missed at the end of the run waits on the dashboard', async ({
     await chest.getByTestId('chest-hit').click({ force: true })
   await chest.getByTestId('chest-results').click()
   await expect(page).toHaveURL(/#\/session\/[^/]+$/)
-  await expect(page.getByTestId('session-reward')).toContainText('couronnes')
+  await expect(page.getByTestId('session-reward')).toContainText('cristaux')
 
   // Seen: not again.
   await page.goto('/#/')

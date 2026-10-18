@@ -13,7 +13,7 @@
           data-testid="shop-balance"
           :aria-label="$t('shop.page.balance', { n: shown })"
         >
-          <CrownCoin :size="32" spin />{{ crowns(shown) }}
+          <CrystalGem :size="32" spin />{{ crowns(shown) }}
         </div>
       </header>
 
@@ -150,7 +150,7 @@
             <li v-for="row in earningRows(state.earning)" :key="row.label">
               <span>{{ row.label }}</span>
               <span class="shop__earn-value"
-                ><CrownCoin :size="18" />{{
+                ><CrystalGem :size="18" />{{
                   $t('shop.page.perHour', { n: crowns(row.value) })
                 }}</span
               >
@@ -212,7 +212,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import CosmeticCard from '@/components/shop/CosmeticCard.vue'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
 import OfferTile from '@/components/shop/OfferTile.vue'
 import PackCard from '@/components/shop/PackCard.vue'
 import PurchaseCelebration from '@/components/shop/PurchaseCelebration.vue'
@@ -426,7 +426,7 @@ onBeforeUnmount(() => {
   padding: 0 14px 0 6px;
   border-radius: 16px;
   background: #1b1530;
-  color: #ffd43b;
+  color: #c9b8ff;
   display: flex;
   align-items: center;
   gap: 8px;

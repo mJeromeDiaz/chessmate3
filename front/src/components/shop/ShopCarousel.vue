@@ -19,7 +19,7 @@
           animationDuration: `${drop.d}s`,
           animationDelay: `${drop.dl}s`
         }"
-        ><CrownCoin :size="drop.s" spin :delay="i * 0.3"
+        ><CrystalGem :size="drop.s" spin :delay="i * 0.3"
       /></span>
     </div>
     <div
@@ -57,7 +57,7 @@
           <span v-if="slide.offer.wasPrice" class="carousel__was">{{
             crowns(slide.offer.wasPrice)
           }}</span>
-          <CrownPrice :amount="slide.offer.price" variant="gold" :coin="24" />
+          <CrystalPrice :amount="slide.offer.price" variant="gold" :coin="24" />
         </span>
       </button>
     </div>
@@ -81,8 +81,8 @@
  * every 4 s (paused on hover or while `paused`), by swipe or dots.
  */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import CrownCoin from '@/components/shop/CrownCoin.vue'
-import CrownPrice from '@/components/shop/CrownPrice.vue'
+import CrystalGem from '@/components/shop/CrystalGem.vue'
+import CrystalPrice from '@/components/shop/CrystalPrice.vue'
 import { crowns, savingOf } from '@/utils/shop'
 
 const props = defineProps({

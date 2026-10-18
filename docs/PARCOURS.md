@@ -18,7 +18,7 @@ Choix validés (2026-10-17) :
 - **Erreur** : la solution s'affiche, le palier continue ; l'aide ou la solution comptent comme une
   erreur.
 - **Récompenses** : l'XP des exercices, plus un bonus d'arrivée +25 / +50 / +100 ; le coffre de
-  couronnes comme une séance de 15 / 30 / 50 min (60 s par exercice, quelle que soit la vitesse).
+  cristaux comme une séance de 15 / 30 / 50 min (60 s par exercice, quelle que soit la vitesse).
   Abandonné ou expiré : l'XP des exercices seulement. Compte pour la série du jour.
 - **Reprise** jusqu'à minuit (heure locale) ; un seul parcours (une seule session) à la fois.
 - Pas dans la v1 : un parcours comme étape d'une session composée à la main.
@@ -127,7 +127,7 @@ et **n'est pas reproposée** ; la séance se clôt à sa dernière ligne (`subje
 `context.reason: limit_reached`). Ses éléments portent `played` (lignes jouées avant celle-ci) et
 `limit`.
 
-## 5. XP, couronnes, série
+## 5. XP, cristaux, série
 
 - **Exercice** : chaque puzzle est un `ExerciseCompleted` `parcours_puzzle` (source
   `parcours_attempt`, `metadata` : `status`, `puzzleId`, `rating`, `targetRating`, `position`,

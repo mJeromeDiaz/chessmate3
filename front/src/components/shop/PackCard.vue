@@ -28,7 +28,7 @@
       <span v-if="offer.wasPrice" class="pack-card__was">{{
         crowns(offer.wasPrice)
       }}</span>
-      <CrownPrice :amount="offer.price" variant="gold" :coin="24" />
+      <CrystalPrice :amount="offer.price" variant="gold" :coin="24" />
     </span>
   </button>
 </template>
@@ -40,7 +40,7 @@
  */
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
-import CrownPrice from '@/components/shop/CrownPrice.vue'
+import CrystalPrice from '@/components/shop/CrystalPrice.vue'
 import { crowns, lookOf, partsOf, savingOf } from '@/utils/shop'
 
 const props = defineProps({

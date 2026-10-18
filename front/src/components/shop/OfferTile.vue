@@ -19,7 +19,7 @@
         <span class="offer-tile__sub">{{ offer.subtitle }}</span>
       </span>
       <span class="offer-tile__foot">
-        <CrownPrice :amount="offer.price" />
+        <CrystalPrice :amount="offer.price" />
         <span
           v-if="stock"
           class="offer-tile__stock"
@@ -43,7 +43,7 @@
         >
         <span class="offer-tile__desc">{{ offer.description }}</span>
       </span>
-      <CrownPrice :amount="offer.price" variant="chip" />
+      <CrystalPrice :amount="offer.price" variant="chip" />
     </template>
   </button>
 </template>
@@ -54,7 +54,7 @@
  * module aids), its price and how many the player holds.
  */
 import { computed } from 'vue'
-import CrownPrice from '@/components/shop/CrownPrice.vue'
+import CrystalPrice from '@/components/shop/CrystalPrice.vue'
 import { lookOf, savingOf } from '@/utils/shop'
 
 const props = defineProps({
