@@ -337,6 +337,10 @@ Le front n'appelle jamais Lichess et ne voit jamais de jeton. Tout passe par `Li
 | Évaluation du nuage | `lichess.org/api/cloud-eval` | aucun | 7 j (trouvée), 1 j (absente) |
 | Étude, chapitre | `lichess.org/api/study/{id}[/{chapitre}].pgn` | celui de l'utilisateur **seulement** s'il a accordé `study:read`, jamais le jeton applicatif | aucun |
 
+- **Roque** (2026-10-18) : Lichess écrit le roque roi sur sa tour (`e1h1`, `e8a8`) ; le proxy le rend
+  en UCI standard (`e1g1`, `e8c8`, `Repertoire\Lichess\Castling`) : coups de l'explorateur (d'après
+  leur SAN `O-O`) et lignes de l'évaluation (un coup illégal est retenté sous cette forme). Les clés
+  du cache de l'explorateur sont préfixées `explorer2.` : les réponses d'avant ne sont plus lues.
 - Pool `repertoire.explorer_cache` (table `repertoire_explorer_cache`) : les lignes expirées sont
   purgées par `bin/console cache:pool:prune` (**cron quotidien** en production).
 - Réponses : 422 (position ou filtre invalide), **503** avec `Retry-After` et l'en-tête
@@ -693,6 +697,9 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
   - Une unité s'ouvre sur sa position de départ (contexte listé en gris, jamais demandé) ; la
     déviation est jouée 600 ms plus tard et signalée ; chaque question joue d'abord les coups
     adverses (250 ms chacun).
+  - **Pré-coup** (2026-10-18, [PUZZLES.md § 6](PUZZLES.md)) : permis pendant la vérification de la
+    réponse et les coups adverses (`premoveColor`), joué dès que l'échiquier redevient jouable ; une
+    réponse fausse reprise l'efface. Son `thinkMs`, presque nul, compte tel quel.
   - Le temps de réflexion (`thinkMs`) court à partir du moment où l'échiquier est jouable,
     animations et « Revoir les coups » exclus.
   - Coup faux : l'échiquier tremble, le coup est repris, une flèche montre le coup préparé (avec

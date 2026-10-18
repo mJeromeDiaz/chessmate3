@@ -252,6 +252,36 @@ final class LichessProxyTest extends RepertoireWebTestCase
         self::assertNull($this->calls[0]['authorization']);
     }
 
+    public function testCastlingWrittenKingToRookByLichessIsGivenInStandardUci(): void
+    {
+        $fen = 'r3k2r/pppqbppp/2npbn2/4p3/4P3/2NPBN2/PPPQBPPP/R3K2R w KQkq -';
+        $alice = $this->createUser('alice@example.com');
+        $this->responses[] = new JsonMockResponse([
+            'white' => 3,
+            'draws' => 0,
+            'black' => 0,
+            'moves' => [
+                ['uci' => 'e1h1', 'san' => 'O-O', 'white' => 2, 'draws' => 0, 'black' => 0],
+                ['uci' => 'e1a1', 'san' => 'O-O-O', 'white' => 1, 'draws' => 0, 'black' => 0],
+            ],
+        ]);
+        $this->responses[] = new JsonMockResponse(['fen' => $fen.' 0 1', 'depth' => 30, 'knodes' => 1, 'pvs' => [['moves' => 'e1h1 e8a8 h2h3', 'cp' => 10]]]);
+
+        $explorer = $this->api('GET', '/api/repertoires/explorer/masters?fen='.rawurlencode($fen.' 0 1'), $alice);
+        self::assertSame(200, $explorer->getStatusCode(), (string) $explorer->getContent());
+        self::assertSame([
+            ['uci' => 'e1g1', 'san' => 'O-O', 'white' => 2, 'draws' => 0, 'black' => 0, 'total' => 2, 'averageRating' => null],
+            ['uci' => 'e1c1', 'san' => 'O-O-O', 'white' => 1, 'draws' => 0, 'black' => 0, 'total' => 1, 'averageRating' => null],
+        ], $this->json($explorer)['moves']);
+
+        $cloud = $this->api('GET', '/api/repertoires/cloud-eval?fen='.rawurlencode($fen), $alice);
+        self::assertSame(200, $cloud->getStatusCode(), (string) $cloud->getContent());
+        self::assertSame(
+            [['cp' => 10, 'mate' => null, 'moves' => ['e1g1', 'e8c8', 'h2h3'], 'san' => ['O-O', 'O-O-O', 'h3']]],
+            $this->json($cloud)['lines'],
+        );
+    }
+
     public function testCloudEvalOfAnUnknownPositionIsNotAnError(): void
     {
         $alice = $this->createUser('alice@example.com');

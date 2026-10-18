@@ -61,6 +61,19 @@ describe('usePuzzle', () => {
     expect(puzzle.movableColor.value).toBeNull()
   })
 
+  it('lets the player premove while the opponent moves, never during the solution', async () => {
+    const { puzzle } = await started(MATE_IN_2)
+    expect(puzzle.premoveColor.value).toBeNull()
+
+    puzzle.play('e1e7')
+    expect(puzzle.premoveColor.value).toBe('white')
+    await vi.advanceTimersByTimeAsync(DELAYS.reply)
+    expect(puzzle.premoveColor.value).toBeNull()
+
+    puzzle.showSolution()
+    expect(puzzle.premoveColor.value).toBeNull()
+  })
+
   it('runs a full solution: player move, automatic reply, final move', async () => {
     const { puzzle, onResolve, onComplete } = await started(MATE_IN_2)
 

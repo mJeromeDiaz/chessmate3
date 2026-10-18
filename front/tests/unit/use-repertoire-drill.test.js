@@ -112,6 +112,19 @@ describe('useRepertoireDrill', () => {
     expect(d.phase.value).toBe('submitting')
   })
 
+  it('lets the user premove while the answer is checked and the reply comes', async () => {
+    const { d } = drill()
+    await d.present(FIRST)
+    expect(d.premoveColor.value).toBeNull()
+
+    d.attempt('g1f3')
+    expect(d.premoveColor.value).toBe('white')
+    d.resolve(answered())
+    expect([d.phase.value, d.premoveColor.value]).toEqual(['showing', 'white'])
+    await d.present(SECOND)
+    expect(d.premoveColor.value).toBeNull()
+  })
+
   it('goes on after a right move, playing the reply before the next question', async () => {
     const { d } = drill()
     await d.present(FIRST)

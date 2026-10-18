@@ -11,7 +11,12 @@
     }"
   >
     <div class="chess-board__frame">
-      <div ref="container" class="chess-board__surface" />
+      <div
+        ref="container"
+        class="chess-board__surface"
+        @pointerdown.left="onPress"
+        @mousedown.right="cancelPremove"
+      />
       <span
         v-for="glyph in placedGlyphs"
         :key="glyph.square"
@@ -43,6 +48,11 @@
  * Display and interaction only: it knows the rules (chess.js) to offer legal moves and the
  * promotion dialog, but nothing about puzzles. The parent owns the position (`fen` prop) and
  * decides what a move means; see docs/PUZZLES.md, "Front components", for the full API.
+ *
+ * As on Lichess, the user draws their own arrows and circles with the right button (green; red
+ * with Shift, blue with Alt, orange with both), erased by a left click or the next position.
+ * With `premoveColor`, that side may premove while it cannot move: the move is kept and played as
+ * soon as it may, if legal then (docs/PUZZLES.md, "Pré-coup").
  */
 import {
   computed,
@@ -61,6 +71,7 @@ import {
 } from 'cm-chessboard/src/Chessboard.js'
 import { Markers } from 'cm-chessboard/src/extensions/markers/Markers.js'
 import { Arrows } from 'cm-chessboard/src/extensions/arrows/Arrows.js'
+import { RightClickAnnotator } from 'cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js'
 import {
   PROMOTION_DIALOG_RESULT_TYPE,
   PromotionDialog
@@ -71,6 +82,7 @@ import 'cm-chessboard/assets/extensions/arrows/arrows.css'
 import 'cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css'
 import { useBoardPreferences } from '@/composables/chess/useBoardPreferences'
 import { moveKind, playMoveSound } from '@/utils/chess/moveSounds'
+import { premoveTargets, premoveToMove } from '@/utils/chess/premove'
 
 /**
  * @typedef {'white'|'black'} Color
@@ -86,7 +98,8 @@ const MARKERS = {
   hint: { class: 'cb-marker-hint', slice: 'markerCircle' },
   error: { class: 'cb-marker-error', slice: 'markerSquare' },
   success: { class: 'cb-marker-success', slice: 'markerSquare' },
-  selected: { class: 'cb-marker-selected', slice: 'markerSquare' }
+  selected: { class: 'cb-marker-selected', slice: 'markerSquare' },
+  premove: { class: 'cb-marker-premove', slice: 'markerSquare' }
 }
 const ARROWS = {
   hint: { class: 'arrow-info' },
@@ -125,7 +138,9 @@ const props = defineProps({
   /** Show the files and ranks on the edge (read once, when the board is created). */
   coordinates: { type: Boolean, default: true },
   /** Every square is clickable and emits `square` (the coordinates series, docs/COORDINATES.md; blindfold puzzles, docs/BLINDFOLD.md). */
-  squareInput: { type: Boolean, default: false }
+  squareInput: { type: Boolean, default: false },
+  /** Side that may premove while `movableColor` does not let it move ('white', 'black'), or null. */
+  premoveColor: { type: String, default: null }
 })
 
 const emit = defineEmits({
@@ -146,6 +161,10 @@ const currentFen = ref(props.fen)
 let rules = rulesOf(props.fen)
 /** Number of setPosition calls, so that only the latest one sets data-fen. */
 let positionCalls = 0
+/** Positions still animating: a premove waits for them. */
+let animating = 0
+/** @type {import('vue').Ref<{from: string, to: string}|null>} The premove waiting to be played. */
+const premove = ref(null)
 
 /**
  * The rules of a position. An empty board (the coordinates series) has no king, which chess.js
@@ -210,6 +229,7 @@ onMounted(() => {
     extensions: [
       { class: Markers, props: { autoMarkers: MARKERS.selected } },
       { class: Arrows },
+      { class: RightClickAnnotator },
       { class: PromotionDialog }
     ]
   })
@@ -232,7 +252,14 @@ watch(
   () => props.orientation,
   value => board.value?.setOrientation(toBoardColor(value), false)
 )
-watch(() => props.movableColor, updateInput)
+watch(
+  () => [props.movableColor, props.premoveColor],
+  () => {
+    if (!props.premoveColor) cancelPremove()
+    updateInput()
+    playPremove()
+  }
+)
 watch(() => [props.highlights, props.arrows], renderDecorations, { deep: true })
 
 /**
@@ -243,19 +270,33 @@ watch(() => [props.highlights, props.arrows], renderDecorations, { deep: true })
  * @returns {Promise<void>}
  */
 async function setPosition(fen, animated = true) {
-  // A position one legal move away from the shown one sounds like that move.
-  if (soundOn.value) {
-    const kind = moveKind(rules.fen(), fen)
-    if (kind) playMoveSound(kind)
+  // A position one legal move away from the shown one sounds like that move; any other change
+  // (a new puzzle, a takeback) drops the premove.
+  const kind = moveKind(rules.fen(), fen)
+  if (kind && soundOn.value) playMoveSound(kind)
+  if (fen !== rules.fen()) {
+    clearAnnotations()
+    if (!kind) cancelPremove()
   }
   rules = rulesOf(fen)
   const call = ++positionCalls
   if (board.value) {
-    await board.value.setPosition(fen, animated && props.animationDuration > 0)
+    animating++
+    try {
+      await board.value.setPosition(
+        fen,
+        animated && props.animationDuration > 0
+      )
+    } finally {
+      animating--
+    }
   }
   // Exposed as data-fen once the animation is over: the position the user can act on. Calls may
   // overlap (a move taken back, then the next unit) and end out of order: the last one wins.
-  if (call === positionCalls) currentFen.value = fen
+  if (call === positionCalls) {
+    currentFen.value = fen
+    playPremove()
+  }
 }
 
 /**
@@ -277,15 +318,22 @@ function renderDecorations() {
   const b = board.value
   if (!b) return
   for (const type of Object.values(MARKERS)) {
-    if (type !== MARKERS.selected) b.removeMarkers(type)
+    if (type !== MARKERS.selected && type !== MARKERS.premove)
+      b.removeMarkers(type)
   }
   for (const { square, type } of props.highlights) {
     if (MARKERS[type]) b.addMarker(MARKERS[type], square)
   }
-  b.removeArrows()
+  // Ours only: the user's own arrows (RightClickAnnotator) have their own types.
+  for (const type of Object.values(ARROWS)) b.removeArrows(type)
   for (const { from, to, type = 'hint' } of props.arrows) {
     b.addArrow(ARROWS[type] ?? ARROWS.hint, from, to)
   }
+}
+
+/** Erases the arrows and circles drawn by the user. */
+function clearAnnotations() {
+  board.value?.setAnnotations?.({})
 }
 
 function updateInput() {
@@ -297,7 +345,71 @@ function updateInput() {
     b.enableMoveInput(onInput)
   } else if (props.movableColor) {
     b.enableMoveInput(onInput, toBoardColor(props.movableColor))
+  } else if (props.premoveColor) {
+    b.enableMoveInput(onPremoveInput, toBoardColor(props.premoveColor))
   }
+}
+
+/** A left press on the board: the user's drawings and the premove go. */
+function onPress() {
+  clearAnnotations()
+  cancelPremove()
+}
+
+/** @param {{from: string, to: string}|null} value */
+function showPremove(value) {
+  premove.value = value
+  const b = board.value
+  if (!b) return
+  b.removeMarkers(MARKERS.premove)
+  if (value) {
+    b.addMarker(MARKERS.premove, value.from)
+    b.addMarker(MARKERS.premove, value.to)
+  }
+}
+
+function cancelPremove() {
+  if (premove.value) showPremove(null)
+}
+
+/**
+ * cm-chessboard input handler while the user cannot move: keeps a premove (the piece goes back
+ * to its square, its two squares marked).
+ *
+ * @param {any} event
+ * @returns {boolean|undefined}
+ */
+function onPremoveInput(event) {
+  switch (event.type) {
+    case INPUT_EVENT_TYPE.moveInputStarted:
+      return premoveTargets(rules.fen(), event.squareFrom).length > 0
+    case INPUT_EVENT_TYPE.validateMoveInput:
+      if (
+        premoveTargets(rules.fen(), event.squareFrom).includes(event.squareTo)
+      ) {
+        showPremove({ from: event.squareFrom, to: event.squareTo })
+      }
+      return false
+    default:
+      return undefined
+  }
+}
+
+/**
+ * Plays the premove once the user may move and no animation is running; dropped when it is not
+ * legal in the position reached.
+ */
+async function playPremove() {
+  const waiting = premove.value
+  const color = props.movableColor
+  if (!waiting || !color || color === 'both' || animating > 0) return
+  if (rules.turn() !== color.charAt(0)) return
+  showPremove(null)
+  const move = premoveToMove(rules, waiting)
+  if (!move) return
+  // Shown at once, as a move dropped by hand; the parent answers by changing `fen`.
+  await board.value?.movePiece(move.from, move.to, true)
+  commit({ from: move.from, to: move.to, promotion: move.promotion })
 }
 
 /**
@@ -472,6 +584,10 @@ defineExpose({ setPosition, shake })
 }
 .cm-chessboard .markers .marker.cb-marker-last-move {
   fill: #9bc700;
+  opacity: 0.35;
+}
+.cm-chessboard .markers .marker.cb-marker-premove {
+  fill: #8e24aa;
   opacity: 0.35;
 }
 .cm-chessboard .markers .marker.cb-marker-selected {

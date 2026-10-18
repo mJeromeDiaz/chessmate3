@@ -253,6 +253,7 @@ légaux et la promotion, mais rien des puzzles. **Le parent possède la position
 | `arrows` | `{from, to, type?}[]` | `[]` | Flèches ; `type` : `hint` (bleu), `solution` (vert). |
 | `animationDuration` | `number` | `250` | Durée des animations en ms (0 : aucune). |
 | `showLegalMoves` | `boolean` | `true` | Points sur les destinations légales de la pièce prise. |
+| `premoveColor` | `'white'\|'black'\|null` | `null` | Camp qui peut faire un **pré-coup** quand `movableColor` ne le laisse pas jouer. |
 
 | Événement | Charge | Quand |
 |---|---|---|
@@ -262,6 +263,25 @@ légaux et la promotion, mais rien des puzzles. **Le parent possède la position
 |---|---|
 | `setPosition(fen, animated = true): Promise` | Force une position (retour arrière après un coup refusé). |
 | `shake(): Promise` | Secousse d'erreur (0,4 s). |
+
+**Flèches et cercles de l'utilisateur** (2026-10-18, comme Lichess ; extension `RightClickAnnotator`
+de cm-chessboard) : clic droit glissé = flèche, clic droit sur place = cercle, depuis n'importe quelle
+case ; vert, rouge avec Maj (ou Ctrl), bleu avec Alt, orange avec Maj + Alt ; la même flèche redessinée
+s'efface. Tout s'efface au clic gauche et à chaque nouvelle position. Souris seulement. Les flèches et
+cases de la prop `arrows`/`highlights` ont leurs propres types : elles n'effacent jamais celles de
+l'utilisateur.
+
+**Pré-coup** (2026-10-18, comme Lichess ; `utils/chess/premove.js`) : avec `premoveColor`, pendant
+le coup adverse, l'utilisateur glisse (ou clique-clique) une de ses pièces vers une case qu'elle
+atteindrait sur un échiquier vide (obstacles ignorés, diagonales du pion, roque depuis la case du
+roi). La pièce revient à sa place, ses deux cases restent marquées (violet). Dès que `movableColor`
+lui rend la main et que l'animation est finie, le coup part comme un coup joué à la main (`move`),
+**s'il est légal** dans la position atteinte (promotion en dame), sinon il est oublié. Un clic gauche
+ou droit sur l'échiquier l'annule, un nouveau pré-coup le remplace, et toute position qui n'est pas à
+un coup de la précédente (nouveau puzzle, coup repris) l'efface. Branché sur `PuzzlePlayer` (puzzles
+notés, Woodpecker, streak, parcours : pendant la réponse adverse, jamais pendant la solution) et sur
+le test de répertoire (pendant la vérification de la réponse et les coups adverses). Un pré-coup
+faux compte comme un coup faux ; son temps de réflexion, presque nul, est compté tel quel.
 
 Responsive (largeur disponible, max `min(92vw, 70vh, 560px)`, ou la variable CSS `--board-max`
 posée par un écran de jeu, voir l'écran de jeu ci-dessous), thème clair/sombre suivi par Quasar
@@ -275,7 +295,8 @@ Préférences du profil (`composables/chess/useBoardPreferences.js`, lues dans `
   les visiteurs). Un changement sur le profil s'applique aussitôt à tous les échiquiers.
 - **Sons des coups** : quand la nouvelle position est à **un coup légal** de celle affichée
   (`utils/chess/moveSounds.js`, `moveKind`), l'échiquier joue `public/media/son/Move.mp3` ou
-  `Capture.mp3` (un échec joue `Move.mp3` : pas de son dédié). Un saut (nouveau puzzle, navigation
+  `Capture.mp3` (un échec joue `Move.mp3` : pas de son dédié ; une prise avec échec, `Dxd1+`, sonne
+  comme une prise, 2026-10-18). Un saut (nouveau puzzle, navigation
   dans l'arbre, retour arrière) reste muet. Jamais de son pour un visiteur.
 - **Son de fin de puzzle** (`PuzzlePlayer`, donc puzzles notés, Woodpecker et séances) : à la
   position finale, `puzzleIsDone.mp3` si le puzzle est réussi, `puzzleIsMissed.mp3` sinon (erreur,

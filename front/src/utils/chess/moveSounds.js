@@ -29,9 +29,10 @@ export function moveKind(before, after) {
     m => m.after.split(' ').slice(0, 2).join(' ') === target
   )
   if (!move) return null
-  if (move.san.includes('+') || move.san.includes('#')) return 'check'
+  // A capture that checks sounds like a capture (1…Qxd1+).
+  if (move.captured) return 'capture'
 
-  return move.captured ? 'capture' : 'move'
+  return move.san.includes('+') || move.san.includes('#') ? 'check' : 'move'
 }
 
 /** One preloaded element per file, replayed from the start for each move. */

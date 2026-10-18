@@ -49,7 +49,8 @@ final readonly class ExplorerQuery
     /** Cache key: same position and filters, same answer, whoever asks. */
     public function cacheKey(): string
     {
-        return 'explorer.'.$this->source.'.'.hash('xxh128', implode('|', [$this->fen, implode(',', $this->speeds), implode(',', $this->ratings)]));
+        // v2: castling in its standard UCI (Castling), older answers no longer read.
+        return 'explorer2.'.$this->source.'.'.hash('xxh128', implode('|', [$this->fen, implode(',', $this->speeds), implode(',', $this->ratings)]));
     }
 
     /**

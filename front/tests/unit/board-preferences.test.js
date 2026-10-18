@@ -50,6 +50,12 @@ describe('moveKind', () => {
     expect(moveKind(beforeCheck, after(['Qh5+'], beforeCheck))).toBe('check')
   })
 
+  it('sounds a capture that gives check as a capture', () => {
+    const line = ['d4', 'Nf6', 'Nc3', 'g6', 'Bf4', 'Bg7', 'e4', 'd6', 'e5']
+    const before = after([...line, 'dxe5', 'dxe5'])
+    expect(moveKind(before, after(['Qxd1+'], before))).toBe('capture')
+  })
+
   it('stays silent when the new position is not one move away', () => {
     expect(moveKind(START, START)).toBeNull()
     expect(moveKind(START, after(['e4', 'e5']))).toBeNull()

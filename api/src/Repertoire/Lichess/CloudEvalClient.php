@@ -88,17 +88,23 @@ final class CloudEvalClient
             $moves = array_values(array_filter(explode(' ', $pv['moves'])));
             $rules = Rules::fromFen($fen);
             $san = [];
-            foreach (\array_slice($moves, 0, self::SAN_PLIES) as $uci) {
+            foreach (\array_slice($moves, 0, self::SAN_PLIES) as $i => $uci) {
+                // A castling written king-to-rook (Castling) is tried in its standard form.
                 $move = $rules->playUci($uci);
+                if (null === $move) {
+                    $uci = Castling::standard($uci, true);
+                    $move = $rules->playUci($uci);
+                }
                 if (null === $move) {
                     break;
                 }
+                $moves[$i] = $uci;
                 $san[] = (string) $move->san;
             }
             $lines[] = [
                 'cp' => isset($pv['cp']) && is_numeric($pv['cp']) ? (int) $pv['cp'] : null,
                 'mate' => isset($pv['mate']) && is_numeric($pv['mate']) ? (int) $pv['mate'] : null,
-                'moves' => $moves,
+                'moves' => array_values($moves),
                 'san' => $san,
             ];
         }

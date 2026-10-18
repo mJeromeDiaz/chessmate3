@@ -67,6 +67,12 @@ export function usePuzzle(options = {}) {
   const movableColor = computed(() =>
     phase.value === 'playing' ? orientation.value : null
   )
+  /** While the opponent's move comes, the player may premove (not during the solution). */
+  const premoveColor = computed(() =>
+    phase.value === 'intro' && !solutionShown.value && !passed.value
+      ? orientation.value
+      : null
+  )
   const expectedMove = computed(() => puzzle.value?.moves[cursor.value] ?? null)
 
   /** Squares to colour on the board. */
@@ -289,6 +295,7 @@ export function usePuzzle(options = {}) {
     lastMove,
     orientation,
     movableColor,
+    premoveColor,
     highlights,
     arrows,
     failed,

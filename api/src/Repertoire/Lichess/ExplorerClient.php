@@ -91,7 +91,8 @@ final class ExplorerClient
             $draws = self::int($move['draws'] ?? 0);
             $black = self::int($move['black'] ?? 0);
             $moves[] = [
-                'uci' => $move['uci'],
+                // Castling in its standard form (Lichess writes the king onto its rook).
+                'uci' => Castling::standard($move['uci'], str_starts_with($move['san'], 'O-O')),
                 'san' => $move['san'],
                 'white' => $white,
                 'draws' => $draws,

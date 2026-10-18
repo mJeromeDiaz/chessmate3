@@ -101,6 +101,15 @@ export function useRepertoireDrill(options = {}) {
       ? orientation.value
       : null
   )
+  /**
+   * While the answer is checked and the opponent's moves come, the user may premove; a wrong
+   * answer taken back drops it (the board's premove survives one-move steps only).
+   */
+  const premoveColor = computed(() =>
+    phase.value === 'showing' || phase.value === 'submitting'
+      ? orientation.value
+      : null
+  )
 
   /**
    * Plays a move on the board.
@@ -361,6 +370,7 @@ export function useRepertoireDrill(options = {}) {
     highlights,
     arrows,
     movableColor,
+    premoveColor,
     present,
     attempt,
     resolve,

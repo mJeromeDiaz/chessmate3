@@ -41,6 +41,7 @@
         :fen="drill.fen.value"
         :orientation="drill.orientation.value"
         :movable-color="drill.movableColor.value"
+        :premove-color="drill.premoveColor.value"
         :highlights="drill.highlights.value"
         :arrows="drill.arrows.value"
         @move="onMove"

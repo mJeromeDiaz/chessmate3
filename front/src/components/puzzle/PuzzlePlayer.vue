@@ -32,6 +32,7 @@
         :fen="game.fen.value"
         :orientation="game.orientation.value"
         :movable-color="game.movableColor.value"
+        :premove-color="game.premoveColor.value"
         :highlights="game.highlights.value"
         :arrows="game.arrows.value"
         @move="onMove"
