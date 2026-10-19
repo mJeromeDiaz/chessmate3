@@ -8,6 +8,7 @@ describe('NAV_LINKS', () => {
     expect(NAV_LINKS.map(l => l.label)).toEqual([
       'Accueil',
       'Sessions',
+      'Cerveau',
       'Parcours',
       'Puzzles',
       'Woodpecker',
@@ -20,6 +21,7 @@ describe('NAV_LINKS', () => {
     ])
     expect(NAV_LINKS.filter(l => l.header).map(l => l.to)).toEqual([
       '/session',
+      '/cerveau',
       '/parcours',
       '/puzzle',
       '/woodpecker',

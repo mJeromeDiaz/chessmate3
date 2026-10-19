@@ -33,6 +33,14 @@ export const NAV_LINKS = [
     header: true
   },
   {
+    to: '/cerveau',
+    get label() {
+      return t('layout.nav.mindMap')
+    },
+    icon: 'lightbulb',
+    header: true
+  },
+  {
     to: '/parcours',
     get label() {
       return t('layout.nav.parcours')

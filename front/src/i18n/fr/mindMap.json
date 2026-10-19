@@ -1,0 +1,99 @@
+{
+  "page": {
+    "kicker": "Tes capacités",
+    "title": "Carte mentale",
+    "hint": "Choisis une zone du cerveau pour découvrir la capacité qu’elle entraîne.",
+    "selected": "{name} : ouverte sur le côté.",
+    "brainLabel": "Les six zones du cerveau"
+  },
+  "panel": {
+    "kicker": "Capacité {n}",
+    "modules": "Modules mobilisés",
+    "why": "Pourquoi ces modules ?",
+    "hideWhy": "Masquer",
+    "primary": "principal",
+    "associated": "associé",
+    "soonTitle": "Les chapitres arrivent bientôt",
+    "soonText": "Des exercices de plus en plus exigeants, jusqu’à un boss de fin de chapitre. En attendant, entraîne cette capacité avec ses modules.",
+    "train": "S’entraîner librement",
+    "compose": "Composer une séance"
+  },
+  "capacities": {
+    "calculation": {
+      "name": "La profondeur de calcul",
+      "short": "Mémoire de travail : garder plusieurs positions en tête.",
+      "desc": "Calculer une variante, c’est garder en tête plusieurs positions à la fois. C’est souvent ce qui sépare un joueur qui « voit » un coup d’un joueur qui le vérifie vraiment."
+    },
+    "visualization": {
+      "name": "La visualisation spatiale",
+      "short": "Voir le diagramme sans le regarder.",
+      "desc": "Imaginer le diagramme sans le regarder, suivre les lignes ouvertes, les diagonales et les cases contrôlées. C’est une capacité en partie distincte du calcul."
+    },
+    "patterns": {
+      "name": "La reconnaissance de formes",
+      "short": "Chunking : reconnaître des configurations entières.",
+      "desc": "Les études de de Groot puis de Chase et Simon ont montré que les maîtres ne calculent pas plus de coups que les débutants. Ils reconnaissent des configurations entières (« chunks ») et savent immédiatement ce qui est important. C’est le principal avantage des experts, et c’est une forme de « mémoire » plus que de calcul."
+    },
+    "speed": {
+      "name": "La vitesse de perception et de décision",
+      "short": "Repérer en quelques secondes prises, menaces et coups forcés.",
+      "desc": "Repérer en quelques secondes les pièces en prise, les menaces et les coups forcés. Elle joue beaucoup en blitz."
+    },
+    "strategy": {
+      "name": "La pensée stratégique",
+      "short": "Planification : trouver un plan à partir de la structure.",
+      "desc": "Identifier un plan à partir de la structure de pions, de l’activité des pièces et des déséquilibres. C’est plus lent et plus abstrait que le calcul."
+    },
+    "composure": {
+      "name": "L’autocritique et la gestion émotionnelle",
+      "short": "Rester lucide, concentré, et gérer son temps.",
+      "desc": "Ne pas s’emballer sur un coup qu’on aime, rester concentré après une erreur, gérer le temps. Ça ne relève pas de l’intelligence au sens strict, mais ça pèse beaucoup dans les résultats."
+    }
+  },
+  "modules": {
+    "puzzles": {
+      "name": "Puzzles",
+      "why": "Classés, par thème. Un puzzle se résout en repérant le motif puis en vérifiant la suite. Le classement Glicko-2 mesure l’ensemble."
+    },
+    "streak": {
+      "name": "Puzzle streak",
+      "why": "Série enchaînée. Enchaîner sans erreur demande de tenir sous pression ; les aides et le pardon touchent aussi à la régulation."
+    },
+    "rush": {
+      "name": "Puzzle Rush",
+      "why": "Un maximum de puzzles en quelques minutes, une erreur en efface deux : décider vite, mais rester juste."
+    },
+    "woodpecker": {
+      "name": "Woodpecker",
+      "why": "Sets de puzzles en répétition espacée. On retient des solutions et des motifs ; la répétition fixe les configurations dans le temps."
+    },
+    "repertoire": {
+      "name": "Répertoire",
+      "why": "Ouvertures, unités, tronçons, lignes. Il faut restituer des séquences de coups et savoir où on en est dans le plan."
+    },
+    "coordinates": {
+      "name": "Coordonnées",
+      "why": "Séries de cases. Associer nom et case rapidement, sans passer par l’échiquier."
+    },
+    "blindfold": {
+      "name": "Puzzles à l’aveugle",
+      "why": "Tenir la position entièrement en tête, sans support visuel. Le module le plus exigeant sur la profondeur de calcul."
+    },
+    "recall": {
+      "name": "Reconstitution",
+      "why": "Replacer de mémoire les pièces d’une position, de quelques pièces à la position complète, puis après des coups annoncés : la base de la vision sans échiquier."
+    },
+    "evaluation": {
+      "name": "Évaluation de position",
+      "why": "Juger qui a l’avantage et pourquoi, à partir des déséquilibres de structure."
+    },
+    "parcours": {
+      "name": "Parcours",
+      "why": "Paliers de puzzles. Un chemin structuré qui dépend des thèmes du palier choisi."
+    },
+    "free": {
+      "name": "Libre",
+      "why": "Étude libre, auto-analyse. Prendre du recul sur sa pratique : repérer ses erreurs, leurs causes, et ce qu’on a compris."
+    }
+  }
+}
