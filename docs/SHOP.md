@@ -105,7 +105,7 @@ Règles validées (2026-10-14, maquette « Coffre ») :
 
 - **Une session terminée** (tous ses modules joués ou passés, `SessionClosed` `completed`)
   rapporte des cristaux ; une session abandonnée ou expirée, rien. Une séance lancée seule, hors
-  session, non plus (le puzzle rush aussi : pas de cristaux propres, [PUZZLE_RUSH.md](PUZZLE_RUSH.md)).
+  session, non plus (le puzzle rush et la reconstitution aussi : pas de cristaux propres, [PUZZLE_RUSH.md](PUZZLE_RUSH.md), [BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)).
 - **Minutes payées** : chaque séance de la session paie sa durée réelle, mais **au plus une minute
   par exercice terminé** (`RewardCalculator::SECONDS_PER_EXERCISE`) : un chrono laissé tourner ne
   rapporte rien. Un parcours ([PARCOURS.md](PARCOURS.md)) paie toujours une minute par exercice. Le **temps libre** ne compte ni dans les minutes ni dans le palier.

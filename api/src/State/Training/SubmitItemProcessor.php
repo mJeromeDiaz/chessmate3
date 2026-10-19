@@ -56,7 +56,7 @@ final class SubmitItemProcessor implements ProcessorInterface
         $this->exerciseXp->reset();
 
         try {
-            $step = $this->runner->submit($user, self::runId($uriVariables), new ItemSubmission($data->itemId, $data->moves, $data->hintLevel, $data->solutionShown, $data->thinkMs, $data->answers, $data->evaluation, $data->pass));
+            $step = $this->runner->submit($user, self::runId($uriVariables), new ItemSubmission($data->itemId, $data->moves, $data->hintLevel, $data->solutionShown, $data->thinkMs, $data->answers, $data->evaluation, $data->pass, $data->placement));
         } catch (RunNotFoundException) {
             throw new NotFoundHttpException('Run not found.');
         } catch (ItemNotFoundException) {

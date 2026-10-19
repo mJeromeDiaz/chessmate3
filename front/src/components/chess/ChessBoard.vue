@@ -140,7 +140,9 @@ const props = defineProps({
   /** Every square is clickable and emits `square` (the coordinates series, docs/COORDINATES.md; blindfold puzzles, docs/BLINDFOLD.md). */
   squareInput: { type: Boolean, default: false },
   /** Side that may premove while `movableColor` does not let it move ('white', 'black'), or null. */
-  premoveColor: { type: String, default: null }
+  premoveColor: { type: String, default: null },
+  /** Any placement, legal or not (a position being rebuilt, docs/BLINDFOLD_RECALL.md): no rules checked, no move offered. */
+  anyPosition: { type: Boolean, default: false }
 })
 
 const emit = defineEmits({
@@ -168,14 +170,20 @@ const premove = ref(null)
 
 /**
  * The rules of a position. An empty board (the coordinates series) has no king, which chess.js
- * refuses unless told to skip its checks.
+ * refuses unless told to skip its checks; so does a position being rebuilt (`anyPosition`).
  *
  * @param {string} fen
  */
 function rulesOf(fen) {
-  return new Chess(fen, {
-    skipValidation: fen.split(' ')[0] === '8/8/8/8/8/8/8/8'
-  })
+  const skipValidation =
+    props.anyPosition || fen.split(' ')[0] === '8/8/8/8/8/8/8/8'
+  try {
+    return new Chess(fen, { skipValidation })
+  } catch (e) {
+    // A rebuilt position the rules cannot even read: the board still shows it.
+    if (!props.anyPosition) throw e
+    return new Chess('8/8/8/8/8/8/8/8 w - - 0 1', { skipValidation: true })
+  }
 }
 
 /** @param {string} color */

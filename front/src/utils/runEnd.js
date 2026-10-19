@@ -12,7 +12,7 @@ import { t } from '@/i18n'
  *
  * @typedef {object} ReviewItem
  * @property {number} index 1-based, in the order played
- * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'|'streak_puzzle'} type
+ * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'|'streak_puzzle'|'blindfold_recall'} type
  * @property {ItemStatus} status
  * @property {number|null} durationMs
  * @property {Record<string, any>} data
@@ -103,6 +103,12 @@ export function itemTitle(item, themeLabel) {
           ? engineLabel(item.data.evalCp)
           : ''
     })
+  if (item.type === 'blindfold_recall')
+    return t('blindfoldRecall.review.title', {
+      level: item.data.level,
+      correct: item.data.correct ?? 0,
+      expected: item.data.expected ?? 0
+    })
   const theme = item.data.puzzle?.themes?.[0]
   return theme ? themeLabel(theme) : t('training.end.puzzle')
 }
@@ -134,9 +140,10 @@ export function missedItems(items, themeLabel) {
         duration: formatDuration(item.durationMs)
       }),
       color: STATUS[item.status].color,
-      // A position to evaluate has no line to replay.
+      // A position to evaluate or to rebuild has no line to replay.
       replayable:
         item.type !== 'evaluation_position' &&
+        item.type !== 'blindfold_recall' &&
         (item.type !== 'repertoire_unit' || !!item.data.startFen)
     }))
 }

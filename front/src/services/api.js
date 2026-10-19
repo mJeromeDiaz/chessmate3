@@ -1019,7 +1019,9 @@ export const evaluationApi = {
 
 export const blindfoldApi = {
   /** The rules (levels, lengths, times) and the results so far, by level and by length. */
-  puzzles: () => http.get('/api/blindfold/puzzles', JSON_LD).then(r => r.data)
+  puzzles: () => http.get('/api/blindfold/puzzles', JSON_LD).then(r => r.data),
+  /** Position recall (docs/BLINDFOLD_RECALL.md): the twenty levels, my progress on each, my highest level open. */
+  recall: () => http.get('/api/blindfold/recall', JSON_LD).then(r => r.data)
 }
 
 /** Puzzle streak (docs/PUZZLE_STREAK.md): the rules, my records, the openings to draw from. */

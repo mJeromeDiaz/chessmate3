@@ -61,7 +61,7 @@ n'en supprime jamais.
 | `PuzzleStreak\Event\RecordBeaten` | un streak bat le record de sa difficulté et de sa thématique ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) | streak, séance, difficulté, thématique, longueur, record précédent |
 | `Training\Event\SessionClosed` | clôture d'une session ([TRAINING.md § 9](TRAINING.md#9-sessions)) : terminée, abandonnée ou expirée (paresseusement) | session, statut, étapes, faites, passées, temps joué, `startedAt` |
 
-`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study`, `coordinates_series`, `blindfold_puzzle`, `position_evaluation`, `streak_puzzle`, `parcours_puzzle`, `puzzle_rush` (extensible).
+`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study`, `coordinates_series`, `blindfold_puzzle`, `position_evaluation`, `streak_puzzle`, `parcours_puzzle`, `puzzle_rush`, `blindfold_recall` (extensible).
 
 | Source | `type` | `sourceType` |
 |---|---|---|
@@ -75,6 +75,7 @@ n'en supprime jamais.
 | Puzzle d'un palier de parcours résolu ou raté ([PARCOURS.md](PARCOURS.md)) ; `metadata` : `status`, `puzzleId`, `rating`, `targetRating`, `position`, `tier`, `helped`, `trainingRunId` | `parcours_puzzle` | `parcours_attempt` |
 | Série de coordonnées close avec au moins une réponse ([COORDINATES.md](COORDINATES.md)) ; `success` = série validante, `itemCount` = réponses | `coordinates_series` | `coordinates_series` |
 | Puzzle rush clos avec au moins un puzzle joué ([PUZZLE_RUSH.md](PUZZLE_RUSH.md)) ; `success` = précision ≥ 80 %, `itemCount` = puzzles joués ; `metadata` : `solved`, `failed`, `score`, `accuracy`, `budgetSeconds`, `themes`, `trainingRunId` | `puzzle_rush` | `training_run` |
+| Position reconstituée ([BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)) ; `success` = exacte ; `metadata` : `status` (`exact`, `close`, `missed`), `level`, `stage`, `expected`, `correct`, `wrong`, `extra`, `missing`, `accuracy`, `unlocked`, `puzzleId` (Lichess, null pour une position générée), `trainingRunId` | `blindfold_recall` | `blindfold_recall_attempt` |
 
 `metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
 (`classic`, `light`) et, joué en séance, `trainingRunId`. Un puzzle classé ou rejoué porte aussi

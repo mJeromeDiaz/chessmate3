@@ -17,6 +17,7 @@
       "puzzle_streak": "La sélection des puzzles est en cours de mise à jour : séance close.",
       "parcours_puzzles": "Plus aucun puzzle pour ce palier : palier clos.",
       "puzzle_rush": "Plus aucun puzzle à ce niveau pour ces thèmes : séance close.",
+      "blindfold_recall": "Plus aucune position disponible à ce niveau : séance close.",
       "woodpecker": "Le set a été mis en pause ou abandonné : séance close."
     }
   },
@@ -30,6 +31,7 @@
     "puzzle_streak": "Retour au streak",
     "parcours_puzzles": "Retour aux parcours",
     "puzzle_rush": "Retour aux puzzles",
+    "blindfold_recall": "Retour à la reconstitution",
     "home": "Retour à l’accueil"
   },
   "result": {
@@ -176,6 +178,7 @@
       "noBlindfold": "Aucun puzzle disponible à ce niveau et de cette longueur.",
       "noPosition": "Aucune position disponible pour ces réglages.",
       "noStreakPuzzle": "Aucun puzzle disponible dans cette thématique.",
+      "noRecall": "Ce niveau n’est pas encore ouvert, ou aucune position n’est disponible.",
       "nothingToTest": "Rien à tester dans cette sélection : ajoutez vos coups au répertoire.",
       "repertoireNotFound": "Répertoire introuvable.",
       "invalidSelection": "Sélection invalide."
@@ -193,6 +196,7 @@
     "seeMyResults": "Voir mes résultats",
     "seeReview": "Voir le bilan",
     "blindfoldProgress": "{played} puzzles · {solved} résolus",
+    "recallProgress": "{played} positions · {exact} exactes",
     "evaluationProgress": "Position {n} · {solved} juste | Position {n} · {solved} justes",
     "streakTimed": "Streak {now} · meilleur {best}",
     "streak": "Streak : {now}",
@@ -224,6 +228,7 @@
       "evaluation": "La position à l’écran ne sera pas comptée.",
       "puzzle_streak": "Le puzzle en cours ne sera pas compté : ton streak s’arrête là.",
       "puzzle_rush": "Le puzzle à l’écran ne sera pas compté.",
+      "blindfold_recall": "La position à l’écran ne sera pas comptée.",
       "default": "Le puzzle en cours ne sera pas compté."
     }
   }

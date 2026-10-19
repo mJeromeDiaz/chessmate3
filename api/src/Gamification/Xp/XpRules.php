@@ -65,6 +65,15 @@ final class XpRules
     public const RUSH_BONUS_ACCURACY = 0.9;
     public const RUSH_BONUS_MIN_SOLVED = 10;
 
+    /**
+     * Position recall (docs/BLINDFOLD_RECALL.md): an exact rebuild by its level's stage (1 to 5),
+     * a close one RECALL_CLOSE, a missed one nothing; RECALL_UNLOCK more for the rebuild that opens
+     * the next level (once per level). Within the daily cap.
+     */
+    public const RECALL_EXACT = [1 => 4, 2 => 6, 3 => 8, 4 => 10, 5 => 12];
+    public const RECALL_CLOSE = 2;
+    public const RECALL_UNLOCK = 20;
+
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
     public const MODULE_STEP = 100;
@@ -82,7 +91,7 @@ final class XpRules
     /**
      * XP of one exercise, before the daily cap.
      *
-     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status, an evaluation's status and bonuses, a streak puzzle's rating, a rush's solved and failed)
+     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status, an evaluation's status and bonuses, a streak puzzle's rating, a rush's solved and failed, a rebuild's status, stage and unlock)
      */
     public static function exercise(ExerciseType $type, bool $success, int $durationMs, int $itemCount = 1, array $metadata = []): int
     {
@@ -106,6 +115,7 @@ final class XpRules
               + (true === ($metadata['fast'] ?? null) ? self::EVALUATION_FAST : 0),
             ExerciseType::StreakPuzzle, ExerciseType::ParcoursPuzzle => $success ? self::streakPuzzle(\is_int($metadata['rating'] ?? null) ? $metadata['rating'] : 0) : 0,
             ExerciseType::PuzzleRush => self::rush(\is_int($metadata['solved'] ?? null) ? $metadata['solved'] : 0, \is_int($metadata['failed'] ?? null) ? $metadata['failed'] : 0),
+            ExerciseType::BlindfoldRecall => self::recall($metadata['status'] ?? null, \is_int($metadata['stage'] ?? null) ? $metadata['stage'] : 1, true === ($metadata['unlocked'] ?? null)),
         };
     }
 
@@ -140,6 +150,18 @@ final class XpRules
     }
 
     /**
+     * XP of a rebuilt position: by its verdict and its level's stage, plus the unlock bonus.
+     */
+    public static function recall(mixed $status, int $stage, bool $unlocked): int
+    {
+        return match ($status) {
+            'exact' => self::RECALL_EXACT[$stage] ?? self::RECALL_EXACT[1],
+            'close' => self::RECALL_CLOSE,
+            default => 0,
+        } + ($unlocked ? self::RECALL_UNLOCK : 0);
+    }
+
+    /**
      * The module of an exercise.
      */
     public static function module(ExerciseType $type): Module
@@ -155,6 +177,7 @@ final class XpRules
             ExerciseType::StreakPuzzle => Module::PuzzleStreak,
             ExerciseType::ParcoursPuzzle => Module::ParcoursPuzzles,
             ExerciseType::PuzzleRush => Module::PuzzleRush,
+            ExerciseType::BlindfoldRecall => Module::BlindfoldRecall,
         };
     }
 

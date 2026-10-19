@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\ApiResource\Training;
 
+use App\Blindfold\Recall\Placement;
+use App\Blindfold\Recall\RecallRules;
 use App\Coordinates\Series\CoordinateRules;
 use App\Entity\Puzzle\Attempt;
 use App\Enum\Evaluation\Plan;
@@ -51,4 +53,12 @@ final class SubmitItemInput
         'plan' => new Assert\Optional([new Assert\Type('string'), new Assert\Choice(callback: [Plan::class, 'values'])]),
     ])]
     public ?array $evaluation = null;
+
+    /** @var list<array{square: string, piece: string}> position recall: the pieces placed, judged by the server (docs/BLINDFOLD_RECALL.md) */
+    #[Assert\Count(max: RecallRules::MAX_PLACED)]
+    #[Assert\All([new Assert\Collection(fields: [
+        'square' => [new Assert\NotNull(), new Assert\Type('string'), new Assert\Regex(Placement::SQUARE_PATTERN)],
+        'piece' => [new Assert\NotNull(), new Assert\Type('string'), new Assert\Regex(Placement::PIECE_PATTERN)],
+    ])])]
+    public array $placement = [];
 }

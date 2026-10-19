@@ -264,6 +264,13 @@ const BLINDFOLD_LEVELS = ['easy', 'medium', 'hard']
 const BLINDFOLD_LENGTHS = [2, 3, 4]
 const BLINDFOLD_VISIBLE = [5, 10, 15, 20, 30]
 
+/**
+ * The levels of position recall (App\Blindfold\Recall\RecallRules, docs/BLINDFOLD_RECALL.md):
+ * "mine" (the highest one open when the step starts) or one of the twenty. A level not open yet
+ * is refused by the API.
+ */
+const RECALL_LEVELS = ['mine', ...Array.from({ length: 20 }, (_, i) => i + 1)]
+
 /** Free study formats, as the API names them. */
 const FREE_FORMATS = ['book', 'video', 'course', 'podcast', 'other']
 
@@ -494,6 +501,26 @@ export const MODULES = [
       ),
       one('memorisation', 'fields.memorize', BLINDFOLD_VISIBLE, 10, v =>
         m('units.seconds', { n: v })
+      ),
+      notes()
+    ]
+  }),
+  defineModule({
+    id: 'reconstitution',
+    ...noCard('Noctis'),
+    glyph: glyph('♖'),
+    available: true,
+    bg: '#3D2F73',
+    ink: '#FFFFFF',
+    soft: '#ECE8F7',
+    deep: '#6A58C2',
+    accentInk: '#4A3D86',
+    fields: [
+      duration(10, MAX_RUN_MINUTES),
+      one('niveau', 'fields.level', RECALL_LEVELS, 'mine', v =>
+        v === 'mine'
+          ? m('options.recallMine')
+          : m('options.recallLevel', { n: v })
       ),
       notes()
     ]
@@ -832,6 +859,7 @@ export const API_MODULES = {
   evaluation: 'evaluation',
   streak: 'puzzle_streak',
   rush: 'puzzle_rush',
+  reconstitution: 'blindfold_recall',
   parcours: 'parcours_puzzles'
 }
 
@@ -863,6 +891,8 @@ export function toStep(item) {
       length: oneOf(BLINDFOLD_LENGTHS, v.longueur, 2),
       visibleSeconds: oneOf(BLINDFOLD_VISIBLE, v.memorisation, 10)
     }
+  if (module === 'blindfold_recall')
+    settings = { level: oneOf(RECALL_LEVELS, v.niveau, 'mine') }
   if (module === 'evaluation')
     settings = {
       elo: v.elo,
@@ -920,6 +950,8 @@ export function fromStep(step) {
       values.memorisation
     )
   }
+  if (step.module === 'blindfold_recall')
+    values.niveau = oneOf(RECALL_LEVELS, settings.level, values.niveau)
   if (step.module === 'evaluation') {
     if (Number.isInteger(settings.elo)) values.elo = settings.elo
     values.couleur = oneOf(SIDES, settings.side, values.couleur)

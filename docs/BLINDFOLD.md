@@ -4,7 +4,9 @@
 
 Le jeu à l'aveugle, ce sont des **puzzles résolus de mémoire** : la position s'affiche quelques
 secondes, disparaît, puis on joue la solution sur un échiquier vide. Ouvert à tous : aucun
-prérequis (les coordonnées sont un module à part, [COORDINATES.md](COORDINATES.md)).
+prérequis (les coordonnées sont un module à part, [COORDINATES.md](COORDINATES.md)). Pour s'y
+préparer, la reconstitution (replacer de mémoire les pièces d'une position, du plus simple à la
+position complète) a sa propre page : [BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md).
 
 Choix validés (2026-10-07) : pas de partie contre un moteur, mais des puzzles du catalogue ; niveaux
 fixes ; plusieurs coups d'affilée (jamais de puzzle en un coup), longueur au choix ; échiquier vide

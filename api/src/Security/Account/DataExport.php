@@ -165,6 +165,14 @@ final readonly class DataExport
                 $id,
                 ['moves'],
             )),
+            // The positions rebuilt (docs/BLINDFOLD_RECALL.md); `puzzle` null for a generated one.
+            'blindfoldRecallAttempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, level, visible_seconds, fen, expected_placement, announced,
+                        puzzle_id AS puzzle, piece_count, status, placement, correct, wrong, extra, missing, unlocked, started_at, submitted_at, duration_ms
+                   FROM blindfold_recall_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['announced', 'placement'],
+            )),
             // The puzzles of the parcours' tiers (docs/PARCOURS.md); the parcours are the sessions above.
             'parcoursPuzzles' => $this->withLichessIds($this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, puzzle_id AS puzzle, puzzle_rating, position, target_rating,

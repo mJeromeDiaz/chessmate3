@@ -105,6 +105,7 @@ final class ExportTest extends WebTestCase
         self::assertArrayHasKey('parcours', $this->listOf($training['sessions'])[0], 'a session says whether it is a parcours');
         self::assertSame([], $training['parcoursPuzzles']);
         self::assertSame([], $training['puzzleRushAttempts']);
+        self::assertSame([], $training['blindfoldRecallAttempts']);
         self::assertSame('Italienne', $this->listOf($this->json($zip, 'repertoires.json')['repertoires'])[0]['name']);
 
         $everything = '';

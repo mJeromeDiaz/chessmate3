@@ -27,7 +27,8 @@ const UNAVAILABLE = [
   'evaluation',
   'puzzle_streak',
   'parcours_puzzles',
-  'puzzle_rush'
+  'puzzle_rush',
+  'blindfold_recall'
 ]
 
 /** Modules with their own "back" label (training.back). */
@@ -40,7 +41,8 @@ const BACK_MODULES = [
   'evaluation',
   'puzzle_streak',
   'parcours_puzzles',
-  'puzzle_rush'
+  'puzzle_rush',
+  'blindfold_recall'
 ]
 
 /**
@@ -100,6 +102,7 @@ export function subjectPath(run) {
   if (run.subjectType === 'puzzle_streak_player') return '/streak'
   if (run.subjectType === 'parcours_player') return '/parcours'
   if (run.subjectType === 'puzzle_rush_player') return '/puzzle'
+  if (run.subjectType === 'blindfold_recall_player') return '/reconstitution'
   return '/'
 }
 

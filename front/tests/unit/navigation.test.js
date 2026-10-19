@@ -15,6 +15,7 @@ describe('NAV_LINKS', () => {
       'Répertoires',
       'Coordonnées',
       'Aveugle',
+      'Reconstitution',
       'Évaluation'
     ])
     expect(NAV_LINKS.filter(l => l.header).map(l => l.to)).toEqual([
@@ -26,6 +27,7 @@ describe('NAV_LINKS', () => {
       '/repertoire',
       '/coordinates',
       '/blindfold',
+      '/reconstitution',
       '/evaluation'
     ])
   })

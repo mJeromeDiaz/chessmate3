@@ -26,6 +26,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_puzzle_lichess_id', columns: ['lichess_id'])]
 #[ORM\Index(name: 'idx_puzzle_selection', columns: ['selectable', 'rating', 'random_key'])]
 #[ORM\Index(name: 'idx_puzzle_opening', columns: ['opening_family', 'solver_color', 'selectable', 'rating', 'random_key'])]
+#[ORM\Index(name: 'idx_puzzle_pieces', columns: ['piece_count', 'selectable', 'rating', 'random_key'])]
 class Puzzle
 {
     #[ORM\Id]
@@ -95,6 +96,18 @@ class Puzzle
         generated: 'ALWAYS',
     )]
     private ?string $solverColor = null;
+
+    /** Pieces on the board of $fen, before the opponent's first move (position recall, docs/BLINDFOLD_RECALL.md). */
+    #[ORM\Column(
+        type: Types::SMALLINT,
+        nullable: true,
+        insertable: false,
+        updatable: false,
+        columnDefinition: "SMALLINT UNSIGNED GENERATED ALWAYS AS (CHAR_LENGTH(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(SUBSTRING_INDEX(fen, ' ', 1), '/', ''), '1', ''), '2', ''), '3', ''), '4', ''), '5', ''), '6', ''), '7', ''), '8', ''))) VIRTUAL",
+        generated: 'ALWAYS',
+        options: ['unsigned' => true],
+    )]
+    private ?int $pieceCount = null;
 
     /**
      * @param list<string>      $themes
@@ -200,6 +213,11 @@ class Puzzle
     public function getSolverColor(): ?string
     {
         return $this->solverColor;
+    }
+
+    public function getPieceCount(): ?int
+    {
+        return $this->pieceCount;
     }
 
     public function getGameUrl(): string

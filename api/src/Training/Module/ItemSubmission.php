@@ -16,6 +16,7 @@ final readonly class ItemSubmission
      * @param list<string>                                     $moves
      * @param list<array{index: int, square: string, ms: int}> $answers    squares clicked (coordinates series)
      * @param array{guess?: int|null, plan?: string|null}|null  $evaluation the category chosen (-2 to 2, null: none in time) and the plan (position evaluation)
+ * @param list<array{square: string, piece: string}>       $placement  pieces placed (position recall)
      */
     public function __construct(
         public string $itemId,
@@ -28,6 +29,8 @@ final readonly class ItemSubmission
         public ?array $evaluation = null,
         /** The puzzle streak: skipped with a pass of the store, before any move (docs/PUZZLE_STREAK.md). */
         public bool $pass = false,
+        /** Position recall: the pieces placed, FEN piece letters (docs/BLINDFOLD_RECALL.md). */
+        public array $placement = [],
     ) {
     }
 }

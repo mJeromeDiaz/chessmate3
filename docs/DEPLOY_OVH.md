@@ -268,6 +268,11 @@ bin/console doctrine:migrations:migrate --configuration=config/migrations/catalo
 bin/console doctrine:migrations:diff --configuration=config/migrations/catalog.php
 ```
 
+Les colonnes ajoutées au catalogue sont générées et `VIRTUAL` (ajout instantané, sans reconstruire
+la table) ; seul leur index se construit, sur place et sans bloquer les lectures, en quelques
+minutes sur 1,5 M de lignes : `Version20261016100000` (famille d'ouverture et camp du joueur,
+[COACH.md](COACH.md)), `Version20261027100000` (nombre de pièces, [BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)).
+
 `migrations/Version20261009100000` supprime les trois tables de la base principale. Elle **refuse**
 de le faire si `puzzle` contient plus de 1 000 lignes (un vrai catalogue, au-delà des 50 puzzles
 d'exemple). Pour garder un catalogue déjà importé (la base de mesure `ChessMateGo_bench`, par

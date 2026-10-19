@@ -186,4 +186,19 @@ describe('training utils', () => {
     ).toBe('/coordinates')
     expect(backLabel({ module: 'blindfold' })).toBe('Retour au jeu à l’aveugle')
   })
+
+  it('knows position recall', () => {
+    expect(
+      closeReasonText({
+        closeReason: 'subject_unavailable',
+        module: 'blindfold_recall'
+      })
+    ).toContain('Plus aucune position disponible à ce niveau')
+    expect(
+      subjectPath({ subjectType: 'blindfold_recall_player', subjectId: 'u' })
+    ).toBe('/reconstitution')
+    expect(backLabel({ module: 'blindfold_recall' })).toBe(
+      'Retour à la reconstitution'
+    )
+  })
 })

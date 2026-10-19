@@ -186,6 +186,53 @@
       </template>
     </BlindfoldPuzzlePlayer>
 
+    <RecallPlayer
+      v-else-if="recallItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="recallPlayer"
+      :item="recallItem"
+      :result="recallResult"
+      :xp="runner.xp.value"
+      :actions="recallActions"
+      @resolve="onRecallResolve"
+    >
+      <template #header>
+        <RunHeader
+          v-if="recallItem.data.mode === 'timed'"
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">{{
+            $t('training.page.recallProgress', {
+              played: runner.played.value,
+              exact: runner.solved.value
+            })
+          }}</div>
+        </RunHeader>
+        <div v-else class="row items-center q-gutter-sm">
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            $t('training.page.recallProgress', {
+              played: runner.played.value,
+              exact: runner.solved.value
+            })
+          }}</div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </RecallPlayer>
+
     <EvaluationPlayer
       v-else-if="evalItem && (runner.phase.value === 'running' || holdEnd)"
       ref="evalPlayer"
@@ -452,12 +499,14 @@
  * `OvertimeDialog`) or a tier of a parcours (docs/PARCOURS.md: no clock, its count of puzzles or
  * lines; between two tiers, Lizy's banner starts the next one; "Terminer" abandons the parcours)
  * or a puzzle rush (docs/PUZZLE_RUSH.md: one try, no help, the next puzzle at once; the counts and
- * the accuracy while playing, the score only at the end).
+ * the accuracy while playing, the score only at the end) or positions to rebuild
+ * (docs/BLINDFOLD_RECALL.md: without a clock on the recall page, "Niveau n" once a level opens).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.vue'
+import RecallPlayer from '@/components/blindfold/RecallPlayer.vue'
 import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
@@ -522,7 +571,8 @@ const STOP_MESSAGES = [
   'blindfold',
   'evaluation',
   'puzzle_streak',
-  'puzzle_rush'
+  'puzzle_rush',
+  'blindfold_recall'
 ]
 const route = useRoute()
 const router = useRouter()
@@ -690,6 +740,111 @@ const evaluationActions = computed(() => [
     }
   }
 ])
+
+/**
+ * The position being rebuilt, kept once the run closed on the last one: its correction stays on
+ * screen (`holdEnd`) until "Voir le résultat".
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const recallItem = ref(null)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const recallPlayer = ref(null)
+/** A free run moving on to the level just opened. */
+const levelStarting = ref(false)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'blindfold_recall') recallItem.value = item
+    else if (item) recallItem.value = null
+  }
+)
+/** The correction of the position on screen. */
+const recallResult = computed(() =>
+  recallItem.value && runner.result.value?.itemId === recallItem.value.id
+    ? runner.result.value.data
+    : null
+)
+/**
+ * The correction's buttons: the next position (or the result once over); in a free run, the
+ * level just opened.
+ */
+const recallActions = computed(() => {
+  const opened = recallResult.value?.unlockedLevel ?? null
+  const free =
+    recallItem.value?.data.mode === 'free' && runner.phase.value === 'running'
+  return [
+    ...(opened && free
+      ? [
+          {
+            label: t('blindfoldRecall.player.nextLevel', { n: opened }),
+            primary: true,
+            disable: loading.value || levelStarting.value,
+            testid: 'recall-next-level',
+            onClick: () => startLevel(opened)
+          }
+        ]
+      : []),
+    {
+      label:
+        runner.phase.value === 'running'
+          ? t('training.page.nextPosition')
+          : t('training.page.seeResult'),
+      primary: !(opened && free),
+      disable: loading.value || levelStarting.value,
+      testid: 'run-next',
+      onClick: async () => {
+        holdEnd.value = false
+        if (runner.phase.value === 'running') await next()
+      }
+    }
+  ]
+})
+
+/** @param {Array<{square: string, piece: string}>} placement */
+async function onRecallResolve(placement) {
+  // Held before the rebuild leaves: the last one may close the run, and the player must not be
+  // unmounted (its correction lost) before it is shown.
+  holdEnd.value = true
+  try {
+    const result = await runner.submit({ placement })
+    if (result) return
+    holdEnd.value = false
+    recallPlayer.value?.unlock()
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    recallPlayer.value?.unlock()
+  }
+}
+
+/**
+ * A free run's level just opened: this run ends and a free run of that level starts (one run at a
+ * time).
+ *
+ * @param {number} level
+ */
+async function startLevel(level) {
+  const run = runner.run.value
+  if (!run) return
+  levelStarting.value = true
+  error.value = ''
+  try {
+    await store.stop(run.id)
+    const started = await store.start({
+      module: 'blindfold_recall',
+      subjectId: run.subjectId,
+      minutes: Math.round(run.budgetSeconds / 60),
+      config: { level, mode: 'free' }
+    })
+    await router.push(`/training/${started.id}`)
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+  } finally {
+    levelStarting.value = false
+  }
+}
 
 /**
  * The puzzle streak's puzzle on screen, kept once the run closed on a miss: its solution stays on
@@ -1256,6 +1411,7 @@ watch(
     chestOpen.value = false
     holdEnd.value = false
     evalItem.value = null
+    recallItem.value = null
     streakItem.value = null
     parcoursItem.value = null
     try {

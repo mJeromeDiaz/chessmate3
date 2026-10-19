@@ -53,6 +53,7 @@ S2 rappel, S3 front, S4 documentation.
 | Évaluation de position ([EVALUATION.md](EVALUATION.md)) | 15 (6 à un cran) ; +5 bon plan (+3 « rapide » : séances d'avant le 2026-10-11 seulement) | 1 |
 | Puzzle d'un streak ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) | selon son classement : 2 sous 800, +1 tous les 200 points, 12 dès 2600 (`metadata.rating`) | 0 |
 | Puzzle rush ([PUZZLE_RUSH.md](PUZZLE_RUSH.md)), un exercice par séance | 2 × score (réussis − 2 × ratés), +20 à 90 % de précision avec au moins 10 réussis (`metadata.solved`, `metadata.failed`) | — |
+| Reconstitution ([BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)) | exacte : 4 / 6 / 8 / 10 / 12 selon l'étape (1 à 5) ; proche (≥ 80 %) : 2 ; +20 pour l'essai qui ouvre le niveau suivant (`metadata.status`, `metadata.stage`, `metadata.unlocked`) | 0 |
 
 - **Plafond** : 500 XP d'exercices par jour local (fuseau de l'utilisateur). Un exercice gagne ce qui
   reste du plafond de son jour (deux événements traités au même instant peuvent le dépasser

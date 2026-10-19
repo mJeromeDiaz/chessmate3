@@ -1,0 +1,218 @@
+{
+  "percent": "{n} %",
+  "stages": {
+    "1": {
+      "title": "Mémoriser les cases et les pièces",
+      "goal": "Retenir quelques positions simples sur l’échiquier."
+    },
+    "2": {
+      "title": "Mémoriser des groupes de pièces",
+      "goal": "Passer d’une mémorisation pièce par pièce à des configurations spatiales."
+    },
+    "3": {
+      "title": "Mémoriser une position plus dense",
+      "goal": "Retenir des configurations plus proches d’une véritable partie."
+    },
+    "4": {
+      "title": "Visualiser une position d’échecs",
+      "goal": "Construire une représentation mentale cohérente de l’échiquier."
+    },
+    "5": {
+      "title": "Jouer sans voir l’échiquier",
+      "goal": "Passer de la mémorisation statique à la visualisation dynamique."
+    }
+  },
+  "levels": {
+    "1": {
+      "title": "Les trois repères",
+      "pieces": "Roi blanc, roi noir, pion blanc",
+      "goal": "mémoriser 3 pièces et leurs cases respectives."
+    },
+    "2": {
+      "title": "Ajouter un repère",
+      "pieces": "2 rois et 2 pions blancs",
+      "goal": "mémoriser 4 pièces sans confondre leurs cases."
+    },
+    "3": {
+      "title": "Distinguer les couleurs",
+      "pieces": "2 rois, 3 pions blancs et 1 pion noir",
+      "goal": "mémoriser 6 pièces et identifier leur camp."
+    },
+    "4": {
+      "title": "Reconnaître une pièce différente",
+      "pieces": "2 rois, 1 fou blanc et 3 pions",
+      "goal": "mémoriser les cases de 6 pièces de types différents."
+    },
+    "5": {
+      "title": "Retenir 7 pièces",
+      "pieces": "2 rois, 1 fou et 4 pions",
+      "goal": "retenir 7 pièces."
+    },
+    "6": {
+      "title": "Deux pièces identiques",
+      "pieces": "2 rois, 2 fous et 4 pions",
+      "goal": "différencier deux pièces identiques."
+    },
+    "7": {
+      "title": "Le cavalier",
+      "pieces": "2 rois, 1 cavalier et 4 pions",
+      "goal": "mémoriser une pièce aux déplacements atypiques."
+    },
+    "8": {
+      "title": "Les alignements",
+      "pieces": "2 rois, 1 tour et 5 pions",
+      "goal": "mémoriser des alignements horizontaux et verticaux."
+    },
+    "9": {
+      "title": "Une pièce majeure",
+      "pieces": "2 rois, 1 dame et 5 pions",
+      "goal": "mémoriser une pièce majeure."
+    },
+    "10": {
+      "title": "Plusieurs types de pièces",
+      "pieces": "2 rois, 1 fou, 1 cavalier et 6 pions",
+      "goal": "retenir plusieurs types de pièces."
+    },
+    "11": {
+      "title": "Plusieurs alignements",
+      "pieces": "2 rois, 2 tours et 6 pions",
+      "goal": "mémoriser plusieurs alignements."
+    },
+    "12": {
+      "title": "Les pièces et leurs relations",
+      "pieces": "2 rois, 1 dame, 1 fou, 1 cavalier et 6 pions",
+      "goal": "retenir 11 pièces et leurs relations."
+    },
+    "13": {
+      "title": "Une position de 14 pièces",
+      "pieces": "Une vraie position de 14 pièces",
+      "goal": "repérer les groupes et les diagonales."
+    },
+    "14": {
+      "title": "Une position de 16 pièces",
+      "pieces": "Une vraie position de 16 pièces",
+      "goal": "distinguer les deux camps dans une position dense."
+    },
+    "15": {
+      "title": "Une position de 18 pièces",
+      "pieces": "Une vraie position de 18 pièces",
+      "goal": "retenir les pièces proches les unes des autres."
+    },
+    "16": {
+      "title": "Une position de 20 pièces",
+      "pieces": "Une vraie position de 20 pièces",
+      "goal": "reconstituer une position semi-complète."
+    },
+    "17": {
+      "title": "Reconstruire vite",
+      "pieces": "Une vraie position de 12 à 16 pièces, affichée 5 secondes",
+      "goal": "reconstruire rapidement une position."
+    },
+    "18": {
+      "title": "Moins de préparation",
+      "pieces": "Une vraie position de 16 à 20 pièces, affichée 5 secondes",
+      "goal": "reconstituer une position avec moins de préparation."
+    },
+    "19": {
+      "title": "Un coup annoncé",
+      "pieces": "Une position de 12 à 16 pièces, cachée, puis un coup annoncé",
+      "goal": "imaginer la pièce déplacée et sa nouvelle case."
+    },
+    "20": {
+      "title": "Une séquence annoncée",
+      "pieces": "Une position de 12 à 16 pièces, cachée, puis trois coups annoncés",
+      "goal": "visualiser les déplacements successifs et la position finale."
+    }
+  },
+  "page": {
+    "title": "Reconstitution",
+    "lead": "Une position s’affiche quelques secondes puis disparaît : replace toutes les pièces de mémoire sur l’échiquier vide. {n} reconstitutions exactes ouvrent le niveau suivant. Sans effet sur ton classement puzzles.",
+    "stage": "Étape {n} · {title}",
+    "progress": "{exact}/{goal}",
+    "levelOf": "Niveau {n} · étape {stage}",
+    "goal": "Objectif : {goal}",
+    "time": "{n} s pour mémoriser",
+    "played": "{n} essai | {n} essais",
+    "passedText": "{played} · {exact} exactes : niveau réussi.",
+    "toUnlock": "{played} · encore {left} exacte(s) pour ouvrir le niveau {next}.",
+    "free": "Sans chrono",
+    "freeHint": "Enchaîne les positions de ce niveau à ton rythme, autant que tu veux.",
+    "play": "Jouer ce niveau",
+    "timed": "Séance chronométrée"
+  },
+  "player": {
+    "level": "Niveau {n}",
+    "toMemorize": "{n} s pour mémoriser",
+    "hidden": "Position cachée",
+    "seconds": "{n} s",
+    "memorized": "J’ai mémorisé",
+    "clear": "Tout effacer",
+    "done": "J’ai terminé",
+    "eraser": "Gomme : vider une case",
+    "announced": "Coups joués depuis",
+    "placed": "{n} pièce posée | {n} pièces posées",
+    "pieceNames": {
+      "white": {
+        "k": "Roi blanc",
+        "q": "Dame blanche",
+        "r": "Tour blanche",
+        "b": "Fou blanc",
+        "n": "Cavalier blanc",
+        "p": "Pion blanc"
+      },
+      "black": {
+        "k": "Roi noir",
+        "q": "Dame noire",
+        "r": "Tour noire",
+        "b": "Fou noir",
+        "n": "Cavalier noir",
+        "p": "Pion noir"
+      }
+    },
+    "views": {
+      "answer": "La position",
+      "mine": "Ma reconstitution"
+    },
+    "legend": {
+      "found": "retrouvée",
+      "missing": "oubliée",
+      "right": "bien placée",
+      "wrong": "fausse ou en trop"
+    },
+    "counts": "{correct}/{expected} pièces bien placées · {accuracy}",
+    "extra": "{n} en trop | {n} en trop",
+    "unlocked": "niveau {n} débloqué !",
+    "nextLevel": "Niveau {n} →",
+    "verdicts": {
+      "exact": "Position exacte !",
+      "close": "Presque !",
+      "missed": "Pas encore…"
+    },
+    "kickers": {
+      "memorize": "Mémorise",
+      "visualize": "Visualise",
+      "rebuild": "À toi",
+      "exact": "Parfait",
+      "close": "Presque",
+      "missed": "On continue"
+    },
+    "bubbles": {
+      "exact": "Chaque pièce à sa place. Ta mémoire de l’échiquier progresse !",
+      "close": "Il manque peu de chose : regarde les cases entourées.",
+      "missed": "Compare avec la position : repère les groupes de pièces avant qu’elle disparaisse."
+    },
+    "memorizeText": "Retiens chaque pièce et sa case : la position va disparaître.",
+    "visualizeText": "Garde la position en tête…",
+    "listenText": "Garde la position en tête et joue les coups annoncés dans ta tête.",
+    "rebuildText": "Choisis une pièce, puis touche ses cases. Touche une pièce posée pour la retirer.",
+    "rebuildAfterText": "Replace la position après les coups annoncés : choisis une pièce, puis touche ses cases."
+  },
+  "recap": {
+    "level": "Niveau {level} · {title}.",
+    "results": "Exactes : {exact} · proches : {close} · ratées : {missed} · précision : {accuracy}.",
+    "unlocked": "Niveau {level} débloqué !"
+  },
+  "review": {
+    "title": "Niveau {level} · {correct}/{expected} pièces"
+  }
+}

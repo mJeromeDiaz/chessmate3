@@ -27,6 +27,8 @@ enum Module: string
     case ParcoursPuzzles = 'parcours_puzzles';
     /** Puzzle rush: as many puzzles as possible in 2, 3 or 5 minutes, a miss costs two (docs/PUZZLE_RUSH.md). */
     case PuzzleRush = 'puzzle_rush';
+    /** Position recall: a position shown, hidden, then rebuilt piece by piece (docs/BLINDFOLD_RECALL.md). */
+    case BlindfoldRecall = 'blindfold_recall';
 
     /**
      * @return list<string>

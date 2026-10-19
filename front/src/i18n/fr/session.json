@@ -58,6 +58,10 @@
       "aveugle": {
         "title": "Jeu à l’aveugle",
         "desc": "Des puzzles résolus de mémoire : la position s’affiche, disparaît, puis tu joues sur un échiquier vide."
+      },
+      "reconstitution": {
+        "title": "Reconstitution",
+        "desc": "Une position s’affiche quelques secondes puis disparaît : replace toutes les pièces de mémoire, de 3 pièces à la position complète."
       }
     },
     "fields": {
@@ -142,7 +146,9 @@
         "hard": "Difficile"
       },
       "length": "{n} coups",
-      "lengthOrMore": "{n} coups et +"
+      "lengthOrMore": "{n} coups et +",
+      "recallMine": "Mon niveau",
+      "recallLevel": "Niveau {n}"
     },
     "allThemes": "Tous les thèmes",
     "issues": {

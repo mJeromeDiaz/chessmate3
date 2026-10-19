@@ -90,6 +90,20 @@ final class RandomSeeker
     }
 
     /**
+     * Up to $limit selectable puzzle ids whose position has $pieces pieces (before the opponent's
+     * first move), from one random point within [low, high].
+     *
+     * @return list<int>
+     */
+    public function drawByPieces(int $pieces, int $low, int $high, int $limit): array
+    {
+        $rating = $this->randomizer->getInt($low, max($low, $high));
+        $key = $this->randomizer->getInt(0, self::MAX_RANDOM_KEY);
+
+        return $this->seek('puzzle', 'id', 'piece_count = :pieces AND selectable = 1', ['pieces' => $pieces], $low, $high, $rating, $key, $limit);
+    }
+
+    /**
      * The selectable puzzles of an opening family within [low, high] (one side, or both).
      */
     public function countOpening(string $family, ?string $solverColor, int $low, int $high): int

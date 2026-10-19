@@ -89,6 +89,14 @@ export const NAV_LINKS = [
     header: true
   },
   {
+    to: '/reconstitution',
+    get label() {
+      return t('layout.nav.recall')
+    },
+    icon: 'psychology',
+    header: true
+  },
+  {
     to: '/evaluation',
     get label() {
       return t('layout.nav.evaluation')

@@ -29,7 +29,8 @@ describe('session catalogue', () => {
       'repertoire',
       'evaluation',
       'coordonnees',
-      'aveugle'
+      'aveugle',
+      'reconstitution'
     ])
   })
 
@@ -57,6 +58,8 @@ describe('session catalogue', () => {
     expect(keys('evaluation')).toEqual(['duree', 'elo', 'couleur', 'notes'])
     // The puzzle rush too (2, 3 or 5 minutes), with the puzzles' themes.
     expect(keys('rush')).toEqual(['duree', 'themes', 'notes'])
+    // Position recall: the level ("mine" or one of the twenty).
+    expect(keys('reconstitution')).toEqual(['duree', 'niveau', 'notes'])
     expect(MODULES_BY_ID.libre.fields[1].options).toContain('other')
     expect(MODULES_BY_ID.libre.fields[1].optionLabel('other')).toBe('Autre')
     for (const m of MODULES.filter(m => m.available)) {
@@ -438,6 +441,39 @@ describe('session catalogue', () => {
       moduleId: 'evaluation',
       values: { duree: 5, elo: 1600, couleur: 'black', notes: '' }
     })
+  })
+
+  it('plays position recall at the level reached, or at a level chosen', () => {
+    expect(MODULES_BY_ID.reconstitution.fields[1].default).toBe('mine')
+    const mine = toStep({
+      uid: 11,
+      moduleId: 'reconstitution',
+      values: { duree: 10, niveau: 'mine', notes: '' }
+    })
+    expect(mine).toEqual({
+      module: 'blindfold_recall',
+      minutes: 10,
+      notes: '',
+      settings: { level: 'mine' }
+    })
+    const fixed = toStep({
+      uid: 12,
+      moduleId: 'reconstitution',
+      values: { duree: 15, niveau: 7, notes: 'cavalier' }
+    })
+    expect(fixed.settings).toEqual({ level: 7 })
+    expect(fromStep(fixed)).toEqual({
+      moduleId: 'reconstitution',
+      values: { duree: 15, niveau: 7, notes: 'cavalier' }
+    })
+    // An unknown level falls back to the player's.
+    expect(
+      toStep({
+        uid: 13,
+        moduleId: 'reconstitution',
+        values: { duree: 10, niveau: 21, notes: '' }
+      }).settings
+    ).toEqual({ level: 'mine' })
   })
 
   it('gives a puzzle rush one of the API lengths and its themes', () => {

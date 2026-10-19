@@ -40,4 +40,9 @@ enum ExerciseType: string
      * are its items; `metadata.solved`, `metadata.failed` (the XP depends on them).
      */
     case PuzzleRush = 'puzzle_rush';
+    /**
+     * A position rebuilt from memory (docs/BLINDFOLD_RECALL.md); `metadata.status` (exact, close,
+     * missed), `metadata.stage` and `metadata.unlocked` (the XP depends on them).
+     */
+    case BlindfoldRecall = 'blindfold_recall';
 }
