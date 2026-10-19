@@ -42,7 +42,7 @@ export function resultKind(run) {
 
 /**
  * The share solved, in whole percent rounded down (99.5 % never reads as a perfect 100); free
- * study: its minutes.
+ * study: its minutes; a puzzle streak: its best streak; a puzzle rush: its points.
  *
  * @param {{module: string, summary: {itemCount: number, successCount: number, durationMs?: number, metrics?: Record<string, any>}|null}} run
  */
@@ -50,6 +50,8 @@ export function resultScore(run) {
   const s = run.summary
   if (run.module === 'free') return Math.floor((s?.durationMs ?? 0) / 60_000)
   if (run.module === 'puzzle_streak') return s?.metrics?.bestStreak ?? 0
+  // A rush is judged on its accuracy (the share solved) but scored in points.
+  if (run.module === 'puzzle_rush') return s?.metrics?.score ?? 0
   if (!s || !s.itemCount) return 0
   return Math.floor((s.successCount / s.itemCount) * 100 + 1e-9)
 }

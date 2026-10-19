@@ -1031,6 +1031,12 @@ export const puzzleStreakApi = {
     http.get('/api/puzzle-streak/openings', JSON_LD).then(r => r.data)
 }
 
+/** Puzzle rush (docs/PUZZLE_RUSH.md): the rules, my records by length, my last rushes. */
+export const puzzleRushApi = {
+  /** The rules (lengths, weight of a miss, ramp), the record of each length, the last rushes. */
+  overview: () => http.get('/api/puzzle-rush', JSON_LD).then(r => r.data)
+}
+
 /** Gamification (docs/GAMIFICATION.md): XP, level, streaks, trophies, the weekly quest. */
 export const gamificationApi = {
   /** XP, level, rank, module levels, streaks, today's exercise XP. */

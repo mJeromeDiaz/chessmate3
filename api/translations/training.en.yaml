@@ -9,6 +9,7 @@ module:
     evaluation: "Evaluation"
     puzzle_streak: "Streak"
     parcours_puzzles: "Parcours"
+    puzzle_rush: "Puzzle Rush"
 # The iCalendar feed and files (App\Training\Calendar\IcsWriter).
 calendar:
     feed_name: "Don't Stay Rooky — sessions"

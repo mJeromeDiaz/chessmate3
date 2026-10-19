@@ -108,6 +108,15 @@
           data-testid="puzzle-run-open"
           @click="runDialog = true"
         />
+        <q-btn
+          outline
+          no-caps
+          icon="bolt"
+          :label="$t('puzzleRush.launch.open')"
+          class="full-width puzzle-page__run q-mt-sm"
+          data-testid="rush-open"
+          @click="rushDialog = true"
+        />
       </template>
     </PuzzlePlayer>
 
@@ -122,6 +131,7 @@
     />
 
     <PuzzleRunDialog v-model="runDialog" />
+    <RushLaunchDialog v-model="rushDialog" />
     <PuzzleSettingsDialog v-model="settingsOpen" />
   </q-page>
 </template>
@@ -132,6 +142,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import PuzzleRunDialog from '@/components/puzzle/PuzzleRunDialog.vue'
+import RushLaunchDialog from '@/components/puzzleRush/RushLaunchDialog.vue'
 import PuzzleSettingsDialog from '@/components/puzzle/PuzzleSettingsDialog.vue'
 import RatingBadge from '@/components/puzzle/RatingBadge.vue'
 import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
@@ -157,6 +168,7 @@ const loading = ref(false)
 const importing = ref(false)
 const error = ref('')
 const runDialog = ref(false)
+const rushDialog = ref(false)
 const settingsOpen = ref(false)
 /** The submission in flight: "Passer" waits for it before asking for the next puzzle. */
 let submitting = Promise.resolve()

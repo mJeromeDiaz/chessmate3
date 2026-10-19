@@ -35,4 +35,9 @@ enum ExerciseType: string
      * `metadata.rating` (the puzzle's: the XP depends on it, as for a streak puzzle).
      */
     case ParcoursPuzzle = 'parcours_puzzle';
+    /**
+     * A puzzle rush (docs/PUZZLE_RUSH.md), one per run, logged when it closes: its puzzles played
+     * are its items; `metadata.solved`, `metadata.failed` (the XP depends on them).
+     */
+    case PuzzleRush = 'puzzle_rush';
 }

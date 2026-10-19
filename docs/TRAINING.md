@@ -7,7 +7,7 @@ Une **séance** (*run*) est un temps d'entraînement fixé à l'avance (5 à 30 
 modes ([WOODPECKER.md](WOODPECKER.md)), le test des répertoires d'ouvertures
 ([REPERTOIRE.md § 15](REPERTOIRE.md#15-test-du-répertoire-séances-chronométrées)), les puzzles
 classés (§ 5 bis), le temps libre (§ 5 ter), les séries de coordonnées
-([COORDINATES.md](COORDINATES.md)) les puzzles à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)), l'évaluation de position ([EVALUATION.md](EVALUATION.md)) le puzzle streak ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) et les paliers de puzzles d'un parcours ([PARCOURS.md](PARCOURS.md), séances finies par leur nombre d'exercices : `Training\Module\CountedModuleInterface`). Le socle est générique : un module
+([COORDINATES.md](COORDINATES.md)) les puzzles à l'aveugle ([BLINDFOLD.md](BLINDFOLD.md)), l'évaluation de position ([EVALUATION.md](EVALUATION.md)) le puzzle streak ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)), le puzzle rush ([PUZZLE_RUSH.md](PUZZLE_RUSH.md)) et les paliers de puzzles d'un parcours ([PARCOURS.md](PARCOURS.md), séances finies par leur nombre d'exercices : `Training\Module\CountedModuleInterface`). Le socle est générique : un module
 implémente un contrat et hérite du chronomètre, des règles de fin et du récapitulatif. Événements et
 journal : [ACTIVITY.md](ACTIVITY.md).
 
@@ -29,6 +29,7 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Module Streak | `App\PuzzleStreak\Training\StreakModule` (prolongation : `Training\Module\OvertimeModuleInterface`) |
 | Module Parcours | `App\Parcours\Training\PuzzleTierModule` (paliers d'un parcours seulement, finis par leur nombre : `Training\Module\CountedModuleInterface`, [PARCOURS.md](PARCOURS.md)) |
 | Module Évaluation | `App\Evaluation\Training\EvaluationModule` (durées permises : `Training\Module\BudgetChoicesInterface`) |
+| Module Puzzle Rush | `App\PuzzleRush\Training\RushModule` (2, 3 ou 5 min : `Training\Module\BudgetChoicesInterface`, [PUZZLE_RUSH.md](PUZZLE_RUSH.md)) |
 | API | `App\ApiResource\Training\*`, `App\State\Training\*` |
 | Front | `services/api.js` (`trainingApi`), `composables/training/useTimeboxedRun.js`, `stores/training.js`, `components/training/{RunLauncher, RunHeader, RunRecap, RunTable, FreeRunPanel}.vue`, `components/puzzle/PuzzleRunDialog.vue`, `utils/training.js`, `pages/index/training/[id].vue` |
 
@@ -344,6 +345,7 @@ Réglages d'une étape, vérifiés par le module au lancement **et** au démarra
 | `repertoire` | `{repertoireIds: string[]}` (tronçons) ; un palier de parcours ajoute `{unit: line, limit}` ([PARCOURS.md](PARCOURS.md)) | l'utilisateur |
 | `free` | `{format}` ; les `notes` de l'étape deviennent celles de la séance | l'utilisateur |
 | `puzzle_streak` | `{ramp, topic}` ; la séance est en mode `timed` ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) | l'utilisateur |
+| `puzzle_rush` | `{themes?: string[]}` ; 2, 3 ou 5 minutes ([PUZZLE_RUSH.md](PUZZLE_RUSH.md)) | l'utilisateur |
 | `parcours_puzzles` | `{tier, themes, count}` ou `{tier, family, color, count}` ; seulement dans un parcours (`training_session.parcours`, [PARCOURS.md](PARCOURS.md)), refusé ailleurs | l'utilisateur |
 
 ### Déroulé (`SessionManager`)

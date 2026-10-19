@@ -1,0 +1,28 @@
+{
+  "percent": "{n} %",
+  "progress": "✓ {solved} · ✗ {failed} · précision {accuracy}",
+  "level": "≈ {rating}",
+  "oneTry": "Un essai, sans aide",
+  "oneTryTip": "Une erreur compte comme ratée et efface deux réussites : le puzzle suivant arrive tout de suite.",
+  "launch": {
+    "open": "Puzzle Rush",
+    "title": "Puzzle Rush",
+    "lead": "Un maximum de puzzles en un temps fixe, de plus en plus durs. Une erreur ne t’arrête pas, mais elle efface deux réussites : va vite, mais juste.",
+    "start": "Lancer le rush",
+    "records": "Tes records",
+    "noRecord": "pas encore de record",
+    "points": "{n} points",
+    "recordLine": "{minutes} min : {best}",
+    "rankedOnly": "Seuls les rushs joués jusqu’au bout, sans thème, comptent pour les records."
+  },
+  "result": {
+    "points": "POINTS",
+    "speedAccuracy": "{speed} puzzles/min · {accuracy} de précision",
+    "scoreDetail": "Score : {solved} réussis − {weight} × {failed} = {score} points",
+    "record": "Ton record : {n}",
+    "newRecord": "Nouveau record ! Ancien : {n}",
+    "firstRecord": "Ton premier record !",
+    "unranked": "Hors records (arrêté avant la fin, ou avec des thèmes)",
+    "xp": "+{n} XP"
+  }
+}

@@ -331,6 +331,42 @@
     </PuzzlePlayer>
 
     <PuzzlePlayer
+      v-else-if="runner.phase.value === 'running' && rushItem"
+      :puzzle="rushItem.data.puzzle"
+      :loading="loading"
+      after-mistake="stop"
+      module="puzzle_rush"
+      :help="false"
+      quick
+      @resolve="onRushResolve"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">{{
+            rushProgress(rushCounts.solved, rushCounts.failed)
+          }}</div>
+        </RunHeader>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+
+      <template #chips>
+        <span class="play-chip" data-testid="rush-level">{{
+          $t('puzzleRush.level', { rating: rushItem.data.targetRating })
+        }}</span>
+        <span class="play-chip lt-md"
+          >{{ $t('puzzleRush.oneTry')
+          }}<q-tooltip>{{ $t('puzzleRush.oneTryTip') }}</q-tooltip></span
+        >
+      </template>
+    </PuzzlePlayer>
+
+    <PuzzlePlayer
       v-else-if="runner.phase.value === 'running' && puzzle"
       :puzzle="puzzle"
       :loading="loading"
@@ -414,7 +450,9 @@
  * positions to evaluate (docs/EVALUATION.md), a puzzle streak (docs/PUZZLE_STREAK.md: no free
  * help, the store's helps and passes, bought in place when out of stock; its overtime asked in
  * `OvertimeDialog`) or a tier of a parcours (docs/PARCOURS.md: no clock, its count of puzzles or
- * lines; between two tiers, Lizy's banner starts the next one; "Terminer" abandons the parcours).
+ * lines; between two tiers, Lizy's banner starts the next one; "Terminer" abandons the parcours)
+ * or a puzzle rush (docs/PUZZLE_RUSH.md: one try, no help, the next puzzle at once; the counts and
+ * the accuracy while playing, the score only at the end).
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -452,6 +490,7 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
 import { levelAt } from '@/utils/puzzleStreak'
 import { ratingZone, stepPlan, tierName } from '@/utils/parcours'
+import { rushProgress } from '@/utils/puzzleRush'
 import { stepModule } from '@/utils/session/steps'
 import { resultKind } from '@/utils/runResult'
 import { chestToOpen } from '@/utils/shopReward'
@@ -465,6 +504,12 @@ definePage({ meta: { auth: 'required' } })
  */
 const AUTO_NEXT_MS = 1200
 
+/**
+ * A rush's puzzle answered, solved or missed: the next one comes once the professor reacted and
+ * the board flashed (the clock is running, so this stays short).
+ */
+const RUSH_NEXT_MS = 400
+
 /** Item types played on the puzzle board. */
 const PUZZLE_ITEMS = ['woodpecker_puzzle', 'puzzle']
 
@@ -476,7 +521,8 @@ const STOP_MESSAGES = [
   'coordinates',
   'blindfold',
   'evaluation',
-  'puzzle_streak'
+  'puzzle_streak',
+  'puzzle_rush'
 ]
 const route = useRoute()
 const router = useRouter()
@@ -740,6 +786,37 @@ async function onStreakResolve(_outcome, report) {
     holdEnd.value = false
     error.value = apiErrorMessage(e)
   }
+}
+
+/** The puzzle rush's puzzle on screen. */
+const rushItem = computed(() =>
+  runner.item.value?.type === 'rush_puzzle' ? runner.item.value : null
+)
+/** Solved and failed so far: the last answer's counts, else the puzzle's (a reload). */
+const rushCounts = computed(() => {
+  const answered = runner.result.value?.data
+  if (typeof answered?.solved === 'number')
+    return { solved: answered.solved, failed: answered.failed ?? 0 }
+  return {
+    solved: rushItem.value?.data.solved ?? 0,
+    failed: rushItem.value?.data.failed ?? 0
+  }
+})
+
+/**
+ * A rush's puzzle answered: solved or missed, the next one comes by itself, no solution played
+ * (the missed ones are replayed from the result).
+ *
+ * @param {string} _outcome
+ * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
+ */
+async function onRushResolve(_outcome, report) {
+  try {
+    await runner.submit(report)
+  } catch (e) {
+    error.value = apiErrorMessage(e)
+  }
+  setTimeout(next, RUSH_NEXT_MS)
 }
 
 /**

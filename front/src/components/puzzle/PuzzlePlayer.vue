@@ -29,6 +29,7 @@
       <ChessBoard
         v-if="game.puzzle.value"
         ref="board"
+        :class="flashClass"
         :fen="game.fen.value"
         :orientation="game.orientation.value"
         :movable-color="game.movableColor.value"
@@ -147,7 +148,7 @@
       data-testid="puzzle-result"
     >
       <ResultSheet
-        v-if="feedback && timeline.kind.value"
+        v-if="feedback && !quick && timeline.kind.value"
         :kind="timeline.kind.value"
         :step="timeline.step.value"
         :run="timeline.run.value"
@@ -239,7 +240,12 @@ const props = defineProps({
    */
   aids: { type: Object, default: null },
   /** A dot on the settings icon: filters other than the defaults. */
-  settingsActive: { type: Boolean, default: false }
+  settingsActive: { type: Boolean, default: false },
+  /**
+   * The puzzle rush (docs/PUZZLE_RUSH.md): no result sheet, the professor reacts at once and the
+   * board flashes, a miss included (with `afterMistake: 'stop'`); the page moves on by itself.
+   */
+  quick: { type: Boolean, default: false }
 })
 
 const emit = defineEmits({
@@ -269,7 +275,14 @@ const durationMs = ref(/** @type {number|null} */ (null))
 
 const game = usePuzzle({
   afterMistake: props.afterMistake,
-  onResolve: (outcome, report) => emit('resolve', outcome, report),
+  onResolve: (outcome, report) => {
+    // A rush's miss ends the puzzle there: its reaction now, no solution played.
+    if (props.quick && outcome === 'failed') {
+      playOutcomeSound('puzzleMissed')
+      timeline.play('miss')
+    }
+    emit('resolve', outcome, report)
+  },
   onComplete: () => {
     durationMs.value = startedAt ? Date.now() - startedAt : null
     // A pass of the store: the solution played, no verdict (the next puzzle comes).
@@ -331,8 +344,16 @@ const copy = computed(() =>
   })
 )
 
+/** The rush's flash around the board, once the verdict is known. */
+const flashClass = computed(() =>
+  props.quick && timeline.kind.value
+    ? `puzzle-player__board--${timeline.kind.value}`
+    : null
+)
+
 const reacting = computed(
-  () => timeline.kind.value !== null && timeline.step.value >= 2
+  () =>
+    timeline.kind.value !== null && (props.quick || timeline.step.value >= 2)
 )
 
 const prof = computed(() =>
@@ -423,3 +444,35 @@ defineExpose({
   pass: () => game.pass()
 })
 </script>
+
+<style scoped>
+/* The puzzle rush's flash: a short glow around the board, green or red (`quick`). */
+.puzzle-player__board--win,
+.puzzle-player__board--hint,
+.puzzle-player__board--miss {
+  border-radius: 6px;
+  animation: puzzle-player-flash 0.4s ease-out;
+}
+.puzzle-player__board--win,
+.puzzle-player__board--hint {
+  --flash: var(--cm-success);
+}
+.puzzle-player__board--miss {
+  --flash: var(--cm-danger);
+}
+@keyframes puzzle-player-flash {
+  from {
+    box-shadow: 0 0 0 6px var(--flash);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-player__board--win,
+  .puzzle-player__board--hint,
+  .puzzle-player__board--miss {
+    animation: none;
+  }
+}
+</style>

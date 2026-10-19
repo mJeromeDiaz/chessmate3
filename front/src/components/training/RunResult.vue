@@ -12,8 +12,10 @@
         :kind="kind"
         :module="run.module"
         :score="score"
-        :ring="streak ? streakRing(run) : null"
+        :ring="streak ? streakRing(run) : rush ? rushRing(run) : null"
         :note="streak ? streakNote(run) : ''"
+        :caption="rush ? $t('puzzleRush.result.points') : ''"
+        :lines="rush ? rushLines(run, rushXp) : []"
         :badges="streak ? wonBadges(run.summary?.metrics) : []"
         :fixable="fixable.length"
         :confetti="confetti"
@@ -52,8 +54,9 @@
  * replay one after the other, client side only (`RunEndReplay`). The next lesson is the session's
  * next module, the session's review, or the module's page. Confetti only for a perfect run whose
  * end was seen on the page, once. A puzzle streak shows its best streak and its record instead of a
- * share (every streak ends on a miss); confetti for a record. A whole parcours shows its tiers'
- * score, without mistakes to correct.
+ * share (every streak ends on a miss); confetti for a record. A puzzle rush is judged on its
+ * accuracy (its share solved) but shows its points, with its speed, accuracy and XP together. A
+ * whole parcours shows its tiers' score, without mistakes to correct.
  */
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -62,6 +65,7 @@ import RunFixErrors from '@/components/training/result/RunFixErrors.vue'
 import RunResultScreen from '@/components/training/result/RunResultScreen.vue'
 import { trainingApi } from '@/services/api'
 import { usePuzzleStore } from '@/stores/puzzle'
+import { rushLines, rushRing } from '@/utils/puzzleRush'
 import { wonBadges } from '@/utils/puzzleStreak'
 import { missedItems } from '@/utils/runEnd'
 import {
@@ -113,6 +117,17 @@ const kind = computed(() => resultKind(props.run))
 const score = computed(() => resultScore(props.run))
 /** A puzzle streak: its record on the ring and under it. */
 const streak = computed(() => props.run.module === 'puzzle_streak')
+/** A puzzle rush: its points, the ring filled by its accuracy; speed, accuracy and XP under it. */
+const rush = computed(() => props.run.module === 'puzzle_rush')
+/** The XP the run gained (its review's), null until read. */
+const xp = ref(/** @type {number|null} */ (null))
+/**
+ * The rush's XP: what the ledger holds once the outbox wrote it, the rule's before (the daily cap
+ * may lower it, the ledger says).
+ */
+const rushXp = computed(() =>
+  (xp.value ?? 0) > 0 ? xp.value : (props.run.summary?.metrics?.xp ?? null)
+)
 const themeLabel = (/** @type {string} */ key) => puzzles.themeLabel(key)
 const fixable = computed(() =>
   fixableItems(missedItems(items.value, themeLabel))
@@ -145,6 +160,7 @@ async function load() {
     ])
     if (props.run.id !== runId) return
     items.value = review.items
+    xp.value = typeof review.xp === 'number' ? review.xp : null
     loadedRun = runId
   } catch {
     // Without the review, nothing to correct: the result screen still shows.
@@ -181,7 +197,10 @@ watch(
     view.value = 'result'
     current.value = null
     if (!open) return
-    if (loadedRun !== props.run.id) items.value = []
+    if (loadedRun !== props.run.id) {
+      items.value = []
+      xp.value = null
+    }
     load()
     confetti.value =
       props.live &&

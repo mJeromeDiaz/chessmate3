@@ -33,6 +33,7 @@ import {
   formatRatingDelta
 } from '@/utils/format'
 import { LEVELS } from '@/utils/blindfold'
+import { rushLines } from '@/utils/puzzleRush'
 import { RAMPS, streakText, topicLabel, wonBadges } from '@/utils/puzzleStreak'
 import {
   ORIENTATIONS,
@@ -94,7 +95,7 @@ const stats = computed(() => {
   ]
 })
 
-/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles, position evaluation, puzzle streak). */
+/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles, position evaluation, puzzle streak, puzzle rush). */
 const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
@@ -187,6 +188,16 @@ const details = computed(() => {
       lines.push(t('training.recap.extended', { n: m.extensions }))
     const aids = streakAids(m)
     if (aids) lines.push(t('training.recap.aids', { aids }))
+    return lines
+  }
+  if (props.run.module === 'puzzle_rush') {
+    lines.push(...rushLines(props.run, null))
+    if (m.averageMs)
+      lines.push(
+        t('training.recap.perPuzzle', { time: formatDuration(m.averageMs) })
+      )
+    if (m.hardestRating)
+      lines.push(t('training.recap.hardest', { rating: m.hardestRating }))
     return lines
   }
   if (props.run.module === 'evaluation') {

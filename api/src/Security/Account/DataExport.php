@@ -157,6 +157,14 @@ final readonly class DataExport
                 $id,
                 ['moves'],
             )),
+            // The puzzles of the rushes (docs/PUZZLE_RUSH.md); their scores are in the runs' summaries.
+            'puzzleRushAttempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, puzzle_id AS puzzle, puzzle_rating, position, target_rating,
+                        status, started_at, submitted_at, duration_ms, moves, mistakes
+                   FROM puzzle_rush_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['moves'],
+            )),
             // The puzzles of the parcours' tiers (docs/PARCOURS.md); the parcours are the sessions above.
             'parcoursPuzzles' => $this->withLichessIds($this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, puzzle_id AS puzzle, puzzle_rating, position, target_rating,

@@ -7,6 +7,7 @@ namespace App\Gamification\Xp;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Parcours\Effort;
 use App\Enum\Training\Module;
+use App\PuzzleRush\RushRules;
 
 /**
  * The XP rules (docs/GAMIFICATION.md, validated 2026-10-05), in one place: change a value here,
@@ -54,6 +55,16 @@ final class XpRules
     /** Bonus: a streak record beaten (docs/PUZZLE_STREAK.md). */
     public const STREAK_RECORD = 25;
 
+    /**
+     * Puzzle rush (docs/PUZZLE_RUSH.md): RUSH_PER_POINT per point of its score (a miss wipes out
+     * puzzles solved), plus RUSH_ACCURACY_BONUS from RUSH_BONUS_ACCURACY with RUSH_BONUS_MIN_SOLVED
+     * puzzles solved at least; one exercise per run, within the daily cap.
+     */
+    public const RUSH_PER_POINT = 2;
+    public const RUSH_ACCURACY_BONUS = 20;
+    public const RUSH_BONUS_ACCURACY = 0.9;
+    public const RUSH_BONUS_MIN_SOLVED = 10;
+
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
     public const MODULE_STEP = 100;
@@ -71,7 +82,7 @@ final class XpRules
     /**
      * XP of one exercise, before the daily cap.
      *
-     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status, an evaluation's status and bonuses, a streak puzzle's rating)
+     * @param array<mixed> $metadata the exercise's facts (a blindfold puzzle's status, an evaluation's status and bonuses, a streak puzzle's rating, a rush's solved and failed)
      */
     public static function exercise(ExerciseType $type, bool $success, int $durationMs, int $itemCount = 1, array $metadata = []): int
     {
@@ -94,6 +105,7 @@ final class XpRules
             } + (true === ($metadata['planOk'] ?? null) ? self::EVALUATION_PLAN : 0)
               + (true === ($metadata['fast'] ?? null) ? self::EVALUATION_FAST : 0),
             ExerciseType::StreakPuzzle, ExerciseType::ParcoursPuzzle => $success ? self::streakPuzzle(\is_int($metadata['rating'] ?? null) ? $metadata['rating'] : 0) : 0,
+            ExerciseType::PuzzleRush => self::rush(\is_int($metadata['solved'] ?? null) ? $metadata['solved'] : 0, \is_int($metadata['failed'] ?? null) ? $metadata['failed'] : 0),
         };
     }
 
@@ -117,6 +129,17 @@ final class XpRules
     }
 
     /**
+     * XP of a puzzle rush: by its score, plus the accuracy bonus; nothing without a puzzle solved.
+     */
+    public static function rush(int $solved, int $failed): int
+    {
+        $accuracy = RushRules::accuracy($solved, $failed);
+        $bonus = $solved >= self::RUSH_BONUS_MIN_SOLVED && null !== $accuracy && $accuracy >= self::RUSH_BONUS_ACCURACY ? self::RUSH_ACCURACY_BONUS : 0;
+
+        return self::RUSH_PER_POINT * RushRules::score($solved, $failed) + $bonus;
+    }
+
+    /**
      * The module of an exercise.
      */
     public static function module(ExerciseType $type): Module
@@ -131,6 +154,7 @@ final class XpRules
             ExerciseType::PositionEvaluation => Module::Evaluation,
             ExerciseType::StreakPuzzle => Module::PuzzleStreak,
             ExerciseType::ParcoursPuzzle => Module::ParcoursPuzzles,
+            ExerciseType::PuzzleRush => Module::PuzzleRush,
         };
     }
 

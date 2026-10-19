@@ -12,7 +12,7 @@ import { GENERAL, RAMPS, topicLabel } from '@/utils/puzzleStreak'
  * Field types beyond the generic ones: `themes` (puzzle theme keys, picked in a second panel),
  * `repertoire` (ids of the user's repertoires, at least one) and `lightSet` (the user's Woodpecker light
  * set: shown, not chosen, as there is at most one; no value) and `durationChoice` (the length of a
- * module whose runs last one of a few lengths only, the coordinates series and the evaluation: picked among the API's
+ * module whose runs last one of a few lengths only, the coordinates series, the evaluation and the puzzle rush: picked among the API's
  * lengths in `context.durationChoices`, its default from there too) and `streakTopic` (a puzzle
  * streak's topic, docs/PUZZLE_STREAK.md: its key, picked among `context.streakRules` and
  * `context.streakOpenings`).
@@ -349,6 +349,25 @@ export const MODULES = [
     ]
   }),
   defineModule({
+    id: 'rush',
+    ...byProf('albert-stein'),
+    glyph: glyph('♗'),
+    available: true,
+    bg: '#FFB020',
+    ink: '#1B1530',
+    soft: '#FFF1D6',
+    deep: '#E08A00',
+    accentInk: '#8A5200',
+    fields: [
+      field(
+        { key: 'duree', type: 'durationChoice', default: 0 },
+        { label: 'fields.duration', hint: 'hints.rushDuration' }
+      ),
+      themes,
+      notes()
+    ]
+  }),
+  defineModule({
     id: 'woodpecker',
     ...byProf('albert-stein'),
     glyph: glyph('♝'),
@@ -658,7 +677,7 @@ export function sessionMinutes(items) {
  *   one of them (its `set` value: the set id; null: the light set)
  * @property {(key: string) => string} themeLabel
  * @property {Record<string, {minutes: number[], default: number}>} durationChoices the lengths a
- *   module's runs may last and the one offered first (catalogue id: the coordinates, the evaluation), from the API
+ *   module's runs may last and the one offered first (catalogue id: the coordinates, the evaluation, the rush), from the API
  * @property {import('@/utils/puzzleStreak').StreakRules|null} [streakRules] the puzzle streak's rules
  * @property {import('@/utils/puzzleStreak').StreakOpenings|null} [streakOpenings] the openings a streak can draw from
  */
@@ -812,6 +831,7 @@ export const API_MODULES = {
   aveugle: 'blindfold',
   evaluation: 'evaluation',
   streak: 'puzzle_streak',
+  rush: 'puzzle_rush',
   parcours: 'parcours_puzzles'
 }
 
@@ -830,7 +850,8 @@ export function toStep(item) {
   let settings = {}
   if (module === 'free')
     settings = { format: FREE_FORMATS.includes(v.type) ? v.type : 'other' }
-  if (module === 'puzzles') settings = { themes: [...(v.themes ?? [])] }
+  if (module === 'puzzles' || module === 'puzzle_rush')
+    settings = { themes: [...(v.themes ?? [])] }
   if (module === 'woodpecker' && v.set) settings = { setId: v.set }
   if (module === 'repertoire')
     settings = { repertoireIds: [...(v.repertoires ?? [])] }
@@ -883,7 +904,8 @@ export function fromStep(step) {
   if (step.module === 'free') {
     values.type = oneOf(FREE_FORMATS, settings.format, 'other')
   }
-  if (step.module === 'puzzles') values.themes = [...(settings.themes ?? [])]
+  if (step.module === 'puzzles' || step.module === 'puzzle_rush')
+    values.themes = [...(settings.themes ?? [])]
   if (step.module === 'woodpecker') values.set = settings.setId ?? null
   if (step.module === 'repertoire')
     values.repertoires = [...(settings.repertoireIds ?? [])]

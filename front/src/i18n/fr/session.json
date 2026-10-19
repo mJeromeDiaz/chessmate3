@@ -27,6 +27,10 @@
         "title": "Puzzle streak",
         "desc": "Du plus facile au plus dur : une erreur et tu repars de zéro. Ton meilleur streak compte."
       },
+      "rush": {
+        "title": "Puzzle Rush",
+        "desc": "Un maximum de puzzles en 2, 3 ou 5 minutes. Une erreur efface deux réussites : la vitesse ne paie que si tu restes juste."
+      },
       "woodpecker": {
         "title": "Woodpecker",
         "desc": "Ton set light : des puzzles faciles, revus encore et encore."
@@ -84,6 +88,7 @@
       "lightSet": "La séance repart du début du set ; il grandit tout seul quand tu l’as presque épuisé.",
       "repertoires": "Les révisions dues passent en premier (répétition espacée automatique).",
       "evaluationDuration": "Une séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent jusqu’au bout.",
+      "rushDuration": "Un rush dure 2, 3 ou 5 minutes : les puzzles s’enchaînent sans pause, de plus en plus durs.",
       "coordinatesDuration": "Une série dure 1, 2, 5 ou 10 minutes."
     },
     "placeholders": {

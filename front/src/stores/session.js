@@ -4,6 +4,7 @@ import {
   coordinatesApi,
   evaluationApi,
   planApi,
+  puzzleRushApi,
   puzzleStreakApi,
   repertoireApi,
   woodpeckerApi
@@ -27,6 +28,7 @@ import {
   settingsIssue,
   settingsPayload
 } from '@/utils/session/plans'
+import { rushMinutes } from '@/utils/puzzleRush'
 
 /** Where the draft is kept between visits (this browser only; wiped on sign-out). */
 export const DRAFT_KEY = 'dontstayrooky.session.draft'
@@ -167,8 +169,9 @@ export const useSessionStore = defineStore('session', () => {
 
   /**
    * Fetches what the modules play on: the user's repertoires, their ongoing light set, the
-   * puzzle themes and the lengths of a coordinates series and of an evaluation run (the program's
-   * items follow them). Fetched again on each call (the user may have created one meanwhile).
+   * puzzle themes and the lengths of a coordinates series, of an evaluation run and of a puzzle
+   * rush (the program's items follow them). Fetched again on each call (the user may have created
+   * one meanwhile).
    */
   async function fetchSubjects() {
     subjectsLoading.value = true
@@ -184,13 +187,14 @@ export const useSessionStore = defineStore('session', () => {
       })
       .catch(() => {})
     try {
-      const [repertoireList, sets, , coordinates, evaluation] =
+      const [repertoireList, sets, , coordinates, evaluation, rush] =
         await Promise.all([
           repertoireApi.list(),
           woodpeckerApi.sets(),
           puzzles.fetchThemes(),
           coordinatesApi.overview(),
-          evaluationApi.overview()
+          evaluationApi.overview(),
+          puzzleRushApi.overview()
         ])
       durationChoices.value = {
         coordonnees: {
@@ -200,7 +204,8 @@ export const useSessionStore = defineStore('session', () => {
         evaluation: {
           minutes: evaluation.rules.runMinutes,
           default: evaluation.rules.defaultMinutes
-        }
+        },
+        rush: rushMinutes(rush.rules)
       }
       items.value = items.value.map(item => {
         const module = MODULES_BY_ID[item.moduleId]

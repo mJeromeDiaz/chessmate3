@@ -24,6 +24,7 @@ describe('session catalogue', () => {
       'libre',
       'puzzles',
       'streak',
+      'rush',
       'woodpecker',
       'repertoire',
       'evaluation',
@@ -54,6 +55,8 @@ describe('session catalogue', () => {
     ])
     // The evaluation lasts one of the API's lengths, like a coordinates series.
     expect(keys('evaluation')).toEqual(['duree', 'elo', 'couleur', 'notes'])
+    // The puzzle rush too (2, 3 or 5 minutes), with the puzzles' themes.
+    expect(keys('rush')).toEqual(['duree', 'themes', 'notes'])
     expect(MODULES_BY_ID.libre.fields[1].options).toContain('other')
     expect(MODULES_BY_ID.libre.fields[1].optionLabel('other')).toBe('Autre')
     for (const m of MODULES.filter(m => m.available)) {
@@ -435,5 +438,24 @@ describe('session catalogue', () => {
       moduleId: 'evaluation',
       values: { duree: 5, elo: 1600, couleur: 'black', notes: '' }
     })
+  })
+
+  it('gives a puzzle rush one of the API lengths and its themes', () => {
+    const step = toStep({
+      uid: 10,
+      moduleId: 'rush',
+      values: { duree: 3, themes: ['fork', 'pin'], notes: ' vite ' }
+    })
+    expect(step).toEqual({
+      module: 'puzzle_rush',
+      minutes: 3,
+      notes: 'vite',
+      settings: { themes: ['fork', 'pin'] }
+    })
+    expect(fromStep(step)).toEqual({
+      moduleId: 'rush',
+      values: { duree: 3, themes: ['fork', 'pin'], notes: 'vite' }
+    })
+    expect(MODULES_BY_ID.rush.profSlug).toBe('albert-stein')
   })
 })

@@ -16,6 +16,7 @@
       "evaluation": "Plus aucune position pour ces réglages : séance close.",
       "puzzle_streak": "La sélection des puzzles est en cours de mise à jour : séance close.",
       "parcours_puzzles": "Plus aucun puzzle pour ce palier : palier clos.",
+      "puzzle_rush": "Plus aucun puzzle à ce niveau pour ces thèmes : séance close.",
       "woodpecker": "Le set a été mis en pause ou abandonné : séance close."
     }
   },
@@ -28,6 +29,7 @@
     "evaluation": "Retour à l’évaluation",
     "puzzle_streak": "Retour au streak",
     "parcours_puzzles": "Retour aux parcours",
+    "puzzle_rush": "Retour aux puzzles",
     "home": "Retour à l’accueil"
   },
   "result": {
@@ -221,6 +223,7 @@
       "blindfold": "Le puzzle en cours ne sera pas compté.",
       "evaluation": "La position à l’écran ne sera pas comptée.",
       "puzzle_streak": "Le puzzle en cours ne sera pas compté : ton streak s’arrête là.",
+      "puzzle_rush": "Le puzzle à l’écran ne sera pas compté.",
       "default": "Le puzzle en cours ne sera pas compté."
     }
   }

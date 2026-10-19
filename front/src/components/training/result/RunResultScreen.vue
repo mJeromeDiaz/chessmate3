@@ -105,8 +105,16 @@
           </template>
         </div>
         <div class="rr__caption" :style="{ color: screen.ink }">{{
-          screen.caption
+          caption || screen.caption
         }}</div>
+        <div
+          v-for="line in lines"
+          :key="line"
+          class="rr__note"
+          :style="{ color: screen.ink }"
+          data-testid="run-result-line"
+          >{{ line }}</div
+        >
         <div
           v-if="note"
           class="rr__note"
@@ -205,12 +213,16 @@ const props = defineProps({
   kind: { type: String, required: true },
   /** The API's module (its professor). */
   module: { type: String, required: true },
-  /** Percent solved, minutes of free study, or a puzzle streak's best streak. */
+  /** Percent solved, minutes of free study, a puzzle streak's best streak or a rush's points. */
   score: { type: Number, required: true },
   /** How full the ring is, in percent, when the score is not a share (a puzzle streak). */
   ring: { type: Number, default: null },
   /** A line under the caption (a puzzle streak's record). */
   note: { type: String, default: '' },
+  /** The caption under the ring instead of the verdict's (a puzzle rush: its points). */
+  caption: { type: String, default: '' },
+  /** Lines under the caption (a puzzle rush: speed and accuracy, the score, the record, the XP). */
+  lines: { type: Array, default: () => [] },
   /**
    * The badges the run won (a puzzle streak's), shown under the note.
    *
@@ -249,7 +261,10 @@ const line2 = computed(() =>
 const percent = computed(() =>
   props.kind === 'done' ? 100 : (props.ring ?? props.score)
 )
-const shownCount = computed(() => countAt(props.kind, props.score, k.value))
+// A score that is not a share (its ring says its own) counts straight up, never overshooting.
+const shownCount = computed(() =>
+  countAt(props.ring === null ? props.kind : 'perfect', props.score, k.value)
+)
 const dash = computed(
   () =>
     CIRC *

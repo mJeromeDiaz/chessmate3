@@ -22,6 +22,13 @@ const api = vi.hoisted(() => ({
       rules: { runMinutes: [1, 2, 5, 10], defaultMinutes: 2 }
     }))
   },
+  puzzleRushApi: {
+    overview: vi.fn(async () => ({
+      rules: { budgets: [120, 180, 300], defaultBudget: 180, errorWeight: 2 },
+      records: [],
+      recent: []
+    }))
+  },
   puzzleStreakApi: {
     overview: vi.fn(async () => ({
       rules: {
@@ -445,6 +452,25 @@ describe('session store', () => {
       })?.values.duree
     ).toBe(5)
     expect(store.totalMinutes).toBe(7)
+    expect(store.canSave).toBe(true)
+  })
+
+  it('gives a puzzle rush the default length of the API', async () => {
+    api.repertoireApi.list.mockResolvedValue([])
+    api.woodpeckerApi.sets.mockResolvedValue([])
+    api.puzzleApi.themes.mockResolvedValue([])
+    const store = useSessionStore()
+    store.title = 'Rush'
+    store.add('rush')
+    expect(store.canSave).toBe(false)
+
+    await store.fetchSubjects()
+
+    expect(store.items[0].values.duree).toBe(3)
+    expect(
+      store.add('rush', { duree: 5, themes: [], notes: '' })?.values.duree
+    ).toBe(5)
+    expect(store.totalMinutes).toBe(8)
     expect(store.canSave).toBe(true)
   })
 
