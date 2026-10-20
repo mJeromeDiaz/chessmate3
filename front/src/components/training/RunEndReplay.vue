@@ -25,7 +25,6 @@
       class="run-end-replay__puzzle"
       :puzzle="puzzle"
       :feedback="false"
-      stacked
       @complete="finished = true"
     >
       <template #result="{ failed }">
@@ -37,7 +36,7 @@
       </template>
     </PuzzlePlayer>
 
-    <template v-else>
+    <div v-else class="run-end-replay__line">
       <ChessBoard
         ref="board"
         :fen="replay.fen.value"
@@ -50,7 +49,7 @@
       <div class="run-end-replay__status" data-testid="run-end-replay-status">{{
         lineStatus
       }}</div>
-    </template>
+    </div>
 
     <footer class="run-end-replay__footer">
       <button
@@ -217,6 +216,15 @@ onBeforeUnmount(() => replay.dispose())
   font-size: 12.5px;
 }
 
+.run-end-replay__line {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
 .run-end-replay__status {
   font-size: 14px;
 }
@@ -235,5 +243,16 @@ onBeforeUnmount(() => replay.dispose())
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
+}
+
+// Wide screen: the button keeps its size, at the end (the replay is as wide as a module's screen).
+@media (min-width: 1024px) {
+  .run-end-replay__footer {
+    justify-content: flex-end;
+  }
+
+  .run-end-replay__btn {
+    flex: 0 1 360px;
+  }
 }
 </style>

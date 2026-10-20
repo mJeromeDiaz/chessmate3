@@ -230,8 +230,9 @@ watch(
   background: var(--cm-page);
   padding: max(16px, env(safe-area-inset-top)) 16px 24px;
 
+  // As wide as a module's puzzle screen: the board as tall as the window on a computer.
   > * {
-    max-width: 560px;
+    max-width: 1320px;
     margin: 0 auto;
   }
 }
