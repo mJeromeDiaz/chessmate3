@@ -133,7 +133,7 @@ final class RecallRunTest extends WoodpeckerWebTestCase
         self::assertSame(422, $this->start($alice, ['level' => 1, 'mode' => 'free'], 600)->getStatusCode(), 'a free run lasts an hour');
         self::assertSame(422, $this->start($alice, ['level' => 1, 'mode' => 'timed', 'visibleSeconds' => 5], 600)->getStatusCode());
         // A mind map step's options, never from the client (docs/BLINDFOLD_RECALL.md, § 3 bis).
-        foreach ([['count' => 5], ['lives' => 3], ['coordinates' => false], ['levels' => [1, 2]]] as $option) {
+        foreach ([['count' => 5], ['lives' => 3], ['coordinates' => false], ['levels' => [1, 2]], ['visibleSeconds' => 30]] as $option) {
             self::assertSame(422, $this->start($alice, ['level' => 1, 'mode' => 'timed'] + $option, 600)->getStatusCode(), (string) json_encode($option));
         }
 

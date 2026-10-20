@@ -59,7 +59,8 @@ final class Visualisation
      * Static blindfold vision: three sections of positions to remember, the levels 1 to 12 of the
      * position recall (docs/BLINDFOLD_RECALL.md); the mini-boss 2.1 rebuilds levels 2, 3 and 4 on a
      * board without coordinates, a life per piece wrong or missing; the mini-bosses 2.2 and 2.3 and
-     * the hidden one ask the vision module's questions (docs/VISION.md).
+     * the hidden one ask the vision module's questions (docs/VISION.md); the Cyclope shows two puzzle
+     * positions of 16 pieces (level 14) for 30 s each, a life per piece wrong or missing.
      */
     private static function chapter2(): Chapter
     {
@@ -81,7 +82,13 @@ final class Visualisation
             ], [
                 self::hidden('2-3-hidden', 60, null, ['hidden_2_3'], self::vision('attackers')),
             ]),
-        ], self::boss('2-boss', 240, 100, 'cyclope', ['chapter_2', 'boss_cyclope']));
+        ], self::boss('2-boss', 240, 100, 'cyclope', ['chapter_2', 'boss_cyclope'], new Activity(
+            Module::BlindfoldRecall,
+            ['level' => 14, 'mode' => 'timed', 'count' => 2, 'lives' => PathRules::BOSS_LIVES, 'visibleSeconds' => 30],
+            self::LESSON_SECONDS,
+            2,
+            PathRules::BOSS_LIVES,
+        )));
     }
 
     /** Dynamic vision: the Jongleur's short version first, then three sections. */

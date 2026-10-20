@@ -95,14 +95,15 @@ class RecallAttempt
 
     /**
      * @param list<string> $announced
+     * @param int|null     $visibleSeconds a mind map step's own time to memorize, null: the level's
      */
-    public function __construct(Run $run, int $level, string $fen, string $expectedPlacement, array $announced, ?int $puzzleId, int $pieceCount, \DateTimeImmutable $startedAt)
+    public function __construct(Run $run, int $level, string $fen, string $expectedPlacement, array $announced, ?int $puzzleId, int $pieceCount, \DateTimeImmutable $startedAt, ?int $visibleSeconds = null)
     {
         $this->id = Uuid::v7();
         $this->user = $run->getUser();
         $this->run = $run;
         $this->level = $level;
-        $this->visibleSeconds = RecallRules::level($level)['visibleSeconds'];
+        $this->visibleSeconds = $visibleSeconds ?? RecallRules::level($level)['visibleSeconds'];
         $this->fen = $fen;
         $this->expectedPlacement = $expectedPlacement;
         $this->announced = $announced;

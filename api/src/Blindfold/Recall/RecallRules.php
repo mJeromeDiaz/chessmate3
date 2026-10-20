@@ -76,6 +76,8 @@ final class RecallRules
     public const MAX_COUNT = 20;
     /** A mind map boss's lives at most, counted in pieces wrong or missing. */
     public const MAX_LIVES = 10;
+    /** A mind map step's own time to memorize, in seconds (the Cyclope: 30). */
+    public const PATH_VISIBLE_SECONDS = [5, 60];
 
     public static function exists(int $level): bool
     {

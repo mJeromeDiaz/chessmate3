@@ -51,8 +51,8 @@ use Symfony\Component\Uid\Uuid;
  * level without a puzzle to draw, no run. A run of a mind map step ({@see Run::isPathStep()}), and
  * only such a run, may take options of its own (docs/BLINDFOLD_RECALL.md, § 3 bis): `count` (the
  * positions, the run's end), `lives` (pieces wrong or missing, the run closes when they are spent),
- * `coordinates` (false: a board without them), `levels` (the level of each position in turn); its
- * levels need not be open.
+ * `coordinates` (false: a board without them), `levels` (the level of each position in turn),
+ * `visibleSeconds` (its own time to memorize); its levels need not be open.
  *
  * @phpstan-type Announced list<array{uci: string, san: string}>
  */
@@ -64,7 +64,7 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
     /** A session step's level: the highest one open when the step starts. */
     public const MY_LEVEL = 'mine';
     /** The options only a mind map step gives its run. */
-    private const PATH_OPTIONS = ['count', 'lives', 'coordinates', 'levels'];
+    private const PATH_OPTIONS = ['count', 'lives', 'coordinates', 'levels', 'visibleSeconds'];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -297,13 +297,13 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
         if (null === $rules['puzzlePieces']) {
             $fen = $this->generator->generate($rules['pieces']);
             $placement = explode(' ', $fen)[0];
-            $attempt = new RecallAttempt($run, $level, $fen, $placement, [], null, \count(Placement::squares($placement)), $now);
+            $attempt = new RecallAttempt($run, $level, $fen, $placement, [], null, \count(Placement::squares($placement)), $now, self::options($run->getConfig())['visibleSeconds']);
         } else {
             $position = $this->picker->pick($run, $level);
             if (null === $position) {
                 throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_puzzle'], 'No puzzle fits this level.');
             }
-            $attempt = new RecallAttempt($run, $level, $position->fen, $position->expectedPlacement, $position->announced, $position->puzzleId, \count(Placement::squares($position->expectedPlacement)), $now);
+            $attempt = new RecallAttempt($run, $level, $position->fen, $position->expectedPlacement, $position->announced, $position->puzzleId, \count(Placement::squares($position->expectedPlacement)), $now, self::options($run->getConfig())['visibleSeconds']);
         }
         $this->entityManager->persist($attempt);
         $this->entityManager->flush();
@@ -381,19 +381,21 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
      *
      * @param array<string, mixed> $config
      *
-     * @return array{count: int|null, lives: int|null, coordinates: bool, levels: list<int>}
+     * @return array{count: int|null, lives: int|null, coordinates: bool, levels: list<int>, visibleSeconds: int|null}
      */
     private static function options(array $config): array
     {
         $count = $config['count'] ?? null;
         $lives = $config['lives'] ?? null;
         $levels = $config['levels'] ?? [];
+        $visible = $config['visibleSeconds'] ?? null;
 
         return [
             'count' => \is_int($count) ? $count : null,
             'lives' => \is_int($lives) ? $lives : null,
             'coordinates' => false !== ($config['coordinates'] ?? true),
             'levels' => \is_array($levels) ? array_values(array_filter($levels, 'is_int')) : [],
+            'visibleSeconds' => \is_int($visible) ? $visible : null,
         ];
     }
 
@@ -424,6 +426,11 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
             if (null !== $value && (!\is_int($value) || $value < 1 || $value > $max)) {
                 throw new InvalidRunConfigException(\sprintf('%s must be a whole number from 1 to %d.', $option, $max));
             }
+        }
+        $visible = $config['visibleSeconds'] ?? null;
+        [$fewest, $most] = RecallRules::PATH_VISIBLE_SECONDS;
+        if (null !== $visible && (!\is_int($visible) || $visible < $fewest || $visible > $most)) {
+            throw new InvalidRunConfigException(\sprintf('visibleSeconds must be a whole number from %d to %d.', $fewest, $most));
         }
         if (\array_key_exists('coordinates', $config) && !\is_bool($config['coordinates'])) {
             throw new InvalidRunConfigException('coordinates must be a boolean.');

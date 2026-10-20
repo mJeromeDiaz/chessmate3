@@ -146,6 +146,8 @@ sont refusées (422) :
 - `coordinates` (`false`) : l'échiquier sans coordonnées, pendant la mémorisation comme pendant la
   reconstitution (`coordinates` dans l'élément).
 - `levels` : le niveau de chaque position à son tour (la dernière valeur ensuite).
+- `visibleSeconds` (5 à 60, `RecallRules::PATH_VISIBLE_SECONDS`) : le temps de mémorisation, à la
+  place de celui du niveau (le Cyclope : 30 s).
 
 Ses reconstitutions exactes comptent comme les autres pour ouvrir les niveaux ; leur XP aussi.
 
