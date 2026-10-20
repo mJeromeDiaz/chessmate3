@@ -37,7 +37,7 @@ class Attempt
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private Run $run;
 
-    #[ORM\Column(length: 8, enumType: Kind::class)]
+    #[ORM\Column(length: 16, enumType: Kind::class)]
     private Kind $kind;
 
     #[ORM\Column(length: 92, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]

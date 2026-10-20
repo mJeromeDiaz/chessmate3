@@ -61,6 +61,29 @@
     "beaten": "Vaincu",
     "optional": "Facultatif"
   },
+  "jongleur": {
+    "progress": "Question {n} sur {count}",
+    "ask": {
+      "find": "Trouve la case",
+      "name": "Nomme la case",
+      "color": "Claire ou foncée ?",
+      "play": "Joue le coup",
+      "write": "Écris le coup joué"
+    },
+    "taunt": "Vite, vite, mes balles n’attendent pas !",
+    "react": {
+      "right": "Grr… tu l’as rattrapée.",
+      "wrong": "Hop ! Une balle par terre !",
+      "late": "Trop lent ! Mes quilles tournent toujours."
+    },
+    "verdict": {
+      "right": "Juste !",
+      "wrong": "Raté : {answer}",
+      "late": "Trop tard ! {answer}",
+      "color": "{square} est {color}"
+    },
+    "writePlaceholder": "Ex. : Cf3"
+  },
   "victory": {
     "kicker": "Boss vaincu !",
     "openChest": "Ouvrir le coffre",

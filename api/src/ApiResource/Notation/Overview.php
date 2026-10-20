@@ -10,8 +10,8 @@ use ApiPlatform\OpenApi\Model\Operation;
 use App\State\Notation\OverviewProvider;
 
 /**
- * The notation module for the signed-in player (docs/NOTATION.md): the rules of the line exercise
- * and the player's repertoires, those fit for it marked.
+ * The notation module for the signed-in player (docs/NOTATION.md): the rules of the line exercise,
+ * the player's repertoires (those fit for it marked) and the legendary games.
  */
 #[ApiResource(
     shortName: 'NotationOverview',
@@ -31,4 +31,7 @@ final class Overview
 
     /** @var list<array{id: string, name: string, color: string, segments: int, eligible: bool}> */
     public array $repertoires = [];
+
+    /** @var list<array{id: int, white: string, black: string, event: string, year: int|null, plies: int}> the legendary games */
+    public array $games = [];
 }

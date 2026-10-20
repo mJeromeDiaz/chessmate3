@@ -91,13 +91,16 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
         /** @var PathJson $path */
         $path = $skipped['path'];
         self::assertSame(['skipped', 'open'], [$this->step($path, '1-1')['status'], $this->step($path, '1-2')['status']]);
-        // 1.7 needs a repertoire of 10 segments (docs/NOTATION.md); 1.8 has no module yet: « soon ».
+        // 1.7 needs a repertoire of 10 segments (docs/NOTATION.md); every exercise skipped, the boss
+        // opens, and is never skipped.
         foreach (['1-2', '1-3', '1-4', '1-5', '1-6'] as $key) {
             self::assertSame(200, $this->api('POST', '/api/mind-map/visualisation/steps/'.$key.'/skip', $alice)->getStatusCode(), $key);
         }
         $this->assertRefused($this->api('POST', '/api/mind-map/visualisation/steps/1-7/start', $alice), 409, 'no_repertoire');
-        self::assertSame(200, $this->api('POST', '/api/mind-map/visualisation/steps/1-7/skip', $alice)->getStatusCode());
-        $this->assertRefused($this->api('POST', '/api/mind-map/visualisation/steps/1-8/start', $alice), 409, 'step_soon');
+        foreach (['1-7', '1-8', '1-9'] as $key) {
+            self::assertSame(200, $this->api('POST', '/api/mind-map/visualisation/steps/'.$key.'/skip', $alice)->getStatusCode(), $key);
+        }
+        self::assertSame('open', $this->step($this->path($alice), '1-boss')['status']);
         self::assertSame(200, $this->api('POST', '/api/mind-map/visualisation/steps/1-1/skip', $alice)->getStatusCode(), 'Skipped again: nothing changes.');
 
         // A skipped exercise may be played: passed, it is done.

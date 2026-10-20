@@ -13,7 +13,12 @@ Choix validés (2026-10-20) :
   (une suite de coups notés à jouer, **les deux camps**), `write` (un puzzle à résoudre de tête :
   on **écrit toute la ligne**, ses coups et les réponses, sans la jouer) ; `line` (une ligne d'un
   répertoire du joueur défile jusqu'à ses **4 derniers demi-coups**, à écrire ; prérequis : un
-  répertoire d'au moins **10 tronçons**, choisi ou tiré parmi ceux qui conviennent).
+  répertoire d'au moins **10 tronçons**, choisi ou tiré parmi ceux qui conviennent) ;
+  `game_write` et `game_play` : une **partie légendaire** (`data/legendary-games.json`, fourni par
+  l'utilisateur : 7 parties, de l'Opéra de Morphy à la partie du siècle), **6 demi-coups à la
+  fois**, la partie reprenant là où l'élément précédent s'est arrêté : `game_write`, les coups
+  défilent sur l'échiquier puis on les écrit ; `game_play`, on lit les coups notés et on les joue,
+  les deux camps (choix du 2026-10-20).
 - **Notation de la langue** : en français R D T F C (Roi, Dame, Tour, Fou, Cavalier), en anglais
   K Q R B N, dans ce module seulement. Le serveur ne parle que l'anglais : le front traduit à
   l'affichage et à la saisie (les deux jeux de lettres ne peuvent pas être acceptés ensemble : R
@@ -47,6 +52,7 @@ Choix validés (2026-10-20) :
 | `DRAWS`, `CANDIDATES` | 4, 12 | tirages et candidats par tirage |
 | `LINE_MIN_SEGMENTS` | 10 | tronçons d'un répertoire pour l'exercice `line` (tronçons présentés, [REPERTOIRE.md](REPERTOIRE.md), § 6) |
 | `LINE_WRITE_PLIES`, `LINE_MIN_PLIES` | 4, 6 | demi-coups à écrire (les derniers de la ligne), longueur minimale d'une ligne |
+| `GAME_CHUNK_PLIES` | 6 | demi-coups d'une tranche de partie légendaire |
 
 ## 3. Déroulé
 
@@ -56,6 +62,13 @@ Choix validés (2026-10-20) :
   lequel de LINE_MIN_SEGMENTS tronçons) ; autre option : 422. Le premier élément est tiré au
   démarrage (rien à tirer : 409 `subject_unavailable`, raison `no_puzzle` ou `no_repertoire`). Une
   étape de session prend `{kind, repertoireId?}` (sans `count`).
+- **Parties légendaires** (`Notation\Games\{LegendaryGames, LegendaryGame, GamePicker}`) : chaque
+  PGN est rejoué au chargement (une partie qui ne se rejoue pas jusqu'au bout est écartée,
+  `LegendaryGamesTest` vérifie qu'aucune ne l'est). Option `gameId` (`game_*` seulement ; inconnue :
+  422) ; sans partie choisie, une partie pas encore jouée dans la séance, au hasard. La séance suit
+  sa partie tranche après tranche (`line_key` `game:<id>`), puis en prend une autre (la partie
+  choisie recommence). Élément : `plies`, `moves` (la tranche : à voir puis écrire, ou à lire puis
+  jouer), `shown` (la partie jusque-là), `label` (« Paul Morphy – …, Paris 1858 »), `orientation`.
 - **Ligne d'un répertoire** (`LinePicker`) : une ligne de l'arbre canonique (UnitBuilder, unités
   `line`, [REPERTOIRE.md](REPERTOIRE.md), § 15) d'au moins 6 demi-coups, jamais deux fois dans une
   séance tant qu'il en reste ; jouée depuis la position initiale jusqu'à ses 4 derniers demi-coups.
@@ -101,7 +114,7 @@ Choix validés (2026-10-20) :
 ## 3 ter. API de la page
 
 `GET /notation` → `{rules: {lineMinSegments, lineWritePlies}, repertoires: [{id, name, color,
-segments, eligible}]}` (`ApiResource\Notation\Overview`) : la page propose un répertoire qui
+segments, eligible}], games: [{id, white, black, event, year, plies}]}` (`ApiResource\Notation\Overview`) : la page propose un répertoire qui
 convient (ou tous), ou dit le prérequis avec un lien vers les répertoires.
 
 ## 4. Modèle de données
@@ -119,4 +132,5 @@ SAN écrits), `mistake_at`, `shown` (JSON : les coups d'une ligne de répertoire
 |---|---|---|
 | L2a | API : `play`, `sequence`, `write`, leçons comptées, carte mentale 1.4 à 1.6 | vert 2026-10-20 |
 | L2b | Front : lecteur (échiquier, coups annoncés, saisie écrite et pavé des pièces), notation de la langue, page `/notation` et lien du menu, carte du Session Builder | vert 2026-10-20 |
-| L2c | `line` : compléter une ligne d'un répertoire (≥ 10 tronçons), 1.7 ; `GET /notation` (règles, répertoires qui conviennent) ; page : choix du répertoire, prérequis | écrit 2026-10-20 |
+| L2c | `line` : compléter une ligne d'un répertoire (≥ 10 tronçons), 1.7 ; `GET /notation` (règles, répertoires qui conviennent) ; page : choix du répertoire, prérequis | vert 2026-10-20 |
+| L3a | Parties légendaires : `game_write` (1.8), `game_play` (1.9), par tranches de 6 ; colonne `kind` sur 16 caractères (migration `Version20261101090000`) ; page : choix de la partie ; lecteur : défilé des coups (« Revoir ») | écrit 2026-10-20 |

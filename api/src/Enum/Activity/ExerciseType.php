@@ -50,4 +50,10 @@ enum ExerciseType: string
      * sequence, write), `metadata.status` (right, wrong).
      */
     case Notation = 'notation';
+    /**
+     * A fight against the Jongleur (docs/MIND_MAP.md, § 8), one per run, logged when it closes: its
+     * questions answered are its items; `metadata.right`, `metadata.wrong`, `metadata.won`. No XP of
+     * its own (the boss's reward).
+     */
+    case Jongleur = 'jongleur';
 }

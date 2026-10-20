@@ -86,6 +86,10 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['mind_map_progress', 'step'],
             ['mind_map_attempt', 'step'],
             ['mind_map_chest', 'step'],
+            ['mind_map_boss_item', 'square'],
+            ['mind_map_boss_item', 'fen'],
+            ['mind_map_boss_item', 'expected'],
+            ['mind_map_boss_item', 'answer'],
         ] as [$table, $column]) {
             yield "$table.$column" => [$table, $column];
         }

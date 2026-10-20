@@ -31,6 +31,8 @@ enum Module: string
     case BlindfoldRecall = 'blindfold_recall';
     /** Notation: a move announced to play, a sequence to play for both sides, a puzzle's line to write (docs/NOTATION.md). */
     case Notation = 'notation';
+    /** The Jongleur, a mind map boss: quick mixed questions of 6 s, 3 lives (docs/MIND_MAP.md, § 8); played from its path only. */
+    case Jongleur = 'jongleur';
 
     /**
      * @return list<string>

@@ -107,7 +107,7 @@ final class ExportTest extends WebTestCase
         self::assertSame([], $training['puzzleRushAttempts']);
         self::assertSame([], $training['blindfoldRecallAttempts']);
         self::assertSame([], $training['notationAttempts']);
-        self::assertSame([[], [], []], [$training['mindMapProgress'], $training['mindMapAttempts'], $training['mindMapChests']]);
+        self::assertSame([[], [], [], []], [$training['mindMapProgress'], $training['mindMapAttempts'], $training['mindMapChests'], $training['mindMapBossItems']]);
         self::assertSame('Italienne', $this->listOf($this->json($zip, 'repertoires.json')['repertoires'])[0]['name']);
 
         $everything = '';

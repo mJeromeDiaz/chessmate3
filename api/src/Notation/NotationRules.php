@@ -24,6 +24,8 @@ final class NotationRules
     /** A line to complete: its last half-moves to write, and its length at least. */
     public const LINE_WRITE_PLIES = 4;
     public const LINE_MIN_PLIES = 6;
+    /** A legendary game: its half-moves by item, played (or written) from where the last item ended. */
+    public const GAME_CHUNK_PLIES = 6;
     /** A counted run (a mind map lesson, docs/MIND_MAP.md): its items, at most. */
     public const MAX_COUNT = 30;
     /** Half-moves written, at most (a submission). */

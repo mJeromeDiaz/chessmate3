@@ -47,10 +47,10 @@ final class Visualisation
                 self::exercise('1-5', '1.5', 3, self::notation('sequence', 5)),
                 self::exercise('1-6', '1.6', 3, self::notation('write', 5)),
                 self::exercise('1-7', '1.7', 3, self::notation('line', 5)),
-                self::exercise('1-8', '1.8', 2),
-                self::exercise('1-9', '1.9', 2),
+                self::exercise('1-8', '1.8', 2, self::notation('game_write', 5)),
+                self::exercise('1-9', '1.9', 2, self::notation('game_play', 5)),
             ]),
-        ], self::boss('1-boss', 200, 100, 'jongleur', ['chapter_1', 'boss_jongleur']));
+        ], self::boss('1-boss', 200, 100, 'jongleur', ['chapter_1', 'boss_jongleur'], self::jongleur(20)));
     }
 
     /** Static blindfold vision: three sections of positions to remember. */
@@ -76,7 +76,7 @@ final class Visualisation
     {
         return new Chapter('c3', 3, [
             new Section('3-0', null, [], [
-                self::miniBoss('3-0-boss', 60, [], 'jongleur'),
+                self::miniBoss('3-0-boss', 60, [], 'jongleur', 40, self::jongleur(10)),
             ]),
             new Section('3-1', '3.1', self::exercises('3-1', '3.1', [3, 3, 3, 3, 4]), [
                 self::miniBoss('3-1-boss', 100, ['section_3_1']),
@@ -176,6 +176,14 @@ final class Visualisation
     private static function notation(string $kind, int $count): Activity
     {
         return new Activity(Module::Notation, ['kind' => $kind, 'count' => $count], self::LESSON_SECONDS, $count);
+    }
+
+    /**
+     * A fight against the Jongleur (docs/MIND_MAP.md, § 8): $count questions, 3 lives.
+     */
+    private static function jongleur(int $count): Activity
+    {
+        return new Activity(Module::Jongleur, ['count' => $count], self::LESSON_SECONDS, $count, PathRules::BOSS_LIVES);
     }
 
     private static function exercise(string $key, string $number, int $passes, ?Activity $activity = null): Step

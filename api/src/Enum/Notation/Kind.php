@@ -18,6 +18,16 @@ enum Kind: string
     case Write = 'write';
     /** A line of one's repertoire played up to its last half-moves: write them. */
     case Line = 'line';
+    /** A legendary game, 6 half-moves at a time: watch them played, then write them. */
+    case GameWrite = 'game_write';
+    /** A legendary game, 6 half-moves at a time: read them, then play them, both sides. */
+    case GamePlay = 'game_play';
+
+    /** Drawn from the legendary games. */
+    public function isGame(): bool
+    {
+        return self::GameWrite === $this || self::GamePlay === $this;
+    }
 
     /**
      * @return list<string>

@@ -143,7 +143,9 @@
         "play": "Jouer le coup annoncé",
         "sequence": "Suite de coups notés",
         "write": "Écrire la solution",
-        "line": "Compléter une ligne"
+        "line": "Compléter une ligne",
+        "game_play": "Rejouer une partie célèbre",
+        "game_write": "Noter une partie célèbre"
       },
       "coordinateModes": {
         "find": "Trouver la case",

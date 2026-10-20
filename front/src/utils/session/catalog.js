@@ -148,7 +148,14 @@ const count = (label, min, max, def, unit) =>
   )
 
 /** The exercises of the notation module (docs/NOTATION.md). */
-const NOTATION_KINDS = ['play', 'sequence', 'write', 'line']
+const NOTATION_KINDS = [
+  'play',
+  'sequence',
+  'write',
+  'line',
+  'game_play',
+  'game_write'
+]
 
 /** The modes of a coordinates series (docs/COORDINATES.md, § 2 bis). */
 const COORDINATE_MODES = ['find', 'name', 'color']

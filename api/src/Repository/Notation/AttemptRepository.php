@@ -88,6 +88,24 @@ class AttemptRepository extends ServiceEntityRepository
     }
 
     /**
+     * The latest item of a run drawn from a legendary game (its line key `game:<id>`), if any.
+     */
+    public function lastGameOfRun(Run $run): ?Attempt
+    {
+        /** @var Attempt|null */
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.run = :run')
+            ->andWhere('a.lineKey LIKE :game')
+            ->setParameter('run', $run->getId(), 'uuid')
+            ->setParameter('game', 'game:%')
+            ->orderBy('a.startedAt', 'DESC')
+            ->addOrderBy('a.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
      * The repertoire lines of a run so far, pending one included.
      *
      * @return list<string>

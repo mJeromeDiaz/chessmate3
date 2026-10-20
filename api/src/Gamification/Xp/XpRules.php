@@ -121,6 +121,8 @@ final class XpRules
             ExerciseType::PuzzleRush => self::rush(\is_int($metadata['solved'] ?? null) ? $metadata['solved'] : 0, \is_int($metadata['failed'] ?? null) ? $metadata['failed'] : 0),
             ExerciseType::BlindfoldRecall => self::recall($metadata['status'] ?? null, \is_int($metadata['stage'] ?? null) ? $metadata['stage'] : 1, true === ($metadata['unlocked'] ?? null)),
             ExerciseType::Notation => $success ? self::NOTATION_RIGHT : self::NOTATION_WRONG,
+            // Only the boss's reward, when it is beaten (docs/MIND_MAP.md, § 5).
+            ExerciseType::Jongleur => 0,
         };
     }
 
@@ -184,6 +186,7 @@ final class XpRules
             ExerciseType::PuzzleRush => Module::PuzzleRush,
             ExerciseType::BlindfoldRecall => Module::BlindfoldRecall,
             ExerciseType::Notation => Module::Notation,
+            ExerciseType::Jongleur => Module::Jongleur,
         };
     }
 

@@ -36,11 +36,12 @@ Choix validés (2026-10-20) :
 | État (pur) | `App\MindMap\Path\PathState` (statuts, coffres dus, sections franchies) |
 | Progression | `App\MindMap\Progress\{StepLauncher, PassRecorder, Rewarder, PathReader, ChestOpener, Progresses}` |
 | Point d'extension | `App\Training\Run\RunClosedListenerInterface` (Training le possède, `PassRecorder` l'implémente) |
-| Entités | `App\Entity\MindMap\{Progress, Attempt, Chest}` (tables `mind_map_progress`, `mind_map_attempt`, `mind_map_chest`, migration `Version20261028090000`) |
-| Enums | `App\Enum\MindMap\{Capacity, StepKind, StepStatus, AttemptOutcome}` |
+| Entités | `App\Entity\MindMap\{Progress, Attempt, Chest}` (tables `mind_map_progress`, `mind_map_attempt`, `mind_map_chest`, migration `Version20261028090000`), `BossItem` (`mind_map_boss_item`, § 8) |
+| Boss | `App\MindMap\Boss\{JongleurModule, JongleurRules, QuestionDrawer}` (module `jongleur`, § 8) |
+| Enums | `App\Enum\MindMap\{Capacity, StepKind, StepStatus, AttemptOutcome, BossQuestion, BossItemStatus}` |
 | Événement | `App\MindMap\Event\StepCompleted` (bonus d'XP, `Gamification\Handler\AwardBonusXp`) |
 | API | `App\ApiResource\MindMap\{Path, StepAction, Outcome, Chest}`, `App\State\MindMap\*` |
-| Front | pages `pages/index/cerveau/index.vue` (la carte) et `pages/index/cerveau/[capacity].vue` (le parcours), `components/mindMap/{PathChapter, PathNode, StepSheet, BossIntro, BossPortrait, BossVictory, RunOutcome}.vue`, `utils/mindMap.js`, `utils/mindMapPath.js`, `services/api.js` (`mindMapApi`), `i18n/<langue>/mindMapPath.json` |
+| Front | pages `pages/index/cerveau/index.vue` (la carte) et `pages/index/cerveau/[capacity].vue` (le parcours), `components/mindMap/{PathChapter, PathNode, StepSheet, BossIntro, BossPortrait, BossVictory, RunOutcome, JongleurPlayer}.vue`, `utils/mindMap.js`, `utils/mindMapPath.js`, `utils/jongleur.js`, `services/api.js` (`mindMapApi`), `i18n/<langue>/mindMapPath.json` |
 
 ## 2. Étapes
 
@@ -179,7 +180,50 @@ retrouve (l'XP de l'étape telle que le catalogue la donne).
   → `_` : `2-1-3` → `s2_1_3`), `mindMapPath.characters.<personnage>.{name, tagline, taunt, defeat,
   win}`.
 
-## 8. Lots
+## 8. Le Jongleur
+
+Boss du chapitre 1 (`1-boss`, 20 questions) et rappel du chapitre 3 (`3-0-boss`, 10 questions) :
+une suite rapide de questions mêlant les exercices du chapitre 1. Module d'entraînement `jongleur`
+(`App\MindMap\Boss\{JongleurModule, JongleurRules, QuestionDrawer}`), joué depuis le parcours
+seulement (refusé en séance : `prepare` lève `InvalidRunConfigException`) ; config `count` (1 à 20),
+seule option.
+
+- **Questions** (`BossQuestion`) : `find` (cliquer la case nommée), `name` (nommer la case
+  allumée), `color` (claire ou foncée, sans échiquier), `play` (jouer le coup annoncé dans une
+  position de puzzle), `write` (écrire en SAN le coup qu'on vient de voir joué). Cases vues des
+  Blancs, jamais deux fois la même de suite ; positions et coups tirés comme pour le module
+  Notation (`PuzzlePicker`, `MoveChooser` : roques, promotions, prises, coups à préciser). Chaque
+  genre revient autant que les autres (un des moins posés jusque-là) ; sans puzzle, une question de
+  case.
+- **Temps** : 6 s par question (`JongleurRules::QUESTION_SECONDS`), pour toutes, sur l'horloge du
+  serveur. Le départ est stocké à la seconde (tronqué) : la limite ajoute 1 s et la tolérance réseau
+  de 2 s, toujours en faveur du joueur. Une réponse en retard (`late`), ou vide (le temps du client
+  écoulé), est un échec. Une question rechargée revient avec son temps qui court.
+- **Vies** : 3 (`PathRules::BOSS_LIVES`) ; la 3e erreur ferme la séance (`subject_finished`,
+  raison `lives_out`), sinon elle se ferme au compte (`count_done`). Le combat est gagné avec
+  `count` réponses et moins de 3 erreurs (`Activity::passes`).
+- **Soumission** : `answers[0].square` (une case, ou `light` / `dark`), `moves[0]` (UCI) ou
+  `written[0]` (SAN, lettres anglaises) ; au plus une réponse. Verdict : `status` (`right`,
+  `wrong`, `late`), `expected` (la case, la couleur, ou `{uci, san}`), `answer`, `lives` restantes,
+  `position`, `count`.
+- **XP** : aucune par question ; un exercice `jongleur` par séance (journal d'activité, série du
+  jour), 0 XP. La victoire rapporte la récompense du boss (§ 5).
+- **Rejouer** : un boss battu se rejoue depuis le parcours (bouton « Rejouer »), sans rien
+  rapporter de plus (§ 4).
+- **Écran** (`JongleurPlayer`, page de séance) : « Question n sur N », le Jongleur (il jongle
+  pendant la question, jubile à une erreur, boude à une bonne réponse) et sa réplique, les 3 cœurs,
+  une barre de 6 s calée sur le départ du serveur (à zéro, une réponse vide part), puis la question :
+  échiquier vide à cliquer (`find`), case allumée et pavé a–h / 1–8 ou clavier (`name`), boutons
+  Claire / Foncée ou C / F (`color`), coup annoncé à jouer (`play`), coup joué sous les yeux puis
+  champ et touches des pièces dans la langue de l'interface (`write`). Le verdict reste 0,7 s (juste)
+  ou 1,6 s (raté, avec la bonne réponse), puis la question suivante vient seule ; le combat fini,
+  `RunOutcome`. **Distractions** légères, environ une question sur trois, tirées de l'id de la
+  question (`distractionOf`) : l'échiquier vacille (`shake`) ou des pièces le traversent (`drift`) ;
+  aucune si le système demande moins d'animations.
+- **Données** : table `mind_map_boss_item` (migration `Version20261102090000`), commune aux futurs
+  boss (`boss` = le personnage), dans l'export du compte (`mindMapBossItems`).
+
+## 9. Lots
 
 | Lot | Contenu | État |
 |---|---|---|
@@ -187,7 +231,7 @@ retrouve (l'XP de l'étape telle que le catalogue la donne).
 | M2 | Front du moteur : chemin, écrans de boss (cyclope par défaut), coffre, victoire provisoire | écrit 2026-10-20 |
 | L1 | Coordonnées : modes « nommer la case » et « couleur de la case » (1.2, 1.3) | écrit 2026-10-20 |
 | L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) : L2a, L2b verts, L2c `line` (1.7, un répertoire d'au moins 10 tronçons) écrit 2026-10-20 | en cours |
-| L3 | Parties célèbres (1.8, 1.9) et boss Jongleur | à faire |
+| L3 | Parties célèbres (1.8, 1.9 : L3a, tranches de 6 demi-coups, vert) et boss Jongleur (L3b, § 8 : L3b1 API vert, L3b2 front écrit 2026-10-20) | en cours |
 | L4 | Chapitre 2 : reconstitution, premières questions de Vision, Cyclope | à faire |
 | L5, L6 | Module Vision (3.1 à 3.3), Gargouille et ses distractions | à faire |
 | L7 à L10 | Chapitres 4 à 7 (précisions de l'utilisateur attendues) | à faire |

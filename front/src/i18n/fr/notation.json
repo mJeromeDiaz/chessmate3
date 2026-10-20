@@ -9,7 +9,10 @@
     "allRepertoires": "Tous mes répertoires (au moins {n} tronçons)",
     "noRepertoire": "Il te faut un répertoire d’au moins {n} tronçons pour compléter ses lignes.",
     "createRepertoire": "Mes répertoires",
-    "segments": "{name} · {n} tronçons"
+    "segments": "{name} · {n} tronçons",
+    "game": "Partie",
+    "anyGame": "Au hasard",
+    "gameOption": "{label} · {n} demi-coups"
   },
   "kinds": {
     "play": {
@@ -27,6 +30,14 @@
     "line": {
       "title": "Compléter une ligne",
       "desc": "Une ligne de ton répertoire défile : écris ses derniers coups."
+    },
+    "game_play": {
+      "title": "Rejouer une partie célèbre",
+      "desc": "Lis 6 demi-coups d’une partie de légende et rejoue-les, tranche après tranche."
+    },
+    "game_write": {
+      "title": "Noter une partie célèbre",
+      "desc": "Regarde 6 demi-coups d’une partie de légende, puis écris-les."
     }
   },
   "player": {
@@ -36,7 +47,9 @@
       "write": "Écris la ligne",
       "right": "Juste !",
       "wrong": "Raté",
-      "line": "Complète la ligne"
+      "line": "Complète la ligne",
+      "game_play": "Rejoue la partie",
+      "game_write": "Note la partie"
     },
     "playText": "Joue {san} sur l’échiquier.",
     "sequenceText": "Joue chaque coup, pour les Blancs comme pour les Noirs.",
@@ -55,7 +68,12 @@
     "white": "Blancs",
     "black": "Noirs",
     "lineText": "{line} : écris la suite, {n} demi-coup | {line} : écris la suite, {n} demi-coups",
-    "lineStart": "La ligne commence"
+    "lineStart": "La ligne commence",
+    "gamePlayText": "{label} : joue ces {n} demi-coups, les deux camps.",
+    "gameWatchText": "{label} : regarde bien ces coups…",
+    "gameWriteText": "{label} : écris les {n} demi-coups que tu viens de voir.",
+    "replay": "Revoir",
+    "gameFrom": "Coups {from} à {to}"
   },
   "reasons": {
     "illegal": "Le demi-coup {n} n’est pas un coup légal.",

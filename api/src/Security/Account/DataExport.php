@@ -203,6 +203,12 @@ final readonly class DataExport
                 'SELECT capacity, step, crystals, created_at, opened_at FROM mind_map_chest WHERE user_id = ? ORDER BY created_at',
                 $id,
             ),
+            // The questions of the boss fights (the Jongleur).
+            'mindMapBossItems' => $this->rows(
+                'SELECT BIN_TO_UUID(run_id) AS training_run_id, boss, question, square, fen, expected, status, answer, started_at, submitted_at, duration_ms
+                   FROM mind_map_boss_item WHERE user_id = ? ORDER BY started_at',
+                $id,
+            ),
         ]));
         // Crowns and the store (docs/SHOP.md).
         $zip->addFromString('boutique.json', self::json([

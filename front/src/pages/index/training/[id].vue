@@ -291,6 +291,39 @@
       </template>
     </NotationPlayer>
 
+    <JongleurPlayer
+      v-else-if="jongleurItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="jongleurPlayer"
+      :item="jongleurItem"
+      :result="jongleurResult"
+      :offset-ms="runner.offsetMs.value"
+      @resolve="onJongleurResolve"
+    >
+      <template #header>
+        <div class="row items-center q-gutter-sm">
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            $t('mindMapPath.jongleur.progress', {
+              n: jongleurItem.data.position,
+              count: jongleurItem.data.count
+            })
+          }}</div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </JongleurPlayer>
+
     <EvaluationPlayer
       v-else-if="evalItem && (runner.phase.value === 'running' || holdEnd)"
       ref="evalPlayer"
@@ -559,7 +592,8 @@
  * or a puzzle rush (docs/PUZZLE_RUSH.md: one try, no help, the next puzzle at once; the counts and
  * the accuracy while playing, the score only at the end) or positions to rebuild
  * (docs/BLINDFOLD_RECALL.md: without a clock on the recall page, "Niveau n" once a level opens)
- * or a notation exercise (docs/NOTATION.md: a counted lesson shows "Exercice n sur N").
+ * or a notation exercise (docs/NOTATION.md: a counted lesson shows "Exercice n sur N") or a
+ * fight against the Jongleur (docs/MIND_MAP.md, § 8: "Question n sur N", the next one at once).
  * A run played for a step of a mind map path (`?mindMap=1`, docs/MIND_MAP.md) ends on the step's
  * verdict (`RunOutcome`) instead of the recap.
  */
@@ -570,6 +604,7 @@ import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.
 import RecallPlayer from '@/components/blindfold/RecallPlayer.vue'
 import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import NotationPlayer from '@/components/notation/NotationPlayer.vue'
+import JongleurPlayer from '@/components/mindMap/JongleurPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
@@ -636,7 +671,8 @@ const STOP_MESSAGES = [
   'puzzle_streak',
   'puzzle_rush',
   'blindfold_recall',
-  'notation'
+  'notation',
+  'jongleur'
 ]
 const route = useRoute()
 const router = useRouter()
@@ -982,6 +1018,60 @@ async function onNotationResolve(report) {
     holdEnd.value = false
     error.value = apiErrorMessage(e)
     notationPlayer.value?.unlock()
+  }
+}
+
+/** A Jongleur's question answered: the verdict, then the next one (or the fight's end). */
+const JONGLEUR_NEXT_MS = { right: 700, miss: 1600 }
+
+/**
+ * The Jongleur's question on screen (docs/MIND_MAP.md, § 8), kept once the fight closed on the
+ * last one: its verdict stays on screen (`holdEnd`) a moment.
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const jongleurItem = ref(null)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const jongleurPlayer = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'jongleur') jongleurItem.value = item
+    else if (item) jongleurItem.value = null
+  }
+)
+const jongleurResult = computed(() =>
+  jongleurItem.value && runner.result.value?.itemId === jongleurItem.value.id
+    ? runner.result.value.data
+    : null
+)
+
+/**
+ * A Jongleur answer (an empty one when its time ran out): the verdict a moment, then the next
+ * question by itself; the fight over, its end.
+ *
+ * @param {Record<string, any>} report
+ */
+async function onJongleurResolve(report) {
+  holdEnd.value = true
+  try {
+    const result = await runner.submit(report)
+    if (!result) {
+      holdEnd.value = false
+      jongleurPlayer.value?.unlock()
+      return
+    }
+    setTimeout(
+      () => {
+        holdEnd.value = false
+        if (runner.phase.value === 'running') next()
+      },
+      result.success ? JONGLEUR_NEXT_MS.right : JONGLEUR_NEXT_MS.miss
+    )
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    jongleurPlayer.value?.unlock()
   }
 }
 
@@ -1557,6 +1647,7 @@ watch(
     evalItem.value = null
     recallItem.value = null
     notationItem.value = null
+    jongleurItem.value = null
     streakItem.value = null
     parcoursItem.value = null
     try {

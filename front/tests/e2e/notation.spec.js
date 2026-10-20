@@ -106,3 +106,44 @@ test('notation: completing a line needs a repertoire of 10 segments', async ({
   await expect(page.getByTestId('notation-no-repertoire')).toHaveCount(0)
   await expect(page.getByTestId('run-start')).toBeEnabled()
 })
+
+test('notation: a legendary game read then replayed, six half-moves at a time', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/notation')
+  await page.getByTestId('notation-kind-game_play').click()
+  await page.getByTestId('notation-game').click()
+  await page.getByRole('option', { name: /Paul Morphy/ }).click()
+  const served = page.waitForResponse(isRunNext)
+  await page.getByTestId('run-start').click()
+  const item = (await (await served).json()).item
+  expect(item.data.kind).toBe('game_play')
+  await expect(page.getByTestId('notation-shown')).toContainText('Paul Morphy')
+  await expect(page.getByTestId('notation-shown')).toContainText('Coups 1 à 3')
+  // French letters: 2. Cf3 … 3. … Fg4.
+  for (const san of ['e4', 'Cf3', 'Fg4'])
+    await expect(page.getByTestId('notation-sequence')).toContainText(san)
+  const next = page.waitForResponse(isRunNext)
+  // One move at a time: the board hands over to the other side once the move is taken.
+  const player = page.getByTestId('notation-player')
+  const board = page.getByTestId('chess-board')
+  const game = new Chess(item.data.fen)
+  for (const [i, move] of item.data.moves.entries()) {
+    await playMove(page, move.uci)
+    await expect(player).toHaveAttribute('data-played', String(i + 1))
+    // A click move ignores clicks until its animation is over (cm-chessboard): data-fen tells.
+    game.move({
+      from: move.uci.slice(0, 2),
+      to: move.uci.slice(2, 4),
+      promotion: move.uci[4]
+    })
+    await expect(board).toHaveAttribute('data-fen', game.fen())
+  }
+  await expect(page.getByTestId('notation-result')).toContainText('Juste !')
+  // The game goes on where it stopped.
+  const following = (await (await next).json()).item
+  expect(following.data.shown).toHaveLength(6)
+  await expect(page.getByTestId('notation-shown')).toContainText('Coups 4 à 6')
+})

@@ -49,6 +49,7 @@ when@test:
         App\Repertoire\Graph\TrashBin: { autowire: true, public: true }
         App\Woodpecker\Set\OpeningSets: { autowire: true, public: true }
         App\Repertoire\Graph\RestorePlanner: { autowire: true, public: true }
+        App\Notation\Games\LegendaryGames: { autowire: true, public: true }
         App\Repertoire\Transaction: { autowire: true, public: true }
         App\Repertoire\Opening\OpeningSynchronizer: { autowire: true, public: true }
         App\Repertoire\Import\ImportApplier: { autowire: true, public: true }

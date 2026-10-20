@@ -234,6 +234,7 @@
       "puzzle_rush": "Le puzzle à l’écran ne sera pas compté.",
       "blindfold_recall": "La position à l’écran ne sera pas comptée.",
       "notation": "L’exercice à l’écran ne sera pas compté.",
+      "jongleur": "Le combat s’arrête là : il est perdu.",
       "default": "Le puzzle en cours ne sera pas compté."
     }
   }

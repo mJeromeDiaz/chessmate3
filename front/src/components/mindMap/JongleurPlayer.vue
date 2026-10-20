@@ -1,0 +1,764 @@
+<template>
+  <PlayLayout
+    class="jongleur-player"
+    data-testid="jongleur-player"
+    :data-question="question"
+    :data-state="state"
+    :data-distraction="distraction ?? 'none'"
+  >
+    <template v-if="$slots.header" #header>
+      <slot name="header" />
+    </template>
+
+    <template #prof>
+      <div class="jongleur-player__boss">
+        <BossPortrait
+          class="jongleur-player__portrait"
+          :class="{
+            'jongleur-player__portrait--juggling': state === 'answering'
+          }"
+          character="jongleur"
+          :pose="pose"
+          :label="$t('mindMapPath.characters.jongleur.name')"
+        />
+        <div class="jongleur-player__talk">
+          <div
+            class="jongleur-player__lives"
+            data-testid="jongleur-lives"
+            :data-lives="lives"
+          >
+            <q-icon
+              v-for="i in BOSS_LIVES"
+              :key="i"
+              :name="i <= lives ? 'favorite' : 'heart_broken'"
+              :class="{ 'jongleur-player__life--lost': i > lives }"
+            />
+          </div>
+          <div class="jongleur-player__bubble" data-testid="jongleur-bubble">{{
+            bubble
+          }}</div>
+        </div>
+      </div>
+      <div
+        class="jongleur-player__clock"
+        :class="{ 'jongleur-player__clock--low': leftMs <= 2000 && !answered }"
+        role="progressbar"
+        :aria-valuenow="Math.ceil(leftMs / 1000)"
+        aria-valuemin="0"
+        :aria-valuemax="seconds"
+        data-testid="jongleur-clock"
+      >
+        <div
+          class="jongleur-player__clock-fill"
+          :style="{ width: `${(leftMs / (seconds * 1000)) * 100}%` }"
+        />
+      </div>
+    </template>
+
+    <template #chips>
+      <span class="play-chip">{{
+        $t(`mindMapPath.jongleur.ask.${question}`)
+      }}</span>
+      <span
+        v-if="question === 'play'"
+        class="play-chip play-chip--accent"
+        data-testid="jongleur-announced"
+        >{{ announced }}</span
+      >
+    </template>
+
+    <template #board>
+      <div
+        class="jongleur-player__stage"
+        :class="distraction ? `jongleur-player__stage--${distraction}` : ''"
+      >
+        <div
+          v-if="isSquare && question !== 'name'"
+          class="jongleur-player__target"
+          data-testid="jongleur-target"
+          >{{ item.data.square }}</div
+        >
+        <div
+          v-else-if="question === 'name'"
+          class="jongleur-player__target jongleur-player__target--typed"
+          data-testid="jongleur-typed"
+          >{{ typed || '·' }}</div
+        >
+
+        <div v-if="question === 'color'" class="jongleur-player__colors">
+          <button
+            type="button"
+            class="jongleur-player__color jongleur-player__color--light"
+            :class="colorClass('light')"
+            :disabled="answered"
+            data-testid="jongleur-light"
+            @click="answerSquare('light')"
+            >{{ $t('coordinates.player.light') }}</button
+          >
+          <button
+            type="button"
+            class="jongleur-player__color jongleur-player__color--dark"
+            :class="colorClass('dark')"
+            :disabled="answered"
+            data-testid="jongleur-dark"
+            @click="answerSquare('dark')"
+            >{{ $t('coordinates.player.dark') }}</button
+          >
+        </div>
+
+        <ChessBoard
+          v-else
+          :fen="fen"
+          :orientation="orientation"
+          :coordinates="!isSquare"
+          :animation-duration="isSquare ? 0 : undefined"
+          :movable-color="movableColor"
+          :square-input="question === 'find' && !answered"
+          :highlights="highlights"
+          :arrows="arrows"
+          @square="answerSquare"
+          @move="onMove"
+        />
+
+        <div
+          v-if="distraction === 'drift'"
+          class="jongleur-player__balls"
+          aria-hidden="true"
+        >
+          <span
+            v-for="(glyph, i) in BALLS"
+            :key="i"
+            class="jongleur-player__ball"
+            :style="{ animationDelay: `${i * 0.7}s` }"
+            >{{ glyph }}</span
+          >
+        </div>
+      </div>
+    </template>
+
+    <template #controls>
+      <div
+        v-if="question === 'name'"
+        class="jongleur-player__keypad"
+        data-testid="jongleur-keypad"
+      >
+        <div class="jongleur-player__keys">
+          <button
+            v-for="f in FILES"
+            :key="f"
+            type="button"
+            class="jongleur-player__key"
+            :class="{ 'jongleur-player__key--on': typed === f }"
+            :disabled="answered || typed.length === 1"
+            :data-testid="`jongleur-key-${f}`"
+            @click="type(f)"
+            >{{ f }}</button
+          >
+        </div>
+        <div class="jongleur-player__keys">
+          <button
+            v-for="r in RANKS"
+            :key="r"
+            type="button"
+            class="jongleur-player__key"
+            :disabled="answered || typed.length !== 1"
+            :data-testid="`jongleur-key-${r}`"
+            @click="type(r)"
+            >{{ r }}</button
+          >
+          <button
+            type="button"
+            class="jongleur-player__key"
+            :disabled="answered || !typed"
+            :aria-label="$t('coordinates.player.erase')"
+            @click="typed = ''"
+            >⌫</button
+          >
+        </div>
+      </div>
+
+      <form
+        v-if="question === 'write'"
+        class="jongleur-player__write"
+        data-testid="jongleur-write"
+        @submit.prevent="send"
+      >
+        <q-input
+          v-model="written"
+          outlined
+          dense
+          autofocus
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          :disable="answered"
+          :placeholder="$t('mindMapPath.jongleur.writePlaceholder')"
+          data-testid="jongleur-input"
+        />
+        <div class="jongleur-player__keys">
+          <button
+            v-for="key in pieceKeys"
+            :key="key"
+            type="button"
+            class="jongleur-player__key jongleur-player__key--small"
+            :disabled="answered"
+            @click="written += key"
+            >{{ key }}</button
+          >
+        </div>
+        <q-btn
+          type="submit"
+          unelevated
+          no-caps
+          color="primary"
+          :label="$t('notation.player.send')"
+          :disable="answered || !written.trim()"
+          data-testid="jongleur-send"
+        />
+      </form>
+    </template>
+
+    <div
+      v-if="result"
+      class="jongleur-player__verdict"
+      :class="`jongleur-player__verdict--${result.status}`"
+      data-testid="jongleur-result"
+      :data-status="result.status"
+      >{{ verdict }}</div
+    >
+  </PlayLayout>
+</template>
+
+<script setup>
+/**
+ * A question of the Jongleur (docs/MIND_MAP.md, § 8): find a square (a click on the empty board),
+ * name the square lit (a file then a rank, keypad or keyboard), tell a square's colour (« Claire »
+ * / « Foncée », or C / F), play the move announced in a puzzle's position, or write the move just
+ * shown played (piece letters of the UI's language). Each has its seconds: the bar runs from the
+ * server's start, and an empty answer goes when it is empty. The Jongleur juggles while the player
+ * thinks, laughs at a miss and sulks at a hit; one question in three or so brings a distraction
+ * (the board wobbles, pieces fly over it), none when the system asks for less motion.
+ */
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { Chess } from 'chess.js'
+import BossPortrait from '@/components/mindMap/BossPortrait.vue'
+import ChessBoard from '@/components/chess/ChessBoard.vue'
+import PlayLayout from '@/components/chess/PlayLayout.vue'
+import { BOSS_LIVES } from '@/utils/mindMapPath'
+import { distractionOf, jongleurVerdict } from '@/utils/jongleur'
+import { englishSan, localSan, pieceLetters } from '@/utils/notation'
+import { t } from '@/i18n'
+
+const props = defineProps({
+  /** @type {import('vue').PropType<import('@/composables/training/useTimeboxedRun').RunItem>} the question (jongleur) */
+  item: { type: Object, required: true },
+  /** @type {import('vue').PropType<Record<string, any>|null>} the server's verdict on it */
+  result: { type: Object, default: null },
+  /** Server clock minus client clock (useTimeboxedRun), in ms. */
+  offsetMs: { type: Number, default: 0 }
+})
+
+const emit = defineEmits({ resolve: null })
+
+const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+const RANKS = ['1', '2', '3', '4', '5', '6', '7', '8']
+const EMPTY_BOARD = '8/8/8/8/8/8/8/8 w - - 0 1'
+/** Before the move to write is played on the board. */
+const SHOW_DELAY_MS = 300
+/** What flies over the board (drift). */
+const BALLS = ['♞', '♝', '♜']
+
+/** Sent: waiting for the verdict, or judged. */
+const answered = ref(false)
+/** The name being typed: '', a file, then sent with the rank. */
+const typed = ref('')
+const written = ref('')
+/** The answer given (a square or a colour; a move played), for the board's colours. */
+const given = ref(/** @type {string|null} */ (null))
+const fen = ref(EMPTY_BOARD)
+/** The client's time now, refreshed while the question runs. */
+const now = ref(Date.now())
+/** When the question reached the client (its own clock). */
+const receivedAt = ref(Date.now())
+/** @type {ReturnType<typeof setInterval>|undefined} */
+let ticker
+/** @type {ReturnType<typeof setTimeout>|undefined} */
+let showTimer
+
+const question = computed(() => props.item.data.question)
+const isSquare = computed(() =>
+  ['find', 'name', 'color'].includes(question.value)
+)
+const seconds = computed(() => props.item.data.seconds ?? 6)
+const distraction = computed(() => distractionOf(props.item.id))
+const lives = computed(() => props.result?.lives ?? props.item.data.lives)
+const state = computed(() =>
+  props.result ? 'judged' : answered.value ? 'sent' : 'answering'
+)
+const pose = computed(() => {
+  if (!props.result) return 'idle'
+  return props.result.status === 'right' ? 'angry' : 'cheer'
+})
+const orientation = computed(() =>
+  isSquare.value || props.item.data.color !== 'black' ? 'white' : 'black'
+)
+const movableColor = computed(() =>
+  question.value === 'play' && !answered.value ? orientation.value : null
+)
+const announced = computed(() => localSan(props.item.data.move?.san ?? ''))
+const pieceKeys = computed(() => [...pieceLetters(), 'x', '+', '=', 'O-O'])
+
+/**
+ * The question's deadline on the client's clock. The server stores its start to the second
+ * (truncated): the real start is within the second after, never after the question came.
+ */
+const deadline = computed(() => {
+  const serverStart = Date.parse(props.item.data.startedAt) - props.offsetMs
+  return Math.min(receivedAt.value, serverStart + 1000) + seconds.value * 1000
+})
+const leftMs = computed(() =>
+  answered.value && !props.result ? 0 : Math.max(0, deadline.value - now.value)
+)
+
+const bubble = computed(() => {
+  const r = props.result
+  if (!r) return t('mindMapPath.jongleur.taunt')
+  return t(`mindMapPath.jongleur.react.${r.status}`)
+})
+
+const verdict = computed(() =>
+  props.result
+    ? jongleurVerdict(question.value, props.item.data.square, props.result)
+    : ''
+)
+
+/** The square lit (name), then the answer's colours: green, or red and the right one in green. */
+const highlights = computed(() => {
+  const r = props.result
+  const square = props.item.data.square
+  if (question.value === 'name')
+    return [
+      {
+        square,
+        type: !r ? 'hint' : r.status === 'right' ? 'success' : 'error'
+      }
+    ]
+  if (question.value === 'find') {
+    if (!r) return []
+    if (r.status === 'right') return [{ square, type: 'success' }]
+    return [
+      ...(given.value ? [{ square: given.value, type: 'error' }] : []),
+      { square, type: 'success' }
+    ]
+  }
+  const move = props.item.data.move?.uci
+  if (question.value === 'write' && move && !r)
+    return [
+      { square: move.slice(0, 2), type: 'lastMove' },
+      { square: move.slice(2, 4), type: 'lastMove' }
+    ]
+  if (question.value === 'play' && r && r.status !== 'right' && given.value)
+    return [
+      { square: given.value.slice(0, 2), type: 'error' },
+      { square: given.value.slice(2, 4), type: 'error' }
+    ]
+  return []
+})
+
+/** A move missed (played or written): the right one as an arrow. */
+const arrows = computed(() => {
+  const r = props.result
+  const move = props.item.data.move?.uci
+  if (!r || r.status === 'right' || isSquare.value || !move) return []
+  return [{ from: move.slice(0, 2), to: move.slice(2, 4), type: 'solution' }]
+})
+
+/** @param {'light'|'dark'} color */
+function colorClass(color) {
+  const r = props.result
+  if (!r) return ''
+  if (r.expected === color) return 'jongleur-player__color--right'
+  return given.value === color ? 'jongleur-player__color--wrong' : ''
+}
+
+/** @param {Record<string, any>} report */
+function answer(report) {
+  if (answered.value) return
+  answered.value = true
+  emit('resolve', report)
+}
+
+/** @param {string} value a square, or light / dark */
+function answerSquare(value) {
+  if (answered.value) return
+  given.value = value
+  answer({ answers: [{ index: 0, square: value, ms: elapsed() }] })
+}
+
+/** @param {{uci: string}} move */
+function onMove(move) {
+  if (answered.value) return
+  given.value = move.uci
+  fen.value = after(fen.value, move.uci)
+  answer({ moves: [move.uci] })
+}
+
+function send() {
+  const text = written.value.trim()
+  if (answered.value || !text) return
+  answer({ written: [englishSan(text)] })
+}
+
+/** @param {string} key a file, then a rank sends the square */
+function type(key) {
+  if (answered.value) return
+  if (FILES.includes(key)) {
+    if (typed.value.length === 0) typed.value = key
+    return
+  }
+  if (RANKS.includes(key) && typed.value.length === 1) {
+    const square = `${typed.value}${key}`
+    typed.value = ''
+    answerSquare(square)
+  }
+}
+
+/** The keyboard: a file and a rank (name), C / F or the arrows (colour). */
+function onKey(/** @type {KeyboardEvent} */ event) {
+  if (event.ctrlKey || event.metaKey || event.altKey || answered.value) return
+  const target = /** @type {HTMLElement|null} */ (event.target)
+  if (target?.closest('input, textarea, [contenteditable="true"]')) return
+  const key = event.key.toLowerCase()
+  if (question.value === 'name') {
+    if (key === 'backspace') typed.value = ''
+    else if (FILES.includes(key) || RANKS.includes(key)) type(key)
+    else return
+  } else if (question.value === 'color') {
+    if (key === 'c' || key === 'arrowleft') answerSquare('light')
+    else if (key === 'f' || key === 'arrowright') answerSquare('dark')
+    else return
+  } else return
+  event.preventDefault()
+}
+
+function elapsed() {
+  return Math.max(0, Date.now() - receivedAt.value)
+}
+
+/**
+ * @param {string} position
+ * @param {string} uci
+ */
+function after(position, uci) {
+  const chess = new Chess(position)
+  chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] })
+  return chess.fen()
+}
+
+/** Lets the player answer again (a refused submission). */
+function unlock() {
+  answered.value = false
+}
+
+defineExpose({ unlock })
+
+watch(
+  () => props.item.id,
+  () => {
+    receivedAt.value = Date.now()
+    now.value = receivedAt.value
+    answered.value = false
+    typed.value = ''
+    written.value = ''
+    given.value = null
+    clearTimeout(showTimer)
+    const data = props.item.data
+    fen.value = data.fen ?? EMPTY_BOARD
+    // The move to write is played before the player's eyes.
+    if (data.question === 'write' && data.fen && data.move?.uci) {
+      const start = data.fen
+      showTimer = setTimeout(() => {
+        if (props.item.data.fen === start)
+          fen.value = after(start, data.move.uci)
+      }, SHOW_DELAY_MS)
+    }
+  },
+  { immediate: true }
+)
+
+// Time out: an empty answer (the server judges it late or wrong).
+watch(leftMs, left => {
+  if (left <= 0 && !answered.value && !props.result) answer({})
+})
+
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  ticker = setInterval(() => (now.value = Date.now()), 100)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  clearInterval(ticker)
+  clearTimeout(showTimer)
+})
+</script>
+
+<style scoped lang="scss">
+.jongleur-player__boss {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.jongleur-player__portrait {
+  flex: none;
+  width: 96px;
+
+  &--juggling {
+    animation: jongleur-bob 1.2s ease-in-out infinite;
+  }
+}
+
+.jongleur-player__talk {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.jongleur-player__lives {
+  display: flex;
+  gap: 4px;
+  font-size: 22px;
+  color: #e5484d;
+}
+
+.jongleur-player__life--lost {
+  color: var(--cm-faint);
+}
+
+.jongleur-player__bubble {
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--cm-subtle);
+  color: var(--cm-ink);
+  font-weight: 600;
+}
+
+.jongleur-player__clock {
+  height: 10px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: var(--cm-subtle);
+  overflow: hidden;
+
+  &--low .jongleur-player__clock-fill {
+    background: #e5484d;
+  }
+}
+
+.jongleur-player__clock-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cm-brand);
+  transition: width 0.1s linear;
+}
+
+.jongleur-player__stage {
+  position: relative;
+
+  &--shake {
+    animation: jongleur-wobble 0.9s ease-in-out 0.8s 3;
+  }
+}
+
+.jongleur-player__target {
+  margin-bottom: 8px;
+  text-align: center;
+  font-family: var(--cm-heading);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--cm-ink);
+}
+
+.jongleur-player__colors {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.jongleur-player__color {
+  width: min(42vw, 200px);
+  height: 140px;
+  border: none;
+  border-radius: 20px;
+  font-family: var(--cm-heading);
+  font-size: 24px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &--light {
+    background: #f0d9b5;
+    color: #5b3d1f;
+    box-shadow: 0 6px 0 #c9ac80;
+  }
+
+  &--dark {
+    background: #b58863;
+    color: #fff;
+    box-shadow: 0 6px 0 #8a6342;
+  }
+
+  &--right {
+    outline: 4px solid var(--cm-success);
+  }
+
+  &--wrong {
+    outline: 4px solid var(--cm-danger);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.jongleur-player__balls {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.jongleur-player__ball {
+  position: absolute;
+  top: 40%;
+  left: -15%;
+  font-size: 44px;
+  opacity: 0.75;
+  animation: jongleur-drift 2.8s linear infinite;
+}
+
+.jongleur-player__keypad,
+.jongleur-player__write {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.jongleur-player__write .q-input {
+  width: 100%;
+  max-width: 320px;
+}
+
+.jongleur-player__keys {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.jongleur-player__key {
+  width: 44px;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: var(--cm-surface);
+  box-shadow:
+    inset 0 0 0 2px var(--cm-line),
+    0 3px 0 var(--cm-dash);
+  color: var(--cm-ink);
+  font-family: var(--cm-heading);
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &--small {
+    width: auto;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 8px;
+    font-size: 16px;
+  }
+
+  &--on {
+    background: var(--cm-brand);
+    color: #fff;
+    box-shadow: 0 3px 0 var(--cm-brand-deep);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.jongleur-player__verdict {
+  padding: 10px 14px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+
+  &--right {
+    background: color-mix(in srgb, var(--cm-success) 16%, transparent);
+    color: var(--cm-success);
+  }
+
+  &--wrong,
+  &--late {
+    background: color-mix(in srgb, var(--cm-danger) 14%, transparent);
+    color: var(--cm-danger);
+  }
+}
+
+@keyframes jongleur-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(2deg);
+  }
+}
+
+@keyframes jongleur-wobble {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-1.5deg) translateX(-4px);
+  }
+  75% {
+    transform: rotate(1.5deg) translateX(4px);
+  }
+}
+
+@keyframes jongleur-drift {
+  0% {
+    transform: translate(0, 0) rotate(0);
+  }
+  50% {
+    transform: translate(65vw, -120px) rotate(200deg);
+  }
+  100% {
+    transform: translate(130vw, 0) rotate(400deg);
+  }
+}
+
+// Less motion asked: no juggling, no distraction.
+@media (prefers-reduced-motion: reduce) {
+  .jongleur-player__portrait--juggling,
+  .jongleur-player__stage--shake {
+    animation: none;
+  }
+
+  .jongleur-player__balls {
+    display: none;
+  }
+}
+</style>

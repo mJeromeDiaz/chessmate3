@@ -18,6 +18,8 @@ use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
 use App\Notation\Drawing\LinePicker;
 use App\Notation\Drawing\PuzzlePicker;
+use App\Notation\Games\GamePicker;
+use App\Notation\Games\LegendaryGames;
 use App\Notation\Judge\WrittenLine;
 use App\Notation\NotationRules;
 use App\Puzzle\Catalog\PuzzleCatalog;
@@ -45,7 +47,9 @@ use Symfony\Component\Uid\Uuid;
  * The notation module in timed runs (docs/NOTATION.md). The subject is the user; config `kind`
  * (play: a move announced, to play; sequence: moves announced, to play for both sides; write: a
  * puzzle to solve in one's head and write; line: a line of one's repertoire to complete, from
- * `repertoireId` or any repertoire of LINE_MIN_SEGMENTS segments) and, for a lesson of the mind map,
+ * `repertoireId` or any repertoire of LINE_MIN_SEGMENTS segments; game_write and game_play: a
+ * legendary game, `gameId` or any, 6 half-moves at a time to write once seen, or to play once read)
+ * and, for a lesson of the mind map,
  * `count` (the run ends at its count of items, {@see CountedModuleInterface}). Items are drawn from
  * the puzzles or the repertoires, one at a time; the server judges each answer (moves played in UCI,
  * half-moves written in SAN). Never rated.
@@ -63,6 +67,8 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
         private readonly AttemptRepository $attempts,
         private readonly PuzzlePicker $picker,
         private readonly LinePicker $lines,
+        private readonly GamePicker $gamePicker,
+        private readonly LegendaryGames $games,
         private readonly RepertoireRepository $repertoires,
         private readonly PuzzleCatalog $catalog,
         private readonly EventPublisher $events,
@@ -87,14 +93,18 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
     public function prepare(User $user, array $settings, string $notes): PreparedStep
     {
         // A session step is timed: no count.
-        if ([] !== array_diff(array_keys($settings), ['kind', 'repertoireId'])) {
-            throw new InvalidRunConfigException('Unknown option: only kind and repertoireId are accepted.');
+        if ([] !== array_diff(array_keys($settings), ['kind', 'repertoireId', 'gameId'])) {
+            throw new InvalidRunConfigException('Unknown option: only kind, repertoireId and gameId are accepted.');
         }
-        [$kind, , $repertoireId] = self::check($settings);
+        [$kind, , $repertoireId, $gameId] = self::check($settings);
         $config = ['kind' => $kind->value];
         if (null !== $repertoireId) {
             $this->assertOwned($user, $repertoireId);
             $config['repertoireId'] = $repertoireId->toRfc4122();
+        }
+        if (null !== $gameId) {
+            $this->assertGame($gameId);
+            $config['gameId'] = $gameId;
         }
 
         return new PreparedStep($user->getId(), $config);
@@ -105,9 +115,12 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
         if (!$run->getSubjectId()->equals($run->getUser()->getId())) {
             throw new SubjectNotFoundException();
         }
-        [, , $repertoireId] = self::check($run->getConfig());
+        [, , $repertoireId, $gameId] = self::check($run->getConfig());
         if (null !== $repertoireId) {
             $this->assertOwned($run->getUser(), $repertoireId);
+        }
+        if (null !== $gameId) {
+            $this->assertGame($gameId);
         }
         // Served now: nothing to draw refuses the run instead of opening an empty one.
         $this->serve($run, $now);
@@ -245,8 +258,13 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
      */
     private function serve(Run $run, \DateTimeImmutable $now): Attempt
     {
-        [$kind, , $repertoireId] = self::check($run->getConfig());
-        if (Kind::Line === $kind) {
+        [$kind, , $repertoireId, $gameId] = self::check($run->getConfig());
+        if ($kind->isGame()) {
+            $exercise = $this->gamePicker->pick($run, $gameId);
+            if (null === $exercise) {
+                throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_game'], 'No legendary game to play (no_game).');
+            }
+        } elseif (Kind::Line === $kind) {
             $exercise = $this->lines->pick($run, $repertoireId);
             if (null === $exercise) {
                 throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_repertoire'], \sprintf('No repertoire of %d segments with a line to complete (no_repertoire).', NotationRules::LINE_MIN_SEGMENTS));
@@ -286,6 +304,15 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
             Kind::Sequence => ['moves' => $expected],
             // Only how many half-moves to write.
             Kind::Write => ['plies' => \count($expected)],
+            // A legendary game: the moves of this chunk (shown played, then hidden, to write; or read,
+            // to play), the game so far and its players.
+            Kind::GameWrite, Kind::GamePlay => [
+                'plies' => \count($expected),
+                'moves' => $expected,
+                'shown' => self::sans(Rules::INITIAL_FEN, $attempt->getShown()),
+                'label' => $attempt->getLabel(),
+                'orientation' => $attempt->getOrientation() ?? 'white',
+            ],
             // The line played so far, from the initial position, and how many half-moves to write.
             Kind::Line => [
                 'plies' => \count($expected),
@@ -298,10 +325,20 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, $data);
     }
 
-    /** Answered by writing (a puzzle's line, a repertoire line's end), not by playing. */
+    /** Answered by writing (a puzzle's line, a repertoire line's end, a legendary game's moves seen), not by playing. */
     private static function isWritten(Kind $kind): bool
     {
-        return Kind::Write === $kind || Kind::Line === $kind;
+        return Kind::Write === $kind || Kind::Line === $kind || Kind::GameWrite === $kind;
+    }
+
+    /**
+     * @throws InvalidRunConfigException no such legendary game
+     */
+    private function assertGame(int $gameId): void
+    {
+        if (null === $this->games->find($gameId)) {
+            throw new InvalidRunConfigException(\sprintf('No legendary game %d.', $gameId));
+        }
     }
 
     /**
@@ -376,14 +413,14 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
     /**
      * @param array<string, mixed> $config
      *
-     * @return array{Kind, int|null, Uuid|null}
+     * @return array{Kind, int|null, Uuid|null, int|null}
      *
      * @throws InvalidRunConfigException
      */
     private static function check(array $config): array
     {
-        if ([] !== array_diff(array_keys($config), ['kind', 'count', 'repertoireId'])) {
-            throw new InvalidRunConfigException('Unknown option: only kind, count and repertoireId are accepted.');
+        if ([] !== array_diff(array_keys($config), ['kind', 'count', 'repertoireId', 'gameId'])) {
+            throw new InvalidRunConfigException('Unknown option: only kind, count, repertoireId and gameId are accepted.');
         }
         $kind = \is_string($config['kind'] ?? null) ? Kind::tryFrom($config['kind']) : null;
         if (null === $kind) {
@@ -393,14 +430,20 @@ final class NotationModule implements TimeboxedModuleInterface, ReviewableModule
         if (null !== $count && (!\is_int($count) || $count < 1 || $count > NotationRules::MAX_COUNT)) {
             throw new InvalidRunConfigException(\sprintf('count must be a whole number from 1 to %d.', NotationRules::MAX_COUNT));
         }
+        $gameId = $config['gameId'] ?? null;
+        if (null !== $gameId) {
+            if (!$kind->isGame() || !\is_int($gameId) || $gameId < 1) {
+                throw new InvalidRunConfigException('gameId: a legendary game\'s id, for the game exercises only.');
+            }
+        }
         $repertoireId = $config['repertoireId'] ?? null;
         if (null === $repertoireId) {
-            return [$kind, $count, null];
+            return [$kind, $count, null, $gameId];
         }
         if (Kind::Line !== $kind || !\is_string($repertoireId) || !Uuid::isValid($repertoireId)) {
             throw new InvalidRunConfigException('repertoireId: a repertoire\'s id, for the line exercise only.');
         }
 
-        return [$kind, $count, Uuid::fromString($repertoireId)];
+        return [$kind, $count, Uuid::fromString($repertoireId), $gameId];
     }
 }

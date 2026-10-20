@@ -4,6 +4,7 @@
     data-testid="notation-player"
     :data-kind="kind"
     :data-state="state"
+    :data-played="played.length"
   >
     <template v-if="$slots.header" #header>
       <slot name="header" />
@@ -46,7 +47,7 @@
 
     <template #controls>
       <div
-        v-if="kind === 'sequence'"
+        v-if="isSequence"
         class="notation-player__line"
         data-testid="notation-sequence"
       >
@@ -64,18 +65,29 @@
       </div>
 
       <div
-        v-if="kind === 'line'"
+        v-if="kind === 'line' || isGame"
         class="notation-player__shown"
         data-testid="notation-shown"
       >
         <span class="notation-player__shown-label">{{
           item.data.label || $t('notation.player.lineStart')
         }}</span>
-        <span>{{ shownLine }}</span>
+        <span v-if="isGame">{{ chunkRange }}</span>
+        <span v-else>{{ shownLine }}</span>
       </div>
 
+      <q-btn
+        v-if="kind === 'game_write' && !watching && !answered"
+        flat
+        no-caps
+        icon="replay"
+        :label="$t('notation.player.replay')"
+        data-testid="notation-replay"
+        @click="showMoves"
+      />
+
       <form
-        v-if="isWritten"
+        v-if="isWritten && !watching"
         class="notation-player__write"
         data-testid="notation-write"
         @submit.prevent="send"
@@ -145,7 +157,8 @@
  * the board; a sequence of moves announced, to play for both sides (each move judged at once, the
  * first wrong one ends it and its right move is shown); a puzzle to solve in one's head, its whole
  * line written in the field or with the keys of the pieces, never played; a line of the player's
- * repertoire played up to its last half-moves, to write the same way. Everything the player
+ * repertoire played up to its last half-moves, to write the same way; a legendary game, 6
+ * half-moves at a time: read, then played (as a sequence), or shown played, then written. Everything the player
  * reads and types is in the interface's language (utils/notation.js); the server judges again.
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
@@ -157,6 +170,8 @@ import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { feedbackProf } from '@/utils/feedback'
 import {
+  GAMES,
+  SEQUENCES,
   WRITTEN,
   englishSan,
   localSan,
@@ -203,9 +218,29 @@ const input = ref(null)
 const kind = computed(() => props.item.data.kind)
 /** Answered in writing (a puzzle's line, a repertoire line's end), not on the board. */
 const isWritten = computed(() => WRITTEN.includes(kind.value))
-/** A repertoire line: the repertoire's side at the bottom; otherwise the side to move. */
+/** Played as a sequence of moves read (a puzzle's solution, a legendary game's chunk). */
+const isSequence = computed(() => SEQUENCES.includes(kind.value))
+const isGame = computed(() => GAMES.includes(kind.value))
+/** A legendary game's chunk being shown played (game_write), before writing it. */
+const watching = ref(false)
+/** The move just shown played. */
+const lastShown = ref(/** @type {string|null} */ (null))
+/** Between two moves shown played. */
+const WATCH_MS = 900
+/** @type {ReturnType<typeof setTimeout>|undefined} */
+let watchTimer
+/** A legendary game's chunk: « Coups 7 à 12 » (full moves). */
+const chunkRange = computed(() => {
+  const from = (props.item.data.shown ?? []).length
+  const to = from + (props.item.data.plies ?? 0)
+  return t('notation.player.gameFrom', {
+    from: Math.floor(from / 2) + 1,
+    to: Math.floor((to - 1) / 2) + 1
+  })
+})
+/** A repertoire line or a legendary game: the side chosen at the bottom; otherwise the side to move. */
 const orientation = computed(() =>
-  kind.value === 'line'
+  kind.value === 'line' || isGame.value
     ? props.item.data.orientation === 'black'
       ? 'black'
       : 'white'
@@ -261,8 +296,13 @@ const sequenceLine = computed(() => {
   })
 })
 
-/** The wrong move in red, the right one as an arrow, once judged. */
+/** The wrong move in red, the right one as an arrow, once judged; the move shown played. */
 const highlights = computed(() => {
+  if (watching.value && lastShown.value)
+    return [
+      { square: lastShown.value.slice(0, 2), type: 'lastMove' },
+      { square: lastShown.value.slice(2, 4), type: 'lastMove' }
+    ]
   const r = props.result
   const wrong = r && r.mistakeAt !== null ? played.value[r.mistakeAt] : null
   if (!wrong || isWritten.value) return []
@@ -325,20 +365,32 @@ const bubble = computed(() => {
         ? t('notation.player.playText', { san: announcedSan.value })
         : kind.value === 'sequence'
           ? t('notation.player.sequenceText')
-          : kind.value === 'line'
+          : isGame.value
             ? t(
-                'notation.player.lineText',
+                kind.value === 'game_play'
+                  ? 'notation.player.gamePlayText'
+                  : watching.value
+                    ? 'notation.player.gameWatchText'
+                    : 'notation.player.gameWriteText',
                 {
-                  line: props.item.data.label || shownLine.value,
+                  label: props.item.data.label ?? '',
                   n: props.item.data.plies ?? 0
-                },
-                props.item.data.plies ?? 0
+                }
               )
-            : t(
-                'notation.player.writeText',
-                { side, n: props.item.data.plies ?? 0 },
-                props.item.data.plies ?? 0
-              )
+            : kind.value === 'line'
+              ? t(
+                  'notation.player.lineText',
+                  {
+                    line: props.item.data.label || shownLine.value,
+                    n: props.item.data.plies ?? 0
+                  },
+                  props.item.data.plies ?? 0
+                )
+              : t(
+                  'notation.player.writeText',
+                  { side, n: props.item.data.plies ?? 0 },
+                  props.item.data.plies ?? 0
+                )
   }
 })
 
@@ -360,7 +412,7 @@ const copy = computed(() => {
         san: localSan(r.expected?.[0]?.san ?? '')
       })
     }
-  if (kind.value === 'sequence')
+  if (isSequence.value)
     return {
       title: t('notation.player.kickers.wrong'),
       sub: t('notation.player.mistakeAt', {
@@ -439,6 +491,31 @@ function after(position, uci) {
   return chess.fen()
 }
 
+/** A legendary game's chunk played on the board, a move at a time, then back to its start to write it. */
+function showMoves() {
+  clearTimeout(watchTimer)
+  watching.value = true
+  fen.value = props.item.data.fen
+  lastShown.value = null
+  const moves = expectedMoves.value
+  let i = 0
+  const step = () => {
+    if (i < moves.length) {
+      fen.value = after(fen.value, moves[i].uci)
+      lastShown.value = moves[i].uci
+      i++
+      watchTimer = setTimeout(step, WATCH_MS)
+      return
+    }
+    watchTimer = setTimeout(() => {
+      fen.value = props.item.data.fen
+      lastShown.value = null
+      watching.value = false
+    }, WATCH_MS)
+  }
+  watchTimer = setTimeout(step, WATCH_MS)
+}
+
 /** Lets the player answer again (a refused submission). */
 function unlock() {
   answered.value = false
@@ -453,6 +530,10 @@ watch(
     before.value = ''
     written.value = ''
     answered.value = false
+    clearTimeout(watchTimer)
+    watching.value = false
+    lastShown.value = null
+    if (props.item.data.kind === 'game_write') showMoves()
   },
   { immediate: true }
 )
@@ -469,7 +550,10 @@ watch(
   }
 )
 
-onBeforeUnmount(() => timeline.reset())
+onBeforeUnmount(() => {
+  timeline.reset()
+  clearTimeout(watchTimer)
+})
 
 defineExpose({ unlock })
 </script>

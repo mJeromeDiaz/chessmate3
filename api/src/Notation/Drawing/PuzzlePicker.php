@@ -84,8 +84,8 @@ final readonly class PuzzlePicker
                     ? \array_slice($solution, 0, NotationRules::SEQUENCE_MAX_PLIES)
                     : null,
                 Kind::Write => \count($solution) <= NotationRules::WRITE_MAX_PLIES ? $solution : null,
-                // Drawn from the repertoires ({@see LinePicker}).
-                Kind::Line => null,
+                // Drawn from the repertoires ({@see LinePicker}) and the legendary games ({@see \App\Notation\Games\GamePicker}).
+                Kind::Line, Kind::GameWrite, Kind::GamePlay => null,
             };
         } catch (InvalidPositionException) {
             return null;

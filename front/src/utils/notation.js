@@ -6,15 +6,28 @@ import { currentLocale, t } from '@/i18n'
  * French R D T F C: Roi, Dame, Tour, Fou, Cavalier). Both sets cannot be accepted at once: R is
  * the king in French, the rook in English. Pure, so that it can be tested alone.
  *
- * @typedef {'play'|'sequence'|'write'|'line'} NotationKind
+ * @typedef {'play'|'sequence'|'write'|'line'|'game_play'|'game_write'} NotationKind
  * @typedef {{uci: string, san: string}} SanMove
  */
 
 /** The exercises, in the page's order. */
-export const KINDS = ['play', 'sequence', 'write', 'line']
+export const KINDS = [
+  'play',
+  'sequence',
+  'write',
+  'line',
+  'game_play',
+  'game_write'
+]
 
 /** Exercises answered in writing, not on the board. */
-export const WRITTEN = ['write', 'line']
+export const WRITTEN = ['write', 'line', 'game_write']
+
+/** Exercises played as a sequence of moves read, for both sides. */
+export const SEQUENCES = ['sequence', 'game_play']
+
+/** Exercises drawn from the legendary games. */
+export const GAMES = ['game_play', 'game_write']
 
 /** English piece letters → each language's (king, queen, rook, bishop, knight). */
 const LETTERS = {
