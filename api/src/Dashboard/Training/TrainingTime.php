@@ -39,6 +39,7 @@ final class TrainingTime
         ExerciseType::BlindfoldRecall->value => Module::BlindfoldRecall,
         ExerciseType::Notation->value => Module::Notation,
         ExerciseType::Jongleur->value => Module::Jongleur,
+        ExerciseType::Vision->value => Module::Vision,
     ];
 
     public function __construct(private readonly Connection $connection)

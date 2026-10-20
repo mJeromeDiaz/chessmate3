@@ -56,4 +56,9 @@ enum ExerciseType: string
      * its own (the boss's reward).
      */
     case Jongleur = 'jongleur';
+    /**
+     * A question of the vision module (docs/VISION.md), never rated; `metadata.kind` (locate,
+     * en_prise, attackers), `metadata.ask`, `metadata.status` (right, wrong).
+     */
+    case Vision = 'vision';
 }

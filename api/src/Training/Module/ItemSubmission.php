@@ -18,6 +18,7 @@ final readonly class ItemSubmission
      * @param array{guess?: int|null, plan?: string|null}|null  $evaluation the category chosen (-2 to 2, null: none in time) and the plan (position evaluation)
  * @param list<array{square: string, piece: string}>       $placement  pieces placed (position recall)
      * @param list<string>                                     $written    half-moves written (notation)
+     * @param list<string>                                     $squares    squares clicked (vision)
      */
     public function __construct(
         public string $itemId,
@@ -34,6 +35,8 @@ final readonly class ItemSubmission
         public array $placement = [],
         /** Notation: the half-moves written, SAN with English letters (docs/NOTATION.md). */
         public array $written = [],
+        /** Vision: the squares clicked on the empty board (docs/VISION.md). */
+        public array $squares = [],
     ) {
     }
 }

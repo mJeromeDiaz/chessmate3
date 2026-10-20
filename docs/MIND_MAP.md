@@ -237,7 +237,7 @@ seule option.
 | L1 | Coordonnées : modes « nommer la case » et « couleur de la case » (1.2, 1.3) | écrit 2026-10-20 |
 | L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) : L2a, L2b verts, L2c `line` (1.7, un répertoire d'au moins 10 tronçons) écrit 2026-10-20 | en cours |
 | L3 | Parties célèbres (1.8, 1.9) et boss Jongleur (§ 8) | fait |
-| L4 | Chapitre 2 : L4a exercices (reconstitution, niveaux 1 à 12) et mini-boss 2.1, écrit 2026-10-20 ; L4b module Vision (mini-boss 2.2, 2.3, caché) ; L4c Cyclope | en cours |
+| L4 | Chapitre 2 : L4a exercices (reconstitution, niveaux 1 à 12) et mini-boss 2.1, vert ; L4b module Vision (mini-boss 2.2, 2.3, caché) : L4b1 API vert, L4b2 front écrit 2026-10-20 ; L4c Cyclope | en cours |
 | L5, L6 | Module Vision (3.1 à 3.3), Gargouille et ses distractions | à faire |
 | L7 à L10 | Chapitres 4 à 7 (précisions de l'utilisateur attendues) | à faire |
 
@@ -250,4 +250,5 @@ lignes du répertoire à compléter, 80 % ; 1.7 refusé sans répertoire de 10 t
 (§ 8). Chapitre 2 : 2.1.1 à 2.3.4 = niveaux 1 à 12 de la reconstitution
 ([BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md), § 3 bis), 5 positions par leçon, seules les exactes
 justes, 80 % ; mini-boss 2.1 = niveaux 2, 3 puis 4, échiquier sans coordonnées, une vie par pièce
-fausse ou oubliée.
+fausse ou oubliée ; mini-boss 2.2 et 2.3 et boss caché 2.3 = module Vision ([VISION.md](VISION.md),
+§ 5), 5 questions, 3 vies.

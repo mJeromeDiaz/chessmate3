@@ -189,6 +189,14 @@ final readonly class DataExport
                 $id,
                 ['expected', 'shown', 'answer'],
             )),
+            // The questions of the vision module (docs/VISION.md).
+            'visionQuestions' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, kind, ask, fen, announced, target, side, expected, puzzle_id AS puzzle, status, answer,
+                        started_at, submitted_at, duration_ms
+                   FROM vision_question WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['announced', 'expected', 'answer'],
+            )),
             // The mind map paths (docs/MIND_MAP.md): progress by step, runs played for a step, chests.
             'mindMapProgress' => $this->rows(
                 'SELECT capacity, step, passes, completed_at, skipped_at, updated_at FROM mind_map_progress WHERE user_id = ? ORDER BY updated_at, step',

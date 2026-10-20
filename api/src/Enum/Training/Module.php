@@ -33,6 +33,8 @@ enum Module: string
     case Notation = 'notation';
     /** The Jongleur, a mind map boss: quick mixed questions of 6 s, 3 lives (docs/MIND_MAP.md, § 8); played from its path only. */
     case Jongleur = 'jongleur';
+    /** Vision: a position shown, hidden, moves announced, then a question about it (docs/VISION.md); played from the mind map only for now. */
+    case Vision = 'vision';
 
     /**
      * @return list<string>

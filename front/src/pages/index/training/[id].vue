@@ -309,6 +309,53 @@
       </template>
     </NotationPlayer>
 
+    <VisionPlayer
+      v-else-if="visionItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="visionPlayer"
+      :item="visionItem"
+      :result="visionResult"
+      :xp="runner.xp.value"
+      :actions="visionActions"
+      @resolve="onVisionResolve"
+    >
+      <template #header>
+        <div class="row items-center q-gutter-sm">
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            $t('vision.player.progress', {
+              n: visionItem.data.position,
+              count: visionItem.data.count ?? '…'
+            })
+          }}</div>
+          <div
+            v-if="visionLives !== null"
+            class="row items-center text-red-6"
+            data-testid="vision-lives"
+            :data-lives="visionLives"
+          >
+            <q-icon
+              v-for="i in BOSS_LIVES"
+              :key="i"
+              size="22px"
+              :name="i <= visionLives ? 'favorite' : 'heart_broken'"
+            />
+          </div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </VisionPlayer>
+
     <JongleurPlayer
       v-else-if="jongleurItem && (runner.phase.value === 'running' || holdEnd)"
       ref="jongleurPlayer"
@@ -611,7 +658,9 @@
  * the accuracy while playing, the score only at the end) or positions to rebuild
  * (docs/BLINDFOLD_RECALL.md: without a clock on the recall page, "Niveau n" once a level opens)
  * or a notation exercise (docs/NOTATION.md: a counted lesson shows "Exercice n sur N") or a
- * fight against the Jongleur (docs/MIND_MAP.md, § 8: "Question n sur N", the next one at once).
+ * fight against the Jongleur (docs/MIND_MAP.md, § 8: "Question n sur N", the next one at once)
+ * or a question of vision (docs/VISION.md: a position hidden, a question about it; the lives of a
+ * mind map boss).
  * A run played for a step of a mind map path (`?mindMap=1`, docs/MIND_MAP.md) ends on the step's
  * verdict (`RunOutcome`) instead of the recap.
  */
@@ -623,6 +672,7 @@ import RecallPlayer from '@/components/blindfold/RecallPlayer.vue'
 import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import NotationPlayer from '@/components/notation/NotationPlayer.vue'
 import JongleurPlayer from '@/components/mindMap/JongleurPlayer.vue'
+import VisionPlayer from '@/components/vision/VisionPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
@@ -691,7 +741,8 @@ const STOP_MESSAGES = [
   'puzzle_rush',
   'blindfold_recall',
   'notation',
-  'jongleur'
+  'jongleur',
+  'vision'
 ]
 const route = useRoute()
 const router = useRouter()
@@ -1042,6 +1093,80 @@ async function onNotationResolve(report) {
     holdEnd.value = false
     error.value = apiErrorMessage(e)
     notationPlayer.value?.unlock()
+  }
+}
+
+/**
+ * The vision question on screen (docs/VISION.md), kept once the run closed on the last one: its
+ * correction stays on screen (`holdEnd`) until it moves on.
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const visionItem = ref(null)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const visionPlayer = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'vision') visionItem.value = item
+    else if (item) visionItem.value = null
+  }
+)
+const visionResult = computed(() =>
+  visionItem.value && runner.result.value?.itemId === visionItem.value.id
+    ? runner.result.value.data
+    : null
+)
+/** A mind map boss's lives left, null without lives. */
+const visionLives = computed(() => {
+  const lives = visionResult.value?.lives ?? visionItem.value?.data.lives
+  return typeof lives === 'number' ? lives : null
+})
+/** After a wrong answer: the next question, or the result once over (a right one moves on by itself). */
+const visionActions = computed(() =>
+  (visionResult.value && visionResult.value.status !== 'right') || error.value
+    ? [
+        {
+          label:
+            runner.phase.value === 'running'
+              ? t('training.page.next')
+              : t('training.page.seeResult'),
+          primary: true,
+          disable: loading.value,
+          testid: 'run-next',
+          onClick: async () => {
+            holdEnd.value = false
+            if (runner.phase.value === 'running') await next()
+          }
+        }
+      ]
+    : []
+)
+
+/**
+ * A vision answer: right, the next question comes by itself once the success played; wrong, the
+ * correction waits for "Suivant". Held so that the last one stays on screen when it closes the run.
+ *
+ * @param {Record<string, any>} report
+ */
+async function onVisionResolve(report) {
+  holdEnd.value = true
+  try {
+    const result = await runner.submit(report)
+    if (!result) {
+      holdEnd.value = false
+      visionPlayer.value?.unlock()
+      return
+    }
+    if (result.success)
+      setTimeout(() => {
+        holdEnd.value = false
+        if (runner.phase.value === 'running') next()
+      }, AUTO_NEXT_MS)
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    visionPlayer.value?.unlock()
   }
 }
 
@@ -1672,6 +1797,7 @@ watch(
     recallItem.value = null
     notationItem.value = null
     jongleurItem.value = null
+    visionItem.value = null
     streakItem.value = null
     parcoursItem.value = null
     try {

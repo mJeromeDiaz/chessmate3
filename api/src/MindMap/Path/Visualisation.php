@@ -58,7 +58,8 @@ final class Visualisation
     /**
      * Static blindfold vision: three sections of positions to remember, the levels 1 to 12 of the
      * position recall (docs/BLINDFOLD_RECALL.md); the mini-boss 2.1 rebuilds levels 2, 3 and 4 on a
-     * board without coordinates, a life per piece wrong or missing.
+     * board without coordinates, a life per piece wrong or missing; the mini-bosses 2.2 and 2.3 and
+     * the hidden one ask the vision module's questions (docs/VISION.md).
      */
     private static function chapter2(): Chapter
     {
@@ -73,12 +74,12 @@ final class Visualisation
                 )),
             ]),
             new Section('2-2', '2.2', self::exercises('2-2', '2.2', [2, 3, 3, 4], self::recalls(5)), [
-                self::miniBoss('2-2-boss', 100, ['section_2_2']),
+                self::miniBoss('2-2-boss', 100, ['section_2_2'], null, 40, self::vision('locate')),
             ]),
             new Section('2-3', '2.3', self::exercises('2-3', '2.3', [3, 3, 3, 4], self::recalls(9)), [
-                self::miniBoss('2-3-boss', 120, ['section_2_3']),
+                self::miniBoss('2-3-boss', 120, ['section_2_3'], null, 40, self::vision('en_prise')),
             ], [
-                self::hidden('2-3-hidden', 60, null, ['hidden_2_3']),
+                self::hidden('2-3-hidden', 60, null, ['hidden_2_3'], self::vision('attackers')),
             ]),
         ], self::boss('2-boss', 240, 100, 'cyclope', ['chapter_2', 'boss_cyclope']));
     }
@@ -202,6 +203,14 @@ final class Visualisation
     private static function notation(string $kind, int $count): Activity
     {
         return new Activity(Module::Notation, ['kind' => $kind, 'count' => $count], self::LESSON_SECONDS, $count);
+    }
+
+    /**
+     * A boss of the vision module (docs/VISION.md): 5 questions of $kind, 3 lives.
+     */
+    private static function vision(string $kind): Activity
+    {
+        return new Activity(Module::Vision, ['kind' => $kind, 'count' => 5, 'lives' => PathRules::BOSS_LIVES], self::LESSON_SECONDS, 5, PathRules::BOSS_LIVES);
     }
 
     /**

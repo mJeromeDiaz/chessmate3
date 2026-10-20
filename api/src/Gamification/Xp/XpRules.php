@@ -77,6 +77,9 @@ final class XpRules
     /** Notation (docs/NOTATION.md): an item right, an item wrong. */
     public const NOTATION_RIGHT = 4;
     public const NOTATION_WRONG = 1;
+    /** Vision (docs/VISION.md): a question right, a question wrong. */
+    public const VISION_RIGHT = 4;
+    public const VISION_WRONG = 1;
 
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
@@ -123,6 +126,7 @@ final class XpRules
             ExerciseType::Notation => $success ? self::NOTATION_RIGHT : self::NOTATION_WRONG,
             // Only the boss's reward, when it is beaten (docs/MIND_MAP.md, § 5).
             ExerciseType::Jongleur => 0,
+            ExerciseType::Vision => $success ? self::VISION_RIGHT : self::VISION_WRONG,
         };
     }
 
@@ -187,6 +191,7 @@ final class XpRules
             ExerciseType::BlindfoldRecall => Module::BlindfoldRecall,
             ExerciseType::Notation => Module::Notation,
             ExerciseType::Jongleur => Module::Jongleur,
+            ExerciseType::Vision => Module::Vision,
         };
     }
 

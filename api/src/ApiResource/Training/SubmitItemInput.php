@@ -11,6 +11,7 @@ use App\Entity\Puzzle\Attempt;
 use App\Enum\Evaluation\Plan;
 use App\Notation\NotationRules;
 use App\Puzzle\Solution\SolutionValidator;
+use App\Vision\VisionRules;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -70,4 +71,9 @@ final class SubmitItemInput
     #[Assert\Count(max: NotationRules::MAX_WRITTEN)]
     #[Assert\All([new Assert\Type('string'), new Assert\Length(max: NotationRules::MAX_WRITTEN_LENGTH)])]
     public array $written = [];
+
+    /** @var list<string> vision: the squares clicked on the empty board (docs/VISION.md) */
+    #[Assert\Count(max: VisionRules::MAX_SQUARES)]
+    #[Assert\All([new Assert\Type('string'), new Assert\Regex('/^[a-h][1-8]$/')])]
+    public array $squares = [];
 }

@@ -1,0 +1,63 @@
+{
+  "pieces": {
+    "K": "le roi blanc",
+    "Q": "la dame blanche",
+    "R": "une tour blanche",
+    "B": "un fou blanc",
+    "N": "un cavalier blanc",
+    "P": "un pion blanc",
+    "k": "le roi noir",
+    "q": "la dame noire",
+    "r": "une tour noire",
+    "b": "un fou noir",
+    "n": "un cavalier noir",
+    "p": "un pion noir"
+  },
+  "sides": {
+    "white": "blanches",
+    "black": "noires"
+  },
+  "ask": {
+    "where": "Où est {piece} ?",
+    "what": "Qu’y a-t-il en {square} ?",
+    "en_prise": "Quelle pièce est en prise ?",
+    "attackers": "Quelles pièces {side} attaquent {square} ?"
+  },
+  "player": {
+    "progress": "Question {n} sur {count}",
+    "toMemorize": "{n} s pour mémoriser",
+    "seconds": "{n} s",
+    "memorized": "J’ai mémorisé",
+    "hidden": "Visualise…",
+    "announced": "Coups joués",
+    "empty": "Case vide",
+    "validate": "Valider",
+    "selected": "{n} case choisie | {n} cases choisies",
+    "kickers": {
+      "memorize": "Regarde bien",
+      "visualize": "Garde-la en tête",
+      "listen": "Écoute les coups",
+      "ask": "À toi",
+      "right": "Juste !",
+      "wrong": "Raté"
+    },
+    "texts": {
+      "memorize": "Retiens où sont les pièces : la position va disparaître.",
+      "visualize": "La position est cachée : revois-la les yeux fermés.",
+      "listen": "Joue-les dans ta tête sur la position cachée.",
+      "askClick": "Réponds sur l’échiquier vide.",
+      "askPiece": "Choisis la pièce, ou « Case vide ».",
+      "askMany": "Clique chaque attaquant, puis « Valider ».",
+      "right": "Tu vois la position sans la voir.",
+      "wrong": "Regarde la position : la bonne réponse est en vert."
+    },
+    "verdicts": {
+      "where": "{piece} était en {squares}.",
+      "what": "En {square}, il y avait {piece}.",
+      "en_prise": "En prise : {squares}.",
+      "attackers": "Les attaquants : {squares}.",
+      "none": "aucun",
+      "whatEmpty": "En {square}, il n’y avait rien."
+    }
+  }
+}
