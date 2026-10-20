@@ -148,6 +148,11 @@ sont refusées (422) :
 - `levels` : le niveau de chaque position à son tour (la dernière valeur ensuite).
 - `visibleSeconds` (5 à 60, `RecallRules::PATH_VISIBLE_SECONDS`) : le temps de mémorisation, à la
   place de celui du niveau (le Cyclope : 30 s).
+- `announce` (1 à 5, `RecallRules::MAX_ANNOUNCE`) : sur une position générée, des coups légaux des
+  deux camps tirés au hasard (`App\Chess\RandomLine`) et annoncés une fois la position cachée ; la
+  position à reconstituer est celle qu'ils atteignent (chapitre 3.2 de la carte mentale).
+- `distraction` (`none` à `strong`) : les distractions d'un boss autour de l'échiquier
+  ([MIND_MAP.md](MIND_MAP.md), § 2), transmises dans l'élément.
 
 Ses reconstitutions exactes comptent comme les autres pour ouvrir les niveaux ; leur XP aussi.
 

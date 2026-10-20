@@ -16,6 +16,7 @@
         v-else
         class="coords-player__target coords-player__target--typed"
         data-testid="coordinates-typed"
+        @click="focusField"
         >{{ typed || '·'
         }}<span class="coords-player__caret">{{
           typed.length === 1 ? '_' : ''
@@ -51,42 +52,30 @@
       class="coords-player__keypad"
       data-testid="coordinates-keypad"
     >
-      <div class="coords-player__keys">
-        <button
-          v-for="f in FILES"
-          :key="f"
-          type="button"
-          class="coords-player__key"
-          :class="{ 'coords-player__key--on': typed === f }"
-          :disabled="!playing || typed.length === 1"
-          :data-testid="`coordinates-key-${f}`"
-          @click="type(f)"
-          >{{ f }}</button
-        >
-      </div>
-      <div class="coords-player__keys">
-        <button
-          v-for="r in RANKS"
-          :key="r"
-          type="button"
-          class="coords-player__key"
-          :disabled="!playing || typed.length !== 1"
-          :data-testid="`coordinates-key-${r}`"
-          @click="type(r)"
-          >{{ r }}</button
-        >
-        <button
-          type="button"
-          class="coords-player__key coords-player__key--erase"
-          :disabled="!typed"
-          :aria-label="$t('coordinates.player.erase')"
-          data-testid="coordinates-key-erase"
-          @click="typed = ''"
-          >⌫</button
-        >
-      </div>
+      <input
+        v-if="touch"
+        ref="field"
+        class="coords-player__field"
+        type="text"
+        inputmode="text"
+        autocomplete="off"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false"
+        enterkeyhint="done"
+        maxlength="2"
+        :disabled="!playing"
+        :aria-label="$t('coordinates.player.name')"
+        data-testid="coordinates-input"
+        @beforeinput="onBeforeInput"
+        @input="onField"
+      />
       <div class="coords-player__keyhint">{{
-        $t('coordinates.player.keysName')
+        $t(
+          touch
+            ? 'coordinates.player.keysNameTouch'
+            : 'coordinates.player.keysName'
+        )
       }}</div>
     </div>
 
@@ -147,13 +136,15 @@
 <script setup>
 /**
  * A coordinates series (docs/COORDINATES.md), in its mode: find the square named on an empty
- * board without coordinates (a click), name the square lit on it (a file then a rank, on the
- * keypad or the keyboard), or tell the colour of the square named, without board (« Claire » /
+ * board without coordinates (a click), name the square lit on it (a file then a rank, typed: the
+ * keyboard on a computer, the device's own keyboard on a touch screen, opened at once; no keys on
+ * screen, they would read as a hint), or tell the colour of the square named, without board (« Claire » /
  * « Foncée », or the keyboard). The answer is judged at once (green, or red with the right answer)
  * and the next square comes straight away; answers go to the server in batches
  * ({@see useCoordinatesSeries}), the last ones before the run closes. Answers stop counting at zero.
  */
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import { useCoordinatesSeries } from '@/composables/coordinates/useCoordinatesSeries'
 import { ORIENTATIONS, answerText } from '@/utils/coordinates'
@@ -171,6 +162,12 @@ const EMPTY_BOARD = '8/8/8/8/8/8/8/8 w - - 0 1'
 const FEEDBACK_MS = 400
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 const RANKS = ['1', '2', '3', '4', '5', '6', '7', '8']
+
+const $q = useQuasar()
+/** A touch screen: the device's keyboard, through a field (no physical keyboard to listen to). */
+const touch = computed(() => $q.platform.has.touch)
+/** @type {import('vue').Ref<HTMLInputElement|null>} */
+const field = ref(null)
 
 const series = useCoordinatesSeries(props.runner)
 /** @type {import('vue').Ref<import('@/composables/coordinates/useCoordinatesSeries').LastAnswer|null>} */
@@ -246,6 +243,34 @@ function type(key) {
   }
 }
 
+/** Opens the device's keyboard (touch screens, name mode). */
+function focusField() {
+  field.value?.focus()
+}
+
+/**
+ * The device's keyboard typed: each letter or digit goes to the name, the field stays empty.
+ *
+ * @param {Event} event
+ */
+function onField(event) {
+  const input = /** @type {HTMLInputElement} */ (event.target)
+  for (const char of input.value.toLowerCase()) type(char)
+  input.value = ''
+}
+
+/**
+ * Deleting on the device's keyboard (the field is empty: no input event of its own).
+ *
+ * @param {InputEvent} event
+ */
+function onBeforeInput(event) {
+  if (event.inputType?.startsWith('delete')) {
+    event.preventDefault()
+    typed.value = ''
+  }
+}
+
 /** The keyboard: letters and digits (name mode), C / F or the arrows (colour mode). */
 function onKey(/** @type {KeyboardEvent} */ event) {
   if (event.ctrlKey || event.metaKey || event.altKey) return
@@ -273,7 +298,10 @@ watch(
   { immediate: true }
 )
 
-onMounted(() => window.addEventListener('keydown', onKey))
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  if (mode.value === 'name') nextTick(focusField)
+})
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
@@ -358,44 +386,6 @@ onBeforeUnmount(() => {
   gap: 8px;
 }
 
-.coords-player__keys {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-}
-
-.coords-player__key {
-  width: 44px;
-  height: 48px;
-  border: none;
-  border-radius: 12px;
-  background: var(--cm-surface);
-  box-shadow:
-    inset 0 0 0 2px var(--cm-line),
-    0 3px 0 var(--cm-dash);
-  color: var(--cm-ink);
-  font-family: var(--cm-heading);
-  font-size: 20px;
-  font-weight: 800;
-  cursor: pointer;
-
-  &--on {
-    background: var(--cm-brand);
-    color: #fff;
-    box-shadow: 0 3px 0 var(--cm-brand-deep);
-  }
-
-  &--erase {
-    font-size: 18px;
-  }
-
-  &:disabled {
-    opacity: 0.45;
-    cursor: default;
-  }
-}
-
 .coords-player__colors {
   flex-direction: row;
   flex-wrap: wrap;
@@ -433,6 +423,26 @@ onBeforeUnmount(() => {
   &:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+}
+
+.coords-player__field {
+  width: 120px;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: var(--cm-surface);
+  box-shadow: inset 0 0 0 2px var(--cm-line);
+  color: var(--cm-ink);
+  font-family: var(--cm-heading);
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+  caret-color: var(--cm-brand);
+
+  &:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cm-brand);
   }
 }
 

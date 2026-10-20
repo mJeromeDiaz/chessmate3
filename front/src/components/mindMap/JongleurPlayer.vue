@@ -82,6 +82,7 @@
           v-else-if="question === 'name'"
           class="jongleur-player__target jongleur-player__target--typed"
           data-testid="jongleur-typed"
+          @click="field?.focus()"
           >{{ typed || '·' }}</div
         >
 
@@ -142,39 +143,30 @@
         class="jongleur-player__keypad"
         data-testid="jongleur-keypad"
       >
-        <div class="jongleur-player__keys">
-          <button
-            v-for="f in FILES"
-            :key="f"
-            type="button"
-            class="jongleur-player__key"
-            :class="{ 'jongleur-player__key--on': typed === f }"
-            :disabled="answered || typed.length === 1"
-            :data-testid="`jongleur-key-${f}`"
-            @click="type(f)"
-            >{{ f }}</button
-          >
-        </div>
-        <div class="jongleur-player__keys">
-          <button
-            v-for="r in RANKS"
-            :key="r"
-            type="button"
-            class="jongleur-player__key"
-            :disabled="answered || typed.length !== 1"
-            :data-testid="`jongleur-key-${r}`"
-            @click="type(r)"
-            >{{ r }}</button
-          >
-          <button
-            type="button"
-            class="jongleur-player__key"
-            :disabled="answered || !typed"
-            :aria-label="$t('coordinates.player.erase')"
-            @click="typed = ''"
-            >⌫</button
-          >
-        </div>
+        <input
+          v-if="touch"
+          ref="field"
+          class="jongleur-player__field"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          maxlength="2"
+          :disabled="answered"
+          :aria-label="$t('coordinates.player.name')"
+          data-testid="jongleur-input"
+          @beforeinput="onBeforeInput"
+          @input="onField"
+        />
+        <div class="jongleur-player__hint">{{
+          $t(
+            touch
+              ? 'coordinates.player.keysNameTouch'
+              : 'coordinates.player.keysName'
+          )
+        }}</div>
       </div>
 
       <form
@@ -232,14 +224,16 @@
 <script setup>
 /**
  * A question of the Jongleur (docs/MIND_MAP.md, § 8): find a square (a click on the empty board),
- * name the square lit (a file then a rank, keypad or keyboard), tell a square's colour (« Claire »
+ * name the square lit (a file then a rank typed: the keyboard, or the device's own on a touch
+ * screen; no keys on screen, they would read as a hint), tell a square's colour (« Claire »
  * / « Foncée », or C / F), play the move announced in a puzzle's position, or write the move just
  * shown played (piece letters of the UI's language). Each has its seconds: the bar runs from the
  * server's start, and an empty answer goes when it is empty. The Jongleur juggles while the player
  * thinks, laughs at a miss and sulks at a hit; one question in three or so brings a distraction
  * (the board wobbles, pieces fly over it), none when the system asks for less motion.
  */
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import { Chess } from 'chess.js'
 import BossPortrait from '@/components/mindMap/BossPortrait.vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
@@ -268,6 +262,12 @@ const SHOW_DELAY_MS = 300
 /** What flies over the board (drift). */
 const BALLS = ['♞', '♝', '♜']
 
+const $q = useQuasar()
+/** A touch screen: the device's keyboard, through a field, names the square. */
+const touch = computed(() => $q.platform.has.touch)
+/** @type {import('vue').Ref<HTMLInputElement|null>} */
+const field = ref(null)
+
 /** Sent: waiting for the verdict, or judged. */
 const answered = ref(false)
 /** The name being typed: '', a file, then sent with the rank. */
@@ -290,7 +290,9 @@ const isSquare = computed(() =>
   ['find', 'name', 'color'].includes(question.value)
 )
 const seconds = computed(() => props.item.data.seconds ?? 6)
-const distraction = computed(() => distractionOf(props.item.id))
+const distraction = computed(() =>
+  distractionOf(props.item.id, props.item.data.distraction)
+)
 const lives = computed(() => props.result?.lives ?? props.item.data.lives)
 const state = computed(() =>
   props.result ? 'judged' : answered.value ? 'sent' : 'answering'
@@ -423,6 +425,25 @@ function type(key) {
   }
 }
 
+/**
+ * The device's keyboard typed (touch screens): each letter or digit to the name, the field empty.
+ *
+ * @param {Event} event
+ */
+function onField(event) {
+  const input = /** @type {HTMLInputElement} */ (event.target)
+  for (const char of input.value.toLowerCase()) type(char)
+  input.value = ''
+}
+
+/** @param {InputEvent} event deleting on the device's keyboard */
+function onBeforeInput(event) {
+  if (event.inputType?.startsWith('delete')) {
+    event.preventDefault()
+    typed.value = ''
+  }
+}
+
 /** The keyboard: a file and a rank (name), C / F or the arrows (colour). */
 function onKey(/** @type {KeyboardEvent} */ event) {
   if (event.ctrlKey || event.metaKey || event.altKey || answered.value) return
@@ -474,6 +495,8 @@ watch(
     clearTimeout(showTimer)
     const data = props.item.data
     fen.value = data.fen ?? EMPTY_BOARD
+    // Naming a square on a touch screen: its keyboard at once.
+    if (data.question === 'name') nextTick(() => field.value?.focus())
     // The move to write is played before the player's eyes.
     if (data.question === 'write' && data.fen && data.move?.uci) {
       const start = data.fen
@@ -659,6 +682,31 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 6px;
+}
+
+.jongleur-player__field {
+  width: 120px;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: var(--cm-surface);
+  box-shadow: inset 0 0 0 2px var(--cm-line);
+  color: var(--cm-ink);
+  font-family: var(--cm-heading);
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+
+  &:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cm-brand);
+  }
+}
+
+.jongleur-player__hint {
+  font-size: 12.5px;
+  color: var(--cm-muted);
+  text-align: center;
 }
 
 .jongleur-player__key {

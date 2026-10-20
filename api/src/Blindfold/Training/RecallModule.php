@@ -13,6 +13,7 @@ use App\Blindfold\Recall\Progress;
 use App\Blindfold\Recall\PuzzlePositionPicker;
 use App\Blindfold\Recall\RecallRules;
 use App\Chess\InvalidPositionException;
+use App\Chess\RandomLine;
 use App\Chess\Rules;
 use App\Entity\Blindfold\RecallAttempt;
 use App\Entity\Training\Run;
@@ -21,6 +22,7 @@ use App\Enum\Activity\ExerciseType;
 use App\Enum\Blindfold\RecallMode;
 use App\Enum\Blindfold\RecallStatus;
 use App\Enum\Training\CloseReason;
+use App\Enum\Training\Distraction;
 use App\Enum\Training\Module;
 use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Repository\Blindfold\RecallAttemptRepository;
@@ -52,7 +54,9 @@ use Symfony\Component\Uid\Uuid;
  * only such a run, may take options of its own (docs/BLINDFOLD_RECALL.md, § 3 bis): `count` (the
  * positions, the run's end), `lives` (pieces wrong or missing, the run closes when they are spent),
  * `coordinates` (false: a board without them), `levels` (the level of each position in turn),
- * `visibleSeconds` (its own time to memorize); its levels need not be open.
+ * `visibleSeconds` (its own time to memorize), `distraction` (a boss's, for the screen), `announce`
+ * (moves of both sides announced after a generated position, the one to rebuild being the one they
+ * reach); its levels need not be open.
  *
  * @phpstan-type Announced list<array{uci: string, san: string}>
  */
@@ -64,12 +68,13 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
     /** A session step's level: the highest one open when the step starts. */
     public const MY_LEVEL = 'mine';
     /** The options only a mind map step gives its run. */
-    private const PATH_OPTIONS = ['count', 'lives', 'coordinates', 'levels', 'visibleSeconds'];
+    private const PATH_OPTIONS = ['count', 'lives', 'coordinates', 'levels', 'visibleSeconds', 'distraction', 'announce'];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly RecallAttemptRepository $attempts,
         private readonly PositionGenerator $generator,
+        private readonly RandomLine $line,
         private readonly PuzzlePositionPicker $picker,
         private readonly Progress $progress,
         private readonly PuzzleCatalog $catalog,
@@ -294,10 +299,11 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
     {
         $level = $this->levelOf($run);
         $rules = RecallRules::level($level);
+        $options = self::options($run->getConfig());
         if (null === $rules['puzzlePieces']) {
-            $fen = $this->generator->generate($rules['pieces']);
-            $placement = explode(' ', $fen)[0];
-            $attempt = new RecallAttempt($run, $level, $fen, $placement, [], null, \count(Placement::squares($placement)), $now, self::options($run->getConfig())['visibleSeconds']);
+            [$fen, $moves, $reached] = $this->generated($rules['pieces'], $options['announce']);
+            $placement = explode(' ', $reached)[0];
+            $attempt = new RecallAttempt($run, $level, $fen, $placement, $moves, null, \count(Placement::squares($placement)), $now, $options['visibleSeconds']);
         } else {
             $position = $this->picker->pick($run, $level);
             if (null === $position) {
@@ -323,6 +329,7 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
             'count' => $options['count'],
             'lives' => null === $options['lives'] ? null : max(0, $options['lives'] - $stats['errors']),
             'coordinates' => $options['coordinates'],
+            'distraction' => $options['distraction'],
             'fen' => $attempt->getFen(),
             'level' => $level,
             'stage' => RecallRules::stage($level),
@@ -362,6 +369,33 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
     }
 
     /**
+     * A generated position, and the $announce random legal moves played from it (a mind map step's
+     * `announce`): the position shown, the moves, the position to rebuild.
+     *
+     * @param list<string> $pieces
+     *
+     * @return array{string, list<string>, string}
+     */
+    private function generated(array $pieces, int $announce): array
+    {
+        for ($try = 0; $try < RecallRules::GENERATION_TRIES; ++$try) {
+            $fen = $this->generator->generate($pieces);
+            if (0 === $announce) {
+                return [$fen, [], $fen];
+            }
+            try {
+                $line = $this->line->draw($fen, $announce);
+            } catch (InvalidPositionException) {
+                continue;
+            }
+            if (null !== $line) {
+                return [$fen, $line['moves'], $line['fen']];
+            }
+        }
+        throw new \RuntimeException('No line could be drawn.');
+    }
+
+    /**
      * The level of the next position: the run's, or its turn in `levels`.
      */
     private function levelOf(Run $run): int
@@ -381,7 +415,7 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
      *
      * @param array<string, mixed> $config
      *
-     * @return array{count: int|null, lives: int|null, coordinates: bool, levels: list<int>, visibleSeconds: int|null}
+     * @return array{count: int|null, lives: int|null, coordinates: bool, levels: list<int>, visibleSeconds: int|null, distraction: string, announce: int}
      */
     private static function options(array $config): array
     {
@@ -396,6 +430,8 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
             'coordinates' => false !== ($config['coordinates'] ?? true),
             'levels' => \is_array($levels) ? array_values(array_filter($levels, 'is_int')) : [],
             'visibleSeconds' => \is_int($visible) ? $visible : null,
+            'distraction' => \is_string($config['distraction'] ?? null) ? $config['distraction'] : Distraction::None->value,
+            'announce' => \is_int($config['announce'] ?? null) ? $config['announce'] : 0,
         ];
     }
 
@@ -431,6 +467,14 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
         [$fewest, $most] = RecallRules::PATH_VISIBLE_SECONDS;
         if (null !== $visible && (!\is_int($visible) || $visible < $fewest || $visible > $most)) {
             throw new InvalidRunConfigException(\sprintf('visibleSeconds must be a whole number from %d to %d.', $fewest, $most));
+        }
+        $announce = $config['announce'] ?? null;
+        if (null !== $announce && (!\is_int($announce) || $announce < 1 || $announce > RecallRules::MAX_ANNOUNCE)) {
+            throw new InvalidRunConfigException(\sprintf('announce must be a whole number from 1 to %d.', RecallRules::MAX_ANNOUNCE));
+        }
+        $distraction = $config['distraction'] ?? null;
+        if (null !== $distraction && (!\is_string($distraction) || null === Distraction::tryFrom($distraction))) {
+            throw new InvalidRunConfigException(\sprintf('distraction must be one of %s.', implode(', ', Distraction::values())));
         }
         if (\array_key_exists('coordinates', $config) && !\is_bool($config['coordinates'])) {
             throw new InvalidRunConfigException('coordinates must be a boolean.');

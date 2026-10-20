@@ -68,7 +68,7 @@ final class Visualisation
             new Section('2-1', '2.1', self::exercises('2-1', '2.1', [2, 3, 3, 4], self::recalls(1)), [
                 self::miniBoss('2-1-boss', 80, ['section_2_1'], null, 40, new Activity(
                     Module::BlindfoldRecall,
-                    ['level' => 4, 'mode' => 'timed', 'count' => 3, 'lives' => PathRules::BOSS_LIVES, 'coordinates' => false, 'levels' => [2, 3, 4]],
+                    ['level' => 4, 'mode' => 'timed', 'count' => 3, 'lives' => PathRules::BOSS_LIVES, 'coordinates' => false, 'levels' => [2, 3, 4], 'distraction' => 'light'],
                     self::LESSON_SECONDS,
                     3,
                     PathRules::BOSS_LIVES,
@@ -84,25 +84,51 @@ final class Visualisation
             ]),
         ], self::boss('2-boss', 240, 100, 'cyclope', ['chapter_2', 'boss_cyclope'], new Activity(
             Module::BlindfoldRecall,
-            ['level' => 14, 'mode' => 'timed', 'count' => 2, 'lives' => PathRules::BOSS_LIVES, 'visibleSeconds' => 30],
+            ['level' => 14, 'mode' => 'timed', 'count' => 2, 'lives' => PathRules::BOSS_LIVES, 'visibleSeconds' => 30, 'distraction' => 'light'],
             self::LESSON_SECONDS,
             2,
             PathRules::BOSS_LIVES,
         )));
     }
 
-    /** Dynamic vision: the Jongleur's short version first, then three sections. */
+    /**
+     * Dynamic vision: the Jongleur's short version first, then three sections; 3.1 follows a piece
+     * (the vision module, docs/VISION.md, § 2 bis), its mini-boss asks three questions on each of 3
+     * paths; 3.2 updates a position by moves (rebuilt, then questions), its mini-boss asks three
+ * questions on each of 3 positions. Exercises calm, bosses with medium distractions.
+     */
     private static function chapter3(): Chapter
     {
         return new Chapter('c3', 3, [
             new Section('3-0', null, [], [
-                self::miniBoss('3-0-boss', 60, [], 'jongleur', 40, self::jongleur(10)),
+                self::miniBoss('3-0-boss', 60, [], 'jongleur', 40, self::jongleur(10, 'medium')),
             ]),
-            new Section('3-1', '3.1', self::exercises('3-1', '3.1', [3, 3, 3, 3, 4]), [
-                self::miniBoss('3-1-boss', 100, ['section_3_1']),
+            new Section('3-1', '3.1', self::exercises('3-1', '3.1', [3, 3, 3, 3, 4], array_map(
+                static fn (string $kind): Activity => self::visionLesson($kind),
+                ['track_capture', 'track_square', 'knight_distance', 'track_turns', 'track_long'],
+            )), [
+                self::miniBoss('3-1-boss', 100, ['section_3_1'], null, 40, new Activity(
+                    Module::Vision,
+                    ['kind' => 'track_boss', 'count' => 9, 'lives' => PathRules::BOSS_LIVES, 'distraction' => 'medium'],
+                    self::LESSON_SECONDS,
+                    9,
+                    PathRules::BOSS_LIVES,
+                )),
             ]),
-            new Section('3-2', '3.2', self::exercises('3-2', '3.2', [3, 3, 3, 3, 4]), [
-                self::miniBoss('3-2-boss', 120, ['section_3_2']),
+            new Section('3-2', '3.2', self::exercises('3-2', '3.2', [3, 3, 3, 3, 4], [
+                self::recallAfter(1),
+                self::recallAfter(3),
+                self::visionLesson('update_missing'),
+                self::visionLesson('update_captures'),
+                self::visionLesson('update_mixed'),
+            ]), [
+                self::miniBoss('3-2-boss', 120, ['section_3_2'], null, 40, new Activity(
+                    Module::Vision,
+                    ['kind' => 'update_boss', 'count' => 9, 'lives' => PathRules::BOSS_LIVES, 'distraction' => 'medium'],
+                    self::LESSON_SECONDS,
+                    9,
+                    PathRules::BOSS_LIVES,
+                )),
             ]),
             new Section('3-3', '3.3', self::exercises('3-3', '3.3', [3, 3, 3, 3, 4]), [
                 self::miniBoss('3-3-boss', 140, ['section_3_3']),
@@ -213,19 +239,36 @@ final class Visualisation
     }
 
     /**
-     * A boss of the vision module (docs/VISION.md): 5 questions of $kind, 3 lives.
+     * A boss of the vision module (docs/VISION.md): 5 questions of $kind, 3 lives, its distractions.
      */
-    private static function vision(string $kind): Activity
+    private static function vision(string $kind, string $distraction = 'light'): Activity
     {
-        return new Activity(Module::Vision, ['kind' => $kind, 'count' => 5, 'lives' => PathRules::BOSS_LIVES], self::LESSON_SECONDS, 5, PathRules::BOSS_LIVES);
+        return new Activity(Module::Vision, ['kind' => $kind, 'count' => 5, 'lives' => PathRules::BOSS_LIVES, 'distraction' => $distraction], self::LESSON_SECONDS, 5, PathRules::BOSS_LIVES);
+    }
+
+    /**
+     * A lesson of position recall after moves (3.2.1, 3.2.2): a position of 6 pieces (level 4), $moves
+     * moves of both sides announced, the position they reach to rebuild; 5 positions, exact ones only.
+     */
+    private static function recallAfter(int $moves): Activity
+    {
+        return new Activity(Module::BlindfoldRecall, ['level' => 4, 'mode' => 'timed', 'count' => self::RECALL_COUNT, 'announce' => $moves], self::LESSON_SECONDS, self::RECALL_COUNT);
+    }
+
+    /**
+     * A lesson of the vision module: 5 questions of $kind at 80 %, calm.
+     */
+    private static function visionLesson(string $kind): Activity
+    {
+        return new Activity(Module::Vision, ['kind' => $kind, 'count' => 5], self::LESSON_SECONDS, 5);
     }
 
     /**
      * A fight against the Jongleur (docs/MIND_MAP.md, § 8): $count questions, 3 lives.
      */
-    private static function jongleur(int $count): Activity
+    private static function jongleur(int $count, string $distraction = 'light'): Activity
     {
-        return new Activity(Module::Jongleur, ['count' => $count], self::LESSON_SECONDS, $count, PathRules::BOSS_LIVES);
+        return new Activity(Module::Jongleur, ['count' => $count, 'distraction' => $distraction], self::LESSON_SECONDS, $count, PathRules::BOSS_LIVES);
     }
 
     private static function exercise(string $key, string $number, int $passes, ?Activity $activity = null): Step

@@ -15,6 +15,13 @@ Choix validés (2026-10-20) :
 - **Un exercice se valide 2 à 4 fois** (ses passages) ; un passage est une leçon courte de son
   module, réussie à **80 %** au moins, avec un nombre minimum d'éléments.
 - **Un boss se bat avec 3 vies** : 3 erreurs et il gagne, on recommence. On ne saute jamais un boss.
+- **Distractions** (validé 2026-10-20) : jamais dans les exercices ; à chaque boss et mini-boss,
+  plus fortes de chapitre en chapitre (`Enum\Training\Distraction`, option `distraction` de
+  l'étape, rendue par `components/mindMap/BoardDistractions.vue`) : chapitres 1 et 2 `light`
+  (l'échiquier vacille, deux pièces le traversent ; le Jongleur, une question sur trois), chapitre 3
+  `medium` (plus souvent, trois pièces, un son de coup parasite si les sons sont activés ; le
+  rappel du Jongleur, deux questions sur trois), la Gargouille `strong`. Rien ne bouge quand le
+  système demande moins d'animations.
 - **On peut sauter un exercice** : ce qui suit s'ouvre, rien n'est gagné ; il reste jouable.
 - **Il faut battre le boss d'un chapitre** pour ouvrir le suivant, et les mini-boss d'une section
   pour ouvrir la suivante. Les **mini-boss cachés** apparaissent (« ? ») une fois leur section
@@ -218,7 +225,7 @@ seule option.
 - **Écran** (`JongleurPlayer`, page de séance) : « Question n sur N », le Jongleur (il jongle
   pendant la question, jubile à une erreur, boude à une bonne réponse) et sa réplique, les 3 cœurs,
   une barre de 6 s calée sur le départ du serveur (à zéro, une réponse vide part), puis la question :
-  échiquier vide à cliquer (`find`), case allumée et pavé a–h / 1–8 ou clavier (`name`), boutons
+  échiquier vide à cliquer (`find`), case allumée et son nom tapé au clavier, celui de l'appareil sur écran tactile (`name`), boutons
   Claire / Foncée ou C / F (`color`), coup annoncé à jouer (`play`), coup joué sous les yeux puis
   champ et touches des pièces dans la langue de l'interface (`write`). Le verdict reste 0,7 s (juste)
   ou 1,6 s (raté, avec la bonne réponse), puis la question suivante vient seule ; le combat fini,
@@ -232,13 +239,14 @@ seule option.
 
 | Lot | Contenu | État |
 |---|---|---|
-| M1 | API du moteur : catalogue, progression, lancement, saut, coffres, badges, verrous | écrit 2026-10-20 |
-| M2 | Front du moteur : chemin, écrans de boss (cyclope par défaut), coffre, victoire provisoire | écrit 2026-10-20 |
-| L1 | Coordonnées : modes « nommer la case » et « couleur de la case » (1.2, 1.3) | écrit 2026-10-20 |
-| L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) : L2a, L2b verts, L2c `line` (1.7, un répertoire d'au moins 10 tronçons) écrit 2026-10-20 | en cours |
+| M1 | API du moteur : catalogue, progression, lancement, saut, coffres, badges, verrous | fait |
+| M2 | Front du moteur : chemin, écrans de boss (cyclope par défaut), coffre, victoire provisoire | fait |
+| L1 | Coordonnées : modes « nommer la case » et « couleur de la case » (1.2, 1.3) | fait |
+| L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) | fait |
 | L3 | Parties célèbres (1.8, 1.9) et boss Jongleur (§ 8) | fait |
-| L4 | Chapitre 2 : L4a exercices (reconstitution, niveaux 1 à 12) et mini-boss 2.1, vert ; L4b module Vision (mini-boss 2.2, 2.3, caché) : L4b1 API et L4b2 front verts ; L4c Cyclope écrit 2026-10-20 | en cours |
-| L5, L6 | Module Vision (3.1 à 3.3), Gargouille et ses distractions | à faire |
+| L4 | Chapitre 2 : exercices (reconstitution, niveaux 1 à 12), mini-boss 2.1, module Vision (mini-boss 2.2, 2.3, caché), Cyclope | fait |
+| L5 | Chapitre 3 : L5a section 3.1 « suivre une pièce » et distractions des boss, vert ; L5b 3.2 « actualiser une position », écrit 2026-10-20 ; L5c 3.3 ; L5d page Vision libre | en cours |
+| L6 | La Gargouille (distractions fortes) | à faire |
 | L7 à L10 | Chapitres 4 à 7 (précisions de l'utilisateur attendues) | à faire |
 
 Jouables aujourd'hui : 1.1 (série de coordonnées `find` d'une minute, Blancs en bas, au moins 10
@@ -250,6 +258,10 @@ lignes du répertoire à compléter, 80 % ; 1.7 refusé sans répertoire de 10 t
 (§ 8). Chapitre 2 : 2.1.1 à 2.3.4 = niveaux 1 à 12 de la reconstitution
 ([BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md), § 3 bis), 5 positions par leçon, seules les exactes
 justes, 80 % ; mini-boss 2.1 = niveaux 2, 3 puis 4, échiquier sans coordonnées, une vie par pièce
-fausse ou oubliée ; mini-boss 2.2 et 2.3 et boss caché 2.3 = module Vision ([VISION.md](VISION.md),
+fausse ou oubliée ; chapitre 3 : rappel du Jongleur (10 questions) ; section 3.1 = module Vision,
+« suivre une pièce » ([VISION.md](VISION.md), § 2 bis), mini-boss 3.1 = 3 trajets × 3 questions ;
+section 3.2 « actualiser une position » (§ 2 ter) : 3.2.1 et 3.2.2 en reconstitution après 1 et 3
+coups, 3.2.3 à 3.2.5 et le mini-boss en questions Vision ;
+mini-boss 2.2 et 2.3 et boss caché 2.3 = module Vision ([VISION.md](VISION.md),
 § 5), 5 questions, 3 vies ; le Cyclope = 2 positions de puzzles de 16 pièces (niveau 14), montrées
 30 s chacune, une vie par pièce fausse ou oubliée.

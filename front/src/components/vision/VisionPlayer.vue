@@ -4,6 +4,7 @@
     data-testid="vision-player"
     :data-phase="phase"
     :data-ask="item.data.ask"
+    :data-follow-up="item.data.followUp ? 'true' : 'false'"
   >
     <template v-if="$slots.header" #header>
       <slot name="header" />
@@ -26,6 +27,12 @@
         $t('vision.player.toMemorize', { n: item.data.visibleSeconds })
       }}</span>
       <span
+        v-if="item.data.followUp && phase !== 'complete'"
+        class="play-chip"
+        data-testid="vision-same-track"
+        >{{ $t('vision.player.sameTrack') }}</span
+      >
+      <span
         v-if="['ask', 'sending', 'complete'].includes(phase)"
         class="play-chip play-chip--accent"
         data-testid="vision-question"
@@ -34,7 +41,11 @@
     </template>
 
     <template #board>
-      <div class="vision-player__board">
+      <BoardDistractions
+        class="vision-player__board"
+        :level="item.data.distraction ?? 'none'"
+        :active="['show', 'hidden', 'announce', 'ask'].includes(phase)"
+      >
         <ChessBoard
           :fen="boardFen"
           any-position
@@ -61,7 +72,7 @@
             >{{ announcedSoFar }}</div
           >
         </div>
-      </div>
+      </BoardDistractions>
     </template>
 
     <template v-if="phase === 'show'" #controls>
@@ -78,7 +89,7 @@
       />
     </template>
     <template
-      v-else-if="item.data.ask === 'attackers' && phase !== 'complete'"
+      v-else-if="MANY_SQUARES.includes(item.data.ask) && phase !== 'complete'"
       #controls
     >
       <q-btn
@@ -90,6 +101,20 @@
         :loading="phase === 'sending'"
         data-testid="vision-validate"
         @click="send({ squares: chosen })"
+      />
+    </template>
+
+    <template v-else-if="item.data.choices && phase !== 'complete'" #controls>
+      <q-btn
+        v-for="choice in item.data.choices"
+        :key="choice"
+        unelevated
+        no-caps
+        class="play-btn play-btn--icon"
+        :label="choiceText(choice)"
+        :disable="phase !== 'ask'"
+        :data-testid="`vision-choice-${choice}`"
+        @click="send({ choice })"
       />
     </template>
 
@@ -105,13 +130,16 @@
         {{ announcedLine }}
       </div>
 
-      <template v-if="item.data.ask === 'what' && phase !== 'complete'">
+      <template
+        v-if="PIECE_ANSWER.includes(item.data.ask) && phase !== 'complete'"
+      >
         <PiecePalette
           :model-value="null"
           :disable="phase !== 'ask'"
           @update:model-value="onPiece"
         />
         <q-btn
+          v-if="item.data.ask === 'what'"
           outline
           no-caps
           :label="$t('vision.player.empty')"
@@ -122,7 +150,7 @@
       </template>
 
       <div
-        v-if="item.data.ask === 'attackers' && phase === 'ask'"
+        v-if="MANY_SQUARES.includes(item.data.ask) && phase === 'ask'"
         class="text-caption cm-muted"
         data-testid="vision-chosen"
       >
@@ -153,12 +181,17 @@
 /**
  * A question of the vision module (docs/VISION.md): the position shown for its seconds (or until
  * « J'ai mémorisé »), hidden, the moves announced one by one, then the question about the position
- * they reach, answered on an empty board: a click (where is a piece, a piece en prise), a piece of
- * the palette or « Case vide » (what stands on a square), every attacker clicked then « Valider ».
+ * they reach, answered on an empty board: a click (where is a piece, a piece en prise, where the
+ * tracked piece stands), a piece of the palette (« Case vide » too for what stands on a square),
+ * several squares then « Valider » (the attackers, the captures or the stops of a path), a choice
+ * (a knight's jumps, yes or no). A piece's path is written « Td1, Td5, Txd7 »; a question on the
+ * path just asked about (`followUp`) shows nothing again. A boss's distractions play around the
+ * board ({@see BoardDistractions}).
  * The page gives the server's verdict back (`result`): the position reached, the right squares in
  * green and the wrong ones in red, and the result sheet. Noctis, the blindfold professor, talks.
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import BoardDistractions from '@/components/mindMap/BoardDistractions.vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
 import PiecePalette from '@/components/blindfold/PiecePalette.vue'
@@ -169,8 +202,13 @@ import { feedbackProf } from '@/utils/feedback'
 import { numberedLine } from '@/utils/notation'
 import { playOutcomeSound } from '@/utils/sounds'
 import {
+  LIT_TARGET,
+  MANY_SQUARES,
   ONE_SQUARE,
+  PIECE_ANSWER,
+  choiceText,
   correctionHighlights,
+  movesText,
   questionText,
   toggleSquare,
   verdictText
@@ -210,7 +248,7 @@ let pause
 
 const right = computed(() => props.result?.status === 'right')
 const answersOnBoard = computed(() =>
-  [...ONE_SQUARE, 'attackers'].includes(props.item.data.ask)
+  [...ONE_SQUARE, ...MANY_SQUARES].includes(props.item.data.ask)
 )
 const question = computed(() => questionText(props.item.data))
 const verdict = computed(() =>
@@ -221,16 +259,13 @@ const sans = computed(() =>
     (/** @type {{san: string}} */ m) => m.san
   )
 )
-/** The moves announced, numbered from the position shown, in the player's letters. */
-const announcedLine = computed(() =>
-  sans.value.length ? numberedLine(sans.value, props.item.data.fen) : ''
-)
+/** @param {string[]} line */
+const numbered = line => numberedLine(line, props.item.data.fen)
+/** The moves announced (a numbered line, or a piece's path), in the player's letters. */
+const announcedLine = computed(() => movesText(props.item.data, numbered))
 const announcedSoFar = computed(() =>
   announcedCount.value
-    ? numberedLine(
-        sans.value.slice(0, announcedCount.value),
-        props.item.data.fen
-      )
+    ? movesText(props.item.data, numbered, announcedCount.value)
     : '…'
 )
 
@@ -248,7 +283,7 @@ const highlights = computed(() => {
   if (!['ask', 'sending'].includes(phase.value)) return []
   const target = props.item.data.target
   const asked =
-    target && ['what', 'attackers'].includes(props.item.data.ask)
+    target && LIT_TARGET.includes(props.item.data.ask)
       ? [{ square: target, type: 'hint' }]
       : []
   return [
@@ -282,11 +317,17 @@ const bubble = computed(() => {
   const text =
     key !== 'ask'
       ? t(`vision.player.texts.${key}`)
-      : props.item.data.ask === 'what'
-        ? t('vision.player.texts.askPiece')
-        : props.item.data.ask === 'attackers'
+      : PIECE_ANSWER.includes(props.item.data.ask)
+        ? t(
+            `vision.player.texts.${props.item.data.ask === 'what' ? 'askWhat' : 'askPiece'}`
+          )
+        : MANY_SQUARES.includes(props.item.data.ask)
           ? t('vision.player.texts.askMany')
-          : t('vision.player.texts.askClick')
+          : props.item.data.choices
+            ? t('vision.player.texts.askChoice')
+            : props.item.data.followUp
+              ? t('vision.player.texts.followUp')
+              : t('vision.player.texts.askClick')
   return { kicker: t(`vision.player.kickers.${key}`), text }
 })
 
@@ -329,14 +370,20 @@ function send(report) {
 /** @param {string} square */
 function onSquare(square) {
   if (phase.value !== 'ask') return
-  if (props.item.data.ask === 'attackers')
+  if (MANY_SQUARES.includes(props.item.data.ask))
     chosen.value = toggleSquare(chosen.value, square)
   else if (ONE_SQUARE.includes(props.item.data.ask)) send({ squares: [square] })
 }
 
 /** @param {string|null} piece a FEN letter (the eraser: nothing) */
 function onPiece(piece) {
-  if (!piece || !props.item.data.target) return
+  if (!piece) return
+  // The piece gone: a choice, on no square.
+  if (props.item.data.ask === 'missing') {
+    send({ choice: piece })
+    return
+  }
+  if (!props.item.data.target) return
   send({ placement: [{ square: props.item.data.target, piece }] })
 }
 
@@ -354,8 +401,13 @@ watch(
     timeline.reset()
     chosen.value = []
     announcedCount.value = 0
+    // Nothing to show: a knight's question, a question on the path just asked about.
+    if (!props.item.data.visibleSeconds || props.item.data.followUp) {
+      phase.value = 'ask'
+      return
+    }
     phase.value = 'show'
-    countdown.value = props.item.data.visibleSeconds ?? 10
+    countdown.value = props.item.data.visibleSeconds
     timer = setInterval(() => {
       countdown.value--
       if (countdown.value <= 0) hide()

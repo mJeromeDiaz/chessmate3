@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  choiceText,
   correctionHighlights,
+  movesText,
   questionText,
   toggleSquare,
   verdictText
@@ -64,5 +66,82 @@ describe('vision', () => {
   it('chooses and unchooses an attacker', () => {
     expect(toggleSquare(['c5'], 'e2')).toEqual(['c5', 'e2'])
     expect(toggleSquare(['c5', 'e2'], 'c5')).toEqual(['e2'])
+  })
+
+  it('asks about a piece’s path, written as it moves', () => {
+    expect(
+      questionText({ ask: 'arrival', target: null, side: null, piece: 'R' })
+    ).toBe('Où est la tour maintenant ?')
+    expect(
+      questionText({ ask: 'captured', target: 'd7', side: null, piece: 'B' })
+    ).toBe('Qu’a pris le fou en d7 ?')
+    expect(
+      questionText({ ask: 'passed', target: 'e4', side: null, piece: 'N' })
+    ).toBe('Le cavalier s’est-il arrêté en e4 ?')
+    expect(
+      questionText({ ask: 'stops', target: null, side: null, piece: 'Q' })
+    ).toBe('Sur quelles cases la dame s’est-elle arrêtée ?')
+    expect(
+      questionText({ ask: 'knight_jumps', target: 'b1', side: null, to: 'f7' })
+    ).toBe('Combien de sauts, au minimum, pour un cavalier de b1 à f7 ?')
+    const path = {
+      announcedStyle: 'path',
+      announced: [{ san: 'Rd1' }, { san: 'Rd5' }, { san: 'Rxd7' }]
+    }
+    expect(movesText(path, () => 'numbered')).toBe('Td1, Td5, Txd7')
+    expect(movesText(path, () => 'numbered', 2)).toBe('Td1, Td5')
+    expect(movesText({ announced: [{ san: 'Nf3' }] }, () => 'numbered')).toBe(
+      'numbered'
+    )
+  })
+
+  it('says the right answer to a choice', () => {
+    expect([choiceText('yes'), choiceText('no'), choiceText('3')]).toEqual([
+      'Oui',
+      'Non',
+      '3'
+    ])
+    expect(
+      verdictText({ ask: 'knight_jumps', target: 'b1' }, { expected: ['1'] })
+    ).toBe('Il fallait 1 saut.')
+    expect(
+      verdictText({ ask: 'knight_jumps', target: 'b1' }, { expected: ['4'] })
+    ).toBe('Il fallait 4 sauts.')
+    expect(
+      verdictText({ ask: 'passed', target: 'e4' }, { expected: ['no'] })
+    ).toBe('La réponse était « Non ».')
+    expect(
+      verdictText(
+        { ask: 'captured', target: 'd7', piece: 'R' },
+        { expected: ['n'] }
+      )
+    ).toBe('En d7, la tour a pris un cavalier noir.')
+    expect(
+      correctionHighlights(
+        { ask: 'knight_jumps', target: 'b1' },
+        { status: 'wrong', expected: ['4'], answer: ['3'] }
+      )
+    ).toEqual([])
+  })
+
+  it('asks about a position updated by moves', () => {
+    expect(questionText({ ask: 'missing', target: null, side: null })).toBe(
+      'Quelle pièce a disparu ?'
+    )
+    expect(questionText({ ask: 'captures', target: null, side: null })).toBe(
+      'Où étaient les pièces prises ?'
+    )
+    expect(
+      questionText({ ask: 'reach', target: 'c4', side: null, piece: 'b' })
+    ).toBe('Le fou noir peut-il aller en c4 en un coup ?')
+    expect(
+      questionText({ ask: 'reach', target: 'c4', side: null, piece: 'Q' })
+    ).toBe('La dame blanche peut-elle aller en c4 en un coup ?')
+    expect(
+      verdictText({ ask: 'missing', target: null }, { expected: ['N'] })
+    ).toBe('C’était un cavalier blanc.')
+    expect(
+      verdictText({ ask: 'reach', target: 'c4' }, { expected: ['yes'] })
+    ).toBe('La réponse était « Oui ».')
   })
 })

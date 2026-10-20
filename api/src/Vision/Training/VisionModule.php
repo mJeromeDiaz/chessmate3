@@ -13,6 +13,7 @@ use App\Entity\User;
 use App\Entity\Vision\Question;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Training\CloseReason;
+use App\Enum\Training\Distraction;
 use App\Enum\Training\Module;
 use App\Enum\Vision\Ask;
 use App\Enum\Vision\Kind;
@@ -32,7 +33,10 @@ use App\Training\Module\PreparedStep;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
 use App\Vision\Drawing\LinePicker;
+use App\Vision\Drawing\Draw;
 use App\Vision\Drawing\LocateDrawer;
+use App\Vision\Drawing\TrackDrawer;
+use App\Vision\Drawing\UpdateDrawer;
 use App\Vision\VisionRules;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
@@ -40,8 +44,10 @@ use Symfony\Component\Uid\Uuid;
 /**
  * The vision module in runs (docs/VISION.md): a position shown, hidden, the moves announced, then a
  * question about the position they reach, answered on an empty board. Played from a mind map step
- * only for now ({@see Run::isPathStep()}): config `kind` (locate, en_prise, attackers), `count` (the
- * questions, the run's end) and `lives` (the run closes at that many wrong answers). The subject is
+ * only for now ({@see Run::isPathStep()}): config `kind` ({@see Kind}), `count` (the questions, the
+ * run's end), `lives` (the run closes at that many wrong answers) and `distraction` (a boss's, none
+ * to strong, for the screen). A piece's path (`track_*`) moves that piece only; the mini-boss 3.1
+ * asks three questions on each path, shown once. The subject is
  * the user; the server judges each answer. Never rated.
  *
  * @phpstan-type SanMove array{uci: string, san: string}
@@ -57,6 +63,8 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         private readonly QuestionRepository $questions,
         private readonly LocateDrawer $locate,
         private readonly LinePicker $lines,
+        private readonly TrackDrawer $tracks,
+        private readonly UpdateDrawer $updates,
         private readonly PuzzleCatalog $catalog,
         private readonly EventPublisher $events,
     ) {
@@ -196,10 +204,13 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
     private function serve(Run $run, \DateTimeImmutable $now): Question
     {
         [$kind] = self::check($run->getConfig());
-        $draw = match ($kind) {
+        // The next question on the position just asked about, if it has more (the mini-bosses 3.x).
+        $draw = $this->followUp($run) ?? match ($kind) {
             Kind::Locate => $this->locate->draw(),
             Kind::EnPrise => $this->lines->pick($run, Ask::EnPrise),
             Kind::Attackers => $this->lines->pick($run, Ask::Attackers),
+            Kind::UpdateMissing, Kind::UpdateCaptures, Kind::UpdateMixed, Kind::UpdateBoss => $this->updates->draw($kind),
+            default => $this->tracks->draw($kind),
         };
         if (null === $draw) {
             throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_puzzle'], 'No puzzle fits this question.');
@@ -211,10 +222,51 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         return $question;
     }
 
+    /**
+     * The next question on the position (or path) just asked about, from its `followUps` (a
+     * mini-boss's); null when it has none left and a new one starts.
+     */
+    private function followUp(Run $run): ?Draw
+    {
+        $last = $this->questions->findLastOfRun($run);
+        $params = $last?->getParams() ?? [];
+        $step = \is_int($params['step'] ?? null) ? $params['step'] : 0;
+        $next = \is_array($params['followUps'] ?? null) ? ($params['followUps'][$step] ?? null) : null;
+        $ask = \is_array($next) && \is_string($next['ask'] ?? null) ? Ask::tryFrom($next['ask']) : null;
+        if (null === $last || !\is_array($next) || null === $ask) {
+            return null;
+        }
+        $expected = \is_array($next['expected'] ?? null) ? array_values(array_filter($next['expected'], 'is_string')) : [];
+        $target = \is_string($next['target'] ?? null) ? $next['target'] : null;
+
+        return new Draw($last->getFen(), $last->getAnnounced(), $ask, $target, null, $expected, null, 0, ['step' => $step + 1] + $params);
+    }
+
+    /**
+     * A path's moves as stored, always {uci, san} (MySQL keeps a JSON object's keys in its own order).
+     *
+     * @param array<mixed> $moves
+     *
+     * @return list<SanMove>
+     */
+    private static function pathMoves(array $moves): array
+    {
+        $clean = [];
+        foreach ($moves as $move) {
+            if (\is_array($move) && \is_string($move['uci'] ?? null) && \is_string($move['san'] ?? null)) {
+                $clean[] = ['uci' => $move['uci'], 'san' => $move['san']];
+            }
+        }
+
+        return $clean;
+    }
+
     private function item(Run $run, Question $question): Item
     {
-        [, $count, $lives] = self::check($run->getConfig());
+        [, $count, $lives, $distraction] = self::check($run->getConfig());
         $stats = $this->questions->statsOfRun($run);
+        $params = $question->getParams();
+        $moves = $params['moves'] ?? null;
 
         return new Item($question->getId()->toRfc4122(), self::ITEM_TYPE, [
             'kind' => $question->getKind()->value,
@@ -222,9 +274,21 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
             'fen' => $question->getFen(),
             'visibleSeconds' => $question->getVisibleSeconds(),
             'hiddenSeconds' => VisionRules::HIDDEN_SECONDS,
-            'announced' => self::sans($question->getFen(), $question->getAnnounced()),
+            // A piece's path is no game: its moves come written already (« Rd1, Rd5, Rxd7 »).
+            'announced' => \is_array($moves) ? self::pathMoves($moves) : self::sans($question->getFen(), $question->getAnnounced()),
+            'announcedStyle' => \is_array($moves) ? 'path' : 'game',
             'target' => $question->getTarget(),
             'side' => $question->getSide(),
+            'piece' => $params['piece'] ?? null,
+            'to' => $params['to'] ?? null,
+            'choices' => match ($question->getAsk()) {
+                Ask::KnightJumps => ['1', '2', '3', '4', '5', '6'],
+                Ask::Passed, Ask::Reach => ['yes', 'no'],
+                default => null,
+            },
+            // A question on the path of the one before: nothing shown again.
+            'followUp' => ($params['step'] ?? 0) > 0,
+            'distraction' => $distraction,
             'position' => $stats['right'] + $stats['wrong'] + 1,
             'count' => $count,
             'lives' => null === $lives ? null : max(0, $lives - $stats['wrong']),
@@ -248,14 +312,21 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
             throw new InvalidItemSubmissionException('Too many squares.');
         }
         $ask = $question->getAsk();
-        if (Ask::Where === $ask || Ask::EnPrise === $ask) {
+        if ($ask->isChoice()) {
+            if (null === $submission->choice) {
+                throw new InvalidItemSubmissionException('A choice is expected.');
+            }
+
+            return [$submission->choice === ($expected[0] ?? null), [$submission->choice]];
+        }
+        if (Ask::Where === $ask || Ask::EnPrise === $ask || Ask::Arrival === $ask) {
             if (1 !== \count($squares)) {
                 throw new InvalidItemSubmissionException('One square is expected.');
             }
 
             return [\in_array($squares[0], $expected, true), $squares];
         }
-        if (Ask::What === $ask) {
+        if (Ask::What === $ask || Ask::Captured === $ask) {
             if (\count($submission->placement) > 1) {
                 throw new InvalidItemSubmissionException('One piece, or none, is expected.');
             }
@@ -277,6 +348,10 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
      */
     private static function finalFen(Question $question): string
     {
+        $final = $question->getParams()['finalFen'] ?? null;
+        if (\is_string($final)) {
+            return $final;
+        }
         try {
             $rules = Rules::fromFen($question->getFen());
         } catch (InvalidPositionException) {
@@ -318,21 +393,25 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
     /**
      * @param array<string, mixed> $config
      *
-     * @return array{Kind, int|null, int|null}
+     * @return array{Kind, int|null, int|null, string}
      *
      * @throws InvalidRunConfigException
      */
     private static function check(array $config): array
     {
-        if ([] !== array_diff(array_keys($config), ['kind', 'count', 'lives'])) {
-            throw new InvalidRunConfigException('Unknown option: only kind, count and lives are accepted.');
+        if ([] !== array_diff(array_keys($config), ['kind', 'count', 'lives', 'distraction'])) {
+            throw new InvalidRunConfigException('Unknown option: only kind, count, lives and distraction are accepted.');
+        }
+        $distraction = $config['distraction'] ?? Distraction::None->value;
+        if (!\is_string($distraction) || null === Distraction::tryFrom($distraction)) {
+            throw new InvalidRunConfigException(\sprintf('distraction must be one of %s.', implode(', ', Distraction::values())));
         }
         $kind = \is_string($config['kind'] ?? null) ? Kind::tryFrom($config['kind']) : null;
         if (null === $kind) {
             throw new InvalidRunConfigException(\sprintf('kind must be one of %s.', implode(', ', Kind::values())));
         }
 
-        return [$kind, self::limit($config, 'count', VisionRules::MAX_COUNT), self::limit($config, 'lives', VisionRules::MAX_LIVES)];
+        return [$kind, self::limit($config, 'count', VisionRules::MAX_COUNT), self::limit($config, 'lives', VisionRules::MAX_LIVES), $distraction];
     }
 
     /**

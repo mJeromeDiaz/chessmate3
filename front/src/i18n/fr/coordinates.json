@@ -46,7 +46,7 @@
     "light": "Claire",
     "dark": "Foncée",
     "erase": "Effacer",
-    "keysName": "Clavier : une lettre puis un chiffre, Retour arrière pour effacer.",
+    "keysName": "Tape la case au clavier : une lettre puis un chiffre, Retour arrière pour effacer.",
     "keysColor": "Clavier : C ou ← pour claire, F ou → pour foncée.",
     "wrongColor": "Raté : {square} est {color}",
     "answers": "réponse | réponses",
@@ -56,7 +56,8 @@
     "pardon": "Pardon : ta 1re erreur ne comptera pas",
     "pardonTip": "Dépensé à la fin de la série, seulement si tu fais une erreur (boutique).",
     "right": "Juste !",
-    "wrong": "Raté : c’était {square}"
+    "wrong": "Raté : c’était {square}",
+    "keysNameTouch": "Tape la case sur ton clavier : une lettre puis un chiffre."
   },
   "ribbon": {
     "correct": "{n} juste | {n} justes",

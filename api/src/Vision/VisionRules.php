@@ -19,6 +19,14 @@ final class VisionRules
     public const PUZZLE_PIECES = [6, 12];
     /** `en_prise`, `attackers`: the moves of the solution announced once the position is hidden. */
     public const ANNOUNCED = 3;
+    /** A piece's path (chapter 3.1): how long its position shows. */
+    public const TRACK_SECONDS = 8;
+    /** A position updated by moves (chapter 3.2): how long it shows, its pieces besides the kings. */
+    public const UPDATE_SECONDS = 10;
+    public const UPDATE_MISSING_PIECES = ['?N', '?B', '?P', '?P', '?P', '?P'];
+    public const UPDATE_CAPTURES_PIECES = ['?R', '?N', '?B', '?P', '?P', '?P', '?P'];
+    public const UPDATE_MIXED_PIECES = ['?R', '?N', '?B', '?P', '?P', '?P', '?P', '?P'];
+    public const UPDATE_TRIES = 300;
     /** The pause, position hidden, before the moves or the question. */
     public const HIDDEN_SECONDS = 2;
     /** The squares an answer may click (the attackers of a square: 16 at most). */

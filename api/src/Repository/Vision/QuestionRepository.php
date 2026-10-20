@@ -37,6 +37,20 @@ class QuestionRepository extends ServiceEntityRepository
         return $this->findOneBy(['run' => $run, 'status' => QuestionStatus::Pending]);
     }
 
+    /** The run's latest question, pending or not. */
+    public function findLastOfRun(Run $run): ?Question
+    {
+        /** @var Question|null */
+        return $this->createQueryBuilder('q')
+            ->andWhere('q.run = :run')
+            ->setParameter('run', $run->getId(), 'uuid')
+            ->orderBy('q.startedAt', 'DESC')
+            ->addOrderBy('q.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     /**
      * @return list<Question> in the order asked
      */

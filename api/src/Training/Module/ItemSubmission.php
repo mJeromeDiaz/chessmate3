@@ -37,6 +37,8 @@ final readonly class ItemSubmission
         public array $written = [],
         /** Vision: the squares clicked on the empty board (docs/VISION.md). */
         public array $squares = [],
+        /** Vision: a choice among the question's (a number, yes or no). */
+        public ?string $choice = null,
     ) {
     }
 }

@@ -18,4 +18,26 @@ enum Ask: string
     case EnPrise = 'en_prise';
     /** « Quelles pièces blanches attaquent f7 ? »: every attacker's square. */
     case Attackers = 'attackers';
+    /** « Où est la tour maintenant ? »: the square the tracked piece stopped on last. */
+    case Arrival = 'arrival';
+    /** « Quelle pièce la tour a-t-elle prise en d7 ? »: the piece taken there. */
+    case Captured = 'captured';
+    /** « Combien de sauts… de b1 à f7 ? »: a number (a choice). */
+    case KnightJumps = 'knight_jumps';
+    /** « Est-elle passée par e4 ? »: yes or no (a choice). */
+    case Passed = 'passed';
+    /** « Où étaient les pièces qu'elle a prises ? »: every square it captured on. */
+    case Captures = 'captures';
+    /** « Où s'est-elle posée ? »: every square it stopped on, the last one included. */
+    case Stops = 'stops';
+    /** « Quelle pièce a disparu ? »: the piece taken (a choice: its FEN letter). */
+    case Missing = 'missing';
+    /** « Le fou blanc peut-il aller en c4 en un coup ? »: yes or no (a choice). */
+    case Reach = 'reach';
+
+    /** Answered with a choice (a number, yes or no, a piece's letter), not on the board. */
+    public function isChoice(): bool
+    {
+        return \in_array($this, [self::KnightJumps, self::Passed, self::Missing, self::Reach], true);
+    }
 }

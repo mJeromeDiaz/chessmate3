@@ -76,4 +76,8 @@ final class SubmitItemInput
     #[Assert\Count(max: VisionRules::MAX_SQUARES)]
     #[Assert\All([new Assert\Type('string'), new Assert\Regex('/^[a-h][1-8]$/')])]
     public array $squares = [];
+
+    /** Vision: a choice among the question's (a number of jumps, yes or no, a piece's FEN letter, docs/VISION.md). */
+    #[Assert\Regex('/^[A-Za-z0-9_]{1,16}$/')]
+    public ?string $choice = null;
 }

@@ -21,7 +21,37 @@
     "where": "Où est {piece} ?",
     "what": "Qu’y a-t-il en {square} ?",
     "en_prise": "Quelle pièce est en prise ?",
-    "attackers": "Quelles pièces {side} attaquent {square} ?"
+    "attackers": "Quelles pièces {side} attaquent {square} ?",
+    "arrival": "Où est {piece} maintenant ?",
+    "captured": "Qu’a pris {piece} en {square} ?",
+    "captures": "Où étaient les pièces prises par {piece} ?",
+    "knight_jumps": "Combien de sauts, au minimum, pour un cavalier de {from} à {to} ?",
+    "passed": {
+      "R": "La tour s’est-elle arrêtée en {square} ?",
+      "B": "Le fou s’est-il arrêté en {square} ?",
+      "Q": "La dame s’est-elle arrêtée en {square} ?",
+      "N": "Le cavalier s’est-il arrêté en {square} ?"
+    },
+    "stops": {
+      "R": "Sur quelles cases la tour s’est-elle arrêtée ?",
+      "B": "Sur quelles cases le fou s’est-il arrêté ?",
+      "Q": "Sur quelles cases la dame s’est-elle arrêtée ?",
+      "N": "Sur quelles cases le cavalier s’est-il arrêté ?"
+    },
+    "capturesAll": "Où étaient les pièces prises ?",
+    "missing": "Quelle pièce a disparu ?",
+    "reach": {
+      "K": "Le roi blanc peut-il aller en {square} en un coup ?",
+      "Q": "La dame blanche peut-elle aller en {square} en un coup ?",
+      "R": "La tour blanche peut-elle aller en {square} en un coup ?",
+      "B": "Le fou blanc peut-il aller en {square} en un coup ?",
+      "N": "Le cavalier blanc peut-il aller en {square} en un coup ?",
+      "k": "Le roi noir peut-il aller en {square} en un coup ?",
+      "q": "La dame noire peut-elle aller en {square} en un coup ?",
+      "r": "La tour noire peut-elle aller en {square} en un coup ?",
+      "b": "Le fou noir peut-il aller en {square} en un coup ?",
+      "n": "Le cavalier noir peut-il aller en {square} en un coup ?"
+    }
   },
   "player": {
     "progress": "Question {n} sur {count}",
@@ -46,10 +76,13 @@
       "visualize": "La position est cachée : revois-la les yeux fermés.",
       "listen": "Joue-les dans ta tête sur la position cachée.",
       "askClick": "Réponds sur l’échiquier vide.",
-      "askPiece": "Choisis la pièce, ou « Case vide ».",
+      "askPiece": "Choisis la pièce dans la réserve.",
       "askMany": "Clique chaque attaquant, puis « Valider ».",
       "right": "Tu vois la position sans la voir.",
-      "wrong": "Regarde la position : la bonne réponse est en vert."
+      "wrong": "Regarde la position : la bonne réponse est en vert.",
+      "askChoice": "Choisis ta réponse.",
+      "followUp": "Même trajet : garde-le en tête.",
+      "askWhat": "Choisis la pièce, ou « Case vide »."
     },
     "verdicts": {
       "where": "{piece} était en {squares}.",
@@ -57,7 +90,25 @@
       "en_prise": "En prise : {squares}.",
       "attackers": "Les attaquants : {squares}.",
       "none": "aucun",
-      "whatEmpty": "En {square}, il n’y avait rien."
-    }
+      "whatEmpty": "En {square}, il n’y avait rien.",
+      "arrival": "{piece} était en {squares}.",
+      "captured": "En {square}, {piece} a pris {taken}.",
+      "knight_jumps": "Il fallait {n} saut. | Il fallait {n} sauts.",
+      "passed": "La réponse était « {answer} ».",
+      "captures": "Les prises : {squares}.",
+      "stops": "Les arrêts : {squares}.",
+      "missing": "C’était {piece}."
+    },
+    "sameTrack": "Même trajet"
+  },
+  "tracked": {
+    "R": "la tour",
+    "B": "le fou",
+    "Q": "la dame",
+    "N": "le cavalier"
+  },
+  "choices": {
+    "yes": "Oui",
+    "no": "Non"
   }
 }

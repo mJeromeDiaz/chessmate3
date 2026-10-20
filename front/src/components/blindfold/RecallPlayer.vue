@@ -33,16 +33,21 @@
 
     <template #board>
       <div class="recall-player__board">
-        <ChessBoard
-          :fen="game.fen.value"
-          any-position
-          :coordinates="item.data.coordinates !== false"
-          :animation-duration="0"
-          :show-legal-moves="false"
-          :highlights="game.highlights.value"
-          :square-input="game.phase.value === 'build'"
-          @square="game.click"
-        />
+        <BoardDistractions
+          :level="item.data.distraction ?? 'none'"
+          :active="['show', 'hidden', 'build'].includes(game.phase.value)"
+        >
+          <ChessBoard
+            :fen="game.fen.value"
+            any-position
+            :coordinates="item.data.coordinates !== false"
+            :animation-duration="0"
+            :show-legal-moves="false"
+            :highlights="game.highlights.value"
+            :square-input="game.phase.value === 'build'"
+            @square="game.click"
+          />
+        </BoardDistractions>
         <div
           v-if="game.phase.value === 'hidden'"
           class="recall-player__veil"
@@ -184,10 +189,11 @@
  * last levels, moves are announced once it is hidden and the position to rebuild is the one after
  * them. "J'ai terminé" sends the rebuild (`resolve`); the page gives the server's correction back
  * (`result`): the position with the pieces found and missed, or the rebuild with its right and
- * wrong pieces, and the result sheet. The logic lives in {@see useRecall}. Noctis, the blindfold
+ * wrong pieces, and the result sheet. A mind map boss's distractions play around the board. The logic lives in {@see useRecall}. Noctis, the blindfold
  * professor, talks and reacts.
  */
 import { computed, onBeforeUnmount, watch } from 'vue'
+import BoardDistractions from '@/components/mindMap/BoardDistractions.vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'

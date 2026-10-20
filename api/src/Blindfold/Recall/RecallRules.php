@@ -78,6 +78,8 @@ final class RecallRules
     public const MAX_LIVES = 10;
     /** A mind map step's own time to memorize, in seconds (the Cyclope: 30). */
     public const PATH_VISIBLE_SECONDS = [5, 60];
+    /** A mind map step's moves announced after a generated position, at most (chapter 3.2). */
+    public const MAX_ANNOUNCE = 5;
 
     public static function exists(int $level): bool
     {

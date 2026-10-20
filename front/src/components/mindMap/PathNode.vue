@@ -4,7 +4,7 @@
     :class="[
       `path-node--${step.status}`,
       `path-node--${step.kind}`,
-      { 'path-node--current': current }
+      { 'path-node--current': current, 'path-node--ringed': ringed }
     ]"
     :style="{ transform: `translateX(${offset * 64}px)` }"
   >
@@ -17,7 +17,7 @@
       @click="emit('select', step)"
     >
       <svg
-        v-if="step.kind === 'exercise' && step.required > 1"
+        v-if="ringed"
         class="path-node__ring"
         viewBox="0 0 100 100"
         aria-hidden="true"
@@ -27,7 +27,7 @@
           :key="i"
           cx="50"
           cy="50"
-          r="46"
+          r="45"
           pathLength="100"
           :stroke-dasharray="`${arc.length} 100`"
           :stroke-dashoffset="-arc.start"
@@ -106,6 +106,10 @@ const props = defineProps({
 const emit = defineEmits({ select: null })
 
 const boss = computed(() => isBoss(props.step.kind))
+/** An exercise of several passes: its ring around it. */
+const ringed = computed(
+  () => props.step.kind === 'exercise' && props.step.required > 1
+)
 
 const title = computed(() =>
   props.step.status === 'hidden'
@@ -118,10 +122,13 @@ const title = computed(() =>
 /** An exercise's last digit (« 2.1.3 » → 3). */
 const glyph = computed(() => props.step.number?.split('.').pop() ?? '')
 
-/** The ring: one arc per pass, those done lit. */
+/**
+ * The ring: one arc per pass, those done lit. The gap leaves room for the arcs' round caps (about
+ * 2 units of the path's 100).
+ */
 const arcs = computed(() => {
   const n = props.step.required
-  const gap = 4
+  const gap = 9
   return Array.from({ length: n }, (_, i) => ({
     start: (100 / n) * i + gap / 2,
     length: 100 / n - gap,
@@ -241,22 +248,25 @@ const ariaLabel = computed(
 }
 
 .path-node__ring {
+  // Around the button's face, clear of it and of its 3D shadow (6 px below).
   position: absolute;
-  inset: -9px;
-  width: calc(100% + 18px);
-  height: calc(100% + 18px);
-  transform: rotate(-90deg);
+  inset: -16px;
+  width: calc(100% + 32px);
+  height: calc(100% + 32px);
+  // Centred on what the eye sees: the face and its 6 px shadow below, 3 px lower than the face.
+  transform: translateY(3px) rotate(-90deg);
   pointer-events: none;
 }
 
 .path-node__arc {
   fill: none;
-  stroke: var(--cm-dash);
-  stroke-width: 5;
+  // A pass to come: the capacity's colour, faint (readable on the light and the dark page).
+  stroke: color-mix(in srgb, var(--capacity, var(--cm-brand)) 28%, transparent);
+  stroke-width: 7;
   stroke-linecap: round;
 
   &--done {
-    stroke: var(--capacity-deep, var(--cm-brand));
+    stroke: var(--capacity, var(--cm-brand));
   }
 }
 
@@ -272,6 +282,10 @@ const ariaLabel = computed(
 
 .path-node__boss {
   width: 100%;
+}
+
+.path-node--ringed .path-node__label {
+  margin-top: 12px;
 }
 
 .path-node__label {

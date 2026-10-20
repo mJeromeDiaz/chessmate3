@@ -70,6 +70,10 @@ class Question
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
     private int $visibleSeconds;
 
+    /** @var array<string, mixed>|null what its kind keeps besides ({@see Draw::$params}) */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $params;
+
     #[ORM\Column(length: 8, enumType: QuestionStatus::class)]
     private QuestionStatus $status = QuestionStatus::Pending;
 
@@ -100,6 +104,7 @@ class Question
         $this->expected = $draw->expected;
         $this->puzzleId = $draw->puzzleId;
         $this->visibleSeconds = $draw->visibleSeconds;
+        $this->params = [] === $draw->params ? null : $draw->params;
         $this->startedAt = $startedAt;
     }
 
@@ -181,6 +186,14 @@ class Question
     public function getVisibleSeconds(): int
     {
         return $this->visibleSeconds;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getParams(): array
+    {
+        return $this->params ?? [];
     }
 
     public function getStatus(): QuestionStatus

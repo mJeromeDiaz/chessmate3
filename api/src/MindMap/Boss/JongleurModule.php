@@ -16,6 +16,7 @@ use App\Enum\Coordinates\Mode;
 use App\Enum\MindMap\BossQuestion;
 use App\Enum\Notation\Kind;
 use App\Enum\Training\CloseReason;
+use App\Enum\Training\Distraction;
 use App\Enum\Training\Module;
 use App\Notation\Drawing\PuzzlePicker;
 use App\Notation\Judge\WrittenLine;
@@ -235,6 +236,7 @@ final class JongleurModule implements TimeboxedModuleInterface, CountedModuleInt
             'count' => self::count($run->getConfig()),
             'lives' => max(0, JongleurRules::LIVES - $stats['wrong']),
             'seconds' => JongleurRules::QUESTION_SECONDS,
+            'distraction' => \is_string($run->getConfig()['distraction'] ?? null) ? $run->getConfig()['distraction'] : Distraction::Light->value,
             'startedAt' => $item->getStartedAt()->format(\DATE_ATOM),
         ];
         $fen = $item->getFen();
@@ -305,8 +307,12 @@ final class JongleurModule implements TimeboxedModuleInterface, CountedModuleInt
      */
     private static function count(array $config): int
     {
-        if ([] !== array_diff(array_keys($config), ['count'])) {
-            throw new InvalidRunConfigException('Unknown option: only count is accepted.');
+        if ([] !== array_diff(array_keys($config), ['count', 'distraction'])) {
+            throw new InvalidRunConfigException('Unknown option: only count and distraction are accepted.');
+        }
+        $distraction = $config['distraction'] ?? null;
+        if (null !== $distraction && (!\is_string($distraction) || null === Distraction::tryFrom($distraction))) {
+            throw new InvalidRunConfigException(\sprintf('distraction must be one of %s.', implode(', ', Distraction::values())));
         }
         $count = $config['count'] ?? null;
         if (!\is_int($count) || $count < 1 || $count > JongleurRules::MAX_COUNT) {

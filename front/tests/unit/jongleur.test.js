@@ -8,12 +8,16 @@ describe('jongleur', () => {
       (_, i) =>
         `0199a${i.toString(16).padStart(3, '0')}-7c2e-7000-8000-00000000${i}`
     )
-    const drawn = ids.map(distractionOf)
+    const drawn = ids.map(id => distractionOf(id))
     expect(new Set(drawn)).toEqual(new Set(['shake', 'drift', null]))
     const share = drawn.filter(Boolean).length / ids.length
     expect(share).toBeGreaterThan(0.2)
     expect(share).toBeLessThan(0.5)
-    expect(ids.map(distractionOf)).toEqual(drawn)
+    expect(ids.map(id => distractionOf(id))).toEqual(drawn)
+    // Chapter 3's short version: two in three; none, never.
+    const medium = ids.map(id => distractionOf(id, 'medium')).filter(Boolean)
+    expect(medium.length / ids.length).toBeGreaterThan(0.5)
+    expect(ids.map(id => distractionOf(id, 'none')).filter(Boolean)).toEqual([])
   })
 
   it('says the verdict with the right answer, in the language of the UI', () => {

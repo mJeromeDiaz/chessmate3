@@ -57,7 +57,7 @@ Une série a un **mode** (`App\Enum\Coordinates\Mode`, réglage `mode`, colonne
 | Mode | Ce qui est montré | Réponse | Validation |
 |---|---|---|---|
 | `find` (par défaut, toutes les séries d'avant) | un nom de case, un échiquier vide sans coordonnées | la case cliquée | oui, par orientation (§ 2) |
-| `name` | une case allumée sur l'échiquier vide | son nom : une colonne puis une rangée (pavé a–h et 1–8 à l'écran, ou le clavier) | non |
+| `name` | une case allumée sur l'échiquier vide | son nom : une colonne puis une rangée, tapées au clavier (sur écran tactile, le clavier de l'appareil, ouvert d'office ; aucune touche à l'écran : elles se liraient comme un indice) | non |
 | `color` | un nom de case, **sans échiquier** | `light` ou `dark` (boutons « Claire » / « Foncée », ou C / ← et F / →) | non |
 
 Choix validés : seul `find` valide une orientation (étiquette « Validé », +100 XP la première

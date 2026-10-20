@@ -185,14 +185,16 @@ test('coordinates: the name and colour modes, answered on their keypad and butto
   item = (await (await served).json()).item
   expect(item.data.mode).toBe('name')
   squares = item.data.squares
-  const keypad = page.getByTestId('coordinates-keypad')
-  await keypad.getByTestId(`coordinates-key-${squares[0][0]}`).click()
+  // No keys on screen (they would read as a hint): the keyboard, a letter then a digit.
+  await expect(
+    page.getByTestId('coordinates-keypad').getByRole('button')
+  ).toHaveCount(0)
+  await page.keyboard.press(squares[0][0])
   await expect(page.getByTestId('coordinates-typed')).toContainText(
     squares[0][0]
   )
-  await keypad.getByTestId(`coordinates-key-${squares[0][1]}`).click()
+  await page.keyboard.press(squares[0][1])
   await expect(page.getByTestId('coordinates-feedback')).toHaveText('Juste !')
-  // From the keyboard: a letter, then a digit.
   await page.keyboard.press(squares[1][0])
   await page.keyboard.press(squares[1][1])
   await expect(page.getByTestId('coordinates-counts')).toContainText('2 justes')

@@ -40,6 +40,49 @@ en prise, ou pour `attackers` une pièce adverse (hors roi) attaquée par le cam
 case qu'il attaque deux fois). Jamais deux fois le même puzzle dans une séance ; d'abord un puzzle
 jamais rencontré dans ce module.
 
+## 2 bis. Suivre une pièce (chapitre 3.1)
+
+Une pièce blanche (tour, fou, dame ou cavalier) parmi 3 à 6 pièces noires, sur un échiquier sans
+rois (`TrackDrawer`) ; puis un trajet où **elle seule bouge** : chaque déplacement est légal pour
+elle (une ligne arrêtée par la première pièce rencontrée, la prise d'une pièce noire, jamais retour
+à la case qu'elle vient de quitter). Les coups s'écrivent « Td1, Td5, Txd7 » (`announcedStyle:
+path`, SAN dans `params.moves`), position montrée 8 s (`TRACK_SECONDS`).
+
+| `kind` | Trajet | Question (`ask`) | Réponse |
+|---|---|---|---|
+| `track_capture` (3.1.1) | tour ou fou, 2 à 3 déplacements, seul le dernier prend | `captured` : « Qu'a pris la tour en d7 ? » | une pièce de la réserve (`placement`, sur la case demandée) |
+| `track_square` (3.1.2) | 2 à 4 déplacements, sans prise | `arrival` : « Où est la tour maintenant ? » | un clic |
+| `knight_distance` (3.1.3) | aucun, pas de position | `knight_jumps` : « Combien de sauts… de b1 à f7 ? » (`target`, `to`) | `choice` de 1 à 6 |
+| `track_turns` (3.1.4) | tour, fou ou dame, 3 à 5 déplacements, une direction nouvelle à chaque fois, 1 ou 2 prises | `arrival` | un clic |
+| `track_long` (3.1.5) | 5 à 8 déplacements, 0 à 2 prises | `arrival`, `captured` (s'il y a eu une prise) ou `passed` : « La tour s'est-elle arrêtée en e4 ? » | un clic, la réserve, `choice` `yes` / `no` |
+| `track_boss` (mini-boss 3.1) | 4 à 6 déplacements, 1 ou 2 prises | à la suite, sur le même trajet montré une fois : `arrival`, `captures` (les cases des prises), `stops` (toutes les cases où elle s'est arrêtée) | un clic, puis des clics et « Valider » |
+
+« S'arrêter » = finir un déplacement sur la case (la case finale comprise, pas les cases survolées).
+Les questions de suite du mini-boss (`followUp`) ne remontrent rien (`visibleSeconds` 0).
+
+## 2 ter. Actualiser une position (chapitre 3.2)
+
+Une position légale générée, les deux rois, les Blancs au trait (`PositionGenerator` de la
+reconstitution, pièces de `UPDATE_*_PIECES`), montrée 10 s (`UPDATE_SECONDS`) ; puis une ligne de
+coups légaux des deux camps tirée au hasard (`App\Chess\RandomLine` : son nombre de prises imposé,
+jamais de prise en passant ni de promotion, ni mat ni pat à la fin), annoncée en ligne numérotée ;
+la question porte sur la position atteinte (`UpdateDrawer`).
+
+| `kind` | Position et coups | Question (`ask`) | Réponse |
+|---|---|---|---|
+| (3.2.1, 3.2.2) | reconstitution niveau 4, 1 puis 3 coups (`announce`, [BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md), § 3 bis) | reconstituer la position atteinte | la réserve, correction case par case |
+| `update_missing` (3.2.3) | 2 rois, cavalier, fou, 4 pions ; 3 ou 4 coups, une prise | `missing` : « Quelle pièce a disparu ? » | `choice` : sa lettre FEN, depuis la réserve |
+| `update_captures` (3.2.4) | une tour en plus ; 5 ou 6 coups, deux prises sur deux cases | `captures` : « Où étaient les pièces prises ? » | ses cases, puis « Valider » |
+| `update_mixed` (3.2.5) | 10 pièces ; 5 à 8 coups | `what`, `where` (une pièce unique sur l'échiquier) ou `reach` : « Le fou blanc peut-il aller en c4 en un coup ? » (une pièce unique dans son camp, pas un pion ; autant de oui que de non) | la réserve ou « Case vide », un clic, `choice` `yes` / `no` |
+| `update_boss` (mini-boss 3.2) | 10 pièces ; 5 coups | à la suite, sur la même position : `what` et `where` (dans un ordre tiré), puis `en_prise` | 3 positions × 3 questions |
+
+**Atteindre** (`Board\Reach`) : sur l'échiquier seul, comme les attaques : une case vide ou une pièce
+adverse (jamais son roi) que la pièce attaque ; clouages ignorés.
+
+**Questions à la suite** (les mini-boss 3.1 et 3.2) : la première question garde les suivantes dans
+`params.followUps` (`ask`, `target`, `expected`) ; chacune est servie sur la même position, sans la
+remontrer (`followUp`, `visibleSeconds` 0), avant qu'une nouvelle position soit tirée.
+
 ## 3. Attaques et pièces en prise
 
 - **Attaquants** (`Attacks::attackers`) : sur l'échiquier seul. Un pion attaque ses deux diagonales
@@ -52,13 +95,15 @@ jamais rencontré dans ce module.
 ## 4. Déroulé (module `vision`)
 
 - **Démarrage** : seulement par une étape du parcours (`Run::isPathStep()`, sinon 422) ; `config:
-  {kind, count?, lives?}` (`count` et `lives` de 1 à 20 et 1 à 10). Aucune étape de session
+  {kind, count?, lives?, distraction?}` (`count` et `lives` de 1 à 20 et 1 à 10 ; `distraction`
+  `none`, `light`, `medium`, `strong`, `Enum\Training\Distraction`, rendue par l'écran). Aucune étape de session
   (`prepare` refuse). La première question est servie au démarrage : sans puzzle qui convienne,
   409 (`no_puzzle`).
 - **Élément** `vision` : `kind`, `ask`, `fen` (la position montrée), `visibleSeconds`,
   `hiddenSeconds` (2 s de voile), `announced` (`[{uci, san}]`), `target`, `side`, `position`,
   `count`, `lives` (restantes), `startedAt`. Le temps d'affichage est celui de l'écran.
-- **Soumission** : `squares` (16 au plus) ou `placement` (une pièce au plus, sur la case demandée) ;
+- **Soumission** : `squares` (16 au plus), `placement` (une pièce au plus, sur la case demandée) ou
+  `choice` (`knight_jumps`, `passed`, `reach` : `yes` / `no` ; `missing` : une lettre FEN) ;
   sinon 400. Un seul essai.
 - **Verdict** : `status` (`right`, `wrong`), `expected`, `answer`, `finalFen` (la position
   atteinte, pour la correction), `position`, `count`, `lives`, `durationMs`.
@@ -86,3 +131,9 @@ Prof : Noctis.
 | Mini-boss 2.2 (`2-2-boss`) | `locate` | 5 | 3 |
 | Mini-boss 2.3 (`2-3-boss`) | `en_prise` | 5 | 3 |
 | Boss caché 2.3 (`2-3-hidden`) | `attackers` | 5 | 3 |
+| Exercices 3.1.1 à 3.1.5 | `track_capture`, `track_square`, `knight_distance`, `track_turns`, `track_long` | 5, 80 % | — |
+| Mini-boss 3.1 (`3-1-boss`) | `track_boss` | 9 (3 trajets × 3) | 3 |
+| Exercices 3.2.3 à 3.2.5 | `update_missing`, `update_captures`, `update_mixed` | 5, 80 % | — |
+| Mini-boss 3.2 (`3-2-boss`) | `update_boss` | 9 (3 positions × 3) | 3 |
+
+Distractions : `light` aux boss du chapitre 2, `medium` au chapitre 3.

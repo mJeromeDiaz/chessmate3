@@ -10,13 +10,15 @@ use App\Enum\Vision\Ask;
  * A vision question drawn (docs/VISION.md, § 2): the position shown, the moves announced once it is
  * hidden (UCI), the question ($target: a piece letter for « where », a square otherwise; $side for
  * « attackers ») and what answers it ($expected: squares, or the piece letter, '' for an empty
- * square).
+ * square, or a choice); $params, what a kind keeps besides (a path's moves with their SAN, the
+ * position it reaches, the tracked piece, the squares of a knight's question).
  */
 final readonly class Draw
 {
     /**
      * @param list<string> $announced
-     * @param list<string> $expected
+     * @param list<string>         $expected
+     * @param array<string, mixed> $params
      */
     public function __construct(
         public string $fen,
@@ -27,6 +29,7 @@ final readonly class Draw
         public array $expected,
         public ?int $puzzleId,
         public int $visibleSeconds,
+        public array $params = [],
     ) {
     }
 }
