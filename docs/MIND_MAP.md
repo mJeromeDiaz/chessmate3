@@ -1,0 +1,200 @@
+# Carte mentale — Don't Stay Rooky
+
+> Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
+
+La **carte mentale** (page `/cerveau`, lien « Cerveau ») montre six capacités du joueur d'échecs
+sur un cerveau. Chaque capacité aura un **parcours** à la Duolingo : des chapitres, des sections,
+des exercices à valider plusieurs fois, des mini-boss, des boss et des coffres. Le premier écrit
+est celui de la **visualisation** (contenu de l'utilisateur :
+[mindMap/Parcours Visualisation version 2.md](mindMap/Parcours%20Visualisation%20version%202.md)).
+
+Choix validés (2026-10-20) :
+
+- **Le parcours est écrit dans le code** (catalogue PHP), les montants dans le tableau du § 5 ;
+  pas d'écran d'admin pour l'instant. Les textes sont des messages du front.
+- **Un exercice se valide 2 à 4 fois** (ses passages) ; un passage est une leçon courte de son
+  module, réussie à **80 %** au moins, avec un nombre minimum d'éléments.
+- **Un boss se bat avec 3 vies** : 3 erreurs et il gagne, on recommence. On ne saute jamais un boss.
+- **On peut sauter un exercice** : ce qui suit s'ouvre, rien n'est gagné ; il reste jouable.
+- **Il faut battre le boss d'un chapitre** pour ouvrir le suivant, et les mini-boss d'une section
+  pour ouvrir la suivante. Les **mini-boss cachés** apparaissent (« ? ») une fois leur section
+  franchie : facultatifs, un bonus et un badge.
+- **Coffres** : sur un chapitre long sans section, un coffre intermédiaire (chapitre 1 entre 1.4 et
+  1.5, chapitre 7 entre 7.2 et 7.3) ; chaque mini-boss et boss a le sien. Ouverture avec l'animation
+  des coffres de session (`TreasureChest`).
+- **Modules** (Notation, Vision, variantes à l'aveugle) développés en parallèle, jouables aussi en
+  libre et en session : libres d'emblée, sauf les modes de boss (après leur victoire) et les bots
+  (après le chapitre 6).
+- Images des boss : `front/src/assets/mindMap/boss/cyclope.png` par défaut, en attendant les
+  définitives ; animations de victoire à venir (Claude Design).
+
+## 1. Organisation du code
+
+| Couche | Emplacement |
+|---|---|
+| Catalogue | `App\MindMap\Path\{Paths, Visualisation, Chapter, Section, Step, Activity, PathRules}` |
+| État (pur) | `App\MindMap\Path\PathState` (statuts, coffres dus, sections franchies) |
+| Progression | `App\MindMap\Progress\{StepLauncher, PassRecorder, Rewarder, PathReader, ChestOpener, Progresses}` |
+| Point d'extension | `App\Training\Run\RunClosedListenerInterface` (Training le possède, `PassRecorder` l'implémente) |
+| Entités | `App\Entity\MindMap\{Progress, Attempt, Chest}` (tables `mind_map_progress`, `mind_map_attempt`, `mind_map_chest`, migration `Version20261028090000`) |
+| Enums | `App\Enum\MindMap\{Capacity, StepKind, StepStatus, AttemptOutcome}` |
+| Événement | `App\MindMap\Event\StepCompleted` (bonus d'XP, `Gamification\Handler\AwardBonusXp`) |
+| API | `App\ApiResource\MindMap\{Path, StepAction, Outcome, Chest}`, `App\State\MindMap\*` |
+| Front | pages `pages/index/cerveau/index.vue` (la carte) et `pages/index/cerveau/[capacity].vue` (le parcours), `components/mindMap/{PathChapter, PathNode, StepSheet, BossIntro, BossPortrait, BossVictory, RunOutcome}.vue`, `utils/mindMap.js`, `utils/mindMapPath.js`, `services/api.js` (`mindMapApi`), `i18n/<langue>/mindMapPath.json` |
+
+## 2. Étapes
+
+Un chapitre a des **sections** (une seule, sans numéro, pour un chapitre qui n'en a pas), puis
+son **boss**, annoncé en haut du chapitre et joué à la fin. Une section : ses **exercices** (et
+coffres) dans l'ordre, ses **mini-boss** dans l'ordre, ses **boss cachés**.
+
+| Genre (`StepKind`) | Passages | Jugement | Saut |
+|---|---|---|---|
+| `exercise` | 2 à 4 | au moins `count` éléments et 80 % justes (`PathRules::PASS_RATE`) | oui |
+| `chest` | — | gagné quand tous les exercices avant lui dans sa section sont **réussis** (un saut ne compte pas) | non |
+| `mini_boss`, `hidden_boss`, `boss` | 1 | au moins `count` éléments et moins de 3 erreurs (`PathRules::BOSS_LIVES`) | non |
+
+Une étape joue une **séance de son module** (`Activity` : module, réglage, durée, `count`,
+`lives`, sujet), lancée comme `POST /training/runs` et jugée à sa clôture. Une étape sans module
+(il arrive avec son lot) est « bientôt » : un exercice peut être sauté, un boss bloque.
+
+## 3. Statuts (`PathState`)
+
+`locked`, `open`, `soon`, `hidden`, `done`, `skipped`, calculés à chaque lecture, jamais stockés :
+
+- le chapitre 1 est ouvert ; un chapitre s'ouvre quand le boss du précédent est battu ;
+- dans un chapitre ouvert, une section s'ouvre quand la précédente est **franchie** (exercices
+  réussis ou sautés, mini-boss battus) ;
+- dans une section ouverte, les exercices s'ouvrent dans l'ordre (réussi ou sauté ouvre le
+  suivant) ; les mini-boss, dans l'ordre, quand tous les exercices sont réussis ou sautés ; les
+  boss cachés quand la section est franchie (avant : `hidden`, sans nom ni récompense affichés) ;
+- le boss du chapitre s'ouvre quand toutes ses sections sont franchies.
+
+Une étape `done` ou `skipped` se rejoue : un exercice sauté puis réussi devient `done` ; une étape
+déjà faite est de l'entraînement, jugé, jamais payé à nouveau.
+
+## 4. Déroulé
+
+- `POST /mind-map/{capacité}/steps/{clé}/start` → `{capacity, key, run}` (la séance, comme
+  `POST /training/runs`). 409 `step_locked`, `step_soon`, ou une autre séance en cours ; 404 clé
+  inconnue. Une ligne `mind_map_attempt` relie la séance à l'étape.
+- La séance se joue comme toute séance (`/training/runs/{id}/next`, `/submission`).
+- À sa **clôture** (fin du temps, du sujet, « Terminer », ou clôture paresseuse), `TimeboxRunner`
+  appelle les `RunClosedListenerInterface` dans la même transaction : `PassRecorder` juge la séance
+  sur son récapitulatif (`itemCount`, `successCount`) et, réussie, compte un passage. Le dernier
+  passage termine l'étape et la récompense (§ 5), puis les coffres en chemin qu'elle débloque.
+- `GET /mind-map/runs/{id}` → le verdict (`pending`, `passed`, `failed`), les éléments, `count`,
+  `lives`, les passages, `completed`, l'XP et le coffre de l'étape si cette séance l'a terminée, et
+  tous les coffres pas encore ouverts du parcours. 404 pour une séance qui n'est pas celle d'une
+  étape du joueur.
+- `POST /mind-map/{capacité}/steps/{clé}/skip` → `{capacity, key, path}`. 409
+  `step_not_skippable` (boss, coffre, exercice fait), `step_locked`.
+- `POST /mind-map/chests/{id}/open` → `{id, capacity, step, crystals, opened, balance}` (idempotent,
+  404 pour le coffre d'un autre).
+- `GET /mind-map/{capacité}` → `{capacity, chapters: [{key, number, status, sections: [{key,
+  number, status, steps, miniBosses, hidden}], boss}], badges, unopenedChests}` ; une étape :
+  `{key, number, kind, status, passes, required, crystals, xp, character, badges, skippable,
+  chest}`. Une séance d'étape dont le temps est passé est d'abord close (donc jugée).
+
+Limiteurs : `training_run_start` (lancer, sauter), `shop_write` (ouvrir un coffre).
+
+## 5. Récompenses (parcours visualisation)
+
+L'XP des exercices des modules compte comme d'habitude (plafond du jour). En plus, **sans
+plafond** : +15 XP par exercice validé (dernier passage), et l'XP des boss ci-dessous. Les cristaux
+sont **crédités quand l'étape est gagnée** (une ligne `reward` du grand livre, « Carte mentale ·
+visualisation · clé »), une seule fois, hors du plafond de 60 minutes des sessions ; le coffre ne
+fait que les révéler.
+
+| Étape | Clé | Cristaux | XP | Badges |
+|---|---|---|---|---|
+| Exercice validé | `1-1`… | — | 15 | — |
+| Ch. 1, coffre entre 1.4 et 1.5 | `1-chest` | 60 | — | — |
+| Ch. 1, boss Le Jongleur | `1-boss` | 200 | 100 | `chapter_1`, `boss_jongleur` |
+| Ch. 2, mini-boss 2.1 / 2.2 / 2.3 | `2-1-boss`… | 80 / 100 / 120 | 40 | `section_2_x` |
+| Ch. 2, mini-boss caché 2.3 | `2-3-hidden` | 60 | 40 | `hidden_2_3` |
+| Ch. 2, boss Le Cyclope | `2-boss` | 240 | 100 | `chapter_2`, `boss_cyclope` |
+| Ch. 3, rappel Le Jongleur (version courte) | `3-0-boss` | 60 | 40 | — |
+| Ch. 3, mini-boss 3.1 / 3.2 / 3.3 | `3-x-boss` | 100 / 120 / 140 | 40 | `section_3_x` |
+| Ch. 3, boss La Gargouille | `3-boss` | 300 | 120 | `chapter_3`, `boss_gargouille` |
+| Ch. 4, examens 4.1 / 4.2 / 4.3 / 4.4 | `4-x-boss` | 100 / 120 / 140 / 160 | 40 | `section_4_x` |
+| Ch. 4, caché Le Sablier (4.2) | `4-2-hidden` | 80 | 40 | `boss_sablier` |
+| Ch. 4, boss Le Cyclope (calcul) | `4-boss` | 360 | 150 | `chapter_4`, `boss_cyclope_calcul` |
+| Ch. 5, mini-boss 5.1 | `5-1-boss` | 160 | 50 | `section_5_1` |
+| Ch. 5, cachés 5.1 (2) | `5-1-hidden-1`, `-2` | 80 chacun | 40 | `hidden_5_1_x` |
+| Ch. 5, mini-boss 5.2 (1 puis 2) | `5-2-boss-1`, `-2` | 160 / 180 | 50 | `section_5_2` (le 2) |
+| Ch. 5, caché Le Flash (5.2) | `5-2-hidden` | 100 | 40 | `boss_flash` |
+| Ch. 5, boss Le Fantôme | `5-boss` | 440 | 150 | `chapter_5`, `boss_fantome` |
+| Ch. 6, boss Le Caméléon | `6-boss` | 500 | 200 | `chapter_6`, `boss_cameleon` |
+| Ch. 7, coffre entre 7.2 et 7.3 | `7-chest` | 200 | — | — |
+| Ch. 7, boss Le Sith aveugle | `7-boss` | 600 | 250 | `chapter_7`, `boss_sith`, `oeil_interieur` |
+
+Repères : un gel d'un jour coûte 60 cristaux ; une heure de session parfaite en rapporte 180.
+Montants doublés par rapport à la première proposition (choix du 2026-10-20). Passages par
+exercice : `Visualisation::chapters()` (le dernier exercice d'une section en demande souvent 4).
+
+Les badges sont ceux des étapes terminées (`GET /mind-map/{capacité}` → `badges`, avec la date) :
+rien n'est stocké à part. Les badges à condition (« Membre fantôme » : Fantôme sans erreur ;
+« Mue parfaite » : 20 coups sans erreur contre le Caméléon) viendront avec leurs boss.
+
+## 6. Modèle de données
+
+- `mind_map_progress` : `user_id`, `capacity`, `step` (`ascii_bin`), `passes`, `completed_at`,
+  `skipped_at`, `updated_at` ; unique `(user_id, capacity, step)`.
+- `mind_map_attempt` : `user_id`, `run_id` (unique, cascade), `capacity`, `step`, `outcome`,
+  `item_count`, `success_count`, `completed`, `started_at`, `judged_at`.
+- `mind_map_chest` : `user_id`, `capacity`, `step`, `crystals`, `created_at`, `opened_at` ; unique
+  `(user_id, capacity, step)`.
+
+Les changements d'un joueur se sérialisent sur sa ligne `app_user` (`ProgressRepository::lockPathOf`).
+Tout est supprimé avec le compte (cascade) et exporté (`entrainement.json` : `mindMapProgress`,
+`mindMapAttempts`, `mindMapChests`). L'XP : source `mind_map_step` (id de la ligne de progression),
+genre `mind_map`, rattachée à la séance qui a terminé l'étape ; `app:gamification:rebuild` la
+retrouve (l'XP de l'étape telle que le catalogue la donne).
+
+## 7. Front
+
+- **Carte** (`/cerveau`) : le panneau d'une capacité qui a un parcours (`PATH_CAPACITIES` : la clé
+  de la carte `visualization` → celle de l'API `visualisation`) propose « Ouvrir le parcours ».
+- **Parcours** (`/cerveau/visualization`) : les chapitres l'un sous l'autre (titre, progression,
+  boss annoncé en haut ; un chapitre verrouillé ne montre que sa tête), leurs étapes en chemin
+  sinueux (`PathNode` : exercice et l'anneau de ses passages, coffre, visage du boss, « ? » d'un
+  boss caché, « Bientôt »), le titre de chaque section ; l'étape à jouer pulse. À côté (grand
+  écran, collant) ou au-dessus (téléphone) : la suite (« Continuer »), les règles, les badges. Les
+  coffres pas encore ouverts s'ouvrent à l'arrivée, l'un après l'autre (`TreasureChest`, avec son
+  propre `opener` et sa ligne « Carte mentale · étape »).
+- **Étape** (`StepSheet`) : passages, règle des 80 %, XP, « Commencer » / « Recommencer » /
+  « S'entraîner », « Passer » (confirmé). **Boss** (`BossIntro`) : son visage, sa présentation, sa
+  réplique, le défi, 3 vies, les gains (cristaux, XP, badges), « Affronter ».
+- **Jouer** : la séance s'ouvre sur `/training/{id}?mindMap=1`, jouée comme toute séance ; à sa
+  fin, `RunOutcome` remplace le récapitulatif : le verdict (passage réussi, exercice validé, pas
+  encore ; victoire, le boss l'emporte avec sa réplique), les passages ou les vies, l'XP ; un boss
+  battu passe d'abord par `BossVictory` (provisoire en attendant les animations de Claude Design :
+  confettis, rayons, visage vaincu, dernière réplique, badges), puis les coffres ; « Passage
+  suivant » / « Rejouer » et « Retour au parcours ».
+- **Images** : `BossPortrait` découpe une pose (`idle`, `cheer`, `angry`, `search`, `beaten`,
+  `POSES` de `utils/mindMapPath.js`) dans la planche du personnage
+  (`assets/mindMap/boss/<personnage>.png`, 1536 × 1024) ; sans planche, celle du cyclope.
+- **Textes** : `mindMapPath.<capacité>.{chapters, sections, steps.s<clé>}` (clé de l'étape, `-`
+  → `_` : `2-1-3` → `s2_1_3`), `mindMapPath.characters.<personnage>.{name, tagline, taunt, defeat,
+  win}`.
+
+## 8. Lots
+
+| Lot | Contenu | État |
+|---|---|---|
+| M1 | API du moteur : catalogue, progression, lancement, saut, coffres, badges, verrous | écrit 2026-10-20 |
+| M2 | Front du moteur : chemin, écrans de boss (cyclope par défaut), coffre, victoire provisoire | écrit 2026-10-20 |
+| L1 | Coordonnées : modes « nommer la case » et « couleur de la case » (1.2, 1.3) | écrit 2026-10-20 |
+| L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) : L2a, L2b verts, L2c `line` (1.7, un répertoire d'au moins 10 tronçons) écrit 2026-10-20 | en cours |
+| L3 | Parties célèbres (1.8, 1.9) et boss Jongleur | à faire |
+| L4 | Chapitre 2 : reconstitution, premières questions de Vision, Cyclope | à faire |
+| L5, L6 | Module Vision (3.1 à 3.3), Gargouille et ses distractions | à faire |
+| L7 à L10 | Chapitres 4 à 7 (précisions de l'utilisateur attendues) | à faire |
+
+Jouables aujourd'hui : 1.1 (série de coordonnées `find` d'une minute, Blancs en bas, au moins 10
+réponses à 80 %), 1.2 (mode `name`, une minute, au moins 10 réponses à 80 %) et 1.3 (mode `color`,
+une minute, au moins 20 réponses à 80 %), [COORDINATES.md](COORDINATES.md), § 2 bis ; 1.4 à 1.6
+et 1.7 (leçons comptées du module Notation : 10 coups annoncés, 5 suites, 5 lignes à écrire, 5
+lignes du répertoire à compléter, 80 % ; 1.7 refusé sans répertoire de 10 tronçons, raison
+`no_repertoire`, [NOTATION.md](NOTATION.md)).

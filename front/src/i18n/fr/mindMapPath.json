@@ -1,0 +1,579 @@
+{
+  "page": {
+    "back": "La carte mentale",
+    "kicker": "Parcours",
+    "loadError": "Le parcours n’a pas pu être chargé.",
+    "continue": "Continuer",
+    "continueSoon": "La suite arrive bientôt",
+    "chapter": "Chapitre {n}",
+    "progress": "{done} / {total}",
+    "locked": "Bats le boss du chapitre précédent pour ouvrir celui-ci.",
+    "bossOfChapter": "Boss du chapitre",
+    "badges": "Badges",
+    "noBadge": "Bats des boss pour gagner tes premiers badges.",
+    "rules": "Chaque exercice se valide 2 à 4 fois (80 % de réussite). Un exercice peut être passé, un boss jamais. Bats le boss pour ouvrir le chapitre suivant.",
+    "soon": "Bientôt"
+  },
+  "chestNote": "Carte mentale · {title}",
+  "status": {
+    "locked": "Verrouillé",
+    "open": "À faire",
+    "soon": "Bientôt",
+    "hidden": "Secret",
+    "done": "Fait",
+    "skipped": "Passé"
+  },
+  "kinds": {
+    "exercise": "Exercice",
+    "chest": "Coffre",
+    "mini_boss": "Mini-boss",
+    "hidden_boss": "Boss caché",
+    "boss": "Boss"
+  },
+  "sheet": {
+    "passes": "Passage {n} sur {total}",
+    "passesDone": "Validé ({total} passages)",
+    "skippedNote": "Tu l’as passé : réussis-le quand tu veux, il comptera.",
+    "start": "Commencer",
+    "again": "Recommencer",
+    "practice": "S’entraîner",
+    "skip": "Passer",
+    "skipTitle": "Passer cet exercice ?",
+    "skipText": "La suite s’ouvre, mais l’exercice ne rapporte rien tant que tu ne l’as pas réussi.",
+    "xp": "+{xp} XP",
+    "crystals": "+{n} cristaux",
+    "soonText": "Son module arrive bientôt. Tu peux le passer pour avancer.",
+    "lockedText": "Pas encore : termine ce qui vient avant.",
+    "chestEarned": "Coffre gagné : {n} cristaux.",
+    "chestLocked": "Réussis les exercices avant lui pour le gagner (un exercice passé ne compte pas).",
+    "hiddenText": "Quelque chose se cache ici. Franchis la section pour le découvrir.",
+    "rule": "Une leçon courte, réussie à 80 % au moins.",
+    "close": "Fermer"
+  },
+  "boss": {
+    "lives": "3 vies : à la 3e erreur, {name} gagne et tu recommences.",
+    "rewards": "À gagner",
+    "fight": "Affronter",
+    "fightAgain": "Rejouer le combat",
+    "later": "Plus tard",
+    "soon": "Ce combat arrive bientôt.",
+    "locked": "Termine d’abord ce qui vient avant.",
+    "beaten": "Vaincu",
+    "optional": "Facultatif"
+  },
+  "victory": {
+    "kicker": "Boss vaincu !",
+    "openChest": "Ouvrir le coffre",
+    "continue": "Continuer",
+    "badges": "Badges gagnés"
+  },
+  "outcome": {
+    "pending": "Résultat en cours…",
+    "validated": "Exercice validé !",
+    "pass": "Passage réussi",
+    "failed": "Pas encore",
+    "victory": "Victoire !",
+    "defeat": "Le boss l’emporte",
+    "practice": "Combat gagné",
+    "passes": "Passage {n} sur {total}",
+    "score": "{success} / {count} justes",
+    "need": "Il faut au moins {count} réponses et 80 % de justes.",
+    "lives": "Vies restantes : {n}",
+    "failedText": "Recommence : chaque passage réussi compte.",
+    "defeatText": "Trois erreurs : retente le combat quand tu veux.",
+    "replay": "Rejouer",
+    "nextPass": "Passage suivant",
+    "back": "Retour au parcours",
+    "chests": "Coffres à ouvrir"
+  },
+  "refusals": {
+    "locked": "Cette étape n’est pas encore ouverte.",
+    "soon": "Le module de cette étape arrive bientôt.",
+    "not_skippable": "Un boss ne se passe pas.",
+    "runInProgress": "Une autre séance est en cours : termine-la d’abord.",
+    "noRepertoire": "Il te faut un répertoire d’au moins 10 tronçons : crée-le dans « Répertoires »."
+  },
+  "badges": {
+    "boss_jongleur": "Jongleur battu",
+    "boss_cyclope": "L’œil du Cyclope",
+    "boss_cyclope_calcul": "Le Cyclope calculateur",
+    "boss_gargouille": "Imperturbable",
+    "boss_fantome": "Chasseur de fantôme",
+    "boss_cameleon": "Rien ne t’échappe",
+    "boss_sith": "Le Sith aveugle vaincu",
+    "boss_sablier": "Maître du sablier",
+    "boss_flash": "Œil de l’éclair",
+    "oeil_interieur": "Œil intérieur",
+    "chapter": "Chapitre {n}",
+    "section": "Section {n}",
+    "hidden": "Secret {n}"
+  },
+  "generic": {
+    "tagline": "Un gardien de section : il vérifie que tu as bien retenu.",
+    "taunt": "Montre-moi ce que tu as appris.",
+    "defeat": "Bien joué, la suite est à toi.",
+    "win": "Pas cette fois. Reviens quand tu veux."
+  },
+  "characters": {
+    "jongleur": {
+      "name": "Le Jongleur",
+      "tagline": "Il fait tourner les cases, les coups et les pièces… et attend que tu en laisses tomber une.",
+      "taunt": "Trois balles en l’air, et tu regardes encore l’échiquier ?",
+      "defeat": "Bien rattrapé ! Je range mes quilles… pour cette fois.",
+      "win": "Une balle par terre ! On recommence ?"
+    },
+    "cyclope": {
+      "name": "Le Cyclope",
+      "tagline": "Un seul œil, mais une mémoire parfaite.",
+      "taunt": "Un regard me suffit. Et toi, combien t’en faut-il ?",
+      "defeat": "Tu vois aussi bien que moi… les yeux fermés.",
+      "win": "Mon œil a tout retenu. Le tien, pas encore."
+    },
+    "gargouille": {
+      "name": "La Gargouille",
+      "tagline": "Elle hurle, grimace et fait trembler l’échiquier. Garde le fil.",
+      "taunt": "Concentre-toi… si tu peux !",
+      "defeat": "Grrr… même mes cris n’ont pas suffi.",
+      "win": "Ha ! Tu as perdu le fil."
+    },
+    "fantome": {
+      "name": "Le Fantôme",
+      "tagline": "Les pièces s’effacent à son passage. À toi de les retrouver.",
+      "taunt": "Tu ne vois plus rien ? Moi non plus… et pourtant.",
+      "defeat": "Tu sens les pièces même quand elles disparaissent.",
+      "win": "Hou… une pièce s’est envolée de ta tête."
+    },
+    "cameleon": {
+      "name": "Le Caméléon",
+      "tagline": "Ses pièces changent d’habit à chaque coup.",
+      "taunt": "Ce fou a l’air d’un cavalier ? Regarde mieux.",
+      "defeat": "Aucun déguisement ne te trompe.",
+      "win": "Tu t’es fié aux apparences."
+    },
+    "sith": {
+      "name": "Le Sith aveugle",
+      "tagline": "Il joue des parties entières sans jamais voir l’échiquier.",
+      "taunt": "Ferme les yeux. Maintenant, joue.",
+      "defeat": "L’œil intérieur est en toi.",
+      "win": "Tu cherchais l’échiquier. Il n’y en a pas."
+    },
+    "sablier": {
+      "name": "Le Sablier",
+      "tagline": "Le temps file, et il te demande de tenir deux positions à la fois.",
+      "taunt": "Garde celle-ci en tête… pendant que je t’en montre une autre.",
+      "defeat": "Deux positions, aucun grain perdu.",
+      "win": "Le sable a tout recouvert."
+    },
+    "flash": {
+      "name": "Le Flash",
+      "tagline": "Une demi-seconde. Pas une de plus.",
+      "taunt": "Cligne des yeux et c’est fini.",
+      "defeat": "Plus rapide que l’éclair !",
+      "win": "Trop lent… la position est déjà loin."
+    }
+  },
+  "visualisation": {
+    "chapters": {
+      "c1": "Coordonnées et notation",
+      "c2": "Vision aveugle statique",
+      "c3": "Vision dynamique",
+      "c4": "Calcul de variantes",
+      "c5": "Perfectionnement",
+      "c6": "Jeu à l’aveugle",
+      "c7": "Bots et humains"
+    },
+    "sections": {
+      "s2_1": "Mémoriser les cases et les pièces",
+      "s2_2": "Mémoriser des groupes",
+      "s2_3": "Position dense",
+      "s3_1": "Suivre une pièce",
+      "s3_2": "Actualiser une position",
+      "s3_3": "Relations entre pièces",
+      "s4_1": "Premiers pas",
+      "s4_2": "Variantes courtes",
+      "s4_3": "Comparer les variantes",
+      "s4_4": "Puzzles à l’aveugle",
+      "s5_1": "Visualiser une position dense",
+      "s5_2": "Jouer à l’aveugle",
+      "s6_1": "Séquences de jeu"
+    },
+    "steps": {
+      "s1_1": {
+        "title": "Cliquer la case",
+        "desc": "On te donne « e4 », tu cliques la case. Une minute, au moins 10 réponses et 80 % justes."
+      },
+      "s1_2": {
+        "title": "Nommer la case",
+        "desc": "Une case s’allume sur l’échiquier : donne son nom, la colonne puis la rangée. Une minute, au moins 10 réponses et 80 % justes."
+      },
+      "s1_3": {
+        "title": "Couleur de la case",
+        "desc": "Un nom de case, pas d’échiquier : claire ou foncée ? Une minute, au moins 20 réponses et 80 % justes."
+      },
+      "s1_4": {
+        "title": "Jouer le coup annoncé",
+        "desc": "« Cf3 » : joue-le sur l’échiquier."
+      },
+      "s1_chest": {
+        "title": "Coffre",
+        "desc": "Réussis les quatre premiers exercices pour l’ouvrir."
+      },
+      "s1_5": {
+        "title": "Suite de coups notés",
+        "desc": "Joue une suite de coups notés, tirée d’un puzzle ou d’un répertoire."
+      },
+      "s1_6": {
+        "title": "Écrire la solution",
+        "desc": "Écris en notation la solution d’un puzzle."
+      },
+      "s1_7": {
+        "title": "Compléter une ligne",
+        "desc": "Une ligne de ton répertoire défile : écris ses derniers coups. Il faut un répertoire d’au moins 10 tronçons."
+      },
+      "s1_8": {
+        "title": "Noter une partie célèbre",
+        "desc": "Reconstitue la notation d’une partie célèbre."
+      },
+      "s1_9": {
+        "title": "Rejouer une partie célèbre",
+        "desc": "Rejoue sur l’échiquier une partie célèbre à partir de sa notation."
+      },
+      "s1_boss": {
+        "title": "Le Jongleur",
+        "desc": "Une suite rapide des exercices du chapitre : coordonnées, notation et déplacements, avec de légères distractions."
+      },
+      "s2_1_1": {
+        "title": "Les rois et un pion",
+        "desc": "Roi blanc, roi noir, pion blanc : 8 secondes pour les retenir, puis replace-les."
+      },
+      "s2_1_2": {
+        "title": "Deux pions",
+        "desc": "Les deux rois et deux pions blancs."
+      },
+      "s2_1_3": {
+        "title": "Quatre pions",
+        "desc": "Les deux rois, trois pions blancs, un pion noir."
+      },
+      "s2_1_4": {
+        "title": "Le premier fou",
+        "desc": "Les deux rois, un fou blanc, trois pions."
+      },
+      "s2_1_boss": {
+        "title": "Trois positions",
+        "desc": "Reconstruis trois positions de suite, sans aucun indice visuel."
+      },
+      "s2_2_1": {
+        "title": "Sept pièces",
+        "desc": "Les deux rois, un fou, quatre pions : 11 secondes."
+      },
+      "s2_2_2": {
+        "title": "Deux fous",
+        "desc": "Les deux rois, deux fous, quatre pions : distingue deux pièces identiques."
+      },
+      "s2_2_3": {
+        "title": "Le cavalier",
+        "desc": "Les deux rois, un cavalier, quatre pions : des déplacements atypiques."
+      },
+      "s2_2_4": {
+        "title": "La tour",
+        "desc": "Les deux rois, une tour, cinq pions : les alignements."
+      },
+      "s2_2_boss": {
+        "title": "Mémoire et question",
+        "desc": "Mémorise une position, puis réponds : « Où est le roi noir ? »"
+      },
+      "s2_3_1": {
+        "title": "La dame",
+        "desc": "Les deux rois, une dame, cinq pions : 14 secondes."
+      },
+      "s2_3_2": {
+        "title": "Fou et cavalier",
+        "desc": "Les deux rois, un fou, un cavalier, six pions."
+      },
+      "s2_3_3": {
+        "title": "Deux tours",
+        "desc": "Les deux rois, deux tours, six pions : plusieurs alignements."
+      },
+      "s2_3_4": {
+        "title": "Douze pièces",
+        "desc": "Les deux rois, une dame, un fou, un cavalier, six pions : les pièces et leurs relations."
+      },
+      "s2_3_boss": {
+        "title": "La pièce en prise",
+        "desc": "Après trois coups que tu ne vois pas, trouve la pièce en prise et la case de capture."
+      },
+      "s2_3_hidden": {
+        "title": "Trois coups énoncés",
+        "desc": "Trois coups énoncés, puis une question sur la position finale : « Combien de pièces attaquent f7 ? »"
+      },
+      "s2_boss": {
+        "title": "Le Cyclope",
+        "desc": "Reconstitue une position complète en 30 secondes."
+      },
+      "s3_0_boss": {
+        "title": "Le Jongleur, version courte",
+        "desc": "Un rappel du chapitre 1 avant d’entrer dans le mouvement."
+      },
+      "s3_1_1": {
+        "title": "Un trajet annoncé",
+        "desc": "Suis une tour ou un fou sur un trajet annoncé, puis dis quelle pièce est capturée."
+      },
+      "s3_1_2": {
+        "title": "La case d’arrivée",
+        "desc": "Retrouve la case d’arrivée après 2 à 4 déplacements."
+      },
+      "s3_1_3": {
+        "title": "Les sauts du cavalier",
+        "desc": "Le nombre minimal de sauts d’un cavalier entre deux cases."
+      },
+      "s3_1_4": {
+        "title": "Virages et captures",
+        "desc": "Un trajet avec des changements de direction et des captures."
+      },
+      "s3_1_5": {
+        "title": "Un long trajet",
+        "desc": "Suis une pièce sur 5 à 8 déplacements, puis réponds à une question."
+      },
+      "s3_1_boss": {
+        "title": "Le trajet inconnu",
+        "desc": "Suis une pièce sur un trajet inconnu : sa case finale, les pièces capturées, les cases traversées."
+      },
+      "s3_2_1": {
+        "title": "Un coup annoncé",
+        "desc": "Applique un coup annoncé à une position de 4 à 6 pièces."
+      },
+      "s3_2_2": {
+        "title": "Trois coups",
+        "desc": "Applique trois coups, puis place chaque pièce."
+      },
+      "s3_2_3": {
+        "title": "La pièce disparue",
+        "desc": "Une séquence avec une capture : quelle pièce a disparu ?"
+      },
+      "s3_2_4": {
+        "title": "Captures en chaîne",
+        "desc": "Une séquence avec plusieurs pièces et des captures successives."
+      },
+      "s3_2_5": {
+        "title": "Questions variées",
+        "desc": "Après 5 à 8 coups : « Quelle pièce occupe e5 ? », « Le fou blanc peut-il atteindre c4 ? »"
+      },
+      "s3_2_boss": {
+        "title": "Cinq coups, trois questions",
+        "desc": "Mémorise une position, écoute cinq coups, réponds à trois questions dont une sur une attaque."
+      },
+      "s3_3_1": {
+        "title": "Les pièces attaquées",
+        "desc": "Après une séquence, quelles pièces sont attaquées ?"
+      },
+      "s3_3_2": {
+        "title": "Défendues ou non",
+        "desc": "Les pièces défendues et celles sans défense."
+      },
+      "s3_3_3": {
+        "title": "Les alignements",
+        "desc": "Les pièces alignées sur une colonne, une rangée ou une diagonale."
+      },
+      "s3_3_4": {
+        "title": "En prise",
+        "desc": "Les pièces devenues en prise après plusieurs coups."
+      },
+      "s3_3_5": {
+        "title": "Interactions",
+        "desc": "Suis une position de 8 à 12 pièces et leurs interactions."
+      },
+      "s3_3_boss": {
+        "title": "Attaquée ou gagnante ?",
+        "desc": "Les pièces attaquées, défendues, les captures possibles : distingue « attaquée » et « capture gagnante »."
+      },
+      "s3_boss": {
+        "title": "La Gargouille",
+        "desc": "Cinq coups à garder en tête sous les cris, les animations et le compte à rebours."
+      },
+      "s4_1_1": {
+        "title": "Réponse imposée",
+        "desc": "Calcule un demi-coup dont la réponse adverse est imposée."
+      },
+      "s4_1_2": {
+        "title": "Deux réponses",
+        "desc": "Un demi-coup et deux réponses adverses possibles."
+      },
+      "s4_1_3": {
+        "title": "La meilleure position",
+        "desc": "Un coup, deux réponses : laquelle te laisse la meilleure position ?"
+      },
+      "s4_1_boss": {
+        "title": "Examen 4.1",
+        "desc": "Les exercices de la section, mélangés."
+      },
+      "s4_2_1": {
+        "title": "Suite forcée",
+        "desc": "Calcule une suite forcée de deux demi-coups."
+      },
+      "s4_2_2": {
+        "title": "Trois ou quatre demi-coups",
+        "desc": "Une variante de 3 à 4 demi-coups."
+      },
+      "s4_2_3": {
+        "title": "Puzzle sans échiquier",
+        "desc": "Résous un puzzle simple sans échiquier visible."
+      },
+      "s4_2_boss": {
+        "title": "Examen 4.2",
+        "desc": "Les exercices de la section, mélangés."
+      },
+      "s4_2_hidden": {
+        "title": "Le Sablier",
+        "desc": "Garde une position en mémoire pendant que tu réponds à une autre question."
+      },
+      "s4_3_1": {
+        "title": "Réponse parmi plusieurs",
+        "desc": "Une réponse adverse imposée parmi plusieurs choix."
+      },
+      "s4_3_2": {
+        "title": "Deux variantes",
+        "desc": "Compare deux variantes : quelle position finale est la meilleure ?"
+      },
+      "s4_3_3": {
+        "title": "Plusieurs défenses",
+        "desc": "Un puzzle avec plusieurs réponses adverses."
+      },
+      "s4_3_4": {
+        "title": "Variantes plausibles",
+        "desc": "Calcule deux variantes plausibles et compare leurs positions finales."
+      },
+      "s4_3_boss": {
+        "title": "Examen 4.3",
+        "desc": "Les exercices de la section, mélangés."
+      },
+      "s4_4_1": {
+        "title": "Séquence forcée",
+        "desc": "Un puzzle de 4 à 6 pièces, séquence forcée, à l’aveugle."
+      },
+      "s4_4_2": {
+        "title": "Capture intermédiaire",
+        "desc": "Un puzzle plus dense avec une capture intermédiaire."
+      },
+      "s4_4_3": {
+        "title": "Plusieurs réponses",
+        "desc": "Plusieurs réponses adverses, puis une question sur la position."
+      },
+      "s4_4_boss": {
+        "title": "Examen 4.4",
+        "desc": "Les exercices de la section, mélangés."
+      },
+      "s4_boss": {
+        "title": "Le Cyclope calculateur",
+        "desc": "Un puzzle à l’aveugle sans limite de coups : garde deux branches en tête à la fois."
+      },
+      "s5_1_1": {
+        "title": "14 pièces",
+        "desc": "Repère les groupes et les diagonales : 16 secondes."
+      },
+      "s5_1_2": {
+        "title": "16 pièces",
+        "desc": "Distingue les deux camps."
+      },
+      "s5_1_3": {
+        "title": "18 pièces",
+        "desc": "Retiens les pièces proches."
+      },
+      "s5_1_4": {
+        "title": "20 pièces",
+        "desc": "Reconstitue une position semi-complète."
+      },
+      "s5_1_5": {
+        "title": "Suivre dans la foule",
+        "desc": "Suis une pièce dans une position dense, avec des captures."
+      },
+      "s5_1_boss": {
+        "title": "Position et question",
+        "desc": "Reconstruis la position, puis réponds à une question sur une case, une pièce ou une attaque."
+      },
+      "s5_1_hidden_1": {
+        "title": "Cinq coups légaux",
+        "desc": "Suis cinq coups, puis donne la position finale."
+      },
+      "s5_1_hidden_2": {
+        "title": "Puzzle à l’aveugle",
+        "desc": "Résous un puzzle simple sans voir l’échiquier."
+      },
+      "s5_2_1": {
+        "title": "Dix secondes",
+        "desc": "12 à 16 pièces affichées 10 secondes, puis reconstruction."
+      },
+      "s5_2_2": {
+        "title": "Sans chrono",
+        "desc": "16 à 20 pièces, sans limite de temps pour répondre."
+      },
+      "s5_2_3": {
+        "title": "Coups annoncés",
+        "desc": "16 à 20 pièces masquées, puis une série de coups annoncés à reconstituer."
+      },
+      "s5_2_4": {
+        "title": "Mat à l’aveugle",
+        "desc": "Un puzzle à l’aveugle en plusieurs coups : mat en 2 ou 3."
+      },
+      "s5_2_boss_1": {
+        "title": "Mémoire et question",
+        "desc": "Mémorise une position, puis réponds à une question."
+      },
+      "s5_2_boss_2": {
+        "title": "Dix coups annoncés",
+        "desc": "Mémorise une position, applique dix coups annoncés, trouve la position finale."
+      },
+      "s5_2_hidden": {
+        "title": "Le Flash",
+        "desc": "Une position affichée une demi-seconde, puis reconstruis-la."
+      },
+      "s5_boss": {
+        "title": "Le Fantôme",
+        "desc": "Pendant une séquence annoncée, une pièce disparaît à chaque coup : retrouve-la par ses relations."
+      },
+      "s6_1_1": {
+        "title": "Finales théoriques",
+        "desc": "Rejoue des finales théoriques : roi et tour, roi et dame, finales de pions."
+      },
+      "s6_1_2": {
+        "title": "Ton répertoire à l’aveugle",
+        "desc": "Rejoue ton répertoire sans voir l’échiquier, en Blancs puis en Noirs."
+      },
+      "s6_1_3": {
+        "title": "Woodpecker à l’aveugle",
+        "desc": "Trois secondes d’exposition par puzzle (après plusieurs Woodpecker classiques à 100 %)."
+      },
+      "s6_boss": {
+        "title": "Le Caméléon",
+        "desc": "Les pièces changent de forme ou de couleur à chaque coup : identifie leur vrai rôle."
+      },
+      "s7_1": {
+        "title": "Bot Apprenti",
+        "desc": "Une partie à l’aveugle contre un bot d’environ 800 Elo."
+      },
+      "s7_2": {
+        "title": "Bot Club",
+        "desc": "Une partie à l’aveugle contre un bot d’environ 1200 Elo."
+      },
+      "s7_chest": {
+        "title": "Coffre",
+        "desc": "Gagne contre les deux premiers bots pour l’ouvrir."
+      },
+      "s7_3": {
+        "title": "Bot Tournoi",
+        "desc": "Une partie à l’aveugle contre un bot d’environ 1600 Elo."
+      },
+      "s7_4": {
+        "title": "Bot Expert",
+        "desc": "Une partie à l’aveugle contre un bot d’environ 2000 Elo."
+      },
+      "s7_5": {
+        "title": "Un humain",
+        "desc": "Une partie à l’aveugle contre un joueur de ton niveau."
+      },
+      "s7_boss": {
+        "title": "Le Sith aveugle",
+        "desc": "Des parties complètes à l’aveugle, avec la position à reconstruire aux moments clés."
+      }
+    }
+  }
+}

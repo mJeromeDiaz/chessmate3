@@ -61,7 +61,33 @@
       </div>
     </section>
 
-    <section class="capacity-panel__section">
+    <section v-if="withPath" class="capacity-panel__section">
+      <div class="capacity-panel__soon" data-testid="capacity-path">
+        <div class="capacity-panel__soon-title">{{
+          $t('mindMap.panel.pathTitle')
+        }}</div>
+        <p>{{ $t('mindMap.panel.pathText') }}</p>
+        <div class="capacity-panel__actions">
+          <q-btn
+            unelevated
+            no-caps
+            class="capacity-panel__train"
+            :label="$t('mindMap.panel.openPath')"
+            :to="`/cerveau/${capacity.key}`"
+            data-testid="capacity-open-path"
+          />
+          <q-btn
+            outline
+            no-caps
+            :label="$t('mindMap.panel.compose')"
+            to="/session/new"
+            data-testid="capacity-compose"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section v-else class="capacity-panel__section">
       <div class="capacity-panel__soon" data-testid="capacity-soon">
         <div class="capacity-panel__soon-title">{{
           $t('mindMap.panel.soonTitle')
@@ -92,8 +118,8 @@
 <script setup>
 /**
  * A capacity opened beside the mind map (design "Carte mentale"): what it is, the modules that
- * train it (main or associated, each one a link to its page) and why. Its chapters come later:
- * meanwhile, ways to train it now.
+ * train it (main or associated, each one a link to its page) and why; its path (docs/MIND_MAP.md),
+ * or, for a capacity without one yet, ways to train it now.
  */
 import { computed, ref, watch } from 'vue'
 import {
@@ -103,6 +129,7 @@ import {
   moduleName,
   moduleWhy
 } from '@/utils/mindMap'
+import { hasPath } from '@/utils/mindMapPath'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/utils/mindMap').Capacity>} */
@@ -113,6 +140,7 @@ const emit = defineEmits({ close: null })
 
 const why = ref(false)
 const modules = computed(() => capacityModules(props.capacity))
+const withPath = computed(() => hasPath(props.capacity.key))
 
 watch(
   () => props.capacity.key,

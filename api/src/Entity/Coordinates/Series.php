@@ -6,6 +6,7 @@ namespace App\Entity\Coordinates;
 
 use App\Entity\Training\Run;
 use App\Entity\User;
+use App\Enum\Coordinates\Mode;
 use App\Enum\Coordinates\Orientation;
 use App\Repository\Coordinates\SeriesRepository;
 use Doctrine\DBAL\Types\Types;
@@ -14,7 +15,8 @@ use Symfony\Component\Uid\Uuid;
 
 /**
  * One coordinates series (docs/COORDINATES.md): the squares drawn at its start, in order, and the
- * answers judged so far (answer i is about square i). Played in one timed run; it validates its
+ * answers judged so far (answer i is about square i: the square clicked or named, or its colour
+ * in the colour mode). Played in one timed run; a series of the `find` mode validates its
  * orientation when it closes ({@see \App\Coordinates\Series\CoordinateRules}).
  */
 #[ORM\Entity(repositoryClass: SeriesRepository::class)]
@@ -39,11 +41,14 @@ class Series
     #[ORM\Column(length: 5, enumType: Orientation::class)]
     private Orientation $orientation;
 
+    #[ORM\Column(length: 8, enumType: Mode::class, options: ['default' => 'find'])]
+    private Mode $mode;
+
     /** @var list<string> the squares to find, in order ("e4") */
     #[ORM\Column(type: Types::JSON)]
     private array $squares;
 
-    /** @var list<array{square: string, ms: int}> the square clicked for each square of $squares, and the time it took */
+    /** @var list<array{square: string, ms: int}> the answer to each square of $squares (a square, or light / dark), and the time it took */
     #[ORM\Column(type: Types::JSON)]
     private array $answers = [];
 
@@ -73,12 +78,13 @@ class Series
     /**
      * @param list<string> $squares
      */
-    public function __construct(Run $run, Orientation $orientation, array $squares)
+    public function __construct(Run $run, Orientation $orientation, array $squares, Mode $mode = Mode::Find)
     {
         $this->id = Uuid::v7();
         $this->user = $run->getUser();
         $this->run = $run;
         $this->orientation = $orientation;
+        $this->mode = $mode;
         $this->squares = $squares;
         $this->startedAt = $run->getStartedAt();
     }
@@ -101,6 +107,11 @@ class Series
     public function getOrientation(): Orientation
     {
         return $this->orientation;
+    }
+
+    public function getMode(): Mode
+    {
+        return $this->mode;
     }
 
     /**
@@ -159,11 +170,11 @@ class Series
      */
     public function isCorrect(int $index): ?bool
     {
-        return isset($this->answers[$index]) ? $this->answers[$index]['square'] === $this->squares[$index] : null;
+        return isset($this->answers[$index]) ? $this->answers[$index]['square'] === $this->mode->expected($this->squares[$index]) : null;
     }
 
     /**
-     * Judges the answer to the next square.
+     * Judges the answer to the next square (a square, or light / dark in the colour mode).
      *
      * @return bool whether it was right
      */
@@ -172,7 +183,7 @@ class Series
         if ($this->isClosed() || $this->answerCount >= \count($this->squares)) {
             throw new \LogicException('No square left to answer.');
         }
-        $correct = $square === $this->squares[$this->answerCount];
+        $correct = $square === $this->mode->expected($this->squares[$this->answerCount]);
         $this->answers[] = ['square' => $square, 'ms' => max(0, $ms)];
         ++$this->answerCount;
         $this->successCount += $correct ? 1 : 0;
@@ -192,7 +203,7 @@ class Series
     public function firstMistake(): ?int
     {
         foreach ($this->answers as $index => $answer) {
-            if ($answer['square'] !== $this->squares[$index]) {
+            if ($answer['square'] !== $this->mode->expected($this->squares[$index])) {
                 return $index;
             }
         }

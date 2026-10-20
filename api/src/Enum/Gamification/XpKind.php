@@ -25,4 +25,6 @@ enum XpKind: string
     case Record = 'record';
     /** A blindfold puzzle missed then pardoned with the store's pardon: the top-up to a solved one (docs/BLINDFOLD.md). */
     case Pardon = 'pardon';
+    /** A step of a mind map path completed: an exercise validated, a boss beaten (docs/MIND_MAP.md). */
+    case MindMap = 'mind_map';
 }

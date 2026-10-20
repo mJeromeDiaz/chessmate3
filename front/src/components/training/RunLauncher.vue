@@ -118,6 +118,7 @@ const MESSAGES = {
   puzzle_streak: { 409: 'noStreakPuzzle', 422: 'invalidSettings' },
   puzzle_rush: { 409: 'noPuzzleThemes', 422: 'invalidSettings' },
   blindfold_recall: { 409: 'noRecall', 422: 'invalidSettings' },
+  notation: { 409: 'noNotation', 422: 'invalidSettings' },
   repertoire: {
     409: 'nothingToTest',
     404: 'repertoireNotFound',

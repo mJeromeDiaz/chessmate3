@@ -89,6 +89,14 @@ export const NAV_LINKS = [
     header: true
   },
   {
+    to: '/notation',
+    get label() {
+      return t('layout.nav.notation')
+    },
+    icon: 'edit_note',
+    header: true
+  },
+  {
     to: '/blindfold',
     get label() {
       return t('layout.nav.blindfold')

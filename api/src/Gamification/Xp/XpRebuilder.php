@@ -9,11 +9,13 @@ use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Blindfold\Pardon;
 use App\Enum\Gamification\XpKind;
+use App\Enum\MindMap\Capacity;
 use App\Enum\Training\Module;
 use App\Enum\Training\SessionStatus;
 use App\Enum\Woodpecker\CycleStatus;
 use App\Enum\Woodpecker\SetStatus;
 use App\Gamification\Handler\AwardBonusXp;
+use App\MindMap\Path\Paths;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -23,7 +25,8 @@ use Symfony\Component\Uid\Uuid;
  * Recomputes the XP of a user from what they played (docs/GAMIFICATION.md): the activity log in
  * chronological order (the daily cap applied on each `local_date` written with the entry), the
  * completed sessions, Woodpecker cycles and sets, the first validation of each orientation of
- * the coordinates, the puzzle streak records and the blindfold puzzles pardoned after their miss. Quest rewards are kept. One transaction per
+ * the coordinates, the puzzle streak records, the blindfold puzzles pardoned after their miss and
+ * the mind map steps completed (their XP as the path gives it today). Quest rewards are kept. One transaction per
  * user; the same rows as the handlers would have written, under the same sources.
  */
 final readonly class XpRebuilder
@@ -174,6 +177,23 @@ final readonly class XpRebuilder
             [ParameterType::BINARY],
         ) as $row) {
             $rows[] = [XpKind::Pardon, Module::Blindfold->value, XpRules::BLINDFOLD_PARDON, AwardBonusXp::PARDON_SOURCE, self::string($row['id']), self::string($row['run_id']), null, self::string($row['submitted_at'])];
+        }
+        // The steps of the mind map paths completed, with the XP of their step today.
+        foreach ($this->connection->fetchAllAssociative(
+            'SELECT BIN_TO_UUID(p.id) AS id, p.capacity, p.step, p.completed_at,
+                    (SELECT a.run_id FROM mind_map_attempt a
+                      WHERE a.user_id = p.user_id AND a.capacity = p.capacity AND a.step = p.step AND a.completed = 1 LIMIT 1) AS run_id
+               FROM mind_map_progress p WHERE p.user_id = ? AND p.completed_at IS NOT NULL',
+            [$id],
+            [ParameterType::BINARY],
+        ) as $row) {
+            $capacity = Capacity::tryFrom(self::string($row['capacity']));
+            $step = null === $capacity ? null : Paths::find($capacity, self::string($row['step']))['step'] ?? null;
+            if (null === $step || $step->xp <= 0) {
+                continue;
+            }
+            $runId = \is_string($row['run_id']) ? $row['run_id'] : null;
+            $rows[] = [XpKind::MindMap, null, $step->xp, AwardBonusXp::MIND_MAP_SOURCE, self::string($row['id']), $runId, null, self::string($row['completed_at'])];
         }
         // The local day of each bonus, in the user's timezone.
         foreach ($rows as $i => $row) {

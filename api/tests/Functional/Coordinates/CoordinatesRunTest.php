@@ -66,7 +66,7 @@ final class CoordinatesRunTest extends WoodpeckerWebTestCase
         $review = $this->review($alice, $run['id']);
         self::assertSame(120, $review['xp'], 'The bonus belongs to the run.');
         self::assertCount(60, $review['items']);
-        self::assertSame(['coordinate', 'ok', 1_000, ['index' => 0, 'target' => $squares[0], 'clicked' => $squares[0], 'pardoned' => false]], [
+        self::assertSame(['coordinate', 'ok', 1_000, ['index' => 0, 'target' => $squares[0], 'clicked' => $squares[0], 'expected' => $squares[0], 'mode' => 'find', 'pardoned' => false]], [
             $review['items'][0]['type'], $review['items'][0]['status'], $review['items'][0]['durationMs'], $review['items'][0]['data'],
         ]);
 

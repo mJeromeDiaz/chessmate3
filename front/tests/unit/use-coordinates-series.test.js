@@ -58,8 +58,28 @@ describe('useCoordinatesSeries', () => {
     expect(s.last.value).toEqual({
       target: 'd5',
       clicked: 'd4',
+      expected: 'd5',
       correct: false
     })
+  })
+
+  it('judges the colour of the square in the colour mode', () => {
+    const s = scope.run(() =>
+      useCoordinatesSeries(mockRunner(), { now: () => clock })
+    )
+    s.load({ data: { squares: SQUARES, mode: 'color' } })
+    expect(s.mode.value).toBe('color')
+    // e4 is light, d5 light, a1 dark.
+    expect(s.answer('light')).toBe(true)
+    expect(s.answer('dark')).toBe(false)
+    expect(s.last.value).toEqual({
+      target: 'd5',
+      clicked: 'dark',
+      expected: 'light',
+      correct: false
+    })
+    expect(s.answer('dark')).toBe(true)
+    expect(s.correct.value).toBe(2)
   })
 
   it('sends the answers in batches, with the time spent on each square', async () => {

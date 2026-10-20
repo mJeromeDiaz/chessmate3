@@ -5,6 +5,7 @@
     "streakNoPuzzle": "Plus aucun puzzle à ce niveau dans cette thématique : streak terminé.",
     "streakDone": "Streak terminé.",
     "coordinatesDone": "Toutes les cases de la série sont faites !",
+    "countDone": "Leçon terminée : tous ses exercices sont joués.",
     "evaluationDone": "Toutes les positions sont évaluées !",
     "tierDone": "Palier terminé !",
     "setDone": "Set terminé, bravo !",
@@ -18,6 +19,7 @@
       "parcours_puzzles": "Plus aucun puzzle pour ce palier : palier clos.",
       "puzzle_rush": "Plus aucun puzzle à ce niveau pour ces thèmes : séance close.",
       "blindfold_recall": "Plus aucune position disponible à ce niveau : séance close.",
+      "notation": "Plus rien à tirer pour cet exercice : séance close.",
       "woodpecker": "Le set a été mis en pause ou abandonné : séance close."
     }
   },
@@ -32,6 +34,7 @@
     "parcours_puzzles": "Retour aux parcours",
     "puzzle_rush": "Retour aux puzzles",
     "blindfold_recall": "Retour à la reconstitution",
+    "notation": "Retour à la notation",
     "home": "Retour à l’accueil"
   },
   "result": {
@@ -179,6 +182,7 @@
       "noPosition": "Aucune position disponible pour ces réglages.",
       "noStreakPuzzle": "Aucun puzzle disponible dans cette thématique.",
       "noRecall": "Ce niveau n’est pas encore ouvert, ou aucune position n’est disponible.",
+      "noNotation": "Rien à tirer pour cet exercice (pour compléter une ligne : un répertoire d’au moins 10 tronçons).",
       "nothingToTest": "Rien à tester dans cette sélection : ajoutez vos coups au répertoire.",
       "repertoireNotFound": "Répertoire introuvable.",
       "invalidSelection": "Sélection invalide."
@@ -229,6 +233,7 @@
       "puzzle_streak": "Le puzzle en cours ne sera pas compté : ton streak s’arrête là.",
       "puzzle_rush": "Le puzzle à l’écran ne sera pas compté.",
       "blindfold_recall": "La position à l’écran ne sera pas comptée.",
+      "notation": "L’exercice à l’écran ne sera pas compté.",
       "default": "Le puzzle en cours ne sera pas compté."
     }
   }

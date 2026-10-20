@@ -1033,6 +1033,77 @@ export const puzzleStreakApi = {
     http.get('/api/puzzle-streak/openings', JSON_LD).then(r => r.data)
 }
 
+/** The notation module (docs/NOTATION.md). */
+export const notationApi = {
+  /** `{rules: {lineMinSegments, lineWritePlies}, repertoires: [{id, name, color, segments, eligible}]}` */
+  overview: () => http.get('/api/notation', JSON_LD).then(r => r.data)
+}
+
+/** The mind map's paths (docs/MIND_MAP.md): chapters, steps, their runs and their chests. */
+export const mindMapApi = {
+  /**
+   * The path of a capacity and where I stand on it.
+   *
+   * @param {string} capacity the API's (`visualisation`)
+   */
+  path: capacity =>
+    http
+      .get(`/api/mind-map/${encodeURIComponent(capacity)}`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Starts the run of a step: `{capacity, key, run}`. 409 `step_locked`, `step_soon`, or another
+   * run in progress.
+   *
+   * @param {string} capacity
+   * @param {string} key
+   */
+  start: (capacity, key) =>
+    http
+      .post(
+        `/api/mind-map/${encodeURIComponent(capacity)}/steps/${encodeURIComponent(key)}/start`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Skips an exercise: `{capacity, key, path}`. 409 `step_not_skippable`, `step_locked`.
+   *
+   * @param {string} capacity
+   * @param {string} key
+   */
+  skip: (capacity, key) =>
+    http
+      .post(
+        `/api/mind-map/${encodeURIComponent(capacity)}/steps/${encodeURIComponent(key)}/skip`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * The verdict on the run of a step; 404 for a run that is not one.
+   *
+   * @param {string} runId
+   */
+  outcome: runId =>
+    http
+      .get(`/api/mind-map/runs/${encodeURIComponent(runId)}`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Marks a chest opened (idempotent): `{id, capacity, step, crystals, opened, balance}`; its
+   * crystals were credited when it was earned.
+   *
+   * @param {string} id
+   */
+  openChest: id =>
+    http
+      .post(
+        `/api/mind-map/chests/${encodeURIComponent(id)}/open`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data)
+}
+
 /** Puzzle rush (docs/PUZZLE_RUSH.md): the rules, my records by length, my last rushes. */
 export const puzzleRushApi = {
   /** The rules (lengths, weight of a miss, ramp), the record of each length, the last rushes. */

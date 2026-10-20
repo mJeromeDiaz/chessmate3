@@ -59,6 +59,10 @@
         "title": "Jeu à l’aveugle",
         "desc": "Des puzzles résolus de mémoire : la position s’affiche, disparaît, puis tu joues sur un échiquier vide."
       },
+      "notation": {
+        "title": "Notation",
+        "desc": "Lis et écris la notation : jouer le coup annoncé, une suite de coups notés, écrire la solution d’un puzzle."
+      },
       "reconstitution": {
         "title": "Reconstitution",
         "desc": "Une position s’affiche quelques secondes puis disparaît : replace toutes les pièces de mémoire, de 3 pièces à la position complète."
@@ -70,6 +74,7 @@
       "format": "Format",
       "notes": "Notes",
       "mode": "Mode",
+      "exercise": "Exercice",
       "themes": "Thèmes",
       "difficulty": "Difficulté",
       "topic": "Thématique",
@@ -133,6 +138,17 @@
         "white": "Blancs",
         "black": "Noirs",
         "both": "Les deux"
+      },
+      "notationKinds": {
+        "play": "Jouer le coup annoncé",
+        "sequence": "Suite de coups notés",
+        "write": "Écrire la solution",
+        "line": "Compléter une ligne"
+      },
+      "coordinateModes": {
+        "find": "Trouver la case",
+        "name": "Nommer la case",
+        "color": "Couleur de la case"
       },
       "gameFilters": {
         "latest": "Dernières",

@@ -28,6 +28,7 @@ use App\Training\Module\TimeboxedModuleInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -46,7 +47,8 @@ use Symfony\Component\Uid\Uuid;
  *   ({@see self::stop()}); nothing is served meanwhile, and without an answer it closes at its
  *   expiry as any other.
  *
- * Every operation locks the run first, then the module locks its subject.
+ * Every operation locks the run first, then the module locks its subject. A closed run is handed to
+ * the {@see RunClosedListenerInterface} (the mind map's verdicts) in the same transaction.
  */
 final class TimeboxRunner
 {
@@ -58,12 +60,17 @@ final class TimeboxRunner
     public const DECISION_SECONDS = 60;
     public const EXTENSION_SECONDS = 300;
 
+    /**
+     * @param iterable<RunClosedListenerInterface> $closedListeners
+     */
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly RunRepository $runs,
         private readonly ModuleRegistry $modules,
         private readonly EventPublisher $events,
         private readonly ClockInterface $clock,
+        #[AutowireIterator(RunClosedListenerInterface::TAG)]
+        private readonly iterable $closedListeners = [],
     ) {
     }
 
@@ -415,6 +422,10 @@ final class TimeboxRunner
             startedAt: $run->getStartedAt(),
             occurredAt: $closedAt,
         ));
+        $this->entityManager->flush();
+        foreach ($this->closedListeners as $listener) {
+            $listener->onRunClosed($run, $now);
+        }
         $this->entityManager->flush();
     }
 

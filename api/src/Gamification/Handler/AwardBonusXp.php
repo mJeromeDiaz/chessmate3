@@ -11,6 +11,7 @@ use App\Enum\Training\Module;
 use App\Enum\Training\SessionStatus;
 use App\Gamification\Xp\XpLedger;
 use App\Gamification\Xp\XpRules;
+use App\MindMap\Event\StepCompleted;
 use App\PuzzleStreak\Event\RecordBeaten;
 use App\Training\Event\SessionClosed;
 use App\Woodpecker\Event\CycleCompleted;
@@ -24,9 +25,10 @@ use Symfony\Component\Uid\Uuid;
  * The bonuses (docs/GAMIFICATION.md): a session completed to its end (a parcours with none of its
  * tiers skipped, docs/PARCOURS.md), a Woodpecker cycle
  * completed in time, a Woodpecker set completed, an orientation of the coordinates validated for
- * the first time, a puzzle streak record beaten, a blindfold puzzle pardoned after its miss.
- * Idempotent on their source (the cycle by set, number and run, the validation by user and
- * orientation, the record by streak, the pardon by attempt, as
+ * the first time, a puzzle streak record beaten, a blindfold puzzle pardoned after its miss, a step
+ * of a mind map path completed. Idempotent on their source (the cycle by set, number and run, the
+ * validation by user and orientation, the record by streak, the pardon by attempt, the step by its
+ * progress row, as
  * {@see \App\Gamification\Xp\XpRebuilder} keys them).
  */
 final class AwardBonusXp
@@ -34,6 +36,7 @@ final class AwardBonusXp
     public const VALIDATION_SOURCE = 'coordinates_validation';
     public const RECORD_SOURCE = 'puzzle_streak';
     public const PARDON_SOURCE = 'blindfold_pardon';
+    public const MIND_MAP_SOURCE = 'mind_map_step';
 
     public function __construct(
         private readonly XpLedger $ledger,
@@ -121,6 +124,24 @@ final class AwardBonusXp
             XpRules::BLINDFOLD_PARDON,
             self::PARDON_SOURCE,
             $event->attemptId,
+            $event->occurredAt,
+            Uuid::isValid($event->runId) ? Uuid::fromString($event->runId) : null,
+        );
+    }
+
+    #[AsMessageHandler]
+    public function onStepCompleted(StepCompleted $event): void
+    {
+        if ($event->xp <= 0) {
+            return;
+        }
+        $this->ledger->awardBonus(
+            $event->userId,
+            XpKind::MindMap,
+            null,
+            $event->xp,
+            self::MIND_MAP_SOURCE,
+            $event->progressId,
             $event->occurredAt,
             Uuid::isValid($event->runId) ? Uuid::fromString($event->runId) : null,
         );

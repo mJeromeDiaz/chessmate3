@@ -65,7 +65,9 @@ S2 rappel, S3 front, S4 documentation.
   la séance qui valide ; record de streak battu (`RecordBeaten`, kind `record`, au moins 5 puzzles,
   par difficulté et thématique) +25 ; puzzle à l'aveugle raté puis pardonné sur la feuille d'échec
   (`PuzzlePardoned`, kind `pardon`, [BLINDFOLD.md](BLINDFOLD.md)) +10, le complément d'un raté (2) à
-  un résolu (12), sur le jour local du raté ; défi de la semaine : sa récompense (G4).
+  un résolu (12), sur le jour local du raté ; étape d'un parcours de la carte mentale terminée
+  (`StepCompleted`, kind `mind_map`, [MIND_MAP.md](MIND_MAP.md)) : +15 par exercice validé, l'XP de
+  son boss (40 à 250), rattachée à la séance qui la termine ; défi de la semaine : sa récompense (G4).
 - **Niveaux** : passer du niveau N à N+1 demande 250 × N XP (niveau 12 : barre de 3 000, comme la
   maquette). **Niveau d'un module** : même courbe sur l'XP du module, paliers de 100 × N.
 - **Grades** : 1–4 Débutant, 5–9 Amateur, 10–14 Tacticien, 15–19 Stratège, 20–29 Expert, 30+ Maître.
@@ -76,7 +78,7 @@ Changer une valeur : modifier `XpRules`, puis `bin/console app:gamification:rebu
 
 ## 3. Registre (`gamification_xp_entry`)
 
-Une ligne par gain, jamais modifiée : `kind` (`exercise`, `session`, `cycle`, `set`, `quest`, `validation`, `record`, `pardon`),
+Une ligne par gain, jamais modifiée : `kind` (`exercise`, `session`, `cycle`, `set`, `quest`, `validation`, `record`, `pardon`, `mind_map`),
 `module` (valeurs de `Module`, null pour une session), `xp`, `source_type` + `source_id` (**unique** :
 un événement relivré ne gagne rien de plus ; `ascii_bin`), `training_run_id` (séance où l'XP a été
 gagnée : l'XP de fin de séance), `local_date`, `occurred_at`. Index `(user_id, local_date)`. Supprimée
@@ -87,7 +89,8 @@ Sources : un exercice garde celle du journal d'activité (`puzzle_attempt`, `woo
 `woodpecker_cycle` + `<set>:<numéro>:<run>` (un cycle perdu se rejoue) ; un set `woodpecker_set` ; une validation `coordinates_validation` + `<user>:<orientation>` (la première
 seulement, quelle que soit la série) ; un record `puzzle_streak` + l'id du streak (le recalcul relit
 `puzzle_streak.record`) ; un pardon `blindfold_pardon` + l'id de la tentative (le recalcul relit
-`blindfold_puzzle_attempt.pardon = 'loss'`).
+`blindfold_puzzle_attempt.pardon = 'loss'`) ; une étape de la carte mentale `mind_map_step` + l'id de
+sa ligne `mind_map_progress` (le recalcul relit les étapes terminées et l'XP du catalogue).
 
 **Recalcul** (`XpRebuilder`, une transaction par utilisateur) : supprime les gains hors défis, puis
 rejoue le journal d'activité dans l'ordre chronologique (plafond appliqué sur le `local_date` écrit

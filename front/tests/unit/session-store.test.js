@@ -212,7 +212,8 @@ describe('session store', () => {
     expect(useSessionStore().items.map(i => i.values)).toEqual([
       { duree: 30, type: 'video', notes: '' },
       { duree: 15, niveau: 'hard', longueur: 4, memorisation: 30, notes: '' },
-      { duree: 5, orientation: 'black', notes: '' },
+      // A draft from before the coordinates' modes: the find mode.
+      { duree: 5, mode: 'find', orientation: 'black', notes: '' },
       // A choice that never was an option: the default.
       { duree: 10, difficulte: 'ladder', thematique: 'general', notes: '' }
     ])

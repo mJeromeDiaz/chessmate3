@@ -28,7 +28,8 @@ const UNAVAILABLE = [
   'puzzle_streak',
   'parcours_puzzles',
   'puzzle_rush',
-  'blindfold_recall'
+  'blindfold_recall',
+  'notation'
 ]
 
 /** Modules with their own "back" label (training.back). */
@@ -42,7 +43,8 @@ const BACK_MODULES = [
   'puzzle_streak',
   'parcours_puzzles',
   'puzzle_rush',
-  'blindfold_recall'
+  'blindfold_recall',
+  'notation'
 ]
 
 /**
@@ -65,6 +67,9 @@ export function closeReasonText(run) {
       if (run.module === 'coordinates')
         return t('training.close.coordinatesDone')
       if (run.module === 'evaluation') return t('training.close.evaluationDone')
+      // A lesson of the mind map (docs/MIND_MAP.md): its count of exercises played.
+      if (run.summary?.context?.reason === 'count_done')
+        return t('training.close.countDone')
       // A parcours tier (docs/PARCOURS.md): its count played, of puzzles or of lines.
       if (
         run.module === 'parcours_puzzles' ||
@@ -103,6 +108,7 @@ export function subjectPath(run) {
   if (run.subjectType === 'parcours_player') return '/parcours'
   if (run.subjectType === 'puzzle_rush_player') return '/puzzle'
   if (run.subjectType === 'blindfold_recall_player') return '/reconstitution'
+  if (run.subjectType === 'notation_player') return '/notation'
   return '/'
 }
 

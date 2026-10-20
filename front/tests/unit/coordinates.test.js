@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  answerText,
+  colorOf,
   durationsText,
+  expectedAnswer,
   formatAnswerTime,
   ribbonCells,
   ribbonTotals,
@@ -133,6 +136,39 @@ describe('validationText', () => {
     )
     expect(validationText(run(100, 94))).toBe(
       '94 % de réussite : il faut 95 % pour valider.'
+    )
+  })
+})
+
+describe('modes', () => {
+  it('knows the colour of each square and what each mode expects', () => {
+    expect(['a1', 'h1', 'a8', 'h8', 'e4', 'd4'].map(colorOf)).toEqual([
+      'dark',
+      'light',
+      'light',
+      'dark',
+      'light',
+      'dark'
+    ])
+    expect(expectedAnswer('find', 'e4')).toBe('e4')
+    expect(expectedAnswer('name', 'e4')).toBe('e4')
+    expect(expectedAnswer('color', 'e4')).toBe('light')
+    expect(answerText('dark')).toBe('foncée')
+    expect(answerText('f5')).toBe('f5')
+  })
+
+  it('names a colour answer in the ribbon, and never speaks of validation for these modes', () => {
+    const [cell] = ribbonCells([
+      {
+        index: 1,
+        status: 'fail',
+        durationMs: 800,
+        data: { index: 0, target: 'e4', clicked: 'dark', mode: 'color' }
+      }
+    ])
+    expect(cell.title).toContain('e4 → foncée')
+    expect(validationText(run(60, 60, { mode: 'color' }))).toBe(
+      'Série « Couleur de la case » : pas de validation d’orientation dans ce mode.'
     )
   })
 })

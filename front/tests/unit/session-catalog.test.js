@@ -29,6 +29,7 @@ describe('session catalogue', () => {
       'repertoire',
       'evaluation',
       'coordonnees',
+      'notation',
       'aveugle',
       'reconstitution'
     ])
@@ -40,7 +41,12 @@ describe('session catalogue', () => {
     expect(keys('woodpecker')).toEqual(['duree', 'set', 'notes'])
     expect(keys('repertoire')).toEqual(['duree', 'repertoires', 'notes'])
     expect(keys('libre')).toEqual(['duree', 'type', 'notes'])
-    expect(keys('coordonnees')).toEqual(['duree', 'orientation', 'notes'])
+    expect(keys('coordonnees')).toEqual([
+      'duree',
+      'mode',
+      'orientation',
+      'notes'
+    ])
     expect(keys('streak')).toEqual([
       'duree',
       'difficulte',
@@ -318,8 +324,32 @@ describe('session catalogue', () => {
     })
     expect(fromStep(step)).toEqual({
       moduleId: 'coordonnees',
-      values: { duree: 10, orientation: 'black', notes: '' }
+      values: { duree: 10, mode: 'find', orientation: 'black', notes: '' }
     })
+
+    // Another mode travels with the step (the find mode is the API's default).
+    const colour = toStep({
+      uid: 8,
+      moduleId: 'coordonnees',
+      values: { ...ten, mode: 'color' }
+    })
+    expect(colour.settings).toEqual({ orientation: 'white', mode: 'color' })
+    expect(fromStep(colour)?.values.mode).toBe('color')
+  })
+
+  it('plays a notation exercise, its kind as the API names it', () => {
+    const step = toStep({
+      uid: 9,
+      moduleId: 'notation',
+      values: { ...defaultValues(MODULES_BY_ID.notation), exercice: 'write' }
+    })
+    expect(step).toEqual({
+      module: 'notation',
+      minutes: 10,
+      notes: '',
+      settings: { kind: 'write' }
+    })
+    expect(fromStep(step)?.values.exercice).toBe('write')
   })
 
   it('plays blindfold puzzles without any prerequisite, their settings as API values', () => {

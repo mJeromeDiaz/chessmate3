@@ -116,3 +116,90 @@ test('coordinates: answers judged at once, sent before "Terminer", ribbon at the
   await history.getByText('4 justes sur 5').click()
   await expect(history.getByTestId('coordinate-cell')).toHaveCount(5)
 })
+
+/** a1 is dark, h1 light. */
+const colorOf = square =>
+  (square.charCodeAt(0) - 97 + Number(square[1])) % 2 === 1 ? 'dark' : 'light'
+
+test('coordinates: the name and colour modes, answered on their keypad and buttons', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/coordinates')
+  await expect(page.getByTestId('mode-color')).toContainText('0 série')
+
+  // Colour: no board, « Claire » / « Foncée », the keyboard too.
+  await page
+    .getByTestId('coordinates-mode')
+    .getByRole('button', { name: 'Couleur de la case' })
+    .click()
+  await expect(page.getByTestId('coordinates-orientation')).toHaveCount(0)
+  await page
+    .getByTestId('run-duration-choice')
+    .getByRole('button', { name: '1 min' })
+    .click()
+  let served = page.waitForResponse(isRunNext)
+  await page.getByTestId('run-start').click()
+  let item = (await (await served).json()).item
+  expect(item.data.mode).toBe('color')
+  let squares = item.data.squares
+  const player = page.getByTestId('coordinates-player')
+  await expect(player).toHaveAttribute('data-mode', 'color')
+  await expect(player.locator('.chess-board')).toHaveCount(0)
+
+  await expect(page.getByTestId('coordinates-target')).toHaveText(squares[0])
+  await page
+    .getByTestId(
+      colorOf(squares[0]) === 'light' ? 'coordinates-light' : 'coordinates-dark'
+    )
+    .click()
+  await expect(page.getByTestId('coordinates-feedback')).toHaveText('Juste !')
+  await expect(page.getByTestId('coordinates-target')).toHaveText(squares[1])
+  // The wrong colour, from the keyboard (C: light, F: dark).
+  await page.keyboard.press(colorOf(squares[1]) === 'light' ? 'f' : 'c')
+  await expect(page.getByTestId('coordinates-feedback')).toHaveText(
+    `Raté : ${squares[1]} est ${colorOf(squares[1]) === 'light' ? 'claire' : 'foncée'}`
+  )
+  await expect(page.getByTestId('coordinates-counts')).toContainText('1 juste')
+  await page.getByTestId('run-stop').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await expect(page.getByTestId('run-end')).toBeVisible()
+  await page.getByTestId('run-end-close').click()
+  await expect(page.getByTestId('run-recap')).toContainText(
+    'pas de validation d’orientation dans ce mode'
+  )
+
+  // Name: the square lit on the board, a file then a rank on the keypad.
+  await page.getByTestId('run-back').click()
+  await page
+    .getByTestId('coordinates-mode')
+    .getByRole('button', { name: 'Nommer la case' })
+    .click()
+  await page
+    .getByTestId('run-duration-choice')
+    .getByRole('button', { name: '1 min' })
+    .click()
+  served = page.waitForResponse(isRunNext)
+  await page.getByTestId('run-start').click()
+  item = (await (await served).json()).item
+  expect(item.data.mode).toBe('name')
+  squares = item.data.squares
+  const keypad = page.getByTestId('coordinates-keypad')
+  await keypad.getByTestId(`coordinates-key-${squares[0][0]}`).click()
+  await expect(page.getByTestId('coordinates-typed')).toContainText(
+    squares[0][0]
+  )
+  await keypad.getByTestId(`coordinates-key-${squares[0][1]}`).click()
+  await expect(page.getByTestId('coordinates-feedback')).toHaveText('Juste !')
+  // From the keyboard: a letter, then a digit.
+  await page.keyboard.press(squares[1][0])
+  await page.keyboard.press(squares[1][1])
+  await expect(page.getByTestId('coordinates-counts')).toContainText('2 justes')
+  await page.getByTestId('run-stop').click()
+  await page.getByRole('button', { name: 'OK' }).click()
+  await page.getByTestId('run-end-close').click()
+  await page.getByTestId('run-back').click()
+  await expect(page.getByTestId('mode-name')).toContainText('1 série')
+  await expect(page.getByTestId('mode-color')).toContainText('1 série')
+})

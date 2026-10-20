@@ -106,7 +106,10 @@ jamais) :
 
 Toute opération verrouille **la séance d'abord, puis le module verrouille son sujet** : jamais
 l'inverse, donc pas d'interblocage. À la clôture, le module abandonne l'élément en attente (non
-compté) et calcule le récapitulatif ; `RunCompleted` est publié dans la même transaction.
+compté) et calcule le récapitulatif ; `RunCompleted` est publié dans la même transaction. Puis les
+`App\Training\Run\RunClosedListenerInterface` (tag autoconfiguré, Training ne dépend d'aucun
+d'eux) reçoivent la séance close, toujours dans cette transaction : la carte mentale y juge les
+passages de ses étapes ([MIND_MAP.md](MIND_MAP.md), § 4). Un écouteur ne refuse rien.
 
 ## 5. Contrat d'un module (`TimeboxedModuleInterface`)
 

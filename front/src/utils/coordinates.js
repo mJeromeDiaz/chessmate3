@@ -19,7 +19,8 @@ import { intlLocale, t } from '@/i18n'
  * @property {number} index 1-based
  * @property {'ok'|'fail'|'hint'} status hint: the wrong answer the store's pardon took away
  * @property {number|null} durationMs
- * @property {{index: number, target: string, clicked: string, pardoned?: boolean}} data
+ * @property {{index: number, target: string, clicked: string, expected?: string, mode?: string, pardoned?: boolean}} data
+ *   `clicked`: the square clicked or named, or light / dark (`expected` the right one)
  *
  * @typedef {object} RibbonCell
  * @property {number} number 1-based
@@ -29,6 +30,42 @@ import { intlLocale, t } from '@/i18n'
  * @property {string} clicked
  * @property {string} title the tooltip: "#3 · e4 → d4 · 1,2 s"
  */
+
+/** What a series asks (docs/COORDINATES.md, § 2 bis): find a square, name it, or tell its colour. */
+export const MODES = ['find', 'name', 'color']
+
+/**
+ * A square's colour: a1 is dark, h1 light.
+ *
+ * @param {string} square e.g. "e4"
+ * @returns {'light'|'dark'}
+ */
+export function colorOf(square) {
+  const file = square.charCodeAt(0) - 'a'.charCodeAt(0)
+  const rank = Number(square[1])
+  return (file + rank) % 2 === 1 ? 'dark' : 'light'
+}
+
+/**
+ * The right answer about a square in a mode: the square itself, or its colour.
+ *
+ * @param {string} mode
+ * @param {string} square
+ */
+export function expectedAnswer(mode, square) {
+  return mode === 'color' ? colorOf(square) : square
+}
+
+/**
+ * An answer as the player reads it: a square, or « claire » / « foncée ».
+ *
+ * @param {string} answer
+ */
+export function answerText(answer) {
+  return answer === 'light' || answer === 'dark'
+    ? t(`coordinates.colors.${answer}`)
+    : answer
+}
 
 /** The orientations, as the API names them. */
 export const ORIENTATIONS = Object.defineProperties(
@@ -75,7 +112,7 @@ export function ribbonCells(items) {
     const correct = item.status === 'ok'
     const pardoned = !!item.data.pardoned
     const { target, clicked } = item.data
-    const what = correct ? target : `${target} → ${clicked}`
+    const what = correct ? target : `${target} → ${answerText(clicked)}`
     return {
       number: item.index,
       correct,
@@ -126,6 +163,9 @@ export function ribbonTotals(items) {
 export function validationText(run) {
   const s = run.summary
   const m = s?.metrics ?? {}
+  // Only the find mode validates an orientation (docs/COORDINATES.md, § 2 bis).
+  if (m.mode && m.mode !== 'find')
+    return t(`coordinates.validation.${m.mode === 'color' ? 'color' : 'name'}`)
   if (m.validated)
     return t(
       `coordinates.validation.${m.orientation === 'black' ? 'black' : 'white'}`

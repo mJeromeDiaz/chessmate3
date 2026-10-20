@@ -30,6 +30,7 @@ export const MODULES = {
   woodpecker: '/woodpecker',
   repertoire: '/repertoire',
   coordinates: '/coordinates',
+  notation: '/notation',
   blindfold: '/blindfold',
   recall: '/reconstitution',
   evaluation: '/evaluation',
@@ -90,7 +91,7 @@ export const CAPACITIES = [
     deep: '#1E88C8',
     ink: '#1B1530',
     primary: ['coordinates', 'blindfold', 'recall'],
-    associated: ['repertoire'],
+    associated: ['notation', 'repertoire'],
     region:
       'M720,0 L1000,0 L1000,140 C980,300 1000,420 1040,548 C900,570 800,590 650,598 C660,440 690,300 720,100 Z',
     badge: [850, 360]

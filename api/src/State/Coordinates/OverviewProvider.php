@@ -10,6 +10,7 @@ use App\ApiResource\Coordinates\Overview;
 use App\Coordinates\Pardon\PardonStockInterface;
 use App\Coordinates\Series\CoordinateRules;
 use App\Entity\Coordinates\Series;
+use App\Enum\Coordinates\Mode;
 use App\Enum\Coordinates\Orientation;
 use App\Repository\Coordinates\SeriesRepository;
 use App\Security\AuthenticatedUser;
@@ -53,6 +54,14 @@ final class OverviewProvider implements ProviderInterface
                 'best' => null !== $best ? self::series($best) : null,
             ];
         }
+        foreach ([Mode::Name, Mode::Color] as $mode) {
+            $best = $this->series->bestOfMode($user, $mode);
+            $view->modes[] = [
+                'mode' => $mode->value,
+                'seriesCount' => $this->series->countClosedOfMode($user, $mode),
+                'best' => null !== $best ? self::series($best) : null,
+            ];
+        }
         $view->history = array_map(self::series(...), $this->series->closedOf($user, self::HISTORY_SIZE));
         $view->pardons = $this->pardons->stock($user->getId());
 
@@ -70,6 +79,7 @@ final class OverviewProvider implements ProviderInterface
             'id' => $series->getId()->toRfc4122(),
             'runId' => $series->getRun()->getId()->toRfc4122(),
             'orientation' => $series->getOrientation()->value,
+            'mode' => $series->getMode()->value,
             'answerCount' => $count,
             'successCount' => $series->getSuccessCount(),
             'successRate' => $count > 0 ? round($series->getSuccessCount() / $count, 4) : null,

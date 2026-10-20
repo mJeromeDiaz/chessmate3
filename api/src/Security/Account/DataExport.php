@@ -131,7 +131,7 @@ final readonly class DataExport
                 ['steps', 'weekdays', 'reminder_channels'],
             ),
             'coordinates' => $this->rows(
-                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, orientation, squares, answers, answer_count, success_count,
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, orientation, mode, squares, answers, answer_count, success_count,
                         answered_ms, validated, pardoned_index, started_at, closed_at
                    FROM coordinates_series WHERE user_id = ? ORDER BY started_at',
                 $id,
@@ -181,6 +181,28 @@ final readonly class DataExport
                 $id,
                 ['moves'],
             )),
+            // The items of the notation module (docs/NOTATION.md).
+            'notationAttempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, kind, fen, expected, shown, label, puzzle_id AS puzzle, status, answer, mistake_at,
+                        started_at, submitted_at, duration_ms
+                   FROM notation_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['expected', 'shown', 'answer'],
+            )),
+            // The mind map paths (docs/MIND_MAP.md): progress by step, runs played for a step, chests.
+            'mindMapProgress' => $this->rows(
+                'SELECT capacity, step, passes, completed_at, skipped_at, updated_at FROM mind_map_progress WHERE user_id = ? ORDER BY updated_at, step',
+                $id,
+            ),
+            'mindMapAttempts' => $this->rows(
+                'SELECT BIN_TO_UUID(run_id) AS training_run_id, capacity, step, outcome, item_count, success_count, completed, started_at, judged_at
+                   FROM mind_map_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+            ),
+            'mindMapChests' => $this->rows(
+                'SELECT capacity, step, crystals, created_at, opened_at FROM mind_map_chest WHERE user_id = ? ORDER BY created_at',
+                $id,
+            ),
         ]));
         // Crowns and the store (docs/SHOP.md).
         $zip->addFromString('boutique.json', self::json([

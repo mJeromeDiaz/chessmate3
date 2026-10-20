@@ -74,6 +74,10 @@ final class XpRules
     public const RECALL_CLOSE = 2;
     public const RECALL_UNLOCK = 20;
 
+    /** Notation (docs/NOTATION.md): an item right, an item wrong. */
+    public const NOTATION_RIGHT = 4;
+    public const NOTATION_WRONG = 1;
+
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
     public const MODULE_STEP = 100;
@@ -116,6 +120,7 @@ final class XpRules
             ExerciseType::StreakPuzzle, ExerciseType::ParcoursPuzzle => $success ? self::streakPuzzle(\is_int($metadata['rating'] ?? null) ? $metadata['rating'] : 0) : 0,
             ExerciseType::PuzzleRush => self::rush(\is_int($metadata['solved'] ?? null) ? $metadata['solved'] : 0, \is_int($metadata['failed'] ?? null) ? $metadata['failed'] : 0),
             ExerciseType::BlindfoldRecall => self::recall($metadata['status'] ?? null, \is_int($metadata['stage'] ?? null) ? $metadata['stage'] : 1, true === ($metadata['unlocked'] ?? null)),
+            ExerciseType::Notation => $success ? self::NOTATION_RIGHT : self::NOTATION_WRONG,
         };
     }
 
@@ -178,6 +183,7 @@ final class XpRules
             ExerciseType::ParcoursPuzzle => Module::ParcoursPuzzles,
             ExerciseType::PuzzleRush => Module::PuzzleRush,
             ExerciseType::BlindfoldRecall => Module::BlindfoldRecall,
+            ExerciseType::Notation => Module::Notation,
         };
     }
 

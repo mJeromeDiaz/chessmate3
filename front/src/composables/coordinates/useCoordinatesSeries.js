@@ -1,19 +1,22 @@
 import { computed, getCurrentScope, onScopeDispose, ref } from 'vue'
+import { expectedAnswer } from '@/utils/coordinates'
 
 /**
  * @typedef {object} Answer an answer as the API takes it
  * @property {number} index rank of the square in the series
- * @property {string} square the square clicked
+ * @property {string} square the square clicked or named, or light / dark (colour mode)
  * @property {number} ms time spent on the square
  *
  * @typedef {object} LastAnswer
- * @property {string} target
- * @property {string} clicked
+ * @property {string} target the square asked
+ * @property {string} clicked the answer given
+ * @property {string} expected the right answer (the square, or its colour)
  * @property {boolean} correct
  */
 
 /**
- * A coordinates series being played (docs/BLINDFOLD.md). The squares were drawn by the server at
+ * A coordinates series being played (docs/COORDINATES.md), in any of its modes (find or name a
+ * square, tell its colour). The squares were drawn by the server at
  * the start: each click is judged here at once (instant feedback), then sent in batches every
  * few seconds, and judged again by the server. A batch that fails (network) is sent again with
  * the next one; one refused because the run is over is dropped. The last answers are sent before
@@ -43,6 +46,8 @@ export function useCoordinatesSeries(runner, options = {}) {
   const last = ref(null)
   /** Answers not acknowledged by the server yet. */
   const unsent = ref(0)
+  /** find, name or color */
+  const mode = ref('find')
 
   /** @type {Answer[]} */
   let pending = []
@@ -58,10 +63,11 @@ export function useCoordinatesSeries(runner, options = {}) {
   /**
    * Starts (or resumes, after a reload) the series served by the API.
    *
-   * @param {{data: {squares: string[], answered?: number, successCount?: number}}} item
+   * @param {{data: {squares: string[], mode?: string, answered?: number, successCount?: number}}} item
    */
   function load(item) {
     squares.value = item.data.squares
+    mode.value = item.data.mode ?? 'find'
     index.value = item.data.answered ?? 0
     correct.value = item.data.successCount ?? 0
     last.value = null
@@ -72,14 +78,16 @@ export function useCoordinatesSeries(runner, options = {}) {
   }
 
   /**
-   * Judges a click on the square to find, and moves on to the next square.
+   * Judges an answer about the square asked (the square clicked or named, or light / dark), and
+   * moves on to the next square.
    *
    * @param {string} square
-   * @returns {boolean|null} whether it was right, null when there is nothing to find
+   * @returns {boolean|null} whether it was right, null when there is nothing to answer
    */
   function answer(square) {
-    const expected = target.value
-    if (!expected) return null
+    const asked = target.value
+    if (!asked) return null
+    const expected = expectedAnswer(mode.value, asked)
     const at = now()
     const ok = square === expected
     pending.push({
@@ -90,7 +98,7 @@ export function useCoordinatesSeries(runner, options = {}) {
     unsent.value = pending.length
     index.value++
     if (ok) correct.value++
-    last.value = { target: expected, clicked: square, correct: ok }
+    last.value = { target: asked, clicked: square, expected, correct: ok }
     shownAt = at
     if (pending.length >= maxBatch) flush().catch(() => {})
     return ok
@@ -132,6 +140,7 @@ export function useCoordinatesSeries(runner, options = {}) {
 
   return {
     squares,
+    mode,
     target,
     index,
     answered,

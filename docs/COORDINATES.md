@@ -49,11 +49,28 @@ nulle part ailleurs : le front les lit dans l'API (`GET /coordinates` : `seriesM
 ses propres `seriesSeconds`, `minAnswers`, `minSuccessRate`). L'XP ne dépend pas de la durée : 20 XP
 par série d'au moins 10 réponses (choix du 2026-10-09).
 
+## 2 bis. Modes (2026-10-20)
+
+Une série a un **mode** (`App\Enum\Coordinates\Mode`, réglage `mode`, colonne
+`coordinates_series.mode`, migration `Version20261029090000`) :
+
+| Mode | Ce qui est montré | Réponse | Validation |
+|---|---|---|---|
+| `find` (par défaut, toutes les séries d'avant) | un nom de case, un échiquier vide sans coordonnées | la case cliquée | oui, par orientation (§ 2) |
+| `name` | une case allumée sur l'échiquier vide | son nom : une colonne puis une rangée (pavé a–h et 1–8 à l'écran, ou le clavier) | non |
+| `color` | un nom de case, **sans échiquier** | `light` ou `dark` (boutons « Claire » / « Foncée », ou C / ← et F / →) | non |
+
+Choix validés : seul `find` valide une orientation (étiquette « Validé », +100 XP la première
+fois) ; les autres modes rapportent les 20 XP d'une série, leur objectif est la carte mentale
+([MIND_MAP.md](MIND_MAP.md), exercices 1.2 et 1.3). En `color`, a1 est foncée (`Mode::colorOf`) ;
+une erreur affiche « Raté : e4 est claire ». L'orientation reste exigée (sans effet en `color`, la
+page envoie `white`). Le pardon de la boutique vaut pour tous les modes.
+
 ## 3. Déroulé (module `coordinates`)
 
 - **Démarrage** : `POST /training/runs` `{module: 'coordinates', subjectId: <id de l'utilisateur>,
-  budgetSeconds: 60|120|300|600, config: {orientation: 'white'|'black'}}`. Toute autre durée,
-  orientation ou option : 422. Le serveur tire 3 cases par seconde de la série (180 à 1800) (uniformes, jamais deux fois la même d'affilée).
+  budgetSeconds: 60|120|300|600, config: {orientation: 'white'|'black', mode?: 'find'|'name'|'color'}}`.
+  Toute autre durée, orientation, mode ou option : 422. Le serveur tire 3 cases par seconde de la série (180 à 1800) (uniformes, jamais deux fois la même d'affilée).
 - **Élément** : un seul par série, `coordinates_series` (id = la série), données `orientation`,
   `squares` (toutes les cases tirées), `answered` et `successCount` (une page rechargée reprend après
   les réponses déjà jugées), `rules`.

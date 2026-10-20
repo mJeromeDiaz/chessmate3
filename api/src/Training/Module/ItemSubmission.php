@@ -17,6 +17,7 @@ final readonly class ItemSubmission
      * @param list<array{index: int, square: string, ms: int}> $answers    squares clicked (coordinates series)
      * @param array{guess?: int|null, plan?: string|null}|null  $evaluation the category chosen (-2 to 2, null: none in time) and the plan (position evaluation)
  * @param list<array{square: string, piece: string}>       $placement  pieces placed (position recall)
+     * @param list<string>                                     $written    half-moves written (notation)
      */
     public function __construct(
         public string $itemId,
@@ -31,6 +32,8 @@ final readonly class ItemSubmission
         public bool $pass = false,
         /** Position recall: the pieces placed, FEN piece letters (docs/BLINDFOLD_RECALL.md). */
         public array $placement = [],
+        /** Notation: the half-moves written, SAN with English letters (docs/NOTATION.md). */
+        public array $written = [],
     ) {
     }
 }

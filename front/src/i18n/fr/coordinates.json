@@ -16,7 +16,23 @@
     "none": "Série non validante.",
     "stopped": "Série arrêtée avant la fin : elle ne valide pas.",
     "tooFew": "{n} réponses : il en faut {min} pour valider.",
-    "rate": "{pct} % de réussite : il faut {min} % pour valider."
+    "rate": "{pct} % de réussite : il faut {min} % pour valider.",
+    "name": "Série « Nommer la case » : pas de validation d’orientation dans ce mode.",
+    "color": "Série « Couleur de la case » : pas de validation d’orientation dans ce mode."
+  },
+  "modes": {
+    "find": "Trouver la case",
+    "name": "Nommer la case",
+    "color": "Couleur de la case"
+  },
+  "modeHints": {
+    "find": "Un nom de case s’affiche : clique la case sur l’échiquier.",
+    "name": "Une case s’allume : donne son nom avec la colonne puis la rangée.",
+    "color": "Un nom de case s’affiche, sans échiquier : claire ou foncée ?"
+  },
+  "colors": {
+    "light": "claire",
+    "dark": "foncée"
   },
   "rules": "au moins {n} réponses par minute et {pct} % de réussite, sans arrêter la série",
   "lengths": {
@@ -25,6 +41,14 @@
   },
   "player": {
     "find": "Trouve la case",
+    "name": "Nomme la case allumée",
+    "color": "Claire ou foncée ?",
+    "light": "Claire",
+    "dark": "Foncée",
+    "erase": "Effacer",
+    "keysName": "Clavier : une lettre puis un chiffre, Retour arrière pour effacer.",
+    "keysColor": "Clavier : C ou ← pour claire, F ou → pour foncée.",
+    "wrongColor": "Raté : {square} est {color}",
     "answers": "réponse | réponses",
     "correct": "juste | justes",
     "percent": "{n} %",

@@ -30,6 +30,7 @@ describe('mind map', () => {
       { key: 'coordinates', primary: true, to: '/coordinates' },
       { key: 'blindfold', primary: true, to: '/blindfold' },
       { key: 'recall', primary: true, to: '/reconstitution' },
+      { key: 'notation', primary: false, to: '/notation' },
       { key: 'repertoire', primary: false, to: '/repertoire' }
     ])
     for (const c of CAPACITIES) {

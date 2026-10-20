@@ -12,6 +12,17 @@
       @continue="sessionStep.start(String(runner.run.value.parentId))"
     />
 
+    <RunOutcome
+      v-else-if="
+        mindMapRun &&
+        runner.phase.value === 'ended' &&
+        runner.run.value &&
+        !holdEnd
+      "
+      :key="runner.run.value.id"
+      :run-id="runner.run.value.id"
+    />
+
     <div
       v-else-if="
         runner.phase.value === 'ended' &&
@@ -232,6 +243,53 @@
         }}</q-banner>
       </template>
     </RecallPlayer>
+
+    <NotationPlayer
+      v-else-if="notationItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="notationPlayer"
+      :item="notationItem"
+      :result="notationResult"
+      :xp="runner.xp.value"
+      :actions="notationActions"
+      @resolve="onNotationResolve"
+    >
+      <template #header>
+        <RunHeader
+          v-if="!notationItem.data.count"
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">{{
+            $t('notation.player.progressTimed', {
+              played: runner.played.value,
+              right: runner.solved.value
+            })
+          }}</div>
+        </RunHeader>
+        <div v-else class="row items-center q-gutter-sm">
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            $t('notation.player.progress', {
+              n: notationItem.data.position,
+              count: notationItem.data.count
+            })
+          }}</div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </NotationPlayer>
 
     <EvaluationPlayer
       v-else-if="evalItem && (runner.phase.value === 'running' || holdEnd)"
@@ -500,7 +558,10 @@
  * lines; between two tiers, Lizy's banner starts the next one; "Terminer" abandons the parcours)
  * or a puzzle rush (docs/PUZZLE_RUSH.md: one try, no help, the next puzzle at once; the counts and
  * the accuracy while playing, the score only at the end) or positions to rebuild
- * (docs/BLINDFOLD_RECALL.md: without a clock on the recall page, "Niveau n" once a level opens).
+ * (docs/BLINDFOLD_RECALL.md: without a clock on the recall page, "Niveau n" once a level opens)
+ * or a notation exercise (docs/NOTATION.md: a counted lesson shows "Exercice n sur N").
+ * A run played for a step of a mind map path (`?mindMap=1`, docs/MIND_MAP.md) ends on the step's
+ * verdict (`RunOutcome`) instead of the recap.
  */
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -508,6 +569,7 @@ import { useQuasar } from 'quasar'
 import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.vue'
 import RecallPlayer from '@/components/blindfold/RecallPlayer.vue'
 import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
+import NotationPlayer from '@/components/notation/NotationPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
@@ -515,6 +577,7 @@ import ParcoursHeader from '@/components/parcours/ParcoursHeader.vue'
 import TierBanner from '@/components/parcours/TierBanner.vue'
 import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
 import FreeRunPanel from '@/components/training/FreeRunPanel.vue'
+import RunOutcome from '@/components/mindMap/RunOutcome.vue'
 import RepertoireDrillPlayer from '@/components/repertoire/RepertoireDrillPlayer.vue'
 import RepertoireRunUnits from '@/components/repertoire/RepertoireRunUnits.vue'
 import RunHeader from '@/components/training/RunHeader.vue'
@@ -572,7 +635,8 @@ const STOP_MESSAGES = [
   'evaluation',
   'puzzle_streak',
   'puzzle_rush',
-  'blindfold_recall'
+  'blindfold_recall',
+  'notation'
 ]
 const route = useRoute()
 const router = useRouter()
@@ -701,6 +765,9 @@ async function onBlindfoldPardon() {
 }
 
 const isRepertoire = computed(() => runner.run.value?.module === 'repertoire')
+
+/** A run played for a step of a mind map path (docs/MIND_MAP.md): its end is the step's verdict. */
+const mindMapRun = computed(() => route.query.mindMap === '1')
 
 /**
  * The position being evaluated, kept once the run closed on the last one: its correction stays on
@@ -843,6 +910,78 @@ async function startLevel(level) {
     error.value = apiErrorMessage(e)
   } finally {
     levelStarting.value = false
+  }
+}
+
+/**
+ * The notation exercise on screen (docs/NOTATION.md), kept once the run closed on the last one:
+ * its verdict stays on screen (`holdEnd`) until it moves on.
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const notationItem = ref(null)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const notationPlayer = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'notation') notationItem.value = item
+    else if (item) notationItem.value = null
+  }
+)
+/** The verdict on the exercise on screen. */
+const notationResult = computed(() =>
+  notationItem.value && runner.result.value?.itemId === notationItem.value.id
+    ? runner.result.value.data
+    : null
+)
+/** After a wrong answer: the next exercise, or the result once over (a right one moves on by itself). */
+const notationActions = computed(() =>
+  (notationResult.value && notationResult.value.status !== 'right') ||
+  error.value
+    ? [
+        {
+          label:
+            runner.phase.value === 'running'
+              ? t('training.page.next')
+              : t('training.page.seeResult'),
+          primary: true,
+          disable: loading.value,
+          testid: 'run-next',
+          onClick: async () => {
+            holdEnd.value = false
+            if (runner.phase.value === 'running') await next()
+          }
+        }
+      ]
+    : []
+)
+
+/**
+ * A notation answer: right, the next exercise comes by itself once the success played; wrong, the
+ * right answer waits for "Suivant". Held so that the last one stays on screen when it closes the
+ * run.
+ *
+ * @param {Record<string, any>} report
+ */
+async function onNotationResolve(report) {
+  holdEnd.value = true
+  try {
+    const result = await runner.submit(report)
+    if (!result) {
+      holdEnd.value = false
+      notationPlayer.value?.unlock()
+      return
+    }
+    if (result.success)
+      setTimeout(() => {
+        holdEnd.value = false
+        if (runner.phase.value === 'running') next()
+      }, AUTO_NEXT_MS)
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    notationPlayer.value?.unlock()
   }
 }
 
@@ -1342,6 +1481,11 @@ function openEnd() {
     endWaiting = true
     return
   }
+  // A step of a mind map path: its own end (RunOutcome), after the streak's celebration.
+  if (mindMapRun.value) {
+    gamification.celebrateStreak({ afterExercise: false }).catch(() => {})
+    return
+  }
   const run = runner.run.value
   if (!hasResult.value && !run?.parentId) return
   // The day's first exercise may have been in this run: its streak celebration comes first.
@@ -1412,6 +1556,7 @@ watch(
     holdEnd.value = false
     evalItem.value = null
     recallItem.value = null
+    notationItem.value = null
     streakItem.value = null
     parcoursItem.value = null
     try {

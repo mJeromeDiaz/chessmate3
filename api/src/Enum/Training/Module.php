@@ -29,6 +29,8 @@ enum Module: string
     case PuzzleRush = 'puzzle_rush';
     /** Position recall: a position shown, hidden, then rebuilt piece by piece (docs/BLINDFOLD_RECALL.md). */
     case BlindfoldRecall = 'blindfold_recall';
+    /** Notation: a move announced to play, a sequence to play for both sides, a puzzle's line to write (docs/NOTATION.md). */
+    case Notation = 'notation';
 
     /**
      * @return list<string>

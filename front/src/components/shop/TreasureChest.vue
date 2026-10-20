@@ -221,7 +221,8 @@
  * the crystals (the `crowns` of the API) rain out and the wallet counts them up. They were credited when the session
  * completed; the chest is shown once (opened, or closed unopened: seen either way). The first
  * background follows the amount, the last title the tier; "Voir mes résultats" goes back to the
- * run's result. Reduced motion: the chest open at once.
+ * run's result. Reduced motion: the chest open at once. Also the chests of the mind map's paths
+ * (their own `opener` and `note`).
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -239,7 +240,16 @@ const props = defineProps({
   resultsLabel: {
     type: String,
     default: () => t('shop.chestScreen.results')
-  }
+  },
+  /** The line under the amount; null: the session's (paid minutes, tier). */
+  note: { type: String, default: null },
+  /**
+   * Marks the chest seen on the server; null: a session reward's (another chest, e.g. a mind map
+   * path's, docs/MIND_MAP.md, brings its own).
+   *
+   * @type {import('vue').PropType<((id: string) => Promise<unknown>)|null>}
+   */
+  opener: { type: Function, default: null }
 })
 
 const emit = defineEmits({
@@ -282,7 +292,7 @@ const stages = computed(() => chestStages(props.reward, shop.state?.earning))
 const stage = computed(() => stages.value[Math.min(hits.value, CHEST_HITS)])
 const lit = computed(() => (hits.value >= 1 ? 1 : 0))
 const lit2 = computed(() => (hits.value >= 2 ? 1 : 0))
-const note = computed(() => rewardNote(props.reward))
+const note = computed(() => props.note ?? rewardNote(props.reward))
 
 const wrapClass = computed(() => {
   if (open.value) return 'chest__body--open'
@@ -350,8 +360,18 @@ function hit() {
 }
 
 /** The chest seen: the server stops showing it; the menus get the new balance. */
+let marked = false
 function markOpened() {
-  shop.openChest(props.reward.id).catch(() => {})
+  if (!props.opener) {
+    shop.openChest(props.reward.id).catch(() => {})
+    return
+  }
+  if (marked) return
+  marked = true
+  props
+    .opener(props.reward.id)
+    .then(() => shop.load())
+    .catch(() => {})
 }
 
 /** Closed before or after opening: seen all the same. */

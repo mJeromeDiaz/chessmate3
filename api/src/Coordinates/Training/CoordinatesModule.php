@@ -14,6 +14,7 @@ use App\Entity\Coordinates\Series;
 use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
+use App\Enum\Coordinates\Mode;
 use App\Enum\Coordinates\Orientation;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
@@ -35,10 +36,11 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * The coordinates series in timed runs (docs/COORDINATES.md). The subject is the user; config
- * `orientation` (white or black). The run lasts one of {@see CoordinateRules::SERIES_MINUTES}, its
+ * `orientation` (white or black) and `mode` (find, the default; name; color, § 2 bis). The run lasts one of {@see CoordinateRules::SERIES_MINUTES}, its
  * squares are drawn at the start and served as one item: the client judges each click at once for its
  * feedback and sends the answers in batches, which the server judges again (answer i is about
- * square i; times capped by the server's clock). Closing validates the orientation or not, and
+ * square i; times capped by the server's clock). Closing validates the orientation or not (the
+ * find mode only), and
  * logs the series as one `coordinates_series` exercise. Launched with `pardon: true` (not from a
  * session), the closing spends a pardon of the store on the first wrong answer, if any.
  */
@@ -76,9 +78,13 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
     public function prepare(User $user, array $settings, string $notes): PreparedStep
     {
         // No pardon in a session step: it is chosen when launching a series.
-        $orientation = self::check($settings, false);
+        [$orientation, $mode] = self::check($settings, false);
+        $config = ['orientation' => $orientation->value];
+        if (Mode::Find !== $mode) {
+            $config['mode'] = $mode->value;
+        }
 
-        return new PreparedStep($user->getId(), ['orientation' => $orientation->value]);
+        return new PreparedStep($user->getId(), $config);
     }
 
     public function start(Run $run, \DateTimeImmutable $now): void
@@ -89,11 +95,11 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
         if (!CoordinateRules::allows($run->getBudgetSeconds())) {
             throw new InvalidRunConfigException(sprintf('A coordinates series lasts %s minutes.', implode(', ', CoordinateRules::SERIES_MINUTES)));
         }
-        $orientation = self::check($run->getConfig());
+        [$orientation, $mode] = self::check($run->getConfig());
         if (self::withPardon($run) && 0 === $this->pardons->stock($run->getUser()->getId())) {
             throw new InvalidRunConfigException('No coordinates pardon left.');
         }
-        $this->entityManager->persist(new Series($run, $orientation, $this->drawer->draw(CoordinateRules::squares($run->getBudgetSeconds()))));
+        $this->entityManager->persist(new Series($run, $orientation, $this->drawer->draw(CoordinateRules::squares($run->getBudgetSeconds())), $mode));
     }
 
     public function next(Run $run, \DateTimeImmutable $now): Item
@@ -102,6 +108,7 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
 
         return new Item($series->getId()->toRfc4122(), self::ITEM_TYPE, [
             'orientation' => $series->getOrientation()->value,
+            'mode' => $series->getMode()->value,
             'squares' => $series->getSquares(),
             // A reload goes on from there.
             'answered' => $series->getAnswerCount(),
@@ -159,7 +166,9 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
         if (null !== $mistake && $this->pardons->consume($run->getUser()->getId())) {
             $series->pardon($mistake);
         }
-        $validated = CoordinateRules::validates($run->getBudgetSeconds(), $series->getAnswerCount(), $series->getSuccessCount(), $playedToTheEnd);
+        // Only the find mode validates an orientation (docs/COORDINATES.md, § 2 bis).
+        $validated = Mode::Find === $series->getMode()
+            && CoordinateRules::validates($run->getBudgetSeconds(), $series->getAnswerCount(), $series->getSuccessCount(), $playedToTheEnd);
         $series->close($validated, $closedAt);
         if (0 === $series->getAnswerCount()) {
             return;
@@ -179,6 +188,7 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
             occurredAt: $closedAt,
             metadata: [
                 'orientation' => $series->getOrientation()->value,
+                'mode' => $series->getMode()->value,
                 'successCount' => $series->getSuccessCount(),
                 'validated' => $validated,
                 'trainingRunId' => $run->getId()->toRfc4122(),
@@ -208,6 +218,7 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
             successCount: $series->getSuccessCount(),
             metrics: [
                 'orientation' => $series->getOrientation()->value,
+                'mode' => $series->getMode()->value,
                 'validated' => $series->isValidated(),
                 'answeredMs' => $series->getAnsweredMs(),
                 'pardonedIndex' => $series->getPardonedIndex(),
@@ -224,18 +235,20 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
             return [];
         }
         $squares = $series->getSquares();
+        $mode = $series->getMode();
         $items = [];
         foreach ($series->getAnswers() as $index => $answer) {
             $pardoned = $index === $series->getPardonedIndex();
             $items[] = new ReviewItem(
                 self::REVIEW_TYPE,
                 match (true) {
-                    $answer['square'] === $squares[$index] => ReviewItem::OK,
+                    $answer['square'] === $mode->expected($squares[$index]) => ReviewItem::OK,
                     $pardoned => ReviewItem::HINT,
                     default => ReviewItem::FAIL,
                 },
                 $answer['ms'],
-                ['index' => $index, 'target' => $squares[$index], 'clicked' => $answer['square'], 'pardoned' => $pardoned],
+                // `clicked`: the square clicked or named, or light / dark (colour mode, `expected` the right one).
+                ['index' => $index, 'target' => $squares[$index], 'clicked' => $answer['square'], 'expected' => $mode->expected($squares[$index]), 'mode' => $mode->value, 'pardoned' => $pardoned],
             );
         }
 
@@ -264,7 +277,7 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
         }
         $expected = null;
         foreach ($answers as $answer) {
-            if (!SquareDrawer::isSquare($answer['square']) || $answer['ms'] < 0) {
+            if (!$series->getMode()->accepts($answer['square']) || $answer['ms'] < 0) {
                 throw new InvalidItemSubmissionException('Invalid answer.');
             }
             if (null !== $expected && $answer['index'] !== $expected) {
@@ -285,21 +298,28 @@ final class CoordinatesModule implements TimeboxedModuleInterface, ReviewableMod
     /**
      * @param array<string, mixed> $config
      *
+     * @return array{Orientation, Mode}
+     *
      * @throws InvalidRunConfigException
      */
-    private static function check(array $config, bool $pardon = true): Orientation
+    private static function check(array $config, bool $pardon = true): array
     {
-        $options = $pardon ? ['orientation', 'pardon'] : ['orientation'];
+        $options = $pardon ? ['orientation', 'mode', 'pardon'] : ['orientation', 'mode'];
         if ([] !== array_diff(array_keys($config), $options)) {
-            throw new InvalidRunConfigException(sprintf('Unknown option: only %s accepted.', implode(' and ', $options)));
+            throw new InvalidRunConfigException(sprintf('Unknown option: only %s accepted.', implode(', ', $options)));
         }
         if (\array_key_exists('pardon', $config) && !\is_bool($config['pardon'])) {
             throw new InvalidRunConfigException('pardon must be a boolean.');
         }
         $orientation = $config['orientation'] ?? null;
+        $mode = $config['mode'] ?? Mode::Find->value;
 
-        return (\is_string($orientation) ? Orientation::tryFrom($orientation) : null)
-            ?? throw new InvalidRunConfigException(sprintf('orientation must be one of %s.', implode(', ', Orientation::values())));
+        return [
+            (\is_string($orientation) ? Orientation::tryFrom($orientation) : null)
+                ?? throw new InvalidRunConfigException(sprintf('orientation must be one of %s.', implode(', ', Orientation::values()))),
+            (\is_string($mode) ? Mode::tryFrom($mode) : null)
+                ?? throw new InvalidRunConfigException(sprintf('mode must be one of %s.', implode(', ', Mode::values()))),
+        ];
     }
 
     /** Launched with the store's pardon. */

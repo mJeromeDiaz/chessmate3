@@ -1,0 +1,69 @@
+{
+  "page": {
+    "title": "Notation",
+    "lead": "Lis et écris la notation des coups comme sur une feuille de partie : jouer le coup annoncé, enchaîner une suite de coups notés, écrire la solution d’un puzzle sans la jouer. Positions tirées des puzzles, non classé.",
+    "letters": "Pièces : {letters} (roi, dame, tour, fou, cavalier). Roque : O-O, O-O-O.",
+    "launch": "Lancer",
+    "mindMap": "Ces exercices sont aussi au chapitre 1 du parcours Visualisation.",
+    "repertoire": "Répertoire",
+    "allRepertoires": "Tous mes répertoires (au moins {n} tronçons)",
+    "noRepertoire": "Il te faut un répertoire d’au moins {n} tronçons pour compléter ses lignes.",
+    "createRepertoire": "Mes répertoires",
+    "segments": "{name} · {n} tronçons"
+  },
+  "kinds": {
+    "play": {
+      "title": "Jouer le coup annoncé",
+      "desc": "Un coup est écrit, joue-le sur l’échiquier."
+    },
+    "sequence": {
+      "title": "Suite de coups notés",
+      "desc": "Joue une suite de coups notés, pour les deux camps."
+    },
+    "write": {
+      "title": "Écrire la solution",
+      "desc": "Résous le puzzle de tête et écris toute la ligne, sans la jouer."
+    },
+    "line": {
+      "title": "Compléter une ligne",
+      "desc": "Une ligne de ton répertoire défile : écris ses derniers coups."
+    }
+  },
+  "player": {
+    "kickers": {
+      "play": "Joue le coup",
+      "sequence": "Joue la suite",
+      "write": "Écris la ligne",
+      "right": "Juste !",
+      "wrong": "Raté",
+      "line": "Complète la ligne"
+    },
+    "playText": "Joue {san} sur l’échiquier.",
+    "sequenceText": "Joue chaque coup, pour les Blancs comme pour les Noirs.",
+    "writeText": "Trait aux {side} : trouve la solution et écris-la, {n} demi-coup | Trait aux {side} : trouve la solution et écris-la, {n} demi-coups",
+    "rightText": "Bien lu, bien joué.",
+    "wrongText": "Regarde la bonne réponse avant de continuer.",
+    "wasPlay": "C’était {san}.",
+    "mistakeAt": "Erreur au coup {n} : il fallait {san}.",
+    "expected": "La bonne ligne : {line}",
+    "yours": "Ta ligne : {line}",
+    "placeholder": "ex. 1. {example}",
+    "send": "Valider",
+    "erase": "Effacer",
+    "progress": "Exercice {n} sur {count}",
+    "progressTimed": "Justes : {right} / {played}",
+    "white": "Blancs",
+    "black": "Noirs",
+    "lineText": "{line} : écris la suite, {n} demi-coup | {line} : écris la suite, {n} demi-coups",
+    "lineStart": "La ligne commence"
+  },
+  "reasons": {
+    "illegal": "Le demi-coup {n} n’est pas un coup légal.",
+    "wrong": "Le demi-coup {n} n’est pas le bon.",
+    "short": "Il manque des coups à partir du demi-coup {n}.",
+    "long": "Trop de coups : la ligne s’arrête avant le demi-coup {n}."
+  },
+  "review": {
+    "title": "{kind} · {line}"
+  }
+}

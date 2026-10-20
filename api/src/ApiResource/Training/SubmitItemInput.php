@@ -9,6 +9,7 @@ use App\Blindfold\Recall\RecallRules;
 use App\Coordinates\Series\CoordinateRules;
 use App\Entity\Puzzle\Attempt;
 use App\Enum\Evaluation\Plan;
+use App\Notation\NotationRules;
 use App\Puzzle\Solution\SolutionValidator;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -38,11 +39,11 @@ final class SubmitItemInput
     #[Assert\Range(min: 0, max: 3_600_000)]
     public ?int $thinkMs = null;
 
-    /** @var list<array{index: int, square: string, ms: int}> coordinates series: squares clicked, judged by the server (docs/COORDINATES.md) */
+    /** @var list<array{index: int, square: string, ms: int}> coordinates series: squares clicked or named, or light / dark (the module checks which its mode takes), judged by the server (docs/COORDINATES.md) */
     #[Assert\Count(max: CoordinateRules::MAX_ANSWERS_PER_SUBMISSION)]
     #[Assert\All([new Assert\Collection(fields: [
         'index' => [new Assert\NotNull(), new Assert\Type('int'), new Assert\Range(min: 0, max: CoordinateRules::MAX_SQUARES - 1)],
-        'square' => [new Assert\NotNull(), new Assert\Type('string'), new Assert\Regex('/^[a-h][1-8]$/')],
+        'square' => [new Assert\NotNull(), new Assert\Type('string'), new Assert\Regex('/^([a-h][1-8]|light|dark)$/')],
         'ms' => [new Assert\NotNull(), new Assert\Type('int'), new Assert\Range(min: 0, max: 3_600_000)],
     ])])]
     public array $answers = [];
@@ -61,4 +62,12 @@ final class SubmitItemInput
         'piece' => [new Assert\NotNull(), new Assert\Type('string'), new Assert\Regex(Placement::PIECE_PATTERN)],
     ])])]
     public array $placement = [];
+
+    /**
+     * @var list<string> notation: what was written, SAN with English letters, move numbers allowed, one or more half-moves
+     *                   per string (the module splits them and checks their count, docs/NOTATION.md)
+     */
+    #[Assert\Count(max: NotationRules::MAX_WRITTEN)]
+    #[Assert\All([new Assert\Type('string'), new Assert\Length(max: NotationRules::MAX_WRITTEN_LENGTH)])]
+    public array $written = [];
 }

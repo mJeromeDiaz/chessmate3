@@ -77,10 +77,48 @@
           </div>
         </div>
 
+        <div v-if="state.modes?.length" class="row q-col-gutter-md">
+          <div v-for="m in state.modes" :key="m.mode" class="col-12 col-sm-6">
+            <q-card
+              flat
+              bordered
+              class="coordinates-page__orientation"
+              :data-testid="`mode-${m.mode}`"
+            >
+              <q-card-section>
+                <div class="text-h6">{{
+                  $t(`coordinates.modes.${m.mode}`)
+                }}</div>
+                <div class="text-caption text-grey">{{
+                  $t('coordinates.page.series', m.seriesCount)
+                }}</div>
+                <div v-if="m.best" class="q-mt-sm">{{
+                  $t('coordinates.page.score', {
+                    n: m.best.successCount,
+                    total: m.best.answerCount
+                  })
+                }}</div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
         <q-card flat bordered>
           <q-card-section class="q-gutter-y-sm">
             <div class="text-subtitle1">{{ $t('coordinates.page.new') }}</div>
             <q-btn-toggle
+              v-model="mode"
+              no-caps
+              unelevated
+              toggle-color="primary"
+              :options="MODE_OPTIONS"
+              data-testid="coordinates-mode"
+            />
+            <div class="text-caption text-grey-8">{{
+              $t(`coordinates.modeHints.${mode}`)
+            }}</div>
+            <q-btn-toggle
+              v-if="mode !== 'color'"
               v-model="orientation"
               no-caps
               unelevated
@@ -134,7 +172,7 @@
                   <q-item-label>{{
                     $t('coordinates.page.historyRow', {
                       date: formatDate(s.startedAt),
-                      side: ORIENTATIONS[s.orientation]
+                      side: seriesLabel(s)
                     })
                   }}</q-item-label>
                   <q-item-label caption>
@@ -197,7 +235,7 @@
 <script setup>
 /**
  * The coordinates (docs/COORDINATES.md): the state of each orientation (validated, best series),
- * a new series and the latest series, each with its ribbon (loaded when opened). The rules come
+ * the other modes' series (name a square, its colour), a new series in a mode and the latest series, each with its ribbon (loaded when opened). The rules come
  * from the API. A series may be launched with the store's pardon (its first wrong answer taken
  * away at the end), bought in place when none is held.
  */
@@ -209,13 +247,23 @@ import { useAidPurchase } from '@/composables/shop/useAidPurchase'
 import { coordinatesApi, trainingApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/utils/apiError'
-import { ORIENTATIONS, durationsText, rulesText } from '@/utils/coordinates'
+import {
+  MODES,
+  ORIENTATIONS,
+  durationsText,
+  rulesText
+} from '@/utils/coordinates'
 import { formatDate, formatRate } from '@/utils/format'
+import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'required' } })
 
 const ORIENTATION_OPTIONS = computed(() =>
   Object.entries(ORIENTATIONS).map(([value, label]) => ({ value, label }))
+)
+
+const MODE_OPTIONS = computed(() =>
+  MODES.map(value => ({ value, label: t(`coordinates.modes.${value}`) }))
 )
 
 const auth = useAuthStore()
@@ -227,13 +275,31 @@ const orientation = ref('white')
 /** @type {Record<string, import('@/utils/coordinates').CoordinateItem[]|null>} ribbons by run id; null: failed */
 const ribbons = reactive({})
 
+/** The mode of the next series (docs/COORDINATES.md, § 2 bis): find, name or color. */
+const mode = ref('find')
 /** Launch the next series with the store's pardon. */
 const withPardon = ref(false)
-const launchConfig = computed(() =>
-  withPardon.value && state.value?.pardons
-    ? { orientation: orientation.value, pardon: true }
-    : { orientation: orientation.value }
-)
+const launchConfig = computed(() => {
+  /** @type {Record<string, any>} */
+  const config = {
+    // No board in the colour mode: the orientation does not matter.
+    orientation: mode.value === 'color' ? 'white' : orientation.value
+  }
+  if (mode.value !== 'find') config.mode = mode.value
+  if (withPardon.value && state.value?.pardons) config.pardon = true
+  return config
+})
+
+/**
+ * A series in the history: its orientation (find mode), else its mode.
+ *
+ * @param {{mode?: string, orientation: 'white'|'black'}} series
+ */
+function seriesLabel(series) {
+  return !series.mode || series.mode === 'find'
+    ? ORIENTATIONS[series.orientation]
+    : t(`coordinates.modes.${series.mode}`)
+}
 const purchase = useAidPurchase(inventory => {
   if (!state.value) return
   state.value.pardons = inventory.coordinates_pardon ?? 0

@@ -15,6 +15,7 @@ describe('NAV_LINKS', () => {
       'Streak',
       'Répertoires',
       'Coordonnées',
+      'Notation',
       'Aveugle',
       'Reconstitution',
       'Évaluation'
@@ -28,6 +29,7 @@ describe('NAV_LINKS', () => {
       '/streak',
       '/repertoire',
       '/coordinates',
+      '/notation',
       '/blindfold',
       '/reconstitution',
       '/evaluation'

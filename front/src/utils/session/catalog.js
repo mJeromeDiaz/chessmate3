@@ -147,6 +147,12 @@ const count = (label, min, max, def, unit) =>
     { label }
   )
 
+/** The exercises of the notation module (docs/NOTATION.md). */
+const NOTATION_KINDS = ['play', 'sequence', 'write', 'line']
+
+/** The modes of a coordinates series (docs/COORDINATES.md, § 2 bis). */
+const COORDINATE_MODES = ['find', 'name', 'color']
+
 /**
  * A single choice. Values are language-neutral (the API's when it has them); `labels` names the
  * group of session.catalog.options holding their labels, or is a function.
@@ -471,12 +477,35 @@ export const MODULES = [
         { key: 'duree', type: 'durationChoice', default: 0 },
         { label: 'fields.duration', hint: 'hints.coordinatesDuration' }
       ),
+      one('mode', 'fields.mode', COORDINATE_MODES, 'find', 'coordinateModes'),
       one(
         'orientation',
         'fields.orientation',
         ['white', 'black'],
         'white',
         'sides'
+      ),
+      notes()
+    ]
+  }),
+  defineModule({
+    id: 'notation',
+    ...noCard('Noctis'),
+    glyph: glyph('♗'),
+    available: true,
+    bg: '#5B4BA6',
+    ink: '#FFFFFF',
+    soft: '#ECE8F7',
+    deep: '#3D2F73',
+    accentInk: '#4A3D86',
+    fields: [
+      duration(10, MAX_RUN_MINUTES),
+      one(
+        'exercice',
+        'fields.exercise',
+        NOTATION_KINDS,
+        'play',
+        'notationKinds'
       ),
       notes()
     ]
@@ -860,6 +889,7 @@ export const API_MODULES = {
   streak: 'puzzle_streak',
   rush: 'puzzle_rush',
   reconstitution: 'blindfold_recall',
+  notation: 'notation',
   parcours: 'parcours_puzzles'
 }
 
@@ -883,8 +913,12 @@ export function toStep(item) {
   if (module === 'woodpecker' && v.set) settings = { setId: v.set }
   if (module === 'repertoire')
     settings = { repertoireIds: [...(v.repertoires ?? [])] }
-  if (module === 'coordinates')
+  if (module === 'coordinates') {
     settings = { orientation: v.orientation === 'black' ? 'black' : 'white' }
+    // The find mode is the API's default: older steps have no mode.
+    const mode = oneOf(COORDINATE_MODES, v.mode, 'find')
+    if (mode !== 'find') settings.mode = mode
+  }
   if (module === 'blindfold')
     settings = {
       level: oneOf(BLINDFOLD_LEVELS, v.niveau, 'easy'),
@@ -893,6 +927,8 @@ export function toStep(item) {
     }
   if (module === 'blindfold_recall')
     settings = { level: oneOf(RECALL_LEVELS, v.niveau, 'mine') }
+  if (module === 'notation')
+    settings = { kind: oneOf(NOTATION_KINDS, v.exercice, 'play') }
   if (module === 'evaluation')
     settings = {
       elo: v.elo,
@@ -939,8 +975,10 @@ export function fromStep(step) {
   if (step.module === 'woodpecker') values.set = settings.setId ?? null
   if (step.module === 'repertoire')
     values.repertoires = [...(settings.repertoireIds ?? [])]
-  if (step.module === 'coordinates')
+  if (step.module === 'coordinates') {
     values.orientation = settings.orientation === 'black' ? 'black' : 'white'
+    values.mode = oneOf(COORDINATE_MODES, settings.mode, 'find')
+  }
   if (step.module === 'blindfold') {
     values.niveau = oneOf(BLINDFOLD_LEVELS, settings.level, values.niveau)
     values.longueur = oneOf(BLINDFOLD_LENGTHS, settings.length, values.longueur)
@@ -952,6 +990,8 @@ export function fromStep(step) {
   }
   if (step.module === 'blindfold_recall')
     values.niveau = oneOf(RECALL_LEVELS, settings.level, values.niveau)
+  if (step.module === 'notation')
+    values.exercice = oneOf(NOTATION_KINDS, settings.kind, 'play')
   if (step.module === 'evaluation') {
     if (Number.isInteger(settings.elo)) values.elo = settings.elo
     values.couleur = oneOf(SIDES, settings.side, values.couleur)

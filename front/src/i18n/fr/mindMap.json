@@ -16,6 +16,9 @@
     "soonTitle": "Les chapitres arrivent bientôt",
     "soonText": "Des exercices de plus en plus exigeants, jusqu’à un boss de fin de chapitre. En attendant, entraîne cette capacité avec ses modules.",
     "train": "S’entraîner librement",
+    "pathTitle": "Le parcours",
+    "pathText": "Sept chapitres, des exercices à valider plusieurs fois, des coffres et un boss au bout de chaque chapitre.",
+    "openPath": "Ouvrir le parcours",
     "compose": "Composer une séance"
   },
   "capacities": {
@@ -74,6 +77,10 @@
     "coordinates": {
       "name": "Coordonnées",
       "why": "Séries de cases. Associer nom et case rapidement, sans passer par l’échiquier."
+    },
+    "notation": {
+      "name": "Notation",
+      "why": "Lire et écrire les coups comme sur une feuille de partie : la langue qu’on se parle quand on joue sans voir l’échiquier."
     },
     "blindfold": {
       "name": "Puzzles à l’aveugle",

@@ -45,4 +45,9 @@ enum ExerciseType: string
      * missed), `metadata.stage` and `metadata.unlocked` (the XP depends on them).
      */
     case BlindfoldRecall = 'blindfold_recall';
+    /**
+     * An item of the notation module (docs/NOTATION.md), never rated; `metadata.kind` (play,
+     * sequence, write), `metadata.status` (right, wrong).
+     */
+    case Notation = 'notation';
 }
