@@ -38,6 +38,19 @@ enum Kind: string
     /** 5 moves, then three questions on the position reached (the mini-boss 3.2). */
     case UpdateBoss = 'update_boss';
 
+    /** A position updated by moves: the pieces of a side attacked. (3.3.1) */
+    case RelationAttacked = 'rel_attacked';
+    /** …the pieces of a side defended, or left without defence. (3.3.2) */
+    case RelationDefended = 'rel_defended';
+    /** …the pieces aligned with one of them. (3.3.3) */
+    case RelationAligned = 'rel_aligned';
+    /** …every piece en prise. (3.3.4) */
+    case RelationEnPrise = 'rel_en_prise';
+    /** 12 pieces, 5 moves: one of the four questions above. (3.3.5) */
+    case RelationMixed = 'rel_mixed';
+    /** Three questions on each position: attacked, defended, the winning captures (the mini-boss 3.3). */
+    case RelationBoss = 'rel_boss';
+
     /** Questions on a piece's path: only that piece moves (docs/VISION.md, § 2 bis). */
     public function isTrack(): bool
     {

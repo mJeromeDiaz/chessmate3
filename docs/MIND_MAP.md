@@ -245,7 +245,7 @@ seule option.
 | L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) | fait |
 | L3 | Parties célèbres (1.8, 1.9) et boss Jongleur (§ 8) | fait |
 | L4 | Chapitre 2 : exercices (reconstitution, niveaux 1 à 12), mini-boss 2.1, module Vision (mini-boss 2.2, 2.3, caché), Cyclope | fait |
-| L5 | Chapitre 3 : L5a section 3.1 « suivre une pièce » et distractions des boss, vert ; L5b 3.2 « actualiser une position », écrit 2026-10-20 ; L5c 3.3 ; L5d page Vision libre | en cours |
+| L5 | Chapitre 3 : L5a section 3.1 « suivre une pièce » et distractions des boss, vert ; L5b 3.2 « actualiser une position », vert ; L5c 3.3 « relations entre pièces », écrit 2026-10-20 ; L5d page Vision libre | en cours |
 | L6 | La Gargouille (distractions fortes) | à faire |
 | L7 à L10 | Chapitres 4 à 7 (précisions de l'utilisateur attendues) | à faire |
 
@@ -261,7 +261,9 @@ justes, 80 % ; mini-boss 2.1 = niveaux 2, 3 puis 4, échiquier sans coordonnées
 fausse ou oubliée ; chapitre 3 : rappel du Jongleur (10 questions) ; section 3.1 = module Vision,
 « suivre une pièce » ([VISION.md](VISION.md), § 2 bis), mini-boss 3.1 = 3 trajets × 3 questions ;
 section 3.2 « actualiser une position » (§ 2 ter) : 3.2.1 et 3.2.2 en reconstitution après 1 et 3
-coups, 3.2.3 à 3.2.5 et le mini-boss en questions Vision ;
+coups, 3.2.3 à 3.2.5 et le mini-boss en questions Vision ; section 3.3 « relations entre pièces »
+(§ 2 quater) : toutes les pièces attaquées, défendues, alignées, en prise, le mini-boss distinguant
+« attaquée » et « capture gagnante » ;
 mini-boss 2.2 et 2.3 et boss caché 2.3 = module Vision ([VISION.md](VISION.md),
 § 5), 5 questions, 3 vies ; le Cyclope = 2 positions de puzzles de 16 pièces (niveau 14), montrées
 30 s chacune, une vie par pièce fausse ou oubliée.

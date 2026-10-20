@@ -27,6 +27,9 @@ final class VisionRules
     public const UPDATE_CAPTURES_PIECES = ['?R', '?N', '?B', '?P', '?P', '?P', '?P'];
     public const UPDATE_MIXED_PIECES = ['?R', '?N', '?B', '?P', '?P', '?P', '?P', '?P'];
     public const UPDATE_TRIES = 300;
+    /** The relations between pieces (chapter 3.3): their positions' pieces besides the kings. */
+    public const RELATION_PIECES = ['?R', '?N', '?B', '?P', '?P', '?P', '?P', '?P'];
+    public const RELATION_DENSE_PIECES = ['?Q', '?R', '?N', '?B', '?P', '?P', '?P', '?P', '?P', '?P'];
     /** The pause, position hidden, before the moves or the question. */
     public const HIDDEN_SECONDS = 2;
     /** The squares an answer may click (the attackers of a square: 16 at most). */

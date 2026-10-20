@@ -83,6 +83,22 @@ adverse (jamais son roi) que la pièce attaque ; clouages ignorés.
 `params.followUps` (`ask`, `target`, `expected`) ; chacune est servie sur la même position, sans la
 remontrer (`followUp`, `visibleSeconds` 0), avant qu'une nouvelle position soit tirée.
 
+## 2 quater. Relations entre pièces (chapitre 3.3)
+
+Comme au § 2 ter, une position légale générée (2 rois, tour, cavalier, fou, 5 pions ;
+`RELATION_PIECES`), montrée 10 s, puis 3 à 5 coups des deux camps (`RelationDrawer`) ; on clique
+**toutes** les pièces de la relation dans la position atteinte, puis « Valider » : juste si l'ensemble
+est exact. Jamais de réponse vide (la position est tirée à nouveau).
+
+| `kind` | Question (`ask`, `side` tiré) | Les pièces (`Board\Relations`, jamais le roi) |
+|---|---|---|
+| `rel_attacked` (3.3.1) | `attacked` : « Quelles pièces noires sont attaquées ? » | du camp nommé, attaquées au moins une fois par l'autre |
+| `rel_defended` (3.3.2) | `defended` ou `undefended` : « …sont défendues ? », « …sans défense ? » | défendue : au moins une pièce de son camp l'attaque |
+| `rel_aligned` (3.3.3) | `aligned` : « Quelles pièces sont alignées avec la tour blanche ? » (une pièce unique sur l'échiquier) | dans chacune des 8 directions, la première pièce rencontrée, de l'un ou l'autre camp |
+| `rel_en_prise` (3.3.4) | `en_prise_all` : « Quelles pièces noires sont en prise ? » (le camp qui n'a pas le trait) | toutes celles en prise (§ 3) |
+| `rel_mixed` (3.3.5) | l'une des quatre, sur 12 pièces (`RELATION_DENSE_PIECES`) et 5 coups | |
+| `rel_boss` (mini-boss 3.3) | à la suite, sur la même position, pour le camp qui n'a pas le trait : `attacked`, `defended`, puis `winning` : « Quelles pièces noires peut-on prendre avec gain ? » | les prises gagnantes sont les pièces en prise ; la position a au moins une pièce attaquée qui n'en est pas une (« attaquée » n'est pas « capture gagnante ») |
+
 ## 3. Attaques et pièces en prise
 
 - **Attaquants** (`Attacks::attackers`) : sur l'échiquier seul. Un pion attaque ses deux diagonales
@@ -135,5 +151,7 @@ Prof : Noctis.
 | Mini-boss 3.1 (`3-1-boss`) | `track_boss` | 9 (3 trajets × 3) | 3 |
 | Exercices 3.2.3 à 3.2.5 | `update_missing`, `update_captures`, `update_mixed` | 5, 80 % | — |
 | Mini-boss 3.2 (`3-2-boss`) | `update_boss` | 9 (3 positions × 3) | 3 |
+| Exercices 3.3.1 à 3.3.5 | `rel_attacked`, `rel_defended`, `rel_aligned`, `rel_en_prise`, `rel_mixed` | 5, 80 % | — |
+| Mini-boss 3.3 (`3-3-boss`) | `rel_boss` | 9 (3 positions × 3) | 3 |
 
 Distractions : `light` aux boss du chapitre 2, `medium` au chapitre 3.

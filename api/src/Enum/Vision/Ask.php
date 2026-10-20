@@ -35,6 +35,19 @@ enum Ask: string
     /** « Le fou blanc peut-il aller en c4 en un coup ? »: yes or no (a choice). */
     case Reach = 'reach';
 
+    /** « Quelles pièces noires sont attaquées ? »: every one ($side), the king never. */
+    case Attacked = 'attacked';
+    /** « Quelles pièces blanches sont défendues ? »: every one ($side), the king never. */
+    case Defended = 'defended';
+    /** « …sont sans défense ? » */
+    case Undefended = 'undefended';
+    /** « Quelles pièces sont alignées avec la tour blanche ? »: the first piece in each direction. */
+    case Aligned = 'aligned';
+    /** « Quelles pièces noires sont en prise ? »: every one ($side, the side not to move). */
+    case EnPriseAll = 'en_prise_all';
+    /** « Quelles prises sont gagnantes ? »: the same pieces, told apart from those only attacked. */
+    case Winning = 'winning';
+
     /** Answered with a choice (a number, yes or no, a piece's letter), not on the board. */
     public function isChoice(): bool
     {

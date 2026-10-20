@@ -95,7 +95,9 @@ final class Visualisation
      * Dynamic vision: the Jongleur's short version first, then three sections; 3.1 follows a piece
      * (the vision module, docs/VISION.md, § 2 bis), its mini-boss asks three questions on each of 3
      * paths; 3.2 updates a position by moves (rebuilt, then questions), its mini-boss asks three
- * questions on each of 3 positions. Exercises calm, bosses with medium distractions.
+ * questions on each of 3 positions; 3.3 asks every piece in a relation (attacked, defended,
+ * aligned, en prise), its mini-boss tells attacked from winning captures. Exercises calm, bosses
+ * with medium distractions.
      */
     private static function chapter3(): Chapter
     {
@@ -130,8 +132,17 @@ final class Visualisation
                     PathRules::BOSS_LIVES,
                 )),
             ]),
-            new Section('3-3', '3.3', self::exercises('3-3', '3.3', [3, 3, 3, 3, 4]), [
-                self::miniBoss('3-3-boss', 140, ['section_3_3']),
+            new Section('3-3', '3.3', self::exercises('3-3', '3.3', [3, 3, 3, 3, 4], array_map(
+                static fn (string $kind): Activity => self::visionLesson($kind),
+                ['rel_attacked', 'rel_defended', 'rel_aligned', 'rel_en_prise', 'rel_mixed'],
+            )), [
+                self::miniBoss('3-3-boss', 140, ['section_3_3'], null, 40, new Activity(
+                    Module::Vision,
+                    ['kind' => 'rel_boss', 'count' => 9, 'lives' => PathRules::BOSS_LIVES, 'distraction' => 'medium'],
+                    self::LESSON_SECONDS,
+                    9,
+                    PathRules::BOSS_LIVES,
+                )),
             ]),
         ], self::boss('3-boss', 300, 120, 'gargouille', ['chapter_3', 'boss_gargouille']));
     }

@@ -35,6 +35,7 @@ use App\Training\Module\TimeboxedModuleInterface;
 use App\Vision\Drawing\LinePicker;
 use App\Vision\Drawing\Draw;
 use App\Vision\Drawing\LocateDrawer;
+use App\Vision\Drawing\RelationDrawer;
 use App\Vision\Drawing\TrackDrawer;
 use App\Vision\Drawing\UpdateDrawer;
 use App\Vision\VisionRules;
@@ -65,6 +66,7 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         private readonly LinePicker $lines,
         private readonly TrackDrawer $tracks,
         private readonly UpdateDrawer $updates,
+        private readonly RelationDrawer $relations,
         private readonly PuzzleCatalog $catalog,
         private readonly EventPublisher $events,
     ) {
@@ -210,6 +212,7 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
             Kind::EnPrise => $this->lines->pick($run, Ask::EnPrise),
             Kind::Attackers => $this->lines->pick($run, Ask::Attackers),
             Kind::UpdateMissing, Kind::UpdateCaptures, Kind::UpdateMixed, Kind::UpdateBoss => $this->updates->draw($kind),
+            Kind::RelationAttacked, Kind::RelationDefended, Kind::RelationAligned, Kind::RelationEnPrise, Kind::RelationMixed, Kind::RelationBoss => $this->relations->draw($kind),
             default => $this->tracks->draw($kind),
         };
         if (null === $draw) {
@@ -238,8 +241,9 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         }
         $expected = \is_array($next['expected'] ?? null) ? array_values(array_filter($next['expected'], 'is_string')) : [];
         $target = \is_string($next['target'] ?? null) ? $next['target'] : null;
+        $side = \is_string($next['side'] ?? null) ? $next['side'] : null;
 
-        return new Draw($last->getFen(), $last->getAnnounced(), $ask, $target, null, $expected, null, 0, ['step' => $step + 1] + $params);
+        return new Draw($last->getFen(), $last->getAnnounced(), $ask, $target, $side, $expected, null, 0, ['step' => $step + 1] + $params);
     }
 
     /**

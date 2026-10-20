@@ -51,7 +51,13 @@
       "r": "La tour noire peut-elle aller en {square} en un coup ?",
       "b": "Le fou noir peut-il aller en {square} en un coup ?",
       "n": "Le cavalier noir peut-il aller en {square} en un coup ?"
-    }
+    },
+    "attacked": "Quelles pièces {side} sont attaquées ?",
+    "defended": "Quelles pièces {side} sont défendues ?",
+    "undefended": "Quelles pièces {side} sont sans défense ?",
+    "aligned": "Quelles pièces sont alignées avec {piece} ?",
+    "en_prise_all": "Quelles pièces {side} sont en prise ?",
+    "winning": "Quelles pièces {side} peut-on prendre avec gain ?"
   },
   "player": {
     "progress": "Question {n} sur {count}",
@@ -77,7 +83,7 @@
       "listen": "Joue-les dans ta tête sur la position cachée.",
       "askClick": "Réponds sur l’échiquier vide.",
       "askPiece": "Choisis la pièce dans la réserve.",
-      "askMany": "Clique chaque attaquant, puis « Valider ».",
+      "askMany": "Clique chaque case qui répond, puis « Valider ».",
       "right": "Tu vois la position sans la voir.",
       "wrong": "Regarde la position : la bonne réponse est en vert.",
       "askChoice": "Choisis ta réponse.",
@@ -97,7 +103,13 @@
       "passed": "La réponse était « {answer} ».",
       "captures": "Les prises : {squares}.",
       "stops": "Les arrêts : {squares}.",
-      "missing": "C’était {piece}."
+      "missing": "C’était {piece}.",
+      "attacked": "Les pièces attaquées : {squares}.",
+      "defended": "Les pièces défendues : {squares}.",
+      "undefended": "Les pièces sans défense : {squares}.",
+      "aligned": "Les pièces alignées : {squares}.",
+      "en_prise_all": "Les pièces en prise : {squares}.",
+      "winning": "Les prises gagnantes : {squares}."
     },
     "sameTrack": "Même trajet"
   },
@@ -110,5 +122,19 @@
   "choices": {
     "yes": "Oui",
     "no": "Non"
+  },
+  "the": {
+    "K": "le roi blanc",
+    "Q": "la dame blanche",
+    "R": "la tour blanche",
+    "B": "le fou blanc",
+    "N": "le cavalier blanc",
+    "P": "le pion blanc",
+    "k": "le roi noir",
+    "q": "la dame noire",
+    "r": "la tour noire",
+    "b": "le fou noir",
+    "n": "le cavalier noir",
+    "p": "le pion noir"
   }
 }

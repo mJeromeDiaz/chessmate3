@@ -78,7 +78,8 @@ final class VisionUpdateTest extends WoodpeckerWebTestCase
                 self::assertSame($first['fen'], $data['fen'] ?? null, 'The same position.');
                 $final = self::reached(self::text($data['fen'] ?? null), $data['announced']);
                 $board = Attacks::board($final);
-                $target = self::text($data['target'] ?? null);
+                // The en prise question has no target.
+                $target = \is_string($data['target'] ?? null) ? $data['target'] : '';
                 $answer = match ($data['ask'] ?? null) {
                     'what' => ['placement' => isset($board[$target]) ? [['square' => $target, 'piece' => $board[$target]]] : []],
                     'where' => ['squares' => [(string) array_search($target, $board, true)]],

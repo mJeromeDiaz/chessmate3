@@ -144,4 +144,22 @@ describe('vision', () => {
       verdictText({ ask: 'reach', target: 'c4' }, { expected: ['yes'] })
     ).toBe('La réponse était « Oui ».')
   })
+
+  it('asks for every piece in a relation', () => {
+    expect(questionText({ ask: 'attacked', target: null, side: 'black' })).toBe(
+      'Quelles pièces noires sont attaquées ?'
+    )
+    expect(questionText({ ask: 'undefended', target: null, side: 'white' })).toBe(
+      'Quelles pièces blanches sont sans défense ?'
+    )
+    expect(questionText({ ask: 'aligned', target: 'r', side: null })).toBe(
+      'Quelles pièces sont alignées avec la tour noire ?'
+    )
+    expect(questionText({ ask: 'winning', target: null, side: 'white' })).toBe(
+      'Quelles pièces blanches peut-on prendre avec gain ?'
+    )
+    expect(
+      verdictText({ ask: 'winning', target: null }, { expected: ['c3', 'h2'] })
+    ).toBe('Les prises gagnantes : c3, h2.')
+  })
 })

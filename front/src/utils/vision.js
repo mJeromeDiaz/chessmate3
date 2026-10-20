@@ -8,7 +8,17 @@ import { t } from '@/i18n'
 /** The questions answered by one click on the empty board. */
 export const ONE_SQUARE = ['where', 'en_prise', 'arrival']
 /** The questions answered by clicking several squares, then « Valider ». */
-export const MANY_SQUARES = ['attackers', 'captures', 'stops']
+export const MANY_SQUARES = [
+  'attackers',
+  'captures',
+  'stops',
+  'attacked',
+  'defended',
+  'undefended',
+  'aligned',
+  'en_prise_all',
+  'winning'
+]
 /** The questions answered with a piece of the palette (« Case vide » for « what »). */
 export const PIECE_ANSWER = ['what', 'captured', 'missing']
 /** The questions whose square is lit while answering (it is no answer). */
@@ -64,6 +74,16 @@ export function questionText(data) {
       return t('vision.ask.captures', { piece: tracked(data.piece) })
     case 'missing':
       return t('vision.ask.missing')
+    case 'attacked':
+    case 'defended':
+    case 'undefended':
+    case 'en_prise_all':
+    case 'winning':
+      return t(`vision.ask.${data.ask}`, {
+        side: t(`vision.sides.${data.side === 'black' ? 'black' : 'white'}`)
+      })
+    case 'aligned':
+      return t('vision.ask.aligned', { piece: t(`vision.the.${data.target}`) })
     case 'reach':
       return t(`vision.ask.reach.${data.piece}`, { square: data.target ?? '' })
     case 'arrival':
