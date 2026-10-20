@@ -78,14 +78,19 @@ déjà faite est de l'entraînement, jugé, jamais payé à nouveau.
 
 - `POST /mind-map/{capacité}/steps/{clé}/start` → `{capacity, key, run}` (la séance, comme
   `POST /training/runs`). 409 `step_locked`, `step_soon`, ou une autre séance en cours ; 404 clé
-  inconnue. Une ligne `mind_map_attempt` relie la séance à l'étape.
+  inconnue. Une ligne `mind_map_attempt` relie la séance à l'étape, et la séance porte son étape
+  (`training_run.path_step`, `visualisation:2-1-3`), posée par le serveur seul : un module s'y fie
+  pour ouvrir ce que le parcours permet (un niveau de reconstitution pas encore ouvert, les options
+  d'un boss) et la refuse à toute autre séance (le Jongleur ne se lance que par son étape).
 - La séance se joue comme toute séance (`/training/runs/{id}/next`, `/submission`).
 - À sa **clôture** (fin du temps, du sujet, « Terminer », ou clôture paresseuse), `TimeboxRunner`
   appelle les `RunClosedListenerInterface` dans la même transaction : `PassRecorder` juge la séance
-  sur son récapitulatif (`itemCount`, `successCount`) et, réussie, compte un passage. Le dernier
+  sur son récapitulatif (`itemCount`, `successCount`, et `metrics.failures` quand le module compte
+  ses échecs autrement, comme les pièces fausses ou oubliées d'une reconstitution) et, réussie,
+  compte un passage. Le dernier
   passage termine l'étape et la récompense (§ 5), puis les coffres en chemin qu'elle débloque.
-- `GET /mind-map/runs/{id}` → le verdict (`pending`, `passed`, `failed`), les éléments, `count`,
-  `lives`, les passages, `completed`, l'XP et le coffre de l'étape si cette séance l'a terminée, et
+- `GET /mind-map/runs/{id}` → le verdict (`pending`, `passed`, `failed`), les éléments, `failures`
+  (ce qui compte contre les vies : éléments ratés, ou `metrics.failures`), `count`, `lives`, les passages, `completed`, l'XP et le coffre de l'étape si cette séance l'a terminée, et
   tous les coffres pas encore ouverts du parcours. 404 pour une séance qui n'est pas celle d'une
   étape du joueur.
 - `POST /mind-map/{capacité}/steps/{clé}/skip` → `{capacity, key, path}`. 409
@@ -231,8 +236,8 @@ seule option.
 | M2 | Front du moteur : chemin, écrans de boss (cyclope par défaut), coffre, victoire provisoire | écrit 2026-10-20 |
 | L1 | Coordonnées : modes « nommer la case » et « couleur de la case » (1.2, 1.3) | écrit 2026-10-20 |
 | L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) : L2a, L2b verts, L2c `line` (1.7, un répertoire d'au moins 10 tronçons) écrit 2026-10-20 | en cours |
-| L3 | Parties célèbres (1.8, 1.9 : L3a, tranches de 6 demi-coups, vert) et boss Jongleur (L3b, § 8 : L3b1 API vert, L3b2 front écrit 2026-10-20) | en cours |
-| L4 | Chapitre 2 : reconstitution, premières questions de Vision, Cyclope | à faire |
+| L3 | Parties célèbres (1.8, 1.9) et boss Jongleur (§ 8) | fait |
+| L4 | Chapitre 2 : L4a exercices (reconstitution, niveaux 1 à 12) et mini-boss 2.1, écrit 2026-10-20 ; L4b module Vision (mini-boss 2.2, 2.3, caché) ; L4c Cyclope | en cours |
 | L5, L6 | Module Vision (3.1 à 3.3), Gargouille et ses distractions | à faire |
 | L7 à L10 | Chapitres 4 à 7 (précisions de l'utilisateur attendues) | à faire |
 
@@ -241,4 +246,8 @@ réponses à 80 %), 1.2 (mode `name`, une minute, au moins 10 réponses à 80 %)
 une minute, au moins 20 réponses à 80 %), [COORDINATES.md](COORDINATES.md), § 2 bis ; 1.4 à 1.6
 et 1.7 (leçons comptées du module Notation : 10 coups annoncés, 5 suites, 5 lignes à écrire, 5
 lignes du répertoire à compléter, 80 % ; 1.7 refusé sans répertoire de 10 tronçons, raison
-`no_repertoire`, [NOTATION.md](NOTATION.md)).
+`no_repertoire`, [NOTATION.md](NOTATION.md)) ; 1.8 et 1.9 (parties légendaires) ; le Jongleur
+(§ 8). Chapitre 2 : 2.1.1 à 2.3.4 = niveaux 1 à 12 de la reconstitution
+([BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md), § 3 bis), 5 positions par leçon, seules les exactes
+justes, 80 % ; mini-boss 2.1 = niveaux 2, 3 puis 4, échiquier sans coordonnées, une vie par pièce
+fausse ou oubliée.

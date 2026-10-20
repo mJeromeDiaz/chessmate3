@@ -208,7 +208,7 @@
     >
       <template #header>
         <RunHeader
-          v-if="recallItem.data.mode === 'timed'"
+          v-if="recallItem.data.mode === 'timed' && !recallItem.data.count"
           :remaining-ms="runner.remainingMs.value"
           :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
           @stop="confirmStop"
@@ -222,11 +222,29 @@
         </RunHeader>
         <div v-else class="row items-center q-gutter-sm">
           <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
-            $t('training.page.recallProgress', {
-              played: runner.played.value,
-              exact: runner.solved.value
-            })
+            recallItem.data.count
+              ? $t('blindfoldRecall.player.lessonProgress', {
+                  n: recallItem.data.position,
+                  count: recallItem.data.count
+                })
+              : $t('training.page.recallProgress', {
+                  played: runner.played.value,
+                  exact: runner.solved.value
+                })
           }}</div>
+          <div
+            v-if="recallLives !== null"
+            class="row items-center text-red-6"
+            data-testid="recall-lives"
+            :data-lives="recallLives"
+          >
+            <q-icon
+              v-for="i in BOSS_LIVES"
+              :key="i"
+              size="22px"
+              :name="i <= recallLives ? 'favorite' : 'heart_broken'"
+            />
+          </div>
           <q-space />
           <q-btn
             flat
@@ -638,6 +656,7 @@ import { t } from '@/i18n'
 import { levelAt } from '@/utils/puzzleStreak'
 import { ratingZone, stepPlan, tierName } from '@/utils/parcours'
 import { rushProgress } from '@/utils/puzzleRush'
+import { BOSS_LIVES } from '@/utils/mindMapPath'
 import { stepModule } from '@/utils/session/steps'
 import { resultKind } from '@/utils/runResult'
 import { chestToOpen } from '@/utils/shopReward'
@@ -872,6 +891,11 @@ const recallResult = computed(() =>
  * The correction's buttons: the next position (or the result once over); in a free run, the
  * level just opened.
  */
+/** A mind map boss's lives left (pieces wrong or missing spent), null outside a boss. */
+const recallLives = computed(() => {
+  const lives = recallResult.value?.lives ?? recallItem.value?.data.lives
+  return typeof lives === 'number' ? lives : null
+})
 const recallActions = computed(() => {
   const opened = recallResult.value?.unlockedLevel ?? null
   const free =

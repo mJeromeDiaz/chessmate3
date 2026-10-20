@@ -36,7 +36,9 @@ final readonly class PassRecorder implements RunClosedListenerInterface
         $itemCount = self::int($summary['itemCount'] ?? 0);
         $successCount = self::int($summary['successCount'] ?? 0);
         $activity = $found['step']->activity ?? null;
-        $passed = null !== $activity && $activity->passes($itemCount, $successCount);
+        $metrics = $summary['metrics'] ?? [];
+        $failures = \is_array($metrics) && \is_int($metrics['failures'] ?? null) ? $metrics['failures'] : null;
+        $passed = null !== $activity && $activity->passes($itemCount, $successCount, $failures);
         $completed = false;
         if ($passed && null !== $found) {
             $user = $run->getUser();
@@ -49,7 +51,7 @@ final readonly class PassRecorder implements RunClosedListenerInterface
                 $this->rewarder->completed($user, $attempt->getCapacity(), $step, $row, $rows, $run->getId()->toRfc4122(), $now);
             }
         }
-        $attempt->judge($passed, $itemCount, $successCount, $completed, $now);
+        $attempt->judge($passed, $itemCount, $successCount, $completed, $now, $failures);
     }
 
     private static function int(mixed $value): int

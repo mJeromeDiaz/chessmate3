@@ -101,9 +101,17 @@ class Run
     private ?Uuid $parentId = null;
 
     /**
+     * The mind map step this run is played for (`visualisation:2-1-3`, docs/MIND_MAP.md, § 4), set
+     * by the server only ({@see \App\MindMap\Progress\StepLauncher}), never from the client: a
+     * module may trust it to open what the path allows (a level not unlocked yet, a boss's options).
+     */
+    #[ORM\Column(length: 48, nullable: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    private ?string $pathStep = null;
+
+    /**
      * @param array<string, mixed> $config
      */
-    public function __construct(User $user, Module $module, string $subjectType, Uuid $subjectId, int $budgetSeconds, array $config, \DateTimeImmutable $startedAt, ?Uuid $parentId = null)
+    public function __construct(User $user, Module $module, string $subjectType, Uuid $subjectId, int $budgetSeconds, array $config, \DateTimeImmutable $startedAt, ?Uuid $parentId = null, ?string $pathStep = null)
     {
         $this->id = Uuid::v7();
         $this->user = $user;
@@ -115,6 +123,7 @@ class Run
         $this->startedAt = $startedAt;
         $this->expiresAt = $startedAt->modify(sprintf('+%d seconds', $budgetSeconds));
         $this->parentId = $parentId;
+        $this->pathStep = $pathStep;
     }
 
     public function getId(): Uuid
@@ -201,6 +210,17 @@ class Run
     public function getParentId(): ?Uuid
     {
         return $this->parentId;
+    }
+
+    public function getPathStep(): ?string
+    {
+        return $this->pathStep;
+    }
+
+    /** Played for a step of a mind map path (set by the server only). */
+    public function isPathStep(): bool
+    {
+        return null !== $this->pathStep;
     }
 
     public function getDecisionUntil(): ?\DateTimeImmutable

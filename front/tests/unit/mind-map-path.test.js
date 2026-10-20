@@ -173,6 +173,10 @@ describe('mind map path', () => {
     expect(outcomeKey(verdict('boss', 'failed'))).toBe('defeat')
     expect(livesLeft({ itemCount: 7, successCount: 5, lives: 3 })).toBe(1)
     expect(livesLeft({ itemCount: 9, successCount: 4, lives: null })).toBe(0)
+    // A recall boss: its pieces wrong or missing, not its positions.
+    expect(
+      livesLeft({ itemCount: 3, successCount: 2, failures: 2, lives: 3 })
+    ).toBe(1)
   })
 
   it('says why a step was refused', () => {

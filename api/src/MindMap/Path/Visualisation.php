@@ -17,6 +17,8 @@ final class Visualisation
 {
     /** A counted lesson's clock: an expiry only (half an hour). */
     private const LESSON_SECONDS = 1_800;
+    /** The positions of a recall lesson (chapter 2). */
+    private const RECALL_COUNT = 5;
 
     /**
      * @return list<Chapter>
@@ -53,17 +55,27 @@ final class Visualisation
         ], self::boss('1-boss', 200, 100, 'jongleur', ['chapter_1', 'boss_jongleur'], self::jongleur(20)));
     }
 
-    /** Static blindfold vision: three sections of positions to remember. */
+    /**
+     * Static blindfold vision: three sections of positions to remember, the levels 1 to 12 of the
+     * position recall (docs/BLINDFOLD_RECALL.md); the mini-boss 2.1 rebuilds levels 2, 3 and 4 on a
+     * board without coordinates, a life per piece wrong or missing.
+     */
     private static function chapter2(): Chapter
     {
         return new Chapter('c2', 2, [
-            new Section('2-1', '2.1', self::exercises('2-1', '2.1', [2, 3, 3, 4]), [
-                self::miniBoss('2-1-boss', 80, ['section_2_1']),
+            new Section('2-1', '2.1', self::exercises('2-1', '2.1', [2, 3, 3, 4], self::recalls(1)), [
+                self::miniBoss('2-1-boss', 80, ['section_2_1'], null, 40, new Activity(
+                    Module::BlindfoldRecall,
+                    ['level' => 4, 'mode' => 'timed', 'count' => 3, 'lives' => PathRules::BOSS_LIVES, 'coordinates' => false, 'levels' => [2, 3, 4]],
+                    self::LESSON_SECONDS,
+                    3,
+                    PathRules::BOSS_LIVES,
+                )),
             ]),
-            new Section('2-2', '2.2', self::exercises('2-2', '2.2', [2, 3, 3, 4]), [
+            new Section('2-2', '2.2', self::exercises('2-2', '2.2', [2, 3, 3, 4], self::recalls(5)), [
                 self::miniBoss('2-2-boss', 100, ['section_2_2']),
             ]),
-            new Section('2-3', '2.3', self::exercises('2-3', '2.3', [3, 3, 3, 4]), [
+            new Section('2-3', '2.3', self::exercises('2-3', '2.3', [3, 3, 3, 4], self::recalls(9)), [
                 self::miniBoss('2-3-boss', 120, ['section_2_3']),
             ], [
                 self::hidden('2-3-hidden', 60, null, ['hidden_2_3']),
@@ -156,18 +168,32 @@ final class Visualisation
     /**
      * The exercises of a section, numbered from 1, waiting for their modules.
      *
-     * @param list<int> $passes the passes of each
+     * @param list<int>      $passes     the passes of each
+     * @param list<Activity> $activities their activities, in order (none: waiting for their modules)
      *
      * @return list<Step>
      */
-    private static function exercises(string $key, string $number, array $passes): array
+    private static function exercises(string $key, string $number, array $passes, array $activities = []): array
     {
         $steps = [];
         foreach ($passes as $i => $count) {
-            $steps[] = self::exercise(\sprintf('%s-%d', $key, $i + 1), \sprintf('%s.%d', $number, $i + 1), $count);
+            $steps[] = self::exercise(\sprintf('%s-%d', $key, $i + 1), \sprintf('%s.%d', $number, $i + 1), $count, $activities[$i] ?? null);
         }
 
         return $steps;
+    }
+
+    /**
+     * Four lessons of position recall from $from: RECALL_COUNT positions each, exact ones only right.
+     *
+     * @return list<Activity>
+     */
+    private static function recalls(int $from): array
+    {
+        return array_map(
+            static fn (int $level): Activity => new Activity(Module::BlindfoldRecall, ['level' => $level, 'mode' => 'timed', 'count' => self::RECALL_COUNT], self::LESSON_SECONDS, self::RECALL_COUNT),
+            range($from, $from + 3),
+        );
     }
 
     /**

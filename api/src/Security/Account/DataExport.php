@@ -112,7 +112,7 @@ final readonly class DataExport
         $zip->addFromString('entrainement.json', self::json([
             'runs' => $this->rows(
                 'SELECT BIN_TO_UUID(id) AS id, module, subject_type, BIN_TO_UUID(subject_id) AS subject_id, config, budget_seconds, status,
-                        started_at, expires_at, closed_at, close_reason, summary, BIN_TO_UUID(parent_id) AS session_id
+                        started_at, expires_at, closed_at, close_reason, summary, BIN_TO_UUID(parent_id) AS session_id, path_step
                    FROM training_run WHERE user_id = ? ORDER BY started_at',
                 $id,
                 ['config', 'summary'],
@@ -195,7 +195,7 @@ final readonly class DataExport
                 $id,
             ),
             'mindMapAttempts' => $this->rows(
-                'SELECT BIN_TO_UUID(run_id) AS training_run_id, capacity, step, outcome, item_count, success_count, completed, started_at, judged_at
+                'SELECT BIN_TO_UUID(run_id) AS training_run_id, capacity, step, outcome, item_count, success_count, failures, completed, started_at, judged_at
                    FROM mind_map_attempt WHERE user_id = ? ORDER BY started_at',
                 $id,
             ),

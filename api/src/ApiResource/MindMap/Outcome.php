@@ -43,6 +43,8 @@ final class Outcome
     public string $outcome;
     public int $itemCount = 0;
     public int $successCount = 0;
+    /** What counts against a boss's lives: its items failed, or its pieces wrong or missing (a recall). */
+    public int $failures = 0;
     /** What the run had to reach: items, and lives for a boss (null for an exercise). */
     public int $count;
     public ?int $lives = null;

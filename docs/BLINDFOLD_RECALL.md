@@ -130,6 +130,25 @@ coups ; l'élément donne leur UCI et leur SAN (`{uci, san}`), rejoués depuis l
   exacte, `hint` proche, `fail` ratée, avec la position, les coups annoncés, la reconstitution et
   les comptes.
 
+## 3 bis. Séances d'une étape de la carte mentale
+
+Le chapitre 2 du parcours visualisation ([MIND_MAP.md](MIND_MAP.md)) joue la reconstitution. Une
+séance lancée par une étape (`Run::isPathStep()`, colonne `training_run.path_step` posée par le
+serveur seul) **ignore le verrou des niveaux** et peut recevoir quatre options ; ailleurs, elles
+sont refusées (422) :
+
+- `count` (1 à 20, `RecallRules::MAX_COUNT`) : la séance se ferme à ce nombre de positions
+  (`subject_finished`, raison `count_done`) ; l'élément donne `position` et `count`.
+- `lives` (1 à 10) : chaque pièce fausse, en trop ou oubliée (`wrong + missing`) coûte une vie ; la
+  séance se ferme quand elles sont épuisées (raison `lives_out`). L'élément et le verdict donnent
+  les vies restantes (`lives`) ; le récapitulatif, `metrics.failures` (les pièces fausses ou
+  oubliées), qui juge le boss.
+- `coordinates` (`false`) : l'échiquier sans coordonnées, pendant la mémorisation comme pendant la
+  reconstitution (`coordinates` dans l'élément).
+- `levels` : le niveau de chaque position à son tour (la dernière valeur ensuite).
+
+Ses reconstitutions exactes comptent comme les autres pour ouvrir les niveaux ; leur XP aussi.
+
 ## 4. XP
 
 | Essai | XP |

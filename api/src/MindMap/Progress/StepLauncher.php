@@ -58,7 +58,7 @@ final readonly class StepLauncher
         }
 
         return $this->entityManager->getConnection()->transactional(function () use ($user, $capacity, $key, $activity): Run {
-            $run = $this->runner->start($user, $activity->module, $this->subjectOf($user, $activity), $activity->budgetSeconds, $activity->config);
+            $run = $this->runner->start($user, $activity->module, $this->subjectOf($user, $activity), $activity->budgetSeconds, $activity->config, null, \sprintf('%s:%s', $capacity->value, $key));
             $this->entityManager->persist(new Attempt($run, $capacity, $key, $run->getStartedAt()));
             $this->entityManager->flush();
 

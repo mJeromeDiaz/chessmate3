@@ -36,8 +36,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The Jongleur, boss of the visualisation path's chapter 1 (docs/MIND_MAP.md, § 8), as a run: the
- * subject is the user, config `count` (the questions to answer, the run's end). Quick questions of
+ * The Jongleur, boss of the visualisation path's chapter 1 (docs/MIND_MAP.md, § 8), as a run
+ * launched by its path's step only ({@see Run::isPathStep()}): the subject is the user, config
+ * `count` (the questions to answer, the run's end). Quick questions of
  * the chapter's exercises, drawn one at a time ({@see QuestionDrawer}): find, name or colour a
  * square (white's side), play a move announced or write a move shown played in a puzzle's position.
  * Each has {@see JongleurRules::QUESTION_SECONDS}, on the server's clock: a late answer, or none, is
@@ -83,6 +84,9 @@ final class JongleurModule implements TimeboxedModuleInterface, CountedModuleInt
     {
         if (!$run->getSubjectId()->equals($run->getUser()->getId())) {
             throw new SubjectNotFoundException();
+        }
+        if (!$run->isPathStep()) {
+            throw new InvalidRunConfigException('The Jongleur is fought from the mind map only.');
         }
         self::count($run->getConfig());
         $this->serve($run, $now);

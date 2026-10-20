@@ -301,13 +301,15 @@ export function outcomeKey(outcome) {
 }
 
 /**
- * Lives a boss run left: 3 minus its failures (never below 0).
+ * Lives a boss run left: 3 minus its failures (never below 0). The failures are its items failed,
+ * or what its module counts (a recall's pieces wrong or missing), as the API gives them.
  *
- * @param {{itemCount: number, successCount: number, lives: number|null}} outcome
+ * @param {{itemCount: number, successCount: number, failures?: number, lives: number|null}} outcome
  */
 export function livesLeft(outcome) {
   const lives = outcome.lives ?? BOSS_LIVES
-  return Math.max(0, lives - (outcome.itemCount - outcome.successCount))
+  const failures = outcome.failures ?? outcome.itemCount - outcome.successCount
+  return Math.max(0, lives - failures)
 }
 
 /**

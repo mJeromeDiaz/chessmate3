@@ -61,13 +61,14 @@ class RecallAttemptRepository extends ServiceEntityRepository
 
     /**
      * The run's rebuilds by verdict, their accuracy summed (for the mean), their time (each one
-     * capped), and the level opened during the run if any.
+     * capped), their pieces wrong or missing (a mind map boss's lives), and the level opened during
+     * the run if any.
      *
-     * @return array{exact: int, close: int, missed: int, accuracySum: float, activeMs: int, unlockedLevel: int|null}
+     * @return array{exact: int, close: int, missed: int, accuracySum: float, activeMs: int, errors: int, unlockedLevel: int|null}
      */
     public function statsOfRun(Run $run): array
     {
-        $stats = ['exact' => 0, 'close' => 0, 'missed' => 0, 'accuracySum' => 0.0, 'activeMs' => 0, 'unlockedLevel' => null];
+        $stats = ['exact' => 0, 'close' => 0, 'missed' => 0, 'accuracySum' => 0.0, 'activeMs' => 0, 'errors' => 0, 'unlockedLevel' => null];
         foreach ($this->findResolvedOfRun($run) as $attempt) {
             $verdict = match ($attempt->getStatus()) {
                 RecallStatus::Exact => 'exact',
@@ -77,12 +78,13 @@ class RecallAttemptRepository extends ServiceEntityRepository
             ++$stats[$verdict];
             $stats['accuracySum'] += $attempt->getAccuracy();
             $stats['activeMs'] += min(RecallRules::ACTIVE_TIME_CAP_MS, $attempt->getDurationMs() ?? 0);
+            $stats['errors'] += $attempt->getWrong() + $attempt->getMissing();
             if ($attempt->isUnlocked()) {
                 $stats['unlockedLevel'] = max($stats['unlockedLevel'] ?? 0, $attempt->getLevel() + 1);
             }
         }
 
-        /** @var array{exact: int, close: int, missed: int, accuracySum: float, activeMs: int, unlockedLevel: int|null} */
+        /** @var array{exact: int, close: int, missed: int, accuracySum: float, activeMs: int, errors: int, unlockedLevel: int|null} */
         return $stats;
     }
 

@@ -13,14 +13,21 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * the user's first exercise: unless `streak` is asked, the API is answered "none pending".
  *
  * @param {import('@playwright/test').BrowserContext} context
- * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number}} [options] an admin
+ * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number}} [options] an admin
  *   (docs/EARLY_ACCESS.md); a password, for a test that also signs in through the login page;
- *   the real streak announcements; crowns of the store (docs/SHOP.md)
+ *   the real streak announcements; crowns of the store (docs/SHOP.md); the first chapters of the
+ *   visualisation path completed (docs/MIND_MAP.md)
  * @returns {Promise<{id: string, email: string}>}
  */
 export async function signIn(
   context,
-  { admin = false, password, streak = false, crowns = 0 } = {}
+  {
+    admin = false,
+    password,
+    streak = false,
+    crowns = 0,
+    mindMapChapters = 0
+  } = {}
 ) {
   if (!streak) {
     await context.route('**/api/gamification/streak/notice', route =>
@@ -31,6 +38,7 @@ export async function signIn(
   if (admin) args.push('--admin')
   if (password) args.push(`--password=${password}`)
   if (crowns > 0) args.push(`--crowns=${crowns}`)
+  if (mindMapChapters > 0) args.push(`--mind-map-chapters=${mindMapChapters}`)
   const output = execFileSync('php', args, {
     cwd: API_DIR,
     env: { ...process.env, APP_ENV: 'e2e' }

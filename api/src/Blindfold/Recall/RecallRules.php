@@ -72,6 +72,10 @@ final class RecallRules
     public const GENERATION_TRIES = 500;
     /** A rebuild's time counts for at most this much in the run's active time (a tab left open). */
     public const ACTIVE_TIME_CAP_MS = 300_000;
+    /** A mind map lesson's or boss's positions at most (docs/BLINDFOLD_RECALL.md, § 3 bis). */
+    public const MAX_COUNT = 20;
+    /** A mind map boss's lives at most, counted in pieces wrong or missing. */
+    public const MAX_LIVES = 10;
 
     public static function exists(int $level): bool
     {

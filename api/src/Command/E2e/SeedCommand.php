@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Command\E2e;
 
+use App\Entity\MindMap\Progress;
 use App\Entity\User;
+use App\Enum\MindMap\Capacity;
+use App\Enum\MindMap\StepKind;
+use App\MindMap\Path\Paths;
 use App\Security\Session\AuthenticatedSessionFactory;
 use App\Shop\Wallet\CrownAdjustment;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,7 +27,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  *
  * --admin gives it ROLE_ADMIN (the administration, docs/EARLY_ACCESS.md); --password sets a
  * password, for a test that signs in through the login page; --crowns gives it crowns of the
- * store (docs/SHOP.md), as an admin's grant.
+ * store (docs/SHOP.md), as an admin's grant; --mind-map-chapters completes the first chapters of
+ * the visualisation path (docs/MIND_MAP.md), every step but the hidden bosses, without rewards.
  */
 #[When(env: 'e2e')]
 #[AsCommand(name: 'app:e2e:seed-user', description: 'E2E only: creates a user and prints a refresh token')]
@@ -43,7 +48,8 @@ final class SeedCommand extends Command
         $this
             ->addOption('admin', null, InputOption::VALUE_NONE, 'Give the user ROLE_ADMIN')
             ->addOption('password', null, InputOption::VALUE_REQUIRED, 'Set this password')
-            ->addOption('crowns', null, InputOption::VALUE_REQUIRED, 'Give it this many crowns');
+            ->addOption('crowns', null, InputOption::VALUE_REQUIRED, 'Give it this many crowns')
+            ->addOption('mind-map-chapters', null, InputOption::VALUE_REQUIRED, 'Complete this many chapters of the visualisation path');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -63,6 +69,24 @@ final class SeedCommand extends Command
         $crowns = $input->getOption('crowns');
         if (is_numeric($crowns) && (int) $crowns > 0) {
             $this->crowns->adjust($user->getId(), (int) $crowns, 'e2e', null);
+        }
+
+        $chapters = $input->getOption('mind-map-chapters');
+        if (is_numeric($chapters) && (int) $chapters > 0) {
+            $now = new \DateTimeImmutable();
+            foreach (\array_slice(Paths::chapters(Capacity::Visualisation), 0, (int) $chapters) as $chapter) {
+                foreach ($chapter->allSteps() as $step) {
+                    if (StepKind::HiddenBoss === $step->kind) {
+                        continue;
+                    }
+                    $progress = new Progress($user, Capacity::Visualisation, $step->key, $now);
+                    for ($i = 0; $i < max(1, $step->passes); ++$i) {
+                        $progress->pass($step->passes, $now);
+                    }
+                    $this->entityManager->persist($progress);
+                }
+            }
+            $this->entityManager->flush();
         }
 
         $session = $this->sessionFactory->issueFor($user);

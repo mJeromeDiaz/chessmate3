@@ -36,6 +36,7 @@
         <ChessBoard
           :fen="game.fen.value"
           any-position
+          :coordinates="item.data.coordinates !== false"
           :animation-duration="0"
           :show-legal-moves="false"
           :highlights="game.highlights.value"

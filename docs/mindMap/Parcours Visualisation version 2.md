@@ -44,7 +44,7 @@ Le Sith aveugle quitte les chapitres 5 et 6 pour devenir le boss final du chapit
 
 - **2.1.1** Roi blanc, roi noir, pion blanc
 - **2.1.2** 2 rois et 2 pions blancs
-- **2.1.3** 2 rois, 3 pions blancs, 1 pion noir
+- **2.1.3** 2 rois, 3 pions blancs, 1 pion 
 - **2.1.4** 2 rois, 1 fou blanc, 3 pions
 
 *Mini-boss :* reconstruire trois positions successives sans indice visuel.

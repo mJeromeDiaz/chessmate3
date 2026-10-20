@@ -107,8 +107,8 @@ npm run test:e2e          # Playwright (API with APP_ENV=e2e on :8100, quasar de
 ```
 
 End-to-end environment: `APP_ENV=e2e` (`api/.env.e2e`) uses its own database (`dbname_suffix:
-_e2e`) and registers `app:e2e:seed-user [--admin] [--password=…]` (a signed-in user without the
-email 2FA), which exists in no other environment. PHP's built-in server needs `-d
+_e2e`) and registers `app:e2e:seed-user [--admin] [--password=…] [--mind-map-chapters=<n>]` (a signed-in
+user without the email 2FA), which exists in no other environment. PHP's built-in server needs `-d
 variables_order=EGPCS` to see `APP_ENV`. Emails go to **Mailpit** (`mailpit` must be in the PATH:
 `sudo sh < <(curl -sL https://raw.githubusercontent.com/axllent/mailpit/develop/install.sh)`),
 started by Playwright on SMTP 1125 / HTTP 8125 and read by `tests/e2e/mailpit.js`; no worker runs

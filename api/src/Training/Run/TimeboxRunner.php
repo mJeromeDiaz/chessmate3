@@ -77,13 +77,14 @@ final class TimeboxRunner
     /**
      * @param array<string, mixed> $config   module-specific options
      * @param Uuid|null            $parentId the session the run is a step of
+     * @param string|null          $pathStep the mind map step the run is played for (never from the client)
      *
      * @throws RunInProgressException
      * @throws \App\Training\Exception\InvalidRunConfigException
      * @throws \App\Training\Exception\SubjectNotFoundException
      * @throws SubjectUnavailableException
      */
-    public function start(User $user, Module $module, Uuid $subjectId, int $budgetSeconds, array $config = [], ?Uuid $parentId = null): Run
+    public function start(User $user, Module $module, Uuid $subjectId, int $budgetSeconds, array $config = [], ?Uuid $parentId = null, ?string $pathStep = null): Run
     {
         $implementation = $this->modules->for($module);
         $max = $implementation instanceof CountedModuleInterface && $implementation->isCounted($config) ? self::MAX_COUNTED_BUDGET_SECONDS : self::MAX_BUDGET_SECONDS;
@@ -93,12 +94,12 @@ final class TimeboxRunner
         $this->closeExpired($user);
 
         try {
-            return $this->entityManager->wrapInTransaction(function () use ($user, $module, $implementation, $subjectId, $budgetSeconds, $config, $parentId): Run {
+            return $this->entityManager->wrapInTransaction(function () use ($user, $module, $implementation, $subjectId, $budgetSeconds, $config, $parentId, $pathStep): Run {
                 $now = $this->now();
                 if (null !== $this->runs->findActiveOf($user)) {
                     throw new RunInProgressException();
                 }
-                $run = new Run($user, $module, $implementation->subjectType(), $subjectId, $budgetSeconds, $config, $now, $parentId);
+                $run = new Run($user, $module, $implementation->subjectType(), $subjectId, $budgetSeconds, $config, $now, $parentId, $pathStep);
                 $this->entityManager->persist($run);
                 // The unique index on active_user_id rejects a concurrent second start here.
                 $this->entityManager->flush();

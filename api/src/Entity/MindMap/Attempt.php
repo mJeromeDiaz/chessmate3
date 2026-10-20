@@ -49,6 +49,10 @@ class Attempt
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 0])]
     private int $successCount = 0;
 
+    /** What its module counted as failures (a recall's pieces wrong or missing), null: its items failed. */
+    #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
+    private ?int $failures = null;
+
     /** Its pass completed the step (the last pass, the boss beaten). */
     #[ORM\Column(options: ['default' => false])]
     private bool $completed = false;
@@ -69,7 +73,7 @@ class Attempt
         $this->startedAt = $startedAt;
     }
 
-    public function judge(bool $passed, int $itemCount, int $successCount, bool $completed, \DateTimeImmutable $at): void
+    public function judge(bool $passed, int $itemCount, int $successCount, bool $completed, \DateTimeImmutable $at, ?int $failures = null): void
     {
         if (AttemptOutcome::Pending !== $this->outcome) {
             throw new \LogicException('Attempt already judged.');
@@ -77,6 +81,7 @@ class Attempt
         $this->outcome = $passed ? AttemptOutcome::Passed : AttemptOutcome::Failed;
         $this->itemCount = min($itemCount, 65_535);
         $this->successCount = min($successCount, 65_535);
+        $this->failures = null === $failures ? null : min(max(0, $failures), 65_535);
         $this->completed = $completed;
         $this->judgedAt = $at;
     }
@@ -119,6 +124,12 @@ class Attempt
     public function getSuccessCount(): int
     {
         return $this->successCount;
+    }
+
+    /** The failures that count against a boss's lives. */
+    public function getFailures(): int
+    {
+        return $this->failures ?? max(0, $this->itemCount - $this->successCount);
     }
 
     public function isCompleted(): bool

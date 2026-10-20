@@ -205,7 +205,8 @@
     "visualizeText": "Garde la position en tête…",
     "listenText": "Garde la position en tête et joue les coups annoncés dans ta tête.",
     "rebuildText": "Choisis une pièce, puis touche ses cases. Touche une pièce posée pour la retirer.",
-    "rebuildAfterText": "Replace la position après les coups annoncés : choisis une pièce, puis touche ses cases."
+    "rebuildAfterText": "Replace la position après les coups annoncés : choisis une pièce, puis touche ses cases.",
+    "lessonProgress": "Position {n} sur {count}"
   },
   "recap": {
     "level": "Niveau {level} · {title}.",

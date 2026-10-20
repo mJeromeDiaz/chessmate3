@@ -27,12 +27,12 @@ final class JongleurTest extends WoodpeckerWebTestCase
     public function testTheQuestionsAreMixedAndJudged(): void
     {
         $alice = $this->createUserIn('alice@example.com');
-        $runId = $this->start($alice, 10);
+        $runId = $this->startBoss($alice);
 
         $asked = [];
-        for ($i = 1; $i <= 10; ++$i) {
+        for ($i = 1; $i <= 20; ++$i) {
             $item = $this->item($alice, $runId);
-            self::assertSame(['jongleur', $i, 10, 3, 6], [$item['type'], $item['data']['position'], $item['data']['count'], $item['data']['lives'], $item['data']['seconds']]);
+            self::assertSame(['jongleur', $i, 20, 3, 6], [$item['type'], $item['data']['position'], $item['data']['count'], $item['data']['lives'], $item['data']['seconds']]);
             if ('write' === $item['data']['question']) {
                 self::assertArrayNotHasKey('san', $item['data']['move'] ?? [], 'The move to write comes without its SAN.');
             }
@@ -42,18 +42,18 @@ final class JongleurTest extends WoodpeckerWebTestCase
         }
         $counts = array_count_values($asked);
         ksort($counts);
-        self::assertSame(['color' => 2, 'find' => 2, 'name' => 2, 'play' => 2, 'write' => 2], $counts, 'Each kind as often as the others.');
+        self::assertSame(['color' => 4, 'find' => 4, 'name' => 4, 'play' => 4, 'write' => 4], $counts, 'Each kind as often as the others.');
 
         $closed = $this->getRun($alice, $runId);
-        self::assertSame(['closed', 'subject_finished', 'count_done', 10, 10, true], [$closed['status'], $closed['closeReason'], $closed['summary']['context']['reason'] ?? null, $closed['summary']['itemCount'] ?? null, $closed['summary']['successCount'] ?? null, $closed['summary']['metrics']['won'] ?? null]);
+        self::assertSame(['closed', 'subject_finished', 'count_done', 20, 20, true], [$closed['status'], $closed['closeReason'], $closed['summary']['context']['reason'] ?? null, $closed['summary']['itemCount'] ?? null, $closed['summary']['successCount'] ?? null, $closed['summary']['metrics']['won'] ?? null]);
         $this->runOutbox();
-        self::assertSame(0, $this->xpOf($alice), 'No XP of its own.');
+        self::assertSame(0, $this->xpOf($alice), 'No exercise XP of its own (the boss rewards).');
     }
 
     public function testTheThirdFailureEndsTheFight(): void
     {
         $alice = $this->createUserIn('alice@example.com');
-        $runId = $this->start($alice, 20);
+        $runId = $this->startBoss($alice);
 
         $item = $this->item($alice, $runId);
         $wrong = $this->submitOk($alice, $runId, $item['id'], self::answer($item, false));
@@ -78,7 +78,7 @@ final class JongleurTest extends WoodpeckerWebTestCase
     public function testAnAnswerInItsTimeCounts(): void
     {
         $alice = $this->createUserIn('alice@example.com');
-        $runId = $this->start($alice, 5);
+        $runId = $this->startBoss($alice);
         $item = $this->item($alice, $runId);
         // 6 s, the second the start is stored to, the network's 2 s.
         $this->travel('+8 seconds');
@@ -142,11 +142,17 @@ final class JongleurTest extends WoodpeckerWebTestCase
         self::assertSame(['failed', false], [$outcome['outcome'] ?? null, $outcome['completed'] ?? null]);
     }
 
-    public function testTheConfigIsChecked(): void
+    public function testOnlyThePathStartsAFight(): void
     {
         $alice = $this->createUserIn('alice@example.com');
-        foreach ([['count' => 0], ['count' => 21], ['count' => 10, 'kind' => 'play'], []] as $config) {
-            self::assertSame(422, $this->startResponse($alice, $config)->getStatusCode(), json_encode($config, \JSON_THROW_ON_ERROR));
+        foreach ([['count' => 20], ['count' => 20, 'pathStep' => 'visualisation:1-boss'], []] as $config) {
+            $response = $this->api('POST', '/api/training/runs', $alice, [
+                'module' => 'jongleur',
+                'subjectId' => $alice->getId()->toRfc4122(),
+                'budgetSeconds' => 1_800,
+                'config' => $config,
+            ]);
+            self::assertSame(422, $response->getStatusCode(), json_encode($config, \JSON_THROW_ON_ERROR));
         }
     }
 
@@ -172,27 +178,20 @@ final class JongleurTest extends WoodpeckerWebTestCase
         };
     }
 
-    private function start(User $user, int $count): string
+    /** Chapter 1's exercises done, its boss's fight started (20 questions). */
+    private function startBoss(User $user): string
     {
-        $response = $this->startResponse($user, ['count' => $count]);
+        foreach (['1-1', '1-2', '1-3', '1-4', '1-chest', '1-5', '1-6', '1-7', '1-8', '1-9'] as $step) {
+            $this->completed($user, $step);
+        }
+        $response = $this->api('POST', '/api/mind-map/visualisation/steps/1-boss/start', $user);
         self::assertSame(201, $response->getStatusCode(), (string) $response->getContent());
-        $id = $this->json($response)['id'] ?? null;
+        $run = $this->json($response)['run'] ?? null;
+        self::assertIsArray($run);
+        $id = $run['id'] ?? null;
         self::assertIsString($id);
 
         return $id;
-    }
-
-    /**
-     * @param array<string, mixed> $config
-     */
-    private function startResponse(User $user, array $config): Response
-    {
-        return $this->api('POST', '/api/training/runs', $user, [
-            'module' => 'jongleur',
-            'subjectId' => $user->getId()->toRfc4122(),
-            'budgetSeconds' => 1_800,
-            'config' => $config,
-        ]);
     }
 
     /**
@@ -267,7 +266,7 @@ final class JongleurTest extends WoodpeckerWebTestCase
 
     private function xpOf(User $user): int
     {
-        $sum = $this->connection()->fetchOne('SELECT COALESCE(SUM(xp), 0) FROM gamification_xp_entry WHERE user_id = ?', [$user->getId()->toBinary()]);
+        $sum = $this->connection()->fetchOne("SELECT COALESCE(SUM(xp), 0) FROM gamification_xp_entry WHERE user_id = ? AND kind = 'exercise'", [$user->getId()->toBinary()]);
 
         return is_numeric($sum) ? (int) $sum : 0;
     }

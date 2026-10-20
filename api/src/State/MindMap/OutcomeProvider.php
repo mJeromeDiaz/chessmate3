@@ -58,6 +58,7 @@ final class OutcomeProvider implements ProviderInterface
         $outcome->outcome = $attempt->getOutcome()->value;
         $outcome->itemCount = $attempt->getItemCount();
         $outcome->successCount = $attempt->getSuccessCount();
+        $outcome->failures = $attempt->getFailures();
         $outcome->count = $step->activity->count ?? 0;
         $outcome->lives = $step->activity?->lives;
         $outcome->passes = ($this->progress->byStep($user, $capacity)[$step->key] ?? null)?->getPasses() ?? 0;

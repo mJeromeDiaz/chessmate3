@@ -30,6 +30,7 @@ use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
+use App\Training\Module\CountedModuleInterface;
 use App\Training\Module\Item;
 use App\Training\Module\ItemResult;
 use App\Training\Module\ItemSubmission;
@@ -47,17 +48,23 @@ use Symfony\Component\Uid\Uuid;
  * {@see RecallRules::FREE_BUDGET_SECONDS}, its clock hidden) or `timed`. A position is shown,
  * hidden, then rebuilt; the server corrects it square by square. The UNLOCK_EXACT-th exact rebuild
  * at a level opens the next one. Never rated. The first position is served at the start: a puzzle
- * level without a puzzle to draw, no run.
+ * level without a puzzle to draw, no run. A run of a mind map step ({@see Run::isPathStep()}), and
+ * only such a run, may take options of its own (docs/BLINDFOLD_RECALL.md, § 3 bis): `count` (the
+ * positions, the run's end), `lives` (pieces wrong or missing, the run closes when they are spent),
+ * `coordinates` (false: a board without them), `levels` (the level of each position in turn); its
+ * levels need not be open.
  *
  * @phpstan-type Announced list<array{uci: string, san: string}>
  */
-final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleInterface
+final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleInterface, CountedModuleInterface
 {
     public const SUBJECT_TYPE = 'blindfold_recall_player';
     public const ITEM_TYPE = 'blindfold_recall';
     public const SOURCE_TYPE = 'blindfold_recall_attempt';
     /** A session step's level: the highest one open when the step starts. */
     public const MY_LEVEL = 'mine';
+    /** The options only a mind map step gives its run. */
+    private const PATH_OPTIONS = ['count', 'lives', 'coordinates', 'levels'];
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -78,6 +85,11 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
     public function subjectType(): string
     {
         return self::SUBJECT_TYPE;
+    }
+
+    public function isCounted(array $config): bool
+    {
+        return isset($config['count']);
     }
 
     public function prepare(User $user, array $settings, string $notes): PreparedStep
@@ -104,7 +116,13 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
         if (RecallMode::Free === $mode && RecallRules::FREE_BUDGET_SECONDS !== $run->getBudgetSeconds()) {
             throw new InvalidRunConfigException(\sprintf('A free run lasts %d seconds.', RecallRules::FREE_BUDGET_SECONDS));
         }
-        $this->assertUnlocked($run->getUser(), $level);
+        // A mind map step opens its levels; nobody else may give its options.
+        if (!$run->isPathStep()) {
+            if ([] !== array_intersect(array_keys($run->getConfig()), self::PATH_OPTIONS)) {
+                throw new InvalidRunConfigException(\sprintf('%s: on a mind map path only.', implode(', ', self::PATH_OPTIONS)));
+            }
+            $this->assertUnlocked($run->getUser(), $level);
+        }
         // Served now: a puzzle level with nothing to draw refuses the run instead of opening an empty one.
         $this->serve($run, $now);
     }
@@ -113,7 +131,7 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
     {
         $attempt = $this->attempts->findPendingOfRun($run) ?? $this->serve($run, $now);
 
-        return $this->item($attempt);
+        return $this->item($run, $attempt);
     }
 
     public function submit(Run $run, ItemSubmission $submission, \DateTimeImmutable $now): ItemResult
@@ -170,10 +188,24 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
             ],
         ));
 
+        $options = self::options($run->getConfig());
+        $stats = $this->attempts->statsOfRun($run);
+        $resolved = $stats['exact'] + $stats['close'] + $stats['missed'];
+        $closes = match (true) {
+            null !== $options['lives'] && $stats['errors'] >= $options['lives'] => 'lives_out',
+            null !== $options['count'] && $resolved >= $options['count'] => 'count_done',
+            default => null,
+        };
+
         return new ItemResult(
             itemId: $attempt->getId()->toRfc4122(),
             success: RecallStatus::Exact === $grade->status,
+            closes: null === $closes ? null : CloseReason::SubjectFinished,
+            context: null === $closes ? [] : ['reason' => $closes],
             data: [
+                'position' => $resolved,
+                'count' => $options['count'],
+                'lives' => null === $options['lives'] ? null : max(0, $options['lives'] - $stats['errors']),
                 'status' => $grade->status->value,
                 'expected' => $grade->expected,
                 'correct' => $grade->correct,
@@ -203,6 +235,7 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
         $played = $stats['exact'] + $stats['close'] + $stats['missed'];
         $config = $run->getConfig();
         $level = \is_int($config['level'] ?? null) ? $config['level'] : null;
+        $lives = self::options($config)['lives'];
 
         return new Summary(
             durationMs: max(0, (int) round(((float) $closedAt->format('U.u') - (float) $run->getStartedAt()->format('U.u')) * 1000)),
@@ -217,6 +250,9 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
                 'missed' => $stats['missed'],
                 'accuracy' => $played > 0 ? round($stats['accuracySum'] / $played, 2) : null,
                 'unlockedLevel' => $stats['unlockedLevel'],
+                'count' => self::options($config)['count'],
+                // A mind map boss's failures: its pieces wrong or missing (docs/MIND_MAP.md, § 4).
+                'failures' => null === $lives ? null : $stats['errors'],
                 'activeMs' => $stats['activeMs'],
                 'averageMs' => $played > 0 ? intdiv($stats['activeMs'], $played) : null,
             ],
@@ -256,7 +292,7 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
      */
     private function serve(Run $run, \DateTimeImmutable $now): RecallAttempt
     {
-        [$level] = self::check($run->getConfig());
+        $level = $this->levelOf($run);
         $rules = RecallRules::level($level);
         if (null === $rules['puzzlePieces']) {
             $fen = $this->generator->generate($rules['pieces']);
@@ -275,12 +311,18 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
         return $attempt;
     }
 
-    private function item(RecallAttempt $attempt): Item
+    private function item(Run $run, RecallAttempt $attempt): Item
     {
         $level = $attempt->getLevel();
-        $mode = $attempt->getRun()->getConfig()['mode'] ?? null;
+        $mode = $run->getConfig()['mode'] ?? null;
+        $options = self::options($run->getConfig());
+        $stats = $this->attempts->statsOfRun($run);
 
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, [
+            'position' => $stats['exact'] + $stats['close'] + $stats['missed'] + 1,
+            'count' => $options['count'],
+            'lives' => null === $options['lives'] ? null : max(0, $options['lives'] - $stats['errors']),
+            'coordinates' => $options['coordinates'],
             'fen' => $attempt->getFen(),
             'level' => $level,
             'stage' => RecallRules::stage($level),
@@ -320,6 +362,42 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
     }
 
     /**
+     * The level of the next position: the run's, or its turn in `levels`.
+     */
+    private function levelOf(Run $run): int
+    {
+        [$level] = self::check($run->getConfig());
+        $levels = self::options($run->getConfig())['levels'];
+        if ([] === $levels) {
+            return $level;
+        }
+        $stats = $this->attempts->statsOfRun($run);
+
+        return $levels[min($stats['exact'] + $stats['close'] + $stats['missed'], \count($levels) - 1)];
+    }
+
+    /**
+     * A mind map step's options (checked by {@see self::check()}).
+     *
+     * @param array<string, mixed> $config
+     *
+     * @return array{count: int|null, lives: int|null, coordinates: bool, levels: list<int>}
+     */
+    private static function options(array $config): array
+    {
+        $count = $config['count'] ?? null;
+        $lives = $config['lives'] ?? null;
+        $levels = $config['levels'] ?? [];
+
+        return [
+            'count' => \is_int($count) ? $count : null,
+            'lives' => \is_int($lives) ? $lives : null,
+            'coordinates' => false !== ($config['coordinates'] ?? true),
+            'levels' => \is_array($levels) ? array_values(array_filter($levels, 'is_int')) : [],
+        ];
+    }
+
+    /**
      * @throws SubjectUnavailableException the level is not open to the user yet
      */
     private function assertUnlocked(User $user, int $level): void
@@ -338,8 +416,22 @@ final class RecallModule implements TimeboxedModuleInterface, ReviewableModuleIn
      */
     private static function check(array $config): array
     {
-        if ([] !== array_diff(array_keys($config), ['level', 'mode'])) {
-            throw new InvalidRunConfigException('Unknown option: only level and mode are accepted.');
+        if ([] !== array_diff(array_keys($config), ['level', 'mode', ...self::PATH_OPTIONS])) {
+            throw new InvalidRunConfigException(\sprintf('Unknown option: only level, mode, %s are accepted.', implode(', ', self::PATH_OPTIONS)));
+        }
+        foreach (['count' => RecallRules::MAX_COUNT, 'lives' => RecallRules::MAX_LIVES] as $option => $max) {
+            $value = $config[$option] ?? null;
+            if (null !== $value && (!\is_int($value) || $value < 1 || $value > $max)) {
+                throw new InvalidRunConfigException(\sprintf('%s must be a whole number from 1 to %d.', $option, $max));
+            }
+        }
+        if (\array_key_exists('coordinates', $config) && !\is_bool($config['coordinates'])) {
+            throw new InvalidRunConfigException('coordinates must be a boolean.');
+        }
+        $levels = $config['levels'] ?? [];
+        if (!\is_array($levels) || !array_is_list($levels) || \count($levels) > RecallRules::MAX_COUNT
+            || [] !== array_filter($levels, static fn (mixed $l): bool => !\is_int($l) || !RecallRules::exists($l))) {
+            throw new InvalidRunConfigException(\sprintf('levels must be a list of levels from 1 to %d.', RecallRules::MAX_LEVEL));
         }
         $level = $config['level'] ?? null;
         if (!\is_int($level) || !RecallRules::exists($level)) {
