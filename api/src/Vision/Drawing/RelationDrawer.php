@@ -74,7 +74,7 @@ final readonly class RelationDrawer
             Kind::RelationDefended => 0 === $this->randomizer->getInt(0, 1)
                 ? [Ask::Defended, null, $side, Relations::defended($final, $side)]
                 : [Ask::Undefended, null, $side, Relations::undefended($final, $side)],
-            Kind::RelationAligned => $this->aligned($final),
+            Kind::RelationAligned => $this->alignedWith($final),
             Kind::RelationEnPrise => [Ask::EnPriseAll, null, $notToMove, EnPrise::squares($final)],
             default => null,
         };
@@ -107,7 +107,7 @@ final readonly class RelationDrawer
      *
      * @return array{Ask, string, null, list<string>}|null
      */
-    private function aligned(string $fen): ?array
+    public function alignedWith(string $fen): ?array
     {
         $board = Attacks::board($fen);
         $counts = array_count_values($board);

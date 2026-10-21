@@ -53,7 +53,10 @@ import { t } from '@/i18n'
  */
 
 /** The capacities of the map that have a path: the map's key → the API's. */
-export const PATH_CAPACITIES = { visualization: 'visualisation' }
+export const PATH_CAPACITIES = {
+  visualization: 'visualisation',
+  calculation: 'calculation'
+}
 
 /** @param {string} key a capacity of the map */
 export function apiCapacity(key) {
@@ -130,7 +133,10 @@ export const CHARACTERS = [
   'cameleon',
   'sith',
   'sablier',
-  'flash'
+  'flash',
+  'metronome',
+  'compteur',
+  'avocat'
 ]
 
 /**
@@ -158,10 +164,12 @@ export function bossLine(step, line) {
 }
 
 /**
- * The bosses' pictures (src/assets/mindMap/boss/<character>.png). Until each one has its own, the
- * cyclops stands in for all.
+ * The bosses' pictures: a character sheet (src/assets/mindMap/boss/<character>.png, as
+ * cyclope.png), or a folder of expressions (src/assets/mindMap/boss/<character>/<character>-<mood
+ * in French>.png, and <character>-pose.png standing). Until each one has its own, the cyclops'
+ * sheet stands in for all.
  */
-const BOSS_URLS = import.meta.glob('@/assets/mindMap/boss/*.png', {
+const BOSS_URLS = import.meta.glob('@/assets/mindMap/boss/**/*.png', {
   eager: true,
   import: 'default',
   query: '?url'
@@ -171,6 +179,54 @@ const BOSS_URLS = import.meta.glob('@/assets/mindMap/boss/*.png', {
 function bossFile(name) {
   const key = Object.keys(BOSS_URLS).find(path => path.endsWith(`/${name}.png`))
   return key ? /** @type {string} */ (BOSS_URLS[key]) : ''
+}
+
+/**
+ * The expressions of a boss in a fight, and their files' names (Claude Design « Fiches
+ * miniboss »).
+ */
+export const MOODS = {
+  joy: 'joie',
+  surprise: 'surprise',
+  doubt: 'doute',
+  sadness: 'tristesse',
+  pride: 'fierte',
+  anger: 'colere',
+  focus: 'concentration',
+  anxiety: 'angoisse',
+  neutral: 'neutre'
+}
+
+/** @typedef {keyof typeof MOODS} Mood */
+
+/** The mood that stands for a pose of the sheet, for a boss drawn by expressions. */
+export const POSE_MOODS = /** @type {Record<string, Mood>} */ ({
+  idle: 'neutral',
+  cheer: 'joy',
+  angry: 'anger',
+  search: 'focus',
+  beaten: 'sadness'
+})
+
+/**
+ * A boss's expression, '' when it has none (it is drawn from a sheet).
+ *
+ * @param {string|null} character
+ * @param {Mood} mood
+ */
+export function moodImage(character, mood) {
+  return character
+    ? bossFile(`${character}-${MOODS[mood] ?? MOODS.neutral}`)
+    : ''
+}
+
+/**
+ * A boss standing (its card), '' when it has no such picture.
+ *
+ * @param {string|null} character
+ */
+export function standingImage(character) {
+  return character ? bossFile(`${character}-pose`) : ''
 }
 
 /** @param {string|null} character */

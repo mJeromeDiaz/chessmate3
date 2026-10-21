@@ -61,7 +61,7 @@ n'en supprime jamais.
 | `PuzzleStreak\Event\RecordBeaten` | un streak bat le record de sa difficulté et de sa thématique ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) | streak, séance, difficulté, thématique, longueur, record précédent |
 | `Training\Event\SessionClosed` | clôture d'une session ([TRAINING.md § 9](TRAINING.md#9-sessions)) : terminée, abandonnée ou expirée (paresseusement) | session, statut, étapes, faites, passées, temps joué, `startedAt` |
 
-`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study`, `coordinates_series`, `blindfold_puzzle`, `position_evaluation`, `streak_puzzle`, `parcours_puzzle`, `puzzle_rush`, `blindfold_recall`, `notation`, `jongleur`, `vision` (extensible).
+`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study`, `coordinates_series`, `blindfold_puzzle`, `position_evaluation`, `streak_puzzle`, `parcours_puzzle`, `puzzle_rush`, `blindfold_recall`, `notation`, `jongleur`, `vision`, `calculation` (extensible).
 
 | Source | `type` | `sourceType` |
 |---|---|---|
@@ -79,6 +79,7 @@ n'en supprime jamais.
 | Élément du module Notation ([NOTATION.md](NOTATION.md)) ; `success` = juste ; `metadata` : `kind`, `status`, `puzzleId`, `trainingRunId` | `notation` | `notation_attempt` |
 | Combat contre le Jongleur clos avec au moins une réponse ([MIND_MAP.md](MIND_MAP.md), § 8) ; `success` = gagné, `itemCount` = questions répondues, 0 XP ; `metadata` : `right`, `wrong`, `late`, `count`, `won`, `trainingRunId` | `jongleur` | `training_run` |
 | Question du module Vision ([VISION.md](VISION.md)) ; `success` = juste ; `metadata` : `kind`, `ask`, `status`, `puzzleId`, `trainingRunId` | `vision` | `vision_question` |
+| Ligne du module Calcul ([CALCULATION.md](CALCULATION.md)) ; `success` = juste ; `metadata` : `mate`, `status`, `puzzleId`, `trainingRunId` | `calculation` | `calculation_attempt` |
 
 `metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
 (`classic`, `light`) et, joué en séance, `trainingRunId`. Un puzzle classé ou rejoué porte aussi

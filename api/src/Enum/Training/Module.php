@@ -35,6 +35,8 @@ enum Module: string
     case Jongleur = 'jongleur';
     /** Vision: a position shown, hidden, moves announced, then a question about it (docs/VISION.md); played from the mind map only for now. */
     case Vision = 'vision';
+    /** Calculation: a mate calculated on a frozen board, then its whole line played at once (docs/CALCULATION.md); played from the mind map only for now. */
+    case Calculation = 'calculation';
 
     /**
      * @return list<string>

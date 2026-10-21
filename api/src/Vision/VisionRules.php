@@ -29,6 +29,13 @@ final class VisionRules
     public const UPDATE_TRIES = 300;
     /** The relations between pieces (chapter 3.3): their positions' pieces besides the kings. */
     public const RELATION_PIECES = ['?R', '?N', '?B', '?P', '?P', '?P', '?P', '?P'];
+    /** The Gargouille (chapter 3's boss): its moves, its questions on each position. */
+    public const GARGOYLE_MOVES = 5;
+    public const GARGOYLE_QUESTIONS = 5;
+    /** A question's time when a step gives one (`questionSeconds`), at most and at least. */
+    public const QUESTION_SECONDS = [5, 60];
+    /** Between two moves announced, and after the last one, on screen (VisionPlayer's ANNOUNCE_MS). */
+    public const ANNOUNCE_MS = 1500;
     public const RELATION_DENSE_PIECES = ['?Q', '?R', '?N', '?B', '?P', '?P', '?P', '?P', '?P', '?P'];
     /** The pause, position hidden, before the moves or the question. */
     public const HIDDEN_SECONDS = 2;

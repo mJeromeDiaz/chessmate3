@@ -197,6 +197,14 @@ final readonly class DataExport
                 $id,
                 ['announced', 'expected', 'answer'],
             )),
+            // The lines of the calculation module (docs/CALCULATION.md).
+            'calculationAttempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, mate, fen, expected, puzzle_id AS puzzle, puzzle_rating, think_seconds, status, answer, mistake_at,
+                        started_at, ready_at, submitted_at, duration_ms
+                   FROM calculation_attempt WHERE user_id = ? ORDER BY started_at',
+                $id,
+                ['expected', 'answer'],
+            )),
             // The mind map paths (docs/MIND_MAP.md): progress by step, runs played for a step, chests.
             'mindMapProgress' => $this->rows(
                 'SELECT capacity, step, passes, completed_at, skipped_at, updated_at FROM mind_map_progress WHERE user_id = ? ORDER BY updated_at, step',

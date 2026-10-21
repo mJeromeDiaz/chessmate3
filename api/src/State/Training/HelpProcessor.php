@@ -22,9 +22,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 
 /**
- * POST /training/runs/{id}/help {itemId} (docs/PUZZLE_STREAK.md) and POST
- * /training/runs/{id}/pardon {itemId} (docs/BLINDFOLD.md): 404 for an unknown run or item, 409 when
- * the run is over or its time up, the item already submitted (help), or the aid refused (`detail`:
+ * POST /training/runs/{id}/help {itemId} (docs/PUZZLE_STREAK.md), POST
+ * /training/runs/{id}/pardon {itemId} (docs/BLINDFOLD.md) and POST /training/runs/{id}/ready
+ * {itemId} (docs/CALCULATION.md): 404 for an unknown run or item, 409 when
+ * the run is over or its time up, the item already submitted (help, ready), or the aid refused (`detail`:
  * `no_help`, `help_limit`, `no_pardon`, `not_pardonable`, `too_late`, `not_offered`).
  *
  * @implements ProcessorInterface<HelpInput, ItemHelp>
@@ -34,6 +35,7 @@ final class HelpProcessor implements ProcessorInterface
     use RunIdTrait;
 
     public const PARDON = 'training_run_pardon';
+    public const READY = 'training_run_ready';
 
     public function __construct(
         private readonly TimeboxRunner $runner,
@@ -49,9 +51,11 @@ final class HelpProcessor implements ProcessorInterface
         $this->rateLimitGuard->consume($this->trainingItemSubmitLimiter, $user->getId()->toRfc4122());
         $runId = self::runId($uriVariables);
         try {
-            $answer = self::PARDON === $operation->getName()
-                ? $this->runner->pardon($user, $runId, $data->itemId)
-                : $this->runner->help($user, $runId, $data->itemId);
+            $answer = match ($operation->getName()) {
+                self::PARDON => $this->runner->pardon($user, $runId, $data->itemId),
+                self::READY => $this->runner->ready($user, $runId, $data->itemId),
+                default => $this->runner->help($user, $runId, $data->itemId),
+            };
         } catch (RunNotFoundException) {
             throw new NotFoundHttpException('Run not found.');
         } catch (ItemNotFoundException) {

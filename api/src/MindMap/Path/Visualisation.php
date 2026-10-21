@@ -96,8 +96,9 @@ final class Visualisation
      * (the vision module, docs/VISION.md, § 2 bis), its mini-boss asks three questions on each of 3
      * paths; 3.2 updates a position by moves (rebuilt, then questions), its mini-boss asks three
  * questions on each of 3 positions; 3.3 asks every piece in a relation (attacked, defended,
- * aligned, en prise), its mini-boss tells attacked from winning captures. Exercises calm, bosses
- * with medium distractions.
+ * aligned, en prise), its mini-boss tells attacked from winning captures; the Gargouille asks 5
+ * questions of the chapter on each of 2 positions, 15 s each, under strong distractions. Exercises
+ * calm, mini-bosses with medium distractions.
      */
     private static function chapter3(): Chapter
     {
@@ -144,7 +145,13 @@ final class Visualisation
                     PathRules::BOSS_LIVES,
                 )),
             ]),
-        ], self::boss('3-boss', 300, 120, 'gargouille', ['chapter_3', 'boss_gargouille']));
+        ], self::boss('3-boss', 300, 120, 'gargouille', ['chapter_3', 'boss_gargouille'], new Activity(
+            Module::Vision,
+            ['kind' => 'gargoyle', 'count' => 10, 'lives' => PathRules::BOSS_LIVES, 'distraction' => 'strong', 'questionSeconds' => 15],
+            self::LESSON_SECONDS,
+            10,
+            PathRules::BOSS_LIVES,
+        )));
     }
 
     /** Calculation of variations: an exam closes each section, the Sablier hides in 4.2. */

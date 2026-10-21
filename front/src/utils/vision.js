@@ -220,3 +220,45 @@ export function toggleSquare(squares, square) {
 function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
+
+/** The questions on each of the Gargouille's positions (docs/VISION.md, § 2 quinquies). */
+export const GARGOYLE_QUESTIONS = 5
+
+/**
+ * The Gargouille's face in its fight (docs/MIND_MAP.md, § 7): a miss delights it, an answer too
+ * late makes it proud, a right one in less than a third of the time surprises it; before the
+ * verdict, anxious over the last two questions, angry when the second position shows (it was
+ * survived), focused while the moves are announced, doubting past half the question's time, sad
+ * after 3 right in a row, neutral otherwise.
+ *
+ * @param {{phase: string, position: number, count: number, streak: number, result?: {status: string}|null, leftRatio: number, answeredRatio: number|null}} state
+ *   `streak`: the answers right in a row before this question; `leftRatio`: the question's time
+ *   left; `answeredRatio`: the share of it used when answered
+ * @returns {import('@/utils/mindMapPath').Mood}
+ */
+export function gargoyleMood({
+  phase,
+  position,
+  count,
+  streak,
+  result = null,
+  leftRatio,
+  answeredRatio
+}) {
+  if (result) {
+    if (result.status === 'late') return 'pride'
+    if (result.status !== 'right') return 'joy'
+    if (answeredRatio !== null && answeredRatio < 1 / 3) return 'surprise'
+    return streak + 1 >= 3 ? 'sadness' : 'neutral'
+  }
+  if (position >= count - 1) return 'anxiety'
+  if (
+    phase === 'show' &&
+    position > GARGOYLE_QUESTIONS &&
+    (position - 1) % GARGOYLE_QUESTIONS === 0
+  )
+    return 'anger'
+  if (phase === 'announce' || phase === 'hidden') return 'focus'
+  if (phase === 'ask' && leftRatio < 0.5) return 'doubt'
+  return streak >= 3 ? 'sadness' : 'neutral'
+}

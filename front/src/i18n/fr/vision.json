@@ -75,7 +75,8 @@
       "listen": "Écoute les coups",
       "ask": "À toi",
       "right": "Juste !",
-      "wrong": "Raté"
+      "wrong": "Raté",
+      "late": "Trop tard !"
     },
     "texts": {
       "memorize": "Retiens où sont les pièces : la position va disparaître.",

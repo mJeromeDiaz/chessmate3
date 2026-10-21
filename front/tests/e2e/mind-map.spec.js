@@ -44,3 +44,23 @@ test('mind map: a capacity chosen on the brain or on its card opens beside it', 
   await panel.getByTestId('capacity-module-streak').click()
   await expect(page).toHaveURL(/#\/streak$/)
 })
+
+test('mind map: the calculation path, its Métronome standing on its card', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/cerveau/calculation')
+  await expect(page.getByText('La ligne droite').first()).toBeVisible()
+  await expect(page.getByTestId('path-step-1-1')).toHaveAttribute(
+    'data-status',
+    'open'
+  )
+
+  await page.getByTestId('path-chapter-boss-1').click()
+  const intro = page.getByTestId('boss-intro')
+  await expect(intro.getByTestId('boss-name')).toHaveText('Le Métronome')
+  await expect(intro.locator('[data-mood="standing"]')).toBeVisible()
+  // Open with its chapter: fought at once by a strong player.
+  await expect(intro.getByTestId('boss-fight')).toBeVisible()
+})

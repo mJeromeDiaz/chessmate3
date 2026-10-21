@@ -24,6 +24,7 @@ use App\Training\Module\ItemSubmission;
 use App\Training\Module\ModuleRegistry;
 use App\Training\Module\OvertimeModuleInterface;
 use App\Training\Module\PardonModuleInterface;
+use App\Training\Module\ReadyModuleInterface;
 use App\Training\Module\TimeboxedModuleInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -257,6 +258,26 @@ final class TimeboxRunner
     {
         return $this->aid($user, $runId, static fn (TimeboxedModuleInterface $module, Run $run, \DateTimeImmutable $now): array|AidRefusedException => $module instanceof PardonModuleInterface
             ? $module->pardon($run, $itemId, $now)
+            : new AidRefusedException(AidRefusedException::NOT_OFFERED));
+    }
+
+    /**
+     * The player is ready to answer the item on screen (docs/CALCULATION.md: « Je réponds »): only
+     * while the run's time runs, like a submission.
+     *
+     * @return array<string, mixed> what the module answers (when the answer's clock started)
+     *
+     * @throws RunNotFoundException
+     * @throws RunClosedException
+     * @throws SubmissionTooLateException (the run is closed, or waits for the overtime decision)
+     * @throws AidRefusedException        not a module thought over first
+     * @throws \App\Training\Exception\ItemNotFoundException
+     * @throws \App\Training\Exception\ItemAlreadySubmittedException
+     */
+    public function ready(User $user, Uuid $runId, string $itemId): array
+    {
+        return $this->aid($user, $runId, static fn (TimeboxedModuleInterface $module, Run $run, \DateTimeImmutable $now): array|AidRefusedException => $module instanceof ReadyModuleInterface
+            ? $module->ready($run, $itemId, $now)
             : new AidRefusedException(AidRefusedException::NOT_OFFERED));
     }
 

@@ -61,4 +61,9 @@ enum ExerciseType: string
      * en_prise, attackers), `metadata.ask`, `metadata.status` (right, wrong).
      */
     case Vision = 'vision';
+    /**
+     * A line of the calculation module (docs/CALCULATION.md), never rated; `metadata.mate`,
+     * `metadata.status` (right, wrong, late).
+     */
+    case Calculation = 'calculation';
 }

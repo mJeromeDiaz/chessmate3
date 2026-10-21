@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   choiceText,
   correctionHighlights,
+  gargoyleMood,
   movesText,
   questionText,
   toggleSquare,
@@ -149,9 +150,9 @@ describe('vision', () => {
     expect(questionText({ ask: 'attacked', target: null, side: 'black' })).toBe(
       'Quelles pièces noires sont attaquées ?'
     )
-    expect(questionText({ ask: 'undefended', target: null, side: 'white' })).toBe(
-      'Quelles pièces blanches sont sans défense ?'
-    )
+    expect(
+      questionText({ ask: 'undefended', target: null, side: 'white' })
+    ).toBe('Quelles pièces blanches sont sans défense ?')
     expect(questionText({ ask: 'aligned', target: 'r', side: null })).toBe(
       'Quelles pièces sont alignées avec la tour noire ?'
     )
@@ -161,5 +162,44 @@ describe('vision', () => {
     expect(
       verdictText({ ask: 'winning', target: null }, { expected: ['c3', 'h2'] })
     ).toBe('Les prises gagnantes : c3, h2.')
+  })
+})
+
+describe('the Gargouille', () => {
+  const base = {
+    phase: 'show',
+    position: 1,
+    count: 10,
+    streak: 0,
+    leftRatio: 1,
+    answeredRatio: null
+  }
+
+  it('reacts to the fight before the verdict', () => {
+    expect(gargoyleMood(base)).toBe('neutral')
+    expect(gargoyleMood({ ...base, phase: 'announce' })).toBe('focus')
+    expect(gargoyleMood({ ...base, phase: 'ask', leftRatio: 0.4 })).toBe(
+      'doubt'
+    )
+    expect(gargoyleMood({ ...base, phase: 'ask', streak: 3 })).toBe('sadness')
+    expect(gargoyleMood({ ...base, position: 6 })).toBe('anger')
+    expect(gargoyleMood({ ...base, position: 7 })).toBe('neutral')
+    expect(gargoyleMood({ ...base, phase: 'ask', position: 9 })).toBe('anxiety')
+  })
+
+  it('reacts to the verdict', () => {
+    expect(gargoyleMood({ ...base, result: { status: 'wrong' } })).toBe('joy')
+    expect(gargoyleMood({ ...base, result: { status: 'late' } })).toBe('pride')
+    expect(
+      gargoyleMood({ ...base, answeredRatio: 0.2, result: { status: 'right' } })
+    ).toBe('surprise')
+    expect(
+      gargoyleMood({
+        ...base,
+        answeredRatio: 0.8,
+        streak: 2,
+        result: { status: 'right' }
+      })
+    ).toBe('sadness')
   })
 })

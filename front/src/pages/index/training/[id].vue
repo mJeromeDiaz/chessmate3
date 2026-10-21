@@ -356,6 +356,60 @@
       </template>
     </VisionPlayer>
 
+    <CalculationPlayer
+      v-else-if="calcItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="calcPlayer"
+      :item="calcItem"
+      :result="calcResult"
+      :xp="runner.xp.value"
+      :actions="calcActions"
+      :offset-ms="runner.offsetMs.value"
+      :ready-fn="calcReady"
+      @resolve="onCalcResolve"
+    >
+      <template #header>
+        <div class="row items-center q-gutter-sm">
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            calcItem.data.streakTarget
+              ? $t('calculation.player.streak', {
+                  n: calcResult?.streak ?? calcItem.data.streak ?? 0,
+                  target: calcItem.data.streakTarget
+                })
+              : $t('calculation.player.progress', {
+                  n: calcItem.data.position,
+                  count: calcItem.data.count ?? '…'
+                })
+          }}</div>
+          <div
+            v-if="calcLives !== null"
+            class="row items-center text-red-6"
+            data-testid="calculation-lives"
+            :data-lives="calcLives"
+          >
+            <q-icon
+              v-for="i in calcLivesTotal"
+              :key="i"
+              size="22px"
+              :name="i <= calcLives ? 'favorite' : 'heart_broken'"
+            />
+          </div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </CalculationPlayer>
+
     <JongleurPlayer
       v-else-if="jongleurItem && (runner.phase.value === 'running' || holdEnd)"
       ref="jongleurPlayer"
@@ -673,6 +727,7 @@ import CoordinatesPlayer from '@/components/coordinates/CoordinatesPlayer.vue'
 import NotationPlayer from '@/components/notation/NotationPlayer.vue'
 import JongleurPlayer from '@/components/mindMap/JongleurPlayer.vue'
 import VisionPlayer from '@/components/vision/VisionPlayer.vue'
+import CalculationPlayer from '@/components/calculation/CalculationPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
@@ -742,7 +797,8 @@ const STOP_MESSAGES = [
   'blindfold_recall',
   'notation',
   'jongleur',
-  'vision'
+  'vision',
+  'calculation'
 ]
 const route = useRoute()
 const router = useRouter()
@@ -1167,6 +1223,96 @@ async function onVisionResolve(report) {
     holdEnd.value = false
     error.value = apiErrorMessage(e)
     visionPlayer.value?.unlock()
+  }
+}
+
+/**
+ * The line of the calculation module on screen (docs/CALCULATION.md), kept once the run closed on
+ * the last one: its correction stays on screen (`holdEnd`) until it moves on.
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const calcItem = ref(null)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const calcPlayer = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'calculation') calcItem.value = item
+    else if (item) calcItem.value = null
+  }
+)
+const calcResult = computed(() =>
+  calcItem.value && runner.result.value?.itemId === calcItem.value.id
+    ? runner.result.value.data
+    : null
+)
+/** A mind map boss's lives left, null without lives. */
+const calcLives = computed(() => {
+  const lives = calcResult.value?.lives ?? calcItem.value?.data.lives
+  return typeof lives === 'number' ? lives : null
+})
+/** Its lives at the start: those left and those spent. */
+const calcLivesTotal = computed(
+  () => (calcLives.value ?? 0) + runner.played.value - runner.solved.value
+)
+/** After a wrong line: the next one, or the result once over (a right one moves on by itself). */
+const calcActions = computed(() =>
+  (calcResult.value && calcResult.value.status !== 'right') || error.value
+    ? [
+        {
+          label:
+            runner.phase.value === 'running'
+              ? t('training.page.next')
+              : t('training.page.seeResult'),
+          primary: true,
+          disable: loading.value,
+          testid: 'run-next',
+          onClick: async () => {
+            holdEnd.value = false
+            if (runner.phase.value === 'running') await next()
+          }
+        }
+      ]
+    : []
+)
+
+/** « Je réponds »: the server stamps when the answer's clock starts (a refusal is shown, the player still answers). */
+async function calcReady() {
+  const runId = runner.run.value?.id
+  const item = calcItem.value
+  if (!runId || !item) return
+  try {
+    await trainingApi.ready(runId, item.id)
+  } catch (e) {
+    error.value = apiErrorMessage(e)
+  }
+}
+
+/**
+ * A line played: right, the next one comes by itself once the success played; wrong, the solution
+ * replayed waits for "Suivant". Held so that the last one stays on screen when it closes the run.
+ *
+ * @param {Record<string, any>} report
+ */
+async function onCalcResolve(report) {
+  holdEnd.value = true
+  try {
+    const result = await runner.submit(report)
+    if (!result) {
+      holdEnd.value = false
+      calcPlayer.value?.unlock()
+      return
+    }
+    if (result.success)
+      setTimeout(() => {
+        holdEnd.value = false
+        if (runner.phase.value === 'running') next()
+      }, AUTO_NEXT_MS)
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    calcPlayer.value?.unlock()
   }
 }
 
@@ -1798,6 +1944,7 @@ watch(
     notationItem.value = null
     jongleurItem.value = null
     visionItem.value = null
+    calcItem.value = null
     streakItem.value = null
     parcoursItem.value = null
     try {

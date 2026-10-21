@@ -80,7 +80,7 @@ final readonly class UpdateDrawer
                 return \count($squares) < \count($line['captures']) ? null : $draw(Ask::Captures, null, $squares);
             case Kind::UpdateMixed:
                 $asks = [Ask::What, Ask::Where, Ask::Reach];
-                $question = $this->ask($asks[$this->randomizer->getInt(0, 2)], $final);
+                $question = $this->askAbout($asks[$this->randomizer->getInt(0, 2)], $final);
 
                 return null === $question ? null : $draw($question['ask'], $question['target'], $question['expected'], $question['params']);
             default:
@@ -90,8 +90,8 @@ final readonly class UpdateDrawer
                     return null;
                 }
                 $order = 0 === $this->randomizer->getInt(0, 1) ? [Ask::What, Ask::Where] : [Ask::Where, Ask::What];
-                $first = $this->ask($order[0], $final);
-                $second = $this->ask($order[1], $final);
+                $first = $this->askAbout($order[0], $final);
+                $second = $this->askAbout($order[1], $final);
                 if ([] === $enPrise || null === $first || null === $second) {
                     return null;
                 }
@@ -127,7 +127,7 @@ final readonly class UpdateDrawer
      *
      * @return array{ask: Ask, target: string, expected: list<string>, params: array<string, mixed>}|null
      */
-    private function ask(Ask $ask, string $fen): ?array
+    public function askAbout(Ask $ask, string $fen): ?array
     {
         $board = Attacks::board($fen);
         $counts = array_count_values($board);

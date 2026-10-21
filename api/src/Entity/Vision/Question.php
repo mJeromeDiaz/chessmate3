@@ -111,12 +111,16 @@ class Question
     /**
      * @param list<string> $answer
      */
-    public function resolve(bool $right, array $answer, \DateTimeImmutable $at): void
+    public function resolve(bool $right, array $answer, \DateTimeImmutable $at, bool $late = false): void
     {
         if (QuestionStatus::Pending !== $this->status) {
             throw new \LogicException('Question already resolved.');
         }
-        $this->status = $right ? QuestionStatus::Right : QuestionStatus::Wrong;
+        $this->status = match (true) {
+            $late => QuestionStatus::Late,
+            $right => QuestionStatus::Right,
+            default => QuestionStatus::Wrong,
+        };
         $this->answer = $answer;
         $this->submittedAt = $at;
         $this->durationMs = max(0, (int) round(((float) $at->format('U.u') - (float) $this->startedAt->format('U.u')) * 1000));

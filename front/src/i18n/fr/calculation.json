@@ -1,0 +1,45 @@
+{
+  "player": {
+    "progress": "Ligne {n} sur {count}",
+    "white": "Trait aux Blancs",
+    "black": "Trait aux Noirs",
+    "mate": "Mat en {n}",
+    "capture": "Avec une capture",
+    "kickers": {
+      "think": "Calcule",
+      "answer": "Joue ta ligne",
+      "right": "Ligne juste",
+      "wrong": "Ligne fausse",
+      "late": "Trop tard"
+    },
+    "thinkText": "L’échiquier est figé : calcule toute la ligne, les deux camps. Clique « Je réponds » quand tu la tiens.",
+    "thinkHidden": "L’échiquier est figé : calcule la ligne jusqu’au mat, les deux camps.",
+    "answerText": "Joue la ligne d’un trait, les deux camps : 2 secondes par demi-coup.",
+    "rightText": "Calculée de bout en bout.",
+    "wrongText": "La solution est rejouée sur l’échiquier.",
+    "lateText": "Le temps de jouer était écoulé.",
+    "ready": "Je réponds",
+    "thinkLeft": "Réflexion : {s} s",
+    "plyLeft": "Demi-coup {n} · {s} s",
+    "mistakeAt": "Écart au demi-coup {n}",
+    "solution": "Solution : {line}",
+    "yours": "Ta ligne : {line}",
+    "streak": "Série {n} sur {target}"
+  },
+  "metronome": {
+    "right": "Tic… tac… Tu tiens encore la cadence.",
+    "wrong": "Ha ! Faux temps. La série repart de zéro.",
+    "late": "Trop lent : la mesure t’a échappé.",
+    "moods": {
+      "neutral": "Tic, tac. Calcule jusqu’au mat : je ne te dirai pas en combien de coups.",
+      "doubt": "Tu hésites… la mesure, elle, n’attend pas.",
+      "sadness": "Trois d’affilée… tu me fais perdre ma cadence.",
+      "anger": "Six ! Je suis désaccordé, et j’accélère.",
+      "focus": "Dernière ligne droite. Pas un temps de retard.",
+      "anxiety": "Encore une, et la mesure est à toi…",
+      "surprise": "Déjà ? Tu calcules plus vite que mon tempo.",
+      "joy": "Ha ! Faux temps.",
+      "pride": "Ma mesure a eu raison de toi."
+    }
+  }
+}

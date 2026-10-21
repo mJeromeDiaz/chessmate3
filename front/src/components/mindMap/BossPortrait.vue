@@ -1,5 +1,27 @@
 <template>
   <div
+    v-if="picture"
+    class="boss-portrait boss-portrait--picture"
+    :class="{
+      'boss-portrait--round': round,
+      'boss-portrait--standing': standing
+    }"
+    :style="{
+      aspectRatio: round ? '1 / 1' : standing ? '545 / 830' : '5 / 4'
+    }"
+    role="img"
+    :aria-label="label"
+    :data-mood="standing ? 'standing' : currentMood"
+  >
+    <img
+      :src="picture"
+      alt=""
+      class="boss-portrait__picture"
+      draggable="false"
+    />
+  </div>
+  <div
+    v-else
     class="boss-portrait"
     :class="{ 'boss-portrait--round': round }"
     :style="{ aspectRatio: crop.aspectRatio }"
@@ -18,11 +40,18 @@
 
 <script setup>
 /**
- * A boss in one pose, cut out of its character sheet (src/assets/mindMap/boss, as cyclope.png).
+ * A boss: in one of its expressions when it has them (src/assets/mindMap/boss/<character>/, the
+ * Métronome, the Gargouille), else in one pose cut out of its character sheet (as cyclope.png).
  * Until each boss has its own picture, the cyclops stands in for all of them.
  */
 import { computed } from 'vue'
-import { bossImage, poseCrop } from '@/utils/mindMapPath'
+import {
+  bossImage,
+  moodImage,
+  POSE_MOODS,
+  poseCrop,
+  standingImage
+} from '@/utils/mindMapPath'
 
 const props = defineProps({
   /** The character (jongleur, cyclope…), null for a nameless boss. */
@@ -32,8 +61,32 @@ const props = defineProps({
   /** Its name, for screen readers. */
   label: { type: String, default: '' },
   /** In a round frame (the nodes of the path). */
-  round: { type: Boolean, default: false }
+  round: { type: Boolean, default: false },
+  /**
+   * Its expression in a fight, for a boss drawn by expressions (else its pose's).
+   *
+   * @type {import('vue').PropType<import('@/utils/mindMapPath').Mood|null>}
+   */
+  mood: { type: String, default: null },
+  /** Standing, whole (its card), when it has such a picture. */
+  full: { type: Boolean, default: false }
 })
+
+const currentMood = computed(
+  () => props.mood ?? POSE_MOODS[props.pose] ?? 'neutral'
+)
+const standingSrc = computed(() =>
+  props.full ? standingImage(props.character) : ''
+)
+const standing = computed(() => standingSrc.value !== '')
+const picture = computed(
+  () =>
+    standingSrc.value ||
+    moodImage(
+      props.character,
+      /** @type {import('@/utils/mindMapPath').Mood} */ (currentMood.value)
+    )
+)
 
 const src = computed(() => bossImage(props.character))
 const crop = computed(() => poseCrop(/** @type {'idle'} */ (props.pose)))
@@ -49,6 +102,22 @@ const crop = computed(() => poseCrop(/** @type {'idle'} */ (props.pose)))
     border-radius: 50%;
     background: #fff;
   }
+}
+
+.boss-portrait__picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  user-select: none;
+  pointer-events: none;
+}
+
+.boss-portrait--round .boss-portrait__picture {
+  object-fit: cover;
+  object-position: center top;
 }
 
 .boss-portrait__sheet {

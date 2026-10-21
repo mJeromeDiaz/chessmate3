@@ -17,6 +17,7 @@ use App\Enum\Training\Distraction;
 use App\Enum\Training\Module;
 use App\Enum\Vision\Ask;
 use App\Enum\Vision\Kind;
+use App\Enum\Vision\QuestionStatus;
 use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Repository\Vision\QuestionRepository;
 use App\Training\Exception\InvalidItemSubmissionException;
@@ -32,8 +33,10 @@ use App\Training\Module\ItemSubmission;
 use App\Training\Module\PreparedStep;
 use App\Training\Module\Summary;
 use App\Training\Module\TimeboxedModuleInterface;
+use App\Training\Run\TimeboxRunner;
 use App\Vision\Drawing\LinePicker;
 use App\Vision\Drawing\Draw;
+use App\Vision\Drawing\GargoyleDrawer;
 use App\Vision\Drawing\LocateDrawer;
 use App\Vision\Drawing\RelationDrawer;
 use App\Vision\Drawing\TrackDrawer;
@@ -67,6 +70,7 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         private readonly TrackDrawer $tracks,
         private readonly UpdateDrawer $updates,
         private readonly RelationDrawer $relations,
+        private readonly GargoyleDrawer $gargoyles,
         private readonly PuzzleCatalog $catalog,
         private readonly EventPublisher $events,
     ) {
@@ -119,8 +123,12 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         if (!$question->isPending()) {
             throw new ItemAlreadySubmittedException();
         }
-        [$right, $answer] = self::judge($question, $submission);
-        $question->resolve($right, $answer, $now);
+        $seconds = self::questionSeconds($run->getConfig());
+        $late = null !== $seconds && self::isLate($question, $seconds, $now);
+        // The question's time ran out on the client: nothing answered (`pass`), a failure.
+        [$right, $answer] = null !== $seconds && $submission->pass ? [false, []] : self::judge($question, $submission);
+        $question->resolve($right && !$late, $answer, $now, $late);
+        $right = QuestionStatus::Right === $question->getStatus();
         $this->entityManager->flush();
 
         $puzzleId = $question->getPuzzleId();
@@ -213,6 +221,7 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
             Kind::Attackers => $this->lines->pick($run, Ask::Attackers),
             Kind::UpdateMissing, Kind::UpdateCaptures, Kind::UpdateMixed, Kind::UpdateBoss => $this->updates->draw($kind),
             Kind::RelationAttacked, Kind::RelationDefended, Kind::RelationAligned, Kind::RelationEnPrise, Kind::RelationMixed, Kind::RelationBoss => $this->relations->draw($kind),
+            Kind::Gargoyle => $this->gargoyles->draw(),
             default => $this->tracks->draw($kind),
         };
         if (null === $draw) {
@@ -242,8 +251,13 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         $expected = \is_array($next['expected'] ?? null) ? array_values(array_filter($next['expected'], 'is_string')) : [];
         $target = \is_string($next['target'] ?? null) ? $next['target'] : null;
         $side = \is_string($next['side'] ?? null) ? $next['side'] : null;
+        $own = ['step' => $step + 1];
+        // A question naming its own piece (« Le fou blanc peut-il… »); otherwise the path's stays.
+        if (\is_string($next['piece'] ?? null)) {
+            $own['piece'] = $next['piece'];
+        }
 
-        return new Draw($last->getFen(), $last->getAnnounced(), $ask, $target, $side, $expected, null, 0, ['step' => $step + 1] + $params);
+        return new Draw($last->getFen(), $last->getAnnounced(), $ask, $target, $side, $expected, null, 0, $own + $params);
     }
 
     /**
@@ -293,6 +307,8 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
             // A question on the path of the one before: nothing shown again.
             'followUp' => ($params['step'] ?? 0) > 0,
             'distraction' => $distraction,
+            // A question's time on screen (the Gargouille), null without one.
+            'seconds' => self::questionSeconds($run->getConfig()),
             'position' => $stats['right'] + $stats['wrong'] + 1,
             'count' => $count,
             'lives' => null === $lives ? null : max(0, $lives - $stats['wrong']),
@@ -403,9 +419,10 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
      */
     private static function check(array $config): array
     {
-        if ([] !== array_diff(array_keys($config), ['kind', 'count', 'lives', 'distraction'])) {
-            throw new InvalidRunConfigException('Unknown option: only kind, count, lives and distraction are accepted.');
+        if ([] !== array_diff(array_keys($config), ['kind', 'count', 'lives', 'distraction', 'questionSeconds'])) {
+            throw new InvalidRunConfigException('Unknown option: only kind, count, lives, distraction and questionSeconds are accepted.');
         }
+        self::questionSeconds($config);
         $distraction = $config['distraction'] ?? Distraction::None->value;
         if (!\is_string($distraction) || null === Distraction::tryFrom($distraction)) {
             throw new InvalidRunConfigException(\sprintf('distraction must be one of %s.', implode(', ', Distraction::values())));
@@ -416,6 +433,40 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         }
 
         return [$kind, self::limit($config, 'count', VisionRules::MAX_COUNT), self::limit($config, 'lives', VisionRules::MAX_LIVES), $distraction];
+    }
+
+    /**
+     * A question's time (`questionSeconds`), null without one.
+     *
+     * @param array<string, mixed> $config
+     *
+     * @throws InvalidRunConfigException
+     */
+    private static function questionSeconds(array $config): ?int
+    {
+        $value = $config['questionSeconds'] ?? null;
+        [$fewest, $most] = VisionRules::QUESTION_SECONDS;
+        if (null !== $value && (!\is_int($value) || $value < $fewest || $value > $most)) {
+            throw new InvalidRunConfigException(\sprintf('questionSeconds must be a whole number from %d to %d.', $fewest, $most));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Whether an answer comes after its question's time, on the server's clock. A question shown
+     * first gets the screen's fixed durations before (memorize, hide, the moves announced one by
+     * one); its start is stored to the second (truncated): one more second, and the network's
+     * tolerance, always in the player's favour.
+     */
+    private static function isLate(Question $question, int $seconds, \DateTimeImmutable $at): bool
+    {
+        $before = $question->getVisibleSeconds() > 0
+            ? ($question->getVisibleSeconds() + VisionRules::HIDDEN_SECONDS) * 1000 + (\count($question->getAnnounced()) + 1) * VisionRules::ANNOUNCE_MS
+            : 0;
+        $deadlineMs = ((int) $question->getStartedAt()->format('U') + 1 + $seconds) * 1000 + $before + TimeboxRunner::SUBMISSION_TOLERANCE_MS;
+
+        return (int) round((float) $at->format('U.u') * 1000) > $deadlineMs;
     }
 
     /**

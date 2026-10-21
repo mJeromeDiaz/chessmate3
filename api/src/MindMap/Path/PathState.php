@@ -16,7 +16,8 @@ use App\Enum\MindMap\StepStatus;
  * - In an open section, the exercises open in order (one passed or skipped opens the next); the
  *   mini-bosses open, in order, once every exercise is passed or skipped; the hidden bosses show
  *   once the section is cleared.
- * - The chapter's boss opens once every section is cleared.
+ * - The chapter's boss is open with its chapter: a strong player may beat it at once, without the
+ *   exercises or the mini-bosses, and open the next chapter.
  * - A chest is earned (done) once every exercise before it in its section is passed, never by a
  *   skip ({@see self::chestsDue()}).
  * - A reachable step without module is « soon »: an exercise may be skipped, a boss blocks.
@@ -41,8 +42,7 @@ final class PathState
                 $statuses += self::sectionStatuses($section, $progress, $sectionOpen);
                 $sectionOpen = $sectionOpen && self::isCleared($section, $progress);
             }
-            // $sectionOpen is now: the chapter is open and all its sections are cleared.
-            $statuses[$chapter->boss->key] = self::reachable($chapter->boss, $progress, $sectionOpen);
+            $statuses[$chapter->boss->key] = self::reachable($chapter->boss, $progress, $chapterOpen);
             $chapterOpen = $chapterOpen && self::isDone($chapter->boss, $progress);
         }
 

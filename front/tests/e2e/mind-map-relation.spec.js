@@ -38,9 +38,13 @@ test('vision: every piece attacked, clicked then validated', async ({
   )
   // A wrong answer on purpose: a1, then a1 again (chosen, unchosen), then h8.
   await player.getByTestId('square-a1').click()
-  await expect(player.getByTestId('vision-chosen')).toContainText('1 case choisie')
+  await expect(player.getByTestId('vision-chosen')).toContainText(
+    '1 case choisie'
+  )
   await player.getByTestId('square-a1').click()
-  await expect(player.getByTestId('vision-chosen')).toContainText('0 case choisie')
+  await expect(player.getByTestId('vision-chosen')).toContainText(
+    '0 case choisie'
+  )
   await player.getByTestId('square-h8').click()
   const submitted = page.waitForResponse(isRunSubmission)
   await player.getByTestId('vision-validate').click()

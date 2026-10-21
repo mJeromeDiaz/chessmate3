@@ -6,7 +6,8 @@ La **carte mentale** (page `/cerveau`, lien « Cerveau ») montre six capacités
 sur un cerveau. Chaque capacité aura un **parcours** à la Duolingo : des chapitres, des sections,
 des exercices à valider plusieurs fois, des mini-boss, des boss et des coffres. Le premier écrit
 est celui de la **visualisation** (contenu de l'utilisateur :
-[mindMap/Parcours Visualisation version 2.md](mindMap/Parcours%20Visualisation%20version%202.md)).
+[mindMap/Parcours Visualisation version 2.md](mindMap/Parcours%20Visualisation%20version%202.md)),
+puis celui du **calcul** (§ 5 bis).
 
 Choix validés (2026-10-20) :
 
@@ -24,7 +25,9 @@ Choix validés (2026-10-20) :
   système demande moins d'animations.
 - **On peut sauter un exercice** : ce qui suit s'ouvre, rien n'est gagné ; il reste jouable.
 - **Il faut battre le boss d'un chapitre** pour ouvrir le suivant, et les mini-boss d'une section
-  pour ouvrir la suivante. Les **mini-boss cachés** apparaissent (« ? ») une fois leur section
+  pour ouvrir la suivante. Le **boss du chapitre est ouvert dès l'ouverture du chapitre** : un
+  joueur fort peut le battre tout de suite, sans les exercices ni les mini-boss (restés jouables
+  ensuite ; les coffres ne se gagnent qu'en réussissant les exercices). Les **mini-boss cachés** apparaissent (« ? ») une fois leur section
   franchie : facultatifs, un bonus et un badge.
 - **Coffres** : sur un chapitre long sans section, un coffre intermédiaire (chapitre 1 entre 1.4 et
   1.5, chapitre 7 entre 7.2 et 7.3) ; chaque mini-boss et boss a le sien. Ouverture avec l'animation
@@ -32,8 +35,8 @@ Choix validés (2026-10-20) :
 - **Modules** (Notation, Vision, variantes à l'aveugle) développés en parallèle, jouables aussi en
   libre et en session : libres d'emblée, sauf les modes de boss (après leur victoire) et les bots
   (après le chapitre 6).
-- Images des boss : `front/src/assets/mindMap/boss/cyclope.png` par défaut, en attendant les
-  définitives ; animations de victoire à venir (Claude Design).
+- Images des boss : expressions du Métronome et de la Gargouille (§ 7), sinon
+  `front/src/assets/mindMap/boss/cyclope.png` par défaut, en attendant les définitives ; animations de victoire à venir (Claude Design).
 
 ## 1. Organisation du code
 
@@ -76,7 +79,8 @@ Une étape joue une **séance de son module** (`Activity` : module, réglage, du
 - dans une section ouverte, les exercices s'ouvrent dans l'ordre (réussi ou sauté ouvre le
   suivant) ; les mini-boss, dans l'ordre, quand tous les exercices sont réussis ou sautés ; les
   boss cachés quand la section est franchie (avant : `hidden`, sans nom ni récompense affichés) ;
-- le boss du chapitre s'ouvre quand toutes ses sections sont franchies.
+- le boss du chapitre est ouvert avec son chapitre (le battre ouvre le suivant, sections et
+  mini-boss non faits compris).
 
 Une étape `done` ou `skipped` se rejoue : un exercice sauté puis réussi devient `done` ; une étape
 déjà faite est de l'entraînement, jugé, jamais payé à nouveau.
@@ -150,6 +154,29 @@ Les badges sont ceux des étapes terminées (`GET /mind-map/{capacité}` → `ba
 rien n'est stocké à part. Les badges à condition (« Membre fantôme » : Fantôme sans erreur ;
 « Mue parfaite » : 20 coups sans erreur contre le Caméléon) viendront avec leurs boss.
 
+## 5 bis. Parcours calcul
+
+Contenu de l'utilisateur : [mindMap/profondeur_de_calcul.md](mindMap/profondeur_de_calcul.md)
+(10 chapitres ; les 3 premiers d'abord, `App\MindMap\Path\Calculation`, capacité
+`calculation`, page `/cerveau/calculation`). Format validé le 2026-10-21 : la position est montrée
+sur un **échiquier figé** le temps de la réflexion (libre, « Je réponds », plafond 2 min), puis la
+ligne entière est jouée **d'un trait, les deux camps**, chaque demi-coup moins de 2 s après le
+précédent ; elle est jugée une fois, à la fin (les coups de la solution, défense comprise, le
+dernier pouvant être n'importe quel mat). Puzzles de mat, non classés : le module Calcul ([CALCULATION.md](CALCULATION.md)), branché
+sur le chapitre 1 et le Métronome (lots K1a à K1c, [CALCULATION.md](CALCULATION.md), § 6) ; les
+chapitres 2 et 3 sont encore « bientôt ».
+
+| Étape | Clé | Contenu | Cristaux | XP | Badges |
+|---|---|---|---|---|---|
+| Ch. 1 « La ligne droite » | `1-1` … `1-4` | mats en 1, en 2, en 2 avec une capture, en 3 (10 positions, 80 %) | — | 15 | — |
+| Ch. 1, coffre après 1.2 | `1-chest` | | 60 | — | — |
+| Ch. 1, mini-boss « Sans faute » | `1-mini` | 4 mats en 3, 2 vies | 80 | 40 | — |
+| Ch. 1, boss Le Métronome | `1-boss` | une série de mats de longueur cachée : 12 justes d'affilée, une erreur remet à zéro et coûte une vie (3) ; réflexion 40 s, −3 s par ligne juste, au moins 15 s | 200 | 100 | `chapter_1`, `boss_metronome` |
+| Ch. 2 « Tenir la distance » | `2-1` … `2-8`, `2-chest`, `2-mini` | à préciser (lot K2) | 80 / 100 | 15 / 40 | — |
+| Ch. 2, boss Le Compteur | `2-boss` | | 240 | 100 | `chapter_2`, `boss_compteur` |
+| Ch. 3 « L'adversaire a son mot à dire » | `3-1` … `3-4`, `3-mini` | à préciser (lot K3) | 120 | 15 / 40 | — |
+| Ch. 3, boss L'Avocat du diable | `3-boss` | | 300 | 120 | `chapter_3`, `boss_avocat` |
+
 ## 6. Modèle de données
 
 - `mind_map_progress` : `user_id`, `capacity`, `step` (`ascii_bin`), `passes`, `completed_at`,
@@ -185,8 +212,13 @@ retrouve (l'XP de l'étape telle que le catalogue la donne).
   battu passe d'abord par `BossVictory` (provisoire en attendant les animations de Claude Design :
   confettis, rayons, visage vaincu, dernière réplique, badges), puis les coffres ; « Passage
   suivant » / « Rejouer » et « Retour au parcours ».
-- **Images** : `BossPortrait` découpe une pose (`idle`, `cheer`, `angry`, `search`, `beaten`,
-  `POSES` de `utils/mindMapPath.js`) dans la planche du personnage
+- **Images** : un boss qui a ses **expressions** (Claude Design « Fiches miniboss » : le Métronome,
+  la Gargouille, le Jongleur) a un dossier `assets/mindMap/boss/<personnage>/` : `<personnage>-<humeur>.png`
+  (bustes : joie, surprise, doute, tristesse, fierte, colere, concentration, angoisse, neutre ;
+  `MOODS` de `utils/mindMapPath.js`, clés anglaises) et `<personnage>-pose.png` (en pied, sur sa
+  fiche `BossIntro`). `BossPortrait` prend une `mood`, sinon celle de sa pose (`POSE_MOODS` : `idle`
+  → neutre, `cheer` → joie, `angry` → colère, `search` → concentration, `beaten` → tristesse) et
+  `full` (en pied). Les autres découpent une pose (`POSES`) dans la planche du personnage
   (`assets/mindMap/boss/<personnage>.png`, 1536 × 1024) ; sans planche, celle du cyclope.
 - **Textes** : `mindMapPath.<capacité>.{chapters, sections, steps.s<clé>}` (clé de l'étape, `-`
   → `_` : `2-1-3` → `s2_1_3`), `mindMapPath.characters.<personnage>.{name, tagline, taunt, defeat,
@@ -245,8 +277,8 @@ seule option.
 | L2 | Module Notation (1.4 à 1.7, [NOTATION.md](NOTATION.md)) | fait |
 | L3 | Parties célèbres (1.8, 1.9) et boss Jongleur (§ 8) | fait |
 | L4 | Chapitre 2 : exercices (reconstitution, niveaux 1 à 12), mini-boss 2.1, module Vision (mini-boss 2.2, 2.3, caché), Cyclope | fait |
-| L5 | Chapitre 3 : L5a section 3.1 « suivre une pièce » et distractions des boss, vert ; L5b 3.2 « actualiser une position », vert ; L5c 3.3 « relations entre pièces », écrit 2026-10-20 ; L5d page Vision libre | en cours |
-| L6 | La Gargouille (distractions fortes) | à faire |
+| L5 | Chapitre 3 : L5a section 3.1 « suivre une pièce » et distractions des boss, vert ; L5b 3.2 « actualiser une position », vert ; L5c 3.3 « relations entre pièces », vert ; L5d page Vision libre | en cours |
+| L6 | La Gargouille (distractions fortes, 15 s par question, musique et cris) | écrit 2026-10-20 |
 | L7 à L10 | Chapitres 4 à 7 (précisions de l'utilisateur attendues) | à faire |
 
 Jouables aujourd'hui : 1.1 (série de coordonnées `find` d'une minute, Blancs en bas, au moins 10

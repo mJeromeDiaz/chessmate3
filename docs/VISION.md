@@ -99,6 +99,32 @@ est exact. Jamais de réponse vide (la position est tirée à nouveau).
 | `rel_mixed` (3.3.5) | l'une des quatre, sur 12 pièces (`RELATION_DENSE_PIECES`) et 5 coups | |
 | `rel_boss` (mini-boss 3.3) | à la suite, sur la même position, pour le camp qui n'a pas le trait : `attacked`, `defended`, puis `winning` : « Quelles pièces noires peut-on prendre avec gain ? » | les prises gagnantes sont les pièces en prise ; la position a au moins une pièce attaquée qui n'en est pas une (« attaquée » n'est pas « capture gagnante ») |
 
+## 2 quinquies. La Gargouille (boss du chapitre 3)
+
+`kind: gargoyle` (`GargoyleDrawer`) : une position légale de 10 pièces (`RELATION_PIECES`), montrée
+10 s, puis 5 coups des deux camps ; ensuite 5 questions à la suite sur la position atteinte, chacune
+d'une autre sorte, tirées parmi `where`, `what`, `reach`, `attacked`, `aligned`, `en_prise_all`
+(jamais de réponse vide) ; une 2e position si l'on survit (`count` 10, 3 vies).
+
+- **Temps par question** (option `questionSeconds`, 5 à 60 ; la Gargouille : 15) : sur l'horloge du
+  serveur (`isLate`). Une question montrée la première a d'abord les durées fixes de l'écran
+  (mémoriser, le voile de 2 s, les coups annoncés à 1,5 s, `ANNOUNCE_MS`) ; son départ est stocké à
+  la seconde : une seconde de plus et la tolérance réseau de 2 s, en faveur du joueur. En retard :
+  `status: late` (un échec). Le temps écoulé à l'écran envoie `pass: true` : un échec, sans réponse
+  (une `placement` vide reste « Case vide »). L'élément donne `seconds`.
+- **Distractions fortes** (`strong`) : éclair sur l'échiquier et sa foudre, voile sombre, échiquier
+  qui vacille, quatre pièces qui le traversent ; la musique du combat en boucle, la cloche quand la
+  position s'éteint, des murmures sous les coups annoncés, le loup à chaque échec et le rire de la
+  Gargouille à la dernière vie perdue (`front/public/media/son/mindMap/`, si les sons sont
+  activés) ; le thème court sur sa fiche (`BossIntro`), les portes au clic « Combattre ».
+- **Son visage** (`gargoyleMood` de `utils/vision.js`, les expressions de
+  `assets/mindMap/boss/gargouille/`, dans la bulle à la place du professeur) : neutre au début ;
+  concentration pendant que la position s'éteint et que les coups sont annoncés ; doute passé la
+  moitié du temps de la question ; tristesse après 3 réponses justes d'affilée ; colère quand la
+  deuxième position s'affiche (la première a été tenue) ; angoisse aux deux dernières questions ;
+  au verdict, joie sur une erreur, fierté sur une réponse en retard, surprise sur une réponse juste
+  en moins d'un tiers du temps.
+
 ## 3. Attaques et pièces en prise
 
 - **Attaquants** (`Attacks::attackers`) : sur l'échiquier seul. Un pion attaque ses deux diagonales
@@ -119,8 +145,8 @@ est exact. Jamais de réponse vide (la position est tirée à nouveau).
   `hiddenSeconds` (2 s de voile), `announced` (`[{uci, san}]`), `target`, `side`, `position`,
   `count`, `lives` (restantes), `startedAt`. Le temps d'affichage est celui de l'écran.
 - **Soumission** : `squares` (16 au plus), `placement` (une pièce au plus, sur la case demandée) ou
-  `choice` (`knight_jumps`, `passed`, `reach` : `yes` / `no` ; `missing` : une lettre FEN) ;
-  sinon 400. Un seul essai.
+  `choice` (`knight_jumps`, `passed`, `reach` : `yes` / `no` ; `missing` : une lettre FEN), ou
+  `pass` (le temps écoulé, avec `questionSeconds`) ; sinon 400. Un seul essai.
 - **Verdict** : `status` (`right`, `wrong`), `expected`, `answer`, `finalFen` (la position
   atteinte, pour la correction), `position`, `count`, `lives`, `durationMs`.
 - **Fin** : à `count` questions (raison `count_done`) ou quand les erreurs atteignent `lives`
@@ -153,5 +179,6 @@ Prof : Noctis.
 | Mini-boss 3.2 (`3-2-boss`) | `update_boss` | 9 (3 positions × 3) | 3 |
 | Exercices 3.3.1 à 3.3.5 | `rel_attacked`, `rel_defended`, `rel_aligned`, `rel_en_prise`, `rel_mixed` | 5, 80 % | — |
 | Mini-boss 3.3 (`3-3-boss`) | `rel_boss` | 9 (3 positions × 3) | 3 |
+| La Gargouille (`3-boss`) | `gargoyle`, 15 s par question, `strong` | 10 (2 positions × 5) | 3 |
 
 Distractions : `light` aux boss du chapitre 2, `medium` au chapitre 3.

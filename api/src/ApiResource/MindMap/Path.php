@@ -33,7 +33,7 @@ use App\State\MindMap\PathProvider;
 final class Path
 {
     /** The capacities with a path ({@see \App\Enum\MindMap\Capacity}): never « runs » nor « chests ». */
-    public const CAPACITY_PATTERN = 'visualisation';
+    public const CAPACITY_PATTERN = 'visualisation|calculation';
     /** A step's key ({@see \App\MindMap\Path\Step::$key}). */
     public const STEP_PATTERN = '[0-9a-z][0-9a-z-]{0,23}';
 

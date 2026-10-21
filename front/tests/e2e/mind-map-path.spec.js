@@ -60,12 +60,13 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
     'Cliquer la case'
   )
 
-  // The chapter's boss, announced at its top: not yet to fight.
+  // The chapter's boss, announced at its top: open with its chapter (a strong player may go
+  // straight to it).
   await page.getByTestId('path-chapter-boss-1').click()
   const intro = page.getByTestId('boss-intro')
   await expect(intro.getByTestId('boss-name')).toHaveText('Le Jongleur')
   await expect(intro).toContainText('3 vies')
-  await expect(intro.getByTestId('boss-fight')).toHaveCount(0)
+  await expect(intro.getByTestId('boss-fight')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(intro).toBeHidden()
 

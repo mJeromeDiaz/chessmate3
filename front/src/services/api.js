@@ -430,6 +430,21 @@ export const trainingApi = {
         JSON_LD
       )
       .then(r => r.data),
+  /**
+   * The calculation module: « Je réponds », the answer's clock starts on the server. Resolves
+   * `{data: {readyAt}}`.
+   *
+   * @param {string} id
+   * @param {string} itemId
+   */
+  ready: (id, itemId) =>
+    http
+      .post(
+        `/api/training/runs/${encodeURIComponent(id)}/ready`,
+        { itemId },
+        JSON_LD
+      )
+      .then(r => r.data),
   /** Overtime: the run waiting for the player's decision goes on for 5 more minutes. */
   extend: id =>
     http

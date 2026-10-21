@@ -66,3 +66,51 @@ export function playOutcomeSound(name) {
     // No audio support.
   }
 }
+
+const MIND_MAP = `${BASE}mindMap/`
+
+/** The ambience of a mind map boss (docs/MIND_MAP.md, § 2): the Gargouille's music and cries. */
+export const AMBIENT_SOUND_FILES = {
+  /** 30 s: its card, before the fight. */
+  gargoyleTheme: `${MIND_MAP}halloween_theme.mp3`,
+  /** 1 min 43: the fight, looped. */
+  gargoyleFight: `${MIND_MAP}halloween_theme_long.mp3`,
+  /** A miss, a question late: its cry. */
+  wolf: `${MIND_MAP}wolf.mp3`,
+  /** The lightning of the strong distractions. */
+  thunder: `${MIND_MAP}thunder.mp3`,
+  /** The fight starts: the doors open. */
+  doors: `${MIND_MAP}doors.mp3`,
+  /** The position goes dark. */
+  bell: `${MIND_MAP}bell.mp3`,
+  /** Under the moves announced, looped. */
+  whispers: `${MIND_MAP}whispers.mp3`,
+  /** The boss wins: the last life lost. */
+  evilLaugh: `${MIND_MAP}evil-laugh.mp3`
+}
+
+/** @typedef {keyof typeof AMBIENT_SOUND_FILES} AmbientSound */
+
+/**
+ * Plays an ambient sound when the signed-in user has the sounds on, and gives what stops it (a
+ * music fades nothing: it stops). Silent failures, as for the outcome sounds.
+ *
+ * @param {AmbientSound} name
+ * @param {{loop?: boolean, volume?: number}} [options]
+ * @returns {() => void} stops it
+ */
+export function playAmbientSound(name, { loop = false, volume = 1 } = {}) {
+  if (useAuthStore().profile?.moveSound !== true) return () => {}
+  try {
+    const audio = new Audio(AMBIENT_SOUND_FILES[name])
+    audio.loop = loop
+    audio.volume = volume
+    audio.play()?.catch(() => {})
+    return () => {
+      audio.pause()
+      audio.currentTime = 0
+    }
+  } catch {
+    return () => {}
+  }
+}

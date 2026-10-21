@@ -15,7 +15,8 @@ use App\State\Training\HelpProcessor;
 /**
  * An aid of the store spent on an item of a run: a help on the puzzle streak's item on screen
  * (docs/PUZZLE_STREAK.md, `data`: `helps` spent on the item, `aids` left), or a pardon on a
- * blindfold puzzle (docs/BLINDFOLD.md, `data`: `pardon`, `status`, `xp`, `pardons` left).
+ * blindfold puzzle (docs/BLINDFOLD.md, `data`: `pardon`, `status`, `xp`, `pardons` left); or the
+ * player ready to answer a line (docs/CALCULATION.md, `data`: `readyAt`).
  */
 #[ApiResource(
     shortName: 'TrainingItemHelp',
@@ -40,6 +41,16 @@ use App\State\Training\HelpProcessor;
             read: false,
             processor: HelpProcessor::class,
             name: HelpProcessor::PARDON,
+        ),
+        new Post(
+            uriTemplate: '/training/runs/{id}/ready',
+            requirements: ['id' => Set::UUID_PATTERN],
+            status: 200,
+            openapi: new Operation(summary: 'The player is ready to answer the item on screen: its answer\'s clock starts (calculation module).'),
+            input: HelpInput::class,
+            read: false,
+            processor: HelpProcessor::class,
+            name: HelpProcessor::READY,
         ),
         // Item IRI only (answers 404), kept under the domain prefix.
         new NotExposed(uriTemplate: '/training/runs/{id}/help', requirements: ['id' => Set::UUID_PATTERN]),

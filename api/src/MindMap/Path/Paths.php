@@ -21,6 +21,7 @@ final class Paths
     {
         return self::$chapters[$capacity->value] ??= match ($capacity) {
             Capacity::Visualisation => Visualisation::chapters(),
+            Capacity::Calculation => Calculation::chapters(),
         };
     }
 

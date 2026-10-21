@@ -36,10 +36,24 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
         self::assertSame(['locked', false], [$steps[1]['status'], $steps[1]['skippable']]);
         self::assertSame(['chest', 60], [$steps[4]['kind'], $steps[4]['crystals']]);
         $boss = $path['chapters'][0]['boss'];
-        self::assertSame(['boss', 'locked', 'jongleur', 200, 100], [$boss['kind'], $boss['status'], $boss['character'], $boss['crystals'], $boss['xp']], 'Announced at the top of its chapter.');
+        self::assertSame(['boss', 'open', 'jongleur', 200, 100], [$boss['kind'], $boss['status'], $boss['character'], $boss['crystals'], $boss['xp']], 'Announced at the top of its chapter, open at once.');
         $hidden = $path['chapters'][1]['sections'][2]['hidden'][0];
         self::assertSame(['2-3-hidden', 'hidden', null, 0, []], [$hidden['key'], $hidden['status'], $hidden['character'], $hidden['crystals'], $hidden['badges']], 'A hidden boss shows nothing of itself.');
         self::assertSame([[], []], [$path['badges'], $path['unopenedChests']]);
+    }
+
+    public function testTheCalculationPathOpensOnItsFirstLesson(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $path = $this->path($alice, 'calculation');
+
+        self::assertSame(['calculation', ['open', 'locked', 'locked']], [$path['capacity'], array_column($path['chapters'], 'status')]);
+        self::assertSame(['open', 'locked'], [$this->step($path, '1-1')['status'], $this->step($path, '1-2')['status']]);
+        $boss = $this->step($path, '1-boss');
+        self::assertSame(['open', 'metronome', 200], [$boss['status'], $boss['character'], $boss['crystals']], 'Open with its chapter.');
+        $this->assertRefused($this->api('POST', '/api/mind-map/calculation/steps/2-boss/start', $alice), 409, 'step_locked');
+        self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/1-1/skip', $alice)->getStatusCode(), 'An exercise may be skipped.');
+        self::assertSame('open', $this->step($this->path($alice), '1-1')['status'], 'The visualisation path is apart.');
     }
 
     public function testAnExerciseIsValidatedByItsPassesThenEarnsItsXp(): void
@@ -213,9 +227,9 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
     /**
      * @return PathJson
      */
-    private function path(User $user): array
+    private function path(User $user, string $capacity = 'visualisation'): array
     {
-        $response = $this->api('GET', '/api/mind-map/visualisation', $user);
+        $response = $this->api('GET', '/api/mind-map/'.$capacity, $user);
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
 
         /** @var PathJson */

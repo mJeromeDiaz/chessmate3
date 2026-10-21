@@ -23,10 +23,10 @@ use PHPUnit\Framework\TestCase;
  */
 final class PathStateTest extends TestCase
 {
-    public function testOnlyTheFirstExerciseIsOpenAtTheStart(): void
+    public function testOnlyTheFirstExerciseAndTheChaptersBossAreOpenAtTheStart(): void
     {
         self::assertSame([
-            'a1' => 'open', 'a2' => 'locked', 'a-chest' => 'locked', 'a3' => 'locked', 'a-boss' => 'locked',
+            'a1' => 'open', 'a2' => 'locked', 'a-chest' => 'locked', 'a3' => 'locked', 'a-boss' => 'open',
             'b1' => 'locked', 'b2' => 'locked', 'b-mini' => 'locked', 'b-hidden' => 'hidden', 'b-boss' => 'locked',
         ], self::statuses([]));
     }
@@ -40,10 +40,10 @@ final class PathStateTest extends TestCase
         self::assertSame(['done', 'soon'], [$statuses['a1'], $statuses['a2']], 'Without module, reachable but soon.');
 
         $statuses = self::statuses(['a1' => self::skipped(), 'a2' => self::skipped()]);
-        self::assertSame(['skipped', 'skipped', 'locked', 'open', 'locked'], [$statuses['a1'], $statuses['a2'], $statuses['a-chest'], $statuses['a3'], $statuses['a-boss']]);
+        self::assertSame(['skipped', 'skipped', 'locked', 'open', 'open'], [$statuses['a1'], $statuses['a2'], $statuses['a-chest'], $statuses['a3'], $statuses['a-boss']]);
     }
 
-    public function testTheBossOpensOnceEveryExerciseIsPassedOrSkippedAndOpensTheNextChapter(): void
+    public function testTheBossIsOpenWithItsChapterAndOpensTheNextChapter(): void
     {
         $chapterOne = ['a1' => self::done(), 'a2' => self::skipped(), 'a3' => self::done()];
         $statuses = self::statuses($chapterOne);
@@ -51,13 +51,17 @@ final class PathStateTest extends TestCase
 
         $statuses = self::statuses([...$chapterOne, 'a-boss' => self::done()]);
         self::assertSame(['done', 'open', 'locked'], [$statuses['a-boss'], $statuses['b1'], $statuses['b-mini']]);
+
+        // A strong player beats the boss first: the next chapter opens, the skipped steps stay as they were.
+        $statuses = self::statuses(['a-boss' => self::done()]);
+        self::assertSame(['done', 'open', 'locked', 'open', 'soon'], [$statuses['a-boss'], $statuses['a1'], $statuses['a2'], $statuses['b1'], $statuses['b-boss']]);
     }
 
     public function testMiniBossThenHiddenBossThenTheChapterBoss(): void
     {
         $before = ['a1' => self::done(), 'a2' => self::done(), 'a3' => self::done(), 'a-boss' => self::done()];
         $statuses = self::statuses([...$before, 'b1' => self::done(), 'b2' => self::skipped()]);
-        self::assertSame(['open', 'hidden', 'locked'], [$statuses['b-mini'], $statuses['b-hidden'], $statuses['b-boss']]);
+        self::assertSame(['open', 'hidden', 'soon'], [$statuses['b-mini'], $statuses['b-hidden'], $statuses['b-boss']], 'The boss is reachable with its chapter, but has no module yet.');
 
         $statuses = self::statuses([...$before, 'b1' => self::done(), 'b2' => self::skipped(), 'b-mini' => self::done()]);
         self::assertSame(['done', 'open', 'soon'], [$statuses['b-mini'], $statuses['b-hidden'], $statuses['b-boss']], 'The hidden boss never blocks; the boss has no module yet.');

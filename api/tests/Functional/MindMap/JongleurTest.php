@@ -116,7 +116,7 @@ final class JongleurTest extends WoodpeckerWebTestCase
         $path = $this->json($this->api('GET', '/api/mind-map/visualisation', $alice));
         /** @var list<array{number: int, status: string, boss: array{status: string}}> $chapters */
         $chapters = $path['chapters'] ?? [];
-        self::assertSame(['done', 'locked'], [$chapters[0]['boss']['status'], $chapters[1]['boss']['status']]);
+        self::assertSame(['done', 'open'], [$chapters[0]['boss']['status'], $chapters[1]['boss']['status']], 'The Cyclope is open with its chapter.');
         self::assertNotSame('locked', $chapters[1]['status'], 'Chapter 2 opens.');
         /** @var list<array{badge: string}> $badges */
         $badges = $path['badges'] ?? [];

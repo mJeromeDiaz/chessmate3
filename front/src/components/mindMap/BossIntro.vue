@@ -20,6 +20,7 @@
           class="boss-intro__portrait"
           :character="step.character"
           :pose="step.status === 'done' ? 'beaten' : 'idle'"
+          :full="step.status !== 'done'"
           :label="name"
         />
       </div>
@@ -89,7 +90,7 @@
             "
             :loading="busy"
             data-testid="boss-fight"
-            @click="emit('start', step)"
+            @click="fight"
           />
           <q-btn
             flat
@@ -107,9 +108,9 @@
 /**
  * A boss before the fight (docs/MIND_MAP.md): its face, who it is and what it says, the challenge,
  * its three lives, what beating it earns, « Affronter ». Locked or without module yet, it only
- * shows itself.
+ * shows itself. A boss with its own music (the Gargouille) plays it while its card is open.
  */
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import BossPortrait from '@/components/mindMap/BossPortrait.vue'
 import CrystalGem from '@/components/shop/CrystalGem.vue'
@@ -120,6 +121,7 @@ import {
   bossName,
   stepDesc
 } from '@/utils/mindMapPath'
+import { playAmbientSound } from '@/utils/sounds'
 
 const props = defineProps({
   /** @type {import('vue').PropType<import('@/utils/mindMapPath').PathStep|null>} */
@@ -138,6 +140,34 @@ const name = computed(() => (props.step ? bossName(props.step) : ''))
 const fightable = computed(() =>
   ['open', 'done'].includes(props.step?.status ?? '')
 )
+
+/** The bosses with a theme of their own, played while their card is open. */
+const THEMES =
+  /** @type {Record<string, import('@/utils/sounds').AmbientSound>} */ ({
+    gargouille: 'gargoyleTheme'
+  })
+let stopTheme = () => {}
+watch(
+  () => props.step?.key,
+  () => {
+    stopTheme()
+    const theme = THEMES[props.step?.character ?? '']
+    stopTheme = theme ? playAmbientSound(theme, { volume: 0.5 }) : () => {}
+  },
+  { immediate: true }
+)
+onBeforeUnmount(() => stopTheme())
+
+/** The bosses whose fight opens on a sound of its own (not stopped: it outlives the card). */
+const OPENINGS =
+  /** @type {Record<string, import('@/utils/sounds').AmbientSound>} */ ({
+    gargouille: 'doors'
+  })
+function fight() {
+  const opening = OPENINGS[props.step?.character ?? '']
+  if (opening) playAmbientSound(opening, { volume: 0.7 })
+  emit('start', props.step)
+}
 </script>
 
 <style scoped lang="scss">
@@ -204,6 +234,14 @@ const fightable = computed(() =>
   background: #fff;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   animation: boss-intro-in 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+// Standing, whole: no card, the halo behind it.
+.boss-intro__portrait.boss-portrait--standing {
+  width: min(220px, 56vw);
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.4));
 }
 
 @keyframes boss-intro-in {

@@ -80,6 +80,9 @@ final class XpRules
     /** Vision (docs/VISION.md): a question right, a question wrong. */
     public const VISION_RIGHT = 4;
     public const VISION_WRONG = 1;
+    /** Calculation (docs/CALCULATION.md): a line right, a line wrong or late. */
+    public const CALCULATION_RIGHT = 4;
+    public const CALCULATION_WRONG = 1;
 
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
@@ -127,6 +130,8 @@ final class XpRules
             // Only the boss's reward, when it is beaten (docs/MIND_MAP.md, § 5).
             ExerciseType::Jongleur => 0,
             ExerciseType::Vision => $success ? self::VISION_RIGHT : self::VISION_WRONG,
+            // The Métronome's lines: only the boss's reward (docs/MIND_MAP.md, § 5 bis).
+            ExerciseType::Calculation => true === ($metadata['boss'] ?? null) ? 0 : ($success ? self::CALCULATION_RIGHT : self::CALCULATION_WRONG),
         };
     }
 
@@ -192,6 +197,7 @@ final class XpRules
             ExerciseType::Notation => Module::Notation,
             ExerciseType::Jongleur => Module::Jongleur,
             ExerciseType::Vision => Module::Vision,
+            ExerciseType::Calculation => Module::Calculation,
         };
     }
 

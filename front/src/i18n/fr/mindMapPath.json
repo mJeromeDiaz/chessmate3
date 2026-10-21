@@ -129,7 +129,10 @@
     "oeil_interieur": "Œil intérieur",
     "chapter": "Chapitre {n}",
     "section": "Section {n}",
-    "hidden": "Secret {n}"
+    "hidden": "Secret {n}",
+    "boss_metronome": "Dans le tempo",
+    "boss_compteur": "Le compte est bon",
+    "boss_avocat": "Plaidoirie gagnée"
   },
   "generic": {
     "tagline": "Un gardien de section : il vérifie que tu as bien retenu.",
@@ -193,6 +196,27 @@
       "taunt": "Cligne des yeux et c’est fini.",
       "defeat": "Plus rapide que l’éclair !",
       "win": "Trop lent… la position est déjà loin."
+    },
+    "metronome": {
+      "name": "Le Métronome",
+      "tagline": "Tic, tac. Il bat la mesure et ne s’arrête jamais : chaque bonne ligne accélère le tempo.",
+      "taunt": "Un temps de retard, et la mesure est perdue.",
+      "defeat": "Désaccordé… tu as tenu la cadence.",
+      "win": "Tic, tac : tu as perdu le tempo."
+    },
+    "compteur": {
+      "name": "Le Compteur",
+      "tagline": "Il compte chaque coup d’une longue variante et te demande où elle s’arrête.",
+      "taunt": "Combien de coups tiens-tu avant de perdre le compte ?",
+      "defeat": "Le compte est bon… pour toi.",
+      "win": "Tu as perdu le compte."
+    },
+    "avocat": {
+      "name": "L’Avocat du diable",
+      "tagline": "Tu proposes un coup, il cherche la réfutation. À toi de la trouver avant lui.",
+      "taunt": "Votre idée est séduisante. Défendez-la.",
+      "defeat": "Objection rejetée : ton idée tenait.",
+      "win": "Ton idée ne résiste pas à l’examen."
     }
   },
   "visualisation": {
@@ -596,6 +620,112 @@
       "s7_boss": {
         "title": "Le Sith aveugle",
         "desc": "Des parties complètes à l’aveugle, avec la position à reconstruire aux moments clés."
+      }
+    }
+  },
+  "calculation": {
+    "chapters": {
+      "c1": "La ligne droite",
+      "c2": "Tenir la distance",
+      "c3": "L’adversaire a son mot à dire"
+    },
+    "sections": {},
+    "steps": {
+      "s1_1": {
+        "title": "Le coup évident",
+        "desc": "Des mats en 1. L’échiquier est figé : calcule, clique « Je réponds », puis joue ton coup en 2 secondes. 10 positions et 80 % justes."
+      },
+      "s1_2": {
+        "title": "Deux coups",
+        "desc": "Des mats en 2 : calcule toute la ligne, puis joue-la d’un trait, les deux camps, 2 secondes par demi-coup. 10 positions et 80 % justes."
+      },
+      "s1_chest": {
+        "title": "Coffre de la ligne droite",
+        "desc": "Gagné en validant 1.1 et 1.2."
+      },
+      "s1_3": {
+        "title": "Captures en chemin",
+        "desc": "Des mats en 2 dont la ligne passe par une capture. 10 positions et 80 % justes."
+      },
+      "s1_4": {
+        "title": "Trois coups",
+        "desc": "Des mats en 3 : cinq demi-coups à tenir en tête avant de jouer. 10 positions et 80 % justes."
+      },
+      "s1_mini": {
+        "title": "Sans faute",
+        "desc": "4 mats en 3, joués d’un trait. 2 vies."
+      },
+      "s1_boss": {
+        "title": "Le Métronome",
+        "desc": "Une série de mats dont la longueur n’est jamais dite. 12 lignes justes d’affilée ; une erreur remet la série à zéro. Le temps de réflexion raccourcit à chaque bonne ligne."
+      },
+      "s2_1": {
+        "title": "Niveau 2.1",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_2": {
+        "title": "Niveau 2.2",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_3": {
+        "title": "Niveau 2.3",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_4": {
+        "title": "Niveau 2.4",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_5": {
+        "title": "Niveau 2.5",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_6": {
+        "title": "Niveau 2.6",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_7": {
+        "title": "Niveau 2.7",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_8": {
+        "title": "Niveau 2.8",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_chest": {
+        "title": "Coffre de la distance",
+        "desc": "Gagné en validant 2.1 à 2.4."
+      },
+      "s2_mini": {
+        "title": "Trouver, puis reconstituer",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s2_boss": {
+        "title": "Le Compteur",
+        "desc": "Une variante longue dont il faut dire où elle s’arrête et ce qui y reste."
+      },
+      "s3_1": {
+        "title": "Niveau 3.1",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s3_2": {
+        "title": "Niveau 3.2",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s3_3": {
+        "title": "Niveau 3.3",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s3_4": {
+        "title": "Niveau 3.4",
+        "desc": "Bientôt : son module arrive avec le lot du chapitre."
+      },
+      "s3_mini": {
+        "title": "La seule qui résiste",
+        "desc": "Trois combinaisons semblent marcher, une seule résiste à la meilleure défense."
+      },
+      "s3_boss": {
+        "title": "L’Avocat du diable",
+        "desc": "Tu proposes un coup, puis tu cherches la meilleure réfutation de ta propre idée."
       }
     }
   }

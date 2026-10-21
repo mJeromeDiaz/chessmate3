@@ -7,6 +7,17 @@
   >
     <slot />
     <div
+      v-if="flashing"
+      class="board-distractions__flash"
+      data-testid="board-distractions-flash"
+      aria-hidden="true"
+    />
+    <div
+      v-if="shadowing"
+      class="board-distractions__shadow"
+      aria-hidden="true"
+    />
+    <div
       v-if="running && balls.length"
       class="board-distractions__balls"
       aria-hidden="true"
@@ -29,13 +40,15 @@
 /**
  * The distractions of a mind map boss around its board (docs/MIND_MAP.md, § 2): none in the
  * exercises, `light` (the board wobbles now and then, two pieces drift across it), `medium` (more
- * often, three pieces, and a stray move sound now and then while `active`). Nothing moves when the
- * system asks for less motion; the sound follows the player's « Sons » preference. The Gargouille's
- * `strong` ones come with it.
+ * often, three pieces, and a stray move sound now and then while `active`), `strong` (the
+ * Gargouille: lightning flashing across the board with its thunder, a dark veil passing, the board
+ * wobbling, four pieces). Nothing moves when the system asks for less motion; the sounds follow the
+ * player's « Sons » preference.
  */
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { playMoveSound } from '@/utils/chess/moveSounds'
+import { playAmbientSound } from '@/utils/sounds'
 
 const props = defineProps({
   /** @type {import('vue').PropType<'none'|'light'|'medium'|'strong'>} */
@@ -51,13 +64,19 @@ const RHYTHMS = {
   strong: { every: 1500, chance: 0.7, balls: ['♞', '♝', '♜', '♛'], sound: true }
 }
 const WOBBLE_MS = 900
+const FLASH_MS = 700
+const SHADOW_MS = 1600
 
 const auth = useAuthStore()
 const wobbling = ref(false)
+const flashing = ref(false)
+const shadowing = ref(false)
 /** @type {ReturnType<typeof setInterval>|undefined} */
 let ticker
 /** @type {ReturnType<typeof setTimeout>|undefined} */
 let wobbleTimer
+/** @type {ReturnType<typeof setTimeout>|undefined} */
+let effectTimer
 
 const rhythm = computed(
   () => RHYTHMS[/** @type {keyof typeof RHYTHMS} */ (props.level)] ?? null
@@ -65,9 +84,33 @@ const rhythm = computed(
 const running = computed(() => props.active && rhythm.value !== null)
 const balls = computed(() => rhythm.value?.balls ?? [])
 
+/**
+ * A short effect: on, then off after $ms.
+ *
+ * @param {import('vue').Ref<boolean>} flag
+ * @param {number} ms
+ */
+function pulse(flag, ms) {
+  flag.value = true
+  clearTimeout(effectTimer)
+  effectTimer = setTimeout(() => (flag.value = false), ms)
+}
+
 function tick() {
   const r = rhythm.value
   if (!r || Math.random() > r.chance) return
+  if (props.level === 'strong') {
+    const roll = Math.random()
+    if (roll < 0.35) {
+      pulse(flashing, FLASH_MS)
+      playAmbientSound('thunder', { volume: 0.8 })
+      return
+    }
+    if (roll < 0.5) {
+      pulse(shadowing, SHADOW_MS)
+      return
+    }
+  }
   if (Math.random() < 0.6) {
     wobbling.value = true
     clearTimeout(wobbleTimer)
@@ -90,6 +133,7 @@ watch(
 onBeforeUnmount(() => {
   clearInterval(ticker)
   clearTimeout(wobbleTimer)
+  clearTimeout(effectTimer)
 })
 </script>
 
@@ -100,6 +144,31 @@ onBeforeUnmount(() => {
   &--wobble {
     animation: board-distractions-wobble 0.3s ease-in-out 3;
   }
+}
+
+.board-distractions__flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgb(255 255 255 / 0.95) 48%,
+    transparent 62%
+  );
+  animation: board-distractions-flash 0.7s ease-out;
+}
+
+.board-distractions__shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 40%,
+    rgb(20 10 40 / 0.2),
+    rgb(20 10 40 / 0.85)
+  );
+  animation: board-distractions-shadow 1.6s ease-in-out;
 }
 
 .board-distractions__balls {
@@ -130,6 +199,35 @@ onBeforeUnmount(() => {
   }
 }
 
+@keyframes board-distractions-flash {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes board-distractions-shadow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  40%,
+  70% {
+    opacity: 1;
+  }
+}
+
 @keyframes board-distractions-drift {
   0% {
     transform: translate(0, 0) rotate(0);
@@ -147,7 +245,9 @@ onBeforeUnmount(() => {
     animation: none;
   }
 
-  .board-distractions__balls {
+  .board-distractions__balls,
+  .board-distractions__flash,
+  .board-distractions__shadow {
     display: none;
   }
 }

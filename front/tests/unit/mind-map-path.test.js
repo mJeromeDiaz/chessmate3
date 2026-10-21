@@ -3,6 +3,7 @@ import fr from '@/i18n/fr/mindMapPath.json'
 import {
   apiCapacity,
   badgeName,
+  bossImage,
   bossLine,
   bossName,
   chapterNodes,
@@ -14,12 +15,14 @@ import {
   livesLeft,
   mapKey,
   messageKey,
+  moodImage,
   nodeOffset,
   outcomeKey,
   pathPage,
   poseCrop,
   refusalText,
   sectionTitle,
+  standingImage,
   stepTitle
 } from '@/utils/mindMapPath'
 
@@ -89,7 +92,8 @@ const path = {
 describe('mind map path', () => {
   it('maps the capacities of the map to the API’s, and back to their page', () => {
     expect(apiCapacity('visualization')).toBe('visualisation')
-    expect(apiCapacity('calculation')).toBeNull()
+    expect(apiCapacity('calculation')).toBe('calculation')
+    expect(apiCapacity('speed')).toBeNull()
     expect(hasPath('visualization')).toBe(true)
     expect(hasPath('speed')).toBe(false)
     expect(mapKey('visualisation')).toBe('visualization')
@@ -203,6 +207,20 @@ describe('mind map path', () => {
       'Il te faut un répertoire d’au moins 10 tronçons : crée-le dans « Répertoires ».'
     )
     expect(refusalText(refusal(500, 'boom'))).toBe('')
+  })
+
+  it('draws the Métronome, the Gargouille and the Jongleur by their expressions, the others from a sheet', () => {
+    expect(moodImage('metronome', 'joy')).toContain('metronome-joie.png')
+    expect(moodImage('gargouille', 'anxiety')).toContain(
+      'gargouille-angoisse.png'
+    )
+    expect(standingImage('metronome')).toContain('metronome-pose.png')
+    expect(moodImage('jongleur', 'joy')).toContain('jongleur-joie.png')
+    expect(moodImage('cyclope', 'joy')).toBe('')
+    expect(standingImage('cyclope')).toBe('')
+    expect(moodImage(null, 'joy')).toBe('')
+    expect(bossImage('metronome')).toContain('cyclope.png')
+    expect(fr.characters.metronome.name).toBe('Le Métronome')
   })
 
   it('crops a pose out of the character sheet and hands a chest to the chest screen', () => {

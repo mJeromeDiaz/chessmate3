@@ -11,6 +11,7 @@ namespace App\Enum\MindMap;
 enum Capacity: string
 {
     case Visualisation = 'visualisation';
+    case Calculation = 'calculation';
 
     /**
      * @return list<string>

@@ -5,6 +5,7 @@
     :data-phase="phase"
     :data-ask="item.data.ask"
     :data-follow-up="item.data.followUp ? 'true' : 'false'"
+    :data-mood="gargoyle ? mood : null"
   >
     <template v-if="$slots.header" #header>
       <slot name="header" />
@@ -120,6 +121,21 @@
 
     <div class="column q-gutter-sm">
       <div
+        v-if="seconds && ['ask', 'sending'].includes(phase)"
+        class="vision-player__clock"
+        :class="{ 'vision-player__clock--low': leftMs <= 4000 }"
+        role="progressbar"
+        :aria-valuenow="Math.ceil(leftMs / 1000)"
+        aria-valuemin="0"
+        :aria-valuemax="seconds"
+        data-testid="vision-clock"
+      >
+        <div
+          class="vision-player__clock-fill"
+          :style="{ width: `${(leftMs / (seconds * 1000)) * 100}%` }"
+        />
+      </div>
+      <div
         v-if="announcedLine && ['ask', 'sending', 'complete'].includes(phase)"
         class="vision-player__line"
         data-testid="vision-line"
@@ -165,7 +181,9 @@
           :title="
             right
               ? $t('vision.player.kickers.right')
-              : $t('vision.player.kickers.wrong')
+              : result.status === 'late'
+                ? $t('vision.player.kickers.late')
+                : $t('vision.player.kickers.wrong')
           "
           :sub="right ? '' : verdict"
           :xp="xp"
@@ -186,11 +204,13 @@
  * several squares then « Valider » (the attackers, the captures or the stops of a path), a choice
  * (a knight's jumps, yes or no). A piece's path is written « Td1, Td5, Txd7 »; a question on the
  * path just asked about (`followUp`) shows nothing again. A boss's distractions play around the
- * board ({@see BoardDistractions}).
+ * board ({@see BoardDistractions}). A question with its time (`seconds`, the Gargouille) shows its
+ * bar once asked; at zero an empty answer goes (`pass`). The Gargouille's music plays through the
+ * fight, its wolf cries at a miss (the « Sons » preference).
  * The page gives the server's verdict back (`result`): the position reached, the right squares in
  * green and the wrong ones in red, and the result sheet. Noctis, the blindfold professor, talks.
  */
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import BoardDistractions from '@/components/mindMap/BoardDistractions.vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
@@ -199,8 +219,9 @@ import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { feedbackProf } from '@/utils/feedback'
+import { moodImage } from '@/utils/mindMapPath'
 import { numberedLine } from '@/utils/notation'
-import { playOutcomeSound } from '@/utils/sounds'
+import { playAmbientSound, playOutcomeSound } from '@/utils/sounds'
 import {
   LIT_TARGET,
   MANY_SQUARES,
@@ -208,6 +229,7 @@ import {
   PIECE_ANSWER,
   choiceText,
   correctionHighlights,
+  gargoyleMood,
   movesText,
   questionText,
   toggleSquare,
@@ -247,6 +269,22 @@ let timer
 let pause
 
 const right = computed(() => props.result?.status === 'right')
+/** A question's time once asked (the Gargouille), null without one. */
+const seconds = computed(() => props.item.data.seconds ?? null)
+const askedAt = ref(0)
+const now = ref(Date.now())
+const leftMs = computed(() =>
+  seconds.value
+    ? Math.max(0, askedAt.value + seconds.value * 1000 - now.value)
+    : 0
+)
+/** @type {ReturnType<typeof setInterval>|undefined} */
+let clock
+/** The fight's music, stopped when the player leaves. */
+let stopMusic = () => {}
+/** The whispers under the moves announced (strong distractions). */
+let stopWhispers = () => {}
+const strong = computed(() => props.item.data.distraction === 'strong')
 const answersOnBoard = computed(() =>
   [...ONE_SQUARE, ...MANY_SQUARES].includes(props.item.data.ask)
 )
@@ -292,13 +330,47 @@ const highlights = computed(() => {
   ]
 })
 
+/** The Gargouille's fight: its face speaks in place of the professor. */
+const gargoyle = computed(() => props.item.data.kind === 'gargoyle')
+/** The answers right in a row before this question (the fight's, kept from one question to the next). */
+const streak = ref(0)
+/** The share of the question's time used when answered. */
+const answeredRatio = ref(/** @type {number|null} */ (null))
+/** The last verdict, counted in the streak when the next question comes. */
+let lastRight = /** @type {boolean|null} */ (null)
+const mood = computed(() =>
+  gargoyleMood({
+    phase: phase.value,
+    position: props.item.data.position ?? 1,
+    count: props.item.data.count ?? 0,
+    streak: streak.value,
+    result: props.result,
+    leftRatio:
+      phase.value === 'ask' && seconds.value
+        ? leftMs.value / (seconds.value * 1000)
+        : 1,
+    answeredRatio: answeredRatio.value
+  })
+)
+
 const prof = computed(() =>
-  feedbackProf(
-    'blindfold_recall',
-    timeline.kind.value !== null && timeline.step.value >= 2
-      ? timeline.kind.value
-      : null
-  )
+  gargoyle.value
+    ? {
+        name: t('mindMapPath.characters.gargouille.name'),
+        image: moodImage('gargouille', mood.value),
+        glyph: '♜︎',
+        bg: '#EEEBFA',
+        deep: '#6B5BD6',
+        ink: '#1B1530',
+        accentInk: '#6B5BD6',
+        title: ''
+      }
+    : feedbackProf(
+        'blindfold_recall',
+        timeline.kind.value !== null && timeline.step.value >= 2
+          ? timeline.kind.value
+          : null
+      )
 )
 
 const bubble = computed(() => {
@@ -341,6 +413,7 @@ function hide() {
   if (phase.value !== 'show') return
   stopTimers()
   phase.value = 'hidden'
+  if (strong.value) playAmbientSound('bell', { volume: 0.7 })
   pause = setTimeout(
     () => (sans.value.length ? announce() : (phase.value = 'ask')),
     (props.item.data.hiddenSeconds ?? 2) * 1000
@@ -399,6 +472,9 @@ watch(
   () => {
     stopTimers()
     timeline.reset()
+    if (lastRight !== null) streak.value = lastRight ? streak.value + 1 : 0
+    lastRight = null
+    answeredRatio.value = null
     chosen.value = []
     announcedCount.value = 0
     // Nothing to show: a knight's question, a question on the path just asked about.
@@ -420,14 +496,51 @@ watch(
   () => props.result,
   value => {
     if (!value || phase.value === 'complete') return
+    answeredRatio.value =
+      seconds.value && askedAt.value
+        ? Math.min(1, (Date.now() - askedAt.value) / (seconds.value * 1000))
+        : null
+    lastRight = value.status === 'right'
     phase.value = 'complete'
     const kind = value.status === 'right' ? 'win' : 'miss'
-    playOutcomeSound(kind === 'miss' ? 'puzzleMissed' : 'puzzleDone')
+    if (kind === 'miss' && strong.value)
+      playAmbientSound(value.lives === 0 ? 'evilLaugh' : 'wolf', {
+        volume: 0.7
+      })
+    else playOutcomeSound(kind === 'miss' ? 'puzzleMissed' : 'puzzleDone')
     timeline.play(kind)
   }
 )
 
-onBeforeUnmount(stopTimers)
+// The question's time runs once it is asked; at zero, nothing answered.
+watch(phase, value => {
+  clearInterval(clock)
+  stopWhispers()
+  if (value === 'announce' && strong.value)
+    stopWhispers = playAmbientSound('whispers', { loop: true, volume: 0.4 })
+  if (value !== 'ask' || !seconds.value) return
+  askedAt.value = Date.now()
+  now.value = askedAt.value
+  clock = setInterval(() => {
+    now.value = Date.now()
+    if (leftMs.value <= 0) {
+      clearInterval(clock)
+      send({ pass: true })
+    }
+  }, 100)
+})
+
+onMounted(() => {
+  if (strong.value)
+    stopMusic = playAmbientSound('gargoyleFight', { loop: true, volume: 0.35 })
+})
+
+onBeforeUnmount(() => {
+  stopTimers()
+  clearInterval(clock)
+  stopMusic()
+  stopWhispers()
+})
 </script>
 
 <style scoped lang="scss">
@@ -470,6 +583,24 @@ onBeforeUnmount(stopTimers)
   font-weight: 800;
   color: var(--cm-ink);
   text-align: center;
+}
+
+.vision-player__clock {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--cm-subtle);
+  overflow: hidden;
+
+  &--low .vision-player__clock-fill {
+    background: #e5484d;
+  }
+}
+
+.vision-player__clock-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cm-brand);
+  transition: width 0.1s linear;
 }
 
 .vision-player__line {

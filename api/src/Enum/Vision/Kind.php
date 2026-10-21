@@ -51,6 +51,9 @@ enum Kind: string
     /** Three questions on each position: attacked, defended, the winning captures (the mini-boss 3.3). */
     case RelationBoss = 'rel_boss';
 
+    /** The Gargouille: 5 moves, then 5 questions of the chapter, each of another kind, under strong distractions. */
+    case Gargoyle = 'gargoyle';
+
     /** Questions on a piece's path: only that piece moves (docs/VISION.md, § 2 bis). */
     public function isTrack(): bool
     {
