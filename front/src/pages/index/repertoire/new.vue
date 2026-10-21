@@ -64,7 +64,15 @@ import { useRepertoireStore } from '@/stores/repertoire'
 import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'repertoire.new.title',
+      subtitle: 'layout.nav.repertoires'
+    }
+  }
+})
 
 /** Same limit as the API (App\Repertoire\Limits). */
 const NAME_MAX = 80

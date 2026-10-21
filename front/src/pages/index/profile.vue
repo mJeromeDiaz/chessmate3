@@ -58,7 +58,15 @@ import SecurityCard from '@/components/profile/SecurityCard.vue'
 import StreakReminderSection from '@/components/profile/StreakReminderSection.vue'
 import TourCard from '@/components/profile/TourCard.vue'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'profile.title',
+      subtitle: 'layout.header.kickers.account'
+    }
+  }
+})
 
 const auth = useAuthStore()
 const route = useRoute()

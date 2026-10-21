@@ -77,7 +77,12 @@ import CapacityPanel from '@/components/mindMap/CapacityPanel.vue'
 import { LEFT, RIGHT, capacity, capacityName } from '@/utils/mindMap'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'mindMap.page.title', subtitle: 'mindMap.page.kicker' }
+  }
+})
 
 const $q = useQuasar()
 /** @type {import('vue').Ref<string|null>} the capacity opened */

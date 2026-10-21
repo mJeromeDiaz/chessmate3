@@ -124,7 +124,15 @@ import {
   topicLabel
 } from '@/utils/puzzleStreak'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'puzzleStreak.page.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 const auth = useAuthStore()
 /** @type {import('vue').Ref<{rules: import('@/utils/puzzleStreak').StreakRules, records: import('@/utils/puzzleStreak').StreakRecord[], total: {solved: number, failed: number}}|null>} */

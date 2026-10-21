@@ -172,7 +172,15 @@ import { t } from '@/i18n'
  * Positions to evaluate (docs/EVALUATION.md): the catalogue entered by hand. A position already
  * played can't be deleted: deactivate it (it is no longer served).
  */
-definePage({ meta: { auth: 'admin' } })
+definePage({
+  meta: {
+    auth: 'admin',
+    header: {
+      title: 'layout.header.titles.admin.positions',
+      subtitle: 'layout.header.kickers.admin'
+    }
+  }
+})
 
 const PAGE_SIZE = 20
 const ACTIVE_OPTIONS = [

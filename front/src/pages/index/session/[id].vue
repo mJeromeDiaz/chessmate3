@@ -275,7 +275,15 @@ import {
   stepStatusText
 } from '@/utils/session/steps'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'layout.header.titles.session',
+      subtitle: 'layout.header.kickers.create'
+    }
+  }
+})
 
 const route = useRoute()
 const $q = useQuasar()

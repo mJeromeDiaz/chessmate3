@@ -86,7 +86,15 @@ import {
   resultsText
 } from '@/utils/evaluation'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'evaluation.page.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 const auth = useAuthStore()
 /** @type {import('vue').Ref<any>} GET /evaluation */

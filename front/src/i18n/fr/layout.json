@@ -45,5 +45,42 @@
     "puzzle": "Se venger sur un puzzle",
     "home": "Retour à l’accueil",
     "blunder": "Blunder !"
+  },
+  "header": {
+    "back": "Retour",
+    "crystals": "{n} cristaux",
+    "kickers": {
+      "dashboard": "Tableau de bord",
+      "free": "Entraînement libre",
+      "create": "Créer un entraînement",
+      "account": "Ton compte",
+      "shop": "Tes cristaux",
+      "admin": "Administration",
+      "profs": "Les profs",
+      "about": "Don't Stay Rooky"
+    },
+    "titles": {
+      "mindMap": "Carte mentale",
+      "sessionNew": "Nouvel entraînement",
+      "plan": "Entraînement",
+      "session": "Séance",
+      "training": "Entraînement en cours",
+      "repertoire": "Répertoire",
+      "woodpecker": "Set Woodpecker",
+      "tour": "Visite guidée",
+      "welcome": "Bienvenue",
+      "prof": "Prof",
+      "terms": "Conditions d’utilisation",
+      "privacy": "Confidentialité",
+      "contact": "Contact",
+      "admin": {
+        "index": "Tableau de bord",
+        "players": "Joueurs",
+        "invitations": "Invitations",
+        "requests": "Demandes",
+        "positions": "Positions",
+        "shop": "Boutique"
+      }
+    }
   }
 }

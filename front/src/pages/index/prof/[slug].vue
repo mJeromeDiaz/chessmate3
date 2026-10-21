@@ -160,7 +160,13 @@ import { MODULES_BY_ID } from '@/utils/session/catalog'
 // page links here (showcase values only, no user data).
 definePage({
   path: '/prof/:slug(lizy|albert-stein|aaron)',
-  meta: { auth: 'public' }
+  meta: {
+    auth: 'public',
+    header: {
+      title: 'layout.header.titles.prof',
+      subtitle: 'layout.header.kickers.profs'
+    }
+  }
 })
 
 const auth = useAuthStore()

@@ -773,7 +773,12 @@ import { chestToOpen } from '@/utils/shopReward'
 import { backLabel, subjectPath } from '@/utils/training'
 import { playAmbientSound } from '@/utils/sounds'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'layout.header.titles.training', parent: false }
+  }
+})
 
 /**
  * After a solved puzzle, the next one comes by itself once the short success animation played

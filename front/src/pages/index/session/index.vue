@@ -235,7 +235,15 @@ import {
 import { sessionProgressText, stepModule } from '@/utils/session/steps'
 import { PROFS } from '@/utils/prof/profs'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'session.list.title',
+      subtitle: 'layout.header.kickers.create'
+    }
+  }
+})
 
 const $q = useQuasar()
 const launcher = usePlanLaunch()

@@ -111,7 +111,15 @@ import { useAuthStore } from '@/stores/auth'
 import { GAMES, KINDS, pieceLetters } from '@/utils/notation'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'notation.page.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 /** The lengths offered, in minutes. */
 const DURATIONS = [2, 5, 10, 15]

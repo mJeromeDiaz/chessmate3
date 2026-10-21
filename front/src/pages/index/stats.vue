@@ -2,17 +2,7 @@
   <q-page class="stats" data-testid="stats-page">
     <div class="stats__inner">
       <header class="stats__head">
-        <div class="row items-center no-wrap">
-          <q-btn
-            flat
-            round
-            dense
-            icon="arrow_back"
-            to="/"
-            :aria-label="$t('dashboard.stats.home')"
-          />
-          <h1 class="stats__title">{{ $t('dashboard.stats.title') }}</h1>
-        </div>
+        <h1 class="stats__title">{{ $t('dashboard.stats.title') }}</h1>
         <PeriodPicker
           :model-value="store.period"
           @update:model-value="store.loadStats"
@@ -97,7 +87,16 @@ import TrainingTimeChart from '@/components/dashboard/TrainingTimeChart.vue'
  * and weak puzzle themes, repertoire health, over a period remembered in this browser. Reached
  * from the home page (the main menu is unchanged). Each block loads and fails on its own.
  */
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'dashboard.stats.title',
+      subtitle: 'layout.header.kickers.dashboard',
+      parent: '/'
+    }
+  }
+})
 
 const store = useDashboardStore()
 

@@ -2,15 +2,7 @@
   <q-page padding>
     <div class="stats-page q-gutter-y-md">
       <div class="row items-center no-wrap">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          :to="`/repertoire/${id}`"
-          :aria-label="$t('repertoire.stats.editor')"
-        />
-        <div class="text-h5 q-ml-sm ellipsis" data-testid="stats-name">{{
+        <div class="text-h5 ellipsis" data-testid="stats-name">{{
           stats?.name ?? $t('repertoire.stats.title')
         }}</div>
         <q-space />
@@ -145,17 +137,27 @@ import CardCounts from '@/components/repertoire/CardCounts.vue'
 import ForecastBars from '@/components/repertoire/ForecastBars.vue'
 import RepertoireTestDialog from '@/components/repertoire/RepertoireTestDialog.vue'
 import SegmentHistoryDialog from '@/components/repertoire/SegmentHistoryDialog.vue'
+import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { repertoireApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatPercent } from '@/utils/format'
 import { labelText, numberedMoves, statusText } from '@/utils/repertoireTest'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'repertoire.stats.title',
+      subtitle: 'layout.nav.repertoires'
+    }
+  }
+})
 
 const route = useRoute()
 const id = String(route.params.id)
 const stats = ref(null)
+usePageHeader(() => ({ subtitle: stats.value?.name ?? null }))
 const loading = ref(true)
 const error = ref('')
 const testOpen = ref(false)

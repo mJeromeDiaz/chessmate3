@@ -139,7 +139,15 @@ import { AUTO_REPERTOIRE_PATH, markLinkReturn } from '@/utils/auth/authFlow'
 import { autoErrorText } from '@/utils/repertoireAuto'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'repertoireAuto.header.title',
+      subtitle: 'layout.nav.repertoires'
+    }
+  }
+})
 
 const router = useRouter()
 const auth = useAuthStore()

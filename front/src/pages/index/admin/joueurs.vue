@@ -198,7 +198,15 @@ import { t } from '@/i18n'
  * Players (docs/EARLY_ACCESS.md): every account, how it signed up, how much it plays; suspend one
  * (every session closed at once) or lift its suspension. An admin's account cannot be suspended.
  */
-definePage({ meta: { auth: 'admin' } })
+definePage({
+  meta: {
+    auth: 'admin',
+    header: {
+      title: 'layout.header.titles.admin.players',
+      subtitle: 'layout.header.kickers.admin'
+    }
+  }
+})
 
 /** Lichess speeds with a name (onboarding.perfs). */
 const PERFS = ['rapid', 'blitz', 'classical']

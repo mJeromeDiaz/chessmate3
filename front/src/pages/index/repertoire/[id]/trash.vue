@@ -2,15 +2,7 @@
   <q-page padding>
     <div class="trash-page q-gutter-y-md">
       <div class="row items-center no-wrap">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          :to="`/repertoire/${repertoireId}`"
-          :aria-label="$t('repertoire.trash.back')"
-        />
-        <div class="text-h5 q-ml-sm ellipsis">
+        <div class="text-h5 ellipsis">
           {{
             store.graph?.id === repertoireId
               ? $t('repertoire.trash.named', { name: store.graph.name })
@@ -174,12 +166,21 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { useRepertoireStore } from '@/stores/repertoire'
 import { apiErrorMessage } from '@/utils/apiError'
 import { pathText } from '@/utils/repertoireImport'
 import { intlLocale, t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'repertoire.trash.title',
+      subtitle: 'layout.nav.repertoires'
+    }
+  }
+})
 
 /** Why a suite is in the trash (App\Enum\Repertoire\TrashReason). */
 const REASONS = ['replaced', 'deleted', 'imported', 'migrated']
@@ -194,6 +195,10 @@ const $q = useQuasar()
 const store = useRepertoireStore()
 
 const repertoireId = computed(() => /** @type {string} */ (route.params.id))
+usePageHeader(() => ({
+  subtitle:
+    store.graph?.id === repertoireId.value ? store.graph.name : null
+}))
 /** @type {import('vue').Ref<import('@/stores/repertoire').TrashedSuite[]|null>} */
 const suites = ref(null)
 const loadError = ref('')

@@ -264,7 +264,15 @@ import { downloadText } from '@/utils/download'
 import { profImage } from '@/utils/prof/images'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'repertoire.list.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 /** Same limit as the API (App\Repertoire\Limits). */
 const NAME_MAX = 80

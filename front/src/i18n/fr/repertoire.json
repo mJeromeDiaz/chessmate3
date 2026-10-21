@@ -261,13 +261,11 @@
     "refused": "Vous avez atteint le nombre maximal de répertoires, ou le nom est invalide."
   },
   "overview": {
-    "back": "Mes répertoires",
     "title": "Statistiques des répertoires",
     "forecast": "Positions dues, 7 prochains jours",
     "row": "{due} dues · {new} nouvelles · {tests} tests · réussite 30 j : {rate} · dernier test : {date}"
   },
   "stats": {
-    "editor": "Éditeur",
     "title": "Statistiques",
     "test": "Tester",
     "fragile": "Tronçons fragiles",
@@ -293,7 +291,6 @@
     "notFound": "Répertoire introuvable."
   },
   "trash": {
-    "back": "Retour au répertoire",
     "title": "Corbeille",
     "named": "Corbeille · {name}",
     "lead": "Un coup remplacé ou supprimé arrive ici avec tout ce qui n’était atteint que par lui. Restauré, il revient avec sa progression.",
@@ -427,7 +424,6 @@
   "pending": {
     "title": "En suspens",
     "named": "En suspens · {name}",
-    "back": "Retour à l’éditeur",
     "lead": "Des réponses fréquentes sur Lichess (5 % des parties et 100 parties au moins) que tes parties ne couvraient pas. Rien n’entre dans le répertoire sans ta réponse.",
     "empty": "Aucune position en suspens.",
     "open": "{n} à préparer",

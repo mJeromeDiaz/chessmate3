@@ -110,7 +110,12 @@ import {
 } from '@/utils/onboarding'
 import { profImage } from '@/utils/prof/images'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'layout.header.titles.tour', parent: false }
+  }
+})
 
 const CONFETTI = [
   '#1B1530',

@@ -24,7 +24,6 @@
     >
       <template #header>
         <div class="row items-center q-gutter-sm">
-          <q-btn flat dense icon="arrow_back" :to="`/woodpecker/${id}`" />
           <div class="text-h6">{{ set?.name ?? 'Woodpecker' }}</div>
         </div>
         <div v-if="set?.current" data-testid="woodpecker-progress">
@@ -104,6 +103,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import CycleRecap from '@/components/woodpecker/CycleRecap.vue'
+import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { useGamificationStore } from '@/stores/gamification'
 import { useTrainingStore } from '@/stores/training'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
@@ -113,7 +113,15 @@ import { formatDate } from '@/utils/format'
 import { pace } from '@/utils/woodpeckerPace'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'layout.header.titles.woodpecker',
+      subtitle: 'layout.nav.woodpecker'
+    }
+  }
+})
 
 const route = useRoute()
 const store = useWoodpeckerStore()
@@ -121,6 +129,7 @@ const training = useTrainingStore()
 const gamification = useGamificationStore()
 const id = computed(() => String(route.params.id))
 const set = computed(() => (store.set?.id === id.value ? store.set : null))
+usePageHeader(() => ({ title: set.value?.name ?? null }))
 const loading = ref(false)
 const error = ref('')
 /** Why no puzzle can be played now (paused, resting, finished), or ''. */

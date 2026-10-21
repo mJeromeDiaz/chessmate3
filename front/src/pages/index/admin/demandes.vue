@@ -152,7 +152,15 @@ import { t } from '@/i18n'
  * The early access waiting list (docs/EARLY_ACCESS.md): who asked, in order of arrival; invite
  * (a 7-day key, emailed and shown once) or delete a request.
  */
-definePage({ meta: { auth: 'admin' } })
+definePage({
+  meta: {
+    auth: 'admin',
+    header: {
+      title: 'layout.header.titles.admin.requests',
+      subtitle: 'layout.header.kickers.admin'
+    }
+  }
+})
 
 const FILTER_OPTIONS = [
   [false, 'pending'],

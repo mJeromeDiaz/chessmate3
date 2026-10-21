@@ -235,7 +235,12 @@ import {
 import { earningRows } from '@/utils/shopReward'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'shop.page.title', subtitle: 'layout.header.kickers.shop' }
+  }
+})
 
 const shop = useShopStore()
 const route = useRoute()

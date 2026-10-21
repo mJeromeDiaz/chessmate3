@@ -256,7 +256,15 @@ import {
 import { formatDate, formatRate } from '@/utils/format'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'coordinates.page.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 const ORIENTATION_OPTIONS = computed(() =>
   Object.entries(ORIENTATIONS).map(([value, label]) => ({ value, label }))

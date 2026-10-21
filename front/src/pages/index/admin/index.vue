@@ -182,7 +182,15 @@ import {
 import { t } from '@/i18n'
 
 /** The admin dashboard (docs/EARLY_ACCESS.md): key figures and charts of the chosen period. */
-definePage({ meta: { auth: 'admin' } })
+definePage({
+  meta: {
+    auth: 'admin',
+    header: {
+      title: 'layout.header.titles.admin.index',
+      subtitle: 'layout.header.kickers.admin'
+    }
+  }
+})
 
 const store = useAdminStore()
 const stats = computed(() => store.stats)

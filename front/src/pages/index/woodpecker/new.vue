@@ -153,7 +153,12 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
 import { themeText } from '@/utils/puzzle'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'woodpecker.new.title', subtitle: 'layout.nav.woodpecker' }
+  }
+})
 
 /** Smallest set in production (the API enforces its own, possibly lower in test environments). */
 const MIN_PUZZLES = 50

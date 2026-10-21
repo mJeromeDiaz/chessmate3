@@ -104,7 +104,15 @@ import { useAuthStore } from '@/stores/auth'
 import { COACH_PATH, markLinkReturn } from '@/utils/auth/authFlow'
 import { COACH_GAMES, coachErrorText, playedModules } from '@/utils/coach'
 
-definePage({ meta: { auth: 'public' } })
+definePage({
+  meta: {
+    auth: 'public',
+    header: {
+      title: 'coach.header.title',
+      subtitle: 'layout.header.kickers.create'
+    }
+  }
+})
 
 const router = useRouter()
 const auth = useAuthStore()

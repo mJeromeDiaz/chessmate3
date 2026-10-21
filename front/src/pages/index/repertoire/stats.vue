@@ -2,15 +2,7 @@
   <q-page padding>
     <div class="stats-page q-gutter-y-md">
       <div class="row items-center">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          to="/repertoire"
-          :aria-label="$t('repertoire.overview.back')"
-        />
-        <div class="text-h5 q-ml-sm">{{ $t('repertoire.overview.title') }}</div>
+        <div class="text-h5">{{ $t('repertoire.overview.title') }}</div>
       </div>
 
       <q-banner v-if="error" rounded class="bg-negative text-white">{{
@@ -68,7 +60,15 @@ import { repertoireApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate, formatPercent } from '@/utils/format'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'repertoire.overview.title',
+      subtitle: 'layout.nav.repertoires'
+    }
+  }
+})
 
 const overview = ref(null)
 const loading = ref(true)

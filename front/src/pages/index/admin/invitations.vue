@@ -168,7 +168,15 @@ import {
 import { t } from '@/i18n'
 
 /** Invitations (docs/EARLY_ACCESS.md): create, list and filter, resend, revoke, read the log. */
-definePage({ meta: { auth: 'admin' } })
+definePage({
+  meta: {
+    auth: 'admin',
+    header: {
+      title: 'layout.header.titles.admin.invitations',
+      subtitle: 'layout.header.kickers.admin'
+    }
+  }
+})
 
 const STATUS_OPTIONS = computed(() => [
   { value: null, label: t('admin.invitations.all') },

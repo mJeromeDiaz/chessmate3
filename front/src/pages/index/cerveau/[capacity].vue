@@ -13,14 +13,6 @@
       "
       data-testid="mind-path"
     >
-      <router-link
-        to="/cerveau"
-        class="mind-path__back"
-        data-testid="mind-path-back"
-        ><q-icon name="arrow_back" />{{
-          $t('mindMapPath.page.back')
-        }}</router-link
-      >
       <header v-if="info" class="mind-path__head">
         <span class="mind-path__kicker">{{
           $t('mindMapPath.page.kicker')
@@ -138,6 +130,7 @@ import BossIntro from '@/components/mindMap/BossIntro.vue'
 import PathChapter from '@/components/mindMap/PathChapter.vue'
 import StepSheet from '@/components/mindMap/StepSheet.vue'
 import TreasureChest from '@/components/shop/TreasureChest.vue'
+import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { mindMapApi } from '@/services/api'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -157,7 +150,15 @@ import {
 } from '@/utils/mindMapPath'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'layout.header.titles.mindMap',
+      subtitle: 'mindMapPath.page.kicker'
+    }
+  }
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -165,6 +166,9 @@ const training = useTrainingStore()
 
 const key = computed(() => String(route.params.capacity ?? ''))
 const info = computed(() => capacity(key.value))
+usePageHeader(() => ({
+  title: info.value ? capacityName(info.value.key) : null
+}))
 /** The API's capacity, '' for a capacity without path. */
 const api = computed(() => apiCapacity(key.value) ?? '')
 
@@ -273,16 +277,6 @@ function nextChest() {
 .mind-path {
   max-width: 1080px;
   margin: 0 auto;
-}
-
-.mind-path__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-  color: var(--cm-brand);
-  font-weight: 800;
-  text-decoration: none;
 }
 
 .mind-path__head {

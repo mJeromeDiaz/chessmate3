@@ -162,7 +162,15 @@ import {
 } from '@/utils/blindfoldRecall'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'blindfoldRecall.page.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 const auth = useAuthStore()
 /** @type {import('vue').Ref<{rules: import('@/utils/blindfoldRecall').RecallRules, levels: import('@/utils/blindfoldRecall').LevelProgress[], highest: number}|null>} GET /blindfold/recall */

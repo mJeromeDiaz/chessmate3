@@ -2,7 +2,6 @@
   <q-page padding>
     <div v-if="set" class="woodpecker-page">
       <div class="woodpecker-page__head">
-        <q-btn flat round dense icon="arrow_back" to="/woodpecker" />
         <div class="woodpecker-page__name cm-heading">{{ set.name }}</div>
         <span class="woodpecker-page__mode">{{
           light ? $t('woodpecker.new.light') : $t('woodpecker.new.classic')
@@ -162,6 +161,7 @@ import CurrentCycleCard from '@/components/woodpecker/CurrentCycleCard.vue'
 import CycleExplainer from '@/components/woodpecker/CycleExplainer.vue'
 import CycleTable from '@/components/woodpecker/CycleTable.vue'
 import SetPuzzleList from '@/components/woodpecker/SetPuzzleList.vue'
+import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { usePuzzleStore } from '@/stores/puzzle'
 import { useTrainingStore } from '@/stores/training'
 import { useWoodpeckerStore } from '@/stores/woodpecker'
@@ -170,7 +170,15 @@ import { apiErrorMessage } from '@/utils/apiError'
 import { formatDate } from '@/utils/format'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'layout.header.titles.woodpecker',
+      subtitle: 'layout.nav.woodpecker'
+    }
+  }
+})
 
 const route = useRoute()
 const $q = useQuasar()
@@ -181,6 +189,7 @@ const error = ref('')
 const stubborn = ref([])
 const id = computed(() => String(route.params.id))
 const set = computed(() => (store.set?.id === id.value ? store.set : null))
+usePageHeader(() => ({ title: set.value?.name ?? null }))
 const light = computed(() => set.value?.mode === 'light')
 
 /** The run in progress on this set, if any. */

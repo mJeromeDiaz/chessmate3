@@ -31,15 +31,7 @@
 
     <div v-else class="editor">
       <div class="row items-center q-mb-sm no-wrap">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          to="/repertoire"
-          :aria-label="$t('repertoire.editor.back')"
-        />
-        <div class="text-h6 ellipsis q-ml-sm" data-testid="editor-name">{{
+        <div class="text-h6 ellipsis" data-testid="editor-name">{{
           store.graph.name
         }}</div>
         <q-badge
@@ -474,18 +466,30 @@ import {
   useRepertoireStore
 } from '@/stores/repertoire'
 import { useRepertoireEditor } from '@/composables/repertoire/useRepertoireEditor'
+import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
 import { repertoireApi } from '@/services/api'
 import { downloadText } from '@/utils/download'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'layout.header.titles.repertoire',
+      subtitle: 'layout.nav.repertoires'
+    }
+  }
+})
 
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const store = useRepertoireStore()
 const editor = useRepertoireEditor(store)
+usePageHeader(() => ({
+  title: store.graph?.id === route.params.id ? store.graph.name : null
+}))
 
 /** What the user's games said of the selected move (a repertoire built from them). */
 const currentGameStat = computed(() => {

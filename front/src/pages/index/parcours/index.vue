@@ -191,7 +191,15 @@ import {
 import { PROFS } from '@/utils/prof/profs'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'parcours.page.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 const lizy = PROFS.lizy
 const router = useRouter()

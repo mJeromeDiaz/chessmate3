@@ -104,7 +104,15 @@ import {
 } from '@/utils/blindfold'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'blindfold.page.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 const auth = useAuthStore()
 /** @type {import('vue').Ref<any>} GET /blindfold/puzzles */

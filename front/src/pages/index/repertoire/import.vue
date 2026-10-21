@@ -2,15 +2,7 @@
   <q-page padding>
     <div class="import-page q-gutter-y-md">
       <div class="row items-center">
-        <q-btn
-          flat
-          round
-          dense
-          icon="arrow_back"
-          to="/repertoire"
-          :aria-label="$t('repertoire.overview.back')"
-        />
-        <div class="text-h5 q-ml-sm">{{
+        <div class="text-h5">{{
           $t('repertoire.importPage.title')
         }}</div>
       </div>
@@ -292,7 +284,15 @@ import { MAX_IMPORT_BYTES, failureText } from '@/utils/repertoireImport'
 import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'repertoire.importPage.title',
+      subtitle: 'layout.nav.repertoires'
+    }
+  }
+})
 
 /** Where the OAuth callback page sends the user back after a grant (sessionStorage). */
 const RETURN_KEY = 'dontstayrooky.oauthReturn'

@@ -97,7 +97,12 @@ import { profImage } from '@/utils/prof/images'
  * then "C'est parti !", which leads to the guided tour (docs/ONBOARDING.md). Opened after a
  * sign-up with Google or Lichess, and after the first sign-in that follows the email verification. A link started here comes back here (OAuth callback).
  */
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'layout.header.titles.welcome', parent: false }
+  }
+})
 
 const auth = useAuthStore()
 const aaron = profImage('aaron-wink')

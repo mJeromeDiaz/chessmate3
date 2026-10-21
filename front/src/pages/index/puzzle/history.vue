@@ -96,7 +96,12 @@ import { formatDate, formatDuration, formatRatingDelta } from '@/utils/format'
 import { t } from '@/i18n'
 import { themeText } from '@/utils/puzzle'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'puzzle.history.title', subtitle: 'layout.nav.puzzles' }
+  }
+})
 
 const store = usePuzzleStore()
 const rows = ref([])

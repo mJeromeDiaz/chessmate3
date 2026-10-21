@@ -83,7 +83,15 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { ongoingModes, useWoodpeckerStore } from '@/stores/woodpecker'
 import { apiErrorMessage } from '@/utils/apiError'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: {
+      title: 'woodpecker.list.title',
+      subtitle: 'layout.header.kickers.free'
+    }
+  }
+})
 
 const STATUS = {
   active: { color: 'primary' },

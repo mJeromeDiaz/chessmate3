@@ -257,7 +257,15 @@ import { ITEMS, crowns } from '@/utils/shop'
 import { intlLocale } from '@/i18n'
 import { t } from '@/i18n'
 
-definePage({ meta: { auth: 'admin' } })
+definePage({
+  meta: {
+    auth: 'admin',
+    header: {
+      title: 'layout.header.titles.admin.shop',
+      subtitle: 'layout.header.kickers.admin'
+    }
+  }
+})
 
 const $q = useQuasar()
 const tab = ref('offers')

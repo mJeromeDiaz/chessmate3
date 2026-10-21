@@ -65,7 +65,12 @@ import { usePuzzleStore } from '@/stores/puzzle'
 import { apiErrorMessage } from '@/utils/apiError'
 import { formatCount, groupThemes, themeText } from '@/utils/puzzle'
 
-definePage({ meta: { auth: 'required' } })
+definePage({
+  meta: {
+    auth: 'required',
+    header: { title: 'puzzle.themesPage.title', subtitle: 'layout.nav.puzzles' }
+  }
+})
 
 const store = usePuzzleStore()
 const router = useRouter()
