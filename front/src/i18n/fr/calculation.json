@@ -40,7 +40,8 @@
       "two_replies": "L’adversaire n’a que deux réponses à ton premier coup : calcule une ligne contre chacune. Clique « Je réponds » quand tu les tiens.",
       "defence": "L’adversaire menace un mat. Calcule la ligne qui le pare, les deux camps. Clique « Je réponds » quand tu la tiens.",
       "intermezzo": "L’adversaire répondra par un échec. Calcule la ligne qui gagne malgré tout, les deux camps. Clique « Je réponds » quand tu la tiens.",
-      "combo": "Trois coups forcés, une seule combinaison tient. Choisis-la, puis joue toute sa ligne, les deux camps."
+      "combo": "Trois coups forcés, une seule combinaison tient. Choisis-la, puis joue toute sa ligne, les deux camps.",
+      "advocate": "Propose ton coup, puis fais l’avocat du diable : joue la meilleure réponse de l’adversaire, puis ta suite, d’un trait. Clique « Je réponds » quand tu tiens toute la ligne."
     },
     "firstLineText": "Première ligne : ton coup, une des deux réponses, puis la suite. 2 secondes par demi-coup.",
     "secondLineText": "Seconde ligne : l’autre réponse est jouée, continue. 2 secondes par demi-coup.",
@@ -74,5 +75,14 @@
     "wasOn": "La réponse : {squares}.",
     "wasPiece": "En {square} : {piece}.",
     "wasEmpty": "La case {square} était vide."
+  },
+  "advocate": {
+    "right": "Objection rejetée : votre idée tenait, et vous l’avez défendue jusqu’au bout.",
+    "wrong": "Je vous l’avais dit : votre idée ne résiste pas à l’examen.",
+    "late": "Le temps de plaider est écoulé.",
+    "ideaFailed": "Ton idée ne tenait pas.",
+    "refutedFound": "Ton idée ne tenait pas, mais tu as trouvé sa réfutation.",
+    "refutedMissed": "Ton idée ne tenait pas, et l’adversaire avait mieux que la réponse que tu lui as prêtée.",
+    "tooKind": "Ton idée tenait, mais tu as été un avocat trop indulgent : l’adversaire avait une meilleure réponse."
   }
 }

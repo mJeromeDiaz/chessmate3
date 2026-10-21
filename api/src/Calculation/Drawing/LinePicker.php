@@ -97,7 +97,7 @@ final readonly class LinePicker
             return null;
         }
         // A reply to look at, and a move of the player's after it.
-        if (\in_array($spec->kind, [Kind::Reply, Kind::TwoReplies, Kind::Intermezzo, Kind::Combo], true) && \count($solution) < 3) {
+        if (\in_array($spec->kind, [Kind::Reply, Kind::TwoReplies, Kind::Intermezzo, Kind::Combo, Kind::Advocate], true) && \count($solution) < 3) {
             return null;
         }
         try {

@@ -5,7 +5,7 @@
     :data-phase="phase"
     :data-played="played.length"
     :data-fen="fen"
-    :data-mood="metronome ? mood : null"
+    :data-mood="metronome || advocate ? mood : null"
     :data-kind="item.data.kind ?? null"
     :data-line="kind === 'two_replies' ? (firstLine ? 2 : 1) : null"
   >
@@ -199,7 +199,9 @@
  * (`reply`): the player's first move shown played, a reply to choose between the solution's and a
  * decoy the engine draws; 3.2 (`two_replies`): two lines, the second after the first move and the
  * other reply, both played by themselves; the mini-boss (`combo`): a first move to choose among
- * forcing moves (the others refuted by the engine), then the rest of its line.
+ * forcing moves (the others refuted by the engine), then the rest of its line; the Avocat du diable
+ * (`advocate`): the player's own move, the opponent's best reply to it, then the rest, at once; an
+ * idea that falls says whether its refutation was found.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Chess } from 'chess.js'
@@ -213,6 +215,8 @@ import { useLineJudge } from '@/composables/calculation/useLineJudge'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { feedbackProf } from '@/utils/feedback'
 import {
+  advocateMood,
+  advocateNote,
   after,
   leftMs,
   levelText,
@@ -375,17 +379,27 @@ const movableColor = computed(() => {
 const metronome = computed(() => !!props.item.data.streakTarget)
 /** When « Je réponds » was clicked: how much of the thinking time was used. */
 const thoughtRatio = ref(/** @type {number|null} */ (null))
+/** The Avocat du diable's fight (chapter 3's boss): his face speaks in place of the professor. */
+const advocate = computed(() => kind.value === 'advocate')
+/** The Avocat du diable: whether the reply played refuted the idea that fell (null: unknown). */
+const refuted = ref(/** @type {boolean|null} */ (null))
+const thinkLeftRatio = computed(() =>
+  phase.value === 'think' ? clockLeftMs.value / (thinkSeconds.value * 1000) : 1
+)
 const mood = computed(() =>
-  metronomeMood({
-    phase: phase.value,
-    streak: props.item.data.streak ?? 0,
-    result: props.result,
-    thinkLeftRatio:
-      phase.value === 'think'
-        ? clockLeftMs.value / (thinkSeconds.value * 1000)
-        : 1,
-    thoughtRatio: thoughtRatio.value
-  })
+  advocate.value
+    ? advocateMood({
+        phase: phase.value,
+        result: props.result,
+        thinkLeftRatio: thinkLeftRatio.value
+      })
+    : metronomeMood({
+        phase: phase.value,
+        streak: props.item.data.streak ?? 0,
+        result: props.result,
+        thinkLeftRatio: thinkLeftRatio.value,
+        thoughtRatio: thoughtRatio.value
+      })
 )
 
 const prof = computed(() =>
@@ -400,7 +414,18 @@ const prof = computed(() =>
         accentInk: '#B07A12',
         title: ''
       }
-    : feedbackProf(
+    : advocate.value
+      ? {
+          name: t('mindMapPath.characters.avocat.name'),
+          image: moodImage('avocat', mood.value),
+          glyph: '⚖︎',
+          bg: '#F3ECFB',
+          deep: '#8B6BFF',
+          ink: '#1B1530',
+          accentInk: '#5B3FC4',
+          title: ''
+        }
+      : feedbackProf(
         'puzzles',
         timeline.kind.value !== null && timeline.step.value >= 2
           ? timeline.kind.value
@@ -419,7 +444,9 @@ const bubble = computed(() => {
       kicker: t(`calculation.player.kickers.${status}`),
       text: metronome.value
         ? t(`calculation.metronome.${status}`)
-        : t(`calculation.player.${status}Text`)
+        : advocate.value
+          ? t(`calculation.advocate.${status}`)
+          : t(`calculation.player.${status}Text`)
     }
   }
   if (metronome.value)
@@ -481,9 +508,14 @@ const bubble = computed(() => {
 
 const verdict = computed(() => {
   if (!props.result) return ''
-  return isQuestion.value
-    ? questionVerdict(props.item.data, props.result)
-    : verdictText(props.result, props.item.data.fen)
+  if (isQuestion.value) return questionVerdict(props.item.data, props.result)
+  const note =
+    advocate.value && !engineFailed.value
+      ? advocateNote(props.result, refuted.value)
+      : ''
+  return [note, verdictText(props.result, props.item.data.fen)]
+    .filter(Boolean)
+    .join(' · ')
 })
 
 /** The square asked lit; once judged, the right squares in green, a wrong click in red. */
@@ -777,6 +809,11 @@ async function sendJudged() {
   }
   const engine = await lineVerdict(line)
   if (props.item.id !== item || phase.value !== 'judging') return
+  // The Avocat du diable: an idea that falls, was its refutation found? (for the verdict only)
+  if (advocate.value && engine.mistakeAt === 0)
+    judge.holdsAt(props.item.data.fen, line, 1, toleranceCp.value).then(v => {
+      if (props.item.id === item) refuted.value = v
+    })
   phase.value = 'sending'
   emit('resolve', { moves: line, engine })
 }
@@ -963,6 +1000,7 @@ watch(
     combos.value = null
     comboLines = null
     refutation.value = null
+    refuted.value = null
     firstLine.value = null
     phase.value = isQuestion.value
       ? 'question'

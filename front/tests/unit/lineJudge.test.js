@@ -86,6 +86,10 @@ describe('useLineJudge', () => {
       right: false,
       mistakeAt: 1
     })
+    // The Avocat du diable: one half-move at a time.
+    await expect(judge.holdsAt(START, line, 0, 50)).resolves.toBe(true)
+    await expect(judge.holdsAt(START, line, 1, 50)).resolves.toBe(false)
+    await expect(judge.holdsAt(START, line, 3, 50)).resolves.toBeNull()
     scope.stop()
   })
 

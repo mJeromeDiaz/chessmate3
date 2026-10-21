@@ -93,6 +93,7 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
 | `two_replies` | 3.2 (6 positions) | l'adversaire n'a que **2 coups légaux** contre le premier coup de la solution | il joue **deux lignes** d'un trait (`lines`), le même premier coup puis chacune des deux réponses ; 2 s par demi-coup de chaque ligne |
 | `defence` | 3.3 (10) | thème `defensiveMove`, l'adversaire **menace un mat en 1** (`Threat::mateInOne` : la position vue comme si l'adversaire avait le trait) ; 1 ou 2 coups | la ligne qui pare, d'un trait |
 | `intermezzo` | 3.4 (10) | la réponse adverse de la solution est un **échec** ; 2 ou 3 coups | la ligne qui gagne malgré l'intermédiaire, d'un trait |
+| `advocate` | boss `3-boss`, L'Avocat du diable (5 positions, 3 vies) | 3 demi-coups au moins ; 2 ou 3 coups | il **propose son coup**, puis joue d'un trait la **meilleure réponse adverse** (l'avocat du diable de sa propre idée) et sa suite, 120 s de réflexion puis 2 s par demi-coup, jugé comme 3.3. Une idée qui ne tient pas (`mistakeAt` 0) est un échec ; la feuille dit si la réponse jouée la réfutait. Aucune XP par ligne (`metadata.boss`), seulement la récompense du boss |
 | `combo` | mini-boss `3-mini` (4 positions, 3 vies) | le premier coup de la solution est un **échec ou une prise**, parmi 3 coups forcés au moins (`Forcing::moves`, `COMBOS`) ; 2 ou 3 coups | il **choisit** une combinaison parmi trois (celle de la solution et deux leurres que le moteur réfute) ; refusée, faux tout de suite (`moves` d'un seul coup : `mistakeAt` 0) ; sinon elle est jouée d'office et il joue la suite, d'un trait |
 
 - **Forme** (`LineShape::complete`) : chaque demi-coup légal, aucun après un mat, jamais plus que la
@@ -134,6 +135,14 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
   couleur, 120 s. Une combinaison qui ne tient pas (ni la solution, ni aussi bonne pour le moteur)
   part seule, une vie perdue, la réponse du moteur montrée en flèche rouge avant la solution
   rejouée ; une qui tient vaut « Je réponds » : elle est jouée, le joueur joue la suite.
+- **L'Avocat du diable** (`advocate`, choix du 2026-10-21) : réflexion puis ligne d'un trait, comme
+  3.3. Une idée qui tombe (`mistakeAt` 0) : le demi-coup 1 jugé seul (`holdsAt` de
+  `useLineJudge`), pour la feuille seulement (`advocateNote` : réfutation trouvée, ou l'adversaire
+  avait mieux) ; une idée qui tient et une réponse trop faible (`mistakeAt` 1) : « avocat trop
+  indulgent ». Son visage (`advocateMood`, `assets/mindMap/boss/avocat/` quand les images
+  viendront, sinon un glyphe) : concentré, puis doute passé la moitié de la réflexion ; joie quand
+  l'idée tombe, fierté au temps écoulé, tristesse quand elle tient. Ses répliques :
+  `calculation.advocate.*`.
 - **3.2** : la première ligne jouée, l'échiquier repart après le premier coup et **l'autre
   réponse, joués d'office** ; le joueur joue la suite. `mistakeAt` compte la seconde ligne après
   les demi-coups de la première.
@@ -187,6 +196,8 @@ lignes sont supprimées avec le compte (cascade) et exportées (`entrainement.js
 - K3b (2026-10-21) : l'API du chapitre 3 jugé par le moteur (§ 2 quater), étapes 3.1 à 3.4.
 - K3c (2026-10-21) : le front du chapitre 3 (§ 2 quater) : analyses au fil de la ligne, leurre de 3.1, seconde ligne de 3.2.
 - K3d (2026-10-21) : le mini-boss du chapitre 3 (`combo`), une combinaison à choisir parmi trois coups forcés.
+- K3e (2026-10-21) : L'Avocat du diable, boss du chapitre 3 (`advocate`) ; les chapitres 1 à 3 du
+  parcours calcul sont complets.
 - K1d (2026-10-21) : les expressions de la Gargouille dans son combat ([VISION.md](VISION.md), § 2
   quinquies) ; le chapitre 1 du parcours calcul est complet.
 

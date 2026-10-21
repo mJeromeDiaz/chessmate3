@@ -21,6 +21,8 @@ final class Calculation
     private const LESSON_COUNT = 10;
     /** 3.2: positions of two lines each. */
     private const TWO_REPLIES_COUNT = 6;
+    /** The Avocat du diable's positions. */
+    private const ADVOCATE_COUNT = 5;
 
     /**
      * @return list<Chapter>
@@ -99,7 +101,8 @@ final class Calculation
     /**
      * The opponent has a say, judged by Stockfish in the browser (docs/CALCULATION.md, § 2 quater):
      * the best of two replies, a line against each of two replies, a mate threat parried, a check
-     * in reply; then the mini-boss and the Avocat du diable (lots K3d, K3e).
+     * in reply; the mini-boss, a combination among three forcing moves; the Avocat du diable, the
+     * player's own move then its best refutation, 5 positions with 3 lives.
      */
     private static function chapter3(): Chapter
     {
@@ -118,7 +121,13 @@ final class Calculation
                     PathRules::BOSS_LIVES,
                 )),
             ]),
-        ], self::boss('3-boss', 300, 120, 'avocat', ['chapter_3', 'boss_avocat']));
+        ], self::boss('3-boss', 300, 120, 'avocat', ['chapter_3', 'boss_avocat'], new Activity(
+            Module::Calculation,
+            ['kind' => 'advocate', 'moves' => [2, 3], 'count' => self::ADVOCATE_COUNT, 'lives' => PathRules::BOSS_LIVES],
+            self::LESSON_SECONDS,
+            self::ADVOCATE_COUNT,
+            PathRules::BOSS_LIVES,
+        )));
     }
 
     /**

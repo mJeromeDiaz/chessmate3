@@ -275,3 +275,64 @@ test('calculation: the mini-boss of chapter 3, a decoy, then the combination tha
   const result = (await response.json()).result
   expect([result.success, result.data.status]).toEqual([true, 'right'])
 })
+
+// The Avocat du diable: an idea of the player's own (the first legal move, rarely the best), then
+// the solution. An idea that falls says so on the sheet; his face follows the verdicts.
+test('calculation: the Avocat du diable judges the idea, then its refutation', async ({
+  page,
+  context
+}) => {
+  await signIn(context, {
+    mindMapCapacity: 'calculation',
+    mindMapChapters: 2,
+    enginePuzzles: true
+  })
+  await page.goto('/#/cerveau/calculation')
+  await page.getByTestId('path-step-3-boss').click()
+  let served = page.waitForResponse(isRunNext)
+  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  let item = (await (await served).json()).item
+  expect([item.data.kind, item.data.count, item.data.lives]).toEqual([
+    'advocate',
+    5,
+    3
+  ])
+
+  const player = page.getByTestId('calculation-player')
+  await expect(player).toHaveAttribute('data-kind', 'advocate')
+  await expect(player).toHaveAttribute('data-mood', 'focus')
+  const first = new Chess(item.data.fen)
+    .moves({ verbose: true })
+    .map(m => m.lan)
+    .find(uci => uci !== item.data.solution[0])
+  const idea = completeLine(item.data.fen, [first], item.data.solution.length)
+  await page.getByTestId('calculation-ready').click()
+  let submitted = page.waitForResponse(isRunSubmission, {
+    timeout: ENGINE_TIMEOUT
+  })
+  served = page.waitForResponse(isRunNext, { timeout: ENGINE_TIMEOUT })
+  for (const uci of idea) await playMove(page, uci)
+  let response = await submitted
+  expect(typeof response.request().postDataJSON().engine.right).toBe('boolean')
+  let result = (await response.json()).result
+  expect(['right', 'wrong']).toContain(result.data.status)
+  if (result.data.status === 'wrong') {
+    await expect(player).toHaveAttribute('data-mood', 'joy')
+    if (result.data.mistakeAt === 0)
+      await expect(page.getByTestId('calculation-result')).toContainText(
+        'Ton idée ne tenait pas'
+      )
+    await page.getByTestId('run-next').click()
+  }
+
+  // The solution: right, whatever the engine says.
+  item = (await (await served).json()).item
+  const solution = item.data.solution
+  await page.getByTestId('calculation-ready').click()
+  submitted = page.waitForResponse(isRunSubmission)
+  for (const uci of solution) await playMove(page, uci)
+  response = await submitted
+  result = (await response.json()).result
+  expect([result.success, result.data.status]).toEqual([true, 'right'])
+  await expect(player).toHaveAttribute('data-mood', 'sadness')
+})

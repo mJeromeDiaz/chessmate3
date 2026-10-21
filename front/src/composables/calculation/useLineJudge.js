@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { isEngineAbort, useEngine } from '@/composables/engine/useEngine'
-import { after, finalScore, judgeLine } from '@/utils/calculation'
+import { after, finalScore, holds, judgeLine } from '@/utils/calculation'
 
 /**
  * Stockfish judging the lines of chapter 3 of the calculation path (docs/CALCULATION.md,
@@ -83,6 +83,25 @@ export function useLineJudge() {
   }
 
   /**
+   * Whether the half-move `i` of a line holds for the engine (the Avocat du diable: the reply that
+   * refutes the player's idea), null when the engine failed there.
+   *
+   * @param {string} fen where the line starts
+   * @param {string[]} moves UCI
+   * @param {number} i
+   * @param {number} toleranceCp
+   * @returns {Promise<boolean|null>}
+   */
+  async function holdsAt(fen, moves, i, toleranceCp) {
+    if (i >= moves.length) return null
+    const [before, afterMove] = await Promise.all([
+      scoreOf(after(fen, moves.slice(0, i))),
+      scoreOf(after(fen, moves.slice(0, i + 1)))
+    ])
+    return before && afterMove ? holds(before, afterMove, toleranceCp) : null
+  }
+
+  /**
    * The opponent's best replies in a position (3.1), null when the engine failed.
    *
    * @param {string} fen
@@ -136,6 +155,7 @@ export function useLineJudge() {
     failed,
     follow,
     verdict,
+    holdsAt,
     replies,
     linesOn,
     bestMove,

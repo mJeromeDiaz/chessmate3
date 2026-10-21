@@ -359,3 +359,42 @@ export function pickDecoy(fen, reply, lines, gapCp, random = Math.random) {
   const from = pool.length > 0 ? pool : others
   return from[Math.floor(random() * from.length)]
 }
+
+/**
+ * The Avocat du diable's note on a line (docs/CALCULATION.md, § 2 quater): the player's idea did
+ * not hold (`mistakeAt` 0), its refutation found or not; it held, the opponent's best reply
+ * missed (`mistakeAt` 1). '' otherwise.
+ *
+ * @param {{status: string, mistakeAt?: number|null}} result
+ * @param {boolean|null} refuted whether the reply played refuted the idea (null: unknown, the engine down)
+ */
+export function advocateNote(result, refuted) {
+  if (result.status !== 'wrong') return ''
+  if (result.mistakeAt === 0)
+    return refuted === null
+      ? t('calculation.advocate.ideaFailed')
+      : t(
+          refuted
+            ? 'calculation.advocate.refutedFound'
+            : 'calculation.advocate.refutedMissed'
+        )
+  return result.mistakeAt === 1 ? t('calculation.advocate.tooKind') : ''
+}
+
+/**
+ * The Avocat du diable's face: delighted by an idea that falls, proud when time ran out, sad when
+ * the idea held to the end; focused while the player thinks, doubtful past half the time.
+ *
+ * @param {{phase: string, result?: {status: string}|null, thinkLeftRatio: number}} state
+ * @returns {import('@/utils/mindMapPath').Mood}
+ */
+export function advocateMood({ phase, result = null, thinkLeftRatio }) {
+  if (result)
+    return result.status === 'right'
+      ? 'sadness'
+      : result.status === 'late'
+        ? 'pride'
+        : 'joy'
+  if (phase === 'think') return thinkLeftRatio < 0.5 ? 'doubt' : 'focus'
+  return 'neutral'
+}

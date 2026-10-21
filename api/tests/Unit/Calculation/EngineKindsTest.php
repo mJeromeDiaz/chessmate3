@@ -73,6 +73,13 @@ final class EngineKindsTest extends TestCase
         self::assertNull(LinePicker::line(self::puzzle(self::DEFENCE), self::spec(Kind::Combo, [1])), 'h3 is no forcing move.');
     }
 
+    public function testTheAvocatDrawsALineWithAReplyToFind(): void
+    {
+        self::assertNotNull(LinePicker::line(self::puzzle(self::INTERMEZZO), self::spec(Kind::Advocate, [2])));
+        self::assertNull(LinePicker::line(self::puzzle(self::DEFENCE), self::spec(Kind::Advocate, [1])), 'No reply to find in a line of one half-move.');
+        self::assertTrue(Kind::Advocate->isEngine());
+    }
+
     public function testALineIsCompleteToItsLengthOrOnThePlayersMate(): void
     {
         $fen = self::start(self::TWO_REPLIES);

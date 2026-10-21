@@ -60,11 +60,11 @@ use Symfony\Component\Uid\Uuid;
  * the client for it; then replayed from memory at once, both sides: a solving missed is a failure),
  * `count` (the items, lines and questions, the run's end), `lives` (the run closes at that many
  * failures) and `kind` (chapter 3, judged by the engine in the browser: a reply to choose, a line
- * against each of two replies, a mate threat to parry, a check in reply; docs/CALCULATION.md,
- * § 2 quater). A position is thought over on a frozen board, up to THINK_SECONDS;
- * « Je réponds » ({@see self::ready()}) starts the answer's clock: PLY_SECONDS per half-move of the
- * solution, on the server's clock; the whole line, both sides, is then judged once
- * ({@see LineJudge}). Late, or not played (`pass`): a failure. Never rated.
+ * against each of two replies, a mate threat to parry, a check in reply, a combination among
+ * forcing moves, the player's own move and its refutation; docs/CALCULATION.md, § 2 quater). A
+ * position is thought over on a frozen board, up to THINK_SECONDS; « Je réponds »
+ * ({@see self::ready()}) starts the answer's clock: PLY_SECONDS per half-move of the solution, on
+ * the server's clock; the whole line, both sides, is then judged once ({@see LineJudge}). Late, or not played (`pass`): a failure. Never rated.
  *
  * The Métronome (docs/CALCULATION.md, § 6): config `streak` (the lines right in a row to win, in
  * place of `mate`) and `lives`: mates of 1 to 4 moves, longer on average as lines come right, their
@@ -303,7 +303,8 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
                 'mate' => $attempt->getMoves(),
                 'ending' => $attempt->getEnding()->value,
                 'status' => $status->value,
-                'boss' => false,
+                // The Avocat du diable: no XP per line.
+                'boss' => Kind::Advocate === $kind,
                 'puzzleId' => $this->catalog->get($attempt->getPuzzleId())->getLichessId(),
                 'trainingRunId' => $run->getId()->toRfc4122(),
             ],
@@ -685,7 +686,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         $kind = $config['kind'] ?? Kind::Line->value;
         $kind = \is_string($kind) ? Kind::tryFrom($kind) : null;
         if (null === $kind || ($kind->isEngine() && [] !== array_intersect(array_keys($config), ['mate', 'question', 'solve', 'streak']))) {
-            throw new InvalidRunConfigException('kind must be line, reply, two_replies, defence, intermezzo or combo; chapter 3\'s kinds without mate, question, solve nor streak.');
+            throw new InvalidRunConfigException('kind must be line, reply, two_replies, defence, intermezzo, combo or advocate; chapter 3\'s kinds without mate, question, solve nor streak.');
         }
         $solve = $config['solve'] ?? false;
         if (!\is_bool($solve) || ($solve && (isset($config['streak']) || true === ($config['question'] ?? false)))) {

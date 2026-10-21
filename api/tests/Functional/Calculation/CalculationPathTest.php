@@ -399,6 +399,49 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertSame([true, 'right'], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null]);
     }
 
+    public function testTheAvocatDuDiableJudgesTheIdeaThenItsRefutation(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->openChapterThree($alice);
+        $runId = $this->startStep($alice, '3-boss');
+
+        // The player's own move, which does not hold: a life lost, whatever its refutation.
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        self::assertSame(['advocate', true, $solution, 50, 5, 3], [
+            $item['data']['kind'] ?? null, $item['data']['engine'] ?? null, $item['data']['solution'] ?? null,
+            $item['data']['toleranceCp'] ?? null, $item['data']['count'] ?? null, $item['data']['lives'] ?? null,
+        ]);
+        $idea = self::completeLine($fen, [self::otherFirst($fen, $solution[0])], \count($solution));
+        $this->ready($alice, $runId, $item['id']);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => $idea, 'engine' => ['right' => false, 'mistakeAt' => 0]]);
+        self::assertSame([false, 'wrong', 0, 2], [
+            $result['success'] ?? null, self::dataOf($result)['status'] ?? null,
+            self::dataOf($result)['mistakeAt'] ?? null, self::dataOf($result)['lives'] ?? null,
+        ]);
+
+        // The solution: right, whatever the engine says.
+        $item = $this->item($alice, $runId);
+        $this->ready($alice, $runId, $item['id']);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item), 'engine' => ['right' => false]]);
+        self::assertSame([true, 'right'], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null]);
+
+        // A good idea, the opponent's reply imagined too weak; then out of time: lost at 3 failures.
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        $weak = self::completeLine($fen, [$solution[0], self::otherReply($fen, $solution[0], $solution[1])], \count($solution));
+        $this->ready($alice, $runId, $item['id']);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => $weak, 'engine' => ['right' => false, 'mistakeAt' => 1]]);
+        self::assertSame(['wrong', 1, 1], [self::dataOf($result)['status'] ?? null, self::dataOf($result)['mistakeAt'] ?? null, self::dataOf($result)['lives'] ?? null]);
+        $item = $this->item($alice, $runId);
+        $this->submitOk($alice, $runId, $item['id'], ['pass' => true]);
+
+        $outcome = $this->json($this->api('GET', '/api/mind-map/runs/'.$runId, $alice));
+        self::assertSame(['failed', 4, 1, false], [$outcome['outcome'] ?? null, $outcome['itemCount'] ?? null, $outcome['successCount'] ?? null, $outcome['completed'] ?? null]);
+    }
+
     /** The Métronome and the Compteur beaten: chapter 3 opens; its puzzles in the catalogue, at the player's level. */
     private function openChapterThree(User $user): void
     {

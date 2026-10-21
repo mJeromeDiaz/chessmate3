@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { Chess } from 'chess.js'
 import {
+  advocateMood,
+  advocateNote,
   after,
   finalScore,
   forcingMoves,
@@ -271,5 +273,39 @@ describe('the mini-boss of chapter 3', () => {
       'c4f7',
       'c4a6'
     ])
+  })
+})
+
+describe('the Avocat du diable', () => {
+  it('tells whether the idea held, and its refutation was found', () => {
+    expect(advocateNote({ status: 'wrong', mistakeAt: 0 }, true)).toBe(
+      'Ton idée ne tenait pas, mais tu as trouvé sa réfutation.'
+    )
+    expect(advocateNote({ status: 'wrong', mistakeAt: 0 }, false)).toContain(
+      'l’adversaire avait mieux'
+    )
+    expect(advocateNote({ status: 'wrong', mistakeAt: 0 }, null)).toBe(
+      'Ton idée ne tenait pas.'
+    )
+    expect(advocateNote({ status: 'wrong', mistakeAt: 1 }, null)).toContain(
+      'avocat trop indulgent'
+    )
+    expect(advocateNote({ status: 'wrong', mistakeAt: 3 }, null)).toBe('')
+    expect(advocateNote({ status: 'right' }, null)).toBe('')
+    expect(advocateNote({ status: 'late', mistakeAt: 0 }, true)).toBe('')
+  })
+
+  it('shows his face: focused, doubtful, then delighted or sad', () => {
+    expect(advocateMood({ phase: 'think', thinkLeftRatio: 0.8 })).toBe('focus')
+    expect(advocateMood({ phase: 'think', thinkLeftRatio: 0.3 })).toBe('doubt')
+    expect(advocateMood({ phase: 'answer', thinkLeftRatio: 1 })).toBe(
+      'neutral'
+    )
+    const state = { phase: 'complete', thinkLeftRatio: 1 }
+    expect(advocateMood({ ...state, result: { status: 'wrong' } })).toBe('joy')
+    expect(advocateMood({ ...state, result: { status: 'late' } })).toBe('pride')
+    expect(advocateMood({ ...state, result: { status: 'right' } })).toBe(
+      'sadness'
+    )
   })
 })

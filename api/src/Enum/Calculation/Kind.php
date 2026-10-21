@@ -26,6 +26,12 @@ enum Kind: string
      * then the rest of the line.
      */
     case Combo = 'combo';
+    /**
+     * The Avocat du diable (boss of chapter 3): the player's own move, then the opponent's best
+     * reply to it, then the player's line on; a move that does not hold is a failure, its
+     * refutation still to be found.
+     */
+    case Advocate = 'advocate';
 
     /** Judged by the engine in the browser, not against the solution. */
     public function isEngine(): bool
