@@ -6,7 +6,9 @@ namespace App\Training\Module;
 
 /**
  * What the client reports for an item, never a result: the moves it tried (UCI) and the help it
- * used, and the think time it measured (the repertoire test). Board-based modules share this shape;
+ * used, and the think time it measured (the repertoire test). One exception: chapter 3 of the
+ * calculation path is judged by the engine in the browser, which sends its verdict (`engine`,
+ * docs/ENGINE.md, § 3). Board-based modules share this shape;
  * the coordinates series sends its answers instead (docs/COORDINATES.md), the position evaluation
  * its evaluation (docs/EVALUATION.md).
  */
@@ -19,6 +21,8 @@ final readonly class ItemSubmission
  * @param list<array{square: string, piece: string}>       $placement  pieces placed (position recall)
      * @param list<string>                                     $written    half-moves written (notation)
      * @param list<string>                                     $squares    squares clicked (vision)
+     * @param list<list<string>>                               $lines      lines played, UCI (calculation 3.2: one per reply)
+     * @param array{right: bool, mistakeAt?: int|null}|null    $engine     the engine's verdict (calculation, chapter 3)
      */
     public function __construct(
         public string $itemId,
@@ -39,6 +43,8 @@ final readonly class ItemSubmission
         public array $squares = [],
         /** Vision: a choice among the question's (a number, yes or no). */
         public ?string $choice = null,
+        public array $lines = [],
+        public ?array $engine = null,
     ) {
     }
 }

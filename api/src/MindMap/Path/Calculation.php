@@ -19,6 +19,8 @@ final class Calculation
     private const LESSON_SECONDS = 1_800;
     /** The lines of a lesson. */
     private const LESSON_COUNT = 10;
+    /** 3.2: positions of two lines each. */
+    private const TWO_REPLIES_COUNT = 6;
 
     /**
      * @return list<Chapter>
@@ -94,15 +96,19 @@ final class Calculation
         )));
     }
 
-    /** The opponent has a say: one reply to choose, then the Avocat du diable. */
+    /**
+     * The opponent has a say, judged by Stockfish in the browser (docs/CALCULATION.md, § 2 quater):
+     * the best of two replies, a line against each of two replies, a mate threat parried, a check
+     * in reply; then the mini-boss and the Avocat du diable (lots K3d, K3e).
+     */
     private static function chapter3(): Chapter
     {
         return new Chapter('c3', 3, [
             new Section('3', null, [
-                self::exercise('3-1', '3.1', 2),
-                self::exercise('3-2', '3.2', 2),
-                self::exercise('3-3', '3.3', 2),
-                self::exercise('3-4', '3.4', 2),
+                self::exercise('3-1', '3.1', 2, self::judged('reply', [2, 3], self::LESSON_COUNT)),
+                self::exercise('3-2', '3.2', 2, self::judged('two_replies', [2, 3], self::TWO_REPLIES_COUNT)),
+                self::exercise('3-3', '3.3', 2, self::judged('defence', [1, 2], self::LESSON_COUNT)),
+                self::exercise('3-4', '3.4', 2, self::judged('intermezzo', [2, 3], self::LESSON_COUNT)),
             ], [
                 self::miniBoss('3-mini', 120),
             ]),
@@ -139,6 +145,17 @@ final class Calculation
     private static function themed(array $themes): Activity
     {
         return new Activity(Module::Calculation, ['moves' => [3, 4], 'themes' => $themes, 'count' => self::LESSON_COUNT], self::LESSON_SECONDS, self::LESSON_COUNT);
+    }
+
+    /**
+     * A lesson of chapter 3, of $kind, judged by the engine in the browser: $count lines of $moves
+     * moves, however they end.
+     *
+     * @param list<int> $moves
+     */
+    private static function judged(string $kind, array $moves, int $count): Activity
+    {
+        return new Activity(Module::Calculation, ['kind' => $kind, 'moves' => $moves, 'count' => $count], self::LESSON_SECONDS, $count);
     }
 
     /**

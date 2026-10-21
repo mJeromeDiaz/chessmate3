@@ -78,6 +78,34 @@ se **rejoue de mémoire** d'un trait, les deux camps, 2 s par demi-coup, jugée 
 toute ligne. La résolution a 5 min (`SOLVE_SECONDS`, en `thinkSeconds`), pour que l'horloge de la
 reconstitution parte toujours de « Je réponds » ; passé ce temps, un échec.
 
+## 2 quater. Le chapitre 3 : jugé par le moteur
+
+Avec `kind` (étapes `3-1` à `3-4`, sans `mate`, `question`, `solve` ni `streak`), la ligne est jugée
+par **Stockfish dans le navigateur** ([ENGINE.md](ENGINE.md)), choix validé le 2026-10-21 : le
+serveur vérifie seulement la légalité des coups, la **forme** de la ligne et le temps, puis prend le
+verdict du moteur (`engine: {right, mistakeAt?}` dans la soumission ; sans verdict, 400). Une ligne
+qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est « un des meilleurs »
+à 0,5 pion du premier choix au plus, ou s'il mate aussi vite (`toleranceCp`, `ENGINE_TOLERANCE_CP`).
+
+| Genre | Étape | Le puzzle | Ce que fait le joueur |
+|---|---|---|---|
+| `reply` | 3.1 (10) | 3 demi-coups au moins, l'adversaire a 2 réponses au moins au premier coup | son premier coup est montré joué ; il **choisit** la meilleure de deux réponses adverses : celle de la solution et un leurre que le moteur tire (une réponse naturelle, prise ou échec d'abord, à 1,5 pion au moins de la meilleure, `decoyGapCp`). Réponse `choice` (UCI), dans la réflexion (120 s) |
+| `two_replies` | 3.2 (6 positions) | l'adversaire n'a que **2 coups légaux** contre le premier coup de la solution | il joue **deux lignes** d'un trait (`lines`), le même premier coup puis chacune des deux réponses ; 2 s par demi-coup de chaque ligne |
+| `defence` | 3.3 (10) | thème `defensiveMove`, l'adversaire **menace un mat en 1** (`Threat::mateInOne` : la position vue comme si l'adversaire avait le trait) ; 1 ou 2 coups | la ligne qui pare, d'un trait |
+| `intermezzo` | 3.4 (10) | la réponse adverse de la solution est un **échec** ; 2 ou 3 coups | la ligne qui gagne malgré l'intermédiaire, d'un trait |
+
+- **Forme** (`LineShape::complete`) : chaque demi-coup légal, aucun après un mat, jamais plus que la
+  solution ; la ligne va **jusqu'à la longueur de la solution**, ou s'arrête plus tôt sur un mat du
+  joueur. Une ligne coupée est fausse, quel que soit le verdict (`mistakeAt` = là où elle s'arrête).
+  En 3.2, les deux lignes ont le même premier coup et deux réponses différentes.
+- **L'élément** porte `kind`, `engine: true`, `solution` (la ligne du puzzle : une ligne qui la
+  suit n'a pas besoin d'analyse, 3.1 en tire sa bonne réponse), `toleranceCp`, `decoyGapCp` (3.1),
+  `replies: 2` (3.2). Le résultat : `expected`, `answer` (3.1 : le coup du joueur puis la réponse
+  choisie), `second` (3.2 : la seconde ligne).
+- Colonnes `kind` et `second_line` (migration `Version20261110090000`) ; le genre aussi dans
+  `metadata.lineKind` de l'`ExerciseCompleted`. Tirage : 30 candidats par tirage au lieu de 8
+  (`CANDIDATES_FILTERED`), peu de puzzles ont deux réponses légales ou une menace de mat.
+
 ## 3. Le déroulé et le jugement
 
 1. **Réflexion** : l'échiquier est figé. « Je réponds » appelle `POST /training/runs/{id}/ready
@@ -123,6 +151,8 @@ lignes sont supprimées avec le compte (cascade) et exportées (`entrainement.js
 - K2c (2026-10-21) : résoudre, puis reconstituer (§ 2 ter), le mini-boss du chapitre 2 ; e2e avec
   `app:e2e:seed-user --mind-map-capacity=calculation`.
 - K2b (2026-10-21) : la question en fin de ligne (§ 2 bis), étapes 2.7 et 2.8.
+- K3a (2026-10-21) : Stockfish dans le navigateur ([ENGINE.md](ENGINE.md)).
+- K3b (2026-10-21) : l'API du chapitre 3 jugé par le moteur (§ 2 quater), étapes 3.1 à 3.4.
 - K1d (2026-10-21) : les expressions de la Gargouille dans son combat ([VISION.md](VISION.md), § 2
   quinquies) ; le chapitre 1 du parcours calcul est complet.
 

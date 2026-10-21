@@ -13,6 +13,7 @@ use App\Calculation\Drawing\Question;
 use App\Calculation\Drawing\QuestionDrawer;
 use App\Calculation\Judge\IllegalLineException;
 use App\Calculation\Judge\LineJudge;
+use App\Calculation\Judge\LineShape;
 use App\Chess\InvalidPositionException;
 use App\Chess\Rules;
 use App\Entity\Calculation\Attempt;
@@ -21,6 +22,7 @@ use App\Entity\User;
 use App\Enum\Activity\ExerciseType;
 use App\Enum\Calculation\AttemptStatus;
 use App\Enum\Calculation\Ending;
+use App\Enum\Calculation\Kind;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
 use App\Puzzle\Catalog\PuzzleCatalog;
@@ -56,8 +58,10 @@ use Symfony\Component\Uid\Uuid;
  * its solution reaches: where a piece stands, what stands on a square; untimed, answered on an
  * empty board), `solve` (each puzzle solved first, the opponent answering, its solution given to
  * the client for it; then replayed from memory at once, both sides: a solving missed is a failure),
- * `count` (the items, lines and questions, the run's end) and `lives` (the run closes at that many
- * failures). A position is thought over on a frozen board, up to THINK_SECONDS;
+ * `count` (the items, lines and questions, the run's end), `lives` (the run closes at that many
+ * failures) and `kind` (chapter 3, judged by the engine in the browser: a reply to choose, a line
+ * against each of two replies, a mate threat to parry, a check in reply; docs/CALCULATION.md,
+ * § 2 quater). A position is thought over on a frozen board, up to THINK_SECONDS;
  * « Je réponds » ({@see self::ready()}) starts the answer's clock: PLY_SECONDS per half-move of the
  * solution, on the server's clock; the whole line, both sides, is then judged once
  * ({@see LineJudge}). Late, or not played (`pass`): a failure. Never rated.
@@ -70,7 +74,7 @@ use Symfony\Component\Uid\Uuid;
  * reached, so that the path judges it lost.
  *
  * @phpstan-type SanMove array{uci: string, san: string}
- * @phpstan-type Config array{spec: LineSpec|null, capture: bool, question: bool, solve: bool, count: int|null, lives: int|null, streak: int|null}
+ * @phpstan-type Config array{spec: LineSpec|null, kind: Kind, capture: bool, question: bool, solve: bool, count: int|null, lives: int|null, streak: int|null}
  */
 final class CalculationModule implements TimeboxedModuleInterface, ReviewableModuleInterface, CountedModuleInterface, ReadyModuleInterface
 {
@@ -142,6 +146,9 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         if ($attempt->isQuestion()) {
             return $this->answer($run, $attempt, $submission, $now);
         }
+        if ($attempt->getKind()->isEngine()) {
+            return $this->engineAnswer($run, $attempt, $submission, $now);
+        }
         $played = $submission->pass ? [] : $submission->moves;
         if (\count($played) > 2 * CalculationRules::MAX_MATE) {
             throw new InvalidItemSubmissionException('More half-moves than a mate has.');
@@ -183,6 +190,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             occurredAt: $now,
             metadata: [
                 'kind' => 'line',
+                'lineKind' => Kind::Line->value,
                 // The line's moves (named before lines without mate came), and how it ends.
                 'mate' => $attempt->getMoves(),
                 'ending' => $attempt->getEnding()->value,
@@ -198,6 +206,113 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             'kind' => 'line',
             'expected' => self::sans($attempt->getFen(), $attempt->getExpected()),
             'answer' => self::sans($attempt->getFen(), $played),
+        ]);
+    }
+
+    /**
+     * A line of chapter 3 (docs/CALCULATION.md, § 2 quater), judged by Stockfish in the browser: the
+     * server checks the moves are legal and the line's shape (to its end, or the player's mate),
+     * the time, and takes the engine's verdict (docs/ENGINE.md, § 3). A line on the solution is
+     * right whatever the verdict.
+     *
+     * @throws InvalidItemSubmissionException
+     */
+    private function engineAnswer(Run $run, Attempt $attempt, ItemSubmission $submission, \DateTimeImmutable $now): ItemResult
+    {
+        $kind = $attempt->getKind();
+        $fen = $attempt->getFen();
+        $expected = $attempt->getExpected();
+        if (!$submission->pass && null === $submission->engine) {
+            throw new InvalidItemSubmissionException('The engine\'s verdict is expected.');
+        }
+        $verdict = (bool) ($submission->engine['right'] ?? false);
+        $given = $submission->engine['mistakeAt'] ?? null;
+        $answer = [];
+        $second = null;
+        $mistakeAt = null;
+        try {
+            if (Kind::Reply === $kind) {
+                // The reply chosen, after the player's move shown played.
+                if (!$submission->pass) {
+                    $choice = $submission->choice;
+                    if (null === $choice || !\in_array($choice, LineShape::replies($fen, $expected[0]), true)) {
+                        throw new InvalidItemSubmissionException('One of the opponent\'s legal replies.');
+                    }
+                    $answer = [$choice];
+                }
+                // Chosen within the thinking time (stored to the second: one more, and the network's).
+                $late = $submission->pass || (int) round((float) $now->format('U.u') * 1000) > ((int) self::thinkingEnd($attempt)->format('U') + 1) * 1000 + TimeboxRunner::SUBMISSION_TOLERANCE_MS;
+                $right = $verdict || ($answer === [$expected[1] ?? null]);
+                $mistakeAt = 1;
+            } elseif (Kind::TwoReplies === $kind) {
+                $lines = $submission->pass ? [] : $submission->lines;
+                if (!$submission->pass && CalculationRules::TWO_REPLIES !== \count($lines)) {
+                    throw new InvalidItemSubmissionException('Two lines, one against each reply.');
+                }
+                [$answer, $second] = [$lines[0] ?? [], $lines[1] ?? []];
+                $complete = !$submission->pass;
+                foreach ($lines as $line) {
+                    $complete = LineShape::complete($fen, $line, \count($expected)) && $complete;
+                }
+                if ($complete) {
+                    // The same first move, then each of the two replies.
+                    $replies = LineShape::replies($fen, $answer[0]);
+                    if (\count($answer) < 2 || \count($second) < 2 || $answer[0] !== $second[0] || $answer[1] === $second[1] || [] !== array_diff([$answer[1], $second[1]], $replies)) {
+                        throw new InvalidItemSubmissionException('The same first move, then each of the two replies.');
+                    }
+                }
+                $late = $submission->pass || self::isLate($attempt, $now, CalculationRules::TWO_REPLIES);
+                $right = $complete && $verdict;
+                $mistakeAt = $complete ? $given : \count($answer) + \count($second);
+            } else {
+                $answer = $submission->pass ? [] : $submission->moves;
+                $complete = !$submission->pass && LineShape::complete($fen, $answer, \count($expected));
+                $late = $submission->pass || self::isLate($attempt, $now);
+                $onSolution = $complete && LineJudge::judge($fen, $expected, $answer)['right'];
+                $right = $onSolution || ($complete && $verdict);
+                $mistakeAt = $complete ? $given : \count($answer);
+            }
+        } catch (IllegalLineException $e) {
+            throw new InvalidItemSubmissionException($e->getMessage());
+        } catch (InvalidPositionException) {
+            throw new \LogicException('A calculation item with an invalid position.');
+        }
+        $status = match (true) {
+            $late => AttemptStatus::Late,
+            $right => AttemptStatus::Right,
+            default => AttemptStatus::Wrong,
+        };
+        $attempt->resolve($status, $answer, $mistakeAt, $now, $second);
+        $this->entityManager->flush();
+        $right = AttemptStatus::Right === $status;
+
+        $this->events->publish(new ExerciseCompleted(
+            userId: $run->getUser()->getId()->toRfc4122(),
+            type: ExerciseType::Calculation,
+            success: $right,
+            durationMs: $attempt->getDurationMs() ?? 0,
+            itemCount: 1,
+            sourceType: self::SOURCE_TYPE,
+            sourceId: $attempt->getId()->toRfc4122(),
+            occurredAt: $now,
+            metadata: [
+                'kind' => 'line',
+                'lineKind' => $kind->value,
+                'mate' => $attempt->getMoves(),
+                'ending' => $attempt->getEnding()->value,
+                'status' => $status->value,
+                'boss' => false,
+                'puzzleId' => $this->catalog->get($attempt->getPuzzleId())->getLichessId(),
+                'trainingRunId' => $run->getId()->toRfc4122(),
+            ],
+        ));
+
+        return $this->result($run, $attempt, [
+            'kind' => $kind->value,
+            'expected' => self::sans($fen, $expected),
+            // 3.1: the player's move, then the reply chosen.
+            'answer' => self::sans($fen, Kind::Reply === $kind ? [$expected[0], ...$answer] : $answer),
+            'second' => null === $second ? null : self::sans($fen, $second),
         ]);
     }
 
@@ -339,6 +454,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             successCount: $stats['right'],
             metrics: [
                 'mate' => \is_int($mate) ? $mate : null,
+                'kind' => \is_string($run->getConfig()['kind'] ?? null) ? $run->getConfig()['kind'] : null,
                 'moves' => \is_int($moves) || \is_array($moves) ? $moves : null,
                 'ending' => \is_string($ending) ? $ending : null,
                 'count' => \is_int($count) ? $count : null,
@@ -359,7 +475,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             AttemptStatus::Right === $attempt->getStatus() ? ReviewItem::OK : ReviewItem::FAIL,
             $attempt->getDurationMs(),
             [
-                'kind' => $attempt->isQuestion() ? 'question' : 'line',
+                'kind' => $attempt->isQuestion() ? 'question' : $attempt->getKind()->value,
                 'ask' => $attempt->getAsk(),
                 'target' => $attempt->getTarget(),
                 'moves' => $attempt->getMoves(),
@@ -367,7 +483,13 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
                 'status' => $attempt->getStatus()->value,
                 'fen' => $attempt->getFen(),
                 'expected' => $attempt->isQuestion() ? $attempt->getExpected() : self::sans($attempt->getFen(), $attempt->getExpected()),
-                'answer' => $attempt->isQuestion() ? ($attempt->getAnswer() ?? []) : self::sans($attempt->getFen(), $attempt->getAnswer() ?? []),
+                'answer' => match (true) {
+                    $attempt->isQuestion() => $attempt->getAnswer() ?? [],
+                    // 3.1: the player's move, then the reply chosen.
+                    Kind::Reply === $attempt->getKind() => self::sans($attempt->getFen(), [$attempt->getExpected()[0] ?? '', ...($attempt->getAnswer() ?? [])]),
+                    default => self::sans($attempt->getFen(), $attempt->getAnswer() ?? []),
+                },
+                'second' => null === $attempt->getSecondLine() ? null : self::sans($attempt->getFen(), $attempt->getSecondLine()),
                 'mistakeAt' => $attempt->getMistakeAt(),
             ],
         ), $this->attempts->findResolvedOfRun($run));
@@ -435,7 +557,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         if (null === $line) {
             throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'no_puzzle'], 'No line to draw.');
         }
-        $attempt = new Attempt($run, $line->puzzleId, $line->rating, $line->moves, $line->ending, $line->fen, $line->expected, $think, $now);
+        $attempt = new Attempt($run, $line->puzzleId, $line->rating, $line->moves, $line->ending, $line->fen, $line->expected, $think, $now, $config['kind']);
         $this->entityManager->persist($attempt);
         $this->entityManager->flush();
 
@@ -463,12 +585,20 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             ]);
         }
 
+        $kind = $attempt->getKind();
+
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, [
-            'kind' => 'line',
+            'kind' => $kind->value,
             'question' => $config['question'],
             'solve' => $config['solve'],
-            // To solve it first, the opponent answering (the mini-boss): as a puzzle gives it.
-            'solution' => $config['solve'] ? $attempt->getExpected() : null,
+            // To solve it first, the opponent answering (the mini-boss): as a puzzle gives it. For
+            // the engine in the browser (chapter 3): a line on it needs no analysis, 3.1 offers its
+            // reply.
+            'solution' => $config['solve'] || $kind->isEngine() ? $attempt->getExpected() : null,
+            'engine' => $kind->isEngine(),
+            'toleranceCp' => $kind->isEngine() ? CalculationRules::ENGINE_TOLERANCE_CP : null,
+            'decoyGapCp' => Kind::Reply === $kind ? CalculationRules::DECOY_GAP_CP : null,
+            'replies' => Kind::TwoReplies === $kind ? CalculationRules::TWO_REPLIES : null,
             'fen' => $fen,
             'color' => 'b' === (explode(' ', $fen)[1] ?? 'w') ? 'black' : 'white',
             // The lesson's level (the line's length is no secret there); the Métronome hides it.
@@ -497,14 +627,15 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
 
     /**
      * Whether a line comes after its time, on the server's clock: PLY_SECONDS per half-move of the
-     * solution from « Je réponds » (or from the end of the thinking time, without it). The instants
+     * solution from « Je réponds » (or from the end of the thinking time, without it), for each of
+     * its $lines (3.2: one against each reply). The instants
      * are stored to the second (truncated): one more second, and the network's tolerance, always in
      * the player's favour.
      */
-    private static function isLate(Attempt $attempt, \DateTimeImmutable $at): bool
+    private static function isLate(Attempt $attempt, \DateTimeImmutable $at, int $lines = 1): bool
     {
         $readyAt = min($attempt->getReadyAt() ?? self::thinkingEnd($attempt), self::thinkingEnd($attempt));
-        $deadlineMs = ((int) $readyAt->format('U') + 1 + CalculationRules::PLY_SECONDS * \count($attempt->getExpected())) * 1000 + TimeboxRunner::SUBMISSION_TOLERANCE_MS;
+        $deadlineMs = ((int) $readyAt->format('U') + 1 + CalculationRules::PLY_SECONDS * \count($attempt->getExpected()) * $lines) * 1000 + TimeboxRunner::SUBMISSION_TOLERANCE_MS;
 
         return (int) round((float) $at->format('U.u') * 1000) > $deadlineMs;
     }
@@ -545,8 +676,13 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
      */
     private static function check(array $config): array
     {
-        if ([] !== array_diff(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'solve', 'count', 'lives', 'streak'])) {
-            throw new InvalidRunConfigException('Unknown option: only mate, moves, ending, themes, capture, question, solve, count, lives and streak are accepted.');
+        if ([] !== array_diff(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'solve', 'count', 'lives', 'streak', 'kind'])) {
+            throw new InvalidRunConfigException('Unknown option: only mate, moves, ending, themes, capture, question, solve, count, lives, streak and kind are accepted.');
+        }
+        $kind = $config['kind'] ?? Kind::Line->value;
+        $kind = \is_string($kind) ? Kind::tryFrom($kind) : null;
+        if (null === $kind || ($kind->isEngine() && [] !== array_intersect(array_keys($config), ['mate', 'question', 'solve', 'streak']))) {
+            throw new InvalidRunConfigException('kind must be line, reply, two_replies, defence or intermezzo; chapter 3\'s kinds without mate, question, solve nor streak.');
         }
         $solve = $config['solve'] ?? false;
         if (!\is_bool($solve) || ($solve && (isset($config['streak']) || true === ($config['question'] ?? false)))) {
@@ -563,16 +699,17 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         }
         if (null !== $streak) {
             // The Métronome: its own mates, its lives.
-            if ([] !== array_intersect(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'solve', 'count']) || !isset($config['lives'])) {
+            if ([] !== array_intersect(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'solve', 'count', 'kind']) || !isset($config['lives'])) {
                 throw new InvalidRunConfigException('streak: with lives, without mate, moves, ending, themes, capture nor count.');
             }
             $spec = null;
         } else {
-            $spec = self::spec($config, $capture);
+            $spec = self::spec($config, $capture, $kind);
         }
 
         return [
             'spec' => $spec,
+            'kind' => $kind,
             'capture' => $capture,
             'question' => $question,
             'solve' => $solve,
@@ -590,7 +727,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
      *
      * @throws InvalidRunConfigException
      */
-    private static function spec(array $config, bool $capture): LineSpec
+    private static function spec(array $config, bool $capture, Kind $kind): LineSpec
     {
         $mate = $config['mate'] ?? null;
         if (null !== $mate) {
@@ -627,7 +764,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             $themes[] = $theme;
         }
 
-        return new LineSpec($moves, null === $ending ? null : Ending::from($ending), $themes, $capture);
+        return new LineSpec($moves, null === $ending ? null : Ending::from($ending), $themes, $capture, $kind);
     }
 
     /**

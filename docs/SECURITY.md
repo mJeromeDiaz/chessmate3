@@ -216,7 +216,8 @@ Redis dans ce projet) ⇒ **un seul serveur applicatif**, sinon il faut un stock
   `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`,
   `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
   `X-Frame-Options: DENY`, sur toutes les réponses, erreurs comprises.
-- SPA : CSP en balise `<meta>` (`script-src 'self'`, `connect-src 'self' <origine de l'API>`,
+- SPA : CSP en balise `<meta>` (`script-src 'self' 'wasm-unsafe-eval'` : le moteur d'échecs est
+  du WebAssembly servi par le SPA lui-même, [ENGINE.md](ENGINE.md) ; `connect-src 'self' <origine de l'API>`,
   `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`). **Le serveur qui héberge le SPA doit
   en plus envoyer** en en-têtes HTTP : la même CSP complétée de `frame-ancestors 'none'` (ignorée en
   `<meta>`), HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`.

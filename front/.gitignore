@@ -30,3 +30,6 @@ yarn-error.log*
 /test-results/
 /playwright-report/
 /blob-report/
+
+# engine
+/public/engine

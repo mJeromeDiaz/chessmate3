@@ -101,7 +101,7 @@ routeur à `#` : aucune réécriture d'URL n'est nécessaire.
   PHP-FPM derrière Apache supprime. Sans cette règle, aucun JWT n'arriverait à l'API.
 - `front/public/.htaccess` (copié dans le build) fixe le cache : `index.html` et `push-sw.js` sont
   toujours revalidés, et `assets/` (fichiers hashés) est mis en cache un an. Il ajoute aussi quelques
-  en-têtes de sécurité.
+  en-têtes de sécurité, et le type `application/wasm` du moteur d'échecs (`engine/`, docs/ENGINE.md).
 
 ### Première mise en place (une fois)
 

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Calculation;
 
 use App\Chess\Rules;
+use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
+use App\Puzzle\Selection\SelectionRebuilder;
+use App\Tests\Unit\Calculation\EngineKindsTest;
 use App\Tests\Functional\Woodpecker\WoodpeckerWebTestCase;
 use Doctrine\DBAL\Connection;
 
@@ -256,6 +259,222 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         $item = $this->item($alice, $runId);
         $bob = $this->createUserIn('bob@example.com');
         self::assertSame(404, $this->api('POST', '/api/training/runs/'.$runId.'/ready', $bob, ['itemId' => $item['id']])->getStatusCode());
+    }
+
+    public function testChapterThreeTakesTheEnginesVerdictOnALegalLine(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->openChapterThree($alice);
+
+        // 3.1: the best of two replies, the player's move shown played.
+        $runId = $this->startStep($alice, '3-1');
+        $item = $this->item($alice, $runId);
+        $data = $item['data'];
+        $solution = $this->expected($item);
+        self::assertSame(['reply', true, $solution, 50, 150], [$data['kind'] ?? null, $data['engine'] ?? null, $data['solution'] ?? null, $data['toleranceCp'] ?? null, $data['decoyGapCp'] ?? null]);
+        self::assertSame(400, $this->api('POST', '/api/training/runs/'.$runId.'/submission', $alice, ['itemId' => $item['id'], 'choice' => $solution[1]])->getStatusCode(), 'No verdict.');
+        self::assertSame(400, $this->api('POST', '/api/training/runs/'.$runId.'/submission', $alice, ['itemId' => $item['id'], 'choice' => 'a1a1', 'engine' => ['right' => true]])->getStatusCode(), 'Not a reply.');
+        $result = $this->submitOk($alice, $runId, $item['id'], ['choice' => $solution[1], 'engine' => ['right' => false]]);
+        self::assertSame([true, 'right'], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null], 'The solution\'s reply, whatever the engine says.');
+
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        $other = self::otherReply($fen, $solution[0], $solution[1]);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['choice' => $other, 'engine' => ['right' => false]]);
+        self::assertSame([false, 'wrong', 1], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null, self::dataOf($result)['mistakeAt'] ?? null]);
+        $item = $this->item($alice, $runId);
+        $solution = $this->expected($item);
+        $this->travel('+125 seconds');
+        $result = $this->submitOk($alice, $runId, $item['id'], ['choice' => $solution[1], 'engine' => ['right' => true]]);
+        self::assertSame('late', self::dataOf($result)['status'] ?? null, 'Chosen after the thinking time.');
+
+        self::assertSame(200, $this->api('POST', '/api/training/runs/'.$runId.'/stop', $alice)->getStatusCode());
+
+        // 3.3: a mate threat to parry, any line the engine finds as good.
+        self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/3-1/skip', $alice)->getStatusCode());
+        self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/3-2/skip', $alice)->getStatusCode());
+        $runId = $this->startStep($alice, '3-3');
+        $item = $this->item($alice, $runId);
+        self::assertSame('defence', $item['data']['kind'] ?? null);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        $this->ready($alice, $runId, $item['id']);
+        self::assertTrue($this->submitOk($alice, $runId, $item['id'], ['moves' => $solution, 'engine' => ['right' => false]])['success'] ?? null, 'The solution.');
+
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        $other = self::completeLine($fen, [self::otherFirst($fen, $solution[0])], \count($solution));
+        $this->ready($alice, $runId, $item['id']);
+        self::assertTrue($this->submitOk($alice, $runId, $item['id'], ['moves' => $other, 'engine' => ['right' => true]])['success'] ?? null, 'Another line the engine finds as good.');
+
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        $other = self::completeLine($fen, [self::otherFirst($fen, $solution[0])], \count($solution));
+        $this->ready($alice, $runId, $item['id']);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => $other, 'engine' => ['right' => false, 'mistakeAt' => 0]]);
+        self::assertSame([false, 'wrong', 0], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null, self::dataOf($result)['mistakeAt'] ?? null]);
+        self::assertSame(400, $this->api('POST', '/api/training/runs/'.$runId.'/submission', $alice, ['itemId' => $this->item($alice, $runId)['id'], 'moves' => ['a1a1'], 'engine' => ['right' => true]])->getStatusCode(), 'An illegal half-move.');
+
+        self::assertSame(200, $this->api('POST', '/api/training/runs/'.$runId.'/stop', $alice)->getStatusCode());
+
+        // 3.4: the opponent's reply is a check.
+        self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/3-3/skip', $alice)->getStatusCode());
+        $runId = $this->startStep($alice, '3-4');
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        $after = Rules::fromFen($fen);
+        $after->playUci($solution[0]);
+        $after->playUci($solution[1]);
+        self::assertSame(['intermezzo', true], [$item['data']['kind'] ?? null, $after->inCheck()]);
+        $this->ready($alice, $runId, $item['id']);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => \array_slice($solution, 0, 2), 'engine' => ['right' => true]]);
+        self::assertSame([false, 'wrong', 2], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null, self::dataOf($result)['mistakeAt'] ?? null], 'Cut short: wrong, whatever the engine says.');
+    }
+
+    public function testThreePointTwoPlaysALineAgainstEachOfTheTwoReplies(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->openChapterThree($alice);
+        self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/3-1/skip', $alice)->getStatusCode());
+        $runId = $this->startStep($alice, '3-2');
+
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        self::assertSame(['two_replies', 2, 6], [$item['data']['kind'] ?? null, $item['data']['replies'] ?? null, $item['data']['count'] ?? null]);
+        $other = self::completeLine($fen, [$solution[0], self::otherReply($fen, $solution[0], $solution[1])], \count($solution));
+        $this->ready($alice, $runId, $item['id']);
+        self::assertSame(400, $this->api('POST', '/api/training/runs/'.$runId.'/submission', $alice, ['itemId' => $item['id'], 'lines' => [$solution, $solution], 'engine' => ['right' => true]])->getStatusCode(), 'The same reply twice.');
+        self::assertSame(400, $this->api('POST', '/api/training/runs/'.$runId.'/submission', $alice, ['itemId' => $item['id'], 'lines' => [$solution], 'engine' => ['right' => true]])->getStatusCode(), 'One line.');
+        $result = $this->submitOk($alice, $runId, $item['id'], ['lines' => [$solution, $other], 'engine' => ['right' => true]]);
+        self::assertSame([true, 'right'], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null]);
+        self::assertIsArray(self::dataOf($result)['second'] ?? null);
+        self::assertCount(\count($other), self::dataOf($result)['second']);
+
+        // 2 s per half-move of each line: 2 × 2 × 3 s, one more, and the network's 2 s.
+        $item = $this->item($alice, $runId);
+        $fen = self::fenOf($item);
+        $solution = $this->expected($item);
+        $other = self::completeLine($fen, [$solution[0], self::otherReply($fen, $solution[0], $solution[1])], \count($solution));
+        $this->ready($alice, $runId, $item['id']);
+        $this->travel(\sprintf('+%d seconds', 4 * \count($solution) + 4));
+        $result = $this->submitOk($alice, $runId, $item['id'], ['lines' => [$solution, $other], 'engine' => ['right' => true]]);
+        self::assertSame('late', self::dataOf($result)['status'] ?? null);
+    }
+
+    /** The Métronome and the Compteur beaten: chapter 3 opens; its puzzles in the catalogue, at the player's level. */
+    private function openChapterThree(User $user): void
+    {
+        foreach (['1-boss', '2-boss'] as $boss) {
+            self::getContainer()->get(Connection::class)->executeStatement(
+                "INSERT INTO mind_map_progress (id, user_id, capacity, step, passes, completed_at, updated_at) VALUES (UUID_TO_BIN(UUID()), ?, 'calculation', ?, 1, '2026-09-28 09:00:00', '2026-09-28 09:00:00')",
+                [$user->getId()->toBinary(), $boss],
+            );
+        }
+        $added = [];
+        foreach ([[EngineKindsTest::TWO_REPLIES, ['short']], [EngineKindsTest::DEFENCE, ['defensiveMove', 'oneMove']], [EngineKindsTest::INTERMEZZO, ['short']]] as $i => [[$fen, $moves], $themes]) {
+            $added[] = $puzzle = new Puzzle('CK3'.$i, $fen, $moves, 1350, 80, 95, 5000, $themes, 'https://lichess.org/abcdefgh', null);
+            $this->catalog->persist($puzzle);
+        }
+        $this->catalog->flush();
+        self::getContainer()->get(SelectionRebuilder::class)->addPuzzles(array_map(static fn (Puzzle $p): int => (int) $p->getId(), $added));
+        $this->catalog->clear();
+    }
+
+    /**
+     * @param Item $item
+     */
+    private static function fenOf(array $item): string
+    {
+        self::assertIsString($item['data']['fen'] ?? null);
+
+        return $item['data']['fen'];
+    }
+
+    /**
+     * @param array<string, mixed> $result
+     *
+     * @return array<string, mixed>
+     */
+    private static function dataOf(array $result): array
+    {
+        $data = $result['data'] ?? null;
+        self::assertIsArray($data);
+
+        /** @var array<string, mixed> */
+        return $data;
+    }
+
+    /** A legal first move of the player's other than $first. */
+    private static function otherFirst(string $fen, string $first): string
+    {
+        foreach (Rules::fromFen($fen)->legalMoves() as $move) {
+            if (Rules::uci($move) !== $first) {
+                return Rules::uci($move);
+            }
+        }
+        self::fail('No other first move.');
+    }
+
+    /** A legal reply to $first other than $reply. */
+    private static function otherReply(string $fen, string $first, string $reply): string
+    {
+        $rules = Rules::fromFen($fen);
+        self::assertNotNull($rules->playUci($first));
+        foreach ($rules->legalMoves() as $move) {
+            if (Rules::uci($move) !== $reply) {
+                return Rules::uci($move);
+            }
+        }
+        self::fail('Only one reply.');
+    }
+
+    /**
+     * $start continued with legal half-moves to $plies, or to the player's mate.
+     *
+     * @param list<string> $start
+     *
+     * @return list<string>
+     */
+    private static function completeLine(string $fen, array $start, int $plies): array
+    {
+        $rules = Rules::fromFen($fen);
+        foreach ($start as $uci) {
+            self::assertNotNull($rules->playUci($uci));
+        }
+        $line = $start;
+        while (\count($line) < $plies && !$rules->inCheckmate()) {
+            $moves = $rules->legalMoves();
+            self::assertNotEmpty($moves, 'Stalemate.');
+            $chosen = $moves[0];
+            // Not mated by the opponent: the player's half-moves are the even ones.
+            foreach ($moves as $move) {
+                if (0 === \count($line) % 2 || !self::mates($rules, Rules::uci($move))) {
+                    $chosen = $move;
+                    break;
+                }
+            }
+            $rules->playUci(Rules::uci($chosen));
+            $line[] = Rules::uci($chosen);
+        }
+
+        return $line;
+    }
+
+    /**
+     * Whether $uci mates, the position left unchanged.
+     */
+    private static function mates(Rules $rules, string $uci): bool
+    {
+        $rules->playUci($uci);
+        $mates = $rules->inCheckmate();
+        $rules->undo();
+
+        return $mates;
     }
 
     private function beatMetronome(User $user): void

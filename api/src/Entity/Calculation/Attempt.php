@@ -8,6 +8,7 @@ use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Calculation\AttemptStatus;
 use App\Enum\Calculation\Ending;
+use App\Enum\Calculation\Kind;
 use App\Repository\Calculation\AttemptRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -53,6 +54,10 @@ class Attempt
     #[ORM\Column(length: 92, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private string $fen;
 
+    /** What the line asks: judged against the solution, or by the engine in the browser (chapter 3). */
+    #[ORM\Column(length: 12, enumType: Kind::class, options: ['default' => 'line'])]
+    private Kind $kind;
+
     /** A question on the position the line before reached (where, what), null for a line. */
     #[ORM\Column(length: 8, nullable: true)]
     private ?string $ask = null;
@@ -76,6 +81,14 @@ class Attempt
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $answer = null;
 
+    /**
+     * 3.2: the line played against the opponent's other reply (the first is in $answer).
+     *
+     * @var list<string>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $secondLine = null;
+
     #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
     private ?int $mistakeAt = null;
 
@@ -94,8 +107,9 @@ class Attempt
     /**
      * @param list<string> $expected
      */
-    public function __construct(Run $run, int $puzzleId, int $puzzleRating, int $moves, Ending $ending, string $fen, array $expected, int $thinkSeconds, \DateTimeImmutable $startedAt)
+    public function __construct(Run $run, int $puzzleId, int $puzzleRating, int $moves, Ending $ending, string $fen, array $expected, int $thinkSeconds, \DateTimeImmutable $startedAt, Kind $kind = Kind::Line)
     {
+        $this->kind = $kind;
         $this->thinkSeconds = $thinkSeconds;
         $this->id = Uuid::v7();
         $this->user = $run->getUser();
@@ -131,9 +145,10 @@ class Attempt
     }
 
     /**
-     * @param list<string> $answer
+     * @param list<string>      $answer
+     * @param list<string>|null $secondLine 3.2: the line against the other reply
      */
-    public function resolve(AttemptStatus $status, array $answer, ?int $mistakeAt, \DateTimeImmutable $at): void
+    public function resolve(AttemptStatus $status, array $answer, ?int $mistakeAt, \DateTimeImmutable $at, ?array $secondLine = null): void
     {
         if (AttemptStatus::Pending !== $this->status) {
             throw new \LogicException('Attempt already resolved.');
@@ -143,6 +158,7 @@ class Attempt
         }
         $this->status = $status;
         $this->answer = $answer;
+        $this->secondLine = $secondLine;
         $this->mistakeAt = AttemptStatus::Right === $status ? null : $mistakeAt;
         $this->submittedAt = $at;
         $this->durationMs = max(0, (int) round(((float) $at->format('U.u') - (float) $this->startedAt->format('U.u')) * 1000));
@@ -181,6 +197,19 @@ class Attempt
     public function getEnding(): Ending
     {
         return $this->ending;
+    }
+
+    public function getKind(): Kind
+    {
+        return $this->kind;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    public function getSecondLine(): ?array
+    {
+        return $this->secondLine;
     }
 
     public function getFen(): string

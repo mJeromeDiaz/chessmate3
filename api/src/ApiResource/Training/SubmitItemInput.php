@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\ApiResource\Training;
 
 use App\Blindfold\Recall\Placement;
+use App\Calculation\CalculationRules;
 use App\Blindfold\Recall\RecallRules;
 use App\Coordinates\Series\CoordinateRules;
 use App\Entity\Puzzle\Attempt;
@@ -15,7 +16,8 @@ use App\Vision\VisionRules;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * The client reports what happened on an item, never whether it succeeded.
+ * The client reports what happened on an item, never whether it succeeded; except the engine's
+ * verdict of chapter 3 of the calculation path, judged in the browser (docs/ENGINE.md, § 3).
  */
 final class SubmitItemInput
 {
@@ -80,4 +82,28 @@ final class SubmitItemInput
     /** Vision: a choice among the question's (a number of jumps, yes or no, a piece's FEN letter, docs/VISION.md). */
     #[Assert\Regex('/^[A-Za-z0-9_]{1,16}$/')]
     public ?string $choice = null;
+
+    /**
+     * Calculation 3.2: the lines played, one against each reply of the opponent's (docs/CALCULATION.md, § 2 quater).
+     *
+     * @var list<list<string>>
+     */
+    #[Assert\Count(max: CalculationRules::TWO_REPLIES)]
+    #[Assert\All([
+        new Assert\Type('array'),
+        new Assert\Count(max: 2 * CalculationRules::MAX_MATE),
+        new Assert\All([new Assert\Type('string'), new Assert\Regex('/^[a-h][1-8][a-h][1-8][qrbn]?$/')]),
+    ])]
+    public array $lines = [];
+
+    /**
+     * Calculation, chapter 3: Stockfish's verdict in the browser, and where the line went wrong.
+     *
+     * @var array{right: bool, mistakeAt?: int|null}|null
+     */
+    #[Assert\Collection(fields: [
+        'right' => [new Assert\NotNull(), new Assert\Type('bool')],
+        'mistakeAt' => new Assert\Optional([new Assert\Type('int'), new Assert\Range(min: 0, max: 4 * CalculationRules::MAX_MATE)]),
+    ])]
+    public ?array $engine = null;
 }

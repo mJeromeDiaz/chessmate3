@@ -79,7 +79,7 @@ n'en supprime jamais.
 | Élément du module Notation ([NOTATION.md](NOTATION.md)) ; `success` = juste ; `metadata` : `kind`, `status`, `puzzleId`, `trainingRunId` | `notation` | `notation_attempt` |
 | Combat contre le Jongleur clos avec au moins une réponse ([MIND_MAP.md](MIND_MAP.md), § 8) ; `success` = gagné, `itemCount` = questions répondues, 0 XP ; `metadata` : `right`, `wrong`, `late`, `count`, `won`, `trainingRunId` | `jongleur` | `training_run` |
 | Question du module Vision ([VISION.md](VISION.md)) ; `success` = juste ; `metadata` : `kind`, `ask`, `status`, `puzzleId`, `trainingRunId` | `vision` | `vision_question` |
-| Ligne du module Calcul ([CALCULATION.md](CALCULATION.md)) ; `success` = juste ; `metadata` : `mate`, `status`, `puzzleId`, `trainingRunId` | `calculation` | `calculation_attempt` |
+| Ligne du module Calcul ([CALCULATION.md](CALCULATION.md)) ; `success` = juste ; `metadata` : `mate`, `status`, `puzzleId`, `trainingRunId`, `lineKind` (`line`, ou le genre du chapitre 3 jugé par le moteur : `reply`, `two_replies`, `defence`, `intermezzo`) | `calculation` | `calculation_attempt` |
 
 `metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
 (`classic`, `light`) et, joué en séance, `trainingRunId`. Un puzzle classé ou rejoué porte aussi

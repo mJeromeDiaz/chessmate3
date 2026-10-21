@@ -2,5 +2,10 @@
   "tree": {
     "empty": "Aucun coup.",
     "transposition": "Transposition : aller à la ligne rejointe"
+  },
+  "engine": {
+    "loading": "Chargement du moteur…",
+    "thinking": "Le moteur réfléchit…",
+    "failed": "Le moteur n’a pas pu démarrer. Réessaie."
   }
 }

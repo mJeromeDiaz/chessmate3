@@ -6,10 +6,12 @@ namespace App\Calculation\Drawing;
 
 use App\Calculation\CalculationRules;
 use App\Enum\Calculation\Ending;
+use App\Enum\Calculation\Kind;
 
 /**
  * What line to draw (docs/CALCULATION.md, § 2): the player's moves it may have, how it ends (any
- * when null), Lichess themes (OR; none: by its length or its mate) and a capture on the way.
+ * when null), Lichess themes (OR; none: the kind's, else by its length or its mate), a capture on
+ * the way, and what its kind asks of it (§ 2 quater).
  */
 final readonly class LineSpec
 {
@@ -22,6 +24,7 @@ final readonly class LineSpec
         public ?Ending $ending = null,
         public array $themes = [],
         public bool $capture = false,
+        public Kind $kind = Kind::Line,
     ) {
     }
 
@@ -32,7 +35,8 @@ final readonly class LineSpec
     }
 
     /**
-     * The themes to draw from: those asked, else the mates' (mateIn3) or the lengths' (long).
+     * The themes to draw from: those asked, else the kind's (defensiveMove), else the mates'
+     * (mateIn3) or the lengths' (long).
      *
      * @return list<string>
      */
@@ -40,6 +44,9 @@ final readonly class LineSpec
     {
         if ([] !== $this->themes) {
             return $this->themes;
+        }
+        if ([] !== $this->kind->themes()) {
+            return $this->kind->themes();
         }
 
         return array_values(array_unique(array_map(
