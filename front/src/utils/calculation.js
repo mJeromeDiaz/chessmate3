@@ -39,16 +39,30 @@ export function after(fen, moves) {
 
 /**
  * Whether the line played is over and goes to the server: a mate, or as many half-moves as the
- * mate has (`mate` known), or as a mate in MAX_MATE has (its length hidden).
+ * line has (its `moves` known), or as a mate in MAX_MATE has (its length hidden).
  *
  * @param {string} fen where the line starts
  * @param {string[]} played UCI
- * @param {number|null} mate
+ * @param {number|null} moves the player's moves of the line
  */
-export function lineOver(fen, played, mate) {
+export function lineOver(fen, played, moves) {
   if (played.length === 0) return false
   if (new Chess(after(fen, played)).isCheckmate()) return true
-  return played.length >= matePlies(mate ?? MAX_MATE)
+  return played.length >= matePlies(moves ?? MAX_MATE)
+}
+
+/**
+ * The chip of a line's level: « Mat en 3 », « Gain en 3 coups », « 3 coups » (its ending not
+ * told), '' when hidden (the Métronome).
+ *
+ * @param {{mate?: number|null, moves?: number|null, ending?: string|null}} data
+ */
+export function levelText(data) {
+  if (data.mate) return t('calculation.player.mate', { n: data.mate })
+  if (!data.moves) return ''
+  return data.ending === 'material'
+    ? t('calculation.player.gain', { n: data.moves })
+    : t('calculation.player.moves', { n: data.moves })
 }
 
 /**
@@ -133,4 +147,36 @@ export function metronomeMood({
   }
   if (phase === 'think' && thinkLeftRatio < 0.5) return 'doubt'
   return streakMood(streak)
+}
+
+/**
+ * A question on the position a line reached (docs/CALCULATION.md, § 2 bis), in plain words.
+ *
+ * @param {{ask?: string, target?: string}} data
+ */
+export function questionText(data) {
+  return data.ask === 'where'
+    ? t('calculation.question.where', {
+        piece: t(`vision.pieces.${data.target}`)
+      })
+    : t('calculation.question.what', { square: data.target ?? '' })
+}
+
+/**
+ * The right answer, once wrong: where the piece stood, what stood on the square.
+ *
+ * @param {{ask?: string, target?: string}} data
+ * @param {{status: string, expected?: string[]}} result
+ */
+export function questionVerdict(data, result) {
+  if (result.status === 'right') return ''
+  const expected = result.expected ?? []
+  if (data.ask === 'where')
+    return t('calculation.question.wasOn', { squares: expected.join(', ') })
+  return expected.length
+    ? t('calculation.question.wasPiece', {
+        square: data.target ?? '',
+        piece: t(`vision.pieces.${expected[0]}`)
+      })
+    : t('calculation.question.wasEmpty', { square: data.target ?? '' })
 }

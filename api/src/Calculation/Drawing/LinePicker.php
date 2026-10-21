@@ -10,6 +10,7 @@ use App\Chess\Rules;
 use App\Entity\Catalog\Puzzle;
 use App\Entity\Catalog\Theme;
 use App\Entity\Training\Run;
+use App\Enum\Calculation\Ending;
 use App\Parcours\ParcoursRules;
 use App\Puzzle\Catalog\PuzzleCatalog;
 use App\Puzzle\Selection\RandomSeeker;
@@ -18,12 +19,12 @@ use App\Repository\Calculation\AttemptRepository;
 use App\Repository\Catalog\ThemeRepository;
 
 /**
- * Draws the line of a calculation item (docs/CALCULATION.md, § 2): a puzzle tagged mateIn$mate whose
- * solution has the length of that mate (and, with $capture, a capture on the way), around the
- * target rating, widened step by step to any rating. Never a puzzle already served in the run while
- * there is another; one the user never played here first.
+ * Draws the line of a calculation item (docs/CALCULATION.md, § 2): a puzzle of the spec's themes
+ * whose solution has one of its lengths, ends as it asks (a mate, or none) and, with `capture`, has
+ * a capture on the way; around the target rating, widened step by step to any rating. Never a
+ * puzzle already served in the run while there is another; one the user never played here first.
  */
-final readonly class MatePicker
+final readonly class LinePicker
 {
     public function __construct(
         private RandomSeeker $seeker,
@@ -38,9 +39,9 @@ final readonly class MatePicker
      *
      * @throws SelectionUnavailableException the selection index is being rebuilt
      */
-    public function pick(Run $run, int $mate, bool $capture, int $target): ?Line
+    public function pick(Run $run, LineSpec $spec, int $target): ?Line
     {
-        $themeIds = array_map(static fn (Theme $t): int => (int) $t->getId(), $this->themes->findByKeys([CalculationRules::theme($mate)]));
+        $themeIds = array_map(static fn (Theme $t): int => (int) $t->getId(), $this->themes->findByKeys($spec->drawThemes()));
         if ([] === $themeIds) {
             return null;
         }
@@ -56,7 +57,7 @@ final readonly class MatePicker
                 $played = $this->attempts->playedAmong($run->getUser(), $candidates);
                 $puzzles = $this->catalog->byIds($candidates);
                 foreach ($candidates as $id) {
-                    $line = isset($puzzles[$id]) ? self::line($puzzles[$id], $mate, $capture) : null;
+                    $line = isset($puzzles[$id]) ? self::line($puzzles[$id], $spec) : null;
                     if (null === $line) {
                         continue;
                     }
@@ -80,14 +81,15 @@ final readonly class MatePicker
     }
 
     /**
-     * A puzzle made into a line, null when it does not fit (another length, no capture when one is
-     * asked, a move that does not replay, no mate at its end).
+     * A puzzle made into a line, null when it does not fit (another length, another ending, no
+     * capture when one is asked, a move that does not replay).
      */
-    public static function line(Puzzle $puzzle, int $mate, bool $capture): ?Line
+    public static function line(Puzzle $puzzle, LineSpec $spec): ?Line
     {
         $moves = explode(' ', trim($puzzle->getMoves()));
         $solution = \array_slice($moves, 1);
-        if (\count($solution) !== CalculationRules::plies($mate)) {
+        $length = intdiv(\count($solution) + 1, 2);
+        if (!\in_array($length, $spec->moves, true) || \count($solution) !== CalculationRules::plies($length)) {
             return null;
         }
         try {
@@ -107,10 +109,11 @@ final readonly class MatePicker
         } catch (InvalidPositionException) {
             return null;
         }
-        if (!$rules->inCheckmate() || ($capture && 0 === $captures)) {
+        $ending = $rules->inCheckmate() ? Ending::Mate : Ending::Material;
+        if ((null !== $spec->ending && $ending !== $spec->ending) || ($spec->capture && 0 === $captures)) {
             return null;
         }
 
-        return new Line((int) $puzzle->getId(), $puzzle->getRating(), $mate, $fen, $solution);
+        return new Line((int) $puzzle->getId(), $puzzle->getRating(), $length, $ending, $fen, $solution);
     }
 }

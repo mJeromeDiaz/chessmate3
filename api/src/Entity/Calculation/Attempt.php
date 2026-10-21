@@ -7,13 +7,14 @@ namespace App\Entity\Calculation;
 use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Calculation\AttemptStatus;
+use App\Enum\Calculation\Ending;
 use App\Repository\Calculation\AttemptRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * A line of the calculation module (docs/CALCULATION.md): a mate puzzle's position ($fen, once the
+ * A line of the calculation module (docs/CALCULATION.md): a puzzle's position ($fen, once the
  * opponent's first move is played), its solution (UCI, both sides), when the player asked to
  * answer ($readyAt, « Je réponds ») and the line they played. Never rated.
  */
@@ -41,12 +42,24 @@ class Attempt
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
     private int $puzzleRating;
 
-    /** The mate's length the puzzle is tagged with (mateIn1 … mateIn4). */
+    /** The line's length in the player's moves (1 to 4: a mate in 2 has 2). */
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
-    private int $mate;
+    private int $moves;
+
+    /** How the solution ends: a mate, or a gain played exactly. */
+    #[ORM\Column(length: 8, enumType: Ending::class, options: ['default' => 'mate'])]
+    private Ending $ending;
 
     #[ORM\Column(length: 92, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private string $fen;
+
+    /** A question on the position the line before reached (where, what), null for a line. */
+    #[ORM\Column(length: 8, nullable: true)]
+    private ?string $ask = null;
+
+    /** The question's piece (a FEN letter) or square. */
+    #[ORM\Column(length: 2, nullable: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    private ?string $target = null;
 
     /** Its thinking time: 120 s, or the Métronome's tempo. */
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true, 'default' => 120])]
@@ -81,7 +94,7 @@ class Attempt
     /**
      * @param list<string> $expected
      */
-    public function __construct(Run $run, int $puzzleId, int $puzzleRating, int $mate, string $fen, array $expected, int $thinkSeconds, \DateTimeImmutable $startedAt)
+    public function __construct(Run $run, int $puzzleId, int $puzzleRating, int $moves, Ending $ending, string $fen, array $expected, int $thinkSeconds, \DateTimeImmutable $startedAt)
     {
         $this->thinkSeconds = $thinkSeconds;
         $this->id = Uuid::v7();
@@ -89,10 +102,26 @@ class Attempt
         $this->run = $run;
         $this->puzzleId = $puzzleId;
         $this->puzzleRating = $puzzleRating;
-        $this->mate = $mate;
+        $this->moves = $moves;
+        $this->ending = $ending;
         $this->fen = $fen;
         $this->expected = $expected;
         $this->startedAt = $startedAt;
+    }
+
+    /**
+     * The question asked once $line is played (docs/CALCULATION.md, § 2 bis): $fen is the position
+     * its solution reaches, $expected the answer (squares, or a FEN letter).
+     *
+     * @param list<string> $expected
+     */
+    public static function question(Attempt $line, string $ask, string $target, string $fen, array $expected, \DateTimeImmutable $startedAt): self
+    {
+        $question = new self($line->run, $line->puzzleId, $line->puzzleRating, $line->moves, $line->ending, $fen, $expected, $line->thinkSeconds, $startedAt);
+        $question->ask = $ask;
+        $question->target = $target;
+
+        return $question;
     }
 
     /** « Je réponds »: the answer's clock starts. Once. */
@@ -144,14 +173,34 @@ class Attempt
         return $this->puzzleRating;
     }
 
-    public function getMate(): int
+    public function getMoves(): int
     {
-        return $this->mate;
+        return $this->moves;
+    }
+
+    public function getEnding(): Ending
+    {
+        return $this->ending;
     }
 
     public function getFen(): string
     {
         return $this->fen;
+    }
+
+    public function isQuestion(): bool
+    {
+        return null !== $this->ask;
+    }
+
+    public function getAsk(): ?string
+    {
+        return $this->ask;
+    }
+
+    public function getTarget(): ?string
+    {
+        return $this->target;
     }
 
     public function getThinkSeconds(): int

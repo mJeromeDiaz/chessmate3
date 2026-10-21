@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   after,
   leftMs,
+  levelText,
   lineOver,
   matePlies,
   metronomeMood,
+  questionText,
+  questionVerdict,
   streakMood,
   verdictText
 } from '@/utils/calculation'
@@ -24,6 +27,15 @@ describe('calculation', () => {
     // Its length hidden: up to a mate in 4, unless it mates.
     expect(lineOver(start, ['h8h4', 'h2g1', 'd5d4'], null)).toBe(false)
     expect(lineOver(start, ['h8h4', 'g3h4', 'd5g2'], null)).toBe(true)
+  })
+
+  it('names a line’s level, never the Métronome’s', () => {
+    expect(levelText({ mate: 3, moves: 3, ending: 'mate' })).toBe('Mat en 3')
+    expect(levelText({ mate: null, moves: 3, ending: 'material' })).toBe(
+      'Gain en 3 coups'
+    )
+    expect(levelText({ mate: null, moves: 4, ending: null })).toBe('4 coups')
+    expect(levelText({ mate: null, moves: null, ending: null })).toBe('')
   })
 
   it('counts the time left', () => {
@@ -85,5 +97,40 @@ describe('the Métronome', () => {
         result: { status: 'right', streak: 9 }
       })
     ).toBe('focus')
+  })
+})
+
+describe('the question at the end of a line', () => {
+  it('asks it in plain words, and gives the answer once wrong', () => {
+    expect(questionText({ ask: 'where', target: 'q' })).toBe(
+      'Au bout de la ligne, où est la dame noire ?'
+    )
+    expect(questionText({ ask: 'what', target: 'h4' })).toBe(
+      'Au bout de la ligne, qu’y a-t-il en h4 ?'
+    )
+    expect(
+      questionVerdict(
+        { ask: 'where', target: 'q' },
+        { status: 'wrong', expected: ['g2'] }
+      )
+    ).toBe('La réponse : g2.')
+    expect(
+      questionVerdict(
+        { ask: 'what', target: 'h4' },
+        { status: 'wrong', expected: ['P'] }
+      )
+    ).toBe('En h4 : un pion blanc.')
+    expect(
+      questionVerdict(
+        { ask: 'what', target: 'h8' },
+        { status: 'wrong', expected: [] }
+      )
+    ).toBe('La case h8 était vide.')
+    expect(
+      questionVerdict(
+        { ask: 'what', target: 'h8' },
+        { status: 'right', expected: [] }
+      )
+    ).toBe('')
   })
 })

@@ -69,7 +69,10 @@ export function playOutcomeSound(name) {
 
 const MIND_MAP = `${BASE}mindMap/`
 
-/** The ambience of a mind map boss (docs/MIND_MAP.md, § 2): the Gargouille's music and cries. */
+/**
+ * The ambience of the mind map bosses (docs/MIND_MAP.md, § 2): every boss's verdicts, the
+ * Gargouille's music and cries, the Métronome's theme and ticking.
+ */
 export const AMBIENT_SOUND_FILES = {
   /** 30 s: its card, before the fight. */
   gargoyleTheme: `${MIND_MAP}halloween_theme.mp3`,
@@ -86,7 +89,19 @@ export const AMBIENT_SOUND_FILES = {
   /** Under the moves announced, looped. */
   whispers: `${MIND_MAP}whispers.mp3`,
   /** The boss wins: the last life lost. */
-  evilLaugh: `${MIND_MAP}evil-laugh.mp3`
+  evilLaugh: `${MIND_MAP}evil-laugh.mp3`,
+  /** Every boss and mini-boss: an answer right. */
+  ding: `${MIND_MAP}ding.mp3`,
+  /** Every boss and mini-boss: an answer wrong or late. */
+  off: `${MIND_MAP}off.mp3`,
+  /** 3 min: the Métronome's card, then its fight, looped. */
+  metronomeTheme: `${MIND_MAP}metronome-theme.mp3`,
+  /** A few seconds of ticking, looped while a line is thought over. */
+  metronomeTick: `${MIND_MAP}metronome-tick.mp3`,
+  /** The Jongleur's card, then its fight, looped. */
+  jongleurTheme: `${MIND_MAP}jongleur-theme.mp3`,
+  /** The Cyclope's card, then its fight, looped. */
+  cyclopeTheme: `${MIND_MAP}cyclope-theme.mp3`
 }
 
 /** @typedef {keyof typeof AMBIENT_SOUND_FILES} AmbientSound */
@@ -96,15 +111,19 @@ export const AMBIENT_SOUND_FILES = {
  * music fades nothing: it stops). Silent failures, as for the outcome sounds.
  *
  * @param {AmbientSound} name
- * @param {{loop?: boolean, volume?: number}} [options]
+ * @param {{loop?: boolean, volume?: number, rate?: number}} [options] `rate`: its speed (1: as recorded)
  * @returns {() => void} stops it
  */
-export function playAmbientSound(name, { loop = false, volume = 1 } = {}) {
+export function playAmbientSound(
+  name,
+  { loop = false, volume = 1, rate = 1 } = {}
+) {
   if (useAuthStore().profile?.moveSound !== true) return () => {}
   try {
     const audio = new Audio(AMBIENT_SOUND_FILES[name])
     audio.loop = loop
     audio.volume = volume
+    audio.playbackRate = rate
     audio.play()?.catch(() => {})
     return () => {
       audio.pause()
@@ -113,4 +132,15 @@ export function playAmbientSound(name, { loop = false, volume = 1 } = {}) {
   } catch {
     return () => {}
   }
+}
+
+/**
+ * A boss's or a mini-boss's verdict on an answer (docs/MIND_MAP.md, § 2): the ding, or the « off »
+ * (a boss of its own may cry instead: the Gargouille's wolf).
+ *
+ * @param {boolean} right
+ * @param {AmbientSound} [miss]
+ */
+export function playBossVerdict(right, miss = 'off') {
+  playAmbientSound(right ? 'ding' : miss, { volume: 0.8 })
 }

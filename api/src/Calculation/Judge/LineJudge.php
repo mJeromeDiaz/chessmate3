@@ -9,8 +9,8 @@ use App\Chess\Rules;
 
 /**
  * Judges a line played at once (docs/CALCULATION.md, § 3): every half-move legal; the solution's,
- * defence included, until the player mates; a mate by the player ends the line right, even one
- * sooner or by another move than the solution's (as Lichess does). Pure.
+ * defence included, to its end; a mate by the player ends the line right, even one sooner or by
+ * another move than the solution's (as Lichess does). Pure.
  */
 final class LineJudge
 {
@@ -44,7 +44,9 @@ final class LineJudge
             }
         }
 
-        // Stopped before the mate.
-        return ['right' => false, 'mistakeAt' => \count($played)];
+        // The whole solution (a line that wins material), or stopped short.
+        return \count($played) === \count($expected)
+            ? ['right' => true, 'mistakeAt' => null]
+            : ['right' => false, 'mistakeAt' => \count($played)];
     }
 }

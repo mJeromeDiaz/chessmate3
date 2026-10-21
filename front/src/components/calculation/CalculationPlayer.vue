@@ -27,12 +27,9 @@
       <span class="play-chip">{{
         $t(`calculation.player.${color === 'black' ? 'black' : 'white'}`)
       }}</span>
-      <span
-        v-if="item.data.mate"
-        class="play-chip"
-        data-testid="calculation-mate"
-        >{{ $t('calculation.player.mate', { n: item.data.mate }) }}</span
-      >
+      <span v-if="level" class="play-chip" data-testid="calculation-mate">{{
+        level
+      }}</span>
       <span v-if="item.data.capture" class="play-chip">{{
         $t('calculation.player.capture')
       }}</span>
@@ -40,6 +37,18 @@
 
     <template #board>
       <ChessBoard
+        v-if="isQuestion"
+        :fen="result?.fen ?? EMPTY_BOARD"
+        :orientation="color"
+        any-position
+        :animation-duration="0"
+        :show-legal-moves="false"
+        :highlights="questionHighlights"
+        :square-input="phase === 'question' && item.data.ask === 'where'"
+        @square="onSquare"
+      />
+      <ChessBoard
+        v-else
         :fen="fen"
         :orientation="color"
         :movable-color="movableColor"
@@ -49,7 +58,19 @@
       />
     </template>
 
-    <template #controls>
+    <template v-if="isQuestion" #controls>
+      <template v-if="item.data.ask === 'what' && phase === 'question'">
+        <PiecePalette :model-value="null" @update:model-value="onPiece" />
+        <q-btn
+          outline
+          no-caps
+          :label="$t('calculation.question.empty')"
+          data-testid="calculation-empty"
+          @click="sendAnswer({ placement: [] })"
+        />
+      </template>
+    </template>
+    <template v-else #controls>
       <div
         v-if="phase === 'think' || phase === 'answer'"
         class="calculation-player__clock"
@@ -110,9 +131,10 @@
  * at the mate, at the mate's length, or when the clock runs out (what was played, or a pass). The
  * server judges and times it again; a wrong line has its solution replayed on the board.
  */
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Chess } from 'chess.js'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import PiecePalette from '@/components/blindfold/PiecePalette.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
@@ -121,12 +143,19 @@ import { feedbackProf } from '@/utils/feedback'
 import {
   after,
   leftMs,
+  levelText,
   lineOver,
   metronomeMood,
+  questionText,
+  questionVerdict,
   verdictText
 } from '@/utils/calculation'
 import { moodImage } from '@/utils/mindMapPath'
-import { playOutcomeSound } from '@/utils/sounds'
+import {
+  playAmbientSound,
+  playBossVerdict,
+  playOutcomeSound
+} from '@/utils/sounds'
 import { t } from '@/i18n'
 
 const props = defineProps({
@@ -151,10 +180,13 @@ const emit = defineEmits({
 
 /** Between two moves of the solution replayed. */
 const REPLAY_MS = 900
+const EMPTY_BOARD = '8/8/8/8/8/8/8/8 w - - 0 1'
 
 const timeline = useFeedbackTimeline()
 
-/** @type {import('vue').Ref<'think'|'answer'|'sending'|'complete'>} */
+/** A question on the position the line before reached (docs/CALCULATION.md, § 2 bis). */
+const isQuestion = computed(() => props.item.data.kind === 'question')
+/** @type {import('vue').Ref<'think'|'answer'|'question'|'sending'|'complete'>} */
 const phase = ref('think')
 const fen = ref('')
 /** @type {import('vue').Ref<string[]>} */
@@ -176,6 +208,8 @@ const color = computed(() =>
   props.item.data.color === 'black' ? 'black' : 'white'
 )
 const right = computed(() => props.result?.status === 'right')
+/** « Mat en 3 », « Gain en 3 coups »… nothing for the Métronome. */
+const level = computed(() => levelText(props.item.data))
 const thinkSeconds = computed(() => props.item.data.thinkSeconds ?? 120)
 const plySeconds = computed(() => props.item.data.plySeconds ?? 2)
 const clockSeconds = computed(() =>
@@ -257,10 +291,15 @@ const bubble = computed(() => {
       ),
       text: t(`calculation.metronome.moods.${mood.value}`)
     }
+  if (isQuestion.value)
+    return {
+      kicker: t('calculation.player.kickers.question'),
+      text: questionText(props.item.data)
+    }
   if (phase.value === 'think')
     return {
       kicker: t('calculation.player.kickers.think'),
-      text: props.item.data.mate
+      text: props.item.data.moves
         ? t('calculation.player.thinkText')
         : t('calculation.player.thinkHidden')
     }
@@ -270,9 +309,57 @@ const bubble = computed(() => {
   }
 })
 
-const verdict = computed(() =>
-  props.result ? verdictText(props.result, props.item.data.fen) : ''
-)
+const verdict = computed(() => {
+  if (!props.result) return ''
+  return isQuestion.value
+    ? questionVerdict(props.item.data, props.result)
+    : verdictText(props.result, props.item.data.fen)
+})
+
+/** The square asked lit; once judged, the right squares in green, a wrong click in red. */
+const questionHighlights = computed(() => {
+  const r = props.result
+  if (!r) {
+    return props.item.data.ask === 'what' && props.item.data.target
+      ? [{ square: props.item.data.target, type: 'hint' }]
+      : []
+  }
+  const squares =
+    props.item.data.ask === 'where'
+      ? (r.expected ?? []).map((/** @type {string} */ square) => ({
+          square,
+          type: 'success'
+        }))
+      : [
+          {
+            square: props.item.data.target,
+            type: right.value ? 'success' : 'error'
+          }
+        ]
+  const wrong =
+    props.item.data.ask === 'where' && !right.value && r.answer?.[0]
+      ? [{ square: r.answer[0], type: 'error' }]
+      : []
+  return [...squares, ...wrong]
+})
+
+/** @param {string} square */
+function onSquare(square) {
+  if (phase.value === 'question') sendAnswer({ squares: [square] })
+}
+
+/** @param {string|null} piece a FEN letter */
+function onPiece(piece) {
+  if (!piece || phase.value !== 'question') return
+  sendAnswer({ placement: [{ square: props.item.data.target, piece }] })
+}
+
+/** @param {Record<string, any>} report */
+function sendAnswer(report) {
+  if (phase.value !== 'question') return
+  phase.value = 'sending'
+  emit('resolve', report)
+}
 
 /** The first wrong half-move in red, then the solution's moves replayed. */
 const highlights = computed(() => {
@@ -327,7 +414,9 @@ function onMove(move) {
   played.value = [...played.value, move.uci]
   fen.value = after(props.item.data.fen, played.value)
   plyStart.value = Date.now()
-  if (lineOver(props.item.data.fen, played.value, props.item.data.mate ?? null))
+  if (
+    lineOver(props.item.data.fen, played.value, props.item.data.moves ?? null)
+  )
     send()
 }
 
@@ -366,7 +455,8 @@ function replaySolution() {
 
 /** Lets the player answer again (a refused submission). */
 function unlock() {
-  if (phase.value === 'sending') phase.value = 'answer'
+  if (phase.value === 'sending')
+    phase.value = isQuestion.value ? 'question' : 'answer'
   plyStart.value = Date.now()
 }
 
@@ -380,14 +470,14 @@ watch(
     replayed.value = null
     readying.value = false
     thoughtRatio.value = null
-    phase.value = 'think'
+    phase.value = isQuestion.value ? 'question' : 'think'
     const start = Date.parse(props.item.data.startedAt) - props.offsetMs
     thinkStart.value = Number.isFinite(start)
       ? Math.min(start, Date.now())
       : Date.now()
     now.value = Date.now()
     // Back on the page after « Je réponds »: the answer's clock already runs.
-    if (props.item.data.readyAt) answer()
+    if (!isQuestion.value && props.item.data.readyAt) answer()
   },
   { immediate: true }
 )
@@ -398,18 +488,45 @@ watch(
     if (!value) return
     phase.value = 'complete'
     const win = value.status === 'right'
-    playOutcomeSound(win ? 'puzzleDone' : 'puzzleMissed')
+    // A mind map boss (its lives): the bosses' verdicts.
+    if (typeof props.item.data.lives === 'number') playBossVerdict(win)
+    else playOutcomeSound(win ? 'puzzleDone' : 'puzzleMissed')
     timeline.play(win ? 'win' : 'miss')
-    if (!win) replaySolution()
+    if (!win && !isQuestion.value) replaySolution()
   }
 )
 
 clock = setInterval(tick, 100)
 
+/** The Métronome's theme under its fight, and its ticking while a line is thought over. */
+const TICK_FAST_MS = 5_000
+let stopTheme = () => {}
+let stopTick = () => {}
+/** The ticking's speed now: 0 silent, 1 as recorded, faster over the last seconds. */
+const tickRate = computed(() => {
+  if (!metronome.value || phase.value !== 'think') return 0
+  return clockLeftMs.value <= TICK_FAST_MS ? 1.5 : 1
+})
+watch(tickRate, rate => {
+  stopTick()
+  stopTick = rate
+    ? playAmbientSound('metronomeTick', { loop: true, volume: 0.6, rate })
+    : () => {}
+})
+
+onMounted(() => {
+  if (metronome.value)
+    stopTheme = playAmbientSound('metronomeTheme', { loop: true, volume: 0.3 })
+  if (tickRate.value)
+    stopTick = playAmbientSound('metronomeTick', { loop: true, volume: 0.6 })
+})
+
 onBeforeUnmount(() => {
   timeline.reset()
   clearInterval(clock)
   clearTimeout(replayTimer)
+  stopTheme()
+  stopTick()
 })
 
 defineExpose({ unlock })

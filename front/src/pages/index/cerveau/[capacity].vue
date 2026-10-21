@@ -234,7 +234,14 @@ async function start(step) {
   try {
     const { run } = await mindMapApi.start(api.value, step.key)
     training.current = run
-    await router.push({ path: `/training/${run.id}`, query: { mindMap: '1' } })
+    // The boss fought: its music on the training page.
+    await router.push({
+      path: `/training/${run.id}`,
+      query: {
+        mindMap: '1',
+        ...(step.character ? { boss: step.character } : {})
+      }
+    })
   } catch (e) {
     actionError.value = refusalText(e) || apiErrorMessage(e)
   } finally {

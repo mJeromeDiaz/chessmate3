@@ -75,7 +75,7 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
   await expect(page.getByTestId('step-passes')).toContainText('Passage 1 sur 2')
   let served = page.waitForResponse(isRunNext)
   await page.getByTestId('step-start').click()
-  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1$/)
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   let item = (await (await served).json()).item
   expect(item.type).toBe('coordinates_series')
   await answerAndStop(page, item.data.squares, 10, 10)

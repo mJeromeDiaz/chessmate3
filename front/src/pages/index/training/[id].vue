@@ -375,10 +375,15 @@
                   n: calcResult?.streak ?? calcItem.data.streak ?? 0,
                   target: calcItem.data.streakTarget
                 })
-              : $t('calculation.player.progress', {
-                  n: calcItem.data.position,
-                  count: calcItem.data.count ?? '…'
-                })
+              : calcItem.data.question || calcItem.data.kind === 'question'
+                ? $t('calculation.player.positions', {
+                    n: Math.ceil(calcItem.data.position / 2),
+                    count: Math.ceil((calcItem.data.count ?? 0) / 2)
+                  })
+                : $t('calculation.player.progress', {
+                    n: calcItem.data.position,
+                    count: calcItem.data.count ?? '…'
+                  })
           }}</div>
           <div
             v-if="calcLives !== null"
@@ -718,7 +723,7 @@
  * A run played for a step of a mind map path (`?mindMap=1`, docs/MIND_MAP.md) ends on the step's
  * verdict (`RunOutcome`) instead of the recap.
  */
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.vue'
@@ -766,6 +771,7 @@ import { stepModule } from '@/utils/session/steps'
 import { resultKind } from '@/utils/runResult'
 import { chestToOpen } from '@/utils/shopReward'
 import { backLabel, subjectPath } from '@/utils/training'
+import { playAmbientSound } from '@/utils/sounds'
 
 definePage({ meta: { auth: 'required' } })
 
@@ -930,6 +936,31 @@ const isRepertoire = computed(() => runner.run.value?.module === 'repertoire')
 
 /** A run played for a step of a mind map path (docs/MIND_MAP.md): its end is the step's verdict. */
 const mindMapRun = computed(() => route.query.mindMap === '1')
+
+/**
+ * The music of a boss's fight (`?boss=`), looped while it runs; the Métronome and the Gargouille
+ * play their own in their players.
+ */
+const FIGHT_THEMES =
+  /** @type {Record<string, import('@/utils/sounds').AmbientSound>} */ ({
+    jongleur: 'jongleurTheme',
+    cyclope: 'cyclopeTheme'
+  })
+let stopFightTheme = () => {}
+watch(
+  () =>
+    mindMapRun.value && runner.phase.value === 'running'
+      ? (FIGHT_THEMES[String(route.query.boss ?? '')] ?? null)
+      : null,
+  theme => {
+    stopFightTheme()
+    stopFightTheme = theme
+      ? playAmbientSound(theme, { loop: true, volume: 0.3 })
+      : () => {}
+  },
+  { immediate: true }
+)
+onBeforeUnmount(() => stopFightTheme())
 
 /**
  * The position being evaluated, kept once the run closed on the last one: its correction stays on

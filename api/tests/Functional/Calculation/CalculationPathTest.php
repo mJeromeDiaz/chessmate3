@@ -159,6 +159,60 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertSame(['failed', false], [$outcome['outcome'] ?? null, $outcome['completed'] ?? null], '12 lines, 11 right: no streak of 12.');
     }
 
+    public function testChapterTwoWinsMaterialInThreeMoves(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        // The Métronome beaten: chapter 2 opens.
+        $this->beatMetronome($alice);
+        $runId = $this->startStep($alice, '2-1');
+
+        $item = $this->item($alice, $runId);
+        self::assertSame([null, 3, 'material', 10], [$item['data']['mate'] ?? null, $item['data']['moves'] ?? null, $item['data']['ending'] ?? null, $item['data']['count'] ?? null]);
+        self::assertCount(5, $this->expected($item), '3 moves of the player: 5 half-moves.');
+        $this->ready($alice, $runId, $item['id']);
+        $right = $this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item)]);
+        self::assertSame([true, 'right', 3, 'material'], [$right['success'] ?? null, \is_array($right['data'] ?? null) ? $right['data']['status'] ?? null : null, \is_array($right['data'] ?? null) ? $right['data']['moves'] ?? null : null, \is_array($right['data'] ?? null) ? $right['data']['ending'] ?? null : null]);
+
+        // Its last move left out: wrong where it stops.
+        $item = $this->item($alice, $runId);
+        $this->ready($alice, $runId, $item['id']);
+        $short = $this->submitOk($alice, $runId, $item['id'], ['moves' => \array_slice($this->expected($item), 0, 4)]);
+        self::assertSame([false, 4], [$short['success'] ?? null, \is_array($short['data'] ?? null) ? $short['data']['mistakeAt'] ?? null : null]);
+    }
+
+    public function testALineThenAQuestionOnThePositionItReaches(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->beatMetronome($alice);
+        foreach (['2-1', '2-2', '2-3', '2-4', '2-5', '2-6'] as $key) {
+            self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/'.$key.'/skip', $alice)->getStatusCode(), $key);
+        }
+        $runId = $this->startStep($alice, '2-7');
+
+        $line = $this->item($alice, $runId);
+        self::assertSame(['line', true, 3], [$line['data']['kind'] ?? null, $line['data']['question'] ?? null, $line['data']['moves'] ?? null]);
+        $this->ready($alice, $runId, $line['id']);
+        self::assertTrue($this->submitOk($alice, $runId, $line['id'], ['moves' => $this->expected($line)])['success'] ?? null);
+
+        // Its question: on an empty board, the position reached kept on the server.
+        $question = $this->item($alice, $runId);
+        self::assertSame(['question', 2], [$question['data']['kind'] ?? null, $question['data']['position'] ?? null]);
+        self::assertArrayNotHasKey('fen', $question['data']);
+        self::assertContains($question['data']['ask'] ?? null, ['where', 'what']);
+        $answer = $this->rightAnswer($question);
+        $result = $this->submitOk($alice, $runId, $question['id'], $answer);
+        self::assertSame([true, 'question'], [$result['success'] ?? null, \is_array($result['data'] ?? null) ? $result['data']['kind'] ?? null : null]);
+
+        // The next line, then a wrong answer to its question.
+        $line = $this->item($alice, $runId);
+        self::assertSame('line', $line['data']['kind'] ?? null);
+        $this->ready($alice, $runId, $line['id']);
+        $this->submitOk($alice, $runId, $line['id'], ['moves' => $this->expected($line)]);
+        $question = $this->item($alice, $runId);
+        $wrong = 'where' === ($question['data']['ask'] ?? null) ? ['squares' => [$this->emptySquare($question)]] : ['placement' => [['square' => $question['data']['target'], 'piece' => 'Q' === ($this->expected($question)[0] ?? null) ? 'N' : 'Q']]];
+        self::assertFalse($this->submitOk($alice, $runId, $question['id'], $wrong)['success'] ?? null);
+    }
+
     public function testOnlyThePathPlaysIt(): void
     {
         $alice = $this->createUserIn('alice@example.com');
@@ -177,6 +231,47 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         $item = $this->item($alice, $runId);
         $bob = $this->createUserIn('bob@example.com');
         self::assertSame(404, $this->api('POST', '/api/training/runs/'.$runId.'/ready', $bob, ['itemId' => $item['id']])->getStatusCode());
+    }
+
+    private function beatMetronome(User $user): void
+    {
+        self::getContainer()->get(Connection::class)->executeStatement(
+            "INSERT INTO mind_map_progress (id, user_id, capacity, step, passes, completed_at, updated_at) VALUES (UUID_TO_BIN(UUID()), ?, 'calculation', '1-boss', 1, '2026-09-28 09:00:00', '2026-09-28 09:00:00')",
+            [$user->getId()->toBinary()],
+        );
+    }
+
+    /**
+     * A question's right answer, from what the server keeps.
+     *
+     * @param Item $question
+     *
+     * @return array<string, mixed>
+     */
+    private function rightAnswer(array $question): array
+    {
+        $expected = $this->expected($question);
+        if ('where' === ($question['data']['ask'] ?? null)) {
+            return ['squares' => [$expected[0] ?? '']];
+        }
+
+        return ['placement' => [] === $expected ? [] : [['square' => $question['data']['target'], 'piece' => $expected[0]]]];
+    }
+
+    /**
+     * A square the question's piece does not stand on.
+     *
+     * @param Item $question
+     */
+    private function emptySquare(array $question): string
+    {
+        $holding = $this->expected($question);
+        foreach (['a1', 'h8', 'a8', 'h1'] as $square) {
+            if (!\in_array($square, $holding, true)) {
+                return $square;
+            }
+        }
+        self::fail('No square left.');
     }
 
     private function startStep(User $user, string $key): string

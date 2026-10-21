@@ -66,7 +66,7 @@ async function openStep(page, step) {
   await page.getByTestId(`path-step-${step}`).click()
   const served = page.waitForResponse(isRunNext)
   await page.getByTestId('step-start').click()
-  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1$/)
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   return (await (await served).json()).item
 }
 

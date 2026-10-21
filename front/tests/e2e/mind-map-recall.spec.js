@@ -63,7 +63,7 @@ test('mind map chapter 2: a recall lesson, then the mini-boss 2.1 without coordi
   await page.getByTestId('path-step-2-1-1').click()
   let served = page.waitForResponse(isRunNext)
   await page.getByTestId('step-start').click()
-  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1$/)
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   let item = (await (await served).json()).item
   expect([item.type, item.data.level, item.data.count]).toEqual([
     'blindfold_recall',

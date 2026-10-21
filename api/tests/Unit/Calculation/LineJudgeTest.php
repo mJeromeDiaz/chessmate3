@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Calculation;
 
-use App\Calculation\Drawing\MatePicker;
+use App\Calculation\Drawing\LinePicker;
+use App\Calculation\Drawing\LineSpec;
+use App\Enum\Calculation\Ending;
 use App\Calculation\Judge\IllegalLineException;
 use App\Calculation\Judge\LineJudge;
 use App\Chess\Rules;
@@ -33,6 +35,14 @@ final class LineJudgeTest extends TestCase
         self::assertSame(['right' => false, 'mistakeAt' => 0], LineJudge::judge(self::fen(), self::SOLUTION, [self::otherFirstMove()]));
     }
 
+    public function testALineWithoutMateIsRightPlayedToItsEnd(): void
+    {
+        // Judged as a gain: the same three half-moves, the last one not needed to mate.
+        self::assertSame(['right' => true, 'mistakeAt' => null], LineJudge::judge(self::fen(), ['h8h4', 'g3h4', 'd5d4'], ['h8h4', 'g3h4', 'd5d4']));
+        self::assertSame(['right' => false, 'mistakeAt' => 2], LineJudge::judge(self::fen(), ['h8h4', 'g3h4', 'd5d4'], ['h8h4', 'g3h4']));
+        self::assertSame(['right' => true, 'mistakeAt' => null], LineJudge::judge(self::fen(), ['h8h4', 'g3h4', 'd5d4'], self::SOLUTION), 'A mate is always right.');
+    }
+
     public function testAnIllegalHalfMoveIsRefused(): void
     {
         $this->expectException(IllegalLineException::class);
@@ -42,12 +52,14 @@ final class LineJudgeTest extends TestCase
     public function testAPuzzleMakesALineOfItsMateOnly(): void
     {
         $puzzle = self::puzzle();
-        $line = MatePicker::line($puzzle, 2, false);
+        $line = LinePicker::line($puzzle, LineSpec::mate(2));
         self::assertNotNull($line);
-        self::assertSame([2, self::SOLUTION, self::fen()], [$line->mate, $line->expected, $line->fen]);
-        self::assertNotNull(MatePicker::line($puzzle, 2, true), 'Rxh4 is a capture on the way.');
-        self::assertNull(MatePicker::line($puzzle, 1, false), 'Another length.');
-        self::assertNull(MatePicker::line($puzzle, 3, false));
+        self::assertSame([2, Ending::Mate, self::SOLUTION, self::fen()], [$line->moves, $line->ending, $line->expected, $line->fen]);
+        self::assertNotNull(LinePicker::line($puzzle, LineSpec::mate(2, true)), 'Rxh4 is a capture on the way.');
+        self::assertNull(LinePicker::line($puzzle, LineSpec::mate(1)), 'Another length.');
+        self::assertNull(LinePicker::line($puzzle, LineSpec::mate(3)));
+        self::assertNull(LinePicker::line($puzzle, new LineSpec([2], Ending::Material)), 'It mates.');
+        self::assertNotNull(LinePicker::line($puzzle, new LineSpec([2, 3])), 'Any ending.');
     }
 
     private static function puzzle(): Puzzle

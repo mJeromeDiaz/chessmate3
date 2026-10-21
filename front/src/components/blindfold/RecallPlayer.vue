@@ -208,7 +208,7 @@ import {
   recallKind
 } from '@/utils/blindfoldRecall'
 import { feedbackProf } from '@/utils/feedback'
-import { playOutcomeSound } from '@/utils/sounds'
+import { playBossVerdict, playOutcomeSound } from '@/utils/sounds'
 import { t } from '@/i18n'
 
 const props = defineProps({
@@ -327,7 +327,10 @@ watch(
     if (!value || game.phase.value === 'complete') return
     game.correct(/** @type {any} */ (value))
     const kind = recallKind(value.status)
-    playOutcomeSound(kind === 'miss' ? 'puzzleMissed' : 'puzzleDone')
+    // A mind map boss (its lives): the bosses' verdicts.
+    if (typeof props.item.data.lives === 'number')
+      playBossVerdict(kind !== 'miss')
+    else playOutcomeSound(kind === 'miss' ? 'puzzleMissed' : 'puzzleDone')
     timeline.play(kind)
   }
 )

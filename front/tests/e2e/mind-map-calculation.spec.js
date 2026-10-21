@@ -37,7 +37,7 @@ test('calculation: a mate in 1 thought over on a frozen board, then played', asy
   await page.getByTestId('path-step-1-1').click()
   let served = page.waitForResponse(isRunNext)
   await page.getByTestId('step-start').click()
-  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1$/)
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   let item = (await (await served).json()).item
   expect(item.type).toBe('calculation')
 
@@ -90,7 +90,7 @@ test('calculation: the Métronome, a line of unknown length and its face', async
   await page.getByTestId('path-chapter-boss-1').click()
   const served = page.waitForResponse(isRunNext)
   await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
-  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1$/)
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   const item = (await (await served).json()).item
   expect([item.type, item.data.mate, item.data.thinkSeconds]).toEqual([
     'calculation',

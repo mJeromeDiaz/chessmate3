@@ -144,7 +144,10 @@ const fightable = computed(() =>
 /** The bosses with a theme of their own, played while their card is open. */
 const THEMES =
   /** @type {Record<string, import('@/utils/sounds').AmbientSound>} */ ({
-    gargouille: 'gargoyleTheme'
+    gargouille: 'gargoyleTheme',
+    metronome: 'metronomeTheme',
+    jongleur: 'jongleurTheme',
+    cyclope: 'cyclopeTheme'
   })
 let stopTheme = () => {}
 watch(

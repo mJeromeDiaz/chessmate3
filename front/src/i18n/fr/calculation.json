@@ -10,10 +10,11 @@
       "answer": "Joue ta ligne",
       "right": "Ligne juste",
       "wrong": "Ligne fausse",
-      "late": "Trop tard"
+      "late": "Trop tard",
+      "question": "Et à la fin ?"
     },
     "thinkText": "L’échiquier est figé : calcule toute la ligne, les deux camps. Clique « Je réponds » quand tu la tiens.",
-    "thinkHidden": "L’échiquier est figé : calcule la ligne jusqu’au mat, les deux camps.",
+    "thinkHidden": "L’échiquier est figé : calcule la ligne jusqu’au bout, les deux camps.",
     "answerText": "Joue la ligne d’un trait, les deux camps : 2 secondes par demi-coup.",
     "rightText": "Calculée de bout en bout.",
     "wrongText": "La solution est rejouée sur l’échiquier.",
@@ -24,7 +25,10 @@
     "mistakeAt": "Écart au demi-coup {n}",
     "solution": "Solution : {line}",
     "yours": "Ta ligne : {line}",
-    "streak": "Série {n} sur {target}"
+    "streak": "Série {n} sur {target}",
+    "gain": "Gain en {n} coups",
+    "moves": "{n} coups",
+    "positions": "Position {n} sur {count}"
   },
   "metronome": {
     "right": "Tic… tac… Tu tiens encore la cadence.",
@@ -41,5 +45,13 @@
       "joy": "Ha ! Faux temps.",
       "pride": "Ma mesure a eu raison de toi."
     }
+  },
+  "question": {
+    "where": "Au bout de la ligne, où est {piece} ?",
+    "what": "Au bout de la ligne, qu’y a-t-il en {square} ?",
+    "empty": "Case vide",
+    "wasOn": "La réponse : {squares}.",
+    "wasPiece": "En {square} : {piece}.",
+    "wasEmpty": "La case {square} était vide."
   }
 }

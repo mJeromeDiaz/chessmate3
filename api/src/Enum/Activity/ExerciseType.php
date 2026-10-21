@@ -62,8 +62,9 @@ enum ExerciseType: string
      */
     case Vision = 'vision';
     /**
-     * A line of the calculation module (docs/CALCULATION.md), never rated; `metadata.mate`,
-     * `metadata.status` (right, wrong, late).
+     * A line of the calculation module (docs/CALCULATION.md), never rated; `metadata.mate` (the
+     * line's moves), `metadata.ending` (mate, material), `metadata.status` (right, wrong, late),
+     * `metadata.boss` (the Métronome: no XP).
      */
     case Calculation = 'calculation';
 }

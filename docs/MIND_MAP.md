@@ -23,6 +23,13 @@ Choix validés (2026-10-20) :
   `medium` (plus souvent, trois pièces, un son de coup parasite si les sons sont activés ; le
   rappel du Jongleur, deux questions sur trois), la Gargouille `strong`. Rien ne bouge quand le
   système demande moins d'animations.
+- **Sons des boss** (si les sons sont activés, `utils/sounds.js` `playBossVerdict`) : chaque
+  réponse d'un boss ou d'un mini-boss (une étape à vies) sonne `ding.mp3` (juste) ou `off.mp3`
+  (fausse, en retard) ; la Gargouille garde son loup (et son rire à la dernière vie), le Métronome
+  a son thème et son tic-tac ([CALCULATION.md](CALCULATION.md), § 6). Les thèmes du Jongleur et du
+  Cyclope (`jongleur-theme.mp3`, `cyclope-theme.mp3`) jouent sur leur fiche puis en boucle sous
+  leur combat : la page du parcours ouvre la séance avec `?boss=<personnage>` (`FIGHT_THEMES` de
+  la page de séance).
 - **On peut sauter un exercice** : ce qui suit s'ouvre, rien n'est gagné ; il reste jouable.
 - **Il faut battre le boss d'un chapitre** pour ouvrir le suivant, et les mini-boss d'une section
   pour ouvrir la suivante. Le **boss du chapitre est ouvert dès l'ouverture du chapitre** : un
@@ -172,7 +179,10 @@ chapitres 2 et 3 sont encore « bientôt ».
 | Ch. 1, coffre après 1.2 | `1-chest` | | 60 | — | — |
 | Ch. 1, mini-boss « Sans faute » | `1-mini` | 4 mats en 3, 2 vies | 80 | 40 | — |
 | Ch. 1, boss Le Métronome | `1-boss` | une série de mats de longueur cachée : 12 justes d'affilée, une erreur remet à zéro et coûte une vie (3) ; réflexion 40 s, −3 s par ligne juste, au moins 15 s | 200 | 100 | `chapter_1`, `boss_metronome` |
-| Ch. 2 « Tenir la distance » | `2-1` … `2-8`, `2-chest`, `2-mini` | à préciser (lot K2) | 80 / 100 | 15 / 40 | — |
+| Ch. 2 « Tenir la distance » | `2-1` … `2-6` | gains de matériel en 3 coups (2.1, 2.2), mats en 3, gains en 4 coups ; puis 3 ou 4 coups des thèmes `sacrifice` (2.5), `quietMove` et `clearance` (2.6) | — | 15 | — |
+| Ch. 2, coffre après 2.4 | `2-chest` | | 80 | — | — |
+| Ch. 2, la position finale | `2-7`, `2-8` | 5 positions : la ligne de 3 (puis 4) coups, puis une question sur la position atteinte ([CALCULATION.md](CALCULATION.md), § 2 bis) | — | 15 | — |
+| Ch. 2, mini-boss « Trouver, puis reconstituer » | `2-mini` | 4 puzzles de 3 ou 4 coups : résolus, puis rejoués de mémoire d'un trait ; 3 vies (lot K2c) | 100 | 40 | — |
 | Ch. 2, boss Le Compteur | `2-boss` | | 240 | 100 | `chapter_2`, `boss_compteur` |
 | Ch. 3 « L'adversaire a son mot à dire » | `3-1` … `3-4`, `3-mini` | à préciser (lot K3) | 120 | 15 / 40 | — |
 | Ch. 3, boss L'Avocat du diable | `3-boss` | | 300 | 120 | `chapter_3`, `boss_avocat` |

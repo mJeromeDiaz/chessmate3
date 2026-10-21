@@ -31,6 +31,8 @@ final class CalculationRules
     public const TEMPO_START_SECONDS = 40;
     public const TEMPO_STEP_SECONDS = 3;
     public const TEMPO_MIN_SECONDS = 15;
+    /** A lesson's themes at most. */
+    public const MAX_THEMES = 3;
     /** A streak to reach at most. */
     public const MAX_STREAK = 30;
 
@@ -52,6 +54,17 @@ final class CalculationRules
             $right < 6 => [1, 2, 2, 3],
             $right < 9 => [2, 2, 3, 3],
             default => [2, 3, 3, 4],
+        };
+    }
+
+    /** The Lichess theme of a solution of $moves moves of the player's (oneMove … veryLong, 4 or more). */
+    public static function lengthTheme(int $moves): string
+    {
+        return match ($moves) {
+            1 => 'oneMove',
+            2 => 'short',
+            3 => 'long',
+            default => 'veryLong',
         };
     }
 

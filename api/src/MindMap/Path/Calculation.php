@@ -57,20 +57,24 @@ final class Calculation
         )));
     }
 
-    /** Going the distance: lines of 5 to 8 half-moves, a chest after 2.4, the Compteur. */
+    /**
+     * Going the distance: lines of 3 moves that win material, mates in 3, lines of 4 moves; a chest
+     * after 2.4; a piece given up, a piece coming into play (3 or 4 moves); then a question on the
+     * position the line reaches (2.7, 2.8), the mini-boss and the Compteur (lots K2b to K2d).
+     */
     private static function chapter2(): Chapter
     {
         return new Chapter('c2', 2, [
             new Section('2', null, [
-                self::exercise('2-1', '2.1', 2),
-                self::exercise('2-2', '2.2', 2),
-                self::exercise('2-3', '2.3', 2),
-                self::exercise('2-4', '2.4', 2),
+                self::exercise('2-1', '2.1', 2, self::gain(3)),
+                self::exercise('2-2', '2.2', 2, self::gain(3)),
+                self::exercise('2-3', '2.3', 2, self::lesson(3)),
+                self::exercise('2-4', '2.4', 2, self::gain(4)),
                 self::chest('2-chest', 80),
-                self::exercise('2-5', '2.5', 2),
-                self::exercise('2-6', '2.6', 2),
-                self::exercise('2-7', '2.7', 2),
-                self::exercise('2-8', '2.8', 2),
+                self::exercise('2-5', '2.5', 2, self::themed(['sacrifice'])),
+                self::exercise('2-6', '2.6', 2, self::themed(['quietMove', 'clearance'])),
+                self::exercise('2-7', '2.7', 2, self::askedAfter(3)),
+                self::exercise('2-8', '2.8', 2, self::askedAfter(4)),
             ], [
                 self::miniBoss('2-mini', 100),
             ]),
@@ -104,6 +108,33 @@ final class Calculation
         }
 
         return new Activity(Module::Calculation, $config, self::LESSON_SECONDS, self::LESSON_COUNT);
+    }
+
+    /**
+     * A lesson of LESSON_COUNT lines of $moves moves that win material (no mate), played exactly.
+     */
+    private static function gain(int $moves): Activity
+    {
+        return new Activity(Module::Calculation, ['moves' => $moves, 'ending' => 'material', 'count' => self::LESSON_COUNT], self::LESSON_SECONDS, self::LESSON_COUNT);
+    }
+
+    /**
+     * A lesson of LESSON_COUNT lines of 3 or 4 moves of Lichess $themes (OR), however they end.
+     *
+     * @param list<string> $themes
+     */
+    private static function themed(array $themes): Activity
+    {
+        return new Activity(Module::Calculation, ['moves' => [3, 4], 'themes' => $themes, 'count' => self::LESSON_COUNT], self::LESSON_SECONDS, self::LESSON_COUNT);
+    }
+
+    /**
+     * A lesson of 5 positions: a line of $moves moves, however it ends, then a question on the
+     * position its solution reaches (LESSON_COUNT items).
+     */
+    private static function askedAfter(int $moves): Activity
+    {
+        return new Activity(Module::Calculation, ['moves' => $moves, 'question' => true, 'count' => self::LESSON_COUNT], self::LESSON_SECONDS, self::LESSON_COUNT);
     }
 
     private static function exercise(string $key, string $number, int $passes, ?Activity $activity = null): Step

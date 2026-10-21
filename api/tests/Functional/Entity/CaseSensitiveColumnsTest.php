@@ -90,6 +90,7 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['vision_question', 'fen'],
             ['vision_question', 'target'],
             ['calculation_attempt', 'fen'],
+            ['calculation_attempt', 'target'],
             ['mind_map_boss_item', 'square'],
             ['mind_map_boss_item', 'fen'],
             ['mind_map_boss_item', 'expected'],

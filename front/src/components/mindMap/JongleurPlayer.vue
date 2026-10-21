@@ -241,6 +241,7 @@ import PlayLayout from '@/components/chess/PlayLayout.vue'
 import { BOSS_LIVES } from '@/utils/mindMapPath'
 import { distractionOf, jongleurVerdict } from '@/utils/jongleur'
 import { englishSan, localSan, pieceLetters } from '@/utils/notation'
+import { playBossVerdict } from '@/utils/sounds'
 import { t } from '@/i18n'
 
 const props = defineProps({
@@ -510,6 +511,14 @@ watch(
 )
 
 // Time out: an empty answer (the server judges it late or wrong).
+// Its verdict heard, as every boss's.
+watch(
+  () => props.result,
+  value => {
+    if (value) playBossVerdict(value.status === 'right')
+  }
+)
+
 watch(leftMs, left => {
   if (left <= 0 && !answered.value && !props.result) answer({})
 })

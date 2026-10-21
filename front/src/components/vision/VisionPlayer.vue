@@ -221,7 +221,11 @@ import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { feedbackProf } from '@/utils/feedback'
 import { moodImage } from '@/utils/mindMapPath'
 import { numberedLine } from '@/utils/notation'
-import { playAmbientSound, playOutcomeSound } from '@/utils/sounds'
+import {
+  playAmbientSound,
+  playBossVerdict,
+  playOutcomeSound
+} from '@/utils/sounds'
 import {
   LIT_TARGET,
   MANY_SQUARES,
@@ -507,6 +511,9 @@ watch(
       playAmbientSound(value.lives === 0 ? 'evilLaugh' : 'wolf', {
         volume: 0.7
       })
+    // A mind map boss (its lives): the bosses' verdicts.
+    else if (typeof props.item.data.lives === 'number')
+      playBossVerdict(kind !== 'miss')
     else playOutcomeSound(kind === 'miss' ? 'puzzleMissed' : 'puzzleDone')
     timeline.play(kind)
   }

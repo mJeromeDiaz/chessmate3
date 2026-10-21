@@ -91,7 +91,7 @@ test('vision: the mini-boss 2.2, a position remembered then asked about', async 
   await page.getByTestId('path-step-2-2-boss').click()
   let served = page.waitForResponse(isRunNext)
   await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
-  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1$/)
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   let item = (await (await served).json()).item
   expect([item.type, item.data.kind, item.data.count, item.data.lives]).toEqual(
     ['vision', 'locate', 5, 3]

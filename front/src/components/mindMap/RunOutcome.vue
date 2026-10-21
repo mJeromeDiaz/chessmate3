@@ -215,7 +215,11 @@ async function replay() {
   try {
     const { run } = await mindMapApi.start(verdict.capacity, verdict.step)
     training.current = run
-    await router.push({ path: `/training/${run.id}`, query: { mindMap: '1' } })
+    const boss = /** @type {any} */ (step.value)?.character
+    await router.push({
+      path: `/training/${run.id}`,
+      query: { mindMap: '1', ...(boss ? { boss } : {}) }
+    })
   } catch (e) {
     startError.value = refusalText(e) || apiErrorMessage(e)
   } finally {

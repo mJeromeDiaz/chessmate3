@@ -2,8 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import {
+  AMBIENT_SOUND_FILES,
   OUTCOME_SOUND_FILES,
   moduleEndSound,
+  playAmbientSound,
+  playBossVerdict,
   playOutcomeSound
 } from '@/utils/sounds'
 
@@ -64,6 +67,10 @@ describe('playOutcomeSound', () => {
           played.push(this.src)
           return Promise.resolve()
         }
+
+        pause() {
+          played.push(`paused ${this.src}`)
+        }
       }
     )
   })
@@ -83,6 +90,27 @@ describe('playOutcomeSound', () => {
     expect(played).toEqual([
       OUTCOME_SOUND_FILES.sessionDone,
       OUTCOME_SOUND_FILES.sessionDone
+    ])
+  })
+  it('gives every boss its verdicts, the Gargouille its own cry', () => {
+    useAuthStore().profile = { moveSound: true }
+    playBossVerdict(true)
+    playBossVerdict(false)
+    playBossVerdict(false, 'wolf')
+    expect(played).toEqual([
+      AMBIENT_SOUND_FILES.ding,
+      AMBIENT_SOUND_FILES.off,
+      AMBIENT_SOUND_FILES.wolf
+    ])
+  })
+
+  it('plays an ambience at its speed, and stops it', () => {
+    useAuthStore().profile = { moveSound: true }
+    const stop = playAmbientSound('metronomeTick', { loop: true, rate: 1.5 })
+    stop()
+    expect(played).toEqual([
+      AMBIENT_SOUND_FILES.metronomeTick,
+      `paused ${AMBIENT_SOUND_FILES.metronomeTick}`
     ])
   })
 })
