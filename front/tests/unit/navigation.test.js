@@ -1,57 +1,48 @@
 import { describe, expect, it } from 'vitest'
-import { NAV_LINKS, isNavActive } from '@/utils/layout/navigation'
+import {
+  DASHBOARD_LINK,
+  FREE_TRAINING_LINKS,
+  isNavActive
+} from '@/utils/layout/navigation'
 
-const link = to => NAV_LINKS.find(l => l.to === to)
+const link = id => FREE_TRAINING_LINKS.find(l => l.id === id)
 
-describe('NAV_LINKS', () => {
-  it('lists the pages, home only in the drawer (the logo in the header)', () => {
-    expect(NAV_LINKS.map(l => l.label)).toEqual([
-      'Accueil',
-      'Sessions',
-      'Cerveau',
-      'Parcours',
+describe('FREE_TRAINING_LINKS', () => {
+  it('lists the modules played on their own', () => {
+    expect(FREE_TRAINING_LINKS.map(l => l.label)).toEqual([
       'Puzzles',
+      'Puzzle Rush',
+      'Puzzle streak',
       'Woodpecker',
-      'Streak',
       'Répertoires',
       'Coordonnées',
       'Notation',
-      'Aveugle',
+      'Jeu à l’aveugle',
       'Reconstitution',
-      'Évaluation'
-    ])
-    expect(NAV_LINKS.filter(l => l.header).map(l => l.to)).toEqual([
-      '/session',
-      '/cerveau',
-      '/parcours',
-      '/puzzle',
-      '/woodpecker',
-      '/streak',
-      '/repertoire',
-      '/coordinates',
-      '/notation',
-      '/blindfold',
-      '/reconstitution',
-      '/evaluation'
+      'Évaluation',
+      'Parcours'
     ])
   })
 })
 
 describe('isNavActive', () => {
   it('matches the page and its sub-pages', () => {
-    expect(isNavActive(link('/puzzle'), '/puzzle')).toBe(true)
-    expect(isNavActive(link('/puzzle'), '/puzzle/themes')).toBe(true)
-    expect(isNavActive(link('/repertoire'), '/repertoire/12/edit')).toBe(true)
+    expect(isNavActive(link('puzzle'), '/puzzle')).toBe(true)
+    expect(isNavActive(link('puzzle'), '/puzzle/themes')).toBe(true)
+    expect(isNavActive(link('repertoire'), '/repertoire/12/stats')).toBe(true)
   })
 
   it('ignores a mere common prefix', () => {
-    expect(isNavActive(link('/puzzle'), '/puzzles')).toBe(false)
-    expect(isNavActive(link('/session'), '/sessions')).toBe(false)
+    expect(isNavActive(link('puzzle'), '/puzzles')).toBe(false)
   })
 
-  it('keeps home for itself and the statistics', () => {
-    expect(isNavActive(link('/'), '/')).toBe(true)
-    expect(isNavActive(link('/'), '/stats')).toBe(true)
-    expect(isNavActive(link('/'), '/puzzle')).toBe(false)
+  it('never marks a link that opens a dialog', () => {
+    expect(isNavActive(link('rush'), '/puzzle')).toBe(false)
+  })
+
+  it('keeps the dashboard for itself and the statistics', () => {
+    expect(isNavActive(DASHBOARD_LINK, '/')).toBe(true)
+    expect(isNavActive(DASHBOARD_LINK, '/stats')).toBe(true)
+    expect(isNavActive(DASHBOARD_LINK, '/puzzle')).toBe(false)
   })
 })

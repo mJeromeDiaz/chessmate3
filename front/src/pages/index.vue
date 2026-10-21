@@ -20,7 +20,7 @@
       </q-toolbar>
     </q-header>
 
-    <NavDrawer v-if="auth.isAuthenticated" v-model="drawer" />
+    <AppMenu v-if="auth.isAuthenticated" v-model="drawer" />
     <StreakCelebration v-if="auth.isAuthenticated" />
 
     <q-page-container>
@@ -35,7 +35,7 @@ import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import StreakCelebration from '@/components/gamification/StreakCelebration.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
-import NavDrawer from '@/components/layout/NavDrawer.vue'
+import AppMenu from '@/components/layout/AppMenu.vue'
 import ThemeMenu from '@/components/theme/ThemeMenu.vue'
 
 const auth = useAuthStore()

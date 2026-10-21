@@ -395,6 +395,19 @@ async function importLichess() {
 
 watch(replayId, id => (id ? replay(id) : begin(() => store.next())))
 
+// The menu's "Puzzle Rush" lands here with ?rush=1: open its launcher, then drop the query.
+watch(
+  () => route.query.rush,
+  rush => {
+    if (!rush) return
+    rushDialog.value = true
+    const query = { ...route.query }
+    delete query.rush
+    router.replace({ query })
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   // Read again: the stock may have moved since the menus read it.
   purchase.shop

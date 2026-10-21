@@ -1,25 +1,43 @@
 {
   "nav": {
-    "home": "Accueil",
-    "sessions": "Sessions",
-    "mindMap": "Cerveau",
-    "parcours": "Parcours",
     "puzzles": "Puzzles",
+    "rush": "Puzzle Rush",
+    "parcours": "Parcours",
     "woodpecker": "Woodpecker",
-    "streak": "Streak",
+    "streak": "Puzzle streak",
     "repertoires": "Répertoires",
     "coordinates": "Coordonnées",
     "notation": "Notation",
-    "blindfold": "Aveugle",
+    "blindfold": "Jeu à l’aveugle",
     "recall": "Reconstitution",
     "evaluation": "Évaluation",
-    "main": "Navigation principale",
     "menu": "Menu"
   },
+  "menu": {
+    "label": "Navigation",
+    "close": "Fermer le menu",
+    "dashboard": "Tableau de bord",
+    "mindMap": {
+      "title": "Entraînement Ludique",
+      "text": "Entraîne tes capacités cognitives sous forme de jeu."
+    },
+    "create": {
+      "title": "Créer un entraînement",
+      "text": "Conçois un entraînement sur mesure, ou laisse-nous le créer grâce à {n} modules."
+    },
+    "free": {
+      "title": "Entraînement libre",
+      "text": "Choisis un module et joue-le tout de suite.",
+      "back": "Retour au menu"
+    },
+    "shop": {
+      "title": "Boutique",
+      "text": "Gels de série, aides et bonus avec tes cristaux.",
+      "balance": "{n} cristaux"
+    }
+  },
   "account": {
-    "label": "Compte : {name}",
     "profile": "Profil",
-    "tour": "Visite guidée",
     "shop": "Boutique",
     "admin": "Admin",
     "signOut": "Déconnexion",
