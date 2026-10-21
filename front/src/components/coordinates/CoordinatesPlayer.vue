@@ -100,9 +100,7 @@
         @click="onSquare('dark')"
         >{{ $t('coordinates.player.dark') }}</button
       >
-      <div class="coords-player__keyhint">{{
-        $t('coordinates.player.keysColor')
-      }}</div>
+      <div class="coords-player__keyhint">{{ colorKeysHint() }}</div>
     </div>
 
     <div class="coords-player__counts" data-testid="coordinates-counts">
@@ -147,7 +145,12 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import { useCoordinatesSeries } from '@/composables/coordinates/useCoordinatesSeries'
-import { ORIENTATIONS, answerText } from '@/utils/coordinates'
+import {
+  ORIENTATIONS,
+  answerText,
+  colorKey,
+  colorKeysHint
+} from '@/utils/coordinates'
 import { t } from '@/i18n'
 
 const props = defineProps({
@@ -271,7 +274,7 @@ function onBeforeInput(event) {
   }
 }
 
-/** The keyboard: letters and digits (name mode), C / F or the arrows (colour mode). */
+/** The keyboard: letters and digits (name mode), a colour's initial or an arrow (colour mode). */
 function onKey(/** @type {KeyboardEvent} */ event) {
   if (event.ctrlKey || event.metaKey || event.altKey) return
   const target = /** @type {HTMLElement|null} */ (event.target)
@@ -282,9 +285,9 @@ function onKey(/** @type {KeyboardEvent} */ event) {
     else if (FILES.includes(key) || RANKS.includes(key)) type(key)
     else return
   } else if (mode.value === 'color') {
-    if (key === 'c' || key === 'arrowleft') onSquare('light')
-    else if (key === 'f' || key === 'arrowright') onSquare('dark')
-    else return
+    const color = colorKey(key)
+    if (color === null) return
+    onSquare(color)
   } else return
   event.preventDefault()
 }

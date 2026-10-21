@@ -86,7 +86,7 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
   (retour à `/visite` après la liaison : `TOUR_PATH` dans les retours permis d'`authFlow`), puis
   cinq cartes radio et la ligne sur le classement (`ratingNote`). **Objectif** : cinq boutons radio.
   Les réponses sont enregistrées en quittant leur écran (`useOnboardingStore().save()`, rien si
-  rien n'a changé ; la pastille de classement de l'en-tête est relue si le niveau a pu le fixer).
+  rien n'a changé ; le classement est relu si le niveau a pu le fixer).
 - **Profs** (`TourModules`) : Albert (Woodpecker, Puzzles, Puzzle streak), Aaron (Répertoire,
   Évaluation, Analyse « Bientôt »), Lizy (Séance sur mesure, Finales « Bientôt »), Ray (À
   l'aveugle, Coordonnées) ; « Pourquoi ça aide » déplié d'emblée sur le premier module de chacun.
@@ -100,8 +100,7 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
   bouton collé en bas ; à partir de 1024 px, une carte en deux colonnes (scène à gauche, prof plus
   grand, titre en 58 px ; bulle, contenu défilant et bouton à droite). Mode sombre : jetons
   `--cm-*`, accents vifs (`accentOn`), bouton principal lime.
-- **Entrées** : « Visite guidée » du menu mobile (`drawer-tour`) et du menu du compte (`nav-tour`),
-  carte « Visite guidée » du profil (revoir, niveau, objectif), « Faire la visite guidée » de
+- **Entrées** : carte « Visite guidée » du profil (revoir, niveau, objectif), « Faire la visite guidée » de
   `/bienvenue` (`welcome-tour`).
 
 ## 6. Tests
@@ -111,5 +110,5 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
 niveau sans nouvelle ligne, plus rien après un puzzle classé ou un import Lichess, niveau suggéré,
 import Lichess toujours proposé, 422, export) ; Vitest `onboarding.test.js`, `auth-flow.test.js` ;
 Playwright `tests/e2e/tour.spec.js` (visite complète sans Lichess jusqu'au Session Builder, réponses
-dans le profil et niveau changé ; étape gardée, retour, segments, « Passer », menu du compte,
+dans le profil et niveau changé ; étape gardée, retour, segments, « Passer »,
 « Revoir » du profil).

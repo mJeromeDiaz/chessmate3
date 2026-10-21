@@ -1,1 +1,183 @@
-{}
+{
+  "endgames": {
+    "pawn": "Pawn",
+    "rook": "Rook",
+    "minor": "Minor pieces",
+    "queen": "Queen",
+    "rook_minor": "Rook and minor pieces",
+    "mixed": "Mixed"
+  },
+  "reasons": [
+    {
+      "title": "Automate pattern recognition",
+      "text": "The Woodpecker method has you review the same tactics multiple times until the patterns become almost automatic: forks, pins, double attacks, sacrifices… The goal is to spot opportunities faster during games."
+    },
+    {
+      "title": "Improve your calculation speed",
+      "text": "By repeating the same exercises regularly, you gradually move from conscious thinking to instant recognition. You then spend your thinking time on complex positions rather than on basic tactics."
+    },
+    {
+      "title": "Turn mistakes into positive reflexes",
+      "text": "The Woodpecker principle is to replay the puzzles until you solve them quickly and correctly. A tactic you once missed gradually becomes a pattern your brain recognizes naturally. This is especially effective at reducing recurring tactical mistakes."
+    }
+  ],
+  "method": [
+    "Each session starts over from the first puzzle in the set.",
+    "You work through the puzzles until the timer runs out, as fast as possible without mistakes.",
+    "When you get through it all, the set grows by 20 puzzles."
+  ],
+  "sides": {
+    "white": "White",
+    "black": "Black"
+  },
+  "counts": {
+    "slips": "{n} advantage let slip | {n} advantages let slip",
+    "games": "{n} game | {n} games",
+    "repertoires": "{n} repertoire | {n} repertoires",
+    "openings": "{n} opening | {n} openings",
+    "endgames": "{n} endgame | {n} endgames"
+  },
+  "slip": "{slips} out of {n}",
+  "scan": {
+    "none": "I couldn't find any games to read in these time controls.",
+    "weakest": "Found it! Your “{type}” endgames are costing you dearly: {slip}.",
+    "solid": "Your endgames hold up: no advantages let slip. Keep it up.",
+    "few": "Few endgames in these games: let's work on your openings and your board vision.",
+    "reading": "I'm reading your games one by one…",
+    "openings": "I'm spotting your favorite openings…",
+    "endgames": "Endgames are appearing, I'm sorting them…"
+  },
+  "need": {
+    "noWoodpecker": "No games as {side}: no Woodpecker on that side.",
+    "woodpecker": "{family}: your #1 with {side}, {games}.",
+    "existing": "Your repertoires: {n} to review.",
+    "generated": "Your repertoire, drawn from your games: {n}.",
+    "not_asked": "No repertoire yet: you're missing one.",
+    "no_opening": "No opening played often enough for a repertoire.",
+    "failed": "The repertoire could not be created.",
+    "repertoire": "Your repertoire.",
+    "blindfoldWeak": "“{type}” endgames: {slip}.",
+    "blindfold": "See without looking, to calculate further.",
+    "evaluationLost": "In endgames, you let {slip} slip.",
+    "evaluation": "Judge a position before choosing a plan."
+  },
+  "card": {
+    "woodpecker": "Woodpecker",
+    "woodpeckerNamed": "Woodpecker · {family}",
+    "with": "As {side}",
+    "noGames": "None of your last {n} games as {side}: nothing to work on there.",
+    "first": "Your #1 as {side} · {games}",
+    "points": " · {n}% of points",
+    "notEnough": "Not enough puzzles from this opening in our catalog: we'll skip it this time.",
+    "puzzles": "{n} puzzles drawn from games played in this opening{who}. The same ones, session after session.",
+    "bothSides": ", from both sides",
+    "you": ", you as {side}",
+    "repertoire": "Repertoire",
+    "missing": "Missing repertoire",
+    "repertoireText": "Your lines to review first (spaced repetition), your prepared moves played from memory.",
+    "repertoireMissing": {
+      "not_asked": "You don't have a repertoire yet: generate it from your games, then rerun the analysis.",
+      "no_opening": "No opening played at least 3 times: no repertoire can be drawn from these games.",
+      "failed": "Repertoire creation failed: try again from the Repertoire page.",
+      "default": "No repertoire for this session."
+    },
+    "blindfold": "Blindfold chess",
+    "blindfoldSub": "You play without seeing the pieces",
+    "blindfoldWeak": "To visualize better, and calculate all the way. Your “{type}” endgames: {slip}.",
+    "blindfoldText": "To visualize better: the position appears, disappears, and you play from memory.",
+    "evaluation": "Evaluation",
+    "evaluationSub": "Who's better, and by how much?",
+    "evaluationLost": "Out of {endgames}, you had the advantage in {advantages} and let {lost} slip. Judging the position is choosing the right plan.",
+    "evaluationText": "Judge a position at a glance, before choosing a plan."
+  },
+  "session": {
+    "two": "We start with your two flagship openings.",
+    "one": "We start with your flagship opening.",
+    "none": "We start with your vision of the game.",
+    "weakest": "{start} Then, a heading for your “{type}” endgames: that's where you let the most advantages slip.",
+    "keep": "{start} Then, we maintain your vision and your judgment."
+  },
+  "errors": {
+    "limit_plans": "You've reached the limit of 50 saved sessions: delete one before continuing."
+  },
+  "header": {
+    "title": "Tailored session",
+    "steps": {
+      "connect": "Account",
+      "scan": "Analysis",
+      "compose": "Composition",
+      "session": "Session",
+      "go": "Module 1"
+    }
+  },
+  "connect": {
+    "bubble": "Give me your last {n} games. I'll find what's costing you points and compose your session for today.",
+    "title": "A session tailored to you",
+    "start": "Analyze my {n} games",
+    "account": "LICHESS ACCOUNT · REQUIRED",
+    "noGames": "Without your games, I can't compose anything. I only read, I don't publish anything.",
+    "noAccount": "No account yet? It's created with your Lichess account.",
+    "repertoire": "Also generate my repertoire",
+    "repertoireHint": "Drawn from the same games: your most played opening as White and as Black. You can refine it afterwards.",
+    "watch": "WHAT I LOOK AT",
+    "watchOpenings": "Your most played openings, with each color.",
+    "watchEndgames": "Your endgames: their type, and the advantages you let slip.",
+    "watchGames": "Your last {n} games in blitz, rapid and classical."
+  },
+  "scanScreen": {
+    "read": "games read",
+    "of": "of {n}",
+    "done": "Analysis complete",
+    "reading": "Reading in progress…",
+    "restart": "Start over",
+    "compose": "Compose my session",
+    "openings": "OPENINGS FOUND",
+    "endgames": "ENDGAMES DETECTED · {n}",
+    "noEndgame": "No endgames in these games.",
+    "waiting": "Waiting for the first endgames…",
+    "weak": "WEAK POINT",
+    "games": "{n} game | {n} games",
+    "footnote": "Advantage: +2 according to Lichess analysis when the game has one ({analysed} out of {games}), otherwise 2 points of material up going into the endgame. Let slip: the game was not won."
+  },
+  "waiting": "Lichess is finishing a previous request: I'll resume in {n} s…",
+  "compose": {
+    "retry": "Try again",
+    "next": "See my session",
+    "total": "YOUR SESSION · {modules}",
+    "modules": "{n} module | {n} modules",
+    "empty": "empty",
+    "minutes": "{n} min",
+    "notThisTime": "Not this time",
+    "creating": "Creating the module…",
+    "searching": "Looking for a need…",
+    "composed": "SESSION COMPOSED",
+    "need": "NEED #{n}",
+    "crossing": "CROSSING YOUR GAMES",
+    "done": "{n} module, just for you. | {n} modules, just for you.",
+    "looking": "I'm looking for what you need…"
+  },
+  "sessionScreen": {
+    "title": "Your session for today",
+    "games": "drawn from {n} games",
+    "begin": "Start the session",
+    "saved": "Saved in My sessions: “My tailored session”, relaunchable whenever you want.",
+    "restart": "Redo the analysis",
+    "absent": "Absent",
+    "generate": "Generate my repertoire →"
+  },
+  "go": {
+    "kicker": "MODULE 1 OF {total} · {n} MIN",
+    "launching": "Launching…",
+    "launch": "Launch the module",
+    "method": "THE METHOD · LIGHT SET",
+    "methodText": "{n} puzzles drawn from games played in your opening, always the same ones: you recognize them faster and faster.",
+    "why": "WHY IT WILL HELP YOU",
+    "reason": "{title}.",
+    "program": "ON THE PROGRAM",
+    "countLabel": "MODULE 1 · {title}",
+    "go": "Go!",
+    "woodpeckerSays": "Tactics from games played in your opening, repeated until they become reflexes. Fast, but accurate.",
+    "says": "Let's start. Focus on accuracy before speed.",
+    "countWoodpecker": "{family} · {n} puzzles"
+  }
+}

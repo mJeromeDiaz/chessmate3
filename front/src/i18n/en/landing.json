@@ -1,1 +1,101 @@
-{}
+{
+  "legend": {
+    "fast": "Fast",
+    "ok": "Solved",
+    "hint": "With help",
+    "fail": "Missed",
+    "todo": "To do"
+  },
+  "example": {
+    "repertoire": "My White openings",
+    "puzzles": "Fork, Pin",
+    "finales": "Review · Rooks",
+    "minutes": "{n} min"
+  },
+  "perks": [
+    "Automatic import of your games",
+    "Repertoire and Elo in sync",
+    "Puzzles drawn from your own mistakes"
+  ],
+  "anchors": {
+    "modules": "Modules",
+    "profs": "The profs",
+    "suivi": "Tracking",
+    "lichess": "Lichess"
+  },
+  "signIn": "Sign in",
+  "cta": {
+    "title": "Your first session is waiting.",
+    "email": "With an email"
+  },
+  "footer": {
+    "terms": "Terms of use",
+    "privacy": "Privacy",
+    "contact": "Contact"
+  },
+  "lichess": "Continue with Lichess",
+  "autoRepertoire": "Generate my repertoire",
+  "placeholder": {
+    "soon": "Content coming soon.",
+    "home": "← Back to home"
+  },
+  "profs": {
+    "kicker": "THE PROFS",
+    "title": "Three personalities, one obsession: your progress.",
+    "profile": "See the profile →"
+  },
+  "hero": {
+    "pill": "Lichess compatible",
+    "lead": "Build your chess training, move by move.",
+    "coach": "Generate my personalized training session"
+  },
+  "modules": {
+    "kicker": "{n} MODULES",
+    "title": "Each module has its own color, prof and settings.",
+    "lead": "Duration, Elo, themes, color played, per-move clock, spaced repetition: you set it up, we keep it going.",
+    "soon": "Coming soon"
+  },
+  "woodpecker": {
+    "pill": "Woodpecker method",
+    "title": "The same set, faster every time.",
+    "lead": "Solve your set, then start over in shorter and shorter cycles. The grid keeps track of every puzzle: fast, solved, with help or missed.",
+    "cta": "Try a cycle →",
+    "set": "Set of 100 puzzles · Cycle 2",
+    "done": "37 done · 85% solved"
+  },
+  "steps": {
+    "compose": "Build",
+    "composeText": "A title, a cover, then your modules in whatever order you like.",
+    "train": "Train",
+    "trainText": "Your prof slips you a tip, a hint or the solution when you get stuck.",
+    "tipLabel": "ALBERT · TIP",
+    "tip": "Look at every open diagonal.",
+    "progress": "Progress",
+    "progressText": "Every puzzle leaves a trace. Mistakes come back until they become reflexes."
+  },
+  "auto": {
+    "kicker": "FROM YOUR LICHESS GAMES",
+    "title": "Your games work for you.",
+    "who": "AARON",
+    "quote": "Connect your Lichess account: I read your games and prepare training that suits you.",
+    "repertoireKicker": "REPERTOIRE",
+    "repertoireTitle": "Generate your repertoire",
+    "repertoireText": "We keep the moves you actually play, opening by opening, and show you where you win and where you lose.",
+    "repertoireButton": "Generate my repertoire with Lichess",
+    "sessionKicker": "TRAINING SESSION",
+    "sessionTitle": "Generate your training session",
+    "sessionText": "We read your last 200 games: your openings, your endgames, the advantages you let slip. Your session of the day comes out of it.",
+    "sessionButton": "Generate my session with Lichess",
+    "note": "Early access: an invitation key is required to sign up. Already signed up with Lichess? You go straight to the generation.",
+    "sessionPoints": [
+      "Woodpecker on your two main openings",
+      "Your endgames under the microscope",
+      "Saved in your profile, ready to replay every day"
+    ],
+    "repertoirePoints": [
+      "Your most played moves, line by line",
+      "Wins, draws, losses and mistakes flagged by Lichess",
+      "Ready to review, you keep control over every move"
+    ]
+  }
+}

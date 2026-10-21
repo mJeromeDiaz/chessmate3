@@ -1,1 +1,735 @@
-{}
+{
+  "page": {
+    "kicker": "Path",
+    "loadError": "The path could not be loaded.",
+    "continue": "Continue",
+    "continueSoon": "More is coming soon",
+    "chapter": "Chapter {n}",
+    "progress": "{done} / {total}",
+    "locked": "Beat the previous chapter's boss to open this one.",
+    "bossOfChapter": "Chapter boss",
+    "badges": "Badges",
+    "noBadge": "Beat bosses to earn your first badges.",
+    "rules": "Each exercise must be passed 2 to 4 times (80% success). An exercise can be skipped, a boss never. Beat the boss to open the next chapter.",
+    "soon": "Coming soon"
+  },
+  "chestNote": "Mind map · {title}",
+  "status": {
+    "locked": "Locked",
+    "open": "To do",
+    "soon": "Coming soon",
+    "hidden": "Secret",
+    "done": "Done",
+    "skipped": "Skipped"
+  },
+  "kinds": {
+    "exercise": "Exercise",
+    "chest": "Chest",
+    "mini_boss": "Mini-boss",
+    "hidden_boss": "Hidden boss",
+    "boss": "Boss"
+  },
+  "sheet": {
+    "passes": "Pass {n} of {total}",
+    "passesDone": "Validated ({total} passes)",
+    "skippedNote": "You skipped it: pass it whenever you like, it will count.",
+    "start": "Start",
+    "again": "Start over",
+    "practice": "Practice",
+    "skip": "Skip",
+    "skipTitle": "Skip this exercise?",
+    "skipText": "What comes next opens, but the exercise earns nothing until you have passed it.",
+    "xp": "+{xp} XP",
+    "crystals": "+{n} crystals",
+    "soonText": "Its module is coming soon. You can skip it to move on.",
+    "lockedText": "Not yet: finish what comes before.",
+    "chestEarned": "Chest earned: {n} crystals.",
+    "chestLocked": "Pass the exercises before it to earn it (a skipped exercise does not count).",
+    "hiddenText": "Something is hiding here. Get through the section to discover it.",
+    "rule": "A short lesson, passed with at least 80%.",
+    "close": "Close"
+  },
+  "boss": {
+    "lives": "3 lives: on the 3rd mistake, {name} wins and you start over.",
+    "rewards": "To win",
+    "fight": "Fight",
+    "fightAgain": "Fight again",
+    "later": "Later",
+    "soon": "This fight is coming soon.",
+    "locked": "Finish what comes before first.",
+    "beaten": "Defeated",
+    "optional": "Optional"
+  },
+  "jongleur": {
+    "progress": "Question {n} of {count}",
+    "ask": {
+      "find": "Find the square",
+      "name": "Name the square",
+      "color": "Light or dark?",
+      "play": "Play the move",
+      "write": "Write the move played"
+    },
+    "taunt": "Quick, quick, my balls don't wait!",
+    "react": {
+      "right": "Grr… you caught it.",
+      "wrong": "Oops! A ball on the floor!",
+      "late": "Too slow! My pins keep spinning."
+    },
+    "verdict": {
+      "right": "Correct!",
+      "wrong": "Missed: {answer}",
+      "late": "Too late! {answer}",
+      "color": "{square} is {color}"
+    },
+    "writePlaceholder": "E.g.: Nf3"
+  },
+  "victory": {
+    "kicker": "Boss defeated!",
+    "openChest": "Open the chest",
+    "continue": "Continue",
+    "badges": "Badges earned"
+  },
+  "outcome": {
+    "pending": "Result in progress…",
+    "validated": "Exercise validated!",
+    "pass": "Pass completed",
+    "failed": "Not yet",
+    "victory": "Victory!",
+    "defeat": "The boss wins",
+    "practice": "Fight won",
+    "passes": "Pass {n} of {total}",
+    "score": "{success} / {count} correct",
+    "need": "You need at least {count} answers and 80% correct.",
+    "lives": "Lives left: {n}",
+    "failedText": "Try again: every successful pass counts.",
+    "defeatText": "Three mistakes: try the fight again whenever you like.",
+    "replay": "Play again",
+    "nextPass": "Next pass",
+    "back": "Back to the path",
+    "chests": "Chests to open"
+  },
+  "refusals": {
+    "locked": "This step is not open yet.",
+    "soon": "This step's module is coming soon.",
+    "not_skippable": "A boss cannot be skipped.",
+    "runInProgress": "Another run is in progress: finish it first.",
+    "noRepertoire": "You need a repertoire with at least 10 segments: create it in “Repertoires”."
+  },
+  "badges": {
+    "boss_jongleur": "Juggler beaten",
+    "boss_cyclope": "The Cyclops's eye",
+    "boss_cyclope_calcul": "The calculating Cyclops",
+    "boss_gargouille": "Unflappable",
+    "boss_fantome": "Ghost hunter",
+    "boss_cameleon": "Nothing escapes you",
+    "boss_sith": "The blind Sith defeated",
+    "boss_sablier": "Master of the hourglass",
+    "boss_flash": "Lightning eye",
+    "oeil_interieur": "Inner eye",
+    "chapter": "Chapter {n}",
+    "section": "Section {n}",
+    "hidden": "Secret {n}",
+    "boss_metronome": "In tempo",
+    "boss_compteur": "The count is right",
+    "boss_avocat": "Case won"
+  },
+  "generic": {
+    "tagline": "A section guardian: it checks that you remembered well.",
+    "taunt": "Show me what you've learned.",
+    "defeat": "Well played, what comes next is yours.",
+    "win": "Not this time. Come back whenever you like."
+  },
+  "characters": {
+    "jongleur": {
+      "name": "The Juggler",
+      "tagline": "He spins squares, moves and pieces… and waits for you to drop one.",
+      "taunt": "Three balls in the air, and you're still looking at the board?",
+      "defeat": "Nice catch! I'm putting my pins away… for this time.",
+      "win": "A ball on the floor! Shall we start over?"
+    },
+    "cyclope": {
+      "name": "The Cyclops",
+      "tagline": "A single eye, but a perfect memory.",
+      "taunt": "One look is enough for me. And you, how many do you need?",
+      "defeat": "You see as well as I do… with your eyes closed.",
+      "win": "My eye remembered everything. Yours, not yet."
+    },
+    "gargouille": {
+      "name": "The Gargoyle",
+      "tagline": "It howls, grimaces and makes the board shake. Keep the thread.",
+      "taunt": "Focus… if you can!",
+      "defeat": "Grrr… even my screams weren't enough.",
+      "win": "Ha! You lost the thread."
+    },
+    "fantome": {
+      "name": "The Ghost",
+      "tagline": "Pieces fade away as it passes. It's up to you to find them.",
+      "taunt": "Can't see anything anymore? Neither can I… and yet.",
+      "defeat": "You sense the pieces even when they disappear.",
+      "win": "Boo… a piece flew out of your head."
+    },
+    "cameleon": {
+      "name": "The Chameleon",
+      "tagline": "Its pieces change clothes on every move.",
+      "taunt": "That bishop looks like a knight? Look closer.",
+      "defeat": "No disguise fools you.",
+      "win": "You trusted appearances."
+    },
+    "sith": {
+      "name": "The Blind Sith",
+      "tagline": "He plays whole games without ever seeing the board.",
+      "taunt": "Close your eyes. Now, play.",
+      "defeat": "The inner eye is within you.",
+      "win": "You were looking for the board. There is none."
+    },
+    "sablier": {
+      "name": "The Hourglass",
+      "tagline": "Time runs out, and it asks you to hold two positions at once.",
+      "taunt": "Keep this one in mind… while I show you another.",
+      "defeat": "Two positions, not a grain lost.",
+      "win": "The sand has covered everything."
+    },
+    "flash": {
+      "name": "The Flash",
+      "tagline": "Half a second. Not one more.",
+      "taunt": "Blink and it's over.",
+      "defeat": "Faster than lightning!",
+      "win": "Too slow… the position is already far away."
+    },
+    "metronome": {
+      "name": "The Metronome",
+      "tagline": "Tick, tock. It beats time and never stops: every correct line speeds up the tempo.",
+      "taunt": "One beat late, and the rhythm is lost.",
+      "defeat": "Out of tune… you kept the pace.",
+      "win": "Tick, tock: you lost the tempo."
+    },
+    "compteur": {
+      "name": "The Counter",
+      "tagline": "He counts every move of a long variation and asks you where it ends.",
+      "taunt": "How many moves can you hold before you lose count?",
+      "defeat": "The count is right… for you.",
+      "win": "You lost count."
+    },
+    "avocat": {
+      "name": "The Devil's Advocate",
+      "tagline": "You propose a move, he looks for the refutation. Find it before he does.",
+      "taunt": "Your idea is tempting. Defend it.",
+      "defeat": "Objection overruled: your idea held up.",
+      "win": "Your idea does not stand up to scrutiny."
+    }
+  },
+  "visualisation": {
+    "chapters": {
+      "c1": "Coordinates and notation",
+      "c2": "Static blind vision",
+      "c3": "Dynamic vision",
+      "c4": "Calculating variations",
+      "c5": "Advanced training",
+      "c6": "Blindfold play",
+      "c7": "Bots and humans"
+    },
+    "sections": {
+      "s2_1": "Memorizing squares and pieces",
+      "s2_2": "Memorizing groups",
+      "s2_3": "Dense position",
+      "s3_1": "Following a piece",
+      "s3_2": "Updating a position",
+      "s3_3": "Relations between pieces",
+      "s4_1": "First steps",
+      "s4_2": "Short variations",
+      "s4_3": "Comparing variations",
+      "s4_4": "Blindfold puzzles",
+      "s5_1": "Visualizing a dense position",
+      "s5_2": "Playing blindfold",
+      "s6_1": "Game sequences"
+    },
+    "steps": {
+      "s1_1": {
+        "title": "Click the square",
+        "desc": "You're given “e4”, you click the square. One minute, at least 10 answers and 80% correct."
+      },
+      "s1_2": {
+        "title": "Name the square",
+        "desc": "A square lights up on the board: give its name, file then rank. One minute, at least 10 answers and 80% correct."
+      },
+      "s1_3": {
+        "title": "Square color",
+        "desc": "A square name, no board: light or dark? One minute, at least 20 answers and 80% correct."
+      },
+      "s1_4": {
+        "title": "Play the announced move",
+        "desc": "“Nf3”: play it on the board."
+      },
+      "s1_chest": {
+        "title": "Chest",
+        "desc": "Pass the first three exercises to open it."
+      },
+      "s1_5": {
+        "title": "Sequence of written moves",
+        "desc": "Play a sequence of written moves, taken from a puzzle or a repertoire."
+      },
+      "s1_6": {
+        "title": "Write the solution",
+        "desc": "Write a puzzle's solution in notation."
+      },
+      "s1_chest_2": {
+        "title": "Chest",
+        "desc": "Pass the first six exercises to open it."
+      },
+      "s1_7": {
+        "title": "Complete a line",
+        "desc": "A line from your repertoire plays out: write its last moves. You need a repertoire with at least 10 segments."
+      },
+      "s1_8": {
+        "title": "Write down a famous game",
+        "desc": "Rebuild the notation of a famous game."
+      },
+      "s1_9": {
+        "title": "Replay a famous game",
+        "desc": "Replay a famous game on the board from its notation."
+      },
+      "s1_boss": {
+        "title": "The Juggler",
+        "desc": "A fast sequence of the chapter's exercises: coordinates, notation and moves, with slight distractions."
+      },
+      "s2_1_1": {
+        "title": "The kings and a pawn",
+        "desc": "White king, black king, white pawn: 8 seconds to remember them, then put them back."
+      },
+      "s2_1_2": {
+        "title": "Two pawns",
+        "desc": "Both kings and two white pawns."
+      },
+      "s2_1_3": {
+        "title": "Four pawns",
+        "desc": "Both kings, three white pawns, one black pawn."
+      },
+      "s2_1_4": {
+        "title": "The first bishop",
+        "desc": "Both kings, a white bishop, three pawns."
+      },
+      "s2_1_boss": {
+        "title": "Three positions",
+        "desc": "Rebuild three positions in a row, without any visual clue."
+      },
+      "s2_2_1": {
+        "title": "Seven pieces",
+        "desc": "Both kings, a bishop, four pawns: 11 seconds."
+      },
+      "s2_2_2": {
+        "title": "Two bishops",
+        "desc": "Both kings, two bishops, four pawns: tell two identical pieces apart."
+      },
+      "s2_2_3": {
+        "title": "The knight",
+        "desc": "Both kings, a knight, four pawns: unusual moves."
+      },
+      "s2_2_4": {
+        "title": "The rook",
+        "desc": "Both kings, a rook, five pawns: the alignments."
+      },
+      "s2_2_boss": {
+        "title": "Memory and question",
+        "desc": "Memorize a position, then answer: “Where is the black king?”"
+      },
+      "s2_3_1": {
+        "title": "The queen",
+        "desc": "Both kings, a queen, five pawns: 14 seconds."
+      },
+      "s2_3_2": {
+        "title": "Bishop and knight",
+        "desc": "Both kings, a bishop, a knight, six pawns."
+      },
+      "s2_3_3": {
+        "title": "Two rooks",
+        "desc": "Both kings, two rooks, six pawns: several alignments."
+      },
+      "s2_3_4": {
+        "title": "Twelve pieces",
+        "desc": "Both kings, a queen, a bishop, a knight, six pawns: the pieces and their relations."
+      },
+      "s2_3_boss": {
+        "title": "The hanging piece",
+        "desc": "After three moves you don't see, find the hanging piece and the capture square."
+      },
+      "s2_3_hidden": {
+        "title": "Three announced moves",
+        "desc": "Three announced moves, then a question about the final position: “How many pieces attack f7?”"
+      },
+      "s2_boss": {
+        "title": "The Cyclops",
+        "desc": "Rebuild a full position in 30 seconds."
+      },
+      "s3_0_boss": {
+        "title": "The Juggler, short version",
+        "desc": "A reminder of chapter 1 before getting into motion."
+      },
+      "s3_1_1": {
+        "title": "An announced route",
+        "desc": "Follow a rook or a bishop along an announced route, then say which piece is captured."
+      },
+      "s3_1_2": {
+        "title": "The destination square",
+        "desc": "Find the destination square after 2 to 4 moves."
+      },
+      "s3_1_3": {
+        "title": "Knight jumps",
+        "desc": "The minimum number of knight jumps between two squares."
+      },
+      "s3_1_4": {
+        "title": "Turns and captures",
+        "desc": "A route with changes of direction and captures."
+      },
+      "s3_1_5": {
+        "title": "A long route",
+        "desc": "Follow a piece over 5 to 8 moves, then answer a question."
+      },
+      "s3_1_boss": {
+        "title": "The unknown route",
+        "desc": "Follow a piece along an unknown route: its final square, the captured pieces, the squares crossed."
+      },
+      "s3_2_1": {
+        "title": "An announced move",
+        "desc": "Apply an announced move to a position of 4 to 6 pieces."
+      },
+      "s3_2_2": {
+        "title": "Three moves",
+        "desc": "Apply three moves, then place each piece."
+      },
+      "s3_2_3": {
+        "title": "The missing piece",
+        "desc": "A sequence with a capture: which piece has disappeared?"
+      },
+      "s3_2_4": {
+        "title": "Chain captures",
+        "desc": "A sequence with several pieces and successive captures."
+      },
+      "s3_2_5": {
+        "title": "Assorted questions",
+        "desc": "After 5 to 8 moves: “Which piece is on e5?”, “Can the white bishop reach c4?”"
+      },
+      "s3_2_boss": {
+        "title": "Five moves, three questions",
+        "desc": "Memorize a position, listen to five moves, answer three questions including one about an attack."
+      },
+      "s3_3_1": {
+        "title": "The attacked pieces",
+        "desc": "After a sequence, which pieces are attacked?"
+      },
+      "s3_3_2": {
+        "title": "Defended or not",
+        "desc": "The defended pieces and the undefended ones."
+      },
+      "s3_3_3": {
+        "title": "The alignments",
+        "desc": "The pieces lined up on a file, a rank or a diagonal."
+      },
+      "s3_3_4": {
+        "title": "Hanging",
+        "desc": "The pieces left hanging after several moves."
+      },
+      "s3_3_5": {
+        "title": "Interactions",
+        "desc": "Follow a position of 8 to 12 pieces and their interactions."
+      },
+      "s3_3_boss": {
+        "title": "Attacked or winning?",
+        "desc": "Attacked pieces, defended pieces, possible captures: tell “attacked” from “winning capture”."
+      },
+      "s3_boss": {
+        "title": "The Gargoyle",
+        "desc": "Five moves to keep in mind amid the screams, the animations and the countdown."
+      },
+      "s4_1_1": {
+        "title": "Forced reply",
+        "desc": "Calculate a half-move whose opposing reply is forced."
+      },
+      "s4_1_2": {
+        "title": "Two replies",
+        "desc": "A half-move and two possible opposing replies."
+      },
+      "s4_1_3": {
+        "title": "The best position",
+        "desc": "One move, two replies: which one leaves you the best position?"
+      },
+      "s4_1_boss": {
+        "title": "Exam 4.1",
+        "desc": "The section's exercises, mixed."
+      },
+      "s4_2_1": {
+        "title": "Forced sequence",
+        "desc": "Calculate a forced sequence of two half-moves."
+      },
+      "s4_2_2": {
+        "title": "Three or four half-moves",
+        "desc": "A variation of 3 to 4 half-moves."
+      },
+      "s4_2_3": {
+        "title": "Puzzle without a board",
+        "desc": "Solve a simple puzzle with no visible board."
+      },
+      "s4_2_boss": {
+        "title": "Exam 4.2",
+        "desc": "The section's exercises, mixed."
+      },
+      "s4_2_hidden": {
+        "title": "The Hourglass",
+        "desc": "Keep a position in memory while you answer another question."
+      },
+      "s4_3_1": {
+        "title": "One reply among several",
+        "desc": "A forced opposing reply among several choices."
+      },
+      "s4_3_2": {
+        "title": "Two variations",
+        "desc": "Compare two variations: which final position is better?"
+      },
+      "s4_3_3": {
+        "title": "Several defenses",
+        "desc": "A puzzle with several opposing replies."
+      },
+      "s4_3_4": {
+        "title": "Plausible variations",
+        "desc": "Calculate two plausible variations and compare their final positions."
+      },
+      "s4_3_boss": {
+        "title": "Exam 4.3",
+        "desc": "The section's exercises, mixed."
+      },
+      "s4_4_1": {
+        "title": "Forced sequence",
+        "desc": "A puzzle with 4 to 6 pieces, forced sequence, blindfold."
+      },
+      "s4_4_2": {
+        "title": "Intermediate capture",
+        "desc": "A denser puzzle with an intermediate capture."
+      },
+      "s4_4_3": {
+        "title": "Several replies",
+        "desc": "Several opposing replies, then a question about the position."
+      },
+      "s4_4_boss": {
+        "title": "Exam 4.4",
+        "desc": "The section's exercises, mixed."
+      },
+      "s4_boss": {
+        "title": "The calculating Cyclops",
+        "desc": "A blindfold puzzle with no move limit: keep two branches in mind at once."
+      },
+      "s5_1_1": {
+        "title": "14 pieces",
+        "desc": "Spot the groups and the diagonals: 16 seconds."
+      },
+      "s5_1_2": {
+        "title": "16 pieces",
+        "desc": "Tell the two sides apart."
+      },
+      "s5_1_3": {
+        "title": "18 pieces",
+        "desc": "Remember the pieces close together."
+      },
+      "s5_1_4": {
+        "title": "20 pieces",
+        "desc": "Rebuild a semi-complete position."
+      },
+      "s5_1_5": {
+        "title": "Following in the crowd",
+        "desc": "Follow a piece in a dense position, with captures."
+      },
+      "s5_1_boss": {
+        "title": "Position and question",
+        "desc": "Rebuild the position, then answer a question about a square, a piece or an attack."
+      },
+      "s5_1_hidden_1": {
+        "title": "Five legal moves",
+        "desc": "Follow five moves, then give the final position."
+      },
+      "s5_1_hidden_2": {
+        "title": "Blindfold puzzle",
+        "desc": "Solve a simple puzzle without seeing the board."
+      },
+      "s5_2_1": {
+        "title": "Ten seconds",
+        "desc": "12 to 16 pieces shown for 10 seconds, then the rebuild."
+      },
+      "s5_2_2": {
+        "title": "No clock",
+        "desc": "16 to 20 pieces, no time limit to answer."
+      },
+      "s5_2_3": {
+        "title": "Announced moves",
+        "desc": "16 to 20 hidden pieces, then a series of announced moves to rebuild."
+      },
+      "s5_2_4": {
+        "title": "Blindfold mate",
+        "desc": "A blindfold puzzle over several moves: mate in 2 or 3."
+      },
+      "s5_2_boss_1": {
+        "title": "Memory and question",
+        "desc": "Memorize a position, then answer a question."
+      },
+      "s5_2_boss_2": {
+        "title": "Ten announced moves",
+        "desc": "Memorize a position, apply ten announced moves, find the final position."
+      },
+      "s5_2_hidden": {
+        "title": "The Flash",
+        "desc": "A position shown for half a second, then rebuild it."
+      },
+      "s5_boss": {
+        "title": "The Ghost",
+        "desc": "During an announced sequence, a piece disappears on each move: find it through its relations."
+      },
+      "s6_1_1": {
+        "title": "Theoretical endgames",
+        "desc": "Replay theoretical endgames: king and rook, king and queen, pawn endgames."
+      },
+      "s6_1_2": {
+        "title": "Your repertoire blindfold",
+        "desc": "Replay your repertoire without seeing the board, as White then as Black."
+      },
+      "s6_1_3": {
+        "title": "Blindfold Woodpecker",
+        "desc": "Three seconds of exposure per puzzle (after several classic Woodpeckers at 100%)."
+      },
+      "s6_boss": {
+        "title": "The Chameleon",
+        "desc": "Pieces change shape or color on every move: identify their true role."
+      },
+      "s7_1": {
+        "title": "Apprentice bot",
+        "desc": "A blindfold game against a bot of about 800 Elo."
+      },
+      "s7_2": {
+        "title": "Club bot",
+        "desc": "A blindfold game against a bot of about 1200 Elo."
+      },
+      "s7_chest": {
+        "title": "Chest",
+        "desc": "Win against the first two bots to open it."
+      },
+      "s7_3": {
+        "title": "Tournament bot",
+        "desc": "A blindfold game against a bot of about 1600 Elo."
+      },
+      "s7_4": {
+        "title": "Expert bot",
+        "desc": "A blindfold game against a bot of about 2000 Elo."
+      },
+      "s7_5": {
+        "title": "A human",
+        "desc": "A blindfold game against a player of your level."
+      },
+      "s7_boss": {
+        "title": "The Blind Sith",
+        "desc": "Full blindfold games, with the position to rebuild at key moments."
+      }
+    }
+  },
+  "calculation": {
+    "chapters": {
+      "c1": "The straight line",
+      "c2": "Going the distance",
+      "c3": "The opponent has a say"
+    },
+    "sections": {},
+    "steps": {
+      "s1_1": {
+        "title": "The obvious move",
+        "desc": "Mates in 1. The board is frozen: calculate, click “I'm ready”, then play your move within 2 seconds. 10 positions and 80% correct."
+      },
+      "s1_2": {
+        "title": "Two moves",
+        "desc": "Mates in 2: calculate the whole line, then play it in one go, both sides, 2 seconds per half-move. 10 positions and 80% correct."
+      },
+      "s1_chest": {
+        "title": "Straight line chest",
+        "desc": "Earned by passing 1.1 and 1.2."
+      },
+      "s1_3": {
+        "title": "Captures along the way",
+        "desc": "Mates in 2 whose line goes through a capture. 10 positions and 80% correct."
+      },
+      "s1_4": {
+        "title": "Three moves",
+        "desc": "Mates in 3: five half-moves to hold in your head before playing. 10 positions and 80% correct."
+      },
+      "s1_mini": {
+        "title": "Flawless",
+        "desc": "4 mates in 3, played in one go. 2 lives."
+      },
+      "s1_boss": {
+        "title": "The Metronome",
+        "desc": "A series of mates whose length is never told. 12 correct lines in a row; a mistake resets the series. The thinking time gets shorter with each correct line."
+      },
+      "s2_1": {
+        "title": "Level 2.1",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_2": {
+        "title": "Level 2.2",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_3": {
+        "title": "Level 2.3",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_4": {
+        "title": "Level 2.4",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_5": {
+        "title": "Level 2.5",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_6": {
+        "title": "Level 2.6",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_7": {
+        "title": "Level 2.7",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_8": {
+        "title": "Level 2.8",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_chest": {
+        "title": "Distance chest",
+        "desc": "Earned by passing 2.1 to 2.4."
+      },
+      "s2_mini": {
+        "title": "Find, then rebuild",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s2_boss": {
+        "title": "The Counter",
+        "desc": "A long variation where you must say where it ends and what is left."
+      },
+      "s3_1": {
+        "title": "Level 3.1",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s3_2": {
+        "title": "Level 3.2",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s3_3": {
+        "title": "Level 3.3",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s3_4": {
+        "title": "Level 3.4",
+        "desc": "Coming soon: its module arrives with the chapter's batch."
+      },
+      "s3_mini": {
+        "title": "The only one that holds",
+        "desc": "Three combinations seem to work, only one holds against the best defense."
+      },
+      "s3_boss": {
+        "title": "The Devil's Advocate",
+        "desc": "You propose a move, then you look for the best refutation of your own idea."
+      }
+    }
+  }
+}

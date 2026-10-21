@@ -1,1 +1,92 @@
-{}
+{
+  "orientations": {
+    "white": "White",
+    "black": "Black"
+  },
+  "time": {
+    "tenths": "{n} s",
+    "seconds": "{n} s",
+    "minutes": "{m} min {s}"
+  },
+  "cell": "#{n} · {what} · {time}",
+  "pardoned": " · pardoned",
+  "validation": {
+    "white": "White validated!",
+    "black": "Black validated!",
+    "none": "This series does not validate.",
+    "stopped": "Series stopped before the end: it does not validate.",
+    "tooFew": "{n} answers: you need {min} to validate.",
+    "rate": "{pct}% success: you need {min}% to validate.",
+    "name": "“Name the square” series: no orientation validation in this mode.",
+    "color": "“Square color” series: no orientation validation in this mode."
+  },
+  "modes": {
+    "find": "Find the square",
+    "name": "Name the square",
+    "color": "Square color"
+  },
+  "modeHints": {
+    "find": "A square name appears: click that square on the board.",
+    "name": "A square lights up: give its name, file then rank.",
+    "color": "A square name appears, with no board: light or dark?"
+  },
+  "colors": {
+    "light": "light",
+    "dark": "dark"
+  },
+  "colorKeys": {
+    "light": "L",
+    "dark": "D"
+  },
+  "rules": "at least {n} answers per minute and {pct}% success, without stopping the series",
+  "lengths": {
+    "one": "{n} min",
+    "many": "{list} or {last} min"
+  },
+  "player": {
+    "find": "Find the square",
+    "name": "Name the lit square",
+    "color": "Light or dark?",
+    "light": "Light",
+    "dark": "Dark",
+    "erase": "Erase",
+    "keysName": "Type the square on your keyboard: a letter then a digit, Backspace to erase.",
+    "keysColor": "Keyboard: {light} or ← for light, {dark} or → for dark.",
+    "wrongColor": "Missed: {square} is {color}",
+    "answers": "answer | answers",
+    "correct": "correct | correct",
+    "percent": "{n}%",
+    "bottom": "{side} at the bottom",
+    "pardon": "Pardon: your 1st mistake won't count",
+    "pardonTip": "Spent at the end of the series, only if you make a mistake (shop).",
+    "right": "Correct!",
+    "wrong": "Missed: it was {square}",
+    "keysNameTouch": "Type the square on your keyboard: a letter then a digit."
+  },
+  "ribbon": {
+    "correct": "{n} correct | {n} correct",
+    "wrong": "{n} mistake | {n} mistakes",
+    "perSquare": "{time} / square"
+  },
+  "page": {
+    "title": "Coordinates",
+    "lead": "Know the board by heart: find the squares on an empty board, with no coordinates. A series lasts {lengths}; it validates its orientation with {rules}. Validate both White and Black!",
+    "validated": "Validated",
+    "toValidate": "To validate",
+    "validatedOn": "Validated on {date} · ",
+    "series": "{n} series | {n} series",
+    "best": "Best series: {n} correct out of {total} ({rate})",
+    "new": "New series",
+    "pardon": "Shop pardon · {n}",
+    "pardonTip": "Your first mistake won't count: spent at the end of the series, only if you make one.",
+    "buy": "Buy some",
+    "launch": "Start the series",
+    "history": "Latest series",
+    "historyRow": "{date} · {side}",
+    "score": "{n} correct out of {total}",
+    "rate": " ({rate})",
+    "pardoned": "Pardoned",
+    "validating": "Validating",
+    "ribbonError": "Could not load the series."
+  }
+}

@@ -1,1 +1,16 @@
-{}
+{
+  "states": {
+    "unsupported": "This browser cannot receive notifications (on iPhone, first add Don't Stay Rooky to the home screen).",
+    "unavailable": "Browser notifications are not available right now.",
+    "denied": "Notifications are blocked for this site: allow them in the browser settings.",
+    "subscribed": "Enabled on this device.",
+    "unsubscribed": "Disabled on this device."
+  },
+  "toggle": {
+    "checking": "Checking…",
+    "enableHere": "Enable on this device",
+    "enable": "Enable",
+    "disable": "Disable",
+    "failed": "Could not change this device's notifications."
+  }
+}

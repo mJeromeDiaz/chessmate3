@@ -1,1 +1,107 @@
-{}
+{
+  "page": {
+    "kicker": "Your skills",
+    "title": "Playful training",
+    "hint": "Pick an area of the brain to discover the skill it trains.",
+    "selected": "{name}: opened on the side.",
+    "brainLabel": "The six areas of the brain",
+    "lead": "Six skills make a chess player: calculating far ahead, seeing the board without looking at it, recognizing patterns, deciding fast, thinking strategically and keeping your cool. Each one has its area of the brain and its path, played like a game: chapters of short exercises to pass several times, chests full of crystals, three-life bosses and badges to collect. Beat a chapter's boss to open the next one."
+  },
+  "panel": {
+    "kicker": "Skill {n}",
+    "modules": "Modules involved",
+    "why": "Why these modules?",
+    "hideWhy": "Hide",
+    "primary": "main",
+    "associated": "associated",
+    "soonTitle": "Chapters are coming soon",
+    "soonText": "Increasingly demanding exercises, up to a boss at the end of each chapter. In the meantime, train this skill with its modules.",
+    "train": "Train freely",
+    "pathTitle": "The path",
+    "pathText": "Seven chapters, exercises to pass several times, chests and a boss at the end of each chapter.",
+    "openPath": "Open the path",
+    "compose": "Build a session"
+  },
+  "capacities": {
+    "calculation": {
+      "name": "Calculation depth",
+      "short": "Working memory: keeping several positions in mind.",
+      "desc": "Calculating a variation means keeping several positions in mind at once. It is often what separates a player who “sees” a move from a player who really checks it."
+    },
+    "visualization": {
+      "name": "Spatial visualization",
+      "short": "Seeing the diagram without looking at it.",
+      "desc": "Picturing the diagram without looking at it, following open files, diagonals and controlled squares. It is a skill partly distinct from calculation."
+    },
+    "patterns": {
+      "name": "Pattern recognition",
+      "short": "Chunking: recognizing whole configurations.",
+      "desc": "The studies of de Groot, then Chase and Simon, showed that masters do not calculate more moves than beginners. They recognize whole configurations (“chunks”) and immediately know what matters. It is the experts' main advantage, and it is a form of “memory” more than calculation."
+    },
+    "speed": {
+      "name": "Speed of perception and decision",
+      "short": "Spotting captures, threats and forcing moves in seconds.",
+      "desc": "Spotting hanging pieces, threats and forcing moves in a few seconds. It matters a lot in blitz."
+    },
+    "strategy": {
+      "name": "Strategic thinking",
+      "short": "Planning: finding a plan from the structure.",
+      "desc": "Identifying a plan from the pawn structure, piece activity and imbalances. It is slower and more abstract than calculation."
+    },
+    "composure": {
+      "name": "Self-criticism and emotional control",
+      "short": "Staying clear-headed, focused, and managing your time.",
+      "desc": "Not getting carried away by a move you like, staying focused after a mistake, managing your time. It is not intelligence in the strict sense, but it weighs heavily on results."
+    }
+  },
+  "modules": {
+    "puzzles": {
+      "name": "Puzzles",
+      "why": "Rated, by theme. You solve a puzzle by spotting the motif then checking the follow-up. The Glicko-2 rating measures it all."
+    },
+    "streak": {
+      "name": "Puzzle streak",
+      "why": "Puzzles back to back. Going on without a mistake means holding up under pressure; the aids and the pardon also touch on self-control."
+    },
+    "rush": {
+      "name": "Puzzle Rush",
+      "why": "As many puzzles as possible in a few minutes, one mistake wipes out two: decide fast, but stay accurate."
+    },
+    "woodpecker": {
+      "name": "Woodpecker",
+      "why": "Puzzle sets with spaced repetition. You remember solutions and motifs; repetition fixes the configurations over time."
+    },
+    "repertoire": {
+      "name": "Repertoire",
+      "why": "Openings, units, segments, lines. You have to recall sequences of moves and know where you are in the plan."
+    },
+    "coordinates": {
+      "name": "Coordinates",
+      "why": "Series of squares. Match a name and a square quickly, without going through the board."
+    },
+    "notation": {
+      "name": "Notation",
+      "why": "Read and write moves as on a scoresheet: the language you speak to yourself when you play without seeing the board."
+    },
+    "blindfold": {
+      "name": "Blindfold puzzles",
+      "why": "Hold the whole position in your head, without any visual support. The most demanding module for calculation depth."
+    },
+    "recall": {
+      "name": "Position recall",
+      "why": "Put the pieces of a position back from memory, from a few pieces to the full position, then after announced moves: the foundation of seeing without a board."
+    },
+    "evaluation": {
+      "name": "Position evaluation",
+      "why": "Judge who has the advantage and why, from the structural imbalances."
+    },
+    "parcours": {
+      "name": "Parcours",
+      "why": "Tiers of puzzles. A structured path that depends on the themes of the chosen tier."
+    },
+    "free": {
+      "name": "Free",
+      "why": "Free study, self-analysis. Stepping back from your practice: spotting your mistakes, their causes, and what you understood."
+    }
+  }
+}

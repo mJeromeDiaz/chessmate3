@@ -1,1 +1,243 @@
-{}
+{
+  "close": {
+    "time_up": "Time's up.",
+    "stopped": "Run ended before time ran out.",
+    "streakNoPuzzle": "No more puzzles at this level in this topic: streak over.",
+    "streakDone": "Streak over.",
+    "coordinatesDone": "All the squares in the series are done!",
+    "countDone": "Lesson complete: all its exercises have been played.",
+    "evaluationDone": "All positions have been evaluated!",
+    "tierDone": "Tier complete!",
+    "setDone": "Set complete, bravo!",
+    "resting": "Cycle complete. Rest: next cycle on {date}.",
+    "unavailable": {
+      "repertoire": "Nothing left to test in this selection: run closed.",
+      "puzzles": "No more puzzles available for these themes: run closed.",
+      "blindfold": "No more blindfold puzzles at this level and length: run closed.",
+      "evaluation": "No more positions for these settings: run closed.",
+      "puzzle_streak": "The puzzle selection is being updated: run closed.",
+      "parcours_puzzles": "No more puzzles for this tier: tier closed.",
+      "puzzle_rush": "No more puzzles at this level for these themes: run closed.",
+      "blindfold_recall": "No more positions available at this level: run closed.",
+      "notation": "Nothing left to draw for this exercise: run closed.",
+      "woodpecker": "The set was paused or abandoned: run closed."
+    }
+  },
+  "back": {
+    "woodpecker": "Back to the set",
+    "repertoire": "Back to repertoires",
+    "puzzles": "Back to puzzles",
+    "coordinates": "Back to coordinates",
+    "blindfold": "Back to blindfold play",
+    "evaluation": "Back to evaluation",
+    "puzzle_streak": "Back to the streak",
+    "parcours_puzzles": "Back to parcours",
+    "puzzle_rush": "Back to puzzles",
+    "blindfold_recall": "Back to position recall",
+    "notation": "Back to notation",
+    "home": "Back to home"
+  },
+  "result": {
+    "screens": {
+      "perfect": ["Perfect", "lesson!"],
+      "close": ["Almost", "perfect!"],
+      "fail": ["Total", "miss!"],
+      "done": ["Run", "complete!"],
+      "streak": ["Best", "streak!"],
+      "record": ["New", "record!"]
+    },
+    "captions": {
+      "success": "SUCCESS",
+      "study": "OF STUDY",
+      "inARow": "IN A ROW"
+    },
+    "unitMinutes": "min",
+    "record": "Your record: {n}",
+    "oldRecord": "Previous record: {n}",
+    "firstRecord": "Your first record!",
+    "recordTied": "Record tied: {n}",
+    "passes": "{n} × pass",
+    "helps": "{n} help | {n} helps",
+    "yourProf": "Your prof",
+    "buttons": {
+      "next": "Next lesson →",
+      "carryOn": "Continue",
+      "review": "Review my mistakes",
+      "restart": "Restart the lesson",
+      "later": "Later"
+    },
+    "fixTitle": "Time to fix your mistakes!",
+    "fixAccent": "mistakes",
+    "fixLabel": {
+      "line": "LINE TO REVIEW | LINES TO REVIEW",
+      "segment": "SEGMENT TO REVIEW | SEGMENTS TO REVIEW",
+      "puzzle": "PUZZLE TO REVIEW | PUZZLES TO REVIEW"
+    },
+    "fixStart": "Fix my mistakes",
+    "badge": "Badge unlocked: {name} · {goal} puzzles in a row",
+    "launching": "Starting…"
+  },
+  "end": {
+    "status": {
+      "ok": "Solved",
+      "hint": "With help",
+      "fail": "Missed"
+    },
+    "position": "Position",
+    "engine": "{tag} · engine {engine}",
+    "puzzle": "Puzzle",
+    "meta": "{status} · {duration}"
+  },
+  "replay": {
+    "backToResult": "Back to the result",
+    "backToReview": "Back to the review",
+    "paused": "Session paused during the review: this replay doesn't count.",
+    "solutionSeen": "Solution seen: remember the motif.",
+    "reviewed": "Well played, it's reviewed!",
+    "opponent": "Opponent's turn…",
+    "yourMove": "Play your repertoire move.",
+    "notYourMove": "That's not your move: play the one shown by the arrow.",
+    "lineMistakes": "Line complete, {n} mistake. | Line complete, {n} mistakes.",
+    "lineClean": "Line complete without a mistake!",
+    "invalid": "This line cannot be replayed.",
+    "nextMiss": "Next miss →"
+  },
+  "recap": {
+    "title": "Run summary",
+    "duration": "Duration",
+    "finished": "Completed",
+    "succeeded": "Solved",
+    "failed": "Failed",
+    "accuracy": "Accuracy",
+    "perMinute": "Per minute",
+    "graded": "Positions graded: {n}.",
+    "recovered": {
+      "line": "{units} missed then passed. | {units} missed then passed.",
+      "segment": "{units} missed then passed. | {units} missed then passed."
+    },
+    "interrupted": {
+      "line": "{units} interrupted by the end, without a mistake: not counted. | {units} interrupted by the end, without a mistake: not counted.",
+      "segment": "{units} interrupted by the end, without a mistake: not counted. | {units} interrupted by the end, without a mistake: not counted."
+    },
+    "dropped": {
+      "line": "{units} ignored: the repertoire changed during the run. | {units} ignored: the repertoire changed during the run.",
+      "segment": "{units} ignored: the repertoire changed during the run. | {units} ignored: the repertoire changed during the run."
+    },
+    "rounds": "{n} rounds.",
+    "format": "Format: {format}.",
+    "notes": "Notes: {notes}",
+    "orientation": "Orientation: {orientation} at the bottom.",
+    "perSquare": "Average time per square: {time}.",
+    "blindfoldSettings": "Level {level} · {length} moves · {seconds} s to memorize.",
+    "blindfoldResults": "Solved from memory: {solved} · with a peek: {helped} · missed: {failed}.",
+    "perPuzzle": "Average time per puzzle: {time}",
+    "streakSettings": "{ramp} · {topic}.",
+    "bestStreak": "Best streak: {streak}.",
+    "bestStreakRecord": "Best streak: {streak} (new record!).",
+    "streaks": "Streaks: {list}.",
+    "badge": "Badge unlocked: {name} ({goal}).",
+    "hardest": "Hardest puzzle solved: {rating}.",
+    "extended": "Extended {n} times by 5 minutes.",
+    "aids": "Shop aids: {aids}.",
+    "evaluation": "Correct: {exact} · one step away: {close} · missed: {miss} · time out: {timeout}.",
+    "plans": "Plans found: {n}.",
+    "perPosition": "Average time per position: {time}",
+    "rating": "Rating: {before} → {after} ({delta}).",
+    "grown": "The set grew by {added} puzzles ({total} in total).",
+    "cycle": "Cycle {n}: {played} / {total} puzzles."
+  },
+  "table": {
+    "duration": "duration",
+    "finished": "completed",
+    "succeeded": "solved",
+    "accuracy": "accuracy",
+    "perMinute": "per minute",
+    "trend": "trend",
+    "empty": "No runs yet."
+  },
+  "free": {
+    "title": "Free time",
+    "hint": "Read, watch, listen at your own pace: time is counted until the clock runs out or until “Finish”."
+  },
+  "stop": "Finish",
+  "launcher": {
+    "minutes": "{n} min",
+    "other": "Other",
+    "minutesSuffix": "min",
+    "start": "Start the run",
+    "inProgress": "A run is already in progress.",
+    "resume": "Resume",
+    "end": "End it",
+    "units": {
+      "segment": "Segments",
+      "line": "Full lines"
+    },
+    "refusals": {
+      "setUnavailable": "This set cannot be played now (paused, resting or completed).",
+      "setNotFound": "Set not found.",
+      "noPuzzleThemes": "No puzzles available for these themes.",
+      "unknownTheme": "Unknown theme.",
+      "invalidSettings": "Invalid settings.",
+      "noBlindfold": "No puzzles available at this level and length.",
+      "noPosition": "No positions available for these settings.",
+      "noStreakPuzzle": "No puzzles available in this topic.",
+      "noRecall": "This level isn't open yet, or no position is available.",
+      "noNotation": "Nothing to draw for this exercise (to complete a line: a repertoire with at least 10 segments).",
+      "nothingToTest": "Nothing to test in this selection: add your moves to the repertoire.",
+      "repertoireNotFound": "Repertoire not found.",
+      "invalidSelection": "Invalid selection."
+    }
+  },
+  "alerts": {
+    "freeDoneTitle": "Free time over",
+    "freeDone": "Your free module is done."
+  },
+  "page": {
+    "seeResult": "See the result",
+    "nextModule": "Next module: {module}",
+    "seeSession": "See the session",
+    "seeSessionReview": "See the session review",
+    "seeMyResults": "See my results",
+    "seeReview": "See the review",
+    "blindfoldProgress": "{played} puzzles · {solved} solved",
+    "recallProgress": "{played} positions · {exact} exact",
+    "evaluationProgress": "Position {n} · {solved} correct | Position {n} · {solved} correct",
+    "streakTimed": "Streak {now} · best {best}",
+    "streak": "Streak: {now}",
+    "noHelp": "No help",
+    "noHelpTip": "One mistake and the streak ends. Aids and passes: shop.",
+    "puzzlesProgress": "{played} puzzles · {solved} solved",
+    "oneTry": "One try only",
+    "oneTryTip": "If you make a mistake, the solution appears.",
+    "timeUp": "Time's up…",
+    "next": "Next →",
+    "nextPosition": "Next position →",
+    "newStreak": "New streak →",
+    "pardoned": "Pardoned: counted as solved (+{xp} XP).",
+    "tooLateServed": "Too late: another puzzle has been served.",
+    "noPardon": "This puzzle can no longer be pardoned.",
+    "noMoreHelp": "No more help available on this puzzle.",
+    "tooLatePlayed": "Too late: this puzzle has already been played.",
+    "tooLateDecide": "Too late: the time to decide has passed.",
+    "setFinished": "This set is complete: its content no longer changes.",
+    "noOtherPuzzle": "No other puzzle matches this set.",
+    "notFound": "Run not found.",
+    "stopTitle": "End the run?",
+    "stop": {
+      "repertoire": "The unit in progress won't be counted, unless you've already made a mistake in it.",
+      "puzzles": "The puzzle in progress won't be counted: it will be waiting for you as your next puzzle.",
+      "free": "The time spent so far will be counted.",
+      "coordinates": "Your answers will be counted, but a series stopped before the end doesn't validate.",
+      "blindfold": "The puzzle in progress won't be counted.",
+      "evaluation": "The position on screen won't be counted.",
+      "puzzle_streak": "The puzzle in progress won't be counted: your streak ends there.",
+      "puzzle_rush": "The puzzle on screen won't be counted.",
+      "blindfold_recall": "The position on screen won't be counted.",
+      "notation": "The exercise on screen won't be counted.",
+      "jongleur": "The fight ends there: it is lost.",
+      "vision": "The question on screen won't be counted.",
+      "calculation": "The line on screen won't be counted.",
+      "default": "The puzzle in progress won't be counted."
+    }
+  }
+}

@@ -1,1 +1,224 @@
-{}
+{
+  "explain": {
+    "light": {
+      "same": {
+        "title": "Always the same puzzles",
+        "text": "Your set has {n} puzzles. Each timed run starts over from the first: you review the same motifs until you recognize them at a glance."
+      },
+      "oneTry": {
+        "title": "One try only",
+        "text": "One mistake, and the solution appears: remember it, the puzzle will come back."
+      },
+      "grows": {
+        "title": "A set that grows",
+        "text": "When a run gets through all the puzzles, the set grows with new puzzles of the same level."
+      },
+      "custom": {
+        "title": "Tailor-made",
+        "text": "Don't like a puzzle? Replace it: another one of the same level takes its place."
+      }
+    },
+    "classic": {
+      "same": {
+        "title": "Always the same puzzles",
+        "shuffled": "A cycle means playing the set's {n} puzzles once each, in an order shuffled every cycle.",
+        "ordered": "A cycle means playing the set's {n} puzzles once each, always in the same order."
+      },
+      "faster": {
+        "title": "Faster and faster",
+        "text": "{n} cycles, each shorter than the previous one: {days}. Between two cycles, {rest}."
+      },
+      "oneTry": {
+        "title": "One try only",
+        "text": "One mistake, and the solution appears: the puzzle counts as missed for this cycle. Remember the motif, it will come back."
+      },
+      "deadline": {
+        "title": "The deadline matters",
+        "text": "A cycle not finished in time is lost and starts over with the same time limit (“attempt 2”). Deadlines fall at the end of the day."
+      },
+      "goal": {
+        "title": "The goal",
+        "text": "Gain accuracy and speed on the same motifs, until you play them by reflex in games."
+      },
+      "custom": {
+        "title": "Tailor-made",
+        "text": "Don't like a puzzle? Replace it: another one of the same level takes its place, without changing the deadlines."
+      }
+    },
+    "days": "{n} d",
+    "rest": "{n} rest day | {n} rest days",
+    "noRest": "no rest"
+  },
+  "pace": {
+    "puzzles": "{n} puzzle | {n} puzzles",
+    "done": "Cycle complete.",
+    "overdue": "Deadline passed: {puzzles} were left.",
+    "lastDay": "Last day: {puzzles} still to go today.",
+    "left": "{puzzles} and {days} days left: about {perDay} per day."
+  },
+  "cycleCard": {
+    "count": "{played} / {total} puzzles",
+    "percent": "{n}%",
+    "lightSize": "{n} puzzles in the set.",
+    "runHere": "A timed run is in progress on this set.",
+    "resumeRun": "Resume the run",
+    "continue": "Continue cycle {n}",
+    "resumeSet": "Resume the set",
+    "runLight": "Start a timed run",
+    "runClassic": "Or as a timed run",
+    "runLightHint": "Each run starts over from the first puzzle. The set grows when you get through it.",
+    "runClassicHint": "The run moves the current cycle forward, deadline included.",
+    "kickerLight": "WOODPECKER LIGHT",
+    "kicker": "WOODPECKER",
+    "kickerCycle": "CYCLE {n} / {total}",
+    "kickerAttempt": "CYCLE {n} / {total} · ATTEMPT {run}",
+    "titles": {
+      "resting": "Resting",
+      "paused": "Paused",
+      "completed": "Set complete, bravo!",
+      "abandoned": "Set abandoned",
+      "light": "In progress",
+      "active": "Cycle in progress"
+    },
+    "restUntil": "Cycle {n} starts on {date}.",
+    "pausedHint": "Deadlines are pushed back by the length of the pause when you resume.",
+    "completedOn": "Completed on {date}.",
+    "abandonedOn": "Abandoned on {date}.",
+    "until": "Until {day} inclusive. {pace}"
+  },
+  "recap": {
+    "setDone": "Set complete!",
+    "cycleDone": "Cycle {n} complete",
+    "accuracy": "Accuracy: {value}",
+    "active": "Active time: {value}",
+    "average": "Average time per puzzle: {value}",
+    "calendar": "Calendar duration: {value}",
+    "compared": " ({comparison})",
+    "percent": "{n}%",
+    "days": "{n} day(s)",
+    "noComparison": "no comparison",
+    "points": "{sign}{n} points vs previous cycle",
+    "ofPrevious": "{n}% of the previous cycle"
+  },
+  "table": {
+    "cycle": "Cycle {n}",
+    "attempt": " · attempt {n}",
+    "played": "played",
+    "accuracy": "accuracy",
+    "perPuzzle": "per puzzle",
+    "active": "active time",
+    "duration": "duration",
+    "deadline": "deadline",
+    "days": "{n} d",
+    "onTime": "met",
+    "late": "missed",
+    "status": {
+      "resting": "Rest",
+      "active": "In progress",
+      "completed": "Completed",
+      "lost": "Lost"
+    }
+  },
+  "puzzles": {
+    "label": "Puzzles in the set ({n})",
+    "caption": "Replace the ones you don't like: a tailor-made set",
+    "title": "Puzzle {rating}",
+    "score": "{solved} / {played} solved",
+    "notPlayed": "not played yet"
+  },
+  "explainer": {
+    "light": "How does light mode work?",
+    "classic": "How do cycles work?"
+  },
+  "list": {
+    "title": "Woodpecker",
+    "archived": "Archived",
+    "new": "New set",
+    "oneByMode": "Only one set in progress per mode (classic and light): finish or abandon one of them.",
+    "lead": "Solve the same set of puzzles again and again to anchor the motifs: in shorter and shorter cycles (classic), or in timed runs (light).",
+    "light": "Light · {puzzles} puzzles · {runs}",
+    "runs": "{n} run | {n} runs",
+    "classic": "{puzzles} puzzles · {cycles} cycles",
+    "current": " · cycle {n}: {played} / {total}",
+    "empty": "No sets.",
+    "status": {
+      "active": "In progress",
+      "paused": "Paused",
+      "completed": "Completed",
+      "abandoned": "Abandoned"
+    }
+  },
+  "new": {
+    "title": "New Woodpecker set",
+    "classic": "Classic",
+    "light": "Light",
+    "lightHint": "Timed runs, no deadlines: each run starts over from the first puzzle and the set grows when you get through it. It starts at 100 puzzles.",
+    "classicHint": "Shorter and shorter cycles, each with a deadline.",
+    "name": "Name",
+    "defaultName": "My set",
+    "nameRequired": "Name required",
+    "count": "Number of puzzles",
+    "countHint": "Between {min} and 1500",
+    "difficulty": "Difficulty",
+    "auto": "Accessible (below my rating, recommended)",
+    "manual": "Manual range",
+    "themes": "Themes (optional, at least one)",
+    "cycles": "Cycles",
+    "cyclesHint": "2 to 10",
+    "firstCycle": "1st cycle (days)",
+    "factor": "Reduction factor",
+    "factorHint": "0.5 = duration halved",
+    "minCycle": "Minimum cycle (days)",
+    "rest": "Rest between cycles (days)",
+    "shuffleRun": "Shuffle the puzzles every run",
+    "shuffleCycle": "Shuffle the puzzles every cycle",
+    "schedule": "Planned durations: {list}",
+    "days": "{n} d",
+    "create": "Create the set",
+    "alreadyLight": "You already have an active or paused light set: finish or abandon it first.",
+    "alreadyClassic": "You already have an active or paused classic set: finish or abandon it first.",
+    "invalid": "Invalid settings, or not enough puzzles for these criteria: widen the range or the themes."
+  },
+  "set": {
+    "actions": "Set actions",
+    "cycles": "Cycles",
+    "runs": "Timed runs",
+    "growth": "Set growth",
+    "grown": "+{added} puzzles → {total}",
+    "noGrowth": "Not yet: the set grows when a run gets through it.",
+    "stubborn": "Stubborn puzzles",
+    "stubbornHintLight": "Failed in at least two runs. Replayable freely (not counted).",
+    "stubbornHintClassic": "Failed in at least two cycles. Replayable freely (not counted).",
+    "failedLight": "Puzzle {rating} · missed in {n} runs",
+    "failedClassic": "Puzzle {rating} · missed in {n} cycles",
+    "replay": "Replay",
+    "none": "None for now.",
+    "pause": "Pause",
+    "resume": "Resume",
+    "abandon": "Abandon",
+    "archive": "Archive",
+    "impossible": "Action impossible in the set's current state.",
+    "abandonTitle": "Abandon this set?",
+    "abandonMessage": "The statistics remain available.",
+    "notFound": "Set not found."
+  },
+  "play": {
+    "progress": "Cycle {n} / {total}",
+    "attempt": " (attempt {n})",
+    "count": " · {played} / {total}",
+    "seeSet": "See the set",
+    "next": "Next puzzle →",
+    "cycleOver": "This cycle is complete or lost: reload the set.",
+    "puzzleNotFound": "This puzzle cannot be found.",
+    "blocked": {
+      "cannot": "This set cannot be played.",
+      "run": "A timed run is in progress on this set.",
+      "light": "This set is played in timed runs.",
+      "paused": "This set is paused.",
+      "completed": "Set complete, bravo!",
+      "abandoned": "This set has been abandoned.",
+      "resting": "Rest: next cycle on {date}.",
+      "notNow": "This set cannot be played right now."
+    }
+  }
+}

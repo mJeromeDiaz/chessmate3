@@ -1,1 +1,388 @@
-{}
+{
+  "untitled": "Untitled session",
+  "inProgress": "A session is already in progress: {resume}.",
+  "inProgressOr": "A session is already in progress: {resume} or {abandon}.",
+  "resume": "resume it",
+  "abandonAndReplay": "abandon it and play again",
+  "replay": "Replay the session",
+  "replayNamed": "Replay {title}",
+  "replayThis": "the session",
+  "launch": "Start",
+  "resumeArrow": "Resume →",
+  "catalog": {
+    "modules": {
+      "libre": {
+        "title": "Free",
+        "desc": "Reading a book, videos, lessons… at your own pace."
+      },
+      "finales": {
+        "title": "Endgames",
+        "desc": "Learn or review the essential endgames."
+      },
+      "puzzles": {
+        "title": "Puzzles",
+        "desc": "Puzzles at your level, as long as there is time left."
+      },
+      "streak": {
+        "title": "Puzzle streak",
+        "desc": "From easiest to hardest: one mistake and you start from zero. Your best streak counts."
+      },
+      "rush": {
+        "title": "Puzzle Rush",
+        "desc": "As many puzzles as possible in 2, 3 or 5 minutes. A mistake wipes out two solved puzzles: speed only pays if you stay accurate."
+      },
+      "woodpecker": {
+        "title": "Woodpecker",
+        "desc": "Your light set: easy puzzles, reviewed again and again."
+      },
+      "repertoire": {
+        "title": "Repertoire",
+        "desc": "Review the openings in your repertoire."
+      },
+      "evaluation": {
+        "title": "Position evaluation",
+        "desc": "Judge positions, in 1 to 10 minutes."
+      },
+      "parcours": {
+        "title": "Parcours",
+        "desc": "Five tiers of one theme, from simplest to hardest, no clock."
+      },
+      "analyse": {
+        "title": "Game analysis",
+        "desc": "Go back over your games and learn lessons from them."
+      },
+      "coordonnees": {
+        "title": "Coordinates",
+        "desc": "Find the squares on an empty board, with no coordinates."
+      },
+      "aveugle": {
+        "title": "Blindfold play",
+        "desc": "Puzzles solved from memory: the position appears, disappears, then you play on an empty board."
+      },
+      "notation": {
+        "title": "Notation",
+        "desc": "Read and write notation: play the announced move, a sequence of written moves, write a puzzle's solution."
+      },
+      "reconstitution": {
+        "title": "Position recall",
+        "desc": "A position appears for a few seconds then disappears: put all the pieces back from memory, from 3 pieces to the full position."
+      }
+    },
+    "fields": {
+      "duration": "Duration",
+      "elo": "Difficulty (Elo)",
+      "format": "Format",
+      "notes": "Notes",
+      "mode": "Mode",
+      "exercise": "Exercise",
+      "themes": "Themes",
+      "difficulty": "Difficulty",
+      "topic": "Topic",
+      "lightSet": "Light set",
+      "repertoires": "Repertoires",
+      "side": "Side to move",
+      "color": "Color played",
+      "games": "Games",
+      "selection": "Selection",
+      "orientation": "Orientation",
+      "level": "Level",
+      "length": "Length",
+      "memorize": "Time to memorize",
+      "spaced": "Spaced repetition"
+    },
+    "hints": {
+      "spaced": "Review mistakes along a forgetting curve.",
+      "themes": "No theme: all themes. Otherwise, a puzzle has at least one of the chosen themes.",
+      "topic": "If time runs out during a streak, you can extend it by 5 minutes.",
+      "lightSet": "The run starts again from the beginning of the set; it grows on its own when you've almost run through it.",
+      "repertoires": "Due reviews come first (automatic spaced repetition).",
+      "evaluationDuration": "A run lasts 1, 2, 5 or 10 minutes: positions follow one another until the end.",
+      "rushDuration": "A rush lasts 2, 3 or 5 minutes: puzzles follow one another without a break, harder and harder.",
+      "coordinatesDuration": "A series lasts 1, 2, 5 or 10 minutes."
+    },
+    "placeholders": {
+      "free": "Title, chapter, link…",
+      "endgames": "E.g. Lucena, Philidor…",
+      "analysis": "Points to dig into…"
+    },
+    "chips": {
+      "spaced": "Spaced rep."
+    },
+    "units": {
+      "minutes": "{n} min",
+      "elo": "Elo {n}",
+      "seconds": "{n} s",
+      "games": "{n} game | {n} games",
+      "puzzles": "{n} puzzle | {n} puzzles"
+    },
+    "options": {
+      "formats": {
+        "book": "Book",
+        "video": "Video",
+        "course": "Course",
+        "podcast": "Podcast",
+        "other": "Other"
+      },
+      "endgameModes": {
+        "learn": "Learn",
+        "review": "Review"
+      },
+      "endgames": {
+        "pawns": "Pawns",
+        "rooks": "Rooks",
+        "basicMates": "Basic mates",
+        "minorPieces": "Minor pieces",
+        "queens": "Queens"
+      },
+      "sides": {
+        "white": "White",
+        "black": "Black",
+        "both": "Both"
+      },
+      "notationKinds": {
+        "play": "Play the announced move",
+        "sequence": "Sequence of written moves",
+        "write": "Write the solution",
+        "line": "Complete a line",
+        "game_play": "Replay a famous game",
+        "game_write": "Write down a famous game"
+      },
+      "coordinateModes": {
+        "find": "Find the square",
+        "name": "Name the square",
+        "color": "Square color"
+      },
+      "gameFilters": {
+        "latest": "Latest",
+        "losses": "Losses",
+        "draws": "Draws",
+        "chosen": "Hand-picked"
+      },
+      "levels": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
+      "length": "{n} moves",
+      "lengthOrMore": "{n}+ moves",
+      "recallMine": "My level",
+      "recallLevel": "Level {n}"
+    },
+    "allThemes": "All themes",
+    "issues": {
+      "tooManyThemes": "{n} themes at most.",
+      "noRepertoire": "Choose at least one repertoire.",
+      "repertoireGone": "A chosen repertoire no longer exists.",
+      "loadingDuration": "Loading the duration…",
+      "openingSetGone": "This opening set is no longer in progress.",
+      "openingSetPaused": "This opening set is paused.",
+      "noLightSet": "You have no light set in progress.",
+      "lightSetPaused": "Your light set is paused."
+    }
+  },
+  "settings": {
+    "profile": "See the prof's profile →",
+    "backToSettings": "Back to settings",
+    "themes": "Themes",
+    "allThemes": "All themes",
+    "pick": "Choose…",
+    "loadingRepertoires": "Loading your repertoires…",
+    "noRepertoire": "You don't have a repertoire yet.",
+    "white": "White",
+    "black": "Black",
+    "createRepertoire": "+ Create a repertoire",
+    "openingSet": "Opening set",
+    "openingSetMeta": "Opening set · {n} puzzle | Opening set · {n} puzzles",
+    "openingSetGone": "This opening set is no longer in progress.",
+    "seeSet": "See the set →",
+    "loadingSet": "Loading your set…",
+    "lightSetMeta": "{puzzles} · {runs}",
+    "lightSetRuns": "{n} run | {n} runs",
+    "paused": " · paused",
+    "noLightSet": "You don't have a light set yet.",
+    "createLightSet": "+ Create my light set",
+    "loadingTopics": "Loading topics…",
+    "notesPlaceholder": "Instructions, goal…",
+    "themesDone": "Confirm themes",
+    "remove": "Remove",
+    "add": "Add to the session",
+    "saveWith": "{action} · {minutes}",
+    "kicker": "PROF {prof} · {mode}",
+    "kickerEdit": "EDIT",
+    "kickerNew": "NEW MODULE",
+    "chosen": "{n} chosen | {n} chosen"
+  },
+  "plans": {
+    "repetitions": {
+      "on_demand": "On demand",
+      "daily": "Daily",
+      "weekly": "Weekly"
+    },
+    "delays": {
+      "10": "10 min before",
+      "30": "30 min before",
+      "60": "1 h before",
+      "1440": "1 day before"
+    },
+    "channels": {
+      "email": "Email",
+      "push": "Browser"
+    },
+    "issues": {
+      "noDay": "Choose at least one day.",
+      "noChannel": "Choose how to be reminded (email or browser)."
+    },
+    "onDemand": "On demand",
+    "weekly": "Every {day} at {time}",
+    "daily": "Every day at {time}",
+    "weekdays": "Weekdays at {time}",
+    "days": "{days} at {time}",
+    "next": "Next: {date}"
+  },
+  "steps": {
+    "blocked": {
+      "light_set_paused": "Your light set is paused: resume it to play this module.",
+      "no_light_set": "You no longer have a light set in progress.",
+      "nothing_to_test": "Nothing to review in these repertoires for now.",
+      "no_puzzle": "No more puzzles available for these themes.",
+      "subject_not_found": "This module's subject no longer exists (repertoire deleted?).",
+      "invalid_settings": "This module's settings are no longer valid.",
+      "default": "This module cannot start right now."
+    },
+    "status": {
+      "pending": "Upcoming",
+      "running": "In progress",
+      "done": "Done",
+      "skipped": "Skipped",
+      "unplayed": "Not played"
+    },
+    "doneFree": "Done · {duration}",
+    "doneRun": "Done · {done} completed, {success} solved",
+    "sessionStatus": {
+      "active": "In progress",
+      "completed": "Completed",
+      "abandoned": "Abandoned",
+      "expired": "Not completed"
+    },
+    "progress": "{done} / {total} module | {done} / {total} modules",
+    "otherRun": "Another timed run is in progress: finish it before continuing.",
+    "over": "This session is over."
+  },
+  "launchErrors": {
+    "notFound": "Session not found.",
+    "inProgress": "A session is already in progress.",
+    "unplayable": "A module cannot be played right now (light set paused or missing, repertoire deleted…): edit the session."
+  },
+  "program": {
+    "edit": "Set up {module}",
+    "drag": "Drag to move",
+    "kicker": "{n} · PROF {prof}"
+  },
+  "soon": "Coming soon",
+  "themePicker": {
+    "search": "Search for a theme…",
+    "searchLabel": "Search for a theme",
+    "loading": "Loading themes…",
+    "none": "No theme matches."
+  },
+  "sessionSettings": {
+    "repetition": "Repetition",
+    "onDemandHint": "It stays in “My sessions”: you start it whenever you like.",
+    "time": "Time",
+    "day": "Day",
+    "days": "Days",
+    "visibility": "Visibility",
+    "private": "Private",
+    "public": "Public",
+    "reminder": "Reminder",
+    "on": "On",
+    "off": "Off",
+    "by": "By",
+    "channel": "Reminder channel",
+    "when": "When",
+    "delay": "Reminder delay",
+    "calendar": "Calendar",
+    "calendarToggle": "Add to my calendar",
+    "calendarHint": "Your calendar shows it once subscribed to your calendar address: {profile} provides it.",
+    "yourProfile": "your profile",
+    "needsRepetition": "Reminder and calendar require a repetition (daily or weekly)."
+  },
+  "builder": {
+    "title": "Session title",
+    "saved": "Session saved · editing",
+    "draft": "Draft saved",
+    "goal": "Goal, context…",
+    "goalLabel": "Session goal",
+    "settings": "Session settings",
+    "program": "Program",
+    "dragWide": "Drag ⠿ to reorder · click to set up",
+    "drag": "Hold ⠿ to move",
+    "emptyWide": "Choose a module from the library on the right.",
+    "empty": "Add a first module below.",
+    "addModule": "Add a module",
+    "addHint": "Each module has its own prof and settings.",
+    "backToLibrary": "Back to the library",
+    "moduleSettings": "Module settings",
+    "library": "Module library",
+    "libraryHint": "Choose a module to set it up and add it.",
+    "inProgress": "A session is already in progress today.",
+    "resume": "Resume it",
+    "abandonAndLaunch": "Abandon it and start this one",
+    "saving": "Saving…",
+    "launching": "Starting…",
+    "saveAndLaunch": "Save and start",
+    "invalid": "A module or a setting is not valid (⚠).",
+    "modules": "{n} module | {n} modules",
+    "savedNotice": "Session saved.",
+    "tooMany": "You have reached the maximum number of saved sessions.",
+    "invalidSave": "A module or a setting is not valid: check them.",
+    "notLaunched": "Session saved, but not started: {reason}",
+    "notLaunchedInProgress": "a session is already in progress.",
+    "notLaunchedUnplayable": "a module cannot be played right now."
+  },
+  "list": {
+    "title": "My sessions",
+    "coach": "♞ Tailored session",
+    "new": "+ New session",
+    "current": "Today's session in progress: {title} · {progress}",
+    "empty": "No saved sessions.",
+    "composeFirst": "Build my first session",
+    "coachTitle": "Drawn from your Lichess games, updated with each analysis",
+    "coachBadge": "Tailored",
+    "public": "Public",
+    "meta": "{modules} · {minutes}",
+    "calendar": "Calendar",
+    "edit": "Edit",
+    "icsLabel": "Add {title} to my calendar (.ics)",
+    "icsTooltip": "Download for my calendar (.ics)",
+    "delete": "Delete {title}",
+    "reminder": "{delay} · {channels}",
+    "deleteTitle": "Delete this session?",
+    "deleteMessage": "Sessions already played stay in your history; only the saved session disappears."
+  },
+  "page": {
+    "kicker": "SESSION OF {date}",
+    "played": "⏱ {duration} played",
+    "stepTitle": "{n} · {module}",
+    "minutes": "{n} min",
+    "resumeRun": "Resume the module in progress",
+    "retry": "Try again: {module}",
+    "start": "Start: {module}",
+    "skip": "Skip this module",
+    "restart": "Restart the session",
+    "abandon": "Abandon the session",
+    "otherInProgress": "Another session is in progress today: {resume} or {abandon}.",
+    "abandonAndReplayThis": "abandon it and play this one again",
+    "composeNew": "Build a new session",
+    "dashboard": "Dashboard",
+    "seeResults": "See the results",
+    "completed": "Session complete, bravo!",
+    "abandoned": "Session abandoned.",
+    "expired": "This session was not completed on the day it was started.",
+    "runInProgress": "This module is in progress: finish its run first.",
+    "abandonTitle": "Abandon the session?",
+    "abandonMessage": "The module in progress stops (what's done still counts) and the remaining modules will not be played.",
+    "restartTitle": "Restart the session?",
+    "restartMessage": "This one is abandoned (what's done still counts) and the session starts again from the first module."
+  }
+}

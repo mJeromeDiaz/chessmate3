@@ -26,7 +26,11 @@ final class VisualisationTest extends TestCase
 
         self::assertSame([1, 2, 3, 4, 5, 6, 7], array_map(static fn (Chapter $chapter): int => $chapter->number, $chapters));
         self::assertSame(['jongleur', 'cyclope', 'gargouille', 'cyclope', 'fantome', 'cameleon', 'sith'], array_map(static fn (Chapter $chapter): ?string => $chapter->boss->character, $chapters));
-        self::assertSame(['1-1', '1-2', '1-3', '1-4', '1-chest', '1-5'], \array_slice(array_map(static fn (Step $step): string => $step->key, $chapters[0]->sections[0]->steps), 0, 6), 'The chest between 1.4 and 1.5.');
+        self::assertSame(
+            ['1-1', '1-2', '1-3', '1-chest', '1-4', '1-5', '1-6', '1-chest-2', '1-7', '1-8', '1-9'],
+            array_map(static fn (Step $step): string => $step->key, $chapters[0]->sections[0]->steps),
+            'A chest between 1.3 and 1.4, another between 1.6 and 1.7.',
+        );
         self::assertSame(['2.1', '2.2', '2.3'], array_map(static fn (Section $section): ?string => $section->number, $chapters[1]->sections));
     }
 
@@ -63,8 +67,8 @@ final class VisualisationTest extends TestCase
             }
         }
         self::assertSame(
-            ['1-chest' => 60, '1-boss' => 200, '2-1-boss' => 80, '2-2-boss' => 100, '2-3-boss' => 120, '2-3-hidden' => 60, '2-boss' => 240],
-            \array_slice($crystals, 0, 7),
+            ['1-chest' => 60, '1-chest-2' => 60, '1-boss' => 200, '2-1-boss' => 80, '2-2-boss' => 100, '2-3-boss' => 120, '2-3-hidden' => 60, '2-boss' => 240],
+            \array_slice($crystals, 0, 8),
         );
         self::assertSame(600, $crystals['7-boss']);
     }

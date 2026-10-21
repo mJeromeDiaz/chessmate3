@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
+import { i18n } from '@/i18n'
 import {
   answerText,
+  colorKey,
+  colorKeysHint,
   colorOf,
   durationsText,
   expectedAnswer,
@@ -195,5 +198,30 @@ describe('formats', () => {
     expect(durationsText({ ...OVERVIEW_RULES, seriesMinutes: [5] })).toBe(
       '5 min'
     )
+  })
+})
+
+describe('colour keys', () => {
+  afterEach(() => {
+    i18n.global.locale.value = 'fr'
+  })
+
+  it('answers with the initials of the UI language, or the arrows', () => {
+    expect(colorKey('c')).toBe('light')
+    expect(colorKey('F')).toBe('dark')
+    expect(colorKey('l')).toBeNull()
+    expect(colorKey('ArrowLeft')).toBe('light')
+    expect(colorKey('ArrowRight')).toBe('dark')
+    expect(colorKeysHint()).toBe(
+      'Clavier : C ou ← pour claire, F ou → pour foncée.'
+    )
+
+    i18n.global.locale.value = 'en'
+    expect(colorKey('l')).toBe('light')
+    expect(colorKey('D')).toBe('dark')
+    expect(colorKey('c')).toBeNull()
+    expect(colorKey('f')).toBeNull()
+    expect(colorKey('ArrowLeft')).toBe('light')
+    expect(colorKeysHint()).toBe('Keyboard: L or ← for light, D or → for dark.')
   })
 })

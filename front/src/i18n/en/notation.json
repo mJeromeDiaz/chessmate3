@@ -1,1 +1,87 @@
-{}
+{
+  "page": {
+    "title": "Notation",
+    "lead": "Read and write move notation as on a scoresheet: play the announced move, follow a sequence of written moves, write a puzzle's solution without playing it. Positions taken from puzzles, unrated.",
+    "letters": "Pieces: {letters} (king, queen, rook, bishop, knight). Castling: O-O, O-O-O.",
+    "launch": "Start",
+    "mindMap": "These exercises are also in chapter 1 of the Visualization path.",
+    "repertoire": "Repertoire",
+    "allRepertoires": "All my repertoires (at least {n} segments)",
+    "noRepertoire": "You need a repertoire with at least {n} segments to complete its lines.",
+    "createRepertoire": "My repertoires",
+    "segments": "{name} · {n} segments",
+    "game": "Game",
+    "anyGame": "Random",
+    "gameOption": "{label} · {n} half-moves"
+  },
+  "kinds": {
+    "play": {
+      "title": "Play the announced move",
+      "desc": "A move is written, play it on the board."
+    },
+    "sequence": {
+      "title": "Sequence of written moves",
+      "desc": "Play a sequence of written moves, for both sides."
+    },
+    "write": {
+      "title": "Write the solution",
+      "desc": "Solve the puzzle in your head and write the whole line, without playing it."
+    },
+    "line": {
+      "title": "Complete a line",
+      "desc": "A line from your repertoire plays out: write its last moves."
+    },
+    "game_play": {
+      "title": "Replay a famous game",
+      "desc": "Read 6 half-moves of a legendary game and replay them, chunk after chunk."
+    },
+    "game_write": {
+      "title": "Write down a famous game",
+      "desc": "Watch 6 half-moves of a legendary game, then write them down."
+    }
+  },
+  "player": {
+    "kickers": {
+      "play": "Play the move",
+      "sequence": "Play the sequence",
+      "write": "Write the line",
+      "right": "Correct!",
+      "wrong": "Missed",
+      "line": "Complete the line",
+      "game_play": "Replay the game",
+      "game_write": "Write down the game"
+    },
+    "playText": "Play {san} on the board.",
+    "sequenceText": "Play each move, for White as well as for Black.",
+    "writeText": "{side} to move: find the solution and write it, {n} half-move | {side} to move: find the solution and write it, {n} half-moves",
+    "rightText": "Well read, well played.",
+    "wrongText": "Look at the right answer before moving on.",
+    "wasPlay": "It was {san}.",
+    "mistakeAt": "Mistake on move {n}: it was {san}.",
+    "expected": "The right line: {line}",
+    "yours": "Your line: {line}",
+    "placeholder": "e.g. 1. {example}",
+    "send": "Submit",
+    "erase": "Erase",
+    "progress": "Exercise {n} of {count}",
+    "progressTimed": "Correct: {right} / {played}",
+    "white": "White",
+    "black": "Black",
+    "lineText": "{line}: write what follows, {n} half-move | {line}: write what follows, {n} half-moves",
+    "lineStart": "The line begins",
+    "gamePlayText": "{label}: play these {n} half-moves, both sides.",
+    "gameWatchText": "{label}: watch these moves carefully…",
+    "gameWriteText": "{label}: write the {n} half-moves you just saw.",
+    "replay": "Watch again",
+    "gameFrom": "Moves {from} to {to}"
+  },
+  "reasons": {
+    "illegal": "Half-move {n} is not a legal move.",
+    "wrong": "Half-move {n} is not the right one.",
+    "short": "Moves are missing from half-move {n}.",
+    "long": "Too many moves: the line ends before half-move {n}."
+  },
+  "review": {
+    "title": "{kind} · {line}"
+  }
+}

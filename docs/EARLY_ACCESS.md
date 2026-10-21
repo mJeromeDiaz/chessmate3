@@ -293,7 +293,7 @@ tranche ensuite.
 
 ## Interface d'administration (SPA)
 
-Seuls les admins voient le bouton **Admin** de l'en-tête (`auth.isAdmin`, lu dans `GET
+Seuls les admins voient l'entrée **Admin** du menu (`auth.isAdmin`, lu dans `GET
 /api/profile`). Les pages portent le niveau d'accès `admin` (`router/guards.js`) : un visiteur est
 envoyé vers la connexion, un joueur vers l'accueil. L'API reste le vrai verrou.
 

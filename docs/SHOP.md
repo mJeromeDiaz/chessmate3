@@ -178,7 +178,7 @@ Statistiques.
 
 ## 7. Front
 
-- Page `/boutique` (lien « Boutique » et solde dans le menu et le tiroir) : solde animé, rayons en
+- Page `/boutique` (carte « Boutique » avec le solde dans le menu, solde de cristaux dans l'en-tête) : solde animé, rayons en
   onglets collants (scroll spy), carrousel, gels en cartes, aides par module, packs, cosmétiques
   « Bientôt » (affichage seul) ; feuille d'achat (en bas sur téléphone) : comment ça marche,
   quantité, prix ou ce qui manque, puis célébration.

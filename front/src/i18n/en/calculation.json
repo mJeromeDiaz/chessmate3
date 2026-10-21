@@ -1,1 +1,88 @@
-{}
+{
+  "player": {
+    "progress": "Line {n} of {count}",
+    "white": "White to move",
+    "black": "Black to move",
+    "mate": "Mate in {n}",
+    "capture": "With a capture",
+    "kickers": {
+      "think": "Calculate",
+      "answer": "Play your line",
+      "right": "Correct line",
+      "wrong": "Incorrect line",
+      "late": "Too late",
+      "question": "And at the end?",
+      "solve": "Find the solution",
+      "replay": "Reconstruct it",
+      "choose": "Choose",
+      "judging": "Verdict"
+    },
+    "thinkText": "The board is frozen: calculate the entire line for both sides. Click “I'm ready” when you've worked it out.",
+    "thinkHidden": "The board is frozen: calculate the line all the way to the end, for both sides.",
+    "answerText": "Play the entire line in one go, for both sides: 2 seconds per ply.",
+    "rightText": "Calculated from beginning to end.",
+    "wrongText": "The solution is replayed on the board.",
+    "lateText": "Time to play has run out.",
+    "ready": "I'm ready",
+    "thinkLeft": "Thinking time: {s} s",
+    "plyLeft": "Ply {n} · {s} s",
+    "mistakeAt": "Mistake at ply {n}",
+    "solution": "Solution: {line}",
+    "yours": "Your line: {line}",
+    "streak": "Streak {n} of {target}",
+    "gain": "Win in {n} moves",
+    "moves": "{n} moves",
+    "positions": "Position {n} of {count}",
+    "solveText": "Play your moves; your opponent replies. Remember the entire line.",
+    "replayText": "From memory: replay the entire line in one go, for both sides, 2 seconds per ply.",
+    "kinds": {
+      "reply": "Your first move has been played. What is your opponent's best reply?",
+      "two_replies": "Your opponent has only two replies to your first move: calculate a line against each. Click “I'm ready” when you've worked them out.",
+      "defence": "Your opponent is threatening checkmate. Calculate the line that prevents it, for both sides. Click “I'm ready” when you've worked it out.",
+      "intermezzo": "Your opponent will reply with a check. Calculate the line that still wins, for both sides. Click “I'm ready” when you've worked it out.",
+      "combo": "Three forced moves, only one combination works. Choose it, then play the entire line, for both sides.",
+      "advocate": "Suggest your move, then play devil's advocate: play your opponent's best reply, followed by your continuation, all in one go. Click “I'm ready” when you have the entire line."
+    },
+    "firstLineText": "First line: your move, one of the two replies, then the continuation. 2 seconds per ply.",
+    "secondLineText": "Second line: the other reply is played; continue. 2 seconds per ply.",
+    "judgingText": "Stockfish is checking your line…",
+    "preparing": "The engine is preparing the replies…",
+    "engineDown": "Engine unavailable: only the solution line can be judged correct.",
+    "mistakeSecond": "Mistake at ply {n} of the second line",
+    "yoursSecond": "Your second line: {line}",
+    "preparingCombos": "The engine is preparing the combinations…"
+  },
+  "metronome": {
+    "right": "Tick… tock… You're still keeping the beat.",
+    "wrong": "Ha! Wrong beat. The streak starts over.",
+    "late": "Too slow: you lost the rhythm.",
+    "moods": {
+      "neutral": "Tick, tock. Calculate all the way to checkmate: I won't tell you how many moves it takes.",
+      "doubt": "You're hesitating… but the beat won't wait.",
+      "sadness": "Three in a row… you're throwing off my rhythm.",
+      "anger": "Six! I'm out of tune, and I'm speeding up.",
+      "focus": "The home stretch. Don't fall a beat behind.",
+      "anxiety": "Just one more, and the beat is yours…",
+      "surprise": "Already? You're calculating faster than my tempo.",
+      "joy": "Ha! Wrong beat.",
+      "pride": "My rhythm got the better of you."
+    }
+  },
+  "question": {
+    "where": "At the end of the line, where is the {piece}?",
+    "what": "At the end of the line, what is on {square}?",
+    "empty": "Empty square",
+    "wasOn": "The answer: {squares}.",
+    "wasPiece": "On {square}: {piece}.",
+    "wasEmpty": "Square {square} was empty."
+  },
+  "advocate": {
+    "right": "Objection overruled: your idea held up, and you defended it to the end.",
+    "wrong": "I told you so: your idea doesn't stand up to scrutiny.",
+    "late": "Your time to argue has run out.",
+    "ideaFailed": "Your idea didn't hold up.",
+    "refutedFound": "Your idea didn't hold up, but you found the refutation.",
+    "refutedMissed": "Your idea didn't hold up, and your opponent had a better reply than the one you gave them.",
+    "tooKind": "Your idea held up, but you were too lenient as a lawyer: your opponent had a better reply."
+  }
+}

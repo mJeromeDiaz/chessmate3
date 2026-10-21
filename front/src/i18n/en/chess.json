@@ -1,1 +1,11 @@
-{}
+{
+  "tree": {
+    "empty": "No moves.",
+    "transposition": "Transposition: go to the joined line"
+  },
+  "engine": {
+    "loading": "Loading the engine…",
+    "thinking": "The engine is thinking…",
+    "failed": "The engine could not start. Try again."
+  }
+}

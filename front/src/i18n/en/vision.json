@@ -1,1 +1,143 @@
-{}
+{
+  "pieces": {
+    "K": "the white king",
+    "Q": "the white queen",
+    "R": "a white rook",
+    "B": "a white bishop",
+    "N": "a white knight",
+    "P": "a white pawn",
+    "k": "the black king",
+    "q": "the black queen",
+    "r": "a black rook",
+    "b": "a black bishop",
+    "n": "a black knight",
+    "p": "a black pawn"
+  },
+  "sides": {
+    "white": "white",
+    "black": "black"
+  },
+  "ask": {
+    "where": "Where is {piece}?",
+    "what": "What is on {square}?",
+    "en_prise": "Which piece is hanging?",
+    "attackers": "Which {side} pieces attack {square}?",
+    "arrival": "Where is {piece} now?",
+    "captured": "What did {piece} capture on {square}?",
+    "captures": "Where were the pieces captured by {piece}?",
+    "knight_jumps": "How many jumps, at least, for a knight from {from} to {to}?",
+    "passed": {
+      "R": "Did the rook stop on {square}?",
+      "B": "Did the bishop stop on {square}?",
+      "Q": "Did the queen stop on {square}?",
+      "N": "Did the knight stop on {square}?"
+    },
+    "stops": {
+      "R": "On which squares did the rook stop?",
+      "B": "On which squares did the bishop stop?",
+      "Q": "On which squares did the queen stop?",
+      "N": "On which squares did the knight stop?"
+    },
+    "capturesAll": "Where were the captured pieces?",
+    "missing": "Which piece has disappeared?",
+    "reach": {
+      "K": "Can the white king go to {square} in one move?",
+      "Q": "Can the white queen go to {square} in one move?",
+      "R": "Can the white rook go to {square} in one move?",
+      "B": "Can the white bishop go to {square} in one move?",
+      "N": "Can the white knight go to {square} in one move?",
+      "k": "Can the black king go to {square} in one move?",
+      "q": "Can the black queen go to {square} in one move?",
+      "r": "Can the black rook go to {square} in one move?",
+      "b": "Can the black bishop go to {square} in one move?",
+      "n": "Can the black knight go to {square} in one move?"
+    },
+    "attacked": "Which {side} pieces are attacked?",
+    "defended": "Which {side} pieces are defended?",
+    "undefended": "Which {side} pieces are undefended?",
+    "aligned": "Which pieces are lined up with {piece}?",
+    "en_prise_all": "Which {side} pieces are hanging?",
+    "winning": "Which {side} pieces can be captured with a gain?",
+    "count": "How many {side} pieces are left, king included?"
+  },
+  "player": {
+    "progress": "Question {n} of {count}",
+    "toMemorize": "{n} s to memorize",
+    "seconds": "{n} s",
+    "memorized": "I've memorized it",
+    "hidden": "Visualize…",
+    "announced": "Moves played",
+    "empty": "Empty square",
+    "validate": "Submit",
+    "selected": "{n} square selected | {n} squares selected",
+    "kickers": {
+      "memorize": "Look carefully",
+      "visualize": "Keep it in mind",
+      "listen": "Listen to the moves",
+      "ask": "Your turn",
+      "right": "Correct!",
+      "wrong": "Missed",
+      "late": "Too late!"
+    },
+    "texts": {
+      "memorize": "Remember where the pieces are: the position is about to disappear.",
+      "visualize": "The position is hidden: picture it with your eyes closed.",
+      "listen": "Play them in your head on the hidden position.",
+      "askClick": "Answer on the empty board.",
+      "askPiece": "Pick the piece from the tray.",
+      "askMany": "Click every square that answers, then “Submit”.",
+      "right": "You see the position without seeing it.",
+      "wrong": "Look at the position: the right answer is in green.",
+      "askChoice": "Pick your answer.",
+      "followUp": "Same route: keep it in mind.",
+      "askWhat": "Pick the piece, or “Empty square”."
+    },
+    "verdicts": {
+      "where": "{piece} was on {squares}.",
+      "what": "On {square}, there was {piece}.",
+      "en_prise": "Hanging: {squares}.",
+      "attackers": "The attackers: {squares}.",
+      "none": "none",
+      "whatEmpty": "On {square}, there was nothing.",
+      "arrival": "{piece} was on {squares}.",
+      "captured": "On {square}, {piece} captured {taken}.",
+      "knight_jumps": "It took {n} jump. | It took {n} jumps.",
+      "passed": "The answer was “{answer}”.",
+      "captures": "The captures: {squares}.",
+      "stops": "The stops: {squares}.",
+      "missing": "It was {piece}.",
+      "attacked": "The attacked pieces: {squares}.",
+      "defended": "The defended pieces: {squares}.",
+      "undefended": "The undefended pieces: {squares}.",
+      "aligned": "The lined-up pieces: {squares}.",
+      "en_prise_all": "The hanging pieces: {squares}.",
+      "winning": "The winning captures: {squares}.",
+      "count": "There was {n} left. | There were {n} left."
+    },
+    "sameTrack": "Same route"
+  },
+  "tracked": {
+    "R": "the rook",
+    "B": "the bishop",
+    "Q": "the queen",
+    "N": "the knight"
+  },
+  "choices": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "the": {
+    "K": "the white king",
+    "Q": "the white queen",
+    "R": "the white rook",
+    "B": "the white bishop",
+    "N": "the white knight",
+    "P": "the white pawn",
+    "k": "the black king",
+    "q": "the black queen",
+    "r": "the black rook",
+    "b": "the black bishop",
+    "n": "the black knight",
+    "p": "the black pawn"
+  }
+}

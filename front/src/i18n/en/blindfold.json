@@ -1,1 +1,76 @@
-{}
+{
+  "levels": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "level": "{name} · {min}–{max}",
+  "length": "{n} moves",
+  "lengthMore": "{n} moves and more",
+  "counts": {
+    "none": "No puzzles played.",
+    "solved": "{n} solved out of {played} ({rate}) | {n} solved out of {played} ({rate})",
+    "helped": " · {n} with a peek"
+  },
+  "game": {
+    "missed": "{move}: missed.",
+    "wrongMove": "{move} is not the right move. Take another look at the position.",
+    "good": "{move}: well spotted!",
+    "reply": "Your opponent plays {move}.",
+    "pardoned": "Forgiven: your mistake is erased, and your peek is restored."
+  },
+  "player": {
+    "hidden": "Position hidden",
+    "seconds": "{n} s",
+    "memorized": "I've memorized it",
+    "pardon": "Forgive · {n}",
+    "pardonTip": "Your mistake is erased and your peek is restored: the puzzle counts as solved (shop).",
+    "solution": "Solution",
+    "promotion": "Promote to",
+    "pieces": {
+      "q": "Queen",
+      "r": "Rook",
+      "b": "Bishop",
+      "n": "Knight"
+    },
+    "kickers": {
+      "peek": "TAKE A PEEK",
+      "memorize": "MEMORIZE",
+      "visualize": "VISUALIZE",
+      "yourTurn": "YOUR TURN"
+    },
+    "white": "White",
+    "black": "Black",
+    "opponent": "Opponent's turn…",
+    "peekText": "Peek: the current position. Memorize it!",
+    "memorizeText": "Memorize the position: {side} to move.",
+    "visualizeText": "Visualize the position…",
+    "from": "Starting square {square}: click the destination square.",
+    "play": "Your turn: click the starting square, then the destination square.",
+    "replying": "Your opponent is replying…",
+    "solutionText": "Solution…",
+    "solved": "Solved from memory, well done!",
+    "helped": "Solved with a peek.",
+    "failed": "Puzzle failed: here's the solution.",
+    "toMemorize": "{n} s to memorize",
+    "peeks": "{n} peek | {n} peeks",
+    "noPeek": "no more peeks"
+  },
+  "page": {
+    "title": "Blindfold Chess",
+    "lead": "Solve puzzles from memory: the position is displayed for the selected amount of time, then disappears {hidden}, and you play the solution on an empty board (with coordinates shown): click the starting square, then the destination square.",
+    "hidden": "{n} s",
+    "unrated": "Does not affect your puzzle rating.",
+    "new": "New session",
+    "level": "Level",
+    "length": "Solution length",
+    "memorize": "Memorization time",
+    "byLevel": "Your results by level",
+    "levelRow": "{level}:",
+    "peeks": {
+      "none": "One mistake and the puzzle is failed.",
+      "one": "After one mistake, you get one peek at the position; a second mistake and the puzzle is failed.",
+      "many": "After a mistake, you can peek at the position ({n} maximum)."
+    }
+  }
+}

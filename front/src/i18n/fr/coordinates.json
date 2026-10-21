@@ -34,6 +34,10 @@
     "light": "claire",
     "dark": "foncée"
   },
+  "colorKeys": {
+    "light": "C",
+    "dark": "F"
+  },
   "rules": "au moins {n} réponses par minute et {pct} % de réussite, sans arrêter la série",
   "lengths": {
     "one": "{n} min",
@@ -47,7 +51,7 @@
     "dark": "Foncée",
     "erase": "Effacer",
     "keysName": "Tape la case au clavier : une lettre puis un chiffre, Retour arrière pour effacer.",
-    "keysColor": "Clavier : C ou ← pour claire, F ou → pour foncée.",
+    "keysColor": "Clavier : {light} ou ← pour claire, {dark} ou → pour foncée.",
     "wrongColor": "Raté : {square} est {color}",
     "answers": "réponse | réponses",
     "correct": "juste | justes",

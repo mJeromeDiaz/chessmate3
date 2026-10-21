@@ -82,7 +82,7 @@ d'agrégats (et leur commande de recalcul) arriveront au lot B si une mesure les
 | Bloc de la maquette | Données |
 |---|---|
 | Bannière niveau / XP avec Aaron | Réelle (`GET /api/gamification/summary`) : niveau, grade, XP dans le niveau, ce qui reste avant le niveau suivant et le prochain grade ([GAMIFICATION.md](GAMIFICATION.md)) |
-| Série 🔥, record de série | Réels (même résumé). La flamme est dans l'en-tête de toutes les pages et dans le menu burger (`components/gamification/StreakChip.vue`), grisée tant qu'on n'a pas joué aujourd'hui ; la carte « Série » (`StreakCard`, juste sous la bannière sur mobile) montre une flamme avec la série en cours, allumée et animée tant que la série vit (grise à 0), petite sous une semaine et plus grande à chaque badge de série atteint (`flameScale()`, `utils/streak.js`), le record et la semaine réelle ; elle remplace l'ancienne heatmap « Régularité », retirée le 2026-10-08, et les 12 badges de série sont dans « Trophées » ; l'ancienne pastille en haut de page a disparu. Une célébration de série restée non vue s'affiche à l'ouverture ([GAMIFICATION.md § 4](GAMIFICATION.md#4-séries-streak)) |
+| Série 🔥, record de série | Réels (même résumé). La flamme est dans l'en-tête de toutes les pages (`components/gamification/StreakChip.vue`), grisée tant qu'on n'a pas joué aujourd'hui ; la carte « Série » (`StreakCard`, juste sous la bannière sur mobile) montre une flamme avec la série en cours, allumée et animée tant que la série vit (grise à 0), petite sous une semaine et plus grande à chaque badge de série atteint (`flameScale()`, `utils/streak.js`), le record et la semaine réelle ; elle remplace l'ancienne heatmap « Régularité », retirée le 2026-10-08, et les 12 badges de série sont dans « Trophées » ; l'ancienne pastille en haut de page a disparu. Une célébration de série restée non vue s'affiche à l'ouverture ([GAMIFICATION.md § 4](GAMIFICATION.md#4-séries-streak)) |
 | Courbe 90 jours, onglets Puzzles · Blitz · Rapide · Classique | Réelles. La maquette montrait un « Elo Lichess » seul ; l'onglet Puzzles (Glicko-2 interne) est ajouté et ouvert par défaut |
 | Défi de la semaine | Réel (`GET /api/gamification/quest`), donné par le prof du module du défi (Lizy pour un défi sur plusieurs modules) ; masqué si la lecture échoue |
 | Progression par module | Ligne réelle (puzzles résolus et classement ; cycle Woodpecker en cours ; coups de répertoire, dus, réussite sur 30 j) et barre réelle (taux de réussite, avancement du cycle, réussite sur 30 j) ; « Niv. » réel (niveau du module, gamification) ; Finales, Évaluation, Analyse : « Bientôt » |
@@ -104,7 +104,7 @@ puis la liste des modules, à la place des graphiques vides.
 
 Disposition : une colonne dans l'ordre de la maquette mobile ; à partir de `md`, deux colonnes
 (1,55 / 1) comme la tablette. La barre de navigation de la maquette (onglets, barre du bas sur mobile)
-n'est **pas** reprise : l'en-tête actuel reste, en attendant la passe dédiée à la navigation.
+n'est **pas** reprise : la navigation est celle de toutes les pages (§ 3 ter).
 
 ## 3 bis. Page Statistiques (`/stats`, lot B)
 
@@ -125,6 +125,34 @@ version foncée des couleurs des modules, vérifiés avec le validateur de palet
 dataviz dans cet ordre d'empilement (bande de luminosité, séparation pour les daltonismes) ; en mode
 sombre, le vert Woodpecker passe à `#77a100`. Le vert reste sous 3:1 de contraste sur fond clair : la
 légende chiffrée, l'info-bulle et la vue tableau portent l'information.
+
+## 3 ter. Navigation (en-tête et menu, 2026-10-21)
+
+Même en-tête et même menu sur téléphone et sur PC, pour un joueur connecté (un visiteur garde la
+barre Connexion / Inscription / thème ; la landing et les écrans d'authentification ont la leur).
+
+- **En-tête** (`components/layout/AppHeader.vue`) : à gauche la flèche retour, le sous-titre en
+  petites capitales et le titre de la page ; à droite la série (`StreakChip`), les cristaux
+  (`CrystalChip`, lien vers la boutique) et le bouton menu (`nav-burger`). Sans titre (dashboard,
+  404), le logo.
+- **Titre et sous-titre** : clés de messages déclarées par chaque page,
+  `definePage({ meta: { header: { title, subtitle, parent } } })` ; un texte venu des données (nom
+  d'un répertoire, d'un set Woodpecker, d'une capacité) passe par `usePageHeader(() => ({ title,
+  subtitle }))` (`composables/layout/usePageHeader.js`, store `layout`) et l'emporte sur la clé.
+- **Flèche retour** : vers la page parente, jamais l'historique (`parentPath()`,
+  `utils/layout/pageHeader.js`) : la page existante la plus proche au-dessus dans l'URL
+  (`/repertoire/12/stats` → `/repertoire/12`, `/session/plans/3` → `/session`). Aucune flèche sur
+  le dashboard et les pages de premier niveau, sauf parent nommé par la page (`/stats` → `/`) ;
+  `parent: false` la retire (séance en cours, visite). Les pages n'ont plus leur propre bouton
+  retour.
+- **Menu** (`components/layout/AppMenu.vue`, tiroir à droite `nav-menu`) : Tableau de bord,
+  Entraînement Ludique (`/cerveau`), Créer un entraînement (`/session`, le nombre de modules
+  disponibles du catalogue dans le texte), Entraînement libre (second panneau : les modules de
+  `FREE_TRAINING_LINKS`, `utils/layout/navigation.js` ; Puzzle Rush ouvre son lancement sur
+  `/puzzle?rush=1`), la Boutique en carte avec le solde, puis Profil, Admin (admins) et
+  Déconnexion. Le thème et la visite guidée ne sont plus que dans le profil ; le classement puzzles
+  n'est plus dans l'en-tête (courbe du dashboard, pages puzzles).
+- Tests : Vitest `pageHeader.test.js`, `navigation.test.js` ; Playwright `navigation.spec.js`.
 
 ## 4. Écarts avec la maquette
 

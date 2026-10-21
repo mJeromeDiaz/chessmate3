@@ -1,1 +1,228 @@
-{}
+{
+  "modules": {
+    "woodpecker": {
+      "title": "Woodpecker",
+      "badge": "Flagship method",
+      "desc": "The same puzzle set, in faster and faster cycles.",
+      "why": "By reviewing the same motifs again and again, they become reflexes: you calculate less, you see more. It's like learning a language: at first you translate, then you speak."
+    },
+    "puzzles": {
+      "title": "Puzzles",
+      "desc": "Tactics at your level, by theme when you want to focus.",
+      "why": "You spot a fork in 2 seconds instead of looking for it for 2 minutes. And your opponent won't be so lucky."
+    },
+    "streak": {
+      "title": "Puzzle streak",
+      "desc": "From easiest to hardest: one mistake and you start from zero.",
+      "why": "The pressure rises with every puzzle. Staying clear-headed when everything hinges on one move is exactly what's missing in games."
+    },
+    "repertoire": {
+      "title": "Repertoire",
+      "badge": "Essential",
+      "desc": "Your openings, reviewed move by move until they come out on their own.",
+      "why": "No more playing the first ten moves by feel: you reach the middlegame on familiar ground, with time on the clock."
+    },
+    "evaluation": {
+      "title": "Position evaluation",
+      "desc": "Who is better, and by how much? Judge at a glance.",
+      "why": "Knowing where you stand before calculating means picking the right variations instead of trying them all."
+    },
+    "analyse": {
+      "title": "Game analysis",
+      "desc": "Go back over your games, especially the losses.",
+      "why": "Your mistakes become your program, instead of repeating game after game."
+    },
+    "coach": {
+      "title": "Tailored session",
+      "desc": "I read your last 200 Lichess games, spot the endgames that cost you points and build your session.",
+      "why": "You work on what makes you lose, not on what you already know. Training time is scarce: might as well aim right."
+    },
+    "finales": {
+      "title": "Endgames",
+      "desc": "Rooks, pawns, minor pieces: the essential endgames.",
+      "why": "An extra pawn is worth nothing if you don't know how to promote it."
+    },
+    "aveugle": {
+      "title": "Blindfold play",
+      "badge": "Superpower",
+      "desc": "The position appears, disappears, then you play from memory on an empty board.",
+      "why": "Your visualization gets trained: you calculate further, even with the pieces in front of you."
+    },
+    "coordonnees": {
+      "title": "Coordinates",
+      "desc": "Find e4 without thinking, on a board with no letters or numbers.",
+      "why": "A square you name quickly is a variation you calculate without getting lost along the way."
+    }
+  },
+  "profScreens": {
+    "albert": {
+      "title": ["Albert", "Stein"],
+      "kicker": "ALBERT · PUZZLES, WOODPECKER & STREAK",
+      "line": "I'm the tactics Bishop: I see the diagonals before you see the trap. And I see them diagonally, of course."
+    },
+    "aaron": {
+      "title": ["Aaron,", "the King"],
+      "kicker": "AARON · REPERTOIRE & EVALUATION",
+      "line": "I take the initiative from the first move and never give it back. Even at dinner, ask Lizy."
+    },
+    "lizy": {
+      "title": ["Lizy,", "the Queen"],
+      "kicker": "LIZY · ENDGAMES & TAILORED SESSION",
+      "line": "Your small advantage, I turn it into a full point. Without trembling, and without asking Aaron's opinion."
+    },
+    "ray": {
+      "title": ["Ray,", "the mystery"],
+      "kicker": "ALBERT · A PROF IN THE SHADOWS",
+      "line": "Ray plays with his eyes closed. He'll introduce himself… as soon as he finds the door."
+    }
+  },
+  "levels": {
+    "beginner": {
+      "name": "Beginner",
+      "hint": "I sometimes mix up the bishop and the rook.",
+      "line": "Perfect: no bad habits to get rid of. Well, almost."
+    },
+    "amateur": {
+      "name": "Amateur",
+      "hint": "I know the Scholar's mate. From both sides.",
+      "line": "The ideal level: strong enough to blunder in style, curious enough to stop."
+    },
+    "confirmed": {
+      "name": "Advanced",
+      "hint": "My Najdorf holds up without a cheat sheet.",
+      "line": "Nice. We'll polish what's stuck, without pulling the Scholar's mate on you again."
+    },
+    "expert": {
+      "name": "Expert",
+      "hint": "I correct the commentators live.",
+      "line": "Ah. I'll have to review my notes, then."
+    },
+    "pro": {
+      "name": "Pro",
+      "hint": "People call me “Master”, and they're not being ironic.",
+      "line": "A pro here? The puzzles are going to sweat. So am I."
+    }
+  },
+  "goals": {
+    "rating": {
+      "label": "Gain Elo",
+      "line": "Elo, noted. We'll start by no longer giving it away."
+    },
+    "blunders": {
+      "label": "Stop giving away my queen",
+      "line": "A queen given away is a gift nobody asked for. We'll learn to keep her."
+    },
+    "fun": {
+      "label": "Have fun",
+      "line": "Excellent choice. Nobody ever improved while bored."
+    },
+    "understanding": {
+      "label": "Understand what I play",
+      "line": "The finest ambition: one move you understand is worth ten moves you recite."
+    },
+    "kasparov": {
+      "label": "Snatch a draw from Kasparov",
+      "line": "A draw against Garry? That'll take Woodpecker. Lots of Woodpecker."
+    }
+  },
+  "endChoices": {
+    "coach": {
+      "title": "Tailored session",
+      "desc": "Lizy reads your Lichess games and builds your session: endgames, openings, tactics."
+    },
+    "repertoire": {
+      "title": "Automatic repertoire",
+      "desc": "Aaron builds your repertoire with the openings you already play."
+    },
+    "builder": {
+      "title": "I build my session",
+      "desc": "You choose the modules and the durations. For control freaks."
+    }
+  },
+  "segments": {
+    "hello": "Welcome",
+    "level": "Level",
+    "goal": "Goal",
+    "profs": "The profs",
+    "end": "Your plan"
+  },
+  "perfs": {
+    "rapid": "rapid",
+    "blitz": "blitz",
+    "classical": "classical"
+  },
+  "chip": {
+    "prof": "PROF {n} / {total}",
+    "step": "{n} / {total}"
+  },
+  "titles": {
+    "hello": ["Hello,", "champion!"],
+    "level": ["Your level,", "no cheating"],
+    "goal": ["Your big", "goal?"],
+    "end": ["Your", "move!"]
+  },
+  "kickers": {
+    "hello": "ALBERT · YOUR MAIN PROF",
+    "level": "ALBERT · LET'S GET ACQUAINTED",
+    "goal": "ALBERT · YOUR AMBITIONS",
+    "end": "ALBERT · SHALL WE START?"
+  },
+  "lines": {
+    "hello": "Hello, I'm Albert Stein, your main prof. I promise I'll be more patient than your opponent when you leave your queen hanging.",
+    "linking": "I'm heading over to Lichess to look at your games… Don't move.",
+    "lichess": "{rating} in {perf}, according to Lichess. {line}",
+    "noLevel": "Link your Lichess, or admit your level. I'm not judging… not yet.",
+    "noGoal": "What brings you here? Just one choice: the most honest, not the most reasonable.",
+    "endLinked": "Enough theory! Choose where to start, I'll take care of the rest.",
+    "endUnlinked": "Enough theory! For something tailored, I'll need your Lichess. Otherwise, build your session yourself."
+  },
+  "rating": {
+    "fixed": "Your puzzle rating ({rating}) is already established: it only moves by playing now.",
+    "seed": "Your rated puzzles will start around {rating}. After that, it's up to you."
+  },
+  "cta": {
+    "hello": "Nice to meet you, Albert",
+    "levelOk": "That's me",
+    "level": "Choose your level",
+    "goalOk": "That's my goal",
+    "goal": "Choose your goal",
+    "ray": "See my plan",
+    "nextProf": "Next prof",
+    "linkLichess": "Link Lichess and continue",
+    "go": "Let's go!"
+  },
+  "foot": {
+    "hello": "You can replay this tour from your profile",
+    "prof": "Tap “Why it helps” to learn more",
+    "end": "Replay the tour in Profile › Guided tour"
+  },
+  "wait": "One moment…",
+  "hello": {
+    "note": "Five short steps, two minutes. You can go back or skip whenever you like: I'm not keeping score… not yet."
+  },
+  "level": {
+    "aria": "Your level",
+    "lichessElo": "LICHESS ELO · {perf}",
+    "disagree": "Disagree? Correct me:",
+    "linking": "Off to Lichess…",
+    "link": "Link my Lichess account",
+    "or": "or choose your level"
+  },
+  "goal": {
+    "aria": "Your goal",
+    "hint": "Just one choice"
+  },
+  "end": {
+    "aria": "Where to start",
+    "advised": "Recommended",
+    "lichessRequired": "Lichess required"
+  },
+  "module": {
+    "soon": "Coming soon",
+    "why": "Why it helps"
+  },
+  "progress": {
+    "back": "Previous step",
+    "skip": "Skip"
+  }
+}

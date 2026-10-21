@@ -36,7 +36,10 @@ final class Visualisation
         ];
     }
 
-    /** Coordinates and notation: no section, a chest between 1.4 and 1.5. */
+    /**
+     * Coordinates and notation: no section, a chest between 1.3 and 1.4, another between 1.6
+     * and 1.7.
+     */
     private static function chapter1(): Chapter
     {
         return new Chapter('c1', 1, [
@@ -44,10 +47,11 @@ final class Visualisation
                 self::exercise('1-1', '1.1', 2, new Activity(Module::Coordinates, ['orientation' => 'white'], 60, 10)),
                 self::exercise('1-2', '1.2', 3, new Activity(Module::Coordinates, ['orientation' => 'white', 'mode' => 'name'], 60, 10)),
                 self::exercise('1-3', '1.3', 2, new Activity(Module::Coordinates, ['orientation' => 'white', 'mode' => 'color'], 60, 20)),
-                self::exercise('1-4', '1.4', 3, self::notation('play', 10)),
                 self::chest('1-chest', 60),
+                self::exercise('1-4', '1.4', 3, self::notation('play', 10)),
                 self::exercise('1-5', '1.5', 3, self::notation('sequence', 5)),
                 self::exercise('1-6', '1.6', 3, self::notation('write', 5)),
+                self::chest('1-chest-2', 60),
                 self::exercise('1-7', '1.7', 3, self::notation('line', 5)),
                 self::exercise('1-8', '1.8', 2, self::notation('game_write', 5)),
                 self::exercise('1-9', '1.9', 2, self::notation('game_play', 5)),

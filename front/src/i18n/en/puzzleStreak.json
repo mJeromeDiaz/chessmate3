@@ -1,1 +1,77 @@
-{}
+{
+  "ramps": {
+    "ladder": "Ladder",
+    "tiers": "Tiers"
+  },
+  "categories": {
+    "endgame": "Endgames",
+    "mate": "Mates",
+    "motif": "Tactical motifs"
+  },
+  "topics": {
+    "endgame": "All endgames",
+    "pawnEndgame": "Pawn endgames",
+    "rookEndgame": "Rook endgames",
+    "bishopEndgame": "Bishop endgames",
+    "knightEndgame": "Knight endgames",
+    "queenEndgame": "Queen endgames",
+    "queenRookEndgame": "Queen and rook endgames",
+    "mate": "All mates",
+    "mateIn1": "Mate in 1",
+    "mateIn2": "Mate in 2",
+    "mateIn3plus": "Mate in 3 or more",
+    "fork": "Fork",
+    "pin": "Pin",
+    "skewer": "Skewer",
+    "discoveredAttack": "Discovered attack",
+    "sacrifice": "Sacrifice",
+    "deflection": "Deflection",
+    "attraction": "Attraction",
+    "doubleCheck": "Double check",
+    "hangingPiece": "Hanging piece",
+    "trappedPiece": "Trapped piece"
+  },
+  "sides": {
+    "white": "White",
+    "black": "Black"
+  },
+  "rampText": {
+    "tiers": "{size} puzzles per tier of {width} points, from {start}",
+    "ladder": "From {start}, +{step} points per solved puzzle"
+  },
+  "general": "General",
+  "withSide": "{name} ({side})",
+  "myOpenings": "My openings",
+  "allOpenings": "All openings",
+  "tier": "Tier {n} · {range}",
+  "inARow": "{n} puzzle in a row | {n} puzzles in a row",
+  "badges": {
+    "streak_puzzles_10": "Chain",
+    "streak_puzzles_20": "Burst",
+    "streak_puzzles_30": "Tidal wave",
+    "streak_puzzles_50": "Unstoppable"
+  },
+  "overtime": {
+    "title": "Time's up!",
+    "streak": "Your streak is at {streak}. Keep going for {n} more minutes?",
+    "left": "With no answer in {n} s, the streak ends here.",
+    "rule": "In overtime, the first mistake ends the module.",
+    "end": "End the streak",
+    "extend": "Continue (+{n} min)"
+  },
+  "noTopic": "No topic.",
+  "page": {
+    "title": "Puzzle streak",
+    "lead": "A very easy first puzzle, then harder and harder. A single mistake and the streak ends: no help, no solution. No clock, and no effect on your puzzle rating.",
+    "new": "New streak",
+    "difficulty": "Difficulty",
+    "topic": "Topic",
+    "record": "Your record: {record}",
+    "noRecord": "No record here yet.",
+    "launch": "Start the streak",
+    "records": "Your records",
+    "noStreak": "No streak played yet.",
+    "streaks": "({n} streak) | ({n} streaks)",
+    "total": "{n} puzzle solved in a streak. | {n} puzzles solved in a streak."
+  }
+}

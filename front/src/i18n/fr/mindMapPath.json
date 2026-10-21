@@ -262,7 +262,7 @@
       },
       "s1_chest": {
         "title": "Coffre",
-        "desc": "Réussis les quatre premiers exercices pour l’ouvrir."
+        "desc": "Réussis les trois premiers exercices pour l’ouvrir."
       },
       "s1_5": {
         "title": "Suite de coups notés",
@@ -271,6 +271,10 @@
       "s1_6": {
         "title": "Écrire la solution",
         "desc": "Écris en notation la solution d’un puzzle."
+      },
+      "s1_chest_2": {
+        "title": "Coffre",
+        "desc": "Réussis les six premiers exercices pour l’ouvrir."
       },
       "s1_7": {
         "title": "Compléter une ligne",

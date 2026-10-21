@@ -36,10 +36,13 @@ describe('languages (docs/I18N.md)', () => {
   })
 
   it('shows the French text while a key is not translated', () => {
-    expect(t('common.locale.title')).toBe('Langue')
+    // Every shipped key is translated: a French-only one of the test's own.
+    i18n.global.mergeLocaleMessage('fr', {
+      i18nTest: { untranslated: 'Langue : {name}' }
+    })
     i18n.global.locale.value = 'en'
-    expect(t('common.locale.title')).toBe('Langue')
-    expect(t('common.locale.menu', { name: 'English' })).toBe(
+    expect(t('common.locale.title')).toBe('Language')
+    expect(t('i18nTest.untranslated', { name: 'English' })).toBe(
       'Langue : English'
     )
   })

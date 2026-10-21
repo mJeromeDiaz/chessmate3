@@ -33,6 +33,7 @@
             <q-item
               clickable
               :to="DASHBOARD_LINK.to"
+              exact
               :active="isNavActive(DASHBOARD_LINK, route.path)"
               active-class="app-menu__item--on"
               class="app-menu__item"

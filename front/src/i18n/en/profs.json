@@ -1,1 +1,179 @@
-{}
+{
+  "lizy": {
+    "title": "The Queen",
+    "kicker": "PROF · ENDGAMES",
+    "tagline": "The endgame champion, and a far-sighted strategist.",
+    "motto": "An endgame is won before you even get there: choose your trades well.",
+    "traits": ["Endgames", "Strategy", "Planning"],
+    "stats": [
+      {
+        "value": "86",
+        "label": "Endgames mastered"
+      },
+      {
+        "value": "1,690",
+        "label": "Endgame Elo"
+      },
+      {
+        "value": "5 d",
+        "label": "Current streak"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Pawn endgames",
+        "desc": "Opposition, the square, passed pawns"
+      },
+      {
+        "name": "Rook endgames",
+        "desc": "Lucena, Philidor, active rook"
+      },
+      {
+        "name": "Basic mates",
+        "desc": "Queen, rook, two bishops"
+      },
+      {
+        "name": "Minor pieces",
+        "desc": "Good and bad bishop, knight"
+      }
+    ],
+    "method": [
+      {
+        "title": "Plan",
+        "desc": "Assess the structure and choose where to take the game."
+      },
+      {
+        "title": "Simplify",
+        "desc": "Trade at the right moment into a winning endgame."
+      },
+      {
+        "title": "Convert",
+        "desc": "Apply the technique without leaving any chance."
+      }
+    ],
+    "cta": "Add an Endgames module",
+    "role": "ENDGAMES"
+  },
+  "albert": {
+    "title": "The Bishop",
+    "kicker": "PROF · PUZZLES & WOODPECKER",
+    "tagline": "A genius vision for diagonal moves.",
+    "motto": "Before you play, look at every open diagonal. The solution often hides there.",
+    "traits": ["Calculation", "Strategy", "Patience"],
+    "stats": [
+      {
+        "value": "1,284",
+        "label": "Puzzles solved"
+      },
+      {
+        "value": "1,742",
+        "label": "Tactics Elo"
+      },
+      {
+        "value": "12 d",
+        "label": "Current streak"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Skewer",
+        "desc": "Attack two aligned pieces"
+      },
+      {
+        "name": "Pin",
+        "desc": "Freeze a piece in front of the king"
+      },
+      {
+        "name": "Discovered attack",
+        "desc": "Unmask a long-range piece"
+      },
+      {
+        "name": "Sacrifice on f7",
+        "desc": "Open the diagonal toward the king"
+      }
+    ],
+    "method": [
+      {
+        "title": "Observe",
+        "desc": "Spot checks, captures and threats before calculating."
+      },
+      {
+        "title": "Calculate",
+        "desc": "Follow every forcing variation to the end."
+      },
+      {
+        "title": "Anchor",
+        "desc": "Review missed motifs so they become reflexes."
+      }
+    ],
+    "cta": "Add a Puzzles module",
+    "role": "PUZZLES & WOODPECKER"
+  },
+  "aaron": {
+    "title": "The King",
+    "kicker": "PROF · REPERTOIRE & EVALUATION",
+    "tagline": "Lessons with rhythm: attack, confidence and style.",
+    "motto": "Take the initiative and never give it back. The enemy king is your stage.",
+    "traits": ["Attack", "Tactics", "Confidence"],
+    "stats": [
+      {
+        "value": "214",
+        "label": "Successful attacks"
+      },
+      {
+        "value": "1,810",
+        "label": "Attack Elo"
+      },
+      {
+        "value": "3 d",
+        "label": "Current streak"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Kingside attack",
+        "desc": "Open lines toward the castled king"
+      },
+      {
+        "name": "Gambits",
+        "desc": "Sacrifice a pawn for the initiative"
+      },
+      {
+        "name": "Sacrifices",
+        "desc": "Give up material to mate"
+      },
+      {
+        "name": "Playing with the initiative",
+        "desc": "Keep up the threats move after move"
+      }
+    ],
+    "method": [
+      {
+        "title": "Dare",
+        "desc": "Spot the moment the attack becomes possible."
+      },
+      {
+        "title": "Keep the rhythm",
+        "desc": "Chain forcing moves without letting them breathe."
+      },
+      {
+        "title": "Finish in style",
+        "desc": "Convert the attack into mate or a decisive gain."
+      }
+    ],
+    "cta": "Create a session with Aaron",
+    "role": "REPERTOIRE & EVALUATION"
+  },
+  "page": {
+    "backToSession": "Back to the session",
+    "backHome": "Back to home",
+    "soon": "{module}: coming soon",
+    "motto": "THEIR MOTTO",
+    "quote": "“{motto}”",
+    "progress": "Your progress",
+    "progressWith": " with {name}",
+    "specialties": "Specialties",
+    "method": "Method",
+    "pct": "{pct}%"
+  }
+}

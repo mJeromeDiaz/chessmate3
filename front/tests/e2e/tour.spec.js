@@ -118,7 +118,7 @@ test('tour: level and goal saved, the professors and Ray, then the session build
   })
 })
 
-test('tour: kept in the browser, back, segments and skip; reopened from the menu and the profile', async ({
+test('tour: kept in the browser, back, segments and skip; reopened from the profile', async ({
   page,
   context
 }) => {
@@ -140,18 +140,9 @@ test('tour: kept in the browser, back, segments and skip; reopened from the menu
   await page.getByTestId('tour-skip').click()
   await expect(tour).toHaveAttribute('data-step', 'end')
 
-  // The account menu leads back to where it was left. (In-app links only from here: a goto that
-  // only changes the hash may leave the router where it was.)
-  await page.getByRole('link', { name: "Don't Stay Rooky" }).click()
-  await expect(page).toHaveURL(/#\/$/)
-  await expect(tour).toBeHidden()
-  await page.getByTestId('account-menu').click()
-  await page.getByTestId('nav-tour').click()
-  await expect(page).toHaveURL(/#\/visite$/)
-  await expect(tour).toHaveAttribute('data-step', 'end')
-
-  // The profile starts it over.
-  await page.getByTestId('account-menu').click()
+  // The profile starts it over. (In-app links only from here: a goto that only changes the hash
+  // may leave the router where it was.)
+  await page.getByTestId('nav-burger').click()
   await page.getByTestId('nav-profile').click()
   await expect(page).toHaveURL(/#\/profile$/)
   await page.getByTestId('profile-tour-restart').click()

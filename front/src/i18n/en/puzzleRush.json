@@ -1,1 +1,28 @@
-{}
+{
+  "percent": "{n}%",
+  "progress": "✓ {solved} · ✗ {failed} · accuracy {accuracy}",
+  "level": "≈ {rating}",
+  "oneTry": "One try, no help",
+  "oneTryTip": "A mistake counts as a miss and wipes out two solved puzzles: the next puzzle comes right away.",
+  "launch": {
+    "open": "Puzzle Rush",
+    "title": "Puzzle Rush",
+    "lead": "As many puzzles as possible in a fixed time, harder and harder. A mistake doesn't stop you, but it wipes out two solved puzzles: go fast, but be accurate.",
+    "start": "Start the rush",
+    "records": "Your records",
+    "noRecord": "no record yet",
+    "points": "{n} points",
+    "recordLine": "{minutes} min: {best}",
+    "rankedOnly": "Only rushes played to the end, without themes, count for records."
+  },
+  "result": {
+    "points": "POINTS",
+    "speedAccuracy": "{speed} puzzles/min · {accuracy} accuracy",
+    "scoreDetail": "Score: {solved} solved − {weight} × {failed} = {score} points",
+    "record": "Your record: {n}",
+    "newRecord": "New record! Previous: {n}",
+    "firstRecord": "Your first record!",
+    "unranked": "Not counted for records (stopped before the end, or with themes)",
+    "xp": "+{n} XP"
+  }
+}

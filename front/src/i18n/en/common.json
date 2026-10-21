@@ -1,1 +1,23 @@
-{}
+{
+  "locale": {
+    "title": "Language",
+    "hint": "Your choice is stored on your account and applies to your other devices.",
+    "menu": "Language: {name}"
+  },
+  "actions": {
+    "continue": "Continue",
+    "back": "← Back",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "retry": "Try again"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "offline": "The server is unreachable. Check your connection.",
+    "puzzleMaintenance": "The puzzle catalog is under maintenance. Try again in a minute.",
+    "tooMany": "Too many attempts. Please wait a few minutes before trying again."
+  },
+  "loading": "Loading…"
+}

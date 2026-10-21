@@ -2,7 +2,8 @@
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
-La **carte mentale** (page `/cerveau`, lien « Cerveau ») montre six capacités du joueur d'échecs
+La **carte mentale** (page `/cerveau`, titrée « Entraînement ludique » comme son entrée du menu
+depuis le 2026-10-21) montre six capacités du joueur d'échecs
 sur un cerveau. Chaque capacité aura un **parcours** à la Duolingo : des chapitres, des sections,
 des exercices à valider plusieurs fois, des mini-boss, des boss et des coffres. Le premier écrit
 est celui de la **visualisation** (contenu de l'utilisateur :
@@ -36,8 +37,10 @@ Choix validés (2026-10-20) :
   joueur fort peut le battre tout de suite, sans les exercices ni les mini-boss (restés jouables
   ensuite ; les coffres ne se gagnent qu'en réussissant les exercices). Les **mini-boss cachés** apparaissent (« ? ») une fois leur section
   franchie : facultatifs, un bonus et un badge.
-- **Coffres** : sur un chapitre long sans section, un coffre intermédiaire (chapitre 1 entre 1.4 et
-  1.5, chapitre 7 entre 7.2 et 7.3) ; chaque mini-boss et boss a le sien. Ouverture avec l'animation
+- **Coffres** : sur un chapitre long sans section, des coffres intermédiaires (chapitre 1 entre 1.3
+  et 1.4 puis entre 1.6 et 1.7, depuis le 2026-10-21 ; chapitre 7 entre 7.2 et 7.3) ; chaque
+  mini-boss et boss a le sien. Un coffre ajouté ou déplacé se donne sans migration : les coffres
+  dus sont recalculés sur tout le parcours à chaque étape terminée (`PathState::chestsDue`). Ouverture avec l'animation
   des coffres de session (`TreasureChest`).
 - **Modules** (Notation, Vision, variantes à l'aveugle) développés en parallèle, jouables aussi en
   libre et en session : libres d'emblée, sauf les modes de boss (après leur victoire) et les bots
@@ -133,7 +136,8 @@ fait que les révéler.
 | Étape | Clé | Cristaux | XP | Badges |
 |---|---|---|---|---|
 | Exercice validé | `1-1`… | — | 15 | — |
-| Ch. 1, coffre entre 1.4 et 1.5 | `1-chest` | 60 | — | — |
+| Ch. 1, coffre entre 1.3 et 1.4 | `1-chest` | 60 | — | — |
+| Ch. 1, coffre entre 1.6 et 1.7 | `1-chest-2` | 60 | — | — |
 | Ch. 1, boss Le Jongleur | `1-boss` | 200 | 100 | `chapter_1`, `boss_jongleur` |
 | Ch. 2, mini-boss 2.1 / 2.2 / 2.3 | `2-1-boss`… | 80 / 100 / 120 | 40 | `section_2_x` |
 | Ch. 2, mini-boss caché 2.3 | `2-3-hidden` | 60 | 40 | `hidden_2_3` |
@@ -269,7 +273,7 @@ seule option.
   pendant la question, jubile à une erreur, boude à une bonne réponse) et sa réplique, les 3 cœurs,
   une barre de 6 s calée sur le départ du serveur (à zéro, une réponse vide part), puis la question :
   échiquier vide à cliquer (`find`), case allumée et son nom tapé au clavier, celui de l'appareil sur écran tactile (`name`), boutons
-  Claire / Foncée ou C / F (`color`), coup annoncé à jouer (`play`), coup joué sous les yeux puis
+  Claire / Foncée ou leurs initiales, C / F (L / D en anglais, `coordinates.colorKeys`) (`color`), coup annoncé à jouer (`play`), coup joué sous les yeux puis
   champ et touches des pièces dans la langue de l'interface (`write`). Le verdict reste 0,7 s (juste)
   ou 1,6 s (raté, avec la bonne réponse), puis la question suivante vient seule ; le combat fini,
   `RunOutcome`. **Distractions** légères, environ une question sur trois, tirées de l'id de la

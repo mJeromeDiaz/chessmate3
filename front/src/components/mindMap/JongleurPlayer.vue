@@ -226,11 +226,12 @@
  * A question of the Jongleur (docs/MIND_MAP.md, § 8): find a square (a click on the empty board),
  * name the square lit (a file then a rank typed: the keyboard, or the device's own on a touch
  * screen; no keys on screen, they would read as a hint), tell a square's colour (« Claire »
- * / « Foncée », or C / F), play the move announced in a puzzle's position, or write the move just
- * shown played (piece letters of the UI's language). Each has its seconds: the bar runs from the
- * server's start, and an empty answer goes when it is empty. The Jongleur juggles while the player
- * thinks, laughs at a miss and sulks at a hit; one question in three or so brings a distraction
- * (the board wobbles, pieces fly over it), none when the system asks for less motion.
+ * / « Foncée », or their initials, C / F or L / D), play the move announced in a puzzle's
+ * position, or write the move just shown played (piece letters of the UI's language). Each has
+ * its seconds: the bar runs from the server's start, and an empty answer goes when it is empty.
+ * The Jongleur juggles while the player thinks, laughs at a miss and sulks at a hit; one question
+ * in three or so brings a distraction (the board wobbles, pieces fly over it), none when the
+ * system asks for less motion.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
@@ -238,6 +239,7 @@ import { Chess } from 'chess.js'
 import BossPortrait from '@/components/mindMap/BossPortrait.vue'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
+import { colorKey } from '@/utils/coordinates'
 import { BOSS_LIVES } from '@/utils/mindMapPath'
 import { distractionOf, jongleurVerdict } from '@/utils/jongleur'
 import { englishSan, localSan, pieceLetters } from '@/utils/notation'
@@ -445,7 +447,7 @@ function onBeforeInput(event) {
   }
 }
 
-/** The keyboard: a file and a rank (name), C / F or the arrows (colour). */
+/** The keyboard: a file and a rank (name), the colour's initial or the arrows (colour). */
 function onKey(/** @type {KeyboardEvent} */ event) {
   if (event.ctrlKey || event.metaKey || event.altKey || answered.value) return
   const target = /** @type {HTMLElement|null} */ (event.target)
@@ -456,9 +458,9 @@ function onKey(/** @type {KeyboardEvent} */ event) {
     else if (FILES.includes(key) || RANKS.includes(key)) type(key)
     else return
   } else if (question.value === 'color') {
-    if (key === 'c' || key === 'arrowleft') answerSquare('light')
-    else if (key === 'f' || key === 'arrowright') answerSquare('dark')
-    else return
+    const color = colorKey(key)
+    if (color === null) return
+    answerSquare(color)
   } else return
   event.preventDefault()
 }

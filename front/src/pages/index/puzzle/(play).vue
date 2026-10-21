@@ -395,15 +395,16 @@ async function importLichess() {
 
 watch(replayId, id => (id ? replay(id) : begin(() => store.next())))
 
-// The menu's "Puzzle Rush" lands here with ?rush=1: open its launcher, then drop the query.
+// The menu's "Puzzle Rush" lands here with ?rush=1: drop the query, then open its launcher (a
+// dialog closes itself on any route change, the replace included).
 watch(
   () => route.query.rush,
-  rush => {
+  async rush => {
     if (!rush) return
-    rushDialog.value = true
     const query = { ...route.query }
     delete query.rush
-    router.replace({ query })
+    await router.replace({ query })
+    rushDialog.value = true
   },
   { immediate: true }
 )

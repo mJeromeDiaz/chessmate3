@@ -1,1 +1,203 @@
-{}
+{
+  "sections": {
+    "freeze": {
+      "tab": "Streak",
+      "title": "Streak freeze",
+      "lead": "A day without training? Your streak stays intact."
+    },
+    "puzzle_streak": {
+      "tab": "Puzzle Streak",
+      "title": "Puzzle Streak",
+      "lead": "Stuck on a puzzle? Your streak survives."
+    },
+    "aids": {
+      "tab": "Aids",
+      "title": "Module aids",
+      "lead": "A mistake that doesn't count, when it counts."
+    },
+    "packs": {
+      "tab": "Packs",
+      "title": "Packs",
+      "lead": "Several items, a single charge."
+    },
+    "cosmetics": {
+      "tab": "Cosmetics",
+      "title": "Cosmetics",
+      "lead": "To win in style. Keep your crystals safe."
+    }
+  },
+  "moduleTabs": {
+    "puzzles": "Puzzles",
+    "blindfold": "Blindfold",
+    "coordinates": "Coordinates"
+  },
+  "freezeHow": [
+    "Missed a day? The freeze kicks in on its own, for up to {until}.",
+    "A snowball replaces your flame on those days; your streak doesn't break.",
+    "Days it didn't use are kept for next time."
+  ],
+  "items": {
+    "streak_freeze_1": {
+      "kicker": "STREAK FREEZE",
+      "label": "1-day freeze",
+      "until": "1 day"
+    },
+    "streak_freeze_2": {
+      "kicker": "STREAK FREEZE",
+      "label": "2-day freeze",
+      "until": "2 days in a row"
+    },
+    "streak_freeze_7": {
+      "kicker": "STREAK FREEZE",
+      "label": "1-week freeze",
+      "until": "7 days in a row"
+    },
+    "streak_freeze_14": {
+      "kicker": "STREAK FREEZE",
+      "label": "2-week freeze",
+      "until": "14 days in a row"
+    },
+    "puzzle_streak_pass": {
+      "kicker": "PUZZLE STREAK",
+      "label": "Puzzle Streak pass",
+      "how": [
+        "Stumped? Before playing, use the pass: the solution appears.",
+        "Your streak isn't broken.",
+        "You move on to an equivalent puzzle, same theme, same level."
+      ]
+    },
+    "puzzle_streak_help": {
+      "kicker": "PUZZLE STREAK",
+      "label": "Puzzle Streak help",
+      "how": [
+        "Tap “Help” during your streak.",
+        "The piece to move lights up.",
+        "You find the move: the streak continues as normal."
+      ]
+    },
+    "puzzle_pardon": {
+      "kicker": "AID · PUZZLES",
+      "label": "Mistake pardoned · Puzzles",
+      "how": [
+        "You miss a rated puzzle.",
+        "On the failure sheet, tap “Pardon”: no points lost.",
+        "The puzzle stays missed, your rating goes back to what it was."
+      ]
+    },
+    "blindfold_pardon": {
+      "kicker": "AID · BLINDFOLD",
+      "label": "Mistake pardoned · Blindfold",
+      "how": [
+        "You play a wrong move, or miss the puzzle, with your eyes closed.",
+        "Tap “Pardon”: your mistakes are erased, your peek comes back.",
+        "The puzzle counts as solved, with all its XP."
+      ]
+    },
+    "coordinates_pardon": {
+      "kicker": "AID · COORDINATES",
+      "label": "Mistake pardoned · Coordinates",
+      "how": [
+        "Turn on “Pardon” when starting your series.",
+        "Your first wrong square doesn't count.",
+        "No mistake: your pardon stays in stock."
+      ]
+    }
+  },
+  "cosmeticKicker": "COSMETIC",
+  "packKicker": "PACK",
+  "part": "{n} × {label}",
+  "partLine": "{label}.",
+  "packArrives": "Everything goes into your inventory.",
+  "saving": "−{n}%",
+  "checkout": {
+    "missing": "You're short",
+    "missingNote": "A little more training, and come back to see me.",
+    "buy": "Buy ·",
+    "left": "You'll have {n} crystal left | You'll have {n} crystals left"
+  },
+  "chest": {
+    "closed": {
+      "small": ["A small treasure", "for you!"],
+      "medium": ["A treasure", "for you!"],
+      "big": ["A big treasure", "for you!"]
+    },
+    "open": {
+      "perfect": ["What a", "jackpot!"],
+      "near": ["Nice", "treasure!"],
+      "missed": ["Nice", "loot!"]
+    },
+    "stages": {
+      "closed": {
+        "kicker": "SESSION REWARD",
+        "hint": "Tap the chest"
+      },
+      "hit1": {
+        "kicker": "IT'S MOVING…",
+        "title": ["It's still", "holding!"],
+        "hint": "One more hit!"
+      },
+      "hit2": {
+        "kicker": "ALMOST…",
+        "title": ["Come on,", "one last time!"],
+        "hint": "It's about to give…"
+      },
+      "open": {
+        "kicker": "CRYSTALS FOUND"
+      }
+    },
+    "tiers": {
+      "perfect": "Perfect session",
+      "near": "Almost perfect",
+      "missed": "Session complete"
+    },
+    "paid": "{n} min paid | {n} min paid",
+    "capped": "daily cap reached",
+    "cappedLine": "Daily cap reached: no crystals for this session.",
+    "line": "+{n} crystals · {note}"
+  },
+  "earning": {
+    "perfect": "Perfect session (100%)",
+    "near": "Almost perfect (80 to 99%)",
+    "missed": "Below 80%"
+  },
+  "page": {
+    "lead": "Spend your crystals",
+    "title": "Shop",
+    "balance": "{n} crystals",
+    "tabs": "Aisles",
+    "soon": "COMING SOON",
+    "toProtect": "🔥︎ {n} d to protect",
+    "frozen": "❄︎ {n} freeze day in stock | ❄︎ {n} freeze days in stock",
+    "earnTitle": "Earn crystals",
+    "earnLead": "Complete a session: a chest awaits you at the end. Every minute played pays, at most one per completed exercise (free time doesn't count).",
+    "perHour": "{n} / h",
+    "daily": "Up to {n} paid min per day · {left}",
+    "leftToday": "{n} min left today",
+    "cappedToday": "cap reached today",
+    "launch": "Start a session"
+  },
+  "errors": {
+    "gone": "This offer no longer exists.",
+    "unavailable": "This offer is no longer on sale, or you're short of crystals.",
+    "nothingToBuy": "Nothing to buy for now: the shop doesn't sell any."
+  },
+  "bought": "{name}: it's in your stock.",
+  "celebration": {
+    "name": "{n} × {name}",
+    "added": "Added to your inventory"
+  },
+  "sheet": {
+    "stock": "In stock: {n}",
+    "quantity": "Quantity",
+    "less": "One less",
+    "more": "One more",
+    "wait": "One moment…"
+  },
+  "chestScreen": {
+    "label": "Session reward",
+    "open": "Open the chest",
+    "added": "crystals added to your reserve",
+    "spend": "Spend in the shop",
+    "results": "See my results"
+  }
+}

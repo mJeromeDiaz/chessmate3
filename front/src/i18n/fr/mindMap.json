@@ -1,10 +1,11 @@
 {
   "page": {
     "kicker": "Tes capacités",
-    "title": "Carte mentale",
+    "title": "Entraînement ludique",
     "hint": "Choisis une zone du cerveau pour découvrir la capacité qu’elle entraîne.",
     "selected": "{name} : ouverte sur le côté.",
-    "brainLabel": "Les six zones du cerveau"
+    "brainLabel": "Les six zones du cerveau",
+    "lead": "Six capacités font un joueur d’échecs : calculer loin, voir l’échiquier sans le regarder, reconnaître des formes, décider vite, penser stratégie et garder son sang-froid. Chacune a sa zone du cerveau et son parcours, à jouer comme un jeu : des chapitres d’exercices courts à réussir plusieurs fois, des coffres pleins de cristaux, des boss à trois vies et des badges à collectionner. Bats le boss d’un chapitre pour ouvrir le suivant."
   },
   "panel": {
     "kicker": "Capacité {n}",

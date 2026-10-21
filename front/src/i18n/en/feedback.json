@@ -1,1 +1,47 @@
-{}
+{
+  "kickers": {
+    "win": "BRAVO",
+    "help": "NOT BAD",
+    "miss": "REVIEW"
+  },
+  "time": " · {time}",
+  "elo": " · Elo {delta}",
+  "puzzle": {
+    "winMotif": "{motif}!",
+    "win": "Bravo!",
+    "foundAlone": "{move} found on your own",
+    "foundAloneNoMove": "Found on your own",
+    "winBubbleMotif": "Flawless. The “{motif}” motif was there, and you saw it without me.",
+    "winBubble": "Flawless. You saw the move without me.",
+    "help": "Well played!",
+    "withHint": "Found with a hint",
+    "helpBubble": "You had the right reflex once put on the track. Next time, on your own!",
+    "miss": "Missed!",
+    "solution": "The solution: {move}!",
+    "seeSolution": "Look at the solution.",
+    "missBubbleMotif": "The motif to remember: “{motif}”. Replay the solution in your head.",
+    "missBubble": "Look for checks, captures and threats first: the solution often starts there."
+  },
+  "blindfold": {
+    "win": "From memory!",
+    "found": "{move} found blindfold",
+    "foundNoMove": "Found blindfold",
+    "winBubble": "You kept it all in your head. Great memory!",
+    "withPeek": "Found with a peek",
+    "helpBubble": "One peek, and you picked up the thread. Next time, without looking!",
+    "missBubble": "The position slipped away from you. Memorize it piece by piece, starting with the kings."
+  },
+  "repertoire": {
+    "winLine": "Line completed!",
+    "winSegment": "Segment completed!",
+    "moves": "{n} prepared move without a mistake | {n} prepared moves without a mistake",
+    "winBubble": "Your preparation holds up. Let's keep going!",
+    "expected": "The prepared move: {move}",
+    "missLine": "Line missed",
+    "missSegment": "Segment missed",
+    "retryLine": "You need to know this move by heart. The line comes back later in the run.",
+    "retrySegment": "You need to know this move by heart. It comes back later in the run.",
+    "later": "You need to know this move by heart. Review it after the run."
+  },
+  "xp": "+{n} XP"
+}

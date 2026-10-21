@@ -1,1 +1,93 @@
-{}
+{
+  "choices": {
+    "2": {
+      "label": "White is winning",
+      "short": "White ++"
+    },
+    "1": {
+      "label": "White is better",
+      "short": "White +"
+    },
+    "0": {
+      "label": "Balanced",
+      "short": "Equal"
+    },
+    "-1": {
+      "label": "Black is better",
+      "short": "Black +"
+    },
+    "-2": {
+      "label": "Black is winning",
+      "short": "Black ++"
+    }
+  },
+  "winTitles": ["Promotion!", "Royal analysis!", "A grandmaster's eye!"],
+  "verdicts": {
+    "exact": "Well spotted!",
+    "close": "Almost!",
+    "miss": "Not this time",
+    "timeout": "Time's up"
+  },
+  "feedback": {
+    "exactPlan": "Exact evaluation and plan",
+    "exact": "Exact evaluation · {time}",
+    "kicker": "REVIEW",
+    "exactBubble": "Exactly my analysis. You've got the eye!",
+    "lookAgain": "Look at the key ideas: they are what tips the balance.",
+    "closeSub": "One step away from the engine ({engine})",
+    "missSub": "The engine says {engine} · reread the key ideas"
+  },
+  "plan": {
+    "none": "no plan chosen",
+    "ok": "✓ well found (+5 XP)",
+    "chosen": "you had chosen “{plan}”"
+  },
+  "sides": {
+    "both": "Both",
+    "white": "White",
+    "black": "Black"
+  },
+  "results": {
+    "none": "No positions played.",
+    "played": "{n} position | {n} positions",
+    "exact": "{n} exact ({rate}) | {n} exact ({rate})",
+    "close": "{n} one step away",
+    "plans": "{n} plan found | {n} plans found"
+  },
+  "player": {
+    "question": "Who is better?",
+    "plan": "The plan",
+    "optional": "(optional)",
+    "validate": "Submit my evaluation",
+    "you": "You: {value}",
+    "engine": "Engine: {value}",
+    "bestPlan": "Best plan:",
+    "tipKicker": "TIP",
+    "tip": "Count the material, then look at king safety and piece activity.",
+    "turn": {
+      "white": "White to move",
+      "black": "Black to move"
+    }
+  },
+  "page": {
+    "title": "Position evaluation",
+    "lead": "Aaron shows you a position: who is better? Five answers, from White's point of view: equal below {advantage} pawn, an advantage up to {winning} pawns, winning beyond that (a mate or a won endgame counts as winning). When the position has one, find the plan too (optional, as a bonus). Each run lasts 1, 2, 5 or 10 minutes: positions follow one another, take the time you need on each; the one on screen at the end does not count.",
+    "new": "New run",
+    "level": "Position level: {elo}",
+    "side": "Side to move",
+    "empty": "No positions for this side to move yet."
+  },
+  "plans": {
+    "king_attack": "Kingside attack",
+    "queenside": "Queenside play",
+    "center_space": "Center and space",
+    "simplify": "Simplify into an endgame",
+    "active_defense": "Active defense"
+  },
+  "tags": {
+    "opening": "Opening",
+    "middlegame": "Middlegame",
+    "structure": "Structure",
+    "endgame": "Endgame"
+  }
+}

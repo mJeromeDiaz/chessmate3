@@ -34,7 +34,7 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
         $steps = $path['chapters'][0]['sections'][0]['steps'];
         self::assertSame(['1-1', 'open', 0, 2, true], [$steps[0]['key'], $steps[0]['status'], $steps[0]['passes'], $steps[0]['required'], $steps[0]['skippable']]);
         self::assertSame(['locked', false], [$steps[1]['status'], $steps[1]['skippable']]);
-        self::assertSame(['chest', 60], [$steps[4]['kind'], $steps[4]['crystals']]);
+        self::assertSame([['1-chest', 'chest', 60], ['1-chest-2', 'chest', 60]], [[$steps[3]['key'], $steps[3]['kind'], $steps[3]['crystals']], [$steps[7]['key'], $steps[7]['kind'], $steps[7]['crystals']]], 'After 1.3, and after 1.6.');
         $boss = $path['chapters'][0]['boss'];
         self::assertSame(['boss', 'open', 'jongleur', 200, 100], [$boss['kind'], $boss['status'], $boss['character'], $boss['crystals'], $boss['xp']], 'Announced at the top of its chapter, open at once.');
         $hidden = $path['chapters'][1]['sections'][2]['hidden'][0];
@@ -132,7 +132,7 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
     public function testTheChestOnTheWayIsEarnedByPassesThenOpened(): void
     {
         $alice = $this->createUserIn('alice@example.com');
-        foreach (['1-2', '1-3', '1-4'] as $step) {
+        foreach (['1-2', '1-3'] as $step) {
             $this->completed($alice, $step);
         }
 
@@ -143,7 +143,7 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
         self::assertSame([['1-chest', 60, false]], array_map(static fn (array $chest): array => [$chest['step'], $chest['crystals'], $chest['opened']], $outcome['unopenedChests']));
         self::assertSame(60, $this->balanceOf($alice), 'Credited when earned.');
         $path = $this->path($alice);
-        self::assertSame(['done', 'open'], [$this->step($path, '1-chest')['status'], $this->step($path, '1-5')['status']]);
+        self::assertSame(['done', 'open', 'locked'], [$this->step($path, '1-chest')['status'], $this->step($path, '1-4')['status'], $this->step($path, '1-chest-2')['status']], 'The chest after 1.3; the second waits for 1.4 to 1.6.');
         self::assertSame(60, $this->step($path, '1-chest')['chest']['crystals'] ?? null);
 
         $chestId = $outcome['unopenedChests'][0]['id'];
@@ -159,10 +159,10 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
         self::assertSame(['passed', false, 0], [$practice['outcome'], $practice['completed'], $practice['xp']]);
         self::assertSame(60, $this->balanceOf($alice));
         $this->runOutbox();
-        self::assertSame(15, $this->mindMapXpOf($alice), 'Exercise 1.1 only (1.2 to 1.4 set as done here); the chest has no XP.');
+        self::assertSame(15, $this->mindMapXpOf($alice), 'Exercise 1.1 only (1.2 and 1.3 set as done here); the chest has no XP.');
 
-        // 1.5: a counted lesson of the notation module (docs/NOTATION.md), its clock only an expiry.
-        $response = $this->api('POST', '/api/mind-map/visualisation/steps/1-5/start', $alice);
+        // 1.4: a counted lesson of the notation module (docs/NOTATION.md), its clock only an expiry.
+        $response = $this->api('POST', '/api/mind-map/visualisation/steps/1-4/start', $alice);
         self::assertSame(201, $response->getStatusCode(), (string) $response->getContent());
         $run = $this->json($response)['run'] ?? null;
         self::assertIsArray($run);

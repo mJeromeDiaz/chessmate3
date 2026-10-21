@@ -1,1 +1,118 @@
-{}
+{
+  "trophies": {
+    "woodpecker": {
+      "name": "Woodpecker",
+      "desc": "A Woodpecker cycle within the time limit"
+    },
+    "golden_fork": {
+      "name": "Golden fork",
+      "desc": "100 forks without help"
+    },
+    "iron_memory": {
+      "name": "Iron memory",
+      "desc": "95% over 50 repertoire tests in 30 days"
+    },
+    "first_step": {
+      "name": "First step",
+      "desc": "A first exercise"
+    },
+    "steel_woodpecker": {
+      "name": "Steel woodpecker",
+      "desc": "A Woodpecker set completed"
+    },
+    "centurion": {
+      "name": "Centurion",
+      "desc": "1,000 puzzles solved"
+    },
+    "conductor": {
+      "name": "Conductor",
+      "desc": "10 sessions completed"
+    },
+    "marathon": {
+      "name": "Marathoner",
+      "desc": "50 h of training"
+    }
+  },
+  "level": {
+    "xp": "{xp} / {next} XP",
+    "nextRank": "{left} XP to go before level {level} · “{rank}” at level {rankLevel}",
+    "next": "{left} XP to go before level {level}"
+  },
+  "badges": {
+    "streakDesc": "{n} day in a row | {n} days in a row",
+    "puzzleStreakDesc": "{n} puzzle in a row | {n} puzzles in a row"
+  },
+  "progress": {
+    "unlockedOn": "On {date}",
+    "tests": "{current}/{goal} tests · {pct}%",
+    "days": "{current}/{goal} days",
+    "puzzles": "{current}/{goal} puzzles",
+    "plain": "{current}/{goal}"
+  },
+  "quests": {
+    "rated_puzzles": "Solve {n} rated puzzle this week. | Solve {n} rated puzzles this week.",
+    "weak_theme": "Solve {n} “{theme}” puzzle without help: it's your weak spot right now. | Solve {n} “{theme}” puzzles without help: it's your weak spot right now.",
+    "sessions": "Complete {n} session this week. | Complete {n} sessions this week.",
+    "woodpecker": "Play {n} puzzle from your Woodpecker set. | Play {n} puzzles from your Woodpecker set.",
+    "repertoire": "Pass {n} segment of your repertoire. | Pass {n} segments of your repertoire.",
+    "days": "Train {n} day this week. | Train {n} days this week."
+  },
+  "streakBadges": {
+    "streak_3": "Spark",
+    "on_fire": "On fire",
+    "streak_14": "Campfire",
+    "unstoppable": "Unstoppable",
+    "streak_50": "Blaze",
+    "streak_100": "Centenarian",
+    "streak_200": "Furnace",
+    "streak_300": "Volcano",
+    "streak_365": "One year",
+    "streak_450": "Phoenix",
+    "streak_500": "Sun",
+    "streak_1000": "Legend"
+  },
+  "days": "{n} day | {n} days",
+  "streak": {
+    "restarted": "Your {days} streak has ended, but a new one starts today. Come back tomorrow to make it grow!",
+    "born": "A streak is born! Come back tomorrow for a second day: that's where the habit begins.",
+    "week": "A full week, without a gap. Great players are made of weeks like this one.",
+    "month": "A whole month! Your tactical eye is not what it was on day one, I promise you.",
+    "hundred": "A hundred days. I have nothing to add, except: hats off.",
+    "hundredNamed": "A hundred days. I have nothing to add, except: hats off, {name}.",
+    "year": "A year, every single day. No more “rooky” here: you are now the king of your own consistency.",
+    "badge": "{days} in a row: the “{badge}” badge is yours. Keep going, the next one is waiting!",
+    "keepGoing": "{days} in a row! Every run counts, even the short ones. Keep it up.",
+    "nextMilestone": "Next milestone: {days} · {left} to go",
+    "legend": "You are a legend."
+  },
+  "weekDays": ["M", "T", "W", "T", "F", "S", "S"],
+  "card": {
+    "title": "Streak",
+    "best": "Best: {days}",
+    "unit": "day in a row | days in a row",
+    "week": "Your week",
+    "frozen": "Frozen: your streak held without you",
+    "protected": "A freeze protects your streak. Play today so you don't use it.",
+    "keep": "One exercise today and your streak continues.",
+    "start": "One exercise today to start a streak.",
+    "nextBadge": "Next badge in {days}.",
+    "allBadges": "All the badges are yours."
+  },
+  "chip": {
+    "played": "Streak: {days} · best {best}",
+    "waiting": "Streak: {days} · play today to keep it",
+    "start": "Play today to start a streak"
+  },
+  "celebration": {
+    "label": "day streak! | day streak!",
+    "badge": "New badge: {name}"
+  },
+  "ranks": {
+    "beginner": "Beginner",
+    "amateur": "Amateur",
+    "tactician": "Tactician",
+    "strategist": "Strategist",
+    "expert": "Expert",
+    "master": "Master"
+  }
+}

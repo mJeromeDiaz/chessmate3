@@ -1,1 +1,178 @@
-{}
+{
+  "modules": {
+    "soon": "Coming soon",
+    "percent": "{pct}%",
+    "puzzles": {
+      "solved": "{n} solved",
+      "elo": " · Elo {rating}",
+      "none": "No puzzles played",
+      "rate": "Success {pct}"
+    },
+    "evaluation": {
+      "none": "No positions played",
+      "stat": "{n} positions · {pct} correct",
+      "rate": "Correct {pct}"
+    },
+    "woodpecker": {
+      "none": "No set in progress",
+      "light": "Light · round {n}",
+      "cycle": "Cycle {n}",
+      "cycleOf": "Cycle {n}/{total}",
+      "accuracy": " · accuracy {pct}",
+      "rate": "Cycle {pct}"
+    },
+    "repertoire": {
+      "none": "No repertoire",
+      "moves": "{n} moves",
+      "due": "{n} to review",
+      "nothingDue": "nothing to review",
+      "rate30": "{pct} over 30 d",
+      "rateLabel": "30-day success {pct}"
+    },
+    "title": "Progress by module",
+    "level": "Lvl {n}"
+  },
+  "stats": {
+    "periods": {
+      "7": "7 d",
+      "30": "30 d",
+      "90": "90 d",
+      "365": "1 yr"
+    },
+    "chart": {
+      "puzzles": "Puzzles",
+      "repertoire": "Repertoire",
+      "woodpecker": "Woodpecker",
+      "free": "Free"
+    },
+    "minutes": "{n} min",
+    "hours": "{h} h",
+    "hoursMinutes": "{h} h {m}",
+    "sessions": {
+      "completed": "Completed",
+      "abandoned": "Abandoned",
+      "expired": "Expired",
+      "average": "Average time"
+    },
+    "title": "My statistics"
+  },
+  "loadError": "Could not load this data. Please try again.",
+  "period": "Period",
+  "shop": {
+    "title": "Now in the shop",
+    "link": "Visit the shop →"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "played": "{n} played · {time} | {n} played · {time}",
+    "none": "None in this period"
+  },
+  "welcome": {
+    "kicker": "Welcome to Don't Stay Rooky",
+    "title": "Your dashboard will fill up as soon as you do your first exercise.",
+    "text": "Build a tailor-made session or start with a few puzzles: your consistency, your rating and your progress will show up here.",
+    "compose": "Build my first session",
+    "puzzles": "Solve puzzles"
+  },
+  "weak": {
+    "kicker": "TO WORK ON · {days} DAYS",
+    "rate": "{pct} success",
+    "train": "Train",
+    "stats": "My statistics →"
+  },
+  "quest": {
+    "kicker": "{prof} · CHALLENGE OF THE WEEK",
+    "done": "✓ DONE",
+    "progress": "{current}/{goal}",
+    "reward": "+{xp} XP"
+  },
+  "level": {
+    "hello": "Hello 👋︎",
+    "title": "Level {n}",
+    "loading": "Level…"
+  },
+  "trophies": {
+    "title": "Trophies",
+    "count": "{won} / {total} unlocked",
+    "empty": "No trophies yet: they unlock as you play, the surprise is at the end."
+  },
+  "plans": {
+    "title": "My sessions",
+    "all": "All →",
+    "empty": "Save a session to find it here.",
+    "compose": "Build a session"
+  },
+  "recent": {
+    "title": "Latest sessions",
+    "empty": "Your played sessions will appear here.",
+    "prepare": "Prepare a session"
+  },
+  "rating": {
+    "tabs": {
+      "puzzles": "Puzzles",
+      "blitz": "Blitz",
+      "rapid": "Rapid",
+      "classical": "Classical"
+    },
+    "kickers": {
+      "puzzles": "PUZZLE RATING",
+      "blitz": "LICHESS ELO · BLITZ",
+      "rapid": "LICHESS ELO · RAPID",
+      "classical": "LICHESS ELO · CLASSICAL"
+    },
+    "kicker": "{tab} · {days} DAYS",
+    "min": "{n} min",
+    "max": "Best {n}",
+    "today": "Today",
+    "noPuzzles": "Play rated puzzles to watch your rating evolve.",
+    "solve": "Solve puzzles",
+    "linkLichess": "Link your Lichess account to follow your game Elo.",
+    "link": "Link Lichess",
+    "noGames": "No rated games in this time control on Lichess.",
+    "record": "Best {n}"
+  },
+  "health": {
+    "title": "Repertoires",
+    "empty": "No repertoire yet.",
+    "create": "Create a repertoire →",
+    "due": "Positions due",
+    "new": "Never seen",
+    "success": "Success ({n} test) | Success ({n} tests)",
+    "fragileTitle": "Weak segments",
+    "noFragile": "None: nothing is slipping in your latest tests.",
+    "fragileMeta": "{name} · {n} tests",
+    "failures": "{pct} missed",
+    "note": "Weak: at least 3 tests and some failures among the last 10, across all history."
+  },
+  "themes": {
+    "title": "Puzzle themes",
+    "summary": "{pct} over {n} puzzles",
+    "empty": "No rated puzzles in this period.",
+    "play": "Play puzzles →",
+    "few": "Not enough attempts per theme yet ({n} minimum).",
+    "strong": "Strengths",
+    "weak": "To work on",
+    "nothing": "Nothing to report.",
+    "ratio": "{done} / {total}",
+    "train": "Train ›",
+    "note": "Rated puzzles solved without help (no mistake, hint or solution); {n} attempts minimum per theme."
+  },
+  "time": {
+    "title": "Training time",
+    "empty": "No exercises in this period.",
+    "week": "Week of {date}",
+    "weekHeader": "Week of",
+    "total": "Total",
+    "chart": "Show the chart",
+    "table": "Show the table",
+    "barLabel": "Week of {date}: {parts}",
+    "nothing": "nothing"
+  },
+  "home": {
+    "hello": "Hello 👋︎",
+    "title": "Your progress",
+    "stats": "My statistics →",
+    "newSession": "+ New session",
+    "sectionError": "Some module statistics could not be loaded."
+  }
+}

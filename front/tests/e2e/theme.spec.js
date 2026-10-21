@@ -38,10 +38,11 @@ test('signed in: the choice is kept on the account and found again on another br
   const saved = page.waitForResponse(
     r => r.url().endsWith('/api/profile/theme') && r.ok()
   )
-  // Signed in, the theme is in the account menu.
-  await page.getByTestId('account-menu').click()
-  await page.getByTestId('account-theme').click()
-  await page.getByTestId('theme-dark').click()
+  // Signed in, the theme is chosen in the profile.
+  await page
+    .getByTestId('profile-theme')
+    .getByRole('button', { name: 'Sombre' })
+    .click()
   await saved
   await expect(body(page)).toHaveClass(/body--dark/)
 

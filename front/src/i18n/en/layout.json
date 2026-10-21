@@ -1,1 +1,104 @@
-{}
+{
+  "nav": {
+    "puzzles": "Puzzles",
+    "rush": "Puzzle Rush",
+    "parcours": "Parcours",
+    "woodpecker": "Woodpecker",
+    "streak": "Puzzle streak",
+    "repertoires": "Repertoires",
+    "coordinates": "Coordinates",
+    "notation": "Notation",
+    "blindfold": "Blindfold play",
+    "recall": "Position recall",
+    "evaluation": "Evaluation",
+    "menu": "Menu"
+  },
+  "menu": {
+    "label": "Navigation",
+    "close": "Close the menu",
+    "dashboard": "Dashboard",
+    "mindMap": {
+      "title": "Playful training",
+      "text": "Train your cognitive skills as a game."
+    },
+    "create": {
+      "title": "Create a training",
+      "text": "Design a tailor-made training, or let us create it with {n} modules."
+    },
+    "free": {
+      "title": "Free training",
+      "text": "Pick a module and play it right away.",
+      "back": "Back to the menu"
+    },
+    "shop": {
+      "title": "Shop",
+      "text": "Streak freezes, aids and bonuses with your crystals.",
+      "balance": "{n} crystals"
+    }
+  },
+  "account": {
+    "profile": "Profile",
+    "shop": "Shop",
+    "admin": "Admin",
+    "signOut": "Sign out",
+    "signIn": "Sign in",
+    "signUp": "Sign up"
+  },
+  "theme": {
+    "current": "Theme: {name}",
+    "auto": "Automatic",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "notFound": {
+    "replay": "↺ Replay the move",
+    "captured": "PIECE CAPTURED",
+    "move": "404. Nxpage ??",
+    "kicker": "ERROR 404 · PAGE NOT FOUND",
+    "subTitle": "The page was right there.",
+    "subText": "You let it get captured.",
+    "bubbleKicker": "AARON · OOPS",
+    "bubble": "Don't panic, we'll start the game over from the beginning.",
+    "dashboard": "Back to the dashboard",
+    "puzzle": "Get revenge on a puzzle",
+    "home": "Back to home",
+    "blunder": "Blunder!"
+  },
+  "header": {
+    "back": "Back",
+    "crystals": "{n} crystals",
+    "kickers": {
+      "dashboard": "Dashboard",
+      "free": "Free training",
+      "create": "Create a training",
+      "account": "Your account",
+      "shop": "Your crystals",
+      "admin": "Administration",
+      "profs": "The profs",
+      "about": "Don't Stay Rooky"
+    },
+    "titles": {
+      "mindMap": "Playful training",
+      "sessionNew": "New training",
+      "plan": "Training",
+      "session": "Session",
+      "training": "Training in progress",
+      "repertoire": "Repertoire",
+      "woodpecker": "Woodpecker set",
+      "tour": "Guided tour",
+      "welcome": "Welcome",
+      "prof": "Prof",
+      "terms": "Terms of use",
+      "privacy": "Privacy",
+      "contact": "Contact",
+      "admin": {
+        "index": "Dashboard",
+        "players": "Players",
+        "invitations": "Invitations",
+        "requests": "Requests",
+        "positions": "Positions",
+        "shop": "Shop"
+      }
+    }
+  }
+}

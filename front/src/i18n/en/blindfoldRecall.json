@@ -1,1 +1,219 @@
-{}
+{
+  "percent": "{n}%",
+  "stages": {
+    "1": {
+      "title": "Memorize squares and pieces",
+      "goal": "Remember a few simple positions on the board."
+    },
+    "2": {
+      "title": "Memorize groups of pieces",
+      "goal": "Move from piece-by-piece memorization to spatial patterns."
+    },
+    "3": {
+      "title": "Memorize a denser position",
+      "goal": "Remember patterns closer to a real game."
+    },
+    "4": {
+      "title": "Visualize a chess position",
+      "goal": "Build a coherent mental picture of the board."
+    },
+    "5": {
+      "title": "Play without seeing the board",
+      "goal": "Move from static memorization to dynamic visualization."
+    }
+  },
+  "levels": {
+    "1": {
+      "title": "The three landmarks",
+      "pieces": "White king, black king, white pawn",
+      "goal": "memorize 3 pieces and their respective squares."
+    },
+    "2": {
+      "title": "Add a landmark",
+      "pieces": "2 kings and 2 white pawns",
+      "goal": "memorize 4 pieces without mixing up their squares."
+    },
+    "3": {
+      "title": "Tell the colors apart",
+      "pieces": "2 kings, 3 white pawns and 1 black pawn",
+      "goal": "memorize 6 pieces and identify their side."
+    },
+    "4": {
+      "title": "Spot a different piece",
+      "pieces": "2 kings, 1 white bishop and 3 pawns",
+      "goal": "memorize the squares of 6 pieces of different types."
+    },
+    "5": {
+      "title": "Remember 7 pieces",
+      "pieces": "2 kings, 1 bishop and 4 pawns",
+      "goal": "remember 7 pieces."
+    },
+    "6": {
+      "title": "Two identical pieces",
+      "pieces": "2 kings, 2 bishops and 4 pawns",
+      "goal": "tell two identical pieces apart."
+    },
+    "7": {
+      "title": "The knight",
+      "pieces": "2 kings, 1 knight and 4 pawns",
+      "goal": "memorize a piece with unusual moves."
+    },
+    "8": {
+      "title": "Lines and columns",
+      "pieces": "2 kings, 1 rook and 5 pawns",
+      "goal": "memorize horizontal and vertical alignments."
+    },
+    "9": {
+      "title": "A major piece",
+      "pieces": "2 kings, 1 queen and 5 pawns",
+      "goal": "memorize a major piece."
+    },
+    "10": {
+      "title": "Several piece types",
+      "pieces": "2 kings, 1 bishop, 1 knight and 6 pawns",
+      "goal": "remember several piece types."
+    },
+    "11": {
+      "title": "Several alignments",
+      "pieces": "2 kings, 2 rooks and 6 pawns",
+      "goal": "memorize several alignments."
+    },
+    "12": {
+      "title": "Pieces and their relations",
+      "pieces": "2 kings, 1 queen, 1 bishop, 1 knight and 6 pawns",
+      "goal": "remember 11 pieces and their relations."
+    },
+    "13": {
+      "title": "A 14-piece position",
+      "pieces": "A real 14-piece position",
+      "goal": "spot the groups and the diagonals."
+    },
+    "14": {
+      "title": "A 16-piece position",
+      "pieces": "A real 16-piece position",
+      "goal": "tell the two sides apart in a dense position."
+    },
+    "15": {
+      "title": "An 18-piece position",
+      "pieces": "A real 18-piece position",
+      "goal": "remember pieces that are close together."
+    },
+    "16": {
+      "title": "A 20-piece position",
+      "pieces": "A real 20-piece position",
+      "goal": "rebuild a semi-complete position."
+    },
+    "17": {
+      "title": "Rebuild fast",
+      "pieces": "A real position of 12 to 16 pieces, shown for 5 seconds",
+      "goal": "rebuild a position quickly."
+    },
+    "18": {
+      "title": "Less preparation time",
+      "pieces": "A real position of 16 to 20 pieces, shown for 5 seconds",
+      "goal": "rebuild a position with less preparation."
+    },
+    "19": {
+      "title": "One announced move",
+      "pieces": "A position of 12 to 16 pieces, hidden, then one announced move",
+      "goal": "picture the moved piece and its new square."
+    },
+    "20": {
+      "title": "An announced sequence",
+      "pieces": "A position of 12 to 16 pieces, hidden, then three announced moves",
+      "goal": "visualize the successive moves and the final position."
+    }
+  },
+  "page": {
+    "title": "Rebuild",
+    "lead": "A position appears for a few seconds then disappears: place all the pieces from memory on the empty board. {n} exact rebuilds unlock the next level. No effect on your puzzle rating.",
+    "stage": "Step {n} · {title}",
+    "progress": "{exact}/{goal}",
+    "levelOf": "Level {n} · step {stage}",
+    "goal": "Goal: {goal}",
+    "time": "{n} s to memorize",
+    "played": "{n} attempt | {n} attempts",
+    "passedText": "{played} · {exact} exact: level passed.",
+    "toUnlock": "{played} · {left} more exact rebuild(s) to unlock level {next}.",
+    "free": "No timer",
+    "freeHint": "Play this level's positions at your own pace, as many as you want.",
+    "play": "Play this level",
+    "timed": "Timed session"
+  },
+  "player": {
+    "level": "Level {n}",
+    "toMemorize": "{n} s to memorize",
+    "hidden": "Hidden position",
+    "seconds": "{n} s",
+    "memorized": "I've memorized it",
+    "clear": "Clear all",
+    "done": "I'm done",
+    "eraser": "Eraser: empty a square",
+    "announced": "Moves played from",
+    "placed": "{n} piece placed | {n} pieces placed",
+    "pieceNames": {
+      "white": {
+        "k": "White king",
+        "q": "White queen",
+        "r": "White rook",
+        "b": "White bishop",
+        "n": "White knight",
+        "p": "White pawn"
+      },
+      "black": {
+        "k": "Black king",
+        "q": "Black queen",
+        "r": "Black rook",
+        "b": "Black bishop",
+        "n": "Black knight",
+        "p": "Black pawn"
+      }
+    },
+    "views": {
+      "answer": "The position",
+      "mine": "My rebuild"
+    },
+    "legend": {
+      "found": "found",
+      "missing": "forgotten",
+      "right": "well placed",
+      "wrong": "wrong or extra"
+    },
+    "counts": "{correct}/{expected} pieces well placed · {accuracy}",
+    "extra": "{n} extra | {n} extra",
+    "unlocked": "level {n} unlocked!",
+    "nextLevel": "Level {n} →",
+    "verdicts": {
+      "exact": "Exact position!",
+      "close": "Almost!",
+      "missed": "Not yet…"
+    },
+    "kickers": {
+      "memorize": "Memorize",
+      "visualize": "Visualize",
+      "rebuild": "Your turn",
+      "exact": "Perfect",
+      "close": "Almost",
+      "missed": "Keep going"
+    },
+    "bubbles": {
+      "exact": "Every piece in its place. Your board memory is improving!",
+      "close": "You're just missing a little: look at the outlined squares.",
+      "missed": "Compare with the position: spot the piece groups before it disappears."
+    },
+    "memorizeText": "Remember each piece and its square: the position is about to disappear.",
+    "visualizeText": "Keep the position in mind…",
+    "listenText": "Keep the position in mind and play the announced moves in your head.",
+    "rebuildText": "Pick a piece, then tap its square. Tap a placed piece to remove it.",
+    "rebuildAfterText": "Rebuild the position after the announced moves: pick a piece, then tap its square.",
+    "lessonProgress": "Position {n} of {count}"
+  },
+  "recap": {
+    "level": "Level {level} · {title}.",
+    "results": "Exact: {exact} · close: {close} · missed: {missed} · accuracy: {accuracy}.",
+    "unlocked": "Level {level} unlocked!"
+  },
+  "review": {
+    "title": "Level {level} · {correct}/{expected} pieces"
+  }
+}

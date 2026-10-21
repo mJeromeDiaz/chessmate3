@@ -1,1 +1,210 @@
-{}
+{
+  "player": "Player",
+  "avatars": {
+    "knight": "Knight",
+    "bishop": "Bishop",
+    "queen": "Queen",
+    "rook": "Rook",
+    "king": "King",
+    "pawn": "Pawn"
+  },
+  "handle": {
+    "invalid": "3 characters minimum · letters, digits, _",
+    "reserved": "This username is reserved.",
+    "taken": "This username is already taken.",
+    "optional": "Optional · 3 to 20 characters: letters, digits, _",
+    "current": "Your current username",
+    "checking": "Checking…",
+    "available": "✓ {'@'}{handle} is available"
+  },
+  "sessions": {
+    "unknownDevice": "Unknown device",
+    "now": "now",
+    "network": "network {ip}",
+    "today": "today, {time}",
+    "yesterday": "yesterday, {time}",
+    "day": "{day}, {time}",
+    "title": "Recent sign-ins",
+    "current": "This device",
+    "close": "Close",
+    "closeTitle": "Close this session?",
+    "closeMessage": "{device} will have to sign in again.",
+    "alreadyClosed": "This session is already closed.",
+    "signOutInstead": "To close this session, sign out."
+  },
+  "deletionRefusals": {
+    "invalid_code": "Incorrect code.",
+    "code_expired": "This code is no longer valid: request a new one.",
+    "resend_too_soon": "Wait a few seconds before requesting a new code.",
+    "recent_sign_in_required": "Sign in again to confirm the deletion.",
+    "deletion_scheduled": "The deletion is already scheduled.",
+    "tooMany": "Too many attempts. Wait a little before trying again.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "export": {
+    "tooMany": "Three exports per day at most: try again tomorrow.",
+    "failed": "The export could not be prepared. Please try again."
+  },
+  "title": "Profile",
+  "linked": "{provider} account linked.",
+  "notificationsTitle": "Notifications and calendar",
+  "hero": {
+    "edit": "✎ Edit",
+    "editWide": "✎ Edit profile",
+    "level": "Level {level}",
+    "memberSince": "Member since {month}",
+    "memberSinceAfter": "member since {month}"
+  },
+  "security": {
+    "title": "Security",
+    "email": "Email",
+    "noEmail": "None",
+    "pendingEmail": "Awaiting confirmation: {email} (open the link sent by email)"
+  },
+  "password": {
+    "title": "Password",
+    "current": "Current password",
+    "new": "New password",
+    "newHint": "12 characters minimum. Your other sessions and trusted devices will be revoked.",
+    "min": "12 characters minimum",
+    "change": "Change password",
+    "addIntro": "Add a password to also sign in with your email. A verification code will be sent to you by email at each sign-in.",
+    "emailHint": "We'll send you a link to confirm it.",
+    "password": "Password",
+    "minHint": "12 characters minimum.",
+    "add": "Add a password",
+    "required": "Required field",
+    "changed": "Password changed. Your other sessions have been closed.",
+    "wrongCurrent": "Incorrect current password.",
+    "added": "Password added.",
+    "pending": "If this address can be used, a confirmation link has just been sent to it. Your password will work once the address is confirmed.",
+    "already": "This account already has a password."
+  },
+  "devices": {
+    "title": "Trusted devices",
+    "intro": "On these devices, signing in with a password does not ask for a code for 30 days.",
+    "none": "No trusted devices.",
+    "dates": "Added on {added} · last used {used} · expires on {expires}",
+    "revoke": "Revoke"
+  },
+  "connections": {
+    "title": "Connections",
+    "linkedOn": "Linked on {date}",
+    "notLinked": "Not linked",
+    "unlink": "Disconnect",
+    "link": "Link",
+    "lockNote": "Keep at least one sign-in method active.",
+    "unlinkTitle": "Disconnect {provider}?",
+    "unlinkMessage": "You will no longer be able to sign in with this account. Your other sessions will be closed. Your Don't Stay Rooky data stays saved.",
+    "lastMethod": "This is your only sign-in method: it cannot be removed."
+  },
+  "timezone": {
+    "title": "Time zone",
+    "intro": "Used to compute your activity days and Woodpecker deadlines. Days already recorded do not change.",
+    "use": "Use {timezone}",
+    "saved": "Time zone saved.",
+    "unknown": "Unknown time zone."
+  },
+  "preferences": {
+    "title": "Preferences",
+    "board": "Board",
+    "boards": {
+      "wood": "Wood",
+      "glass": "Glass",
+      "pastel": "Pastel",
+      "tournament": "Tournament",
+      "slate": "Slate"
+    },
+    "sounds": "Sounds",
+    "soundsHint": "Moves, end of puzzle, module and session",
+    "public": "Public profile",
+    "private": "Private profile",
+    "publicHint": "Other players will be able to see your level and your stats.",
+    "privateHint": "Your level and your stats are only visible to you."
+  },
+  "appearance": {
+    "title": "Appearance",
+    "hint": "Automatic follows your device's setting. Your choice is stored on your account and applies to your other devices."
+  },
+  "tour": {
+    "title": "Guided tour",
+    "again": "Replay the tour",
+    "againHint": "Albert, Aaron, Lizy and their modules, in two minutes.",
+    "restart": "Replay",
+    "level": "My level",
+    "goal": "My goal"
+  },
+  "footer": {
+    "terms": "Terms of use",
+    "privacy": "Privacy",
+    "contact": "Contact"
+  },
+  "data": {
+    "title": "Data",
+    "export": "Export my data",
+    "exportHint": "Puzzles, repertoires, sessions and stats · ZIP (JSON + PGN)",
+    "exportButton": "Export",
+    "delete": "Delete my account",
+    "deleteHint": "Permanent after 30 days",
+    "deleteButton": "Delete…"
+  },
+  "push": {
+    "title": "Browser notifications",
+    "hint": "To receive reminders of your sessions and your streak on this device, even when Don't Stay Rooky is closed. Enable it on each device."
+  },
+  "streakReminder": {
+    "title": "Streak reminder",
+    "hint": "In the evening, if you haven't played yet, a notification warns you that your streak ends at midnight.",
+    "hour": "Time",
+    "hourOption": "{h}:00",
+    "email": "Also by email",
+    "devices": "The notification arrives on the devices where you enabled browser notifications."
+  },
+  "calendar": {
+    "title": "Calendar",
+    "intro": "A private address to add to your calendar (Google Calendar, Apple Calendar, Outlook…): it shows your sessions marked “Add to my calendar” and follows their changes. Keep it to yourself: anyone who knows it can see your sessions.",
+    "address": "Your calendar address",
+    "copy": "Copy the address",
+    "howTo": "Google Calendar: “Other calendars” → “From URL”. On Apple or Outlook, the “Subscribe” button opens the app.",
+    "subscribe": "Subscribe",
+    "regenerate": "New address",
+    "revoke": "Disable",
+    "create": "Create my calendar address",
+    "regenerateTitle": "Create a new address?",
+    "regenerateMessage": "The current address will stop working: you'll need to add the new one to your calendar.",
+    "revokeTitle": "Disable your calendar?",
+    "revokeMessage": "The address will stop working and your calendar will no longer show your sessions.",
+    "copied": "Address copied",
+    "copyFailed": "Copying failed: select the address to copy it."
+  },
+  "edit": {
+    "title": "Edit profile",
+    "avatar": "Avatar",
+    "displayName": "Display name",
+    "handle": "Username",
+    "saved": "Profile updated",
+    "taken": "This username was just taken: choose another one.",
+    "unusable": "This username cannot be used."
+  },
+  "deletion": {
+    "title": "Delete my account",
+    "erased": "The following will be permanently erased:",
+    "items": {
+      "puzzles": "your rating, your puzzles and your Woodpecker sets;",
+      "repertoires": "your repertoires and their reviews;",
+      "sessions": "your runs, sessions and statistics;",
+      "profile": "your profile and your linked accounts."
+    },
+    "frozen": "Your account will be {frozen}: you will be signed out everywhere, and can cancel by signing in again. After that, the deletion is permanent.",
+    "frozenDays": "frozen for 30 days",
+    "exportFirst": "Remember to export your data first (“Export” button).",
+    "understood": "I understand that my data will be deleted",
+    "codeSent": "A 6-digit code has just been sent to {email}. It is valid for 10 minutes.",
+    "code": "Code received by email",
+    "resend": "Resend the code",
+    "recent": "Your account has no email address: your recent sign-in is enough to confirm.",
+    "relogin": "Your account has no email address: to confirm, sign in again (with Lichess), then come back to delete your account from your profile within 10 minutes.",
+    "confirm": "Delete my account",
+    "signIn": "Sign in again"
+  }
+}

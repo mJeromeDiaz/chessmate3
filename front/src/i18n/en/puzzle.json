@@ -1,1 +1,107 @@
-{}
+{
+  "difficulties": {
+    "easier": "Easier",
+    "normal": "Normal",
+    "harder": "Harder"
+  },
+  "lichessImport": {
+    "409": "Your rating is already established.",
+    "422": "Lichess has no puzzle rating for this account."
+  },
+  "player": {
+    "helpCount": "Help · {n}",
+    "helpTip": "The piece to move lights up (shop).",
+    "passCount": "Pass · {n}",
+    "passTip": "Before your first move: the solution appears, your streak continues (shop).",
+    "help": "Help",
+    "solution": "Solution",
+    "skip": "Skip",
+    "replace": "Replace this puzzle",
+    "settings": "Puzzle settings",
+    "white": "White",
+    "black": "Black",
+    "passIntro": "Pass: here is the solution…",
+    "solutionIntro": "Solution…",
+    "opponent": "Opponent's turn…",
+    "wrong": "That's not the right move. Keep looking!",
+    "find": "Find the best move for {side}.",
+    "passed": "Puzzle passed: your streak continues.",
+    "done": "Puzzle complete.",
+    "bravo": "Bravo!",
+    "hintKicker": "HINT",
+    "hint1": "Hint: the piece to move is highlighted.",
+    "hint2": "Hint: follow the arrow.",
+    "yourTurn": "YOUR MOVE",
+    "skipTitle": "Skip this puzzle?",
+    "skipMessage": "Skipping counts as a failure.",
+    "replaceTitle": "Replace this puzzle?",
+    "replaceMessage": "It leaves the set for good: another puzzle of the same level takes its place.",
+    "replaceOk": "Replace"
+  },
+  "run": {
+    "title": "Timed run",
+    "lead": "Rated puzzles at your level, as long as there is time left.",
+    "themes": "Themes: {list}.",
+    "allThemes": "All themes."
+  },
+  "settings": {
+    "title": "Puzzle settings",
+    "rating": "Rating",
+    "history": "History",
+    "lichess": "Start with your Lichess puzzle rating?",
+    "import": "Import",
+    "difficulty": "Difficulty",
+    "themes": "Themes",
+    "clear": "Clear all",
+    "themesHint": "No theme checked: all themes. Otherwise, a puzzle is offered if it has at least one of the chosen themes.",
+    "nextPuzzle": "Applied from the next puzzle.",
+    "apply": "Apply"
+  },
+  "ratingTip": "Puzzle rating (±{n})",
+  "play": {
+    "title": "Puzzles",
+    "lichessLinked": "You have linked your Lichess account: start with your Lichess puzzle rating?",
+    "joinRun": "Join the run",
+    "sourceGame": "Original game",
+    "timedRun": "Timed run",
+    "heldByRun": "Your current puzzle is being played in a timed run.",
+    "pardoned": "Pardoned: your rating is back.",
+    "tooLate": "Too late: another puzzle has been played since.",
+    "noPardon": "This puzzle cannot be pardoned.",
+    "backToPuzzles": "Back to puzzles",
+    "next": "Next puzzle →",
+    "pardon": "Pardon · {n}",
+    "retry": "Try again",
+    "alreadySubmitted": "This puzzle has already been submitted.",
+    "attemptNotFound": "This attempt cannot be found.",
+    "notInHistory": "This puzzle is not part of your history.",
+    "noMatch": "No puzzle matches these criteria. Try other themes.",
+    "unknownTheme": "Unknown theme."
+  },
+  "history": {
+    "title": "History",
+    "all": "All",
+    "solved": "Solved",
+    "failed": "Failed",
+    "theme": "Theme",
+    "empty": "No attempts.",
+    "solvedOne": "Solved",
+    "failedOne": "Failed",
+    "unrated": "unrated",
+    "replay": "Replay",
+    "columns": {
+      "date": "Date",
+      "themes": "Themes",
+      "puzzle": "Puzzle",
+      "status": "Result",
+      "duration": "Duration",
+      "delta": "Rating"
+    }
+  },
+  "themesPage": {
+    "title": "Themes",
+    "playSome": "Play ({n})",
+    "playAll": "Play all themes",
+    "hint": "A puzzle is offered if it has at least one of the chosen themes."
+  }
+}

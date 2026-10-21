@@ -67,6 +67,30 @@ export function answerText(answer) {
     : answer
 }
 
+/**
+ * The colour a key answers, in the UI language: its initials (C / F in French, L / D in English,
+ * `coordinates.colorKeys`) or the arrows, ← light and → dark.
+ *
+ * @param {string} key a KeyboardEvent's `key`
+ * @returns {'light'|'dark'|null}
+ */
+export function colorKey(key) {
+  const lower = key.toLowerCase()
+  const initial = (/** @type {'light'|'dark'} */ color) =>
+    t(`coordinates.colorKeys.${color}`).toLowerCase()
+  if (lower === 'arrowleft' || lower === initial('light')) return 'light'
+  if (lower === 'arrowright' || lower === initial('dark')) return 'dark'
+  return null
+}
+
+/** The colour keys' hint: « Clavier : C ou ← pour claire, F ou → pour foncée. » */
+export function colorKeysHint() {
+  return t('coordinates.player.keysColor', {
+    light: t('coordinates.colorKeys.light'),
+    dark: t('coordinates.colorKeys.dark')
+  })
+}
+
 /** The orientations, as the API names them. */
 export const ORIENTATIONS = Object.defineProperties(
   {},

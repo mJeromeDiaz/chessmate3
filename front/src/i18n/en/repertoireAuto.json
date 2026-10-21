@@ -1,1 +1,284 @@
-{}
+{
+  "speeds": {
+    "bullet": "Bullet",
+    "blitz": "Blitz",
+    "rapid": "Rapid",
+    "classical": "Classical"
+  },
+  "tags": {
+    "risk": "At risk",
+    "weapon": "Weapon",
+    "draws": "Draws",
+    "solid": "Solid"
+  },
+  "outcomes": {
+    "wins": "Wins",
+    "draws": "Draws",
+    "losses": "Losses"
+  },
+  "steps": {
+    "connect": "Account",
+    "scan": "Analysis",
+    "select": "Selection",
+    "gen": "Generation",
+    "tree": "Repertoire"
+  },
+  "letters": {
+    "win": "W",
+    "draw": "D",
+    "loss": "L"
+  },
+  "think": {
+    "seconds": "{n} s",
+    "minutesSeconds": "{m} min {s}",
+    "minutes": "{m} min"
+  },
+  "eval": {
+    "pending": "not evaluated yet",
+    "mateFor": "mate in {n} for you",
+    "mateAgainst": "mate in {n} against you",
+    "none": "not evaluated by Lichess",
+    "equal": "equal",
+    "plus": "+{n} for you",
+    "minus": "−{n} for you"
+  },
+  "scan": {
+    "none": "I couldn't find any games to read with these settings. Try other time controls.",
+    "found": "{games} games read. You have a style of your own: {n} opening keeps coming back. | {games} games read. You have a style of your own: {n} openings keep coming back.",
+    "noFamily": "{games} games read, but no opening comes back at least 3 times. Try with more games.",
+    "reading": "I'm reading your games one by one… patience is required.",
+    "habits": "I'm spotting your habits in the first moves…",
+    "counting": "Almost done, I'm counting the openings…"
+  },
+  "family": {
+    "firstWhite": "Your #1 opening with White",
+    "firstBlack": "Your #1 opening with Black",
+    "best": "Your best score",
+    "fragile": "Fragile score: it's costing you points",
+    "draws": "Lots of draws",
+    "share": "Played in {n}% of your games"
+  },
+  "select": {
+    "white": "With White, it's mostly {family}",
+    "black": "with Black, {family}",
+    "keep": "Keep what works for you.",
+    "summary": "{parts}. Keep what works for you."
+  },
+  "ticker": {
+    "family": "{family}: {games} games, score {score}%.",
+    "worst": "{name}: you lose {n}% of these games.",
+    "best": "{name}: {n}% wins.",
+    "rebuilding": "I'm rebuilding your lines…"
+  },
+  "tree": {
+    "risk": "{n} is costing you points | {n} are costing you points",
+    "noRisk": "none is really costing you points",
+    "weapon": "{n} is a real weapon | {n} are real weapons",
+    "noWeapon": "none is a weapon yet",
+    "say": "I drew {lines} from your {games} games. {risk}, {weapon}.",
+    "lines": "{n} line | {n} lines"
+  },
+  "moments": {
+    "risk": "AT RISK",
+    "riskText": "{n}% losses over {games} games.",
+    "weapon": "YOUR WEAPON",
+    "weaponText": "{n}% wins over {games} games.",
+    "played": "MOST PLAYED",
+    "playedText": "{games} games."
+  },
+  "events": {
+    "suggested": "{move}: the move recommended by Lichess, which you haven't played yet. The line stops here: extend it in the editor.",
+    "error": "{move}: a mistake in {n} analyzed game out of {analysed}.{advice} | {move}: a mistake in {n} analyzed games out of {analysed}.{advice}",
+    "advice": " Lichess recommends {move}.",
+    "clean": "{move}: never a mistake in {n} analyzed games.",
+    "think": "{move}: you think for {time} on average here, the position still surprises you.",
+    "alternative": "{move} ({games} games, score {score}%)",
+    "alternatives": "You also played {list}."
+  },
+  "errors": {
+    "lichess_not_linked": "Link your Lichess account first.",
+    "invalid_settings": "Choose a number of games and at least one time control.",
+    "invalid_selection": "This selection no longer matches your games: reload the page.",
+    "not_ready": "Reading your games is not finished.",
+    "already_applied": "These repertoires have already been created.",
+    "nothing_selected": "Keep at least one opening that yields a line.",
+    "limit_repertoires": "You have reached the limit of 50 repertoires: delete some before continuing.",
+    "expired": "This analysis has expired (24 h): start over.",
+    "tooMany": "Too many requests in a short time: wait a few minutes.",
+    "lichess": "Lichess is not responding right now: try again in a moment.",
+    "offline": "The server is unreachable. Check your connection.",
+    "generic": "Something went wrong. Please try again.",
+    "unconfirmed_lines": "Confirm the short lines first: keep them or put them on hold."
+  },
+  "facts": {
+    "think": "You think for {time} on average on this move.",
+    "errors": "A mistake in {n} of the {analysed} games analyzed by Lichess.",
+    "errorsAdvice": "A mistake in {n} of the {analysed} games analyzed by Lichess, which recommends {move}.",
+    "clean": "Never a mistake in the {analysed} games analyzed by Lichess.",
+    "end": "End of line: {value} (Lichess cloud)."
+  },
+  "build": {
+    "waiting": "Lichess is finishing a previous request: wait a few seconds, I'll resume in {n} s…",
+    "removed": "“{name}” removed",
+    "suspended": "“{name}” put on hold."
+  },
+  "header": {
+    "back": "Back",
+    "title": "Auto repertoire",
+    "step": "{n}/{total} · {label}"
+  },
+  "connect": {
+    "bubble": "Show me your games. I'll observe what you really play, then build you a repertoire that suits you.",
+    "title": "Your repertoire, drawn from your real games",
+    "start": "Analyze my {n} games",
+    "account": "LICHESS ACCOUNT",
+    "connected": "Connected",
+    "linkHint": "Connect your account so I can read your games. I don't publish anything.",
+    "linking": "Connecting to Lichess…",
+    "link": "Connect Lichess",
+    "games": "GAMES TO ANALYZE",
+    "speeds": "TIME CONTROLS",
+    "rating": "{speed} {rating}"
+  },
+  "scanScreen": {
+    "toSelect": "See the summary",
+    "restart": "Change settings",
+    "analysed": "{n} games analyzed",
+    "legend": "games analyzed",
+    "count": "{shown} of {max}",
+    "found": "OPENINGS FOUND · {n}",
+    "live": "LIVE FROM LICHESS",
+    "versus": "vs {name}",
+    "anonymous": "Anonymous"
+  },
+  "selectScreen": {
+    "title": "Here's what you play",
+    "games": "games read",
+    "families": "openings",
+    "score": "overall score",
+    "percent": "{n}%",
+    "build": "Build my repertoire · {n}",
+    "pickOne": "Choose at least one opening",
+    "choose": "CHOOSE YOUR OPENINGS",
+    "removeAll": "Remove all",
+    "keepAll": "Keep all",
+    "withWhite": "With White",
+    "withBlack": "With Black",
+    "familyGames": "{side} · {n} games",
+    "familyScore": "Score {n}%"
+  },
+  "gen": {
+    "kicker": "I'M WATCHING",
+    "ready": "Your repertoire is ready",
+    "building": "I'm building your repertoire…",
+    "phases": [
+      "Rebuilding the move tree",
+      "Opponent replies on Lichess",
+      "Lichess evaluating line endings",
+      "Detecting critical moments"
+    ],
+    "done": "{n} line built, {risk} to watch. | {n} lines built, {risk} to watch.",
+    "treeLabel": "{n} lines in {families} opening | {n} lines in {families} openings",
+    "root": "your games"
+  },
+  "done": {
+    "stamp": "SAVED ✓",
+    "title": "Repertoire ready! | Repertoires ready!",
+    "text": "{lines} to train, drawn from {games} games, in {repertoires}. Start with the ones that cost you points.",
+    "textOne": "{lines} to train, drawn from {games} games, in {repertoires}. Start with the ones that cost you points.",
+    "lines": "{n} line ready | {n} lines ready",
+    "repertoires": "{n} repertoire | {n} repertoires",
+    "train": "Train on my lines",
+    "enrichOne": "Enrich a repertoire manually",
+    "enrich": "＋ Enrich the repertoire manually",
+    "review": "Review the repertoire"
+  },
+  "treeScreen": {
+    "title": "Your repertoire",
+    "lines": "{n} line | {n} lines",
+    "risk": "{n} at risk",
+    "weapons": "{n} weapon | {n} weapons",
+    "select": "↺ Selection",
+    "validate": "Confirm",
+    "notEvaluated": "Lichess did not evaluate {n} line ending. | Lichess did not evaluate {n} line endings.",
+    "evaluating": "Lichess is evaluating {n} line ending… | Lichess is evaluating {n} line endings…",
+    "moments": "CRITICAL MOMENTS",
+    "variations": "VARIATION TREE",
+    "percent": "{n}%",
+    "games": "{n} games",
+    "locked": "Locked",
+    "lockedTitle": "+{n} line already analyzed | +{n} lines already analyzed",
+    "lockedText": "The free version shows the first {n} lines. Unlock the full tree, the boards and the critical moments."
+  },
+  "sheet": {
+    "sub": "Line {n} · {family} · {side}",
+    "white": "White",
+    "black": "Black",
+    "first": "Start",
+    "previous": "Previous",
+    "next": "Next",
+    "last": "End",
+    "frequency": "Frequency",
+    "percent": "{n}%",
+    "frequencySub": "{games} games out of {total} in {family}",
+    "score": "Score",
+    "scoreSub": "wins + ½ draws",
+    "outcomes": "OUTCOMES OF YOUR GAMES",
+    "errors": "Mistake in the line: {n} of {analysed} game analyzed by Lichess. | Mistake in the line: {n} of {analysed} games analyzed by Lichess.",
+    "notAnalysed": "None of these games has been analyzed by Lichess.",
+    "end": "End of line: {value}.",
+    "events": "WHAT HAPPENED",
+    "other": "PLAY SOMETHING ELSE",
+    "remove": "Remove this line from the repertoire",
+    "start": "Start",
+    "kinds": {
+      "error": "Mistake",
+      "key": "Key moment",
+      "good": "Well played",
+      "alt": "Other move"
+    },
+    "insteadOf": "{move} instead of {played}",
+    "played": "You played it {n} times · score {score}%",
+    "advised": "Recommended by Lichess: the line will stop there"
+  },
+  "page": {
+    "testTitle": "Test my new repertoires",
+    "testCaption": "The lines drawn from your games, one by one.",
+    "repertoire": "Repertoire"
+  },
+  "stop": {
+    "uncovered": "Cut off by {reply}: a frequent reply you have never met.",
+    "noUserMove": "Cut off by {reply}: you have no move there played at least twice.",
+    "noPopular": "No opponent reply meets the Lichess thresholds (5% and 100 games).",
+    "unexplored": "Continuation not yet explored on Lichess.",
+    "unplayed": "Stops on a move you have never played.",
+    "depth": "Maximum length reached."
+  },
+  "explore": {
+    "capped": "Analysis stopped at {n} requests: resume to continue.",
+    "left": "{n} opponent position to explore on Lichess… | {n} opponent positions to explore on Lichess…",
+    "resume": "Resume",
+    "failed": "Lichess is not responding: exploration is paused.",
+    "further": "Explore further",
+    "exploring": "Exploring on Lichess…"
+  },
+  "short": {
+    "badge": "Short line",
+    "keep": "Keep",
+    "suspend": "Put on hold",
+    "kept": "Kept",
+    "toConfirm": "{n} short line to confirm before validating. | {n} short lines to confirm before validating.",
+    "keepAll": "Keep all"
+  },
+  "pending": {
+    "title": "ON HOLD",
+    "count": "{n} on hold",
+    "lead": "Frequent replies on Lichess that your games don't cover. Nothing enters the repertoire without your answer: you'll answer them from the editor.",
+    "share": "{share}% of games",
+    "reasons": {
+      "reply_uncovered": "Never met",
+      "no_user_move": "No move of yours",
+      "short_line": "Short line set aside"
+    }
+  }
+}

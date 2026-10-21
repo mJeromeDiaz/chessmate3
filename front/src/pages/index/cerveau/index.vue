@@ -2,8 +2,10 @@
   <q-page padding>
     <div class="mind-page">
       <header class="mind-page__head">
-        <div class="mind-page__kicker">{{ $t('mindMap.page.kicker') }}</div>
         <h1 class="text-h5 q-my-none">{{ $t('mindMap.page.title') }}</h1>
+        <p class="mind-page__lead" data-testid="mind-lead">
+          {{ $t('mindMap.page.lead') }}
+        </p>
         <p class="mind-page__hint" data-testid="mind-hint">{{ hint }}</p>
       </header>
 
@@ -125,12 +127,11 @@ function select(key) {
   margin-bottom: 16px;
 }
 
-.mind-page__kicker {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--cm-muted);
+.mind-page__lead {
+  max-width: 72ch;
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .mind-page__hint {
