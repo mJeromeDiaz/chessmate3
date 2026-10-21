@@ -21,6 +21,11 @@ enum Kind: string
     case Defence = 'defence';
     /** 3.4: the opponent's reply is a check; the line that still wins. */
     case Intermezzo = 'intermezzo';
+    /**
+     * The mini-boss: the first move to choose among forcing moves (COMBOS, the others refuted),
+     * then the rest of the line.
+     */
+    case Combo = 'combo';
 
     /** Judged by the engine in the browser, not against the solution. */
     public function isEngine(): bool

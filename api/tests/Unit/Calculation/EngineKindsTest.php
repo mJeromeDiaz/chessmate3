@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Calculation;
 
+use App\Calculation\Drawing\Forcing;
 use App\Calculation\Drawing\LinePicker;
 use App\Calculation\Drawing\LineSpec;
 use App\Calculation\Drawing\Threat;
@@ -27,6 +28,8 @@ final class EngineKindsTest extends TestCase
     public const DEFENCE = ['r5k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1', 'a8e8 h2h3'];
     /** After h7h6, Rxd7 is met by Qb1+ first, then Rd1. */
     public const INTERMEZZO = ['6k1/3r1ppp/1q6/8/8/8/5PPP/3R2K1 b - - 0 1', 'h7h6 d1d7 b6b1 d7d1'];
+    /** After a7a6, three forcing moves: Rd8+ (the solution), Bxf7+ and Bxa6. */
+    public const COMBO = ['6k1/p4pp1/7p/4r3/2B5/8/5PPP/3R2K1 b - - 0 1', 'a7a6 d1d8 e5e8 d8e8'];
 
     public function testAMateThreatIsSeenFromTheSideNotToMove(): void
     {
@@ -56,6 +59,18 @@ final class EngineKindsTest extends TestCase
         $line = LinePicker::line($two, self::spec(Kind::TwoReplies, [2]));
         self::assertNotNull($line);
         self::assertSame([2, Ending::Material, ['d1d8', 'e2e8', 'd8e8']], [$line->moves, $line->ending, $line->expected]);
+    }
+
+    public function testTheMiniBossDrawsAForcingFirstMoveAmongOthers(): void
+    {
+        $forcing = Forcing::moves(self::start(self::COMBO));
+        sort($forcing);
+        self::assertSame(['c4a6', 'c4f7', 'd1d8'], $forcing, 'Bxa6, Bxf7+ and Rd8+.');
+        self::assertSame(['d1d8'], Forcing::moves(self::start(self::TWO_REPLIES)), 'Rd8+ alone.');
+
+        self::assertNotNull(LinePicker::line(self::puzzle(self::COMBO), self::spec(Kind::Combo, [2])));
+        self::assertNull(LinePicker::line(self::puzzle(self::TWO_REPLIES), self::spec(Kind::Combo, [2])), 'No other forcing move to offer.');
+        self::assertNull(LinePicker::line(self::puzzle(self::DEFENCE), self::spec(Kind::Combo, [1])), 'h3 is no forcing move.');
     }
 
     public function testALineIsCompleteToItsLengthOrOnThePlayersMate(): void

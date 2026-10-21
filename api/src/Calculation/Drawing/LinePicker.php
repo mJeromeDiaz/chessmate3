@@ -85,7 +85,8 @@ final readonly class LinePicker
 
     /**
      * A puzzle made into a line, null when it does not fit (another length, another ending, no
-     * capture when one is asked, not what its kind asks, a move that does not replay).
+     * capture when one is asked, not what its kind asks, a move that does not replay). The
+     * mini-boss's (`combo`): its first move a check or a capture, among COMBOS forcing moves at least.
      */
     public static function line(Puzzle $puzzle, LineSpec $spec): ?Line
     {
@@ -96,7 +97,7 @@ final readonly class LinePicker
             return null;
         }
         // A reply to look at, and a move of the player's after it.
-        if (\in_array($spec->kind, [Kind::Reply, Kind::TwoReplies, Kind::Intermezzo], true) && \count($solution) < 3) {
+        if (\in_array($spec->kind, [Kind::Reply, Kind::TwoReplies, Kind::Intermezzo, Kind::Combo], true) && \count($solution) < 3) {
             return null;
         }
         try {
@@ -107,6 +108,13 @@ final readonly class LinePicker
             $fen = $rules->fen();
             if (Kind::Defence === $spec->kind && !Threat::mateInOne($fen)) {
                 return null;
+            }
+            // The mini-boss: a forcing first move, and others to offer beside it.
+            if (Kind::Combo === $spec->kind) {
+                $forcing = Forcing::moves($fen);
+                if (!\in_array($solution[0], $forcing, true) || \count($forcing) < CalculationRules::COMBOS) {
+                    return null;
+                }
             }
             $captures = 0;
             foreach ($solution as $i => $uci) {

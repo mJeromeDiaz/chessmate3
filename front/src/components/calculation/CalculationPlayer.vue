@@ -97,11 +97,34 @@
         </div>
       </div>
       <div
+        v-if="phase === 'combo'"
+        class="calculation-player__choices"
+        data-testid="calculation-combos"
+      >
+        <q-btn
+          v-for="combo in combos ?? []"
+          :key="combo.uci"
+          outline
+          no-caps
+          size="lg"
+          :label="combo.san"
+          :style="{ color: combo.color }"
+          :loading="readying"
+          :data-uci="combo.uci"
+          data-testid="calculation-combo"
+          @click="chooseCombo(combo.uci)"
+        />
+        <div v-if="!combos" class="calculation-player__preparing">
+          {{ $t('calculation.player.preparingCombos') }}
+        </div>
+      </div>
+      <div
         v-if="
           phase === 'think' ||
           phase === 'solve' ||
           phase === 'answer' ||
-          phase === 'choose'
+          phase === 'choose' ||
+          phase === 'combo'
         "
         class="calculation-player__clock"
         :class="{
@@ -175,7 +198,8 @@
  * position analysed as soon as it is on the board, and the verdict goes with the line. 3.1
  * (`reply`): the player's first move shown played, a reply to choose between the solution's and a
  * decoy the engine draws; 3.2 (`two_replies`): two lines, the second after the first move and the
- * other reply, both played by themselves.
+ * other reply, both played by themselves; the mini-boss (`combo`): a first move to choose among
+ * forcing moves (the others refuted by the engine), then the rest of its line.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Chess } from 'chess.js'
@@ -194,8 +218,10 @@ import {
   levelText,
   lineOver,
   metronomeMood,
+  forcingMoves,
   offSolution,
   pickDecoy,
+  pickDecoys,
   questionText,
   questionVerdict,
   verdictText
@@ -238,6 +264,14 @@ const emit = defineEmits({
  * less a margin: the engine's verdict is waited for until then.
  */
 const JUDGE_SLACK_MS = 2500
+/** A refuted combination: its refutation shown this long before the solution is replayed. */
+const REFUTATION_MS = 1800
+/** The mini-boss's combinations, told apart by colour (arrow and button alike). */
+const COMBO_COLORS = [
+  { type: 'choiceA', color: '#2f80ed' },
+  { type: 'choiceB', color: '#f5a524' },
+  { type: 'choiceC', color: '#8b6bff' }
+]
 /** Between two moves of the solution replayed. */
 const REPLAY_MS = 900
 const EMPTY_BOARD = '8/8/8/8/8/8/8/8 w - - 0 1'
@@ -253,7 +287,7 @@ const SOLVE_REPLY_MS = 450
 const SOLVED_MS = 900
 /** @type {ReturnType<typeof setTimeout>|undefined} */
 let solveTimer
-/** @type {import('vue').Ref<'think'|'solve'|'choose'|'answer'|'question'|'judging'|'sending'|'complete'>} */
+/** @type {import('vue').Ref<'think'|'solve'|'choose'|'combo'|'answer'|'question'|'judging'|'sending'|'complete'>} */
 const phase = ref('think')
 const fen = ref('')
 /** @type {import('vue').Ref<string[]>} */
@@ -288,6 +322,14 @@ const choices = ref(/** @type {{uci: string, san: string}[]|null} */ (null))
 let replyLines = /** @type {import('@/utils/engine/uci').EngineLine[]|null} */ (
   null
 )
+/** The mini-boss: the combinations offered (shuffled, coloured), null while the decoys are drawn. */
+const combos = ref(
+  /** @type {{uci: string, san: string, type: string, color: string}[]|null} */ (null)
+)
+/** The mini-boss: the engine's lines on the forcing moves, null without them. */
+let comboLines = /** @type {import('@/utils/engine/uci').EngineLine[]|null} */ (null)
+/** A refuted combination: the engine's answer to it, shown before the solution. */
+const refutation = ref(/** @type {string|null} */ (null))
 /** 3.2: the first line, once played; the second is on the board. */
 const firstLine = ref(/** @type {string[]|null} */ (null))
 
@@ -313,7 +355,8 @@ const clockText = computed(() => {
     return t('calculation.player.plyLeft', { n: played.value.length + 1, s })
   return phase.value === 'think' ||
     phase.value === 'solve' ||
-    phase.value === 'choose'
+    phase.value === 'choose' ||
+    phase.value === 'combo'
     ? t('calculation.player.thinkLeft', { s })
     : ''
 })
@@ -406,10 +449,10 @@ const bubble = computed(() => {
       kicker: t('calculation.player.kickers.judging'),
       text: t('calculation.player.judgingText')
     }
-  if (phase.value === 'choose')
+  if (phase.value === 'choose' || phase.value === 'combo')
     return {
       kicker: t('calculation.player.kickers.choose'),
-      text: t('calculation.player.kinds.reply')
+      text: t(`calculation.player.kinds.${kind.value}`)
     }
   if (engineKind.value && phase.value === 'think')
     return {
@@ -503,9 +546,37 @@ const highlights = computed(() => {
     ]
   return []
 })
-/** The right move where the line went off, before the replay. */
+/** A refused combination: one half-move, other than the solution's first. */
+const refused = computed(
+  () =>
+    kind.value === 'combo' &&
+    props.result?.status === 'wrong' &&
+    props.result?.mistakeAt === 0 &&
+    props.result?.answer?.length === 1
+)
+
+/**
+ * The combinations offered; the right move where the line went off, before the replay (a refused
+ * combination: the engine's answer to it).
+ */
 const arrows = computed(() => {
+  if (phase.value === 'combo')
+    return (combos.value ?? []).map(c => ({
+      from: c.uci.slice(0, 2),
+      to: c.uci.slice(2, 4),
+      type: c.type
+    }))
   const r = props.result
+  if (refused.value && !replayed.value)
+    return refutation.value
+      ? [
+          {
+            from: refutation.value.slice(0, 2),
+            to: refutation.value.slice(2, 4),
+            type: 'error'
+          }
+        ]
+      : []
   if (!r || r.status === 'right' || replayed.value) return []
   // 3.2: a mistake in the second line has no move of the solution to show.
   if (r.second && (r.mistakeAt ?? 0) >= (r.answer?.length ?? 0)) return []
@@ -724,6 +795,79 @@ function choose(uci) {
   emit('resolve', { choice: uci, engine: { right } })
 }
 
+/**
+ * The mini-boss: a combination chosen. Refuted, a failure at once, the engine's answer to it shown;
+ * holding (the solution's, or as good for the engine), « Je réponds »: it is played, the player
+ * plays the rest of the line.
+ *
+ * @param {string} uci
+ */
+async function chooseCombo(uci) {
+  if (phase.value !== 'combo' || !combos.value || readying.value) return
+  const holds =
+    uci === solution.value[0] ||
+    (!!comboLines && isNearBest(comboLines, uci, toleranceCp.value))
+  if (!holds) {
+    const item = props.item.id
+    const position = after(props.item.data.fen, [uci])
+    fen.value = position
+    judge.bestMove(position).then(move => {
+      if (props.item.id === item) refutation.value = move
+    })
+    phase.value = 'sending'
+    emit('resolve', { moves: [uci], engine: { right: false, mistakeAt: 0 } })
+    return
+  }
+  readying.value = true
+  try {
+    await props.readyFn()
+  } finally {
+    readying.value = false
+  }
+  if (phase.value !== 'combo') return
+  phase.value = 'answer'
+  played.value = [uci]
+  fen.value = after(props.item.data.fen, played.value)
+  plyStart.value = Date.now()
+  answerStart.value = plyStart.value
+  judge.follow(props.item.data.fen, played.value)
+  if (over(played.value)) send()
+}
+
+/** The mini-boss: the decoys drawn by the engine, the combinations offered in a random order. */
+async function offerCombos() {
+  const item = props.item.id
+  const first = solution.value[0]
+  if (!first) return
+  const forcing = forcingMoves(props.item.data.fen)
+  const lines = await judge.linesOn(props.item.data.fen, forcing)
+  if (props.item.id !== item) return
+  comboLines = lines
+  const decoys = pickDecoys(
+    forcing,
+    first,
+    lines,
+    props.item.data.decoyGapCp ?? 150,
+    (props.item.data.combos ?? COMBO_COLORS.length) - 1
+  )
+  const offered = [first, ...decoys]
+  for (let i = offered.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[offered[i], offered[j]] = [offered[j], offered[i]]
+  }
+  combos.value = offered.map((uci, i) => ({
+    uci,
+    san: localSan(
+      new Chess(props.item.data.fen).move({
+        from: uci.slice(0, 2),
+        to: uci.slice(2, 4),
+        promotion: uci[4]
+      }).san
+    ),
+    ...COMBO_COLORS[i % COMBO_COLORS.length]
+  }))
+}
+
 /** 3.1: the decoy drawn by the engine, then the two replies offered in a random order. */
 async function offerReplies() {
   const item = props.item.id
@@ -759,7 +903,10 @@ function tick() {
     // Not solved in time: a failure.
     phase.value = 'sending'
     emit('resolve', { moves: [], solutionShown: true })
-  } else if (phase.value === 'choose' && clockLeftMs.value <= 0) {
+  } else if (
+    (phase.value === 'choose' || phase.value === 'combo') &&
+    clockLeftMs.value <= 0
+  ) {
     phase.value = 'sending'
     emit('resolve', { pass: true })
   } else if (phase.value === 'think' && clockLeftMs.value <= 0) ready()
@@ -791,7 +938,10 @@ function unlock() {
       ? 'question'
       : kind.value === 'reply'
         ? 'choose'
-        : 'answer'
+        : kind.value === 'combo' && played.value.length === 0
+          ? 'combo'
+          : 'answer'
+  if (phase.value === 'combo') fen.value = props.item.data.fen
   plyStart.value = Date.now()
 }
 
@@ -810,6 +960,9 @@ watch(
     judge.reset()
     choices.value = null
     replyLines = null
+    combos.value = null
+    comboLines = null
+    refutation.value = null
     firstLine.value = null
     phase.value = isQuestion.value
       ? 'question'
@@ -817,7 +970,9 @@ watch(
         ? 'solve'
         : kind.value === 'reply'
           ? 'choose'
-          : 'think'
+          : kind.value === 'combo'
+            ? 'combo'
+            : 'think'
     const start = Date.parse(props.item.data.startedAt) - props.offsetMs
     thinkStart.value = Number.isFinite(start)
       ? Math.min(start, Date.now())
@@ -828,7 +983,8 @@ watch(
     if (kind.value === 'reply') {
       fen.value = after(props.item.data.fen, solution.value.slice(0, 1))
       offerReplies()
-    } else if (engineKind.value) judge.follow(props.item.data.fen, [])
+    } else if (kind.value === 'combo') offerCombos()
+    else if (engineKind.value) judge.follow(props.item.data.fen, [])
   },
   { immediate: true }
 )
@@ -843,7 +999,11 @@ watch(
     if (typeof props.item.data.lives === 'number') playBossVerdict(win)
     else playOutcomeSound(win ? 'puzzleDone' : 'puzzleMissed')
     timeline.play(win ? 'win' : 'miss')
-    if (!win && !isQuestion.value) replaySolution()
+    if (!win && !isQuestion.value) {
+      // A refused combination: the engine's answer to it first.
+      if (refused.value) replayTimer = setTimeout(replaySolution, REFUTATION_MS)
+      else replaySolution()
+    }
   }
 )
 

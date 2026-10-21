@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Calculation;
 
+use App\Calculation\Drawing\Forcing;
 use App\Chess\Rules;
 use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
@@ -366,6 +367,38 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertSame('late', self::dataOf($result)['status'] ?? null);
     }
 
+    public function testTheMiniBossOfChapterThreeRefusesAnotherCombinationAtOnce(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->openChapterThree($alice);
+        foreach (['3-1', '3-2', '3-3', '3-4'] as $key) {
+            self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/'.$key.'/skip', $alice)->getStatusCode(), $key);
+        }
+        $runId = $this->startStep($alice, '3-mini');
+
+        // Bxf7+ chosen in place of Rd8+: wrong at the first half-move, whatever the engine says.
+        $item = $this->item($alice, $runId);
+        $solution = $this->expected($item);
+        self::assertSame(['combo', true, 3, 150, 4, 3], [
+            $item['data']['kind'] ?? null, $item['data']['engine'] ?? null, $item['data']['combos'] ?? null,
+            $item['data']['decoyGapCp'] ?? null, $item['data']['count'] ?? null, $item['data']['lives'] ?? null,
+        ]);
+        $decoy = array_values(array_diff(Forcing::moves(self::fenOf($item)), [$solution[0]]))[0] ?? null;
+        self::assertIsString($decoy);
+        $this->ready($alice, $runId, $item['id']);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => [$decoy], 'engine' => ['right' => true]]);
+        self::assertSame([false, 'wrong', 0, 2], [
+            $result['success'] ?? null, self::dataOf($result)['status'] ?? null,
+            self::dataOf($result)['mistakeAt'] ?? null, self::dataOf($result)['lives'] ?? null,
+        ]);
+
+        // The right combination, then its line.
+        $item = $this->item($alice, $runId);
+        $this->ready($alice, $runId, $item['id']);
+        $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item), 'engine' => ['right' => false]]);
+        self::assertSame([true, 'right'], [$result['success'] ?? null, self::dataOf($result)['status'] ?? null]);
+    }
+
     /** The Métronome and the Compteur beaten: chapter 3 opens; its puzzles in the catalogue, at the player's level. */
     private function openChapterThree(User $user): void
     {
@@ -376,7 +409,7 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
             );
         }
         $added = [];
-        foreach ([[EngineKindsTest::TWO_REPLIES, ['short']], [EngineKindsTest::DEFENCE, ['defensiveMove', 'oneMove']], [EngineKindsTest::INTERMEZZO, ['short']]] as $i => [[$fen, $moves], $themes]) {
+        foreach ([[EngineKindsTest::TWO_REPLIES, ['short']], [EngineKindsTest::DEFENCE, ['defensiveMove', 'oneMove']], [EngineKindsTest::INTERMEZZO, ['short']], [EngineKindsTest::COMBO, ['short']]] as $i => [[$fen, $moves], $themes]) {
             $added[] = $puzzle = new Puzzle('CK3'.$i, $fen, $moves, 1350, 80, 95, 5000, $themes, 'https://lichess.org/abcdefgh', null);
             $this->catalog->persist($puzzle);
         }

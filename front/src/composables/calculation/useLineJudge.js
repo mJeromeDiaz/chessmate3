@@ -94,6 +94,36 @@ export function useLineJudge() {
       .then(({ lines }) => lines, lost)
   }
 
+  /**
+   * The engine's lines on some moves of a position only (the mini-boss's combinations), best
+   * first; null when the engine failed.
+   *
+   * @param {string} fen
+   * @param {string[]} moves UCI
+   * @returns {Promise<import('@/utils/engine/uci').EngineLine[]|null>}
+   */
+  function linesOn(fen, moves) {
+    return engine
+      .analyse(fen, {
+        movetime: ANALYSE_MS,
+        multiPv: moves.length,
+        searchMoves: moves
+      })
+      .then(({ lines }) => lines, lost)
+  }
+
+  /**
+   * The engine's move in a position (a refutation to show), null without one.
+   *
+   * @param {string} fen
+   * @returns {Promise<string|null>}
+   */
+  function bestMove(fen) {
+    return engine
+      .bestMove(fen, { movetime: ANALYSE_MS })
+      .catch(lost)
+  }
+
   /** Forgets the positions analysed and gives up the searches running (a new item). */
   function reset() {
     engine.stop()
@@ -101,5 +131,14 @@ export function useLineJudge() {
     failed.value = false
   }
 
-  return { status: engine.status, failed, follow, verdict, replies, reset }
+  return {
+    status: engine.status,
+    failed,
+    follow,
+    verdict,
+    replies,
+    linesOn,
+    bestMove,
+    reset
+  }
 }

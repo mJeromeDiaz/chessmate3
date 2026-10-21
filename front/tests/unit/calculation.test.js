@@ -3,6 +3,7 @@ import { Chess } from 'chess.js'
 import {
   after,
   finalScore,
+  forcingMoves,
   holds,
   judgeLine,
   leftMs,
@@ -12,6 +13,7 @@ import {
   metronomeMood,
   offSolution,
   pickDecoy,
+  pickDecoys,
   questionText,
   questionVerdict,
   streakMood,
@@ -231,5 +233,43 @@ describe('chapter 3, judged by the engine', () => {
     ).toBe(
       'Écart au demi-coup 3 de la seconde ligne · Solution : 36… Txh4+ 37. gxh4 Dg2# · Ta ligne : 36… Txh4+ 37. gxh4 Dg2# · Ta seconde ligne : 36… Txh4+ 37. Rg1 Dd4'
     )
+  })
+})
+
+describe('the mini-boss of chapter 3', () => {
+  // After a7a6: Rd8+ (the solution), Bxf7+ and Bxa6.
+  const COMBO = after('6k1/p4pp1/7p/4r3/2B5/8/5PPP/3R2K1 b - - 0 1', ['a7a6'])
+  const line = (move, cp) => ({ move, score: { cp }, pv: [move], depth: 12 })
+
+  it('offers the forcing moves: checks and captures', () => {
+    expect(forcingMoves(COMBO).sort()).toEqual(['c4a6', 'c4f7', 'd1d8'])
+  })
+
+  it('draws the refuted ones first, the least worse first, then the weakest', () => {
+    const forcing = ['d1d8', 'c4f7', 'c4a6']
+    expect(
+      pickDecoys(
+        forcing,
+        'd1d8',
+        [line('d1d8', 300), line('c4a6', 100), line('c4f7', -200)],
+        150,
+        2
+      )
+    ).toEqual(['c4a6', 'c4f7'])
+    // Bxa6 holds as well as Rd8+: Bxf7+ first, then the weakest other.
+    expect(
+      pickDecoys(
+        forcing,
+        'd1d8',
+        [line('c4a6', 320), line('d1d8', 300), line('c4f7', -200)],
+        150,
+        2
+      )
+    ).toEqual(['c4f7', 'c4a6'])
+    // The engine down: drawn among the others.
+    expect(pickDecoys(forcing, 'd1d8', null, 150, 2, () => 0)).toEqual([
+      'c4f7',
+      'c4a6'
+    ])
   })
 })

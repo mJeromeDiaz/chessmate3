@@ -39,7 +39,8 @@
       "reply": "Ton premier coup est joué. Quelle est la meilleure réponse de l’adversaire ?",
       "two_replies": "L’adversaire n’a que deux réponses à ton premier coup : calcule une ligne contre chacune. Clique « Je réponds » quand tu les tiens.",
       "defence": "L’adversaire menace un mat. Calcule la ligne qui le pare, les deux camps. Clique « Je réponds » quand tu la tiens.",
-      "intermezzo": "L’adversaire répondra par un échec. Calcule la ligne qui gagne malgré tout, les deux camps. Clique « Je réponds » quand tu la tiens."
+      "intermezzo": "L’adversaire répondra par un échec. Calcule la ligne qui gagne malgré tout, les deux camps. Clique « Je réponds » quand tu la tiens.",
+      "combo": "Trois coups forcés, une seule combinaison tient. Choisis-la, puis joue toute sa ligne, les deux camps."
     },
     "firstLineText": "Première ligne : ton coup, une des deux réponses, puis la suite. 2 secondes par demi-coup.",
     "secondLineText": "Seconde ligne : l’autre réponse est jouée, continue. 2 secondes par demi-coup.",
@@ -47,7 +48,8 @@
     "preparing": "Le moteur prépare les réponses…",
     "engineDown": "Moteur indisponible : seule la ligne de la solution peut être jugée juste.",
     "mistakeSecond": "Écart au demi-coup {n} de la seconde ligne",
-    "yoursSecond": "Ta seconde ligne : {line}"
+    "yoursSecond": "Ta seconde ligne : {line}",
+    "preparingCombos": "Le moteur prépare les combinaisons…"
   },
   "metronome": {
     "right": "Tic… tac… Tu tiens encore la cadence.",

@@ -110,7 +110,13 @@ final class Calculation
                 self::exercise('3-3', '3.3', 2, self::judged('defence', [1, 2], self::LESSON_COUNT)),
                 self::exercise('3-4', '3.4', 2, self::judged('intermezzo', [2, 3], self::LESSON_COUNT)),
             ], [
-                self::miniBoss('3-mini', 120),
+                self::miniBoss('3-mini', 120, new Activity(
+                    Module::Calculation,
+                    ['kind' => 'combo', 'moves' => [2, 3], 'count' => 4, 'lives' => PathRules::BOSS_LIVES],
+                    self::LESSON_SECONDS,
+                    4,
+                    PathRules::BOSS_LIVES,
+                )),
             ]),
         ], self::boss('3-boss', 300, 120, 'avocat', ['chapter_3', 'boss_avocat']));
     }

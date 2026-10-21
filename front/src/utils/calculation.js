@@ -266,6 +266,62 @@ export function offSolution(line, solution) {
 }
 
 /**
+ * The decoys of the mini-boss of chapter 3 (docs/CALCULATION.md, § 2 quater): `count` forcing moves
+ * of the player's beside the solution's first one, refuted (at least `gapCp` worse than the best
+ * forcing move the engine saw), the least worse first (the most tempting); short of them, the
+ * weakest of the others, then those it did not see. Without an analysis (the engine failed): drawn
+ * at random.
+ *
+ * @param {string[]} forcing the position's forcing moves (UCI)
+ * @param {string} first the solution's first move
+ * @param {import('@/utils/engine/uci').EngineLine[]|null} lines the engine's lines on them, best first
+ * @param {number} gapCp
+ * @param {number} count
+ * @param {() => number} [random]
+ * @returns {string[]}
+ */
+export function pickDecoys(
+  forcing,
+  first,
+  lines,
+  gapCp,
+  count,
+  random = Math.random
+) {
+  const others = forcing.filter(uci => uci !== first)
+  const seen = (lines ?? []).filter(l => others.includes(l.move))
+  if (!lines || lines.length === 0 || seen.length === 0) {
+    const pool = [...others]
+    const drawn = []
+    while (drawn.length < count && pool.length > 0)
+      drawn.push(pool.splice(Math.floor(random() * pool.length), 1)[0])
+    return drawn
+  }
+  const best = scoreValue(lines[0].score)
+  const refuted = seen.filter(l => best - scoreValue(l.score) >= gapCp)
+  const weakest = [...seen].reverse().filter(l => !refuted.includes(l))
+  const unseen = others.filter(uci => !seen.some(l => l.move === uci))
+  return [
+    ...refuted.map(l => l.move),
+    ...weakest.map(l => l.move),
+    ...unseen
+  ].slice(0, count)
+}
+
+/**
+ * The forcing moves of a position: its checks and captures (UCI).
+ *
+ * @param {string} fen
+ * @returns {string[]}
+ */
+export function forcingMoves(fen) {
+  return new Chess(fen)
+    .moves({ verbose: true })
+    .filter(m => m.captured || m.san.includes('+') || m.san.includes('#'))
+    .map(m => m.lan)
+}
+
+/**
  * The decoy of a reply to choose (3.1, docs/CALCULATION.md, § 2 quater): among the opponent's
  * replies the engine looked at, those at least `gapCp` worse than the best; a natural one first (a
  * capture or a check), the most tempting of them (the least worse). None that bad: the weakest

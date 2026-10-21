@@ -202,3 +202,76 @@ test('calculation 3.4: the solution right at once, another line judged by Stockf
   expect(['right', 'wrong']).toContain(status)
   await expect(player.getByTestId('calculation-engine-down')).toHaveCount(0)
 })
+
+// The puzzles drawn vary (many samples start with a check or a capture among others): a decoy is
+// chosen; refuted by the engine (most are), a failure at once, else its line goes on.
+test('calculation: the mini-boss of chapter 3, a decoy, then the combination that holds', async ({
+  page,
+  context
+}) => {
+  await signIn(context, {
+    mindMapCapacity: 'calculation',
+    mindMapChapters: 2,
+    mindMapSteps: ['3-1', '3-2', '3-3', '3-4'],
+    enginePuzzles: true
+  })
+  await page.goto('/#/cerveau/calculation')
+  await page.getByTestId('path-step-3-mini').click()
+  let served = page.waitForResponse(isRunNext)
+  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  let item = (await (await served).json()).item
+  expect([item.data.kind, item.data.combos, item.data.lives]).toEqual([
+    'combo',
+    3,
+    3
+  ])
+
+  const player = page.getByTestId('calculation-player')
+  await expect(player).toHaveAttribute('data-phase', 'combo')
+  const combos = player.getByTestId('calculation-combo')
+  await expect(combos).toHaveCount(3, { timeout: ENGINE_TIMEOUT })
+  const offered = await combos.evaluateAll(buttons =>
+    buttons.map(b => b.getAttribute('data-uci'))
+  )
+  expect(offered).toContain(item.data.solution[0])
+  const decoy = offered.find(uci => uci !== item.data.solution[0])
+  const submitted = page.waitForResponse(isRunSubmission, {
+    timeout: ENGINE_TIMEOUT
+  })
+  served = page.waitForResponse(isRunNext, { timeout: ENGINE_TIMEOUT })
+  await player.locator(`[data-uci="${decoy}"]`).click()
+  await expect(player).toHaveAttribute(
+    'data-phase',
+    /^(answer|sending|complete)$/
+  )
+  let first
+  if ((await player.getAttribute('data-phase')) === 'answer') {
+    // As good as the solution for the engine: its line goes on.
+    const line = completeLine(item.data.fen, [decoy], item.data.solution.length)
+    for (const uci of line.slice(1)) await playMove(page, uci)
+    first = (await (await submitted).json()).result
+  } else {
+    first = (await (await submitted).json()).result
+    expect([
+      first.data.status,
+      first.data.mistakeAt,
+      first.data.answer.length,
+      first.data.lives
+    ]).toEqual(['wrong', 0, 1, 2])
+  }
+
+  // The solution's first move: played by itself, the rest of the line to play.
+  if (!first.success) await page.getByTestId('run-next').click()
+  item = (await (await served).json()).item
+  const solution = item.data.solution
+  await expect(combos).toHaveCount(3, { timeout: ENGINE_TIMEOUT })
+  await player.locator(`[data-uci="${solution[0]}"]`).click()
+  await expect(player).toHaveAttribute('data-phase', 'answer')
+  await expect(player).toHaveAttribute('data-played', '1')
+  const lineSent = page.waitForResponse(isRunSubmission)
+  for (const uci of solution.slice(1)) await playMove(page, uci)
+  const response = await lineSent
+  expect(response.request().postDataJSON().moves).toEqual(solution)
+  const result = (await response.json()).result
+  expect([result.success, result.data.status]).toEqual([true, 'right'])
+})

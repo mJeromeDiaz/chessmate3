@@ -105,7 +105,11 @@ const ARROWS = {
   hint: { class: 'arrow-info' },
   solution: { class: 'arrow-success' },
   explorer: { class: 'arrow-explorer' },
-  error: { class: 'arrow-danger' }
+  error: { class: 'arrow-danger' },
+  // Three choices told apart by colour (the calculation's mini-boss, docs/CALCULATION.md).
+  choiceA: { class: 'arrow-choice-a' },
+  choiceB: { class: 'arrow-choice-b' },
+  choiceC: { class: 'arrow-choice-c' }
 }
 /** Colour of an annotation glyph, by its meaning (good, bad, dubious). */
 const GLYPH_TONES = {
@@ -621,6 +625,30 @@ defineExpose({ setPosition, shake })
   stroke: #42a5f5;
   stroke-linecap: round;
   opacity: 0.45;
+}
+.cm-chessboard .arrow-choice-a .arrow-head {
+  fill: #2f80ed;
+}
+.cm-chessboard .arrow-choice-a .arrow-line {
+  stroke: #2f80ed;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.cm-chessboard .arrow-choice-b .arrow-head {
+  fill: #f5a524;
+}
+.cm-chessboard .arrow-choice-b .arrow-line {
+  stroke: #f5a524;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.cm-chessboard .arrow-choice-c .arrow-head {
+  fill: #8b6bff;
+}
+.cm-chessboard .arrow-choice-c .arrow-line {
+  stroke: #8b6bff;
+  stroke-linecap: round;
+  opacity: 0.7;
 }
 .cm-chessboard .markers .marker.cb-marker-success {
   fill: #43a047;

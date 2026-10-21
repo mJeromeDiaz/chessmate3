@@ -43,7 +43,8 @@ final class SeedCommand extends Command
 {
     /**
      * Chapter 3's puzzles, at a new player's level (1500 − 150): the opponent has only two replies
-     * to Rd8+ (3.1, 3.2); after a8e8, black threatens Re1# (3.3); Rxd7 is met by Qb1+ (3.4).
+     * to Rd8+ (3.1, 3.2); after a8e8, black threatens Re1# (3.3); Rxd7 is met by Qb1+ (3.4); Rd8+,
+     * Bxf7+ and Bxa6 to choose from (the mini-boss).
      *
      * @var list<array{string, string, string, list<string>}>
      */
@@ -51,6 +52,7 @@ final class SeedCommand extends Command
         ['E2EK1', '6k1/p4pp1/7p/8/8/8/4rPPP/3R2K1 b - - 0 1', 'a7a6 d1d8 e2e8 d8e8', ['short']],
         ['E2EK2', 'r5k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1', 'a8e8 h2h3', ['defensiveMove', 'oneMove']],
         ['E2EK3', '6k1/3r1ppp/1q6/8/8/8/5PPP/3R2K1 b - - 0 1', 'h7h6 d1d7 b6b1 d7d1', ['short']],
+        ['E2EK4', '6k1/p4pp1/7p/4r3/2B5/8/5PPP/3R2K1 b - - 0 1', 'a7a6 d1d8 e5e8 d8e8', ['short']],
     ];
 
     public function __construct(

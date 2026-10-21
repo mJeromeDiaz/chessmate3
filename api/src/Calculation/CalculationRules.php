@@ -26,17 +26,19 @@ final class CalculationRules
     /** Draws of candidates per rating range, and candidates per draw. */
     public const DRAWS = 4;
     public const CANDIDATES = 8;
-    /** Candidates per draw for a kind that few puzzles fit (two legal replies, a mate threatened). */
+    /** Candidates per draw for a kind that few puzzles fit (two legal replies, a mate threatened, forcing moves). */
     public const CANDIDATES_FILTERED = 30;
     /**
      * Chapter 3, judged by the engine in the browser (docs/CALCULATION.md, § 2 quater): a move is one
-     * of the best within this many centipawns of the first; the wrong reply offered in 3.1 is at
-     * least this much worse.
+     * of the best within this many centipawns of the first; the wrong reply offered in 3.1, and the
+     * wrong combinations of the mini-boss, at least this much worse.
      */
     public const ENGINE_TOLERANCE_CP = 50;
     public const DECOY_GAP_CP = 150;
     /** 3.2: the opponent's legal replies to the player's first move. */
     public const TWO_REPLIES = 2;
+    /** The mini-boss of chapter 3: the forcing moves offered, the solution's first move among them. */
+    public const COMBOS = 3;
     /** An item's time counted in the active time, at most. */
     public const ACTIVE_TIME_CAP_MS = 300_000;
 

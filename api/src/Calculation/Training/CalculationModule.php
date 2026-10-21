@@ -270,7 +270,9 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
                 $late = $submission->pass || self::isLate($attempt, $now);
                 $onSolution = $complete && LineJudge::judge($fen, $expected, $answer)['right'];
                 $right = $onSolution || ($complete && $verdict);
-                $mistakeAt = $complete ? $given : \count($answer);
+                // The mini-boss: another combination chosen alone, refused at once.
+                $refused = Kind::Combo === $kind && 1 === \count($answer) && $answer[0] !== ($expected[0] ?? null);
+                $mistakeAt = $complete ? $given : ($refused ? 0 : \count($answer));
             }
         } catch (IllegalLineException $e) {
             throw new InvalidItemSubmissionException($e->getMessage());
@@ -597,8 +599,9 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             'solution' => $config['solve'] || $kind->isEngine() ? $attempt->getExpected() : null,
             'engine' => $kind->isEngine(),
             'toleranceCp' => $kind->isEngine() ? CalculationRules::ENGINE_TOLERANCE_CP : null,
-            'decoyGapCp' => Kind::Reply === $kind ? CalculationRules::DECOY_GAP_CP : null,
+            'decoyGapCp' => \in_array($kind, [Kind::Reply, Kind::Combo], true) ? CalculationRules::DECOY_GAP_CP : null,
             'replies' => Kind::TwoReplies === $kind ? CalculationRules::TWO_REPLIES : null,
+            'combos' => Kind::Combo === $kind ? CalculationRules::COMBOS : null,
             'fen' => $fen,
             'color' => 'b' === (explode(' ', $fen)[1] ?? 'w') ? 'black' : 'white',
             // The lesson's level (the line's length is no secret there); the Métronome hides it.
@@ -682,7 +685,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         $kind = $config['kind'] ?? Kind::Line->value;
         $kind = \is_string($kind) ? Kind::tryFrom($kind) : null;
         if (null === $kind || ($kind->isEngine() && [] !== array_intersect(array_keys($config), ['mate', 'question', 'solve', 'streak']))) {
-            throw new InvalidRunConfigException('kind must be line, reply, two_replies, defence or intermezzo; chapter 3\'s kinds without mate, question, solve nor streak.');
+            throw new InvalidRunConfigException('kind must be line, reply, two_replies, defence, intermezzo or combo; chapter 3\'s kinds without mate, question, solve nor streak.');
         }
         $solve = $config['solve'] ?? false;
         if (!\is_bool($solve) || ($solve && (isset($config['streak']) || true === ($config['question'] ?? false)))) {

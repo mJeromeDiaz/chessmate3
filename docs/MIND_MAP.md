@@ -185,7 +185,7 @@ chapitres 2 et 3 sont encore « bientôt ».
 | Ch. 2, mini-boss « Trouver, puis reconstituer » | `2-mini` | 4 puzzles de 3 ou 4 coups : résolus, puis rejoués de mémoire d'un trait ; 3 vies ([CALCULATION.md](CALCULATION.md), § 2 ter) | 100 | 40 | — |
 | Ch. 2, boss Le Compteur | `2-boss` | un puzzle long gardé à l'écran, sa ligne (8 à 10 demi-coups) annoncée, 3 questions sur la position atteinte (une case, une pièce, combien de pièces) ; 3 positions, 15 s par question, 3 vies ([VISION.md](VISION.md), § 2 sexies) | 240 | 100 | `chapter_2`, `boss_compteur` |
 | Ch. 3 « L'adversaire a son mot à dire » | `3-1` … `3-4` | jugés par Stockfish dans le navigateur ([CALCULATION.md](CALCULATION.md), § 2 quater) : la meilleure de deux réponses adverses (3.1, 10), une ligne contre chacune des deux réponses légales (3.2, 6 positions), parer une menace de mat (3.3, `defensiveMove`, 10), gagner malgré l'échec intermédiaire (3.4, 10) | — | 15 | — |
-| Ch. 3, mini-boss | `3-mini` | à venir (lot K3d) | 120 | 40 | — |
+| Ch. 3, mini-boss | `3-mini` | `combo` ([CALCULATION.md](CALCULATION.md), § 2 quater) : trois coups forcés, une seule combinaison tient ; la choisir puis jouer sa ligne (2 ou 3 coups), 4 positions, 3 vies | 120 | 40 | — |
 | Ch. 3, boss L'Avocat du diable | `3-boss` | | 300 | 120 | `chapter_3`, `boss_avocat` |
 
 ## 6. Modèle de données

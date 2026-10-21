@@ -93,6 +93,7 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
 | `two_replies` | 3.2 (6 positions) | l'adversaire n'a que **2 coups légaux** contre le premier coup de la solution | il joue **deux lignes** d'un trait (`lines`), le même premier coup puis chacune des deux réponses ; 2 s par demi-coup de chaque ligne |
 | `defence` | 3.3 (10) | thème `defensiveMove`, l'adversaire **menace un mat en 1** (`Threat::mateInOne` : la position vue comme si l'adversaire avait le trait) ; 1 ou 2 coups | la ligne qui pare, d'un trait |
 | `intermezzo` | 3.4 (10) | la réponse adverse de la solution est un **échec** ; 2 ou 3 coups | la ligne qui gagne malgré l'intermédiaire, d'un trait |
+| `combo` | mini-boss `3-mini` (4 positions, 3 vies) | le premier coup de la solution est un **échec ou une prise**, parmi 3 coups forcés au moins (`Forcing::moves`, `COMBOS`) ; 2 ou 3 coups | il **choisit** une combinaison parmi trois (celle de la solution et deux leurres que le moteur réfute) ; refusée, faux tout de suite (`moves` d'un seul coup : `mistakeAt` 0) ; sinon elle est jouée d'office et il joue la suite, d'un trait |
 
 - **Forme** (`LineShape::complete`) : chaque demi-coup légal, aucun après un mat, jamais plus que la
   solution ; la ligne va **jusqu'à la longueur de la solution**, ou s'arrête plus tôt sur un mat du
@@ -127,6 +128,12 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
   adverses (MultiPV 8), `pickDecoy` tire le leurre (sans analyse : une prise ou un échec au
   hasard) ; deux boutons dans un ordre au hasard. Juste : la réponse de la solution, ou une aussi
   bonne pour le moteur. Le temps écoulé : une passe.
+- **Mini-boss** (`combo`, choix du 2026-10-21) : les coups forcés de la position analysés
+  (`searchmoves`), `pickDecoys` garde les réfutés (à `decoyGapCp` au moins du meilleur), le moins
+  mauvais d'abord, puis les plus faibles ; trois flèches de couleur et trois boutons de la même
+  couleur, 120 s. Une combinaison qui ne tient pas (ni la solution, ni aussi bonne pour le moteur)
+  part seule, une vie perdue, la réponse du moteur montrée en flèche rouge avant la solution
+  rejouée ; une qui tient vaut « Je réponds » : elle est jouée, le joueur joue la suite.
 - **3.2** : la première ligne jouée, l'échiquier repart après le premier coup et **l'autre
   réponse, joués d'office** ; le joueur joue la suite. `mistakeAt` compte la seconde ligne après
   les demi-coups de la première.
@@ -179,6 +186,7 @@ lignes sont supprimées avec le compte (cascade) et exportées (`entrainement.js
 - K3a (2026-10-21) : Stockfish dans le navigateur ([ENGINE.md](ENGINE.md)).
 - K3b (2026-10-21) : l'API du chapitre 3 jugé par le moteur (§ 2 quater), étapes 3.1 à 3.4.
 - K3c (2026-10-21) : le front du chapitre 3 (§ 2 quater) : analyses au fil de la ligne, leurre de 3.1, seconde ligne de 3.2.
+- K3d (2026-10-21) : le mini-boss du chapitre 3 (`combo`), une combinaison à choisir parmi trois coups forcés.
 - K1d (2026-10-21) : les expressions de la Gargouille dans son combat ([VISION.md](VISION.md), § 2
   quinquies) ; le chapitre 1 du parcours calcul est complet.
 
