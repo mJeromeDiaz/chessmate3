@@ -6,6 +6,8 @@
     :data-played="played.length"
     :data-fen="fen"
     :data-mood="metronome ? mood : null"
+    :data-kind="item.data.kind ?? null"
+    :data-line="kind === 'two_replies' ? (firstLine ? 2 : 1) : null"
   >
     <template v-if="$slots.header" #header>
       <slot name="header" />
@@ -75,7 +77,32 @@
     </template>
     <template v-else #controls>
       <div
-        v-if="phase === 'think' || phase === 'solve' || phase === 'answer'"
+        v-if="phase === 'choose'"
+        class="calculation-player__choices"
+        data-testid="calculation-choices"
+      >
+        <q-btn
+          v-for="choice in choices ?? []"
+          :key="choice.uci"
+          outline
+          no-caps
+          size="lg"
+          :label="choice.san"
+          :data-uci="choice.uci"
+          data-testid="calculation-choice"
+          @click="choose(choice.uci)"
+        />
+        <div v-if="!choices" class="calculation-player__preparing">
+          {{ $t('calculation.player.preparing') }}
+        </div>
+      </div>
+      <div
+        v-if="
+          phase === 'think' ||
+          phase === 'solve' ||
+          phase === 'answer' ||
+          phase === 'choose'
+        "
         class="calculation-player__clock"
         :class="{
           'calculation-player__clock--answer': phase === 'answer',
@@ -105,6 +132,16 @@
         data-testid="calculation-ready"
         @click="ready"
       />
+      <div v-if="engineKind" class="calculation-player__engine">
+        <EngineStatus :status="engineStatus" />
+        <div
+          v-if="engineFailed"
+          class="calculation-player__engine-down"
+          data-testid="calculation-engine-down"
+        >
+          {{ $t('calculation.player.engineDown') }}
+        </div>
+      </div>
     </template>
 
     <div v-if="result" data-testid="calculation-result">
@@ -133,14 +170,22 @@
  * once, both sides, each half-move within `plySeconds` of the previous one; it goes to the server
  * at the mate, at the mate's length, or when the clock runs out (what was played, or a pass). The
  * server judges and times it again; a wrong line has its solution replayed on the board.
+ *
+ * Chapter 3 (`engine`, docs/CALCULATION.md, § 2 quater): Stockfish judges in the browser, each
+ * position analysed as soon as it is on the board, and the verdict goes with the line. 3.1
+ * (`reply`): the player's first move shown played, a reply to choose between the solution's and a
+ * decoy the engine draws; 3.2 (`two_replies`): two lines, the second after the first move and the
+ * other reply, both played by themselves.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Chess } from 'chess.js'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import EngineStatus from '@/components/chess/EngineStatus.vue'
 import PiecePalette from '@/components/blindfold/PiecePalette.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
+import { useLineJudge } from '@/composables/calculation/useLineJudge'
 import { useFeedbackTimeline } from '@/composables/feedback/useFeedbackTimeline'
 import { feedbackProf } from '@/utils/feedback'
 import {
@@ -149,11 +194,15 @@ import {
   levelText,
   lineOver,
   metronomeMood,
+  offSolution,
+  pickDecoy,
   questionText,
   questionVerdict,
   verdictText
 } from '@/utils/calculation'
+import { isNearBest } from '@/utils/engine/uci'
 import { moodImage } from '@/utils/mindMapPath'
+import { localSan } from '@/utils/notation'
 import {
   playAmbientSound,
   playBossVerdict,
@@ -177,10 +226,18 @@ const props = defineProps({
 })
 
 const emit = defineEmits({
-  /** The line: `{moves}` (UCI), or `{pass: true}` when nothing was played in time. */
+  /**
+   * The line: `{moves}` (UCI), or `{pass: true}` when nothing was played in time; chapter 3 adds
+   * the engine's verdict `engine: {right, mistakeAt?}`, 3.1 sends `choice`, 3.2 `lines`.
+   */
   resolve: payload => typeof payload === 'object'
 })
 
+/**
+ * What the server allows past the line's 2 s per half-move (1 s of rounding, 2 s of network),
+ * less a margin: the engine's verdict is waited for until then.
+ */
+const JUDGE_SLACK_MS = 2500
 /** Between two moves of the solution replayed. */
 const REPLAY_MS = 900
 const EMPTY_BOARD = '8/8/8/8/8/8/8/8 w - - 0 1'
@@ -196,7 +253,7 @@ const SOLVE_REPLY_MS = 450
 const SOLVED_MS = 900
 /** @type {ReturnType<typeof setTimeout>|undefined} */
 let solveTimer
-/** @type {import('vue').Ref<'think'|'solve'|'answer'|'question'|'sending'|'complete'>} */
+/** @type {import('vue').Ref<'think'|'solve'|'choose'|'answer'|'question'|'judging'|'sending'|'complete'>} */
 const phase = ref('think')
 const fen = ref('')
 /** @type {import('vue').Ref<string[]>} */
@@ -205,6 +262,8 @@ const readying = ref(false)
 const now = ref(Date.now())
 /** When the thinking started (the server's start, on the client's clock). */
 const thinkStart = ref(0)
+/** When « Je réponds » was clicked (the answer's clock started). */
+const answerStart = ref(0)
 /** When the last half-move was played, or « Je réponds » clicked. */
 const plyStart = ref(0)
 /** The solution's move being replayed, highlighted. */
@@ -213,6 +272,24 @@ const replayed = ref(/** @type {string|null} */ (null))
 let clock
 /** @type {ReturnType<typeof setTimeout>|undefined} */
 let replayTimer
+
+/** Chapter 3: judged by Stockfish in the browser. */
+const judge = useLineJudge()
+const { status: engineStatus, failed: engineFailed } = judge
+const kind = computed(() => props.item.data.kind ?? 'line')
+const engineKind = computed(() => !!props.item.data.engine)
+const solution = computed(
+  () => /** @type {string[]} */ (props.item.data.solution ?? [])
+)
+const toleranceCp = computed(() => props.item.data.toleranceCp ?? 50)
+/** 3.1: the two replies offered (shuffled), null while the decoy is drawn. */
+const choices = ref(/** @type {{uci: string, san: string}[]|null} */ (null))
+/** 3.1: the engine's lines on the opponent's replies, null without them. */
+let replyLines = /** @type {import('@/utils/engine/uci').EngineLine[]|null} */ (
+  null
+)
+/** 3.2: the first line, once played; the second is on the board. */
+const firstLine = ref(/** @type {string[]|null} */ (null))
 
 const color = computed(() =>
   props.item.data.color === 'black' ? 'black' : 'white'
@@ -234,7 +311,9 @@ const clockText = computed(() => {
   const s = Math.ceil(clockLeftMs.value / 1000)
   if (phase.value === 'answer')
     return t('calculation.player.plyLeft', { n: played.value.length + 1, s })
-  return phase.value === 'think' || phase.value === 'solve'
+  return phase.value === 'think' ||
+    phase.value === 'solve' ||
+    phase.value === 'choose'
     ? t('calculation.player.thinkLeft', { s })
     : ''
 })
@@ -322,6 +401,28 @@ const bubble = computed(() => {
       kicker: t('calculation.player.kickers.replay'),
       text: t('calculation.player.replayText')
     }
+  if (phase.value === 'judging')
+    return {
+      kicker: t('calculation.player.kickers.judging'),
+      text: t('calculation.player.judgingText')
+    }
+  if (phase.value === 'choose')
+    return {
+      kicker: t('calculation.player.kickers.choose'),
+      text: t('calculation.player.kinds.reply')
+    }
+  if (engineKind.value && phase.value === 'think')
+    return {
+      kicker: t('calculation.player.kickers.think'),
+      text: t(`calculation.player.kinds.${kind.value}`)
+    }
+  if (kind.value === 'two_replies' && phase.value === 'answer')
+    return {
+      kicker: t('calculation.player.kickers.answer'),
+      text: firstLine.value
+        ? t('calculation.player.secondLineText')
+        : t('calculation.player.firstLineText')
+    }
   if (phase.value === 'think')
     return {
       kicker: t('calculation.player.kickers.think'),
@@ -389,6 +490,12 @@ function sendAnswer(report) {
 
 /** The first wrong half-move in red, then the solution's moves replayed. */
 const highlights = computed(() => {
+  const first = solution.value[0]
+  if (phase.value === 'choose' && first)
+    return [
+      { square: first.slice(0, 2), type: 'lastMove' },
+      { square: first.slice(2, 4), type: 'lastMove' }
+    ]
   if (replayed.value)
     return [
       { square: replayed.value.slice(0, 2), type: 'lastMove' },
@@ -400,6 +507,8 @@ const highlights = computed(() => {
 const arrows = computed(() => {
   const r = props.result
   if (!r || r.status === 'right' || replayed.value) return []
+  // 3.2: a mistake in the second line has no move of the solution to show.
+  if (r.second && (r.mistakeAt ?? 0) >= (r.answer?.length ?? 0)) return []
   const move = r.expected?.[r.mistakeAt ?? 0]
   return move
     ? [
@@ -433,6 +542,7 @@ function answer() {
   if (phase.value !== 'think' && phase.value !== 'solve') return
   phase.value = 'answer'
   plyStart.value = Date.now()
+  answerStart.value = plyStart.value
 }
 
 /**
@@ -479,19 +589,168 @@ function onMove(move) {
   played.value = [...played.value, move.uci]
   fen.value = after(props.item.data.fen, played.value)
   plyStart.value = Date.now()
-  if (
-    lineOver(props.item.data.fen, played.value, props.item.data.moves ?? null)
-  )
-    send()
+  if (engineKind.value) judge.follow(props.item.data.fen, played.value)
+  if (!over(played.value)) return
+  if (kind.value === 'two_replies' && !firstLine.value) secondLine()
+  else send()
+}
+
+/** Whether a line is over: at the solution's length in chapter 3, else at the mate's. */
+function over(/** @type {string[]} */ line) {
+  if (engineKind.value && solution.value.length)
+    return (
+      lineOver(props.item.data.fen, line, null) ||
+      line.length >= solution.value.length
+    )
+  return lineOver(props.item.data.fen, line, props.item.data.moves ?? null)
+}
+
+/**
+ * 3.2: the first line played, the second starts from the same first move and the other reply,
+ * both played by themselves (just the first move when there is no other reply: a line cut short).
+ */
+function secondLine() {
+  const first = played.value
+  firstLine.value = first
+  const start = first.slice(0, 1)
+  const other = first.length
+    ? new Chess(after(props.item.data.fen, start))
+        .moves({ verbose: true })
+        .map(m => m.lan)
+        .find(uci => uci !== first[1])
+    : undefined
+  played.value = other ? [...start, other] : start
+  fen.value = after(props.item.data.fen, played.value)
+  plyStart.value = Date.now()
+  judge.follow(props.item.data.fen, played.value)
+  if (other && over(played.value)) send()
 }
 
 function send() {
   if (phase.value !== 'answer') return
+  if (engineKind.value) {
+    sendJudged()
+    return
+  }
   phase.value = 'sending'
   emit(
     'resolve',
     played.value.length ? { moves: played.value } : { pass: true }
   )
+}
+
+/**
+ * A line's verdict: right on the solution with no analysis; cut short, wrong where it stops;
+ * otherwise Stockfish's. The engine down, only the solution is right.
+ *
+ * @param {string[]} line
+ * @returns {Promise<{right: boolean, mistakeAt?: number}>}
+ */
+async function lineVerdict(line) {
+  const off = offSolution(line, solution.value)
+  if (off === null) return { right: true }
+  if (!over(line)) return { right: false, mistakeAt: line.length }
+  // The server times the line up to the submission: an engine too slow counts as down.
+  const verdict = await Promise.race([
+    judge.verdict(props.item.data.fen, line, toleranceCp.value),
+    new Promise(resolve => setTimeout(() => resolve(null), judgeWaitMs()))
+  ])
+  if (!verdict) return { right: false, mistakeAt: off }
+  return verdict.mistakeAt === null
+    ? { right: verdict.right }
+    : { right: verdict.right, mistakeAt: verdict.mistakeAt }
+}
+
+/**
+ * How long the engine's verdict may still be waited for: the server times the line from « Je
+ * réponds » up to the submission (2 s per half-move of the solution, for each line of 3.2).
+ */
+function judgeWaitMs() {
+  const lines = kind.value === 'two_replies' ? 2 : 1
+  const deadline =
+    answerStart.value +
+    plySeconds.value * 1000 * solution.value.length * lines +
+    JUDGE_SLACK_MS
+  return Math.max(1000, deadline - Date.now())
+}
+
+/** Chapter 3: the line(s) sent with the engine's verdict, once the last position is analysed. */
+async function sendJudged() {
+  const item = props.item.id
+  const line = played.value
+  const first = firstLine.value
+  if (!first && line.length === 0) {
+    phase.value = 'sending'
+    emit('resolve', { pass: true })
+    return
+  }
+  phase.value = 'judging'
+  if (kind.value === 'two_replies') {
+    const lines = first ? [first, line] : [line, []]
+    const [a, b] = await Promise.all(lines.map(l => lineVerdict(l)))
+    if (props.item.id !== item || phase.value !== 'judging') return
+    const mistakeAt = !a.right
+      ? a.mistakeAt
+      : !b.right
+        ? lines[0].length + (b.mistakeAt ?? 0)
+        : undefined
+    phase.value = 'sending'
+    emit('resolve', {
+      lines,
+      engine:
+        mistakeAt === undefined
+          ? { right: a.right && b.right }
+          : { right: false, mistakeAt }
+    })
+    return
+  }
+  const engine = await lineVerdict(line)
+  if (props.item.id !== item || phase.value !== 'judging') return
+  phase.value = 'sending'
+  emit('resolve', { moves: line, engine })
+}
+
+/**
+ * 3.1: the reply chosen; right when it is the solution's, or as good for the engine.
+ *
+ * @param {string} uci
+ */
+function choose(uci) {
+  if (phase.value !== 'choose' || !choices.value) return
+  const right =
+    uci === solution.value[1] ||
+    (!!replyLines && isNearBest(replyLines, uci, toleranceCp.value))
+  phase.value = 'sending'
+  emit('resolve', { choice: uci, engine: { right } })
+}
+
+/** 3.1: the decoy drawn by the engine, then the two replies offered in a random order. */
+async function offerReplies() {
+  const item = props.item.id
+  const [first, reply] = solution.value
+  if (!first || !reply) return
+  const position = after(props.item.data.fen, [first])
+  const lines = await judge.replies(position)
+  if (props.item.id !== item) return
+  replyLines = lines
+  const decoy = pickDecoy(
+    position,
+    reply,
+    lines,
+    props.item.data.decoyGapCp ?? 150
+  )
+  const offered = [reply, ...(decoy ? [decoy] : [])].map(uci => ({
+    uci,
+    san: localSan(
+      new Chess(position).move({
+        from: uci.slice(0, 2),
+        to: uci.slice(2, 4),
+        promotion: uci[4]
+      }).san
+    )
+  }))
+  if (Math.random() < 0.5) offered.reverse()
+  choices.value = offered
 }
 
 function tick() {
@@ -500,6 +759,9 @@ function tick() {
     // Not solved in time: a failure.
     phase.value = 'sending'
     emit('resolve', { moves: [], solutionShown: true })
+  } else if (phase.value === 'choose' && clockLeftMs.value <= 0) {
+    phase.value = 'sending'
+    emit('resolve', { pass: true })
   } else if (phase.value === 'think' && clockLeftMs.value <= 0) ready()
   else if (phase.value === 'answer' && clockLeftMs.value <= 0) send()
 }
@@ -525,7 +787,11 @@ function replaySolution() {
 /** Lets the player answer again (a refused submission). */
 function unlock() {
   if (phase.value === 'sending')
-    phase.value = isQuestion.value ? 'question' : 'answer'
+    phase.value = isQuestion.value
+      ? 'question'
+      : kind.value === 'reply'
+        ? 'choose'
+        : 'answer'
   plyStart.value = Date.now()
 }
 
@@ -541,11 +807,17 @@ watch(
     thoughtRatio.value = null
     clearTimeout(solveTimer)
     solveTimer = undefined
+    judge.reset()
+    choices.value = null
+    replyLines = null
+    firstLine.value = null
     phase.value = isQuestion.value
       ? 'question'
       : props.item.data.solve
         ? 'solve'
-        : 'think'
+        : kind.value === 'reply'
+          ? 'choose'
+          : 'think'
     const start = Date.parse(props.item.data.startedAt) - props.offsetMs
     thinkStart.value = Number.isFinite(start)
       ? Math.min(start, Date.now())
@@ -553,6 +825,10 @@ watch(
     now.value = Date.now()
     // Back on the page after « Je réponds »: the answer's clock already runs.
     if (!isQuestion.value && props.item.data.readyAt) answer()
+    if (kind.value === 'reply') {
+      fen.value = after(props.item.data.fen, solution.value.slice(0, 1))
+      offerReplies()
+    } else if (engineKind.value) judge.follow(props.item.data.fen, [])
   },
   { immediate: true }
 )
@@ -635,6 +911,27 @@ defineExpose({ unlock })
   margin-top: 6px;
   font-size: 13px;
   opacity: 0.75;
+}
+
+.calculation-player__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  .q-btn {
+    min-width: 140px;
+  }
+}
+
+.calculation-player__preparing,
+.calculation-player__engine-down {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.calculation-player__engine {
+  margin-top: 12px;
 }
 
 .calculation-player__ready {

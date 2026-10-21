@@ -1,6 +1,7 @@
 import { Chess } from 'chess.js'
 import { t } from '@/i18n'
 import { numberedLine } from '@/utils/notation'
+import { scoreValue } from '@/utils/engine/uci'
 
 /**
  * The calculation module (docs/CALCULATION.md): a mate thought over on a frozen board, then its
@@ -79,7 +80,9 @@ export function leftMs(startMs, seconds, now) {
 /**
  * The verdict's lines: the solution, numbered in the player's letters, and theirs when it differs.
  *
- * @param {{status: string, expected?: {san: string}[], answer?: {san: string}[], mistakeAt?: number|null}} result
+ * 3.2: the second line too, its mistake counted after the first line's half-moves.
+ *
+ * @param {{status: string, expected?: {san: string}[], answer?: {san: string}[], second?: {san: string}[]|null, mistakeAt?: number|null}} result
  * @param {string} fen
  */
 export function verdictText(result, fen) {
@@ -88,16 +91,29 @@ export function verdictText(result, fen) {
     fen
   )
   if (result.status === 'right') return solution
+  const answer = result.answer ?? []
   const yours = numberedLine(
-    (result.answer ?? []).map(m => m.san),
+    answer.map(m => m.san),
     fen
   )
+  const second = result.second
+    ? numberedLine(
+        result.second.map(m => m.san),
+        fen
+      )
+    : ''
+  const mistakeAt = result.mistakeAt ?? 0
   return [
     result.status === 'late'
       ? t('calculation.player.lateText')
-      : t('calculation.player.mistakeAt', { n: (result.mistakeAt ?? 0) + 1 }),
+      : result.second && mistakeAt >= answer.length
+        ? t('calculation.player.mistakeSecond', {
+            n: mistakeAt - answer.length + 1
+          })
+        : t('calculation.player.mistakeAt', { n: mistakeAt + 1 }),
     t('calculation.player.solution', { line: solution }),
-    yours ? t('calculation.player.yours', { line: yours }) : ''
+    yours ? t('calculation.player.yours', { line: yours }) : '',
+    second ? t('calculation.player.yoursSecond', { line: second }) : ''
   ]
     .filter(Boolean)
     .join(' · ')
@@ -179,4 +195,111 @@ export function questionVerdict(data, result) {
         piece: t(`vision.pieces.${expected[0]}`)
       })
     : t('calculation.question.wasEmpty', { square: data.target ?? '' })
+}
+
+/**
+ * Whether a half-move holds, from the engine's scores of the positions before and after it, each
+ * from the side to move there (docs/CALCULATION.md, § 2 quater): when the mover had a forced mate,
+ * the move keeps it as fast; otherwise its value (the opposite of the score after) is within
+ * `toleranceCp` of the best (the score before).
+ *
+ * @param {import('@/utils/engine/uci').Score} before
+ * @param {import('@/utils/engine/uci').Score} afterMove
+ * @param {number} toleranceCp
+ */
+export function holds(before, afterMove, toleranceCp) {
+  if ('mate' in before && before.mate > 0) {
+    // Mate in N: the opponent mated in N − 1 at most once it is played (mate 0: mated already).
+    return (
+      'mate' in afterMove &&
+      afterMove.mate <= 0 &&
+      -afterMove.mate <= before.mate - 1
+    )
+  }
+  return scoreValue(before) + scoreValue(afterMove) <= toleranceCp
+}
+
+/**
+ * The engine's verdict on a line, from the scores of every position along it (`scores[i]` before
+ * the half-move i, the last one after the line), each from the side to move there: right when
+ * every half-move holds, the player's and the opponent's alike (a defence imagined too weak spoils
+ * the line); `mistakeAt` the first that does not.
+ *
+ * @param {import('@/utils/engine/uci').Score[]} scores one more than the line's half-moves
+ * @param {number} toleranceCp
+ * @returns {{right: boolean, mistakeAt: number|null}}
+ */
+export function judgeLine(scores, toleranceCp) {
+  for (let i = 0; i + 1 < scores.length; i++) {
+    if (!holds(scores[i], scores[i + 1], toleranceCp))
+      return { right: false, mistakeAt: i }
+  }
+  return { right: true, mistakeAt: null }
+}
+
+/**
+ * The score of a position the engine has no move in: mated (`mate 0`), or a stalemate's draw.
+ * Null when there is a move to search.
+ *
+ * @param {string} fen
+ * @returns {import('@/utils/engine/uci').Score|null}
+ */
+export function finalScore(fen) {
+  const chess = new Chess(fen)
+  if (chess.isCheckmate()) return { mate: 0 }
+  if (chess.isStalemate()) return { cp: 0 }
+  return null
+}
+
+/**
+ * The first half-move where a line leaves the solution (its length when it follows it all the
+ * way); null when it is the solution itself.
+ *
+ * @param {string[]} line UCI
+ * @param {string[]} solution UCI
+ * @returns {number|null}
+ */
+export function offSolution(line, solution) {
+  const i = line.findIndex((uci, k) => uci !== solution[k])
+  if (i >= 0) return i
+  return line.length === solution.length ? null : line.length
+}
+
+/**
+ * The decoy of a reply to choose (3.1, docs/CALCULATION.md, § 2 quater): among the opponent's
+ * replies the engine looked at, those at least `gapCp` worse than the best; a natural one first (a
+ * capture or a check), the most tempting of them (the least worse). None that bad: the weakest
+ * reply seen. Without an analysis (the engine failed): a natural reply, else any. Never the
+ * solution's reply; null when there is no other.
+ *
+ * @param {string} fen the position after the player's first move, the opponent to move
+ * @param {string} reply the solution's reply (UCI)
+ * @param {import('@/utils/engine/uci').EngineLine[]|null} lines the engine's lines there, best first
+ * @param {number} gapCp
+ * @param {() => number} [random]
+ * @returns {string|null}
+ */
+export function pickDecoy(fen, reply, lines, gapCp, random = Math.random) {
+  const moves = new Chess(fen).moves({ verbose: true })
+  const natural = new Set(
+    moves
+      .filter(m => m.captured || m.san.includes('+') || m.san.includes('#'))
+      .map(m => m.lan)
+  )
+  const others = moves.map(m => m.lan).filter(uci => uci !== reply)
+  if (others.length === 0) return null
+  const seen = (lines ?? []).filter(
+    l => l.move !== reply && others.includes(l.move)
+  )
+  if (lines && lines.length > 0 && seen.length > 0) {
+    const best = scoreValue(lines[0].score)
+    const bad = seen.filter(l => best - scoreValue(l.score) >= gapCp)
+    // The lines come best first: the first bad one is the least worse.
+    const decoy =
+      bad.find(l => natural.has(l.move)) ?? bad[0] ?? seen[seen.length - 1]
+    return decoy.move
+  }
+  const pool = others.filter(uci => natural.has(uci))
+  const from = pool.length > 0 ? pool : others
+  return from[Math.floor(random() * from.length)]
 }

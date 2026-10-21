@@ -13,7 +13,9 @@
       "late": "Trop tard",
       "question": "Et à la fin ?",
       "solve": "Trouve la solution",
-      "replay": "Reconstitue-la"
+      "replay": "Reconstitue-la",
+      "choose": "Choisis",
+      "judging": "Verdict"
     },
     "thinkText": "L’échiquier est figé : calcule toute la ligne, les deux camps. Clique « Je réponds » quand tu la tiens.",
     "thinkHidden": "L’échiquier est figé : calcule la ligne jusqu’au bout, les deux camps.",
@@ -32,7 +34,20 @@
     "moves": "{n} coups",
     "positions": "Position {n} sur {count}",
     "solveText": "Joue tes coups, l’adversaire répond. Retiens bien toute la ligne.",
-    "replayText": "De mémoire : rejoue toute la ligne d’un trait, les deux camps, 2 secondes par demi-coup."
+    "replayText": "De mémoire : rejoue toute la ligne d’un trait, les deux camps, 2 secondes par demi-coup.",
+    "kinds": {
+      "reply": "Ton premier coup est joué. Quelle est la meilleure réponse de l’adversaire ?",
+      "two_replies": "L’adversaire n’a que deux réponses à ton premier coup : calcule une ligne contre chacune. Clique « Je réponds » quand tu les tiens.",
+      "defence": "L’adversaire menace un mat. Calcule la ligne qui le pare, les deux camps. Clique « Je réponds » quand tu la tiens.",
+      "intermezzo": "L’adversaire répondra par un échec. Calcule la ligne qui gagne malgré tout, les deux camps. Clique « Je réponds » quand tu la tiens."
+    },
+    "firstLineText": "Première ligne : ton coup, une des deux réponses, puis la suite. 2 secondes par demi-coup.",
+    "secondLineText": "Seconde ligne : l’autre réponse est jouée, continue. 2 secondes par demi-coup.",
+    "judgingText": "Stockfish vérifie ta ligne…",
+    "preparing": "Le moteur prépare les réponses…",
+    "engineDown": "Moteur indisponible : seule la ligne de la solution peut être jugée juste.",
+    "mistakeSecond": "Écart au demi-coup {n} de la seconde ligne",
+    "yoursSecond": "Ta seconde ligne : {line}"
   },
   "metronome": {
     "right": "Tic… tac… Tu tiens encore la cadence.",

@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { Chess } from 'chess.js'
 import {
   after,
+  finalScore,
+  holds,
+  judgeLine,
   leftMs,
   levelText,
   lineOver,
   matePlies,
   metronomeMood,
+  offSolution,
+  pickDecoy,
   questionText,
   questionVerdict,
   streakMood,
@@ -132,5 +138,98 @@ describe('the question at the end of a line', () => {
         { status: 'right', expected: [] }
       )
     ).toBe('')
+  })
+})
+
+describe('chapter 3, judged by the engine', () => {
+  it('takes a half-move within the tolerance, a mate kept as fast, any defence when mated', () => {
+    // Scores from the side to move: 100 before, the opponent at −80 after (a loss of 20).
+    expect(holds({ cp: 100 }, { cp: -80 }, 50)).toBe(true)
+    expect(holds({ cp: 100 }, { cp: -30 }, 50)).toBe(false)
+    expect(holds({ cp: 100 }, { cp: -300 }, 50)).toBe(true)
+    // Mate in 2: mated in 1 after it, or mated already after a mate in 1.
+    expect(holds({ mate: 2 }, { mate: -1 }, 50)).toBe(true)
+    expect(holds({ mate: 1 }, { mate: 0 }, 50)).toBe(true)
+    expect(holds({ mate: 2 }, { mate: -2 }, 50)).toBe(false)
+    expect(holds({ mate: 2 }, { cp: -900 }, 50)).toBe(false)
+    // Mated in 2 either way: any defence holds.
+    expect(holds({ mate: -2 }, { mate: 1 }, 50)).toBe(true)
+    expect(holds({ cp: 0 }, { mate: 3 }, 50)).toBe(false)
+  })
+
+  it('judges a line half-move by half-move, both sides', () => {
+    expect(
+      judgeLine([{ cp: 100 }, { cp: -90 }, { cp: 95 }, { cp: -400 }], 50)
+    ).toEqual({ right: true, mistakeAt: null })
+    // The defence imagined is 200 worse than the best one: the line goes off there.
+    expect(
+      judgeLine([{ cp: 100 }, { cp: -90 }, { cp: 290 }, { cp: -300 }], 50)
+    ).toEqual({ right: false, mistakeAt: 1 })
+    expect(judgeLine([{ mate: 1 }, { mate: 0 }], 50)).toEqual({
+      right: true,
+      mistakeAt: null
+    })
+  })
+
+  it('scores a mate and a stalemate without the engine', () => {
+    expect(finalScore(after(start, ['h8h4', 'g3h4', 'd5g2']))).toEqual({
+      mate: 0
+    })
+    expect(finalScore('7k/5Q2/6K1/8/8/8/8/8 b - - 0 1')).toEqual({ cp: 0 })
+    expect(finalScore(start)).toBeNull()
+  })
+
+  it('finds where a line leaves the solution', () => {
+    expect(offSolution(['a', 'b'], ['a', 'b'])).toBeNull()
+    expect(offSolution(['a', 'c'], ['a', 'b'])).toBe(1)
+    expect(offSolution(['a'], ['a', 'b'])).toBe(1)
+  })
+
+  it('draws a decoy: natural and bad first, else the least worse bad, else the weakest', () => {
+    const line = (move, cp) => ({ move, score: { cp }, pv: [move], depth: 12 })
+    // Rxg3 takes a pawn: natural; Qd4 is quiet.
+    const lines = [
+      line('h8h4', 900),
+      line('d5d4', 300),
+      line('g5g3', 100),
+      line('a7a5', -200)
+    ]
+    expect(pickDecoy(start, 'h8h4', lines, 150)).toBe('g5g3')
+    expect(
+      pickDecoy(
+        start,
+        'h8h4',
+        [line('h8h4', 900), line('d5d4', 300), line('a7a5', 200)],
+        150
+      )
+    ).toBe('d5d4')
+    expect(
+      pickDecoy(start, 'h8h4', [line('h8h4', 900), line('d5d4', 850)], 150)
+    ).toBe('d5d4')
+    // The engine down: a capture or a check, never the solution's reply.
+    const drawn = pickDecoy(start, 'h8h4', null, 150, () => 0)
+    expect(drawn).not.toBe('h8h4')
+    const move = new Chess(start)
+      .moves({ verbose: true })
+      .find(m => m.lan === drawn)
+    expect(!!move?.captured || /[+#]/.test(move?.san ?? '')).toBe(true)
+  })
+
+  it('names a mistake in the second line of 3.2', () => {
+    const expected = [{ san: 'Rxh4+' }, { san: 'gxh4' }, { san: 'Qg2#' }]
+    expect(
+      verdictText(
+        {
+          status: 'wrong',
+          expected,
+          answer: [{ san: 'Rxh4+' }, { san: 'gxh4' }, { san: 'Qg2#' }],
+          second: [{ san: 'Rxh4+' }, { san: 'Kg1' }, { san: 'Qd4' }],
+          mistakeAt: 5
+        },
+        start
+      )
+    ).toBe(
+      'Écart au demi-coup 3 de la seconde ligne · Solution : 36… Txh4+ 37. gxh4 Dg2# · Ta ligne : 36… Txh4+ 37. gxh4 Dg2# · Ta seconde ligne : 36… Txh4+ 37. Rg1 Dd4'
+    )
   })
 })

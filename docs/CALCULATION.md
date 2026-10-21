@@ -106,6 +106,31 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
   `metadata.lineKind` de l'`ExerciseCompleted`. Tirage : 30 candidats par tirage au lieu de 8
   (`CANDIDATES_FILTERED`), peu de puzzles ont deux réponses légales ou une menace de mat.
 
+**Le jugement, côté front** (`CalculationPlayer`, `composables/calculation/useLineJudge.js`,
+`utils/calculation.js`, choix du 2026-10-21) :
+
+- **Au fil de la ligne** : le serveur chronomètre la ligne jusqu'à la soumission ; analyser après
+  coup la mettrait en retard. La position de départ est analysée pendant la réflexion, puis chaque
+  position dès qu'elle est sur l'échiquier, pendant que le joueur joue le demi-coup suivant
+  (**1 s** par position, MultiPV 1, `ANALYSE_MS`) ; les positions sont gardées par FEN (les deux
+  lignes de 3.2 partagent leur début), un mat ou un pat se passe du moteur (`finalScore`).
+- **Un demi-coup tient** (`holds`) quand sa valeur pour qui le joue, l'opposé du score de la
+  position atteinte, est à `toleranceCp` au plus du score d'avant ; quand ce camp avait un mat
+  forcé, quand il le garde aussi rapide. **Les deux camps** : une défense imaginée trop faible
+  gâche la ligne. `judgeLine` rend le verdict et `mistakeAt`, le premier demi-coup qui ne tient pas.
+- Une ligne sur la solution est juste sans attendre le moteur ; une ligne coupée est fausse là où
+  elle s'arrête. Le verdict est attendu jusqu'à la limite du serveur moins 0,5 s
+  (`JUDGE_SLACK_MS`), puis la ligne part comme si le moteur était en panne.
+- **Moteur en panne** : « Moteur indisponible » sous l'échiquier ; seule une ligne sur la solution
+  peut être juste, les autres sont fausses (`mistakeAt` = là où elles quittent la solution).
+- **3.1** : `choose`, l'échiquier montre le premier coup joué ; le moteur analyse les réponses
+  adverses (MultiPV 8), `pickDecoy` tire le leurre (sans analyse : une prise ou un échec au
+  hasard) ; deux boutons dans un ordre au hasard. Juste : la réponse de la solution, ou une aussi
+  bonne pour le moteur. Le temps écoulé : une passe.
+- **3.2** : la première ligne jouée, l'échiquier repart après le premier coup et **l'autre
+  réponse, joués d'office** ; le joueur joue la suite. `mistakeAt` compte la seconde ligne après
+  les demi-coups de la première.
+
 ## 3. Le déroulé et le jugement
 
 1. **Réflexion** : l'échiquier est figé. « Je réponds » appelle `POST /training/runs/{id}/ready
@@ -153,6 +178,7 @@ lignes sont supprimées avec le compte (cascade) et exportées (`entrainement.js
 - K2b (2026-10-21) : la question en fin de ligne (§ 2 bis), étapes 2.7 et 2.8.
 - K3a (2026-10-21) : Stockfish dans le navigateur ([ENGINE.md](ENGINE.md)).
 - K3b (2026-10-21) : l'API du chapitre 3 jugé par le moteur (§ 2 quater), étapes 3.1 à 3.4.
+- K3c (2026-10-21) : le front du chapitre 3 (§ 2 quater) : analyses au fil de la ligne, leurre de 3.1, seconde ligne de 3.2.
 - K1d (2026-10-21) : les expressions de la Gargouille dans son combat ([VISION.md](VISION.md), § 2
   quinquies) ; le chapitre 1 du parcours calcul est complet.
 

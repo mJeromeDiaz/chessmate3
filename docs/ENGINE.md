@@ -74,5 +74,9 @@ et les modules qui s'en servent ne touchent pas au classement (XP et cristaux se
 
 - Vitest : `tests/unit/engine.test.js` (lignes UCI, scores, file des recherches, options remises
   par défaut, abandon, panne, moteur partagé), avec un faux worker qui parle UCI.
-- Playwright : le vrai moteur est chargé par les tests des modules qui s'en servent (chapitre 3 du
-  parcours calcul).
+- Vitest : `tests/unit/lineJudge.test.js` (le jugement des lignes du calcul, un faux worker qui
+  score chaque position).
+- Playwright : le vrai moteur est chargé par les tests des modules qui s'en servent :
+  `tests/e2e/mind-map-calculation-engine.spec.js` (chapitre 3 du parcours calcul, puzzles ajoutés
+  au catalogue par `app:e2e:seed-user --engine-puzzles`). `npm run engine:fetch` doit avoir été
+  lancé.
