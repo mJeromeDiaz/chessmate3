@@ -13,7 +13,7 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * the user's first exercise: unless `streak` is asked, the API is answered "none pending".
  *
  * @param {import('@playwright/test').BrowserContext} context
- * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[]}} [options] an admin
+ * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[], mindMapCapacity?: string}} [options] an admin
  *   (docs/EARLY_ACCESS.md); a password, for a test that also signs in through the login page;
  *   the real streak announcements; crowns of the store (docs/SHOP.md); the first chapters of the
  *   visualisation path completed (docs/MIND_MAP.md), and these steps of it
@@ -27,7 +27,8 @@ export async function signIn(
     streak = false,
     crowns = 0,
     mindMapChapters = 0,
-    mindMapSteps = []
+    mindMapSteps = [],
+    mindMapCapacity = ''
   } = {}
 ) {
   if (!streak) {
@@ -42,6 +43,7 @@ export async function signIn(
   if (mindMapChapters > 0) args.push(`--mind-map-chapters=${mindMapChapters}`)
   if (mindMapSteps.length)
     args.push(`--mind-map-steps=${mindMapSteps.join(',')}`)
+  if (mindMapCapacity) args.push(`--mind-map-capacity=${mindMapCapacity}`)
   const output = execFileSync('php', args, {
     cwd: API_DIR,
     env: { ...process.env, APP_ENV: 'e2e' }

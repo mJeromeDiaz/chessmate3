@@ -29,7 +29,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  * password, for a test that signs in through the login page; --crowns gives it crowns of the
  * store (docs/SHOP.md), as an admin's grant; --mind-map-chapters completes the first chapters of
  * the visualisation path (docs/MIND_MAP.md), every step but the hidden bosses, without rewards;
- * --mind-map-steps completes the steps named.
+ * --mind-map-steps completes the steps named; --mind-map-capacity picks the path (visualisation by
+ * default, or calculation).
  */
 #[When(env: 'e2e')]
 #[AsCommand(name: 'app:e2e:seed-user', description: 'E2E only: creates a user and prints a refresh token')]
@@ -51,7 +52,8 @@ final class SeedCommand extends Command
             ->addOption('password', null, InputOption::VALUE_REQUIRED, 'Set this password')
             ->addOption('crowns', null, InputOption::VALUE_REQUIRED, 'Give it this many crowns')
             ->addOption('mind-map-chapters', null, InputOption::VALUE_REQUIRED, 'Complete this many chapters of the visualisation path')
-            ->addOption('mind-map-steps', null, InputOption::VALUE_REQUIRED, 'Complete these steps of the visualisation path (keys, comma-separated)');
+            ->addOption('mind-map-steps', null, InputOption::VALUE_REQUIRED, 'Complete these steps of the visualisation path (keys, comma-separated)')
+            ->addOption('mind-map-capacity', null, InputOption::VALUE_REQUIRED, 'The path of --mind-map-chapters and --mind-map-steps', Capacity::Visualisation->value);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -73,10 +75,12 @@ final class SeedCommand extends Command
             $this->crowns->adjust($user->getId(), (int) $crowns, 'e2e', null);
         }
 
+        $capacity = $input->getOption('mind-map-capacity');
+        $capacity = (\is_string($capacity) ? Capacity::tryFrom($capacity) : null) ?? Capacity::Visualisation;
         $steps = [];
         $chapters = $input->getOption('mind-map-chapters');
         if (is_numeric($chapters) && (int) $chapters > 0) {
-            foreach (\array_slice(Paths::chapters(Capacity::Visualisation), 0, (int) $chapters) as $chapter) {
+            foreach (\array_slice(Paths::chapters($capacity), 0, (int) $chapters) as $chapter) {
                 foreach ($chapter->allSteps() as $step) {
                     if (StepKind::HiddenBoss !== $step->kind) {
                         $steps[$step->key] = $step;
@@ -86,14 +90,14 @@ final class SeedCommand extends Command
         }
         $named = $input->getOption('mind-map-steps');
         foreach (\is_string($named) && '' !== $named ? explode(',', $named) : [] as $key) {
-            $step = Paths::find(Capacity::Visualisation, trim($key))['step'] ?? null;
+            $step = Paths::find($capacity, trim($key))['step'] ?? null;
             if (null !== $step) {
                 $steps[$step->key] = $step;
             }
         }
         $now = new \DateTimeImmutable();
         foreach ($steps as $step) {
-            $progress = new Progress($user, Capacity::Visualisation, $step->key, $now);
+            $progress = new Progress($user, $capacity, $step->key, $now);
             for ($i = 0; $i < max(1, $step->passes); ++$i) {
                 $progress->pass($step->passes, $now);
             }

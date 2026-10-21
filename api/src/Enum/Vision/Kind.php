@@ -53,6 +53,11 @@ enum Kind: string
 
     /** The Gargouille: 5 moves, then 5 questions of the chapter, each of another kind, under strong distractions. */
     case Gargoyle = 'gargoyle';
+    /**
+     * The Compteur, boss of chapter 2 of the calculation path (docs/VISION.md, § 2 sexies): a
+     * puzzle's position kept in sight, a long line announced, 3 questions on where it ends.
+     */
+    case Counter = 'counter';
 
     /** Questions on a piece's path: only that piece moves (docs/VISION.md, § 2 bis). */
     public function isTrack(): bool

@@ -97,6 +97,10 @@ export function questionText(data) {
       return t(`vision.ask.${data.ask}.${trackedKey(data.piece)}`, {
         square: data.target ?? ''
       })
+    case 'count':
+      return t('vision.ask.count', {
+        side: t(`vision.sides.${data.side ?? 'white'}`)
+      })
     case 'knight_jumps':
       return t('vision.ask.knight_jumps', {
         from: data.target ?? '',
@@ -154,6 +158,12 @@ export function verdictText(data, result) {
         piece: tracked(data.piece),
         taken: t(`vision.pieces.${result.expected[0]}`)
       })
+    case 'count':
+      return t(
+        'vision.player.verdicts.count',
+        { n: result.expected[0] ?? '' },
+        Number(result.expected[0] ?? 0)
+      )
     case 'knight_jumps':
       return t(
         'vision.player.verdicts.knight_jumps',

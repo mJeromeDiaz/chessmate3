@@ -125,6 +125,19 @@ d'une autre sorte, tirées parmi `where`, `what`, `reach`, `attacked`, `aligned`
   au verdict, joie sur une erreur, fierté sur une réponse en retard, surprise sur une réponse juste
   en moins d'un tiers du temps.
 
+## 2 sexies. Le Compteur (boss du chapitre 2 du parcours calcul)
+
+`kind: counter` (étape `calculation` `2-boss`, `count: 9`, `lives: 3`, `questionSeconds: 15`, sans
+distractions ; [CALCULATION.md](CALCULATION.md)) : un puzzle long (thème Lichess `veryLong`, 8
+demi-coups au moins), montré **tel qu'il commence** (`CounterPosition`, `CounterDrawer`), puis le
+premier coup de l'adversaire et la solution annoncés (8 à 10 demi-coups, `COUNTER_PLIES`) ; la
+position **reste affichée** pendant l'annonce (`keepShown` : pas de voile, les coups écrits sous
+l'échiquier), regardée 10 s d'abord (`COUNTER_SECONDS`). Puis 3 questions sur la position atteinte,
+dans un ordre tiré : « Qu'y a-t-il en e5 ? », « Où est le fou blanc ? » (une pièce unique) et
+`ask: count` : « Combien de pièces noires restent, roi compris ? », réponse parmi 6 nombres qui se
+suivent (`choices`, `COUNTER_CHOICES`). 3 positions, 15 s par question, 3 vies ; 240 cristaux,
+100 XP, badges `chapter_2`, `boss_compteur`. Portrait provisoire du cyclope, verdicts `ding` / `off`.
+
 ## 3. Attaques et pièces en prise
 
 - **Attaquants** (`Attacks::attackers`) : sur l'échiquier seul. Un pion attaque ses deux diagonales

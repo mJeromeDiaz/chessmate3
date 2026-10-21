@@ -203,3 +203,17 @@ describe('the Gargouille', () => {
     ).toBe('sadness')
   })
 })
+
+describe('the Compteur', () => {
+  it('asks how many pieces a side has left, and tells it once wrong', () => {
+    expect(questionText({ ask: 'count', target: null, side: 'black' })).toBe(
+      'Combien de pièces noires restent, roi compris ?'
+    )
+    expect(
+      verdictText(
+        { ask: 'count', target: null, side: 'black' },
+        { status: 'wrong', expected: ['7'], answer: ['6'] }
+      )
+    ).toBe('Il en restait 7.')
+  })
+})

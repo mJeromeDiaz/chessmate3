@@ -57,7 +57,9 @@
           @square="onSquare"
         />
         <div
-          v-if="phase === 'hidden' || phase === 'announce'"
+          v-if="
+            (phase === 'hidden' || phase === 'announce') && !item.data.keepShown
+          "
           class="vision-player__veil"
           data-testid="vision-veil"
         >
@@ -136,14 +138,18 @@
         />
       </div>
       <div
-        v-if="announcedLine && ['ask', 'sending', 'complete'].includes(phase)"
+        v-if="
+          announcedLine &&
+          (['ask', 'sending', 'complete'].includes(phase) ||
+            (item.data.keepShown && phase === 'announce'))
+        "
         class="vision-player__line"
         data-testid="vision-line"
       >
         <span class="vision-player__line-label">{{
           $t('vision.player.announced')
         }}</span>
-        {{ announcedLine }}
+        {{ phase === 'announce' ? announcedSoFar : announcedLine }}
       </div>
 
       <template
@@ -314,6 +320,12 @@ const announcedSoFar = computed(() =>
 /** The position shown, an empty board to answer on, then the position reached. */
 const boardFen = computed(() => {
   if (phase.value === 'show') return props.item.data.fen
+  // The Compteur: the position stays in sight while its line is announced.
+  if (
+    props.item.data.keepShown &&
+    (phase.value === 'hidden' || phase.value === 'announce')
+  )
+    return props.item.data.fen
   if (phase.value === 'complete' && props.result?.finalFen)
     return props.result.finalFen
   return EMPTY_BOARD

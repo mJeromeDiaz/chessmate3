@@ -54,8 +54,10 @@ use Symfony\Component\Uid\Uuid;
  * themes, OR; none: by its mate or its length), `mate` (chapter 1: `moves` and a mate in one),
  * `capture` (a capture on the way), `question` (each line followed by a question on the position
  * its solution reaches: where a piece stands, what stands on a square; untimed, answered on an
- * empty board), `count` (the items, lines and questions, the run's end) and `lives` (the run closes
- * at that many failures). A position is thought over on a frozen board, up to THINK_SECONDS;
+ * empty board), `solve` (each puzzle solved first, the opponent answering, its solution given to
+ * the client for it; then replayed from memory at once, both sides: a solving missed is a failure),
+ * `count` (the items, lines and questions, the run's end) and `lives` (the run closes at that many
+ * failures). A position is thought over on a frozen board, up to THINK_SECONDS;
  * « Je réponds » ({@see self::ready()}) starts the answer's clock: PLY_SECONDS per half-move of the
  * solution, on the server's clock; the whole line, both sides, is then judged once
  * ({@see LineJudge}). Late, or not played (`pass`): a failure. Never rated.
@@ -68,7 +70,7 @@ use Symfony\Component\Uid\Uuid;
  * reached, so that the path judges it lost.
  *
  * @phpstan-type SanMove array{uci: string, san: string}
- * @phpstan-type Config array{spec: LineSpec|null, capture: bool, question: bool, count: int|null, lives: int|null, streak: int|null}
+ * @phpstan-type Config array{spec: LineSpec|null, capture: bool, question: bool, solve: bool, count: int|null, lives: int|null, streak: int|null}
  */
 final class CalculationModule implements TimeboxedModuleInterface, ReviewableModuleInterface, CountedModuleInterface, ReadyModuleInterface
 {
@@ -144,11 +146,16 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         if (\count($played) > 2 * CalculationRules::MAX_MATE) {
             throw new InvalidItemSubmissionException('More half-moves than a mate has.');
         }
-        if (!$submission->pass && [] === $played) {
+        // The mini-boss: the puzzle not solved, its solution shown; nothing to replay.
+        $unsolved = $submission->solutionShown && self::check($run->getConfig())['solve'];
+        if (!$submission->pass && !$unsolved && [] === $played) {
             throw new InvalidItemSubmissionException('A line, or pass when the time ran out.');
         }
         $mistakeAt = null;
-        if (self::isLate($attempt, $now) || $submission->pass) {
+        if ($unsolved) {
+            $status = AttemptStatus::Wrong;
+            $played = [];
+        } elseif (self::isLate($attempt, $now) || $submission->pass) {
             $status = AttemptStatus::Late;
         } else {
             try {
@@ -409,7 +416,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         }
         $rating = $this->ratings->findOneByUser($run->getUser())?->getRating() ?? RatingCalculator::DEFAULT_RATING;
         $target = max(0, (int) round($rating) - CalculationRules::RATING_GAP);
-        $think = CalculationRules::THINK_SECONDS;
+        $think = $config['solve'] ? CalculationRules::SOLVE_SECONDS : CalculationRules::THINK_SECONDS;
         if (null === $config['spec']) {
             $right = $this->attempts->statsOfRun($run)['right'];
             $think = CalculationRules::tempo($right);
@@ -459,6 +466,9 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, [
             'kind' => 'line',
             'question' => $config['question'],
+            'solve' => $config['solve'],
+            // To solve it first, the opponent answering (the mini-boss): as a puzzle gives it.
+            'solution' => $config['solve'] ? $attempt->getExpected() : null,
             'fen' => $fen,
             'color' => 'b' === (explode(' ', $fen)[1] ?? 'w') ? 'black' : 'white',
             // The lesson's level (the line's length is no secret there); the Métronome hides it.
@@ -535,8 +545,12 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
      */
     private static function check(array $config): array
     {
-        if ([] !== array_diff(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'count', 'lives', 'streak'])) {
-            throw new InvalidRunConfigException('Unknown option: only mate, moves, ending, themes, capture, question, count, lives and streak are accepted.');
+        if ([] !== array_diff(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'solve', 'count', 'lives', 'streak'])) {
+            throw new InvalidRunConfigException('Unknown option: only mate, moves, ending, themes, capture, question, solve, count, lives and streak are accepted.');
+        }
+        $solve = $config['solve'] ?? false;
+        if (!\is_bool($solve) || ($solve && (isset($config['streak']) || true === ($config['question'] ?? false)))) {
+            throw new InvalidRunConfigException('solve must be true or false, without streak nor question.');
         }
         $question = $config['question'] ?? false;
         if (!\is_bool($question) || ($question && (isset($config['streak']) || !isset($config['count'])))) {
@@ -549,7 +563,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         }
         if (null !== $streak) {
             // The Métronome: its own mates, its lives.
-            if ([] !== array_intersect(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'count']) || !isset($config['lives'])) {
+            if ([] !== array_intersect(array_keys($config), ['mate', 'moves', 'ending', 'themes', 'capture', 'question', 'solve', 'count']) || !isset($config['lives'])) {
                 throw new InvalidRunConfigException('streak: with lives, without mate, moves, ending, themes, capture nor count.');
             }
             $spec = null;
@@ -561,6 +575,7 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             'spec' => $spec,
             'capture' => $capture,
             'question' => $question,
+            'solve' => $solve,
             'count' => self::limit($config, 'count', CalculationRules::MAX_COUNT),
             'lives' => self::limit($config, 'lives', CalculationRules::MAX_LIVES),
             'streak' => $streak,

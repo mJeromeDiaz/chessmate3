@@ -47,10 +47,12 @@ enum Ask: string
     case EnPriseAll = 'en_prise_all';
     /** « Quelles prises sont gagnantes ? »: the same pieces, told apart from those only attacked. */
     case Winning = 'winning';
+    /** « Combien de pièces noires restent ? »: a number among the choices ($side). */
+    case Count = 'count';
 
     /** Answered with a choice (a number, yes or no, a piece's letter), not on the board. */
     public function isChoice(): bool
     {
-        return \in_array($this, [self::KnightJumps, self::Passed, self::Missing, self::Reach], true);
+        return \in_array($this, [self::KnightJumps, self::Passed, self::Missing, self::Reach, self::Count], true);
     }
 }

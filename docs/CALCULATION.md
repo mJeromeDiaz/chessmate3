@@ -67,6 +67,17 @@ position atteinte (colonnes `ask`, `target`, `fen` = la position atteinte, `expe
 migration `Version20261109090000`). Le résultat la donne (`fen`), le front la montre avec les bonnes
 cases en vert. Même XP qu'une ligne (`metadata.kind: question`).
 
+## 2 ter. Résoudre, puis reconstituer
+
+Avec `solve: true` (mini-boss du chapitre 2, `2-mini` : 4 puzzles de 3 ou 4 coups, 3 vies), la
+ligne se **résout d'abord** comme un puzzle : l'élément donne sa `solution` (comme le module Puzzles
+la donne), le joueur joue ses coups, l'adversaire répond seul ; un coup hors solution (et qui ne mate
+pas) est un échec : le front envoie `solutionShown: true`, le serveur compte la ligne fausse sans
+rien rejouer. Résolue, l'échiquier revient au départ, « Je réponds » part tout seul, et la ligne
+se **rejoue de mémoire** d'un trait, les deux camps, 2 s par demi-coup, jugée par le serveur comme
+toute ligne. La résolution a 5 min (`SOLVE_SECONDS`, en `thinkSeconds`), pour que l'horloge de la
+reconstitution parte toujours de « Je réponds » ; passé ce temps, un échec.
+
 ## 3. Le déroulé et le jugement
 
 1. **Réflexion** : l'échiquier est figé. « Je réponds » appelle `POST /training/runs/{id}/ready
@@ -107,6 +118,10 @@ lignes sont supprimées avec le compte (cascade) et exportées (`entrainement.js
 - K1c (2026-10-21) : le Métronome (§ 6).
 - K2a (2026-10-21) : lignes sans mat (`ending: material`), longueurs et thèmes (`LineSpec`),
   migration `Version20261108090000` (`mate` → `moves`, `ending`) ; chapitre 2, étapes 2.1 à 2.6.
+- K2d (2026-10-21) : le Compteur, boss du chapitre 2, un genre du module Vision ([VISION.md](VISION.md),
+  § 2 sexies) ; le chapitre 2 est complet.
+- K2c (2026-10-21) : résoudre, puis reconstituer (§ 2 ter), le mini-boss du chapitre 2 ; e2e avec
+  `app:e2e:seed-user --mind-map-capacity=calculation`.
 - K2b (2026-10-21) : la question en fin de ligne (§ 2 bis), étapes 2.7 et 2.8.
 - K1d (2026-10-21) : les expressions de la Gargouille dans son combat ([VISION.md](VISION.md), § 2
   quinquies) ; le chapitre 1 du parcours calcul est complet.

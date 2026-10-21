@@ -36,6 +36,11 @@ final class VisionRules
     public const QUESTION_SECONDS = [5, 60];
     /** Between two moves announced, and after the last one, on screen (VisionPlayer's ANNOUNCE_MS). */
     public const ANNOUNCE_MS = 1500;
+    /** The Compteur: its position looked at, the half-moves announced (the opponent's first included), its questions, its choices. */
+    public const COUNTER_SECONDS = 10;
+    public const COUNTER_PLIES = [8, 10];
+    public const COUNTER_QUESTIONS = 3;
+    public const COUNTER_CHOICES = 6;
     public const RELATION_DENSE_PIECES = ['?Q', '?R', '?N', '?B', '?P', '?P', '?P', '?P', '?P', '?P'];
     /** The pause, position hidden, before the moves or the question. */
     public const HIDDEN_SECONDS = 2;

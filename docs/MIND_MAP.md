@@ -182,8 +182,8 @@ chapitres 2 et 3 sont encore « bientôt ».
 | Ch. 2 « Tenir la distance » | `2-1` … `2-6` | gains de matériel en 3 coups (2.1, 2.2), mats en 3, gains en 4 coups ; puis 3 ou 4 coups des thèmes `sacrifice` (2.5), `quietMove` et `clearance` (2.6) | — | 15 | — |
 | Ch. 2, coffre après 2.4 | `2-chest` | | 80 | — | — |
 | Ch. 2, la position finale | `2-7`, `2-8` | 5 positions : la ligne de 3 (puis 4) coups, puis une question sur la position atteinte ([CALCULATION.md](CALCULATION.md), § 2 bis) | — | 15 | — |
-| Ch. 2, mini-boss « Trouver, puis reconstituer » | `2-mini` | 4 puzzles de 3 ou 4 coups : résolus, puis rejoués de mémoire d'un trait ; 3 vies (lot K2c) | 100 | 40 | — |
-| Ch. 2, boss Le Compteur | `2-boss` | | 240 | 100 | `chapter_2`, `boss_compteur` |
+| Ch. 2, mini-boss « Trouver, puis reconstituer » | `2-mini` | 4 puzzles de 3 ou 4 coups : résolus, puis rejoués de mémoire d'un trait ; 3 vies ([CALCULATION.md](CALCULATION.md), § 2 ter) | 100 | 40 | — |
+| Ch. 2, boss Le Compteur | `2-boss` | un puzzle long gardé à l'écran, sa ligne (8 à 10 demi-coups) annoncée, 3 questions sur la position atteinte (une case, une pièce, combien de pièces) ; 3 positions, 15 s par question, 3 vies ([VISION.md](VISION.md), § 2 sexies) | 240 | 100 | `chapter_2`, `boss_compteur` |
 | Ch. 3 « L'adversaire a son mot à dire » | `3-1` … `3-4`, `3-mini` | à préciser (lot K3) | 120 | 15 / 40 | — |
 | Ch. 3, boss L'Avocat du diable | `3-boss` | | 300 | 120 | `chapter_3`, `boss_avocat` |
 

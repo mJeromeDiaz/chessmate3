@@ -60,7 +60,8 @@ final class Calculation
     /**
      * Going the distance: lines of 3 moves that win material, mates in 3, lines of 4 moves; a chest
      * after 2.4; a piece given up, a piece coming into play (3 or 4 moves); then a question on the
-     * position the line reaches (2.7, 2.8), the mini-boss and the Compteur (lots K2b to K2d).
+     * position the line reaches (2.7, 2.8); the mini-boss, solved then replayed; the Compteur, 3
+     * positions of a long line announced, 3 questions on each (a vision boss).
      */
     private static function chapter2(): Chapter
     {
@@ -76,9 +77,21 @@ final class Calculation
                 self::exercise('2-7', '2.7', 2, self::askedAfter(3)),
                 self::exercise('2-8', '2.8', 2, self::askedAfter(4)),
             ], [
-                self::miniBoss('2-mini', 100),
+                self::miniBoss('2-mini', 100, new Activity(
+                    Module::Calculation,
+                    ['moves' => [3, 4], 'solve' => true, 'count' => 4, 'lives' => PathRules::BOSS_LIVES],
+                    self::LESSON_SECONDS,
+                    4,
+                    PathRules::BOSS_LIVES,
+                )),
             ]),
-        ], self::boss('2-boss', 240, 100, 'compteur', ['chapter_2', 'boss_compteur']));
+        ], self::boss('2-boss', 240, 100, 'compteur', ['chapter_2', 'boss_compteur'], new Activity(
+            Module::Vision,
+            ['kind' => 'counter', 'count' => 9, 'lives' => PathRules::BOSS_LIVES, 'questionSeconds' => 15],
+            self::LESSON_SECONDS,
+            9,
+            PathRules::BOSS_LIVES,
+        )));
     }
 
     /** The opponent has a say: one reply to choose, then the Avocat du diable. */

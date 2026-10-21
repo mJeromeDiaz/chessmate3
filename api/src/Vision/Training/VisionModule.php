@@ -36,6 +36,7 @@ use App\Training\Module\TimeboxedModuleInterface;
 use App\Training\Run\TimeboxRunner;
 use App\Vision\Drawing\LinePicker;
 use App\Vision\Drawing\Draw;
+use App\Vision\Drawing\CounterDrawer;
 use App\Vision\Drawing\GargoyleDrawer;
 use App\Vision\Drawing\LocateDrawer;
 use App\Vision\Drawing\RelationDrawer;
@@ -71,6 +72,7 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         private readonly UpdateDrawer $updates,
         private readonly RelationDrawer $relations,
         private readonly GargoyleDrawer $gargoyles,
+        private readonly CounterDrawer $counters,
         private readonly PuzzleCatalog $catalog,
         private readonly EventPublisher $events,
     ) {
@@ -222,6 +224,7 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
             Kind::UpdateMissing, Kind::UpdateCaptures, Kind::UpdateMixed, Kind::UpdateBoss => $this->updates->draw($kind),
             Kind::RelationAttacked, Kind::RelationDefended, Kind::RelationAligned, Kind::RelationEnPrise, Kind::RelationMixed, Kind::RelationBoss => $this->relations->draw($kind),
             Kind::Gargoyle => $this->gargoyles->draw(),
+            Kind::Counter => $this->counters->draw($run),
             default => $this->tracks->draw($kind),
         };
         if (null === $draw) {
@@ -255,6 +258,10 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
         // A question naming its own piece (« Le fou blanc peut-il… »); otherwise the path's stays.
         if (\is_string($next['piece'] ?? null)) {
             $own['piece'] = $next['piece'];
+        }
+        // A question of numbers brings its own (« Combien de pièces noires restent ? »).
+        if (\is_array($next['choices'] ?? null)) {
+            $own['choices'] = array_values(array_filter($next['choices'], 'is_string'));
         }
 
         return new Draw($last->getFen(), $last->getAnnounced(), $ask, $target, $side, $expected, null, 0, $own + $params);
@@ -302,10 +309,13 @@ final class VisionModule implements TimeboxedModuleInterface, CountedModuleInter
             'choices' => match ($question->getAsk()) {
                 Ask::KnightJumps => ['1', '2', '3', '4', '5', '6'],
                 Ask::Passed, Ask::Reach => ['yes', 'no'],
+                Ask::Count => \is_array($params['choices'] ?? null) ? array_values(array_filter($params['choices'], 'is_string')) : null,
                 default => null,
             },
             // A question on the path of the one before: nothing shown again.
             'followUp' => ($params['step'] ?? 0) > 0,
+            // The Compteur: its position stays in sight while the line is announced.
+            'keepShown' => Kind::Counter === $question->getKind(),
             'distraction' => $distraction,
             // A question's time on screen (the Gargouille), null without one.
             'seconds' => self::questionSeconds($run->getConfig()),

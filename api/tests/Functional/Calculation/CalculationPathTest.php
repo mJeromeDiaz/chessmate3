@@ -213,6 +213,31 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertFalse($this->submitOk($alice, $runId, $question['id'], $wrong)['success'] ?? null);
     }
 
+    public function testTheMiniBossOfChapterTwoIsSolvedThenReplayed(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->beatMetronome($alice);
+        foreach (['2-1', '2-2', '2-3', '2-4', '2-5', '2-6', '2-7', '2-8'] as $key) {
+            self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/'.$key.'/skip', $alice)->getStatusCode(), $key);
+        }
+        $runId = $this->startStep($alice, '2-mini');
+
+        // Solved first, its solution given as a puzzle's; 5 minutes before the replay's clock.
+        $item = $this->item($alice, $runId);
+        self::assertSame([true, $this->expected($item), 300, 4, 3], [
+            $item['data']['solve'] ?? null, $item['data']['solution'] ?? null, $item['data']['thinkSeconds'] ?? null,
+            $item['data']['count'] ?? null, $item['data']['lives'] ?? null,
+        ]);
+        $this->travel('+200 seconds');
+        $this->ready($alice, $runId, $item['id']);
+        self::assertTrue($this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item)])['success'] ?? null, 'Replayed in its time after a long solving.');
+
+        // Not solved: a failure, nothing to replay.
+        $item = $this->item($alice, $runId);
+        $unsolved = $this->submitOk($alice, $runId, $item['id'], ['moves' => [], 'solutionShown' => true]);
+        self::assertSame([false, 'wrong', 2], [$unsolved['success'] ?? null, \is_array($unsolved['data'] ?? null) ? $unsolved['data']['status'] ?? null : null, \is_array($unsolved['data'] ?? null) ? $unsolved['data']['lives'] ?? null : null]);
+    }
+
     public function testOnlyThePathPlaysIt(): void
     {
         $alice = $this->createUserIn('alice@example.com');

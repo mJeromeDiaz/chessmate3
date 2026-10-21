@@ -122,3 +122,91 @@ test('calculation: the Métronome, a line of unknown length and its face', async
     '2'
   )
 })
+
+// Solved first, the opponent answering, then replayed from memory at once: the mini-boss of
+// chapter 2 (its judging is covered by PHPUnit).
+test('calculation: the mini-boss of chapter 2, solved then replayed', async ({
+  page,
+  context
+}) => {
+  await signIn(context, {
+    mindMapCapacity: 'calculation',
+    mindMapChapters: 1,
+    mindMapSteps: ['2-1', '2-2', '2-3', '2-4', '2-5', '2-6', '2-7', '2-8']
+  })
+  await page.goto('/#/cerveau/calculation')
+  await page.getByTestId('path-step-2-mini').click()
+  const served = page.waitForResponse(isRunNext)
+  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
+  const item = (await (await served).json()).item
+  expect([item.data.solve, item.data.lives]).toEqual([true, 3])
+  const solution = item.data.solution
+
+  // Solving: the player's moves, the opponent answering by itself.
+  const player = page.getByTestId('calculation-player')
+  await expect(player).toHaveAttribute('data-phase', 'solve')
+  for (let i = 0; i < solution.length; i += 2) {
+    await playMove(page, solution[i])
+    await expect(player).toHaveAttribute(
+      'data-played',
+      String(Math.min(i + 2, solution.length))
+    )
+  }
+
+  // Back to the start: the whole line from memory, both sides.
+  await expect(player).toHaveAttribute('data-phase', 'answer')
+  await expect(player).toHaveAttribute('data-played', '0')
+  const submitted = page.waitForResponse(isRunSubmission)
+  const board = page.getByTestId('chess-board')
+  const chess = new Chess(item.data.fen)
+  for (let i = 0; i < solution.length; i++) {
+    await playMove(page, solution[i])
+    await expect(player).toHaveAttribute('data-played', String(i + 1))
+    // The board ready for the next half-move (its position set).
+    chess.move({
+      from: solution[i].slice(0, 2),
+      to: solution[i].slice(2, 4),
+      promotion: solution[i][4]
+    })
+    if (i < solution.length - 1)
+      await expect(board).toHaveAttribute('data-fen', chess.fen())
+  }
+  const result = (await (await submitted).json()).result
+  expect([result.success, result.data.status]).toEqual([true, 'right'])
+})
+
+// Its questions and lives are covered by PHPUnit (tests/Functional/Vision/VisionCounterTest.php);
+// here, the long line announced while its position stays in sight.
+test('calculation: the Compteur, a long line announced on the position in sight', async ({
+  page,
+  context
+}) => {
+  await signIn(context, {
+    mindMapCapacity: 'calculation',
+    mindMapChapters: 1
+  })
+  await page.goto('/#/cerveau/calculation')
+  await page.getByTestId('path-chapter-boss-2').click()
+  const served = page.waitForResponse(isRunNext)
+  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  const item = (await (await served).json()).item
+  expect([item.type, item.data.kind, item.data.keepShown]).toEqual([
+    'vision',
+    'counter',
+    true
+  ])
+
+  const player = page.getByTestId('vision-player')
+  await player.getByTestId('vision-memorized').click()
+  await expect(player).toHaveAttribute('data-phase', 'announce', {
+    timeout: 5_000
+  })
+  await expect(player.getByTestId('vision-veil')).toHaveCount(0)
+  await expect(page.getByTestId('chess-board')).toHaveAttribute(
+    'data-fen',
+    item.data.fen
+  )
+  await expect(player.getByTestId('vision-line')).toBeVisible()
+  await expect(player).toHaveAttribute('data-phase', 'ask', { timeout: 20_000 })
+})

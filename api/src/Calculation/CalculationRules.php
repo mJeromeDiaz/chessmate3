@@ -14,6 +14,8 @@ final class CalculationRules
     public const MAX_MATE = 4;
     /** The thinking time's ceiling: past it, the answer opens by itself. */
     public const THINK_SECONDS = 120;
+    /** The mini-boss of chapter 2: solving the puzzle first takes up to this long (docs/CALCULATION.md, § 2 ter). */
+    public const SOLVE_SECONDS = 300;
     /** Each half-move played at most this long after the previous one (the first after « Je réponds »). */
     public const PLY_SECONDS = 2;
     /** The positions are drawn this far below the player's puzzle rating (calm lessons). */

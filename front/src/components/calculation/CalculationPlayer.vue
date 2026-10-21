@@ -47,6 +47,8 @@
         :square-input="phase === 'question' && item.data.ask === 'where'"
         @square="onSquare"
       />
+      <!-- No animation: a move played at 2 s per half-move must never wait for one (a click
+        during an animation is lost). -->
       <ChessBoard
         v-else
         :fen="fen"
@@ -54,6 +56,7 @@
         :movable-color="movableColor"
         :highlights="highlights"
         :arrows="arrows"
+        :animation-duration="0"
         @move="onMove"
       />
     </template>
@@ -72,7 +75,7 @@
     </template>
     <template v-else #controls>
       <div
-        v-if="phase === 'think' || phase === 'answer'"
+        v-if="phase === 'think' || phase === 'solve' || phase === 'answer'"
         class="calculation-player__clock"
         :class="{
           'calculation-player__clock--answer': phase === 'answer',
@@ -186,7 +189,14 @@ const timeline = useFeedbackTimeline()
 
 /** A question on the position the line before reached (docs/CALCULATION.md, § 2 bis). */
 const isQuestion = computed(() => props.item.data.kind === 'question')
-/** @type {import('vue').Ref<'think'|'answer'|'question'|'sending'|'complete'>} */
+/** The mini-boss of chapter 2 (docs/CALCULATION.md, § 2 ter): solved first, then replayed. */
+const isSolve = computed(() => !!props.item.data.solve && !isQuestion.value)
+/** Between the player's move and the opponent's answer while solving, and before the replay. */
+const SOLVE_REPLY_MS = 450
+const SOLVED_MS = 900
+/** @type {ReturnType<typeof setTimeout>|undefined} */
+let solveTimer
+/** @type {import('vue').Ref<'think'|'solve'|'answer'|'question'|'sending'|'complete'>} */
 const phase = ref('think')
 const fen = ref('')
 /** @type {import('vue').Ref<string[]>} */
@@ -224,11 +234,17 @@ const clockText = computed(() => {
   const s = Math.ceil(clockLeftMs.value / 1000)
   if (phase.value === 'answer')
     return t('calculation.player.plyLeft', { n: played.value.length + 1, s })
-  return phase.value === 'think' ? t('calculation.player.thinkLeft', { s }) : ''
+  return phase.value === 'think' || phase.value === 'solve'
+    ? t('calculation.player.thinkLeft', { s })
+    : ''
 })
 
-/** Both sides in turn while answering; nothing before nor after. */
+/** Both sides in turn while answering; the player's while solving (the opponent answers); nothing before nor after. */
 const movableColor = computed(() => {
+  if (phase.value === 'solve') {
+    const turn = new Chess(fen.value).turn() === 'w' ? 'white' : 'black'
+    return turn === color.value && !solveTimer ? turn : null
+  }
   if (phase.value !== 'answer') return null
   return new Chess(fen.value).turn() === 'w' ? 'white' : 'black'
 })
@@ -295,6 +311,16 @@ const bubble = computed(() => {
     return {
       kicker: t('calculation.player.kickers.question'),
       text: questionText(props.item.data)
+    }
+  if (phase.value === 'solve')
+    return {
+      kicker: t('calculation.player.kickers.solve'),
+      text: t('calculation.player.solveText')
+    }
+  if (isSolve.value && phase.value === 'answer')
+    return {
+      kicker: t('calculation.player.kickers.replay'),
+      text: t('calculation.player.replayText')
     }
   if (phase.value === 'think')
     return {
@@ -387,7 +413,8 @@ const arrows = computed(() => {
 })
 
 async function ready() {
-  if (phase.value !== 'think' || readying.value) return
+  if ((phase.value !== 'think' && phase.value !== 'solve') || readying.value)
+    return
   readying.value = true
   thoughtRatio.value = Math.min(
     1,
@@ -403,13 +430,51 @@ async function ready() {
 
 /** The answer's clock starts: the first half-move within plySeconds. */
 function answer() {
-  if (phase.value !== 'think') return
+  if (phase.value !== 'think' && phase.value !== 'solve') return
   phase.value = 'answer'
   plyStart.value = Date.now()
 }
 
+/**
+ * Solving the mini-boss's puzzle: the solution's move (or any mate), the opponent's answer, until
+ * its end; then back to the start, the replay's clock started. Missed: a failure (the solution
+ * is then replayed).
+ *
+ * @param {string} uci
+ */
+function solveMove(uci) {
+  const solution = props.item.data.solution ?? []
+  const next = [...played.value, uci]
+  const mates = new Chess(after(props.item.data.fen, next)).isCheckmate()
+  if (uci !== solution[played.value.length] && !mates) {
+    phase.value = 'sending'
+    emit('resolve', { moves: [], solutionShown: true })
+    return
+  }
+  played.value = next
+  fen.value = after(props.item.data.fen, next)
+  if (mates || next.length >= solution.length) {
+    solveTimer = setTimeout(() => {
+      solveTimer = undefined
+      played.value = []
+      fen.value = props.item.data.fen
+      ready()
+    }, SOLVED_MS)
+    return
+  }
+  solveTimer = setTimeout(() => {
+    solveTimer = undefined
+    played.value = [...played.value, solution[played.value.length]]
+    fen.value = after(props.item.data.fen, played.value)
+  }, SOLVE_REPLY_MS)
+}
+
 /** @param {{uci: string}} move */
 function onMove(move) {
+  if (phase.value === 'solve') {
+    solveMove(move.uci)
+    return
+  }
   if (phase.value !== 'answer') return
   played.value = [...played.value, move.uci]
   fen.value = after(props.item.data.fen, played.value)
@@ -431,7 +496,11 @@ function send() {
 
 function tick() {
   now.value = Date.now()
-  if (phase.value === 'think' && clockLeftMs.value <= 0) ready()
+  if (phase.value === 'solve' && clockLeftMs.value <= 0 && !solveTimer) {
+    // Not solved in time: a failure.
+    phase.value = 'sending'
+    emit('resolve', { moves: [], solutionShown: true })
+  } else if (phase.value === 'think' && clockLeftMs.value <= 0) ready()
   else if (phase.value === 'answer' && clockLeftMs.value <= 0) send()
 }
 
@@ -470,7 +539,13 @@ watch(
     replayed.value = null
     readying.value = false
     thoughtRatio.value = null
-    phase.value = isQuestion.value ? 'question' : 'think'
+    clearTimeout(solveTimer)
+    solveTimer = undefined
+    phase.value = isQuestion.value
+      ? 'question'
+      : props.item.data.solve
+        ? 'solve'
+        : 'think'
     const start = Date.parse(props.item.data.startedAt) - props.offsetMs
     thinkStart.value = Number.isFinite(start)
       ? Math.min(start, Date.now())
@@ -525,6 +600,7 @@ onBeforeUnmount(() => {
   timeline.reset()
   clearInterval(clock)
   clearTimeout(replayTimer)
+  clearTimeout(solveTimer)
   stopTheme()
   stopTick()
 })

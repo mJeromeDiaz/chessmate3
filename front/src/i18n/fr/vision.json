@@ -57,7 +57,8 @@
     "undefended": "Quelles pièces {side} sont sans défense ?",
     "aligned": "Quelles pièces sont alignées avec {piece} ?",
     "en_prise_all": "Quelles pièces {side} sont en prise ?",
-    "winning": "Quelles pièces {side} peut-on prendre avec gain ?"
+    "winning": "Quelles pièces {side} peut-on prendre avec gain ?",
+    "count": "Combien de pièces {side} restent, roi compris ?"
   },
   "player": {
     "progress": "Question {n} sur {count}",
@@ -110,7 +111,8 @@
       "undefended": "Les pièces sans défense : {squares}.",
       "aligned": "Les pièces alignées : {squares}.",
       "en_prise_all": "Les pièces en prise : {squares}.",
-      "winning": "Les prises gagnantes : {squares}."
+      "winning": "Les prises gagnantes : {squares}.",
+      "count": "Il en restait {n}. | Il en restait {n}."
     },
     "sameTrack": "Même trajet"
   },

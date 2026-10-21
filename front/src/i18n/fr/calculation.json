@@ -11,7 +11,9 @@
       "right": "Ligne juste",
       "wrong": "Ligne fausse",
       "late": "Trop tard",
-      "question": "Et à la fin ?"
+      "question": "Et à la fin ?",
+      "solve": "Trouve la solution",
+      "replay": "Reconstitue-la"
     },
     "thinkText": "L’échiquier est figé : calcule toute la ligne, les deux camps. Clique « Je réponds » quand tu la tiens.",
     "thinkHidden": "L’échiquier est figé : calcule la ligne jusqu’au bout, les deux camps.",
@@ -28,7 +30,9 @@
     "streak": "Série {n} sur {target}",
     "gain": "Gain en {n} coups",
     "moves": "{n} coups",
-    "positions": "Position {n} sur {count}"
+    "positions": "Position {n} sur {count}",
+    "solveText": "Joue tes coups, l’adversaire répond. Retiens bien toute la ligne.",
+    "replayText": "De mémoire : rejoue toute la ligne d’un trait, les deux camps, 2 secondes par demi-coup."
   },
   "metronome": {
     "right": "Tic… tac… Tu tiens encore la cadence.",
