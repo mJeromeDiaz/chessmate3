@@ -56,13 +56,6 @@
   },
   "jongleur": {
     "progress": "Question {n} sur {count}",
-    "ask": {
-      "find": "Trouve la case",
-      "name": "Nomme la case",
-      "color": "Claire ou foncée ?",
-      "play": "Joue le coup",
-      "write": "Écris le coup joué"
-    },
     "taunt": "Vite, vite, mes balles n’attendent pas !",
     "react": {
       "right": "Grr… tu l’as rattrapée.",
@@ -75,7 +68,30 @@
       "late": "Trop tard ! {answer}",
       "color": "{square} est {color}"
     },
-    "writePlaceholder": "Ex. : Cf3"
+    "writePlaceholder": "Ex. : Cf3",
+    "order": {
+      "find": {
+        "title": "Trouve la case",
+        "hint": "Clique dessus sur l’échiquier"
+      },
+      "name": {
+        "title": "Nomme la case allumée",
+        "hint": "Tape sa colonne puis sa rangée"
+      },
+      "color": {
+        "title": "Claire ou foncée ?",
+        "hint": "La case {square}, de tête"
+      },
+      "play": {
+        "title": "Joue le coup",
+        "hint": "Sur l’échiquier, avec tes pièces"
+      },
+      "write": {
+        "title": "Écris le coup joué",
+        "hint": "Celui qu’on vient de voir, en notation"
+      },
+      "new": "Nouveau !"
+    }
   },
   "victory": {
     "kicker": "Boss vaincu !",

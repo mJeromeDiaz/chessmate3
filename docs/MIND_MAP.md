@@ -33,9 +33,11 @@ Choix validés (2026-10-20) :
   la page de séance).
 - **On peut sauter un exercice** : ce qui suit s'ouvre, rien n'est gagné ; il reste jouable.
 - **Il faut battre le boss d'un chapitre** pour ouvrir le suivant, et les mini-boss d'une section
-  pour ouvrir la suivante. Le **boss du chapitre est ouvert dès l'ouverture du chapitre** : un
-  joueur fort peut le battre tout de suite, sans les exercices ni les mini-boss (restés jouables
-  ensuite ; les coffres ne se gagnent qu'en réussissant les exercices). Les **mini-boss cachés** apparaissent (« ? ») une fois leur section
+  pour ouvrir la suivante (une section sans mini-boss : ses exercices réussis ou passés). Le **boss
+  du chapitre est ouvert dès l'ouverture du chapitre**, et **les mini-boss dès l'ouverture de leur
+  section** (dans l'ordre, depuis le 2026-10-22) : un joueur fort peut les battre tout de suite,
+  sans les exercices (restés jouables ensuite ; les coffres ne se gagnent qu'en réussissant les
+  exercices). Les **mini-boss cachés** apparaissent (« ? ») une fois leur section
   franchie : facultatifs, un bonus et un badge.
 - **Coffres** : sur un chapitre long sans section, des coffres intermédiaires (chapitre 1 entre 1.3
   et 1.4 puis entre 1.6 et 1.7, depuis le 2026-10-21 ; chapitre 7 entre 7.2 et 7.3) ; chaque
@@ -84,11 +86,13 @@ Une étape joue une **séance de son module** (`Activity` : module, réglage, du
 `locked`, `open`, `soon`, `hidden`, `done`, `skipped`, calculés à chaque lecture, jamais stockés :
 
 - le chapitre 1 est ouvert ; un chapitre s'ouvre quand le boss du précédent est battu ;
-- dans un chapitre ouvert, une section s'ouvre quand la précédente est **franchie** (exercices
-  réussis ou sautés, mini-boss battus) ;
+- dans un chapitre ouvert, une section s'ouvre quand la précédente est **franchie** : ses
+  mini-boss battus ; sans mini-boss, ses exercices réussis ou sautés ;
 - dans une section ouverte, les exercices s'ouvrent dans l'ordre (réussi ou sauté ouvre le
-  suivant) ; les mini-boss, dans l'ordre, quand tous les exercices sont réussis ou sautés ; les
-  boss cachés quand la section est franchie (avant : `hidden`, sans nom ni récompense affichés) ;
+  suivant) ; les mini-boss sont ouverts avec leur section, dans l'ordre (un battu ouvre le
+  suivant ; depuis le 2026-10-22, avant : quand tous les exercices étaient réussis ou sautés) ;
+  les boss cachés quand la section est franchie (avant : `hidden`, sans nom ni récompense
+  affichés) ;
 - le boss du chapitre est ouvert avec son chapitre (le battre ouvre le suivant, sections et
   mini-boss non faits compris).
 
@@ -293,7 +297,10 @@ seule option.
   rapporter de plus (§ 4).
 - **Écran** (`JongleurPlayer`, page de séance) : « Question n sur N », le Jongleur (il jongle
   pendant la question, jubile à une erreur, boude à une bonne réponse) et sa réplique, les 3 cœurs,
-  une barre de 6 s calée sur le départ du serveur (à zéro, une réponse vide part), puis la question :
+  une barre de 6 s calée sur le départ du serveur (à zéro, une réponse vide part), au-dessus de
+  l'échiquier la **consigne en grand bandeau** (2026-10-22 : une couleur et une icône par genre, la
+  case ou le coup demandé, une ligne d'aide ; il rebondit à chaque question et tremble avec
+  « Nouveau ! » quand le genre change, `jongleur.order.<genre>`), puis la question :
   échiquier vide à cliquer (`find`), case allumée et son nom tapé au clavier, celui de l'appareil sur écran tactile (`name`), boutons
   Claire / Foncée ou leurs initiales, C / F (L / D en anglais, `coordinates.colorKeys`) (`color`), coup annoncé à jouer (`play`), coup joué sous les yeux puis
   champ et touches des pièces dans la langue de l'interface (`write`). Le verdict reste 0,7 s (juste)

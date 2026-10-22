@@ -368,7 +368,8 @@ function fight() {
 .step-detail {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  // Clip, not hidden: `hidden` would make it the scroll box of its sticky foot.
+  overflow: clip;
   border-radius: 28px;
   background: var(--cm-surface);
   color: var(--cm-ink);
@@ -644,11 +645,18 @@ function fight() {
   font-weight: 800;
 }
 
+// The button always in sight: the foot sticks to the bottom of the column (or of the sheet)
+// when the detail is taller than the screen.
 .step-detail__foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 16px 24px 24px;
+  background: var(--cm-surface);
+  box-shadow: 0 -10px 16px -12px rgba(27, 21, 48, 0.25);
 }
 
 .step-detail__rewards {

@@ -56,15 +56,44 @@
     </template>
 
     <template #chips>
-      <span class="play-chip">{{
-        $t(`mindMapPath.jongleur.ask.${question}`)
-      }}</span>
-      <span
-        v-if="question === 'play'"
-        class="play-chip play-chip--accent"
-        data-testid="jongleur-announced"
-        >{{ announced }}</span
+      <div
+        :key="item.id"
+        class="jongleur-player__order"
+        :class="[
+          `jongleur-player__order--${question}`,
+          { 'jongleur-player__order--new': changed }
+        ]"
+        data-testid="jongleur-order"
+        :data-question="question"
       >
+        <q-icon
+          :name="ORDER_ICONS[question]"
+          class="jongleur-player__order-icon"
+        />
+        <div class="jongleur-player__order-text">
+          <span class="jongleur-player__order-title"
+            >{{ $t(`mindMapPath.jongleur.order.${question}.title`) }}
+            <b
+              v-if="question === 'play'"
+              class="jongleur-player__order-what"
+              data-testid="jongleur-announced"
+              >{{ announced }}</b
+            ><b
+              v-else-if="question === 'find'"
+              class="jongleur-player__order-what"
+              >{{ item.data.square }}</b
+            ></span
+          >
+          <span class="jongleur-player__order-hint">{{
+            $t(`mindMapPath.jongleur.order.${question}.hint`, {
+              square: item.data.square ?? ''
+            })
+          }}</span>
+        </div>
+        <span v-if="changed" class="jongleur-player__order-new">{{
+          $t('mindMapPath.jongleur.order.new')
+        }}</span>
+      </div>
     </template>
 
     <template #board>
@@ -223,7 +252,9 @@
 
 <script setup>
 /**
- * A question of the Jongleur (docs/MIND_MAP.md, § 8): find a square (a click on the empty board),
+ * A question of the Jongleur (docs/MIND_MAP.md, § 8), its order on a large banner above the
+ * board (its colour and icon by kind, the square or move asked; it pops in at each question, and
+ * shakes with « Nouveau ! » when the kind changes): find a square (a click on the empty board),
  * name the square lit (a file then a rank typed: the keyboard, or the device's own on a touch
  * screen; no keys on screen, they would read as a hint), tell a square's colour (« Claire »
  * / « Foncée », or their initials, C / F or L / D), play the move announced in a puzzle's
@@ -264,6 +295,14 @@ const EMPTY_BOARD = '8/8/8/8/8/8/8/8 w - - 0 1'
 const SHOW_DELAY_MS = 300
 /** What flies over the board (drift). */
 const BALLS = ['♞', '♝', '♜']
+/** Each kind of question: its icon on the order's banner. */
+const ORDER_ICONS = /** @type {Record<string, string>} */ ({
+  find: 'ads_click',
+  name: 'keyboard',
+  color: 'contrast',
+  play: 'touch_app',
+  write: 'edit_note'
+})
 
 const $q = useQuasar()
 /** A touch screen: the device's keyboard, through a field, names the square. */
@@ -289,6 +328,10 @@ let ticker
 let showTimer
 
 const question = computed(() => props.item.data.question)
+/** The kind of question changed from the previous one: the banner says it louder. */
+const changed = ref(false)
+/** @type {string|null} */
+let previousQuestion = null
 const isSquare = computed(() =>
   ['find', 'name', 'color'].includes(question.value)
 )
@@ -489,6 +532,9 @@ defineExpose({ unlock })
 watch(
   () => props.item.id,
   () => {
+    changed.value =
+      previousQuestion !== null && previousQuestion !== question.value
+    previousQuestion = question.value
     receivedAt.value = Date.now()
     now.value = receivedAt.value
     answered.value = false
@@ -538,6 +584,130 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
+// The order: a banner as wide as the board, one colour per kind of question.
+.jongleur-player__order {
+  --order: #4fc3f7;
+  --order-ink: #1b1530;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: var(--order);
+  color: var(--order-ink);
+  box-shadow: 0 5px 0 rgba(27, 21, 48, 0.25);
+  animation: jongleur-order-in 0.35s cubic-bezier(0.34, 1.8, 0.64, 1) both;
+
+  &--name {
+    --order: #c6f432;
+  }
+
+  &--color {
+    --order: #ffd43b;
+  }
+
+  &--play {
+    --order: #ff6fae;
+  }
+
+  &--write {
+    --order: #8b6bff;
+    --order-ink: #fff;
+  }
+
+  &--new {
+    animation:
+      jongleur-order-in 0.35s cubic-bezier(0.34, 1.8, 0.64, 1) both,
+      jongleur-order-shake 0.45s 0.35s both;
+  }
+}
+
+@keyframes jongleur-order-in {
+  from {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+}
+
+@keyframes jongleur-order-shake {
+  20% {
+    transform: rotate(-2deg);
+  }
+  40% {
+    transform: rotate(2deg);
+  }
+  60% {
+    transform: rotate(-1deg);
+  }
+  80% {
+    transform: rotate(1deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jongleur-player__order,
+  .jongleur-player__order--new {
+    animation: none;
+  }
+}
+
+.jongleur-player__order-icon {
+  flex: none;
+  font-size: 34px;
+}
+
+.jongleur-player__order-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.jongleur-player__order-title {
+  font-family: var(--cm-heading);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+
+  @media (min-width: $breakpoint-md-min) {
+    font-size: 26px;
+  }
+}
+
+.jongleur-player__order-what {
+  margin-left: 4px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(27, 21, 48, 0.88);
+  color: #fff;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.jongleur-player__order-hint {
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.jongleur-player__order-new {
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #1b1530;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .jongleur-player__boss {
   display: flex;
   align-items: center;

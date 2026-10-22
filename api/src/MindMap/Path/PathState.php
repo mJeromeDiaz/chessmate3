@@ -11,11 +11,12 @@ use App\Enum\MindMap\StepStatus;
  * Where the player stands on a path (docs/MIND_MAP.md, § 3), from their progress only. Pure.
  *
  * - The first chapter is open; a chapter opens when the boss of the previous one is beaten.
- * - In an open chapter, a section opens when the previous one is cleared: its exercises passed or
- *   skipped, its mini-bosses beaten.
+ * - In an open chapter, a section opens when the previous one is cleared: its mini-bosses beaten,
+ *   or, without mini-boss, its exercises passed or skipped.
  * - In an open section, the exercises open in order (one passed or skipped opens the next); the
- *   mini-bosses open, in order, once every exercise is passed or skipped; the hidden bosses show
- *   once the section is cleared.
+ *   mini-bosses are open with their section, in order (one beaten opens the next): a strong player
+ *   may beat them at once, without the exercises, and open the next section (2026-10-22); the
+ *   hidden bosses show once the section is cleared.
  * - The chapter's boss is open with its chapter: a strong player may beat it at once, without the
  *   exercises or the mini-bosses, and open the next chapter.
  * - A chest is earned (done) once every exercise before it in its section is passed, never by a
@@ -80,19 +81,24 @@ final class PathState
     }
 
     /**
-     * Whether a section is cleared: its exercises passed or skipped, its mini-bosses beaten.
+     * Whether a section is cleared: its mini-bosses beaten; without mini-boss, its exercises passed
+     * or skipped.
      *
      * @param array<string, StepProgress> $progress
      */
     public static function isCleared(Section $section, array $progress): bool
     {
+        if ([] !== $section->miniBosses) {
+            foreach ($section->miniBosses as $boss) {
+                if (!self::isDone($boss, $progress)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
         foreach ($section->steps as $step) {
             if (StepKind::Exercise === $step->kind && !self::isPassedOrSkipped($step, $progress)) {
-                return false;
-            }
-        }
-        foreach ($section->miniBosses as $boss) {
-            if (!self::isDone($boss, $progress)) {
                 return false;
             }
         }
@@ -123,12 +129,15 @@ final class PathState
             };
             $cleared = $cleared && self::isPassedOrSkipped($step, $progress);
         }
+        // The mini-bosses: open with the section, one beaten opens the next.
+        $reached = $open;
         foreach ($section->miniBosses as $boss) {
-            $statuses[$boss->key] = self::reachable($boss, $progress, $cleared);
-            $cleared = $cleared && self::isDone($boss, $progress);
+            $statuses[$boss->key] = self::reachable($boss, $progress, $reached);
+            $reached = $reached && self::isDone($boss, $progress);
         }
+        $sectionCleared = $open && self::isCleared($section, $progress);
         foreach ($section->hidden as $boss) {
-            $statuses[$boss->key] = $cleared ? self::reachable($boss, $progress, true) : StepStatus::Hidden;
+            $statuses[$boss->key] = $sectionCleared ? self::reachable($boss, $progress, true) : StepStatus::Hidden;
         }
 
         return $statuses;

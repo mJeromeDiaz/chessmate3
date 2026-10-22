@@ -111,6 +111,11 @@ test('jongleur: the chapter 1 boss, right answers, a question timed out, lost at
   // Two right answers: the next question comes by itself.
   for (let i = 0; i < 2; i++) {
     await expect(player).toHaveAttribute('data-question', item.data.question)
+    // What is asked, on a banner above the board.
+    await expect(page.getByTestId('jongleur-order')).toHaveAttribute(
+      'data-question',
+      item.data.question
+    )
     served = page.waitForResponse(isRunNext)
     await answer(page, item, true)
     await expect(page.getByTestId('jongleur-result')).toHaveText('Juste !')

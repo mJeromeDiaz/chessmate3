@@ -56,13 +56,6 @@
   },
   "jongleur": {
     "progress": "Question {n} of {count}",
-    "ask": {
-      "find": "Find the square",
-      "name": "Name the square",
-      "color": "Light or dark?",
-      "play": "Play the move",
-      "write": "Write the move played"
-    },
     "taunt": "Quick, quick, my balls don't wait!",
     "react": {
       "right": "Grr… you caught it.",
@@ -75,7 +68,30 @@
       "late": "Too late! {answer}",
       "color": "{square} is {color}"
     },
-    "writePlaceholder": "E.g.: Nf3"
+    "writePlaceholder": "E.g.: Nf3",
+    "order": {
+      "find": {
+        "title": "Find the square",
+        "hint": "Click it on the board"
+      },
+      "name": {
+        "title": "Name the lit square",
+        "hint": "Type its file then its rank"
+      },
+      "color": {
+        "title": "Light or dark?",
+        "hint": "Square {square}, in your head"
+      },
+      "play": {
+        "title": "Play the move",
+        "hint": "On the board, with your pieces"
+      },
+      "write": {
+        "title": "Write the move played",
+        "hint": "The one you just saw, in notation"
+      },
+      "new": "New!"
+    }
   },
   "victory": {
     "kicker": "Boss defeated!",

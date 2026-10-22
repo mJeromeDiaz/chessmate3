@@ -140,6 +140,32 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
   )
 })
 
+test('mind map path: a mini-boss is open with its section, its fight in sight', async ({
+  page,
+  context
+}) => {
+  await signIn(context, { mindMapChapters: 1 })
+  await page.goto('/#/cerveau/visualization')
+  // Section 2.1 open: its mini-boss at once (a strong player skips the exercises), not 2.2's.
+  await expect(page.getByTestId('path-step-2-1-1')).toHaveAttribute(
+    'data-status',
+    'open'
+  )
+  await expect(page.getByTestId('path-step-2-1-boss')).toHaveAttribute(
+    'data-status',
+    'open'
+  )
+  await expect(page.getByTestId('path-step-2-2-boss')).toHaveAttribute(
+    'data-status',
+    'locked'
+  )
+  await page.getByTestId('path-step-2-1-boss').click()
+  const detail = page.getByTestId('step-detail')
+  await expect(detail).toHaveAttribute('data-step', '2-1-boss')
+  // However tall the detail, its button stays on screen.
+  await expect(detail.getByTestId('boss-fight')).toBeInViewport()
+})
+
 test('mind map path: on a phone, a step opens in a sheet from the bottom', async ({
   page,
   context

@@ -16,8 +16,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Where the player stands on a path (docs/MIND_MAP.md, § 3): exercises in order, a skip opens what
- * follows, mini-bosses then hidden bosses, the chapter's boss, the next chapter; chests earned by
- * passes only; steps without module « soon ».
+ * follows, mini-bosses open with their section (beating them clears it), hidden bosses, the
+ * chapter's boss, the next chapter; chests earned by passes only; steps without module « soon ».
  *
  * @phpstan-import-type StepProgress from PathState
  */
@@ -50,7 +50,7 @@ final class PathStateTest extends TestCase
         self::assertSame(['open', 'locked'], [$statuses['a-boss'], $statuses['b1']]);
 
         $statuses = self::statuses([...$chapterOne, 'a-boss' => self::done()]);
-        self::assertSame(['done', 'open', 'locked'], [$statuses['a-boss'], $statuses['b1'], $statuses['b-mini']]);
+        self::assertSame(['done', 'open', 'open'], [$statuses['a-boss'], $statuses['b1'], $statuses['b-mini']], 'The mini-boss is open with its section.');
 
         // A strong player beats the boss first: the next chapter opens, the skipped steps stay as they were.
         $statuses = self::statuses(['a-boss' => self::done()]);
@@ -65,6 +65,19 @@ final class PathStateTest extends TestCase
 
         $statuses = self::statuses([...$before, 'b1' => self::done(), 'b2' => self::skipped(), 'b-mini' => self::done()]);
         self::assertSame(['done', 'open', 'soon'], [$statuses['b-mini'], $statuses['b-hidden'], $statuses['b-boss']], 'The hidden boss never blocks; the boss has no module yet.');
+    }
+
+    public function testAStrongPlayerBeatsTheMiniBossFirstAndClearsTheSection(): void
+    {
+        $progress = ['a-boss' => self::done(), 'b-mini' => self::done()];
+        $statuses = self::statuses($progress);
+        self::assertSame(['open', 'locked', 'done', 'open'], [$statuses['b1'], $statuses['b2'], $statuses['b-mini'], $statuses['b-hidden']], 'The exercises stay to play, in order; the hidden boss shows.');
+        self::assertTrue(PathState::isCleared(self::chapters()[1]->sections[0], $progress));
+
+        // Without its mini-boss beaten, the exercises alone do not clear a section that has one.
+        self::assertFalse(PathState::isCleared(self::chapters()[1]->sections[0], ['b1' => self::done(), 'b2' => self::done()]));
+        // A section without mini-boss: its exercises passed or skipped.
+        self::assertTrue(PathState::isCleared(self::chapters()[0]->sections[0], ['a1' => self::done(), 'a2' => self::skipped(), 'a3' => self::done()]));
     }
 
     public function testAChestIsDueOncePassedNeverBySkips(): void
