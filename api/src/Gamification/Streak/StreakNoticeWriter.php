@@ -23,7 +23,8 @@ use Symfony\Component\Uid\Uuid;
  * written later by the outbox's handler, so the announcement can't wait for it. Only a newer day
  * overwrites the row: a second exercise of the same day, written to the log or not yet, announces
  * nothing more. Missed days since the streak's last day are first covered by the player's freezes
- * when they can (docs/SHOP.md). It also moves the "streak in danger" reminder to the next day.
+ * when they can (docs/SHOP.md). The day's chest is credited with it (docs/SHOP.md, § 4 ter), and the
+ * "streak in danger" reminder moves to the next day.
  */
 final readonly class StreakNoticeWriter implements EventSubscriberInterface
 {
@@ -33,6 +34,7 @@ final readonly class StreakNoticeWriter implements EventSubscriberInterface
         private ClockInterface $clock,
         private StreakReminders $reminders,
         private StreakDays $streakDays,
+        private StreakRewardInterface $rewards,
     ) {
     }
 
@@ -71,6 +73,7 @@ final readonly class StreakNoticeWriter implements EventSubscriberInterface
             return;
         }
         $length = $streak['current'] + 1;
+        $badge = Trophy::forStreak($length);
 
         // The local date is assigned last: MySQL evaluates the assignments left to right, the
         // conditions before it still see the stored day.
@@ -83,9 +86,11 @@ final readonly class StreakNoticeWriter implements EventSubscriberInterface
                 badge = IF(gamification_streak_notice.local_date < new.local_date, new.badge, gamification_streak_notice.badge),
                 acknowledged_at = IF(gamification_streak_notice.local_date < new.local_date, NULL, gamification_streak_notice.acknowledged_at),
                 local_date = GREATEST(gamification_streak_notice.local_date, new.local_date)',
-            [Uuid::v7()->toBinary(), $id, $day, $length, $streak['current'], Trophy::forStreak($length)?->value],
+            [Uuid::v7()->toBinary(), $id, $day, $length, $streak['current'], $badge?->value],
             [ParameterType::BINARY, ParameterType::BINARY, ParameterType::STRING, ParameterType::INTEGER, ParameterType::INTEGER, ParameterType::STRING],
         );
+        // The day's chest, with the badge's bonus (once a day: its own unique index).
+        $this->rewards->grant($user->getId(), $day, $length, $badge?->goal(), $this->clock->now());
         // Today is safe: the "streak in danger" reminder moves to tomorrow.
         $this->reminders->schedule($user, $day);
     }

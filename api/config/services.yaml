@@ -62,6 +62,9 @@ when@test:
         App\Ops\Queue\QueueDrainer: { autowire: true, public: true }
         App\Shop\Wallet\CrownAdjustment: { autowire: true, public: true }
         App\Shop\Reward\RewardRules: { autowire: true, public: true }
+        # The daily chest, off unless a test switches it on (its random crystals in exact balances).
+        App\Tests\Double\SwitchableStreakReward: { autowire: true }
+        App\Gamification\Streak\StreakRewardInterface: '@App\Tests\Double\SwitchableStreakReward'
     parameters:
         woodpecker.min_puzzles: 5
         woodpecker.light.initial_puzzles: 10
@@ -114,6 +117,8 @@ services:
 
     # The daily streak's freezes come from the store (docs/SHOP.md): Gamification owns the interface.
     App\Gamification\Streak\FreezeStockInterface: '@App\Shop\Freeze\FreezeStock'
+    # And the day's chest (docs/SHOP.md, § 4 ter).
+    App\Gamification\Streak\StreakRewardInterface: '@App\Shop\Reward\DailyRewarder'
     # The puzzle streak's helps and passes too: PuzzleStreak owns the interface.
     App\PuzzleStreak\Aid\AidStockInterface: '@App\Shop\Aid\AidStock'
     # The pardons of rated puzzles too: Puzzle owns the interface.

@@ -199,5 +199,15 @@
     "added": "cristaux ajoutés à ta réserve",
     "spend": "Dépenser à la boutique",
     "results": "Voir mes résultats"
+  },
+  "daily": {
+    "label": "Coffre du jour",
+    "kicker": "COFFRE DU JOUR",
+    "title": ["Coffre", "du jour !"],
+    "badgeKicker": "COFFRE DE SÉRIE · {n} JOURS",
+    "badgeTitle": ["{n} jours", "de série !"],
+    "note": "Série de {n} jour | Série de {n} jours",
+    "badgeNote": "{daily} du jour + {bonus} pour le badge {n} jours",
+    "continue": "Continuer"
   }
 }

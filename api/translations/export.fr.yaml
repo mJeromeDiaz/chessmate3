@@ -19,7 +19,7 @@ readme:
         - entrainement.json : vos séances chronométrées, sessions (parcours compris), sessions
           enregistrées, séries de coordonnées, puzzles à l'aveugle, puzzle streaks et puzzles de
           parcours.
-        - boutique.json : vos cristaux (chaque mouvement, ceux gagnés par vos sessions), vos
+        - boutique.json : vos cristaux (chaque mouvement, ceux gagnés par vos sessions et vos coffres du jour), vos
           objets, vos gels de série et les jours qu'ils ont couverts.
         - activite.json : le journal de vos exercices terminés.
 

@@ -15,7 +15,8 @@ maquette « Coffre », 2026-10-14) ; un admin peut aussi en donner.
 Choix validés (2026-10-13) :
 
 - **Gagner des cristaux** (2026-10-14) : à la fin d'une session terminée, un coffre (§ 4 bis) ;
-  un admin peut aussi en donner (ou en retirer).
+  chaque jour joué, le coffre du jour, plus gros le jour d'un badge de série (§ 4 ter,
+  2026-10-21) ; un admin peut aussi en donner (ou en retirer).
 - **Gel automatique** : au retour, les gels en stock couvrent les jours manqués ; la série ne
   bouge pas (un jour gelé ne compte pas) ; boule de glace à la place de la flamme.
 - **Aides gratuites inchangées + pardon payant** (puzzles notés, aveugle, coordonnées).
@@ -34,7 +35,7 @@ Choix validés (2026-10-13) :
 | Solde | `App\Shop\Wallet\{Wallets, CrownAdjustment}` |
 | Stock | `App\Shop\Inventory\Inventory`, `Shop\Freeze\FreezeStock`, `Shop\Aid\AidStock`, `Shop\Pardon\{PuzzlePardons, BlindfoldPardons, CoordinatesPardons}` |
 | Achat | `App\Shop\Purchase\{Purchaser, PurchaseRefusal}` |
-| Gains | `App\Enum\Shop\RewardTier`, `App\Entity\Shop\{RewardRule, SessionReward}`, `App\Shop\Reward\{Rule, RewardRules, RewardCalculator, SessionRewarder}` (implémente `Training\Session\SessionRewardInterface`) |
+| Gains | `App\Enum\Shop\RewardTier`, `App\Entity\Shop\{RewardRule, SessionReward, DailyReward}`, `App\Shop\Reward\{Rule, RewardRules, RewardCalculator, SessionRewarder, DailyRewarder}` (implémentent `Training\Session\SessionRewardInterface` et `Gamification\Streak\StreakRewardInterface`), `App\ApiResource\Shop\{Reward, DailyReward}` |
 | API joueur | `App\ApiResource\Shop\*`, `App\State\Shop\*` |
 | Admin | `App\Controller\Shop\AdminShopController`, `App\Shop\Admin\{Payload, InvalidPayload, OfferEditor, SlideEditor, AdminCatalog, PlayerWallets, ShopStats}` |
 | Front | `front/src/pages/index/boutique.vue`, `components/shop/` (dont `TreasureChest.vue`, `CrystalGem.vue`, `CrystalPrice.vue`), `stores/shop.js`, `utils/shop.js`, `utils/shopReward.js`, `composables/shop/useAidPurchase.js` ; admin : `pages/index/admin/boutique.vue`, `components/admin/shop/` (dont `RewardRuleForm.vue`), `utils/admin/shop.js` |
@@ -81,9 +82,13 @@ Ajouter un article : un cas de l'enum (jamais renommé), son effet codé, son as
   boutique ne touche pas aux tables de Training), `local_date` (jour local du joueur, pour le
   plafond), exercices et réussites comptés, `paid_seconds` (après plafond), `capped`, `tier`,
   `crowns`, `opened_at` (coffre vu).
+- `shop_daily_reward` : le coffre du jour (§ 4 ter), une ligne par joueur et jour local
+  (`uniq_shop_daily_reward_user_day`) : `streak` atteinte, `badge_days` (le badge du jour, sinon
+  null), `daily_crowns` (le tirage), `badge_crowns` (le bonus du badge, 0 sinon), `crowns` (les
+  deux), `opened_at`.
 
 Tout est supprimé avec le compte (cascade) et exporté (`boutique.json` : mouvements,
-inventaire, gels, jours gelés et gains des sessions).
+inventaire, gels, jours gelés, gains des sessions et coffres du jour).
 
 ## 4. Gels de la série
 
@@ -141,6 +146,48 @@ Un coffre n'est « vu » qu'une fois frappé ou fermé ; affiché puis quitté, 
 coffre prend lui-même le focus (Échap le ferme) : le coffre n'a son contour de focus qu'au
 clavier.
 
+## 4 ter. Coffre du jour et coffre de badge de série (2026-10-21)
+
+Règles validées (2026-10-21) :
+
+- **Chaque jour joué**, le premier exercice du jour local (celui qui annonce la série,
+  [GAMIFICATION.md](GAMIFICATION.md), « Annonce de la série ») rapporte un **coffre du jour** de
+  **6 à 12 cristaux**, tirés au hasard côté serveur (`DailyRewarder::DAILY_MIN`, `DAILY_MAX`). Les
+  exercices suivants du jour ne rapportent rien de plus.
+- **Le jour d'un badge de série** (3, 7, 14, 30, 50, 100… jours), le même coffre ajoute
+  **10 cristaux par jour**, **1 000 au plus** : 3 → 30, 7 → 70, 14 → 140, 30 → 300, 50 → 500,
+  100 et au-delà → 1 000 (`DailyRewarder::badgeCrowns`). Un seul coffre, dont le détail donne le
+  tirage et le bonus.
+- **Pas rétroactif** : les badges gagnés avant le 2026-10-21 ne rapportent rien.
+- Hors du plafond des sessions (§ 4 bis) : ni minutes payées ni palier.
+- Crédité **à l'annonce de la série**, dans la transaction de l'exercice (annulé avec lui) :
+  `StreakNoticeWriter` appelle `Gamification\Streak\StreakRewardInterface`, que la boutique
+  implémente (`Shop\Reward\DailyRewarder`) ; l'index unique le rend idempotent par jour. Un
+  exercice d'un jour passé (séance close après minuit, rattrapage) n'en donne pas. Écriture au
+  registre `reward`, motif « Coffre du jour » ou « Coffre de série · 7 jours » : les statistiques
+  admin le comptent dans « gagné ».
+- Le coffre ne fait que révéler les cristaux, une fois (`opened_at`), comme ceux des sessions ;
+  aucun n'est perdu (liste des coffres du jour pas encore vus).
+
+Front : `components/shop/DailyChest.vue`, dans la mise en page (après la page : au-dessus de ses
+propres coffres), réutilise `TreasureChest` avec ses mots (`words` : « COFFRE DU JOUR » ou
+« COFFRE DE SÉRIE · 7 JOURS », titre ouvert « Coffre du jour ! » ou « 7 jours de série ! »), sa
+note (« Série de 5 jours », ou « 9 du jour + 70 pour le badge 7 jours ») et « Continuer ». Le
+store `shop` les tient (`dailyChests`, `showDailyChests()`, `openDailyChest()`,
+`nextDailyChest()`, calculs dans `utils/shopReward.js` : `dailyChestReward`, `dailyChestWords`,
+`dailyChestNote`). `useGamificationStore().celebrateStreak()` les montre **juste après la
+célébration de la série**, l'un après l'autre, et ne se résout qu'une fois le dernier fermé : tous
+les appelants (puzzle, Woodpecker, fin de séance, dashboard) attendent donc le coffre avant de
+reprendre. Sans annonce en attente, le dashboard et la fin de séance montrent quand même un coffre
+du jour resté non vu ; après un exercice, non (déjà montré ailleurs : le dashboard le rattrape).
+Taille du coffre fermé selon le montant, comme une session.
+
+En test PHPUnit, `App\Tests\Double\SwitchableStreakReward` coupe le coffre du jour
+(`when@test`) : ses cristaux aléatoires fausseraient les soldes exacts des autres tests ;
+`DailyRewardTest` l'active. En e2e, le coffre est réel côté serveur (le solde le compte), mais
+`signIn()` répond « aucun coffre » à `GET /shop/daily-rewards/unopened` comme « aucune annonce »
+à la série, sauf avec `streak: true`.
+
 ## 5. API joueur
 
 | Endpoint | Rôle |
@@ -148,6 +195,8 @@ clavier.
 | `GET /shop` | `{balance, offers, slides, inventory, freezes, earning}` : offres listées (en vente ou « bientôt »), `inventory` par article (un gel compte tant qu'il couvre un jour), gels un par un, `earning` (la règle des gains et `minutesLeftToday`) |
 | `GET /shop/rewards/unopened` | les coffres pas encore vus, du plus ancien (20 au plus), la session active d'abord réconciliée → `member` : `{id, crowns, paidMinutes, tier, capped, opened, balance, sessionId}` |
 | `POST /shop/rewards/{id}/open` | le coffre d'un gain vu (idempotent) → `{id, crowns, paidMinutes, tier, capped, opened, balance}` ; 404 pour celui d'un autre ; limiteur `shop_write` |
+| `GET /shop/daily-rewards/unopened` | les coffres du jour pas encore vus, du plus ancien (20 au plus) → `member` : `{id, localDate, streak, badgeDays, dailyCrowns, badgeCrowns, crowns, opened, balance}` |
+| `POST /shop/daily-rewards/{id}/open` | un coffre du jour vu (idempotent) → la même forme ; 404 pour celui d'un autre ; limiteur `shop_write` |
 | `POST /shop/purchases` `{offerId, quantity}` | 1 à 9 ; payé d'un coup sur le solde verrouillé, articles en stock, même transaction → l'état de la boutique ; 404 offre inconnue, 409 `detail` `insufficient` ou `not_on_sale`, 422 quantité ; limiteur `shop_write` (60 / 10 min) |
 
 La vue d'une session (`GET /training/sessions/{id}`, la liste, etc.) porte `reward` :
@@ -190,14 +239,16 @@ Statistiques.
 
 ## 8. Tests
 
-`tests/Unit/Shop/{CatalogTest, RewardCalculatorTest}.php`, `tests/Unit/Gamification/StreakFreezeTest.php`,
-`tests/Functional/Shop/{ShopTest, AdminShopTest, SessionRewardTest}.php`, les pardons et aides dans
+`tests/Unit/Shop/{CatalogTest, RewardCalculatorTest, DailyRewarderTest}.php`, `tests/Unit/Gamification/StreakFreezeTest.php`,
+`tests/Functional/Shop/{ShopTest, AdminShopTest, SessionRewardTest, DailyRewardTest}.php`, les pardons et aides dans
 `Functional/Puzzle/PardonTest.php`, `Functional/Blindfold/PuzzleRunTest.php`,
 `Functional/Coordinates/CoordinatesRunTest.php`, `Functional/PuzzleStreak/StreakRunTest.php` ;
-Vitest `shop.test.js`, `shop-reward.test.js`, `admin-shop.test.js`, `streak.test.js`, `use-blindfold-puzzle.test.js`,
+Vitest `shop.test.js`, `shop-reward.test.js` (dont le coffre du jour), `admin-shop.test.js`, `streak.test.js`, `use-blindfold-puzzle.test.js`,
 `use-timeboxed-run.test.js`, `coordinates.test.js` ; Playwright `tests/e2e/shop.spec.js` (un admin
 donne des cristaux, achat d'un gel ; puzzle classé raté pardonné, pardon acheté sur place ;
 pardon à l'aveugle en jeu, acheté sur place, puzzle résolu ; session terminée : coffre ouvert en
-trois coups, solde, « Voir mes résultats », bilan et « Gagner des cristaux »). `closeRunEnd()`
+trois coups, solde, « Voir mes résultats », bilan et « Gagner des cristaux ») et
+`tests/e2e/streak.spec.js` (coffre du jour après la célébration du premier puzzle, coffre de
+badge resté non vu au dashboard). `closeRunEnd()`
 ferme le coffre d'une session s'il précède le résultat. La commande e2e
 `app:e2e:seed-user --crowns=N` crée un joueur déjà riche.

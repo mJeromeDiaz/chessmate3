@@ -9,13 +9,15 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * set as the HttpOnly cookie the SPA uses to restore its session on load (the email 2FA login
  * itself is covered by the Phase 1 tests).
  *
- * The streak celebration (docs/GAMIFICATION.md, "Annonce de la série") would cover the page after
- * the user's first exercise: unless `streak` is asked, the API is answered "none pending".
+ * The streak celebration (docs/GAMIFICATION.md, "Annonce de la série") and the daily chest after it
+ * (docs/SHOP.md, § 4 ter) would cover the page after the user's first exercise: unless `streak` is
+ * asked, the API is answered "none pending" and "no chest" (the chest's crystals are still
+ * credited: a balance counts them).
  *
  * @param {import('@playwright/test').BrowserContext} context
  * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[], mindMapCapacity?: string, enginePuzzles?: boolean}} [options] an admin
  *   (docs/EARLY_ACCESS.md); a password, for a test that also signs in through the login page;
- *   the real streak announcements; crowns of the store (docs/SHOP.md); the first chapters of the
+ *   the real streak announcements and daily chests; crowns of the store (docs/SHOP.md); the first chapters of the
  *   visualisation path completed (docs/MIND_MAP.md), and these steps of it; the puzzles of the
  *   calculation path's chapter 3 added to the catalogue (docs/CALCULATION.md, § 2 quater)
  * @returns {Promise<{id: string, email: string}>}
@@ -36,6 +38,9 @@ export async function signIn(
   if (!streak) {
     await context.route('**/api/gamification/streak/notice', route =>
       route.fulfill({ json: { pending: false } })
+    )
+    await context.route('**/api/shop/daily-rewards/unopened', route =>
+      route.fulfill({ json: { member: [] } })
     )
   }
   const args = ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user']

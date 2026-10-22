@@ -13,6 +13,20 @@ import { intlLocale, t } from '@/i18n'
  * @property {boolean} capped the daily cap cut its paid time
  * @property {boolean} opened its chest was seen
  *
+ * @typedef {object} DailyReward a daily chest (API, docs/SHOP.md, § 4 ter)
+ * @property {string} id
+ * @property {string} localDate
+ * @property {number} streak the streak reached that day
+ * @property {number|null} badgeDays the streak badge won that day
+ * @property {number} dailyCrowns the daily draw (6 to 12)
+ * @property {number} badgeCrowns the badge's bonus (0 without one)
+ * @property {number} crowns both together
+ * @property {boolean} opened
+ *
+ * @typedef {object} ChestWords what another chest says instead of a session's
+ * @property {string} [kicker] the closed chest's kicker
+ * @property {[string, string]} [openTitle] the open chest's title
+ *
  * @typedef {object} ChestStage
  * @property {string} bg
  * @property {string} glow
@@ -93,9 +107,10 @@ const title = key => [t(`${key}.0`), t(`${key}.1`)]
  *
  * @param {SessionReward} reward
  * @param {Partial<import('@/utils/shop').ShopEarning>|null|undefined} earning
+ * @param {ChestWords} [words] another chest's words (the daily chest's)
  * @returns {ChestStage[]}
  */
-export function chestStages(reward, earning) {
+export function chestStages(reward, earning, words = {}) {
   const size = chestSize(reward.crowns, earning)
   const closed = CLOSED[size]
   const tier = TIERS.includes(reward.tier) ? reward.tier : 'near'
@@ -104,7 +119,7 @@ export function chestStages(reward, earning) {
       bg: closed.bg,
       glow: closed.glow,
       ink: '#FFFFFF',
-      kicker: t('shop.chest.stages.closed.kicker'),
+      kicker: words.kicker ?? t('shop.chest.stages.closed.kicker'),
       title: title(`shop.chest.closed.${size}`),
       accent: '#C6F432',
       hint: t('shop.chest.stages.closed.hint')
@@ -132,7 +147,7 @@ export function chestStages(reward, earning) {
       glow: 'rgba(255,255,255,.9)',
       ink: '#1B1530',
       kicker: t('shop.chest.stages.open.kicker'),
-      title: title(`shop.chest.open.${tier}`),
+      title: words.openTitle ?? title(`shop.chest.open.${tier}`),
       accent: '#5A3BE0',
       hint: ''
     }
@@ -201,4 +216,58 @@ export function earningRows(earning) {
     { label: t('shop.earning.near'), value: hour(earning.nearPercent) },
     { label: t('shop.earning.missed'), value: hour(earning.missedPercent) }
   ]
+}
+
+/**
+ * A daily chest as the treasure chest screen takes a reward (`TreasureChest`): its crystals, the
+ * best tier (sized by its amount like a session's).
+ *
+ * @param {DailyReward} daily
+ * @returns {SessionReward}
+ */
+export function dailyChestReward(daily) {
+  return {
+    id: daily.id,
+    crowns: daily.crowns,
+    paidMinutes: 0,
+    tier: 'perfect',
+    capped: false,
+    opened: daily.opened
+  }
+}
+
+/**
+ * The daily chest's words: "COFFRE DU JOUR", or the badge's days on a badge day.
+ *
+ * @param {DailyReward} daily
+ * @returns {Required<ChestWords>}
+ */
+export function dailyChestWords(daily) {
+  if (daily.badgeDays)
+    return {
+      kicker: t('shop.daily.badgeKicker', { n: daily.badgeDays }),
+      openTitle: [
+        t('shop.daily.badgeTitle.0', { n: daily.badgeDays }),
+        t('shop.daily.badgeTitle.1')
+      ]
+    }
+  return {
+    kicker: t('shop.daily.kicker'),
+    openTitle: title('shop.daily.title')
+  }
+}
+
+/**
+ * The line under the amount: the streak, or the draw and the badge's bonus.
+ *
+ * @param {DailyReward} daily
+ */
+export function dailyChestNote(daily) {
+  if (daily.badgeDays)
+    return t('shop.daily.badgeNote', {
+      daily: daily.dailyCrowns,
+      bonus: new Intl.NumberFormat(intlLocale()).format(daily.badgeCrowns),
+      n: daily.badgeDays
+    })
+  return t('shop.daily.note', { n: daily.streak }, daily.streak > 1 ? 2 : 1)
 }

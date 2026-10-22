@@ -10,11 +10,16 @@ vi.mock('@/services/api', () => ({
     acknowledgeStreak: vi.fn(),
     streakReminder: vi.fn(),
     saveStreakReminder: vi.fn()
+  },
+  shopApi: {
+    unopenedDailyRewards: vi.fn(),
+    openDailyReward: vi.fn()
   }
 }))
 
-const { gamificationApi } = await import('@/services/api')
+const { gamificationApi, shopApi } = await import('@/services/api')
 const { useGamificationStore } = await import('@/stores/gamification')
+const { useShopStore } = await import('@/stores/shop')
 const {
   FLAME_BASE,
   FLAME_STEP,
@@ -136,6 +141,7 @@ describe('streak celebration', () => {
     setActivePinia(createPinia())
     vi.resetAllMocks()
     gamificationApi.acknowledgeStreak.mockResolvedValue({})
+    shopApi.unopenedDailyRewards.mockResolvedValue([])
   })
 
   it('shows today’s announcement until it is closed, then updates the summary', async () => {
@@ -191,11 +197,64 @@ describe('streak celebration', () => {
     expect(store.celebration).toBeNull()
   })
 
+  it('shows the daily chests after the celebration, then lets the player go on', async () => {
+    const store = useGamificationStore()
+    const shop = useShopStore()
+    gamificationApi.streakNotice.mockResolvedValue(notice())
+    shopApi.unopenedDailyRewards.mockResolvedValue([
+      { id: 'd1', crowns: 9 },
+      { id: 'd2', crowns: 79 }
+    ])
+
+    let done = false
+    const shown = store.celebrateStreak().then(() => (done = true))
+    await vi.waitFor(() => expect(store.celebration).not.toBeNull())
+    expect(shopApi.unopenedDailyRewards).not.toHaveBeenCalled()
+    store.closeCelebration()
+    await vi.waitFor(() => expect(shop.dailyChests).toHaveLength(2))
+    shop.nextDailyChest()
+    expect(shop.dailyChests.map(c => c.id)).toEqual(['d2'])
+    await Promise.resolve()
+    expect(done).toBe(false)
+    shop.nextDailyChest()
+    await shown
+    expect(done).toBe(true)
+  })
+
+  it('shows a daily chest left unseen on the dashboard, not after an exercise', async () => {
+    const store = useGamificationStore()
+    const shop = useShopStore()
+    gamificationApi.streakNotice.mockResolvedValue({ pending: false })
+    shopApi.unopenedDailyRewards.mockResolvedValue([{ id: 'd1', crowns: 9 }])
+
+    const shown = store.celebrateStreak({ afterExercise: false })
+    await vi.waitFor(() => expect(shop.dailyChests).toHaveLength(1))
+    // Seen in this tab: not shown again while the server is marking it.
+    shopApi.openDailyReward.mockResolvedValue({})
+    await shop.openDailyChest('d1')
+    expect(shopApi.openDailyReward).toHaveBeenCalledWith('d1')
+    shop.nextDailyChest()
+    await shown
+    await store.celebrateStreak({ afterExercise: false })
+    expect(shopApi.unopenedDailyRewards).toHaveBeenCalledTimes(2)
+    expect(shop.dailyChests).toHaveLength(0)
+
+    // After an exercise, none pending: shown elsewhere, its chest left to the dashboard.
+    await store.celebrateStreak()
+    expect(shopApi.unopenedDailyRewards).toHaveBeenCalledTimes(2)
+  })
+
   it('never blocks the player when the API fails', async () => {
     const store = useGamificationStore()
     gamificationApi.streakNotice.mockRejectedValue(new Error('500'))
 
     await expect(store.celebrateStreak()).resolves.toBeUndefined()
     expect(store.celebration).toBeNull()
+
+    gamificationApi.streakNotice.mockResolvedValue({ pending: false })
+    shopApi.unopenedDailyRewards.mockRejectedValue(new Error('500'))
+    await expect(
+      store.celebrateStreak({ afterExercise: false })
+    ).resolves.toBeUndefined()
   })
 })

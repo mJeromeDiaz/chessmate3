@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { gamificationApi } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { useShopStore } from '@/stores/shop'
 import { localToday } from '@/utils/streak'
 import { t } from '@/i18n'
 
@@ -91,8 +92,8 @@ export const useGamificationStore = defineStore('gamification', () => {
   /**
    * Shows today's streak announcement if there is one not shown yet (docs/GAMIFICATION.md,
    * "Annonce de la série"): after a free exercise's result, at the end of a timed run, on the
-   * dashboard. Resolves once the player closed it, at once when there is none; never rejects
-   * (a failure only skips the celebration).
+   * dashboard; then the daily chests not seen yet (docs/SHOP.md, § 4 ter). Resolves once the
+   * player closed them, at once when there is none; never rejects (a failure only skips them).
    *
    * @param {{afterExercise?: boolean}} [options] afterExercise (default): an exercise of today
    *   just ended, so its announcement was written with it; none pending means it was already
@@ -106,11 +107,17 @@ export const useGamificationStore = defineStore('gamification', () => {
       .streakNotice()
       .then(notice => {
         if (!notice?.pending) {
-          if (afterExercise) shownOn = today()
-          return
+          // Shown elsewhere after an exercise: a chest left unseen comes on the dashboard.
+          if (afterExercise) {
+            shownOn = today()
+            return
+          }
+          return useShopStore().showDailyChests()
         }
         celebration.value = notice
-        return new Promise(resolve => onClosed.push(resolve))
+        return new Promise(resolve => onClosed.push(resolve)).then(() =>
+          useShopStore().showDailyChests()
+        )
       })
       .catch(() => {})
       .finally(() => {

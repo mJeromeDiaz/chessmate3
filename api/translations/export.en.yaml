@@ -17,7 +17,7 @@ readme:
           games; repertoires/*.pgn: each repertoire as PGN.
         - entrainement.json: your timed runs, sessions (parcours included), saved sessions,
           coordinates series, blindfold puzzles, puzzle streaks and parcours puzzles.
-        - boutique.json: your crystals (each movement, those earned by your sessions), your items,
+        - boutique.json: your crystals (each movement, those earned by your sessions and your daily chests), your items,
           your streak freezes and the days they covered.
         - activite.json: the log of your finished exercises.
 

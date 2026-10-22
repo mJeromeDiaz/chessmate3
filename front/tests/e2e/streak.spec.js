@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test'
 import { signIn, solve } from './helpers.js'
 
 /**
- * The streak (docs/GAMIFICATION.md, § 4): the celebration after the day's first exercise, once; the
- * header flame; the "streak in danger" reminder settings (docs/NOTIFICATIONS.md, § 5).
+ * The streak (docs/GAMIFICATION.md, § 4): the celebration after the day's first exercise, once, then
+ * the daily chest (docs/SHOP.md, § 4 ter), with a streak badge's bonus; the header flame; the "streak in danger" reminder settings (docs/NOTIFICATIONS.md, § 5).
  */
 
 /**
@@ -63,11 +63,24 @@ test('the first puzzle of the day is celebrated, once', async ({
   const acknowledged = page.waitForResponse(r =>
     r.url().endsWith('/api/gamification/streak/notice/acknowledgement')
   )
-  const second = await nextPuzzle(page, () =>
-    page.getByTestId('streak-celebration-continue').click()
-  )
+  await page.getByTestId('streak-celebration-continue').click()
   expect((await acknowledged).status()).toBe(204)
   await expect(celebration).toBeHidden()
+
+  // Then the day's chest: 6 to 12 crystals, credited already (open at once: reduced motion).
+  const chest = page.getByTestId('daily-chest')
+  await expect(chest).toBeVisible()
+  // Open at once: the open stage's title (the closed one's kicker is never seen).
+  await expect(chest).toHaveAttribute('aria-label', 'Coffre du jour')
+  await expect(chest).toContainText('du jour !')
+  await expect(chest).toContainText('Série de 1 jour')
+  await expect(chest.getByTestId('chest-amount')).toHaveText(
+    /^\s*\+([6-9]|1[0-2])$/
+  )
+  const second = await nextPuzzle(page, () =>
+    chest.getByTestId('chest-results').click()
+  )
+  await expect(chest).toBeHidden()
   // The flame is lit, without a reload.
   await expect(page.getByTestId('streak')).not.toHaveClass(
     /streak-chip--waiting/
@@ -78,6 +91,7 @@ test('the first puzzle of the day is celebrated, once', async ({
   await solveAndWait(page, second)
   await nextPuzzle(page, () => page.getByTestId('puzzle-next').click())
   await expect(celebration).toHaveCount(0)
+  await expect(page.getByTestId('daily-chest')).toHaveCount(0)
 })
 
 test('a celebration left unseen shows on the dashboard, with its badge', async ({
@@ -110,6 +124,26 @@ test('a celebration left unseen shows on the dashboard, with its badge', async (
       return route.fulfill({ status: 204 })
     }
   )
+  // The badge's day: 9 drawn + 70 for 7 days, in one chest.
+  const chest = {
+    id: '0192f0a0-0000-7000-8000-000000000007',
+    localDate: today,
+    streak: 7,
+    badgeDays: 7,
+    dailyCrowns: 9,
+    badgeCrowns: 70,
+    crowns: 79,
+    opened: false,
+    balance: 79
+  }
+  let chestOpened = false
+  await page.route('**/api/shop/daily-rewards/unopened', route =>
+    route.fulfill({ json: { member: chestOpened ? [] : [chest] } })
+  )
+  await page.route('**/api/shop/daily-rewards/*/open', route => {
+    chestOpened = true
+    return route.fulfill({ json: { ...chest, opened: true } })
+  })
 
   await page.goto('/#/')
   await expect(page.getByTestId('streak-celebration')).toBeVisible()
@@ -124,9 +158,19 @@ test('a celebration left unseen shows on the dashboard, with its badge', async (
   await expect(page.getByTestId('streak-celebration')).toBeHidden()
   expect(acknowledged).toBe(true)
 
+  const daily = page.getByTestId('daily-chest')
+  await expect(daily).toBeVisible()
+  await expect(daily).toContainText('7 joursde série !')
+  await expect(daily.getByTestId('chest-amount')).toHaveText('+79')
+  await expect(daily).toContainText('9 du jour + 70 pour le badge 7 jours')
+  await daily.getByTestId('chest-results').click()
+  await expect(daily).toBeHidden()
+  expect(chestOpened).toBe(true)
+
   await page.reload()
   await expect(page.getByTestId('dashboard')).toBeVisible()
   await expect(page.getByTestId('streak-celebration')).toHaveCount(0)
+  await expect(page.getByTestId('daily-chest')).toHaveCount(0)
 })
 
 test('the streak reminder is set in the profile', async ({ page, context }) => {

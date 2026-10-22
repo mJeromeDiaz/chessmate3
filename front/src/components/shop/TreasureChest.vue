@@ -5,7 +5,7 @@
     role="dialog"
     aria-modal="true"
     tabindex="-1"
-    :aria-label="$t('shop.chestScreen.label')"
+    :aria-label="label ?? $t('shop.chestScreen.label')"
     data-testid="treasure-chest"
     :style="{ background: stage.bg, color: stage.ink }"
     @keydown.esc="close"
@@ -222,7 +222,7 @@
  * completed; the chest is shown once (opened, or closed unopened: seen either way). The first
  * background follows the amount, the last title the tier; "Voir mes résultats" goes back to the
  * run's result. Reduced motion: the chest open at once. Also the chests of the mind map's paths
- * (their own `opener` and `note`).
+ * (their own `opener` and `note`) and the daily chest (its own `words` too, docs/SHOP.md, § 4 ter).
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -249,7 +249,15 @@ const props = defineProps({
    *
    * @type {import('vue').PropType<((id: string) => Promise<unknown>)|null>}
    */
-  opener: { type: Function, default: null }
+  opener: { type: Function, default: null },
+  /**
+   * Another chest's kicker and open title; empty: a session's.
+   *
+   * @type {import('vue').PropType<import('@/utils/shopReward').ChestWords>}
+   */
+  words: { type: Object, default: () => ({}) },
+  /** The screen's accessible name; null: a session reward's. */
+  label: { type: String, default: null }
 })
 
 const emit = defineEmits({
@@ -288,7 +296,9 @@ const wallet = ref(/** @type {number|null} */ (null))
 /** The balance before this reward. */
 let base = 0
 
-const stages = computed(() => chestStages(props.reward, shop.state?.earning))
+const stages = computed(() =>
+  chestStages(props.reward, shop.state?.earning, props.words)
+)
 const stage = computed(() => stages.value[Math.min(hits.value, CHEST_HITS)])
 const lit = computed(() => (hits.value >= 1 ? 1 : 0))
 const lit2 = computed(() => (hits.value >= 2 ? 1 : 0))

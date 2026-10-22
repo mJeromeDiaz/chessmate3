@@ -1187,7 +1187,29 @@ export const shopApi = {
   unopenedRewards: () =>
     http
       .get('/api/shop/rewards/unopened', JSON_LD)
-      .then(r => r.data.member ?? [])
+      .then(r => r.data.member ?? []),
+  /**
+   * The daily chests not seen yet, oldest first (docs/SHOP.md, § 4 ter): `{id, localDate, streak,
+   * badgeDays, dailyCrowns, badgeCrowns, crowns, opened, balance}` each.
+   */
+  unopenedDailyRewards: () =>
+    http
+      .get('/api/shop/daily-rewards/unopened', JSON_LD)
+      .then(r => r.data.member ?? []),
+  /**
+   * Marks a daily chest opened (idempotent), same shape. The crowns were credited with the day's
+   * first exercise.
+   *
+   * @param {string} rewardId
+   */
+  openDailyReward: rewardId =>
+    http
+      .post(
+        `/api/shop/daily-rewards/${encodeURIComponent(rewardId)}/open`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data)
 }
 
 /** The guided tour (docs/ONBOARDING.md): the declared level and goal. */

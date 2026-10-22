@@ -26,6 +26,8 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+    <!-- After the page: above its own chests (a mind map step's), after the celebration. -->
+    <DailyChest v-if="auth.isAuthenticated" />
   </q-layout>
 </template>
 
@@ -36,6 +38,7 @@ import { useAuthStore } from '@/stores/auth'
 import StreakCelebration from '@/components/gamification/StreakCelebration.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppMenu from '@/components/layout/AppMenu.vue'
+import DailyChest from '@/components/shop/DailyChest.vue'
 import ThemeMenu from '@/components/theme/ThemeMenu.vue'
 
 const auth = useAuthStore()

@@ -125,7 +125,8 @@ fois par jour, après le premier exercice du jour (jeu libre) ou à la fin de la
   `SendMessageToTransportsEvent` (comme `ExerciseXp`) et, quand un `ExerciseCompleted` du jour local
   de l'utilisateur entre dans l'outbox alors que le journal n'a encore rien ce jour-là, écrit la série
   atteinte (série vivante + 1, sinon 1), celle d'avant (0 si cassée) et le badge éventuel, **dans la
-  transaction de l'exercice** (annulée avec lui).
+  transaction de l'exercice** (annulée avec lui). Le coffre du jour, avec le bonus du badge, est
+  crédité au même moment ([SHOP.md § 4 ter](SHOP.md#4-ter-coffre-du-jour-et-coffre-de-badge-de-série-2026-10-21)).
 - Une ligne par utilisateur (`INSERT … AS new ON DUPLICATE KEY UPDATE`) que seul un jour plus récent
   remplace : un deuxième exercice du même jour, journalisé ou encore dans l'outbox, n'annonce rien de
   plus. Un exercice d'un jour passé (séance close paresseusement après minuit, reprise) n'annonce rien.
@@ -236,7 +237,7 @@ avec le test de performance du dashboard (un an d'un joueur très assidu, XP rec
   `tests/Functional/Training/RunReviewTest.php` vérifie l'`xp` de la revue avant et après l'outbox.
 - Vitest : `tests/unit/gamification.test.js` (barre de niveau, niveau d'un module du catalogue,
   cartes de trophées, phrase et prof du défi), `run-end.test.js` (XP et niveau de fin de séance),
-  `streak.test.js` (badges, paroles d'Albert, semaine, jour local, célébration une fois par jour).
+  `streak.test.js` (badges, paroles d'Albert, semaine, jour local, célébration une fois par jour, puis le coffre du jour).
 - Playwright : `tests/e2e/dashboard.spec.js` (réponses de gamification simulées : niveau, série,
   carte « Série » et badges, record, niveau de module, trophées, défi ; plus aucune étiquette
   « Aperçu »), `streak.spec.js` (célébration réelle après le premier puzzle du jour puis plus rien,

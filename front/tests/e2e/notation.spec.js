@@ -28,10 +28,9 @@ test('notation: a move announced played right then wrong, a line written', async
 }) => {
   await signIn(context)
   await page.goto('/#/cerveau')
-  await page
-    .getByRole('navigation')
-    .getByRole('link', { name: 'Notation' })
-    .click()
+  await page.getByTestId('nav-burger').click()
+  await page.getByTestId('nav-free').click()
+  await page.getByTestId('nav-free-notation').click()
   await expect(page).toHaveURL(/#\/notation$/)
   await expect(page.getByTestId('notation-letters')).toContainText('R D T F C')
 

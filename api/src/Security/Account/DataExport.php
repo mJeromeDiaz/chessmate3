@@ -239,6 +239,11 @@ final readonly class DataExport
                 'SELECT local_date, item_count, success_count, paid_seconds, capped, tier, crowns, created_at, opened_at FROM shop_session_reward WHERE user_id = ? ORDER BY created_at',
                 $id,
             ),
+            // The daily chests (docs/SHOP.md, § 4 ter).
+            'dailyRewards' => $this->rows(
+                'SELECT local_date, streak, badge_days, daily_crowns, badge_crowns, crowns, created_at, opened_at FROM shop_daily_reward WHERE user_id = ? ORDER BY local_date',
+                $id,
+            ),
         ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(

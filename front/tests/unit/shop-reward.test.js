@@ -4,6 +4,9 @@ import {
   chestSize,
   chestStages,
   chestToOpen,
+  dailyChestNote,
+  dailyChestReward,
+  dailyChestWords,
   dailyMax,
   earningRows,
   rewardLine,
@@ -99,5 +102,66 @@ describe('the reward in words', () => {
 
   it('lists what an hour pays by tier in the store', () => {
     expect(earningRows(EARNING).map(r => r.value)).toEqual([180, 120, 60])
+  })
+})
+
+/** @param {Partial<import('@/utils/shopReward').DailyReward>} over */
+const daily = over => ({
+  id: 'd1',
+  localDate: '2026-10-21',
+  streak: 5,
+  badgeDays: null,
+  dailyCrowns: 9,
+  badgeCrowns: 0,
+  crowns: 9,
+  opened: false,
+  ...over
+})
+
+describe('the daily chest (docs/SHOP.md, § 4 ter)', () => {
+  it('says the day, or the streak badge and its bonus', () => {
+    const plain = daily({})
+    expect(dailyChestWords(plain)).toEqual({
+      kicker: 'COFFRE DU JOUR',
+      openTitle: ['Coffre', 'du jour !']
+    })
+    expect(dailyChestNote(plain)).toBe('Série de 5 jours')
+    expect(dailyChestNote(daily({ streak: 1 }))).toBe('Série de 1 jour')
+
+    const badge = daily({
+      streak: 7,
+      badgeDays: 7,
+      badgeCrowns: 70,
+      crowns: 79
+    })
+    expect(dailyChestWords(badge)).toEqual({
+      kicker: 'COFFRE DE SÉRIE · 7 JOURS',
+      openTitle: ['7 jours', 'de série !']
+    })
+    expect(dailyChestNote(badge)).toBe('9 du jour + 70 pour le badge 7 jours')
+  })
+
+  it('opens on the chest screen with its own words, sized by its amount', () => {
+    const reward = dailyChestReward(daily({ crowns: 79, opened: true }))
+    expect(reward).toEqual({
+      id: 'd1',
+      crowns: 79,
+      paidMinutes: 0,
+      tier: 'perfect',
+      capped: false,
+      opened: true
+    })
+    const stages = chestStages(
+      reward,
+      EARNING,
+      dailyChestWords(daily({ badgeDays: 7 }))
+    )
+    expect([stages[0].kicker, stages[0].bg]).toEqual([
+      'COFFRE DE SÉRIE · 7 JOURS',
+      '#2B2250'
+    ])
+    expect(stages[3].title).toEqual(['7 jours', 'de série !'])
+    // The hits in between stay the session's.
+    expect(stages[1].kicker).toBe('ÇA BOUGE…')
   })
 })
