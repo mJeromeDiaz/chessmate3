@@ -2,7 +2,7 @@
 
 namespace App;
 
-use App\Doctrine\Mapping\CatalogMappingPass;
+use App\Doctrine\Mapping\SeparateDatabaseMappingPass;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
@@ -23,6 +23,7 @@ class Kernel extends BaseKernel
 
     protected function build(ContainerBuilder $container): void
     {
-        $container->addCompilerPass(new CatalogMappingPass());
+        $container->addCompilerPass(new SeparateDatabaseMappingPass(SeparateDatabaseMappingPass::CATALOG));
+        $container->addCompilerPass(new SeparateDatabaseMappingPass(SeparateDatabaseMappingPass::TABLEBASE));
     }
 }

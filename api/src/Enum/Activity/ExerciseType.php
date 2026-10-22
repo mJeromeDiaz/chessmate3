@@ -67,4 +67,10 @@ enum ExerciseType: string
      * `metadata.boss` (the Métronome: no XP).
      */
     case Calculation = 'calculation';
+    /**
+     * A position of the endgames module (docs/ENDGAMES.md), never rated; `metadata.status` (won,
+     * held, spoiled, overtime, resigned), `metadata.lesson`, `metadata.opponentElo` (null: the
+     * tablebase's best defence; the XP depends on it).
+     */
+    case Endgame = 'endgame';
 }

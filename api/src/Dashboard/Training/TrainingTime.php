@@ -41,6 +41,7 @@ final class TrainingTime
         ExerciseType::Jongleur->value => Module::Jongleur,
         ExerciseType::Vision->value => Module::Vision,
         ExerciseType::Calculation->value => Module::Calculation,
+        ExerciseType::Endgame->value => Module::Endgames,
     ];
 
     public function __construct(private readonly Connection $connection)

@@ -7,7 +7,6 @@
     "locked": "Beat the previous chapter's boss to open this one.",
     "bossOfChapter": "Chapter boss",
     "badges": "Badges",
-    "noBadge": "Beat bosses to earn your first badges.",
     "rules": "Each exercise must be passed 2 to 4 times (80% success). An exercise can be skipped, a boss never. Beat the boss to open the next chapter.",
     "capacity": "Capacity {n} · {done} / {total} steps",
     "step": "Step {n}",

@@ -171,6 +171,12 @@ framework:
             policy: sliding_window
             limit: 10
             interval: '1 hour'
+        # Endgames module (docs/ENDGAMES.md): the tablebase answer after each move played, kept
+        # server-side for everyone (a 15-minute run is about 150 moves).
+        endgame_tablebase:
+            policy: sliding_window
+            limit: 400
+            interval: '10 minutes'
         # Lichess proxy (explorer and cloud eval together). The front waits 300 ms of stillness
         # before asking and caches per position; answers are cached server-side for everyone.
         repertoire_explorer:

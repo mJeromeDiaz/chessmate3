@@ -7,7 +7,6 @@
     "locked": "Bats le boss du chapitre précédent pour ouvrir celui-ci.",
     "bossOfChapter": "Boss du chapitre",
     "badges": "Badges",
-    "noBadge": "Bats des boss pour gagner tes premiers badges.",
     "rules": "Chaque exercice se valide 2 à 4 fois (80 % de réussite). Un exercice peut être passé, un boss jamais. Bats le boss pour ouvrir le chapitre suivant.",
     "capacity": "Capacité {n} · {done} / {total} étapes",
     "step": "Étape {n}",

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Puzzle;
 
-use App\Doctrine\Mapping\CatalogMappingPass;
+use App\Doctrine\Mapping\SeparateDatabaseMappingPass;
 use App\Entity\Catalog\Puzzle;
 use App\Entity\Catalog\Theme;
 use App\Entity\Catalog\ThemeMembership;
@@ -64,9 +64,9 @@ final class CatalogDatabaseTest extends KernelTestCase
         self::assertSame($expected, $catalogClasses);
 
         foreach ($this->default->getMetadataFactory()->getAllMetadata() as $metadata) {
-            self::assertStringStartsNotWith(CatalogMappingPass::NAMESPACE, $metadata->getName());
+            self::assertStringStartsNotWith(SeparateDatabaseMappingPass::CATALOG, $metadata->getName());
             foreach ($metadata->getAssociationMappings() as $field => $association) {
-                self::assertStringStartsNotWith(CatalogMappingPass::NAMESPACE, $association->targetEntity, \sprintf('%s::$%s links to the catalogue: keep its id instead.', $metadata->getName(), $field));
+                self::assertStringStartsNotWith(SeparateDatabaseMappingPass::CATALOG, $association->targetEntity, \sprintf('%s::$%s links to the catalogue: keep its id instead.', $metadata->getName(), $field));
             }
         }
     }

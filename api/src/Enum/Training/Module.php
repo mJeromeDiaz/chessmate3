@@ -37,6 +37,8 @@ enum Module: string
     case Vision = 'vision';
     /** Calculation: a mate calculated on a frozen board, then its whole line played at once (docs/CALCULATION.md); played from the mind map only for now. */
     case Calculation = 'calculation';
+    /** Endgames: elementary endgames won or held against Maia or the tablebase, judged by the tablebase (docs/ENDGAMES.md). */
+    case Endgames = 'endgames';
 
     /**
      * @return list<string>

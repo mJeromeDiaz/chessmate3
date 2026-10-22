@@ -84,6 +84,16 @@ final class XpRules
     public const CALCULATION_RIGHT = 4;
     public const CALCULATION_WRONG = 1;
 
+    /**
+     * Endgames (docs/ENDGAMES.md): a position won or held, by the opponent's strength (Maia under
+     * ENDGAME_STRONG_ELO, Maia from it, the tablebase's best defence); a position failed.
+     */
+    public const ENDGAME_WEAK = 15;
+    public const ENDGAME_STRONG = 25;
+    public const ENDGAME_PERFECT = 35;
+    public const ENDGAME_STRONG_ELO = 1400;
+    public const ENDGAME_FAILED = 2;
+
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
     public const MODULE_STEP = 100;
@@ -132,6 +142,7 @@ final class XpRules
             ExerciseType::Vision => $success ? self::VISION_RIGHT : self::VISION_WRONG,
             // The Métronome's lines: only the boss's reward (docs/MIND_MAP.md, § 5 bis).
             ExerciseType::Calculation => true === ($metadata['boss'] ?? null) ? 0 : ($success ? self::CALCULATION_RIGHT : self::CALCULATION_WRONG),
+            ExerciseType::Endgame => $success ? self::endgame(\is_int($metadata['opponentElo'] ?? null) ? $metadata['opponentElo'] : null) : self::ENDGAME_FAILED,
         };
     }
 
@@ -163,6 +174,18 @@ final class XpRules
         $bonus = $solved >= self::RUSH_BONUS_MIN_SOLVED && null !== $accuracy && $accuracy >= self::RUSH_BONUS_ACCURACY ? self::RUSH_ACCURACY_BONUS : 0;
 
         return self::RUSH_PER_POINT * RushRules::score($solved, $failed) + $bonus;
+    }
+
+    /**
+     * XP of an endgame position won or held, by the opponent's Elo (null: the tablebase's best defence).
+     */
+    public static function endgame(?int $opponentElo): int
+    {
+        return match (true) {
+            null === $opponentElo => self::ENDGAME_PERFECT,
+            $opponentElo >= self::ENDGAME_STRONG_ELO => self::ENDGAME_STRONG,
+            default => self::ENDGAME_WEAK,
+        };
     }
 
     /**
@@ -198,6 +221,7 @@ final class XpRules
             ExerciseType::Jongleur => Module::Jongleur,
             ExerciseType::Vision => Module::Vision,
             ExerciseType::Calculation => Module::Calculation,
+            ExerciseType::Endgame => Module::Endgames,
         };
     }
 

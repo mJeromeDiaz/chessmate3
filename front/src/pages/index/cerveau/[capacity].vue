@@ -53,20 +53,19 @@
           />
 
           <div class="mind-path__card cm-card" data-testid="mind-path-badges">
-            <span class="mind-path__label">{{
-              $t('mindMapPath.page.badges')
-            }}</span>
-            <div v-if="path.badges.length" class="mind-path__badges">
-              <span
-                v-for="b in path.badges"
-                :key="b.badge"
-                class="mind-path__badge"
-                ><q-icon name="military_tech" />{{ badgeName(b.badge) }}</span
-              >
-            </div>
-            <p v-else class="mind-path__rules">{{
-              $t('mindMapPath.page.noBadge')
-            }}</p>
+            <template v-if="path.badges.length">
+              <span class="mind-path__label">{{
+                $t('mindMapPath.page.badges')
+              }}</span>
+              <div class="mind-path__badges">
+                <span
+                  v-for="b in path.badges"
+                  :key="b.badge"
+                  class="mind-path__badge"
+                  ><q-icon name="military_tech" />{{ badgeName(b.badge) }}</span
+                >
+              </div>
+            </template>
             <p class="mind-path__rules">{{ $t('mindMapPath.page.rules') }}</p>
           </div>
         </aside>

@@ -6,6 +6,7 @@
  *   cache:pool:prune   expired Lichess explorer and cloud-eval answers
  *   app:account:purge  accounts whose deletion is due (docs/AUTH.md)
  *   app:repertoire:refresh-opening-stats  the explorer's first moves, rows older than 30 days (docs/REPERTOIRE.md)
+ *   app:endgame:prune-tablebase  tablebase answers unread for 90 days (docs/ENDGAMES.md)
  * Scheduled in the OVH manager: script `<dir>/api/bin/cron-daily.php`, PHP 8.3, daily.
  */
 
@@ -27,7 +28,7 @@ $application->setAutoExit(false);
 $output = new ConsoleOutput();
 
 $status = 0;
-foreach (['cache:pool:prune', 'app:account:purge', 'app:repertoire:refresh-opening-stats'] as $command) {
+foreach (['cache:pool:prune', 'app:account:purge', 'app:repertoire:refresh-opening-stats', 'app:endgame:prune-tablebase'] as $command) {
     $output->writeln(sprintf('[%s] %s', date(DATE_ATOM), $command));
     $status = max($status, $application->run(new ArrayInput(['command' => $command, '--no-interaction' => true]), $output));
 }

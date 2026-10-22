@@ -9,10 +9,10 @@ use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 
 /**
- * Maps nothing: registered first in the default entity manager's driver chain for the catalogue's
- * namespace ({@see CatalogMappingPass}), so that manager never claims a catalogue entity. The
- * registry then resolves those classes to the `catalog` manager, and persisting one through the
- * default manager fails instead of writing to the wrong database.
+ * Maps nothing: registered first in the default entity manager's driver chain for the namespace of
+ * a database of its own ({@see SeparateDatabaseMappingPass}), so that manager never claims one of
+ * its entities. The registry then resolves those classes to their own manager, and persisting one
+ * through the default manager fails instead of writing to the wrong database.
  */
 final class TransientDriver implements MappingDriver
 {

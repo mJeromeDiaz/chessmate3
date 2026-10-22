@@ -24,7 +24,7 @@
     "postinstall": "quasar prepare --silent",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e:prepare": "cd ../api && export APP_ENV=e2e && php -d xdebug.mode=off bin/console doctrine:database:create --if-not-exists && php -d xdebug.mode=off bin/console doctrine:database:create --connection=catalog --if-not-exists && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n --configuration=config/migrations/catalog.php && php -d xdebug.mode=off bin/console doctrine:fixtures:load -n",
+    "e2e:prepare": "cd ../api && export APP_ENV=e2e && php -d xdebug.mode=off bin/console doctrine:database:create --if-not-exists && php -d xdebug.mode=off bin/console doctrine:database:create --connection=catalog --if-not-exists && php -d xdebug.mode=off bin/console doctrine:database:create --connection=endgame --if-not-exists && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n --configuration=config/migrations/catalog.php && php -d xdebug.mode=off bin/console doctrine:migrations:migrate -n --configuration=config/migrations/endgame.php && php -d xdebug.mode=off bin/console doctrine:fixtures:load -n",
     "test:e2e": "playwright test"
   },
   "dependencies": {

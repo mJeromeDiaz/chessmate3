@@ -47,6 +47,7 @@ echo "==> On the host: migrations, cache, checks"
 ssh "$OVH_SSH" "set -e; cd $REMOTE_DIR/api \
   && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration \
   && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --configuration=config/migrations/catalog.php \
+  && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --configuration=config/migrations/endgame.php \
   && $PHP_BIN bin/console cache:clear \
   && $PHP_BIN bin/console assets:install public \
   && $PHP_BIN bin/console app:deploy:check"

@@ -21,6 +21,14 @@ doctrine:
                     1002: "SET time_zone = '+00:00'"
                 profiling_collect_backtrace: '%kernel.debug%'
                 use_savepoints: true
+            # The endgame tablebase (Lichess answers kept, positions served by the endgames
+            # module) in a third database: docs/ENDGAMES.md, docs/DEPLOY_OVH.md, § 3.
+            endgame:
+                url: '%env(resolve:ENDGAME_DATABASE_URL)%'
+                options:
+                    1002: "SET time_zone = '+00:00'"
+                profiling_collect_backtrace: '%kernel.debug%'
+                use_savepoints: true
     orm:
         default_entity_manager: default
         auto_generate_proxy_classes: true
@@ -35,7 +43,7 @@ doctrine:
                 naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
                 auto_mapping: true
                 mappings:
-                    # Covers src/Entity except src/Entity/Catalog (App\Doctrine\Mapping\CatalogMappingPass).
+                    # Covers src/Entity except src/Entity/{Catalog,Tablebase} (App\Doctrine\Mapping\SeparateDatabaseMappingPass).
                     App:
                         type: attribute
                         is_bundle: false
@@ -65,6 +73,18 @@ doctrine:
                         dir: '%kernel.project_dir%/src/Entity/Catalog'
                         prefix: 'App\Entity\Catalog'
                         alias: Catalog
+            endgame:
+                connection: endgame
+                report_fields_where_declared: true
+                validate_xml_mapping: true
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                mappings:
+                    Tablebase:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Entity/Tablebase'
+                        prefix: 'App\Entity\Tablebase'
+                        alias: Tablebase
 
 when@test:
     doctrine:
@@ -75,6 +95,8 @@ when@test:
                     dbname_suffix: '_test%env(default::TEST_TOKEN)%'
                 catalog:
                     dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+                endgame:
+                    dbname_suffix: '_test%env(default::TEST_TOKEN)%'
 
 when@e2e:
     doctrine:
@@ -84,6 +106,8 @@ when@e2e:
                 default:
                     dbname_suffix: '_e2e'
                 catalog:
+                    dbname_suffix: '_e2e'
+                endgame:
                     dbname_suffix: '_e2e'
 
 when@prod:
@@ -100,6 +124,13 @@ when@prod:
                         type: pool
                         pool: doctrine.result_cache_pool
                 catalog:
+                    query_cache_driver:
+                        type: pool
+                        pool: doctrine.system_cache_pool
+                    result_cache_driver:
+                        type: pool
+                        pool: doctrine.result_cache_pool
+                endgame:
                     query_cache_driver:
                         type: pool
                         pool: doctrine.system_cache_pool

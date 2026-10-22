@@ -11,13 +11,14 @@ use App\Coordinates\Series\CoordinateRules;
 use App\Entity\Puzzle\Attempt;
 use App\Enum\Evaluation\Plan;
 use App\Notation\NotationRules;
-use App\Puzzle\Solution\SolutionValidator;
+use App\Endgame\EndgameRules;
 use App\Vision\VisionRules;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * The client reports what happened on an item, never whether it succeeded; except the engine's
- * verdict of chapter 3 of the calculation path, judged in the browser (docs/ENGINE.md, § 3).
+ * verdict of chapter 3 of the calculation path, judged in the browser (docs/ENGINE.md, § 3), and of
+ * an endgame the tablebase could not judge (docs/ENDGAMES.md, § 5).
  */
 final class SubmitItemInput
 {
@@ -25,8 +26,11 @@ final class SubmitItemInput
     #[Assert\Length(max: 64)]
     public string $itemId = '';
 
-    /** @var list<string> UCI moves tried by the player, in order, wrong ones included */
-    #[Assert\Count(max: SolutionValidator::MAX_LOGGED_MOVES)]
+    /**
+     * @var list<string> UCI moves tried by the player, in order, wrong ones included; the endgames
+     *                   module's whole game, both sides (longer: puzzles check their own limit)
+     */
+    #[Assert\Count(max: EndgameRules::MAX_PLIES)]
     #[Assert\All([new Assert\Type('string'), new Assert\Regex('/^[a-h][1-8][a-h][1-8][qrbn]?$/')])]
     public array $moves = [];
 
@@ -97,13 +101,14 @@ final class SubmitItemInput
     public array $lines = [];
 
     /**
-     * Calculation, chapter 3: Stockfish's verdict in the browser, and where the line went wrong.
+     * Calculation, chapter 3, and endgames without the tablebase: Stockfish's verdict in the
+     * browser, and where the line (the game) went wrong.
      *
      * @var array{right: bool, mistakeAt?: int|null}|null
      */
     #[Assert\Collection(fields: [
         'right' => [new Assert\NotNull(), new Assert\Type('bool')],
-        'mistakeAt' => new Assert\Optional([new Assert\Type('int'), new Assert\Range(min: 0, max: 4 * CalculationRules::MAX_MATE)]),
+        'mistakeAt' => new Assert\Optional([new Assert\Type('int'), new Assert\Range(min: 0, max: EndgameRules::MAX_PLIES)]),
     ])]
     public ?array $engine = null;
 }

@@ -211,33 +211,36 @@ Les messages en file ne sont pas perdus pendant un déploiement : le tick suivan
 - **Erreurs** : en production, Monolog écrit les erreurs (avec les messages qui les précèdent) et les
   dépréciations sur `stderr`, c'est-à-dire dans les journaux d'erreurs PHP de l'hébergement.
 
-## 3. Deux bases de données
+## 3. Trois bases de données
 
 Les bases incluses dans l'offre sont limitées à 1 Go chacune. Le **catalogue de puzzles** occupe donc
 une base à lui seul : les tables `puzzle`, `puzzle_theme` et `puzzle_theme_membership`, environ
 654 Mo pour 1,5 M puzzles (docs/PUZZLE_IMPORT.md, § 4). L'import et la reconstruction de la sélection
-n'utilisent aucune table temporaire : la taille finale est aussi le pic. Tout le reste vit dans la
-base principale. Sur un mutualisé, une requête ne peut pas joindre deux bases : chacune a son
-propre utilisateur, voire son propre serveur.
+n'utilisent aucune table temporaire : la taille finale est aussi le pic. La **base des finales**
+garde les réponses de la tablebase Lichess (`endgame_tablebase`, environ 1 Ko par position, purgée
+après 90 jours sans lecture : [ENDGAMES.md](ENDGAMES.md), § 2). Tout le reste vit dans la base
+principale. Sur un mutualisé, une requête ne peut pas joindre deux bases : chacune a son propre
+utilisateur, voire son propre serveur.
 
-### Deux connexions, deux gestionnaires d'entités
+### Trois connexions, trois gestionnaires d'entités
 
-| | Base principale | Catalogue |
-|---|---|---|
-| Variable | `DATABASE_URL` | `CATALOG_DATABASE_URL` |
-| Connexion DBAL | `default` (celle qu'on obtient par autowiring) | `doctrine.dbal.catalog_connection` |
-| Gestionnaire d'entités | `default` | `doctrine.orm.catalog_entity_manager` |
-| Entités | `src/Entity/` sauf `Catalog/` | `src/Entity/Catalog/` (`Puzzle`, `Theme`, `ThemeMembership`) |
-| Migrations | `migrations/` | `migrations_catalog/` |
+| | Base principale | Catalogue | Finales |
+|---|---|---|---|
+| Variable | `DATABASE_URL` | `CATALOG_DATABASE_URL` | `ENDGAME_DATABASE_URL` |
+| Connexion DBAL | `default` (celle qu'on obtient par autowiring) | `doctrine.dbal.catalog_connection` | `doctrine.dbal.endgame_connection` |
+| Gestionnaire d'entités | `default` | `doctrine.orm.catalog_entity_manager` | `doctrine.orm.endgame_entity_manager` |
+| Entités | `src/Entity/` sauf `Catalog/` et `Tablebase/` | `src/Entity/Catalog/` (`Puzzle`, `Theme`, `ThemeMembership`) | `src/Entity/Tablebase/` (`Probe`) |
+| Migrations | `migrations/` | `migrations_catalog/` (`config/migrations/catalog.php`) | `migrations_endgame/` (`config/migrations/endgame.php`) |
 
-En test et en e2e, les deux noms de base reçoivent le même suffixe (`_test`, `_e2e`). En local, la
-base du catalogue s'appelle `ChessMateGo_catalog`.
+En test et en e2e, les trois noms de base reçoivent le même suffixe (`_test`, `_e2e`). En local, les
+bases s'appellent `ChessMateGo_catalog` et `ChessMateGo_endgame`. Ce qui suit décrit le catalogue ;
+la base des finales suit les mêmes règles (`TablebaseTest` vérifie qu'elle est à part).
 
 - **Le mapping par défaut couvre tout `src/Entity`** et DoctrineBundle ne sait pas en exclure un
-  dossier. `App\Doctrine\Mapping\CatalogMappingPass` (compiler pass) retire donc
-  `src/Entity/Catalog` du driver d'attributs, ce qui protège `migrations:diff` et la validation du
-  schéma de la base principale. Elle place aussi en tête de la chaîne de drivers un
-  `TransientDriver` pour ce namespace : le gestionnaire par défaut ne reconnaît alors aucune entité
+  dossier. `App\Doctrine\Mapping\SeparateDatabaseMappingPass` (compiler pass, enregistrée une fois
+  par base à part) retire donc `src/Entity/Catalog` et `src/Entity/Tablebase` du driver
+  d'attributs, ce qui protège `migrations:diff` et la validation du schéma de la base principale.
+  Elle place aussi en tête de la chaîne de drivers un `TransientDriver` pour chaque namespace : le gestionnaire par défaut ne reconnaît alors aucune entité
   du catalogue. Le registre Doctrine (`getManagerForClass`, les dépôts) les attribue donc au
   gestionnaire `catalog`, et un `persist()` d'un puzzle par le gestionnaire par défaut échoue au lieu
   d'écrire dans la mauvaise base.
@@ -267,6 +270,9 @@ bin/console doctrine:database:create --connection=catalog --if-not-exists
 bin/console doctrine:migrations:migrate --configuration=config/migrations/catalog.php
 bin/console doctrine:migrations:diff --configuration=config/migrations/catalog.php
 ```
+
+La base des finales de même, avec `--connection=endgame` et `config/migrations/endgame.php`.
+`deploy/ovh/deploy.sh` migre les trois bases, et `app:deploy:check` vérifie chacune.
 
 Les colonnes ajoutées au catalogue sont générées et `VIRTUAL` (ajout instantané, sans reconstruire
 la table) ; seul leur index se construit, sur place et sans bloquer les lectures, en quelques

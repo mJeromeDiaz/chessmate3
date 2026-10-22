@@ -27,6 +27,8 @@ final readonly class DeploymentChecker
         private Connection $connection,
         #[Autowire(service: 'doctrine.dbal.catalog_connection')]
         private Connection $catalog,
+        #[Autowire(service: 'doctrine.dbal.endgame_connection')]
+        private Connection $endgame,
         private SelectionRebuilder $selection,
         private HttpClientInterface $httpClient,
         #[Autowire('%kernel.environment%')]
@@ -140,7 +142,25 @@ final readonly class DeploymentChecker
         $tables = $this->connection->createSchemaManager()->listTableNames();
         $checks[] = self::check('Messenger table', \in_array('messenger_messages', $tables, true) ? 'ok' : 'error', \in_array('messenger_messages', $tables, true) ? 'messenger_messages' : 'missing: run the migrations');
 
-        return [...$checks, $this->catalog()];
+        return [...$checks, $this->catalog(), $this->endgame()];
+    }
+
+    /**
+     * The endgame database (docs/ENDGAMES.md, docs/DEPLOY_OVH.md, § 3): reachable and migrated.
+     *
+     * @return Check
+     */
+    private function endgame(): array
+    {
+        try {
+            $tables = $this->endgame->createSchemaManager()->listTableNames();
+        } catch (\Throwable $exception) {
+            return self::check('Endgame database', 'error', 'unreachable: '.$exception->getMessage());
+        }
+
+        return \in_array('endgame_tablebase', $tables, true)
+            ? self::check('Endgame database', 'ok', 'tablebase answers kept')
+            : self::check('Endgame database', 'error', 'tables missing: run the endgame migrations (--configuration=config/migrations/endgame.php)');
     }
 
     /**

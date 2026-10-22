@@ -21,12 +21,15 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
     private EntityManagerInterface $entityManager;
     /** The puzzle catalogue's entity manager: its own database (docs/DEPLOY_OVH.md, § 3). */
     private EntityManagerInterface $catalog;
+    /** The endgame tablebase's entity manager: a third database. */
+    private EntityManagerInterface $endgame;
 
     protected function setUp(): void
     {
         self::bootKernel();
         $this->entityManager = self::getContainer()->get(EntityManagerInterface::class);
         $this->catalog = self::getContainer()->get('doctrine.orm.catalog_entity_manager');
+        $this->endgame = self::getContainer()->get('doctrine.orm.endgame_entity_manager');
     }
 
     /**
@@ -95,6 +98,12 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['mind_map_boss_item', 'fen'],
             ['mind_map_boss_item', 'expected'],
             ['mind_map_boss_item', 'answer'],
+            ['endgame_tablebase', 'fen'],
+            ['endgame_position', 'lesson_key'],
+            ['endgame_position', 'fen'],
+            ['endgame_attempt', 'lesson_key'],
+            ['endgame_attempt', 'fen'],
+            ['endgame_attempt', 'best_move'],
         ] as [$table, $column]) {
             yield "$table.$column" => [$table, $column];
         }
@@ -103,7 +112,11 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
     #[DataProvider('binaryColumns')]
     public function testColumnUsesABinaryCollation(string $table, string $column): void
     {
-        $manager = \in_array($table, ['puzzle', 'puzzle_theme'], true) ? $this->catalog : $this->entityManager;
+        $manager = match (true) {
+            \in_array($table, ['puzzle', 'puzzle_theme'], true) => $this->catalog,
+            \in_array($table, ['endgame_tablebase', 'endgame_position'], true) => $this->endgame,
+            default => $this->entityManager,
+        };
         $collation = $manager->getConnection()->fetchOne(
             'SELECT COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
             [$table, $column],

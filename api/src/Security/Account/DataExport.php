@@ -205,6 +205,14 @@ final readonly class DataExport
                 $id,
                 ['expected', 'answer', 'second_line'],
             )),
+            // The positions of the endgames module (docs/ENDGAMES.md); `position_id` refers to the endgame database.
+            'endgameAttempts' => $this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, lesson_key, fen, position_id, textbook, opponent_elo, budget_moves, hold_moves,
+                        status, moves, mistake_at, best_move, player_moves, engine_judged, served_at, submitted_at, duration_ms
+                   FROM endgame_attempt WHERE user_id = ? ORDER BY served_at',
+                $id,
+                ['moves'],
+            ),
             // The mind map paths (docs/MIND_MAP.md): progress by step, runs played for a step, chests.
             'mindMapProgress' => $this->rows(
                 'SELECT capacity, step, passes, completed_at, skipped_at, updated_at FROM mind_map_progress WHERE user_id = ? ORDER BY updated_at, step',
