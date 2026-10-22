@@ -2,25 +2,10 @@
   "page": {
     "kicker": "Tes capacités",
     "title": "Entraînement ludique",
-    "hint": "Choisis une zone du cerveau pour découvrir la capacité qu’elle entraîne.",
-    "selected": "{name} : ouverte sur le côté.",
+    "hint": "Choisis une zone du cerveau pour ouvrir son parcours.",
     "brainLabel": "Les six zones du cerveau",
-    "lead": "Six capacités font un joueur d’échecs : calculer loin, voir l’échiquier sans le regarder, reconnaître des formes, décider vite, penser stratégie et garder son sang-froid. Chacune a sa zone du cerveau et son parcours, à jouer comme un jeu : des chapitres d’exercices courts à réussir plusieurs fois, des coffres pleins de cristaux, des boss à trois vies et des badges à collectionner. Bats le boss d’un chapitre pour ouvrir le suivant."
-  },
-  "panel": {
-    "kicker": "Capacité {n}",
-    "modules": "Modules mobilisés",
-    "why": "Pourquoi ces modules ?",
-    "hideWhy": "Masquer",
-    "primary": "principal",
-    "associated": "associé",
-    "soonTitle": "Les chapitres arrivent bientôt",
-    "soonText": "Des exercices de plus en plus exigeants, jusqu’à un boss de fin de chapitre. En attendant, entraîne cette capacité avec ses modules.",
-    "train": "S’entraîner librement",
-    "pathTitle": "Le parcours",
-    "pathText": "Sept chapitres, des exercices à valider plusieurs fois, des coffres et un boss au bout de chaque chapitre.",
-    "openPath": "Ouvrir le parcours",
-    "compose": "Composer une séance"
+    "lead": "Six capacités font un joueur d’échecs : calculer loin, voir l’échiquier sans le regarder, reconnaître des formes, décider vite, penser stratégie et garder son sang-froid. Chacune a sa zone du cerveau et son parcours, à jouer comme un jeu : des chapitres d’exercices courts à réussir plusieurs fois, des coffres pleins de cristaux, des boss à trois vies et des badges à collectionner. Bats le boss d’un chapitre pour ouvrir le suivant.",
+    "soon": "Bientôt"
   },
   "capacities": {
     "calculation": {
@@ -52,56 +37,6 @@
       "name": "L’autocritique et la gestion émotionnelle",
       "short": "Rester lucide, concentré, et gérer son temps.",
       "desc": "Ne pas s’emballer sur un coup qu’on aime, rester concentré après une erreur, gérer le temps. Ça ne relève pas de l’intelligence au sens strict, mais ça pèse beaucoup dans les résultats."
-    }
-  },
-  "modules": {
-    "puzzles": {
-      "name": "Puzzles",
-      "why": "Classés, par thème. Un puzzle se résout en repérant le motif puis en vérifiant la suite. Le classement Glicko-2 mesure l’ensemble."
-    },
-    "streak": {
-      "name": "Puzzle streak",
-      "why": "Série enchaînée. Enchaîner sans erreur demande de tenir sous pression ; les aides et le pardon touchent aussi à la régulation."
-    },
-    "rush": {
-      "name": "Puzzle Rush",
-      "why": "Un maximum de puzzles en quelques minutes, une erreur en efface deux : décider vite, mais rester juste."
-    },
-    "woodpecker": {
-      "name": "Woodpecker",
-      "why": "Sets de puzzles en répétition espacée. On retient des solutions et des motifs ; la répétition fixe les configurations dans le temps."
-    },
-    "repertoire": {
-      "name": "Répertoire",
-      "why": "Ouvertures, unités, tronçons, lignes. Il faut restituer des séquences de coups et savoir où on en est dans le plan."
-    },
-    "coordinates": {
-      "name": "Coordonnées",
-      "why": "Séries de cases. Associer nom et case rapidement, sans passer par l’échiquier."
-    },
-    "notation": {
-      "name": "Notation",
-      "why": "Lire et écrire les coups comme sur une feuille de partie : la langue qu’on se parle quand on joue sans voir l’échiquier."
-    },
-    "blindfold": {
-      "name": "Puzzles à l’aveugle",
-      "why": "Tenir la position entièrement en tête, sans support visuel. Le module le plus exigeant sur la profondeur de calcul."
-    },
-    "recall": {
-      "name": "Reconstitution",
-      "why": "Replacer de mémoire les pièces d’une position, de quelques pièces à la position complète, puis après des coups annoncés : la base de la vision sans échiquier."
-    },
-    "evaluation": {
-      "name": "Évaluation de position",
-      "why": "Juger qui a l’avantage et pourquoi, à partir des déséquilibres de structure."
-    },
-    "parcours": {
-      "name": "Parcours",
-      "why": "Paliers de puzzles. Un chemin structuré qui dépend des thèmes du palier choisi."
-    },
-    "free": {
-      "name": "Libre",
-      "why": "Étude libre, auto-analyse. Prendre du recul sur sa pratique : repérer ses erreurs, leurs causes, et ce qu’on a compris."
     }
   }
 }

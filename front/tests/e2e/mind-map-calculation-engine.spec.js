@@ -218,7 +218,7 @@ test('calculation: the mini-boss of chapter 3, a decoy, then the combination tha
   await page.goto('/#/cerveau/calculation')
   await page.getByTestId('path-step-3-mini').click()
   let served = page.waitForResponse(isRunNext)
-  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await page.getByTestId('step-detail').getByTestId('boss-fight').click()
   let item = (await (await served).json()).item
   expect([item.data.kind, item.data.combos, item.data.lives]).toEqual([
     'combo',
@@ -290,7 +290,7 @@ test('calculation: the Avocat du diable judges the idea, then its refutation', a
   await page.goto('/#/cerveau/calculation')
   await page.getByTestId('path-step-3-boss').click()
   let served = page.waitForResponse(isRunNext)
-  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await page.getByTestId('step-detail').getByTestId('boss-fight').click()
   let item = (await (await served).json()).item
   expect([item.data.kind, item.data.count, item.data.lives]).toEqual([
     'advocate',

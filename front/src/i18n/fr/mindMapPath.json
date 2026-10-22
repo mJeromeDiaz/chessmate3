@@ -2,8 +2,6 @@
   "page": {
     "kicker": "Parcours",
     "loadError": "Le parcours n’a pas pu être chargé.",
-    "continue": "Continuer",
-    "continueSoon": "La suite arrive bientôt",
     "chapter": "Chapitre {n}",
     "progress": "{done} / {total}",
     "locked": "Bats le boss du chapitre précédent pour ouvrir celui-ci.",
@@ -11,7 +9,11 @@
     "badges": "Badges",
     "noBadge": "Bats des boss pour gagner tes premiers badges.",
     "rules": "Chaque exercice se valide 2 à 4 fois (80 % de réussite). Un exercice peut être passé, un boss jamais. Bats le boss pour ouvrir le chapitre suivant.",
-    "soon": "Bientôt"
+    "capacity": "Capacité {n} · {done} / {total} étapes",
+    "step": "Étape {n}",
+    "chestOpened": "Ouvert",
+    "chapterBoss": "Boss : {name}",
+    "section": "Section {n}"
   },
   "chestNote": "Carte mentale · {title}",
   "status": {
@@ -41,8 +43,6 @@
     "skipText": "La suite s’ouvre, mais l’exercice ne rapporte rien tant que tu ne l’as pas réussi.",
     "xp": "+{xp} XP",
     "crystals": "+{n} cristaux",
-    "soonText": "Son module arrive bientôt. Tu peux le passer pour avancer.",
-    "lockedText": "Pas encore : termine ce qui vient avant.",
     "chestEarned": "Coffre gagné : {n} cristaux.",
     "chestLocked": "Réussis les exercices avant lui pour le gagner (un exercice passé ne compte pas).",
     "hiddenText": "Quelque chose se cache ici. Franchis la section pour le découvrir.",
@@ -51,14 +51,8 @@
   },
   "boss": {
     "lives": "3 vies : à la 3e erreur, {name} gagne et tu recommences.",
-    "rewards": "À gagner",
     "fight": "Affronter",
-    "fightAgain": "Rejouer le combat",
-    "later": "Plus tard",
-    "soon": "Ce combat arrive bientôt.",
-    "locked": "Termine d’abord ce qui vient avant.",
-    "beaten": "Vaincu",
-    "optional": "Facultatif"
+    "fightAgain": "Rejouer le combat"
   },
   "jongleur": {
     "progress": "Question {n} sur {count}",
@@ -729,6 +723,33 @@
       "s3_boss": {
         "title": "L’Avocat du diable",
         "desc": "Tu proposes un coup, puis tu cherches la meilleure réfutation de ta propre idée."
+      }
+    }
+  },
+  "detail": {
+    "brief": "En bref",
+    "place": "Chapitre {n} · {title}",
+    "placeSection": "Chapitre {n} · {title} · Section {section}",
+    "lockedButton": "Verrouillé",
+    "soonButton": "Bientôt",
+    "status": {
+      "exercise": {
+        "open": "Étape en cours",
+        "done": "Étape validée",
+        "skipped": "Étape passée",
+        "soon": "Son module arrive bientôt",
+        "locked": "Pas encore ouverte"
+      },
+      "boss": {
+        "open": "Prêt au combat",
+        "done": "Vaincu",
+        "soon": "Ce combat arrive bientôt",
+        "locked": "Pas encore ouvert",
+        "hidden": "Caché"
+      },
+      "chest": {
+        "done": "Gagné",
+        "locked": "À gagner"
       }
     }
   }

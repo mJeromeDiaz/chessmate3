@@ -96,9 +96,9 @@ test('jongleur: the chapter 1 boss, right answers, a question timed out, lost at
     )
   }
 
-  await page.getByTestId('path-chapter-boss-1').click()
+  await page.getByTestId('path-step-1-boss').click()
   let served = page.waitForResponse(isRunNext)
-  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await page.getByTestId('step-detail').getByTestId('boss-fight').click()
   await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   let item = (await (await served).json()).item
   expect(item.type).toBe('jongleur')

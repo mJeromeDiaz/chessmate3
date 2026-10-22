@@ -4,14 +4,10 @@
     class="capacity-card"
     :class="[
       `capacity-card--${side}`,
-      {
-        'capacity-card--on': selected,
-        'capacity-card--hover': hovered,
-        'capacity-card--dim': dimmed
-      }
+      { 'capacity-card--hover': hovered, 'capacity-card--soon': soon }
     ]"
     :style="{ '--capacity': capacity.color, '--capacity-ink': capacity.ink }"
-    :aria-pressed="selected"
+    :disabled="soon"
     :data-testid="`capacity-card-${capacity.key}`"
     @click.stop="emit('select', capacity.key)"
     @mouseenter="emit('hover', capacity.key)"
@@ -21,6 +17,12 @@
     <span class="capacity-card__head">
       <span class="capacity-card__num">{{ capacity.num }}</span>
       <span class="capacity-card__name">{{ capacityName(capacity.key) }}</span>
+      <span
+        v-if="soon"
+        class="capacity-card__soon"
+        :data-testid="`capacity-soon-${capacity.key}`"
+        >{{ $t('mindMap.page.soon') }}</span
+      >
     </span>
     <span class="capacity-card__short">{{ capacityShort(capacity.key) }}</span>
   </button>
@@ -29,7 +31,8 @@
 <script setup>
 /**
  * A capacity's summary beside the brain (design "Carte mentale"): its number, its name and what
- * it is about. A line points to the brain on wide screens. Clicking it chooses the capacity.
+ * it is about. A line points to the brain on wide screens. Clicking it opens its path; without a
+ * path yet, it is disabled and says « Bientôt ».
  */
 import { capacityName, capacityShort } from '@/utils/mindMap'
 
@@ -38,10 +41,9 @@ defineProps({
   capacity: { type: Object, required: true },
   /** The side of the brain it stands on: its line points the other way. */
   side: { type: String, default: 'left' },
-  selected: { type: Boolean, default: false },
   hovered: { type: Boolean, default: false },
-  /** Another capacity is chosen. */
-  dimmed: { type: Boolean, default: false }
+  /** No path yet. */
+  soon: { type: Boolean, default: false }
 })
 
 const emit = defineEmits({
@@ -78,14 +80,9 @@ const emit = defineEmits({
       var(--cm-card-shadow);
   }
 
-  &--on {
-    box-shadow:
-      0 0 0 3px var(--capacity),
-      var(--cm-card-shadow);
-  }
-
-  &--dim {
-    opacity: 0.55;
+  &--soon {
+    cursor: default;
+    opacity: 0.6;
   }
 }
 
@@ -150,6 +147,17 @@ const emit = defineEmits({
   color: var(--capacity-ink);
   font-weight: 800;
   font-size: 14px;
+}
+
+.capacity-card__soon {
+  margin-left: auto;
+  flex: none;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--cm-subtle);
+  color: var(--cm-muted);
+  font-size: 11.5px;
+  font-weight: 800;
 }
 
 .capacity-card__name {

@@ -116,7 +116,7 @@ d'une autre sorte, tirées parmi `where`, `what`, `reach`, `attacked`, `aligned`
   qui vacille, quatre pièces qui le traversent ; la musique du combat en boucle, la cloche quand la
   position s'éteint, des murmures sous les coups annoncés, le loup à chaque échec et le rire de la
   Gargouille à la dernière vie perdue (`front/public/media/son/mindMap/`, si les sons sont
-  activés) ; le thème court sur sa fiche (`BossIntro`), les portes au clic « Combattre ».
+  activés) ; le thème court sur son détail (`StepDetail`, quand le joueur le choisit), les portes au clic « Combattre ».
 - **Son visage** (`gargoyleMood` de `utils/vision.js`, les expressions de
   `assets/mindMap/boss/gargouille/`, dans la bulle à la place du professeur) : neutre au début ;
   concentration pendant que la position s'éteint et que les coups sont annoncés ; doute passé la

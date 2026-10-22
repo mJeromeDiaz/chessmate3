@@ -2,8 +2,6 @@
   "page": {
     "kicker": "Path",
     "loadError": "The path could not be loaded.",
-    "continue": "Continue",
-    "continueSoon": "More is coming soon",
     "chapter": "Chapter {n}",
     "progress": "{done} / {total}",
     "locked": "Beat the previous chapter's boss to open this one.",
@@ -11,7 +9,11 @@
     "badges": "Badges",
     "noBadge": "Beat bosses to earn your first badges.",
     "rules": "Each exercise must be passed 2 to 4 times (80% success). An exercise can be skipped, a boss never. Beat the boss to open the next chapter.",
-    "soon": "Coming soon"
+    "capacity": "Capacity {n} · {done} / {total} steps",
+    "step": "Step {n}",
+    "chestOpened": "Opened",
+    "chapterBoss": "Boss: {name}",
+    "section": "Section {n}"
   },
   "chestNote": "Mind map · {title}",
   "status": {
@@ -41,8 +43,6 @@
     "skipText": "What comes next opens, but the exercise earns nothing until you have passed it.",
     "xp": "+{xp} XP",
     "crystals": "+{n} crystals",
-    "soonText": "Its module is coming soon. You can skip it to move on.",
-    "lockedText": "Not yet: finish what comes before.",
     "chestEarned": "Chest earned: {n} crystals.",
     "chestLocked": "Pass the exercises before it to earn it (a skipped exercise does not count).",
     "hiddenText": "Something is hiding here. Get through the section to discover it.",
@@ -51,14 +51,8 @@
   },
   "boss": {
     "lives": "3 lives: on the 3rd mistake, {name} wins and you start over.",
-    "rewards": "To win",
     "fight": "Fight",
-    "fightAgain": "Fight again",
-    "later": "Later",
-    "soon": "This fight is coming soon.",
-    "locked": "Finish what comes before first.",
-    "beaten": "Defeated",
-    "optional": "Optional"
+    "fightAgain": "Fight again"
   },
   "jongleur": {
     "progress": "Question {n} of {count}",
@@ -729,6 +723,33 @@
       "s3_boss": {
         "title": "The Devil's Advocate",
         "desc": "You propose a move, then you look for the best refutation of your own idea."
+      }
+    }
+  },
+  "detail": {
+    "brief": "In short",
+    "place": "Chapter {n} · {title}",
+    "placeSection": "Chapter {n} · {title} · Section {section}",
+    "lockedButton": "Locked",
+    "soonButton": "Coming soon",
+    "status": {
+      "exercise": {
+        "open": "Step in progress",
+        "done": "Step passed",
+        "skipped": "Step skipped",
+        "soon": "Its module is coming soon",
+        "locked": "Not open yet"
+      },
+      "boss": {
+        "open": "Ready to fight",
+        "done": "Defeated",
+        "soon": "This fight is coming soon",
+        "locked": "Not open yet",
+        "hidden": "Hidden"
+      },
+      "chest": {
+        "done": "Earned",
+        "locked": "To earn"
       }
     }
   }

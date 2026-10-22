@@ -50,6 +50,7 @@ import { t } from '@/i18n'
  * @property {PathStep} step
  * @property {PathSection} section
  * @property {boolean} sectionStart the first node of a numbered section (its title above it)
+ * @property {number} index its place in its section (where the path winds)
  */
 
 /** The capacities of the map that have a path: the map's key → the API's. */
@@ -276,11 +277,21 @@ export function chapterNodes(chapter) {
   for (const section of chapter.sections) {
     const steps = [...section.steps, ...section.miniBosses, ...section.hidden]
     steps.forEach((step, i) =>
-      nodes.push({ step, section, sectionStart: i === 0 && !!section.number })
+      nodes.push({
+        step,
+        section,
+        sectionStart: i === 0 && !!section.number,
+        index: i
+      })
     )
   }
   const last = chapter.sections[chapter.sections.length - 1]
-  nodes.push({ step: chapter.boss, section: last, sectionStart: false })
+  nodes.push({
+    step: chapter.boss,
+    section: last,
+    sectionStart: false,
+    index: 0
+  })
   return nodes
 }
 
@@ -334,12 +345,43 @@ export function chapterProgress(chapter) {
   }
 }
 
-/** The path winds: each node's offset from the middle, in steps (× the node's width). */
-const WIND = [0, 0.7, 1, 0.7, 0, -0.7, -1, -0.7]
+/**
+ * A whole path's progress: its chapters' summed (exercises and bosses passed or skipped).
+ *
+ * @param {MindPath} path
+ */
+export function pathProgress(path) {
+  return path.chapters.map(chapterProgress).reduce(
+    (sum, p) => ({ done: sum.done + p.done, total: sum.total + p.total }),
+    { done: 0, total: 0 }
+  )
+}
 
-/** @param {number} index the node's place in its chapter */
-export function nodeOffset(index) {
-  return WIND[index % WIND.length]
+/**
+ * A boss's face on the path (design « Parcours zone »): proud when it waits for the player,
+ * sad once beaten, neutral otherwise.
+ *
+ * @param {PathStep} step
+ * @returns {Mood}
+ */
+export function pathMood(step) {
+  if (step.status === 'done') return 'sadness'
+  return step.status === 'open' ? 'pride' : 'neutral'
+}
+
+/**
+ * The path winds (design « Parcours zone »): each node's offset from the middle in pixels, by its
+ * place in its section (scaled down on a phone by the page).
+ */
+const WIND = [-50, 30, 90, 30, -50, 0]
+
+/**
+ * A node's offset from the middle, in pixels: bosses stand in the middle.
+ *
+ * @param {PathNode} node
+ */
+export function nodeOffset(node) {
+  return isBoss(node.step.kind) ? 0 : WIND[node.index % WIND.length]
 }
 
 /**
@@ -466,5 +508,19 @@ export function findStep(path, key) {
   for (const chapter of path.chapters)
     for (const { step } of chapterNodes(chapter))
       if (step.key === key) return step
+  return null
+}
+
+/**
+ * Where a step stands: its chapter and its section.
+ *
+ * @param {MindPath} path
+ * @param {string} key
+ * @returns {{chapter: PathChapter, section: PathSection}|null}
+ */
+export function findPlace(path, key) {
+  for (const chapter of path.chapters)
+    for (const { step, section } of chapterNodes(chapter))
+      if (step.key === key) return { chapter, section }
   return null
 }

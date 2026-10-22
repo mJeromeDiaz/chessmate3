@@ -37,7 +37,6 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
   await signIn(context)
   await page.goto('/#/cerveau')
   await page.getByTestId('capacity-card-visualization').click()
-  await page.getByTestId('capacity-open-path').click()
   await expect(page).toHaveURL(/#\/cerveau\/visualization$/)
 
   await expect(page.getByTestId('path-chapter-1')).toHaveAttribute(
@@ -56,19 +55,35 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
     'data-status',
     'locked'
   )
-  await expect(page.getByTestId('mind-path-next')).toContainText(
+  // Arriving: the step to play is on screen, no scrolling to find it.
+  await expect(page.getByTestId('path-step-1-1')).toBeInViewport()
+  // A locked chapter shows all its steps, greyed.
+  await expect(page.getByTestId('path-step-2-1-1')).toHaveAttribute(
+    'data-status',
+    'locked'
+  )
+  // Deep in chapter 2, its card sticks under the header, on one line.
+  await page.getByTestId('path-step-2-2-1').scrollIntoViewIfNeeded()
+  await expect(
+    page.getByTestId('path-chapter-2').locator('.path-chapter__head')
+  ).toHaveAttribute('data-stuck', 'true')
+  await page.getByTestId('path-step-1-1').scrollIntoViewIfNeeded()
+  // Beside the path, the step to play shown in full until another one is chosen.
+  await expect(page.getByTestId('step-detail')).toHaveAttribute(
+    'data-step',
+    '1-1'
+  )
+  await expect(page.getByTestId('step-detail')).toContainText(
     'Cliquer la case'
   )
 
-  // The chapter's boss, announced at its top: open with its chapter (a strong player may go
-  // straight to it).
-  await page.getByTestId('path-chapter-boss-1').click()
-  const intro = page.getByTestId('boss-intro')
+  // The chapter's boss, at its end: open with its chapter (a strong player may go straight to
+  // it).
+  await page.getByTestId('path-step-1-boss').click()
+  const intro = page.getByTestId('step-detail')
   await expect(intro.getByTestId('boss-name')).toHaveText('Le Jongleur')
   await expect(intro).toContainText('3 vies')
   await expect(intro.getByTestId('boss-fight')).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(intro).toBeHidden()
 
   // Exercise 1.1: a one-minute coordinates series, 10 answers at 80 %.
   await page.getByTestId('path-step-1-1').click()
@@ -118,6 +133,30 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
     'data-status',
     'open'
   )
+  // What opened shows beside the path now.
+  await expect(page.getByTestId('step-detail')).toHaveAttribute(
+    'data-step',
+    '1-2'
+  )
+})
+
+test('mind map path: on a phone, a step opens in a sheet from the bottom', async ({
+  page,
+  context
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 })
+  await signIn(context)
+  await page.goto('/#/cerveau/visualization')
+  await expect(page.getByTestId('path-step-1-1')).toBeVisible()
+  // No column on a phone: nothing shown until a step is chosen.
+  await expect(page.getByTestId('step-detail')).toHaveCount(0)
+
+  await page.getByTestId('path-step-1-boss').click()
+  const sheet = page.getByTestId('step-detail')
+  await expect(sheet).toHaveAttribute('data-step', '1-boss')
+  await expect(sheet.getByTestId('boss-name')).toHaveText('Le Jongleur')
+  await sheet.getByRole('button', { name: 'Fermer' }).click()
+  await expect(sheet).toHaveCount(0)
 })
 
 test('mind map path: a chest not opened yet opens on arrival', async ({

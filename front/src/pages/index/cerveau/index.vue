@@ -6,13 +6,14 @@
         <p class="mind-page__lead" data-testid="mind-lead">
           {{ $t('mindMap.page.lead') }}
         </p>
-        <p class="mind-page__hint" data-testid="mind-hint">{{ hint }}</p>
+        <p class="mind-page__hint" data-testid="mind-hint">{{
+          $t('mindMap.page.hint')
+        }}</p>
       </header>
 
       <div class="mind-page__map">
         <div class="mind-page__brain">
           <BrainMap
-            :selected="selected"
             :hovered="hovered"
             @select="select"
             @hover="hovered = $event"
@@ -24,9 +25,8 @@
             :key="c.key"
             :capacity="c"
             side="left"
-            :selected="selected === c.key"
             :hovered="hovered === c.key"
-            :dimmed="!!selected && selected !== c.key"
+            :soon="!hasPath(c.key)"
             @select="select"
             @hover="hovered = $event"
           />
@@ -37,47 +37,29 @@
             :key="c.key"
             :capacity="c"
             side="right"
-            :selected="selected === c.key"
             :hovered="hovered === c.key"
-            :dimmed="!!selected && selected !== c.key"
+            :soon="!hasPath(c.key)"
             @select="select"
             @hover="hovered = $event"
           />
         </div>
       </div>
     </div>
-
-    <q-dialog
-      v-model="open"
-      position="right"
-      full-height
-      :maximized="$q.screen.lt.sm"
-      @hide="selected = null"
-    >
-      <div class="mind-page__panel">
-        <CapacityPanel
-          v-if="current"
-          :capacity="current"
-          @close="open = false"
-        />
-      </div>
-    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
 /**
  * The mind map (design "Carte mentale"): the six cognitive capacities a player trains, as zones
- * of a brain and cards around it. Choosing one (its zone or its card) opens it on the side: what
- * it is and the modules that train it. Its chapters come later.
+ * of a brain and cards around it. Choosing one (its zone or its card) opens its path; a capacity
+ * without path yet says « Bientôt ».
  */
-import { computed, ref } from 'vue'
-import { useQuasar } from 'quasar'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BrainMap from '@/components/mindMap/BrainMap.vue'
 import CapacityCard from '@/components/mindMap/CapacityCard.vue'
-import CapacityPanel from '@/components/mindMap/CapacityPanel.vue'
-import { LEFT, RIGHT, capacity, capacityName } from '@/utils/mindMap'
-import { t } from '@/i18n'
+import { LEFT, RIGHT, capacity } from '@/utils/mindMap'
+import { hasPath } from '@/utils/mindMapPath'
 
 definePage({
   meta: {
@@ -86,31 +68,18 @@ definePage({
   }
 })
 
-const $q = useQuasar()
-/** @type {import('vue').Ref<string|null>} the capacity opened */
-const selected = ref(null)
+const router = useRouter()
 /** @type {import('vue').Ref<string|null>} the capacity under the pointer */
 const hovered = ref(null)
-const open = ref(false)
 
 const byKey = (/** @type {string} */ key) =>
   /** @type {import('@/utils/mindMap').Capacity} */ (capacity(key))
 const left = LEFT.map(byKey)
 const right = RIGHT.map(byKey)
-const current = computed(() =>
-  selected.value ? capacity(selected.value) : null
-)
-
-const hint = computed(() =>
-  selected.value
-    ? t('mindMap.page.selected', { name: capacityName(selected.value) })
-    : t('mindMap.page.hint')
-)
 
 /** @param {string} key */
 function select(key) {
-  selected.value = key
-  open.value = true
+  if (hasPath(key)) router.push(`/cerveau/${key}`)
 }
 </script>
 
@@ -172,12 +141,5 @@ function select(key) {
   &--right {
     grid-area: right;
   }
-}
-
-.mind-page__panel {
-  width: min(480px, 100vw);
-  max-width: 100vw;
-  overflow-y: auto;
-  background: var(--cm-page);
 }
 </style>

@@ -110,7 +110,7 @@ test('mind map chapter 2: a recall lesson, then the mini-boss 2.1 without coordi
   }
   await page.getByTestId('path-step-2-1-boss').click()
   served = page.waitForResponse(isRunNext)
-  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await page.getByTestId('step-detail').getByTestId('boss-fight').click()
   item = (await (await served).json()).item
   expect([item.data.level, item.data.lives, item.data.coordinates]).toEqual([
     2,

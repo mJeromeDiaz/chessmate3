@@ -61,7 +61,7 @@ Choix validés (2026-10-20) :
 | Enums | `App\Enum\MindMap\{Capacity, StepKind, StepStatus, AttemptOutcome, BossQuestion, BossItemStatus}` |
 | Événement | `App\MindMap\Event\StepCompleted` (bonus d'XP, `Gamification\Handler\AwardBonusXp`) |
 | API | `App\ApiResource\MindMap\{Path, StepAction, Outcome, Chest}`, `App\State\MindMap\*` |
-| Front | pages `pages/index/cerveau/index.vue` (la carte) et `pages/index/cerveau/[capacity].vue` (le parcours), `components/mindMap/{PathChapter, PathNode, StepSheet, BossIntro, BossPortrait, BossVictory, RunOutcome, JongleurPlayer}.vue`, `utils/mindMap.js`, `utils/mindMapPath.js`, `utils/jongleur.js`, `services/api.js` (`mindMapApi`), `i18n/<langue>/mindMapPath.json` |
+| Front | pages `pages/index/cerveau/index.vue` (la carte) et `pages/index/cerveau/[capacity].vue` (le parcours), `components/mindMap/{BrainMap, CapacityCard, PathHero, PathChapter, PathNode, WoodChest, StepDetail, BossPortrait, BossVictory, RunOutcome, JongleurPlayer}.vue`, `utils/mindMap.js`, `utils/mindMapPath.js`, `utils/jongleur.js`, `services/api.js` (`mindMapApi`), `i18n/<langue>/mindMapPath.json` |
 
 ## 2. Étapes
 
@@ -209,18 +209,40 @@ retrouve (l'XP de l'étape telle que le catalogue la donne).
 
 ## 7. Front
 
-- **Carte** (`/cerveau`) : le panneau d'une capacité qui a un parcours (`PATH_CAPACITIES` : la clé
-  de la carte `visualization` → celle de l'API `visualisation`) propose « Ouvrir le parcours ».
-- **Parcours** (`/cerveau/visualization`) : les chapitres l'un sous l'autre (titre, progression,
-  boss annoncé en haut ; un chapitre verrouillé ne montre que sa tête), leurs étapes en chemin
-  sinueux (`PathNode` : exercice et l'anneau de ses passages, coffre, visage du boss, « ? » d'un
-  boss caché, « Bientôt »), le titre de chaque section ; l'étape à jouer pulse. À côté (grand
-  écran, collant) ou au-dessus (téléphone) : la suite (« Continuer »), les règles, les badges. Les
+Mise en page de Claude Design « Parcours zone » (2026-10-22), aux couleurs claires et sombres de
+l'appli.
+
+- **Carte** (`/cerveau`) : un clic sur la carte ou la zone du cerveau d'une capacité qui a un
+  parcours (`PATH_CAPACITIES` : la clé de la carte `visualization` → celle de l'API
+  `visualisation`) ouvre directement son parcours ; les autres sont désactivées, avec la pastille
+  « Bientôt » (leur zone ne réagit ni au clic ni au survol).
+- **Parcours** (`/cerveau/visualization`) : un bandeau aux couleurs de la capacité (`PathHero` :
+  numéro, étapes passées sur le total, nom, description, barre de progression du parcours entier,
+  `pathProgress`), puis les chapitres l'un sous l'autre, **tous visibles** (un chapitre verrouillé
+  montre ses étapes grisées). Une étape par ligne (`PathNode`), décalée selon sa place dans sa
+  section (`nodeOffset` : −50, 30, 90, 30, −50, 0 px, × 0,55 sous 560 px), son titre sur le côté
+  opposé ; une bulle « Commencer » flotte au-dessus de l'étape à jouer ; l'anneau des passages
+  autour d'un exercice. Les boss au milieu, en grand disque (150 px pour le boss du chapitre, 92 pour
+  un mini-boss ou un boss caché), leur visage selon l'état (`pathMood` : fier quand il attend le
+  joueur, triste vaincu, neutre sinon ; grisé verrouillé), un halo qui pulse s'il est le prochain,
+  leur pastille et leur nom dessous. Les coffres en bois (`WoodChest` : gris verrouillé, qui
+  sautille gagné mais pas ouvert, ouvert sur un cristal). L'étape à jouer est **centrée** à
+  l'arrivée.
+- **Carte de chapitre** (`PathChapter`) : « Chapitre n · x / y », le titre, « Boss : … ». Elle
+  colle sous l'en-tête de l'appli (sa hauteur mesurée en direct) pendant que son chapitre défile ;
+  la carte suivante la pousse, et l'inverse en remontant. Collée, elle tient sur une ligne avec une
+  ombre, et garde sa place dans le flux (une marge basse compense) : le chemin ne saute pas. L'état
+  « collé » (`data-stuck`) est lu à chaque défilement (une fois par image), un saut de la page compris.
+- **Détail d'une étape** (`StepDetail`) : sur grand écran, dans la colonne à droite (collante),
+  l'étape à jouer tant que le joueur n'en a pas choisi une autre ; sur téléphone, en volet par le
+  bas au clic. Exercice : en-tête aux couleurs de la capacité, « En bref », passages, règle des
+  80 %, « Commencer » / « Recommencer » / « S'entraîner », « Passer » (confirmé). Boss : sa scène
+  (en pied), sa pastille et son chapitre, son nom, sa devise, sa réplique, le défi, 3 vies,
+  « Affronter ». Coffre : ce qu'il contient. Puis les gains (cristaux, XP, badges), l'état, et le
+  bouton (grisé « Verrouillé » ou « Bientôt »). Un boss choisi par le joueur joue son thème tant
+  qu'il est affiché (jamais celui montré d'office). Sous le détail : les badges et les règles. Les
   coffres pas encore ouverts s'ouvrent à l'arrivée, l'un après l'autre (`TreasureChest`, avec son
   propre `opener` et sa ligne « Carte mentale · étape »).
-- **Étape** (`StepSheet`) : passages, règle des 80 %, XP, « Commencer » / « Recommencer » /
-  « S'entraîner », « Passer » (confirmé). **Boss** (`BossIntro`) : son visage, sa présentation, sa
-  réplique, le défi, 3 vies, les gains (cristaux, XP, badges), « Affronter ».
 - **Jouer** : la séance s'ouvre sur `/training/{id}?mindMap=1`, jouée comme toute séance ; à sa
   fin, `RunOutcome` remplace le récapitulatif : le verdict (passage réussi, exercice validé, pas
   encore ; victoire, le boss l'emporte avec sa réplique), les passages ou les vies, l'XP ; un boss
@@ -228,10 +250,10 @@ retrouve (l'XP de l'étape telle que le catalogue la donne).
   confettis, rayons, visage vaincu, dernière réplique, badges), puis les coffres ; « Passage
   suivant » / « Rejouer » et « Retour au parcours ».
 - **Images** : un boss qui a ses **expressions** (Claude Design « Fiches miniboss » : le Métronome,
-  la Gargouille, le Jongleur) a un dossier `assets/mindMap/boss/<personnage>/` : `<personnage>-<humeur>.png`
+  la Gargouille, le Jongleur, le Cyclope ; le Requin aussi, pas encore placé dans un parcours) a un dossier `assets/mindMap/boss/<personnage>/` : `<personnage>-<humeur>.png`
   (bustes : joie, surprise, doute, tristesse, fierte, colere, concentration, angoisse, neutre ;
-  `MOODS` de `utils/mindMapPath.js`, clés anglaises) et `<personnage>-pose.png` (en pied, sur sa
-  fiche `BossIntro`). `BossPortrait` prend une `mood`, sinon celle de sa pose (`POSE_MOODS` : `idle`
+  `MOODS` de `utils/mindMapPath.js`, clés anglaises) et `<personnage>-pose.png` (en pied, dans son
+  détail `StepDetail`). `BossPortrait` prend une `mood`, sinon celle de sa pose (`POSE_MOODS` : `idle`
   → neutre, `cheer` → joie, `angry` → colère, `search` → concentration, `beaten` → tristesse) et
   `full` (en pied). Les autres découpent une pose (`POSES`) dans la planche du personnage
   (`assets/mindMap/boss/<personnage>.png`, 1536 × 1024) ; sans planche, celle du cyclope.

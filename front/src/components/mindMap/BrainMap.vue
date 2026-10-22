@@ -16,7 +16,7 @@
           :style="{ background: BASE_TINT, ...maskOf(imageMask) }"
         />
       </div>
-      <!-- Each zone in its colour, shown when hovered or chosen. -->
+      <!-- Each zone in its colour, shown when hovered. -->
       <div
         v-for="c in ordered"
         :key="c.key"
@@ -52,9 +52,10 @@
           :d="c.region"
           fill="transparent"
           class="brain-map__hit"
+          :class="{ 'brain-map__hit--soon': !hasPath(c.key) }"
           :data-testid="`brain-zone-${c.key}`"
-          @click.stop="emit('select', c.key)"
-          @mouseenter="emit('hover', c.key)"
+          @click.stop="hasPath(c.key) && emit('select', c.key)"
+          @mouseenter="hasPath(c.key) && emit('hover', c.key)"
           @mouseleave="emit('hover', null)"
         />
       </g>
@@ -85,8 +86,9 @@
 <script setup>
 /**
  * The brain of the mind map (design "Carte mentale"): the picture greyed, each capacity's zone
- * lit in its colour when hovered or chosen, its number on a badge. Clicking a zone chooses its
- * capacity (`select`); hovering it tells the page (`hover`), which lights the card too.
+ * lit in its colour when hovered, its number on a badge. Clicking a zone chooses its capacity
+ * (`select`); hovering it tells the page (`hover`), which lights the card too. A capacity without
+ * path yet does neither.
  */
 import { computed } from 'vue'
 import BRAIN from '@/assets/mindMap/brain-pink.png'
@@ -98,10 +100,9 @@ import {
   capacity,
   zoneMask
 } from '@/utils/mindMap'
+import { hasPath } from '@/utils/mindMapPath'
 
 const props = defineProps({
-  /** @type {import('vue').PropType<string|null>} the capacity chosen */
-  selected: { type: String, default: null },
   /** @type {import('vue').PropType<string|null>} the capacity under the pointer */
   hovered: { type: String, default: null }
 })
@@ -141,12 +142,12 @@ const imageBox = {
 }
 
 const glowColor = computed(
-  () => CAPACITIES.find(c => c.key === props.selected)?.color ?? '#6A4CFF'
+  () => CAPACITIES.find(c => c.key === props.hovered)?.color ?? '#6A4CFF'
 )
 
 /** @param {string} key */
 function lit(key) {
-  return props.selected === key || props.hovered === key
+  return props.hovered === key
 }
 
 /** @param {string} mask a CSS image */
@@ -253,5 +254,9 @@ function maskOf(mask) {
 
 .brain-map__hit {
   cursor: pointer;
+
+  &--soon {
+    cursor: default;
+  }
 }
 </style>

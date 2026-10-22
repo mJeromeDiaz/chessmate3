@@ -87,9 +87,9 @@ test('calculation: the Métronome, a line of unknown length and its face', async
 }) => {
   await signIn(context)
   await page.goto('/#/cerveau/calculation')
-  await page.getByTestId('path-chapter-boss-1').click()
+  await page.getByTestId('path-step-1-boss').click()
   const served = page.waitForResponse(isRunNext)
-  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await page.getByTestId('step-detail').getByTestId('boss-fight').click()
   await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   const item = (await (await served).json()).item
   expect([item.type, item.data.mate, item.data.thinkSeconds]).toEqual([
@@ -137,7 +137,7 @@ test('calculation: the mini-boss of chapter 2, solved then replayed', async ({
   await page.goto('/#/cerveau/calculation')
   await page.getByTestId('path-step-2-mini').click()
   const served = page.waitForResponse(isRunNext)
-  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await page.getByTestId('step-detail').getByTestId('boss-fight').click()
   await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   const item = (await (await served).json()).item
   expect([item.data.solve, item.data.lives]).toEqual([true, 3])
@@ -187,9 +187,9 @@ test('calculation: the Compteur, a long line announced on the position in sight'
     mindMapChapters: 1
   })
   await page.goto('/#/cerveau/calculation')
-  await page.getByTestId('path-chapter-boss-2').click()
+  await page.getByTestId('path-step-2-boss').click()
   const served = page.waitForResponse(isRunNext)
-  await page.getByTestId('boss-intro').getByTestId('boss-fight').click()
+  await page.getByTestId('step-detail').getByTestId('boss-fight').click()
   const item = (await (await served).json()).item
   expect([item.type, item.data.kind, item.data.keepShown]).toEqual([
     'vision',

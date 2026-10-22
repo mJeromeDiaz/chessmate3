@@ -25,8 +25,8 @@ test('vision: the Gargouille, a question left to its 15 s', async ({
     ]
   })
   await page.goto('/#/cerveau/visualization')
-  await page.getByTestId('path-chapter-boss-3').click()
-  const intro = page.getByTestId('boss-intro')
+  await page.getByTestId('path-step-3-boss').click()
+  const intro = page.getByTestId('step-detail')
   await expect(intro.getByTestId('boss-name')).toHaveText('La Gargouille')
   const served = page.waitForResponse(isRunNext)
   await intro.getByTestId('boss-fight').click()

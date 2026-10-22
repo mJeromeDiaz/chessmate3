@@ -13,14 +13,6 @@
       "
       data-testid="mind-path"
     >
-      <header v-if="info" class="mind-path__head">
-        <span class="mind-path__kicker">{{
-          $t('mindMapPath.page.kicker')
-        }}</span>
-        <h1 class="mind-path__title">{{ capacityName(info.key) }}</h1>
-        <p class="mind-path__short">{{ capacityShort(info.key) }}</p>
-      </header>
-
       <q-banner v-if="error" rounded class="bg-negative text-white q-mb-md">{{
         error
       }}</q-banner>
@@ -28,7 +20,9 @@
         <q-spinner size="2.5em" />
       </div>
 
-      <div v-else class="mind-path__layout">
+      <PathHero v-if="path && info" :info="info" :path="path" />
+
+      <div v-if="path" class="mind-path__layout">
         <div class="mind-path__main">
           <PathChapter
             v-for="chapter in path.chapters"
@@ -36,34 +30,27 @@
             :chapter="chapter"
             :capacity="api"
             :current-key="current?.key ?? null"
+            :chosen-key="shown?.key ?? null"
+            :stick-top="headerHeight"
             @select="select"
           />
         </div>
 
-        <aside class="mind-path__side">
-          <div class="mind-path__card cm-card" data-testid="mind-path-next">
-            <span class="mind-path__label">{{
-              chapter
-                ? `${$t('mindMapPath.page.chapter', { n: chapter.number })} · ${chapterTitle(api, chapter.key)}`
-                : ''
-            }}</span>
-            <div v-if="current" class="mind-path__next">
-              <span class="mind-path__next-title">{{ currentTitle }}</span>
-              <q-btn
-                unelevated
-                no-caps
-                class="mind-path__continue"
-                :label="
-                  current.status === 'open'
-                    ? $t('mindMapPath.page.continue')
-                    : $t('mindMapPath.page.continueSoon')
-                "
-                data-testid="mind-path-continue"
-                @click="select(current)"
-              />
-            </div>
-            <p class="mind-path__rules">{{ $t('mindMapPath.page.rules') }}</p>
-          </div>
+        <aside
+          class="mind-path__side"
+          :style="{ '--side-top': `${headerHeight + 16}px` }"
+        >
+          <StepDetail
+            v-if="wide && shown"
+            :step="shown"
+            :capacity="api"
+            :place="placeOf(shown)"
+            :busy="busy"
+            :error="actionError"
+            :chosen="chosenKey === shown.key"
+            @start="start"
+            @skip="skip"
+          />
 
           <div class="mind-path__card cm-card" data-testid="mind-path-badges">
             <span class="mind-path__label">{{
@@ -80,28 +67,33 @@
             <p v-else class="mind-path__rules">{{
               $t('mindMapPath.page.noBadge')
             }}</p>
+            <p class="mind-path__rules">{{ $t('mindMapPath.page.rules') }}</p>
           </div>
         </aside>
       </div>
     </div>
 
-    <StepSheet
-      :step="sheetStep"
-      :capacity="api"
-      :busy="busy"
-      :error="actionError"
-      @start="start"
-      @skip="skip"
-      @close="closeSheet"
-    />
-    <BossIntro
-      :step="bossStep"
-      :capacity="api"
-      :busy="busy === 'start'"
-      :error="actionError"
-      @start="start"
-      @close="closeBoss"
-    />
+    <!-- A phone: the step chosen in a sheet from the bottom. -->
+    <q-dialog
+      :model-value="!wide && sheetOpen && !!shown"
+      position="bottom"
+      @hide="closeSheet"
+    >
+      <div v-if="shown" class="mind-path__sheet">
+        <StepDetail
+          :step="shown"
+          :capacity="api"
+          :place="placeOf(shown)"
+          :busy="busy"
+          :error="actionError"
+          :chosen="chosenKey === shown.key"
+          closable
+          @start="start"
+          @skip="skip"
+          @close="sheetOpen = false"
+        />
+      </div>
+    </q-dialog>
     <TreasureChest
       v-if="chests.length"
       :key="chests[0].id"
@@ -118,35 +110,43 @@
 
 <script setup>
 /**
- * A capacity's path on the mind map (docs/MIND_MAP.md): its chapters one under the other, their
- * steps winding down (exercises to pass 2 to 4 times, chests, mini-bosses, hidden bosses, the
- * chapter's boss); a step opens its sheet, a boss its screen; « Commencer » plays the step's run.
- * Beside it (wide screens) or below it: what comes next, the rules, the badges. Chests not opened
- * yet open on arrival, one after the other.
+ * A capacity's path on the mind map (docs/MIND_MAP.md, design « Parcours zone »): its head, then
+ * its chapters one under the other, their steps winding down (exercises to pass 2 to 4 times,
+ * chests, mini-bosses, hidden bosses, the chapter's boss), the step to play centred on arrival.
+ * A step chosen shows in full (`StepDetail`): in the column beside the path on a wide screen (the
+ * step to play until one is chosen), in a sheet from the bottom on a phone; « Commencer » plays
+ * its run. Under it: the badges and the rules. Chests not opened yet open on arrival, one after
+ * the other.
  */
-import { computed, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import BossIntro from '@/components/mindMap/BossIntro.vue'
+import { useQuasar } from 'quasar'
 import PathChapter from '@/components/mindMap/PathChapter.vue'
-import StepSheet from '@/components/mindMap/StepSheet.vue'
+import PathHero from '@/components/mindMap/PathHero.vue'
+import StepDetail from '@/components/mindMap/StepDetail.vue'
 import TreasureChest from '@/components/shop/TreasureChest.vue'
 import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { mindMapApi } from '@/services/api'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
-import { capacity, capacityName, capacityShort } from '@/utils/mindMap'
+import { capacity, capacityName } from '@/utils/mindMap'
 import {
   apiCapacity,
   badgeName,
-  bossName,
   chapterTitle,
   chestNote,
   chestReward,
-  currentChapter,
   currentStep,
-  isBoss,
-  refusalText,
-  stepTitle
+  findPlace,
+  findStep,
+  refusalText
 } from '@/utils/mindMapPath'
 import { t } from '@/i18n'
 
@@ -162,6 +162,9 @@ definePage({
 
 const route = useRoute()
 const router = useRouter()
+const $q = useQuasar()
+/** A wide screen: the step's detail in the column (else in a sheet). */
+const wide = computed(() => $q.screen.gt.sm)
 const training = useTrainingStore()
 
 const key = computed(() => String(route.params.capacity ?? ''))
@@ -178,24 +181,47 @@ const error = ref('')
 /** @type {import('vue').Ref<import('@/utils/mindMapPath').PathChest[]>} */
 const chests = ref([])
 
-/** @type {import('vue').Ref<import('@/utils/mindMapPath').PathStep|null>} */
-const sheetStep = ref(null)
-/** @type {import('vue').Ref<import('@/utils/mindMapPath').PathStep|null>} */
-const bossStep = ref(null)
+/** @type {import('vue').Ref<string|null>} the step the player chose, null: the one to play */
+const chosenKey = ref(null)
+/** A phone: the sheet open. */
+const sheetOpen = ref(false)
 const busy = ref(/** @type {''|'start'|'skip'} */ (''))
 const actionError = ref('')
 
 const current = computed(() => (path.value ? currentStep(path.value) : null))
-const chapter = computed(() => (path.value ? currentChapter(path.value) : null))
-const currentTitle = computed(() => {
-  const step = current.value
-  if (!step) return ''
-  return isBoss(step.kind) ? bossName(step) : stepTitle(api.value, step.key)
+/** The step shown in full: the one chosen, else the one to play. */
+const shown = computed(() => {
+  if (!path.value) return null
+  return (
+    (chosenKey.value ? findStep(path.value, chosenKey.value) : null) ??
+    current.value
+  )
 })
+
+/**
+ * « Chapitre 2 · Vision aveugle statique · Section 2.1 ».
+ *
+ * @param {import('@/utils/mindMapPath').PathStep} step
+ */
+function placeOf(step) {
+  const place = path.value ? findPlace(path.value, step.key) : null
+  if (!place) return ''
+  const params = {
+    n: place.chapter.number,
+    title: chapterTitle(api.value, place.chapter.key)
+  }
+  return place.section.number && step.kind !== 'boss'
+    ? t('mindMapPath.detail.placeSection', {
+        ...params,
+        section: place.section.number
+      })
+    : t('mindMapPath.detail.place', params)
+}
 
 async function load() {
   error.value = ''
   path.value = null
+  chosenKey.value = null
   if (!api.value) {
     error.value = t('mindMapPath.page.loadError')
     return
@@ -203,6 +229,7 @@ async function load() {
   try {
     path.value = await mindMapApi.path(api.value)
     chests.value = path.value?.unopenedChests ?? []
+    await centreCurrent()
   } catch (e) {
     error.value = apiErrorMessage(e, { 404: t('mindMapPath.page.loadError') })
   }
@@ -210,25 +237,46 @@ async function load() {
 
 watch(key, load, { immediate: true })
 
+/** Where the player is, in the middle of the screen: no scrolling to find it. */
+async function centreCurrent() {
+  await nextTick()
+  const step = current.value
+  if (!step) return
+  document
+    .querySelector(`[data-testid="path-step-${step.key}"]`)
+    ?.scrollIntoView({ block: 'center' })
+}
+
+/** The app header's height: the chapters' cards stick under it. */
+const headerHeight = ref(0)
+/** @type {ResizeObserver|null} */
+let headerObserver = null
+
+onMounted(() => {
+  const header = /** @type {HTMLElement|null} */ (
+    document.querySelector('.app-header')
+  )
+  if (!header) return
+  headerHeight.value = header.offsetHeight
+  if (typeof ResizeObserver === 'undefined') return
+  headerObserver = new ResizeObserver(() => {
+    headerHeight.value = header.offsetHeight
+  })
+  headerObserver.observe(header)
+})
+
+onBeforeUnmount(() => headerObserver?.disconnect())
+
 /** @param {import('@/utils/mindMapPath').PathStep} step */
 function select(step) {
-  actionError.value = ''
-  if (isBoss(step.kind) && step.status !== 'hidden') bossStep.value = step
-  else sheetStep.value = step
+  if (step.key !== shown.value?.key) actionError.value = ''
+  chosenKey.value = step.key
+  sheetOpen.value = true
 }
 
-/**
- * Each dialog closes only itself: a dialog's `hide` comes at the end of its transition, when the
- * other one may already be open (a boss closed, a step chosen at once).
- */
 function closeSheet() {
-  sheetStep.value = null
-  if (!bossStep.value) actionError.value = ''
-}
-
-function closeBoss() {
-  bossStep.value = null
-  if (!sheetStep.value) actionError.value = ''
+  sheetOpen.value = false
+  actionError.value = ''
 }
 
 /** @param {import('@/utils/mindMapPath').PathStep} step */
@@ -260,6 +308,8 @@ async function skip(step) {
   try {
     const answer = await mindMapApi.skip(api.value, step.key)
     path.value = answer.path
+    // What opened next shows now.
+    chosenKey.value = null
     closeSheet()
   } catch (e) {
     actionError.value = refusalText(e) || apiErrorMessage(e)
@@ -275,18 +325,10 @@ function nextChest() {
 
 <style scoped lang="scss">
 .mind-path {
-  max-width: 1080px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 
-.mind-path__head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 18px;
-}
-
-.mind-path__kicker,
 .mind-path__label {
   font-size: 12px;
   font-weight: 800;
@@ -295,35 +337,22 @@ function nextChest() {
   color: var(--cm-muted);
 }
 
-.mind-path__title {
-  margin: 0;
-  font-family: var(--cm-heading);
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--cm-ink);
-}
-
-.mind-path__short {
-  margin: 4px 0 0;
-  color: var(--cm-muted);
-  font-weight: 600;
-}
-
 .mind-path__wait {
   display: grid;
   place-items: center;
   padding: 48px;
 }
 
-// Phone: what comes next first, then the path. Wide screen: the path | the side, sticky.
+// Phone: the path, then the badges (a step opens in a sheet). Wide screen: the path | the
+// step's detail and the badges, sticky under the header.
 .mind-path__layout {
+  margin-top: 28px;
   display: grid;
   gap: 24px;
-  grid-template-areas: 'side' 'main';
+  grid-template-areas: 'main' 'side';
 
   @media (min-width: $breakpoint-md-min) {
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) 400px;
     grid-template-areas: 'main side';
     gap: 40px;
     align-items: start;
@@ -345,7 +374,19 @@ function nextChest() {
 
   @media (min-width: $breakpoint-md-min) {
     position: sticky;
-    top: 16px;
+    top: var(--side-top, 16px);
+    max-height: calc(100vh - var(--side-top, 16px) - 16px);
+    overflow-y: auto;
+  }
+}
+
+.mind-path__sheet {
+  width: min(520px, 100vw);
+  max-height: 86vh;
+  overflow-y: auto;
+
+  :deep(.step-detail) {
+    border-radius: 28px 28px 0 0;
   }
 }
 
@@ -355,26 +396,6 @@ function nextChest() {
   gap: 10px;
   padding: 18px 20px;
   border-radius: 20px;
-}
-
-.mind-path__next {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.mind-path__next-title {
-  font-family: var(--cm-heading);
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--cm-ink);
-}
-
-.mind-path__continue {
-  align-self: flex-start;
-  background: var(--capacity, var(--cm-brand));
-  color: var(--capacity-ink, #fff);
-  font-weight: 800;
 }
 
 .mind-path__rules {
