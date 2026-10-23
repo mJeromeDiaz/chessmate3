@@ -76,7 +76,15 @@ export default defineConfig(ctx => {
       // minify: false,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      // Maia's worker (docs/ENGINE.md, § Maia) imports the ONNX runtime: an ES module worker, and
+      // the runtime left out of Vite's dependency pre-bundling (its .wasm is imported with ?url).
+      extendViteConf(viteConf) {
+        viteConf.worker = { ...viteConf.worker, format: 'es' }
+        viteConf.optimizeDeps = {
+          ...viteConf.optimizeDeps,
+          exclude: [...(viteConf.optimizeDeps?.exclude ?? []), 'onnxruntime-web']
+        }
+      },
       // viteVuePluginOptions: {},
 
       // to write components with JSX/TSX:

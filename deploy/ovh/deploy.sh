@@ -31,8 +31,8 @@ echo "==> API: production dependencies"
   --optimize-autoloader --classmap-authoritative)
 
 echo "==> SPA: build against $API_URL"
-# The chess engine is not in git (docs/ENGINE.md): fetched from its release, digests checked.
-(cd "$BUILD/front" && npm ci --no-audit --no-fund && npm run engine:fetch && API_URL="$API_URL" npm run build)
+# The chess engine and Maia are not in git (docs/ENGINE.md): fetched from their releases, digests checked.
+(cd "$BUILD/front" && npm ci --no-audit --no-fund && npm run engine:fetch && npm run maia:fetch && API_URL="$API_URL" npm run build)
 
 echo "==> Upload"
 # Kept on the host: its .env.local (secrets), JWT keys, var/ (cache, logs), installed bundle assets.

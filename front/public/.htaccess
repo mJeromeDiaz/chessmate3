@@ -13,6 +13,11 @@
     <If "%{REQUEST_URI} =~ m#^/assets/#">
         Header set Cache-Control "public, max-age=31536000, immutable"
     </If>
+
+    # Maia (docs/ENGINE.md): 46 MB, downloaded once. Its file is pinned (a new model, a new name).
+    <If "%{REQUEST_URI} =~ m#^/maia/.+\.onnx$#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
 </IfModule>
 
 # The chess engine (docs/ENGINE.md): WebAssembly must come as application/wasm (nosniff above).

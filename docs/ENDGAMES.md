@@ -18,7 +18,7 @@ touche pas au classement : il ne rapporte que de l'XP.
   des variantes générées, toutes vérifiées par la tablebase.
 
 Lots : **E1** troisième base et tablebase (fait), **E2a** leçons, variantes, réserve de positions et
-route de la tablebase (fait), **E2b** module (séries, jugement, XP) (fait), **E3** Maia dans le navigateur,
+route de la tablebase (fait), **E2b** module (séries, jugement, XP) (fait), **E3** Maia dans le navigateur (fait, [ENGINE.md](ENGINE.md) § 5),
 **E4** front (page `/finales`, tuile du créateur de séance), **E5** e2e et docs.
 
 ## 1. Où est le code

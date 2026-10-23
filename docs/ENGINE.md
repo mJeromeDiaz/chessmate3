@@ -61,8 +61,8 @@ const { lines, bestMove } = await engine.analyse(fen, {
 - **Statut** (`status`) : `idle` (pas chargé), `loading`, `ready`, `thinking` (une recherche en
   cours, tous composants confondus), `failed`.
 - **Autre moteur** : `UciEngine` prend n'importe quel worker qui parle UCI par `postMessage`.
-  Un moteur qui ne parle pas UCI (Maia en ONNX, par exemple) offrirait les mêmes `analyse` et
-  `terminate`. `setWorkerFactory` remplace le worker (tests unitaires).
+  Maia, qui ne parle pas UCI, a sa propre classe (§ 5). `setWorkerFactory` remplace le worker
+  (tests unitaires).
 
 ## 3. Confiance
 
@@ -80,3 +80,76 @@ et les modules qui s'en servent ne touchent pas au classement (XP et cristaux se
   `tests/e2e/mind-map-calculation-engine.spec.js` (chapitre 3 du parcours calcul, puzzles ajoutés
   au catalogue par `app:e2e:seed-user --engine-puzzles`). `npm run engine:fetch` doit avoir été
   lancé.
+
+## 5. Maia
+
+**Maia-3** (CSSLab, université de Toronto) joue **comme un humain** d'un Elo donné, pas le meilleur
+coup : c'est l'adversaire du module des finales ([ENDGAMES.md](ENDGAMES.md)). Il tourne lui aussi
+chez le joueur, dans son propre Web Worker.
+
+- **Le modèle** : Maia-3 23M en float16, export ONNX de <https://huggingface.co/bqrio/maia3-onnx>
+  (commit `923df9a`), `front/public/maia/maia3-23m.fp16.onnx` (46 Mo), **hors git** :
+  `npm run maia:fetch` (`front/scripts/fetch-maia.mjs`) le télécharge, vérifie son SHA-256 et
+  écrit `maia/README.txt` (licence et sources). À lancer une fois après un clone ;
+  `deploy/ovh/deploy.sh` le lance avant chaque build. `.htaccess` le met en cache un an (un autre
+  modèle aura un autre nom).
+- **Plus tard** : Maia-3 5M (10,8 Mo, mêmes entrées et sorties) pour les données mobiles et les
+  appareils faibles. Le choix reste à décider (2026-10-23 : le 23M pour tous en attendant).
+- **Le moteur d'exécution** : `onnxruntime-web` 1.30.0, point d'entrée `onnxruntime-web/wasm`
+  (WebAssembly seul, pas de WebGPU), un seul fil (pas de COOP/COEP, comme Stockfish). Son `.wasm`
+  (14 Mo) vient de `node_modules`, importé avec `?url` : Vite le sert dans `assets/` avec une
+  empreinte. `quasar.config.js` met les workers en modules ES et sort `onnxruntime-web` du
+  pré-bundling. Optimisation du graphe `basic` : les niveaux `extended`/`all` d'ORT cassent sur
+  les conversions float16 de ce graphe (README de l'export). La CSP en place suffit
+  (`'wasm-unsafe-eval'`, worker et modèle sur la même origine).
+- **Licence** : AGPLv3 (le modèle et le code de Maia-3), acceptée (2026-10-22). Le modèle est un
+  fichier à part, chargé dans son worker ; ses sources sont dans `maia/README.txt`.
+
+### Entrées et sorties
+
+Telles que le code de Maia-3 (CSSLab/maia3) les construit, dans `src/utils/maia/encoding.js` :
+
+- **Le plateau** est vu par le camp au trait : quand les noirs ont le trait, il est retourné
+  (rangées inversées, couleurs échangées). `tokens` : 64 cases (a1 = 0, b1 = 1 … h8 = 63) × 12
+  canaux, pion, cavalier, fou, tour, dame, roi du camp au trait (0–5) puis de l'adversaire (6–11).
+  Ni roques, ni prise en passant, ni historique : le modèle recopie la position sur ses 8 positions
+  d'historique.
+- **`elo_self`, `elo_oppo`** : l'Elo du camp au trait (Maia) et de l'adversaire (le même par
+  défaut), gardés entre 600 et 2600.
+- **`logits_move`** : 4352 coups, chaque couple départ × arrivée (4096, départ d'abord, a1a1
+  compris) puis les 256 promotions de la 7e à la 8e rangée (colonne de départ × colonne d'arrivée ×
+  q, r, b, n), dans le repère retourné quand les noirs ont le trait (rangée r → 9 − r). Les coups
+  illégaux sont écartés, puis softmax (`legalChances`).
+- **`logits_value`** : perte, nulle, gain pour le camp au trait (`outlook`).
+- **Le coup joué** (`drawMove`) : tiré au sort selon les probabilités, parmi les coups d'au moins
+  5 % (le plus probable si aucun) : les défenses varient comme celles d'un humain de ce niveau,
+  sans coup absurde. Avec `among`, le tirage se fait parmi ces coups seulement (les ex aequo de la
+  meilleure défense, au niveau « Parfait »).
+
+### Le code
+
+| Fichier | Rôle |
+|---|---|
+| `src/utils/maia/encoding.js` | l'encodage, pur : `encodeBoard`, `MOVES`, `moveIndex`, `mirrorMove`, `legalChances`, `outlook`, `drawMove` |
+| `src/utils/maia/maia.worker.js` | le worker : télécharge le modèle (progression), crée la session, répond à chaque position par ses logits |
+| `src/utils/maia/MaiaEngine.js` | parle au worker : `ready()`, `predict(fen, {elo, opponentElo, signal})`, `terminate()` ; 20 s au plus par prédiction ; mêmes erreurs que Stockfish (`EngineAbortError`, `EngineFailureError`) |
+| `src/composables/maia/useMaia.js` | Maia **partagé**, comme `useEngine` : `preload()` (le module des finales le lance à son ouverture, avant le premier coup du joueur), `predict`, `chooseMove(fen, {elo, among})`, `stop()`, `status`, `progress` (0 à 1, null si la taille est inconnue) ; `setMaiaWorkerFactory` (tests) |
+
+```js
+const maia = useMaia()
+maia.preload() // à l'ouverture du module : 46 Mo la première fois, le cache du navigateur ensuite
+const move = await maia.chooseMove(fen, { elo: 1200 }) // 'e7e5', null sans coup légal
+```
+
+- **Maia indisponible** (le modèle ne se charge pas, le worker plante) : `status` passe à
+  `failed`, `preload()` et les prédictions rejettent `EngineFailureError`, l'appel suivant relance
+  un worker. Le module des finales joue alors la meilleure défense de la tablebase et le dit.
+
+### Tests
+
+- Vitest : `tests/unit/maia.test.js` (vocabulaire, plateau retourné, coups des noirs et
+  promotions, probabilités, tirage, `MaiaEngine` et `useMaia` avec un faux worker).
+- Vitest, le vrai modèle sous Node : `npm run test:maia` (`vitest.maia.config.js`,
+  `tests/maia/model.test.js`, sauté sans le modèle) : il se charge avec ces réglages, ouvre
+  e4 ou d4, répond e5 ou c5 avec les noirs, voit gagné K+D contre K, promeut pour les deux camps.
+  Il affiche le temps de chaque prédiction.

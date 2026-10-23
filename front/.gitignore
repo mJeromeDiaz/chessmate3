@@ -33,3 +33,4 @@ yarn-error.log*
 
 # engine
 /public/engine
+/public/maia
