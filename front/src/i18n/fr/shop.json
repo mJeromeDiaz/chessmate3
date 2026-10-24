@@ -284,11 +284,11 @@
     "gems": {
       "blue": "bleue",
       "red": "rouge",
-      "yellow": "jaune"
+      "green": "verte"
     },
     "chests": {
       "title": "Choisis un coffre",
-      "sub": "Pierre bleue, rouge ou jaune ? Touche-le 3 fois pour l’ouvrir.",
+      "sub": "Pierre bleue, rouge ou verte ? Touche-le 3 fois pour l’ouvrir.",
       "again": "Encore !",
       "two": "Plus que 2 coups.",
       "one": "Un dernier coup !",

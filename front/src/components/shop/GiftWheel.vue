@@ -457,11 +457,11 @@ const shop = useShopStore()
 const auth = useAuthStore()
 const purchase = useAidPurchase(() => nextTick(spin))
 
-/** The chests' stones (design). */
+/** The chests' stones (design; the third green rather than yellow, 2026-10-24). */
 const GEMS = [
   { id: 'blue', c: '#3D7BFF', hi: '#9EC2FF' },
   { id: 'red', c: '#FF3D5A', hi: '#FFA3B1' },
-  { id: 'yellow', c: '#FFC21A', hi: '#FFF0A8' }
+  { id: 'green', c: '#1FBF6A', hi: '#A6F0C6' }
 ]
 const SPIN_SECONDS = 5
 const CHEST_TAPS = 3
