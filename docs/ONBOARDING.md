@@ -4,8 +4,8 @@
 
 La **visite guidée** présente l'outil en deux minutes (maquette « Visite guidée », reprise pour son
 esthétique, textes réécrits) : Albert se présente, demande le **niveau** et l'**objectif**, les profs
-présentent leurs modules, Ray reste dans l'ombre, les **boss** de la carte mentale défilent, un
-**bout de parcours** se montre, puis le joueur choisit **par où commencer** (la carte mentale
+présentent leurs modules, Ray reste dans l'ombre, les **boss** du parcours ludique défilent, un
+**bout de parcours** se montre, puis le joueur choisit **par où commencer** (le parcours ludique
 d'abord).
 
 Choix validés (2026-10-13) :
@@ -19,12 +19,12 @@ Choix validés (2026-10-13) :
   existants ne la voient pas d'office.
 - **Ray** (prof des parties à l'aveugle, présenté plus tard) : un écran « mystère », cavalier dans
   l'ombre, avec À l'aveugle et Coordonnées. Analyse de parties est marquée « Bientôt ».
-- **Carte mentale mise en avant** (2026-10-24, maquette « Visite guidée », écrans « Tes pires
+- **Parcours ludique mis en avant** (2026-10-24, maquette « Visite guidée », écrans « Tes pires
   ennemis » et « Ta carte d'aventure ») : un segment « Les boss » puis un segment « Ta carte »
   avant le plan ; la galerie des boss **sans compteur ni points** (on doit croire qu'il y en a
   beaucoup plus : sa dernière carte, « Et d'autres… », est dans l'ombre) ; la carte, un vrai bout
   de parcours qu'on fait défiler à la main (l'écran de la maquette, une liste qui défilait seule,
-  écarté) ; « Ma carte mentale » premier choix du plan, coché sans Lichess.
+  écarté) ; « Mon parcours ludique » premier choix du plan, coché sans Lichess.
 
 ## 1. Organisation du code
 
@@ -113,7 +113,7 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
   haut), ouverte sur l'étape à jouer (`SAMPLE_PATH_CURRENT`) ; une étape touchée dit dessous ce
   qu'elle demande et rapporte (`tourStepFacts` : passages à 80 %, vies, cristaux, XP, badges).
   Rien ne s'y joue : c'est un exemple.
-- **Plan** (`TourEnd`, confettis) : Ma carte mentale (`/cerveau`, conseillée et choix par défaut
+- **Plan** (`TourEnd`, confettis) : Mon parcours ludique (`/cerveau`, conseillé et choix par défaut
   sans Lichess), Séance sur mesure (`/session/auto`, conseillée avec Lichess), Répertoire
   automatique (`/repertoire/auto`), Je compose ma séance (`/session/new`). Un choix qui demande Lichess sans compte lié passe par la liaison, qui
   revient directement sur la page choisie.
@@ -134,6 +134,6 @@ niveau sans nouvelle ligne, plus rien après un puzzle classé ou un import Lich
 import Lichess toujours proposé, 422, export) ; Vitest `onboarding.test.js`, `auth-flow.test.js` ;
 Playwright `tests/e2e/tour.spec.js` (visite complète sans Lichess jusqu'au Session Builder, avec
 la galerie des boss — flèches, retour jusqu'à « Et d'autres… », aucun compteur — et la carte — une
-étape touchée et ses récompenses —, la carte mentale cochée d'office au plan, réponses
+étape touchée et ses récompenses —, le parcours ludique coché d'office au plan, réponses
 dans le profil et niveau changé ; étape gardée, retour, segments, « Passer »,
 « Revoir » du profil).

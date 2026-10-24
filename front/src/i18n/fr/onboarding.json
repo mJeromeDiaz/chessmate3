@@ -127,7 +127,7 @@
   },
   "endChoices": {
     "map": {
-      "title": "Ma carte mentale",
+      "title": "Mon parcours ludique",
       "desc": "Visualisation, calcul, finales : avance de case en case et affronte les boss."
     },
     "coach": {
@@ -174,7 +174,7 @@
     "level": "ALBERT · FAISONS CONNAISSANCE",
     "goal": "ALBERT · TES AMBITIONS",
     "end": "ALBERT · ON S’Y MET ?",
-    "map": "ALBERT · TA CARTE MENTALE"
+    "map": "ALBERT · TON PARCOURS LUDIQUE"
   },
   "lines": {
     "hello": "Bonjour, je suis Albert Stein, ton prof principal. Promis, je serai plus patient que ton adversaire quand tu laisses ta dame en prise.",
@@ -183,7 +183,7 @@
     "noLevel": "Lie ton Lichess, ou avoue ton niveau. Je ne juge pas… pas encore.",
     "noGoal": "Qu’est-ce qui t’amène ? Un seul choix : le plus sincère, pas le plus raisonnable.",
     "endLinked": "Assez de théorie ! Choisis par où commencer, je m’occupe du reste.",
-    "endUnlinked": "Assez de théorie ! Commence par ta carte mentale, ses boss t’attendent. Pour le sur-mesure, il me faudra ton Lichess.",
+    "endUnlinked": "Assez de théorie ! Commence par ton parcours ludique, ses boss t’attendent. Pour le sur-mesure, il me faudra ton Lichess.",
     "map": "Voici un bout du parcours de Visualisation. Chaque exercice se valide à 80 %, plusieurs fois ; des coffres de cristaux t’attendent en chemin, un mini-boss garde chaque section, un boss chaque chapitre. Fais défiler, touche une étape."
   },
   "rating": {
