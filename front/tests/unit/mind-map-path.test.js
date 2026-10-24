@@ -275,9 +275,9 @@ describe('mind map path', () => {
     expect(standingImage('dragon')).toBe('')
     expect(moodImage(null, 'joy')).toBe('')
     expect(bossImage('metronome')).toContain('cyclope.png')
-    // The Roi des cendres wears the shark's faces for now; the endgames' others stand as a piece.
-    expect(moodImage('roi-cendres', 'pride')).toContain('requin-fierte.png')
-    expect(standingImage('roi-cendres')).toContain('requin-pose.png')
+    // The Roi des cendres is the lich; the endgames' others stand as a piece.
+    expect(moodImage('roi-cendres', 'pride')).toContain('liche-fierte.png')
+    expect(standingImage('roi-cendres')).toContain('liche-pose.png')
     expect(moodImage('bourreau', 'joy')).toBe('')
     expect(BOSS_GLYPHS.bourreau).toBe('♛')
     expect(BOSS_GLYPHS['cavalier-errant']).toBe('♞')

@@ -492,7 +492,7 @@ export function tourBossPlace(boss) {
 }
 
 /**
- * Its picture standing (the Roi des cendres: its stand-in), '' for the shadow.
+ * Its picture standing (the Roi des cendres: the lich), '' for the shadow.
  *
  * @param {TourBoss} boss
  */

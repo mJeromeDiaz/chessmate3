@@ -345,7 +345,7 @@ absent du cerveau. **Rien n'est jamais verrouillé** : ses chapitres sont libres
 | `rooks` | `king-cut-off`, `lucena`, `philidor`, `rook-vs-pawn`, `vancura` | `rooks-boss` (`maitre-tours`) | 180 | 60 |
 | `bishops` | `wrong-rook-pawn`, `bishop-vs-pawn`, `opposite-bishops`, `bishop-pawn` | `bishops-boss` (`duelliste`) | 150 | 60 |
 | `knights` | `knight-vs-pawn`, `knight-vs-rook-pawn`, `knight-pawn` | `knights-boss` (`cavalier-errant`) | 120 | 60 |
-| `ashes` | toutes | `ashes-boss` (`roi-cendres`, le requin en attendant) | 600 | 250 |
+| `ashes` | toutes | `ashes-boss` (`roi-cendres`, la liche) | 600 | 250 |
 
 - **Badges** : `boss_roi_cendres` (le Roi des cendres battu) ; `endgames_mastered`
   (`Paths::masteryBadge()`), les 27 leçons maîtrisées, daté de la dernière.
@@ -422,8 +422,8 @@ pure est dans `front/src/utils/endgamePath.js`.
   `mindMapPath.js` : ♛ le Bourreau, ♟ le Gardien, ♚ l'Horloger, ♛ la Reine noire, ♜ le Maître des
   tours, ♝ le Duelliste, ♞ le Cavalier errant), aussi sur l'écran de victoire (`BossPortrait`) ;
   une image la remplacera.
-- **Le Roi des cendres** : une grande carte sous les sept (`EndgameAshesCard.vue`), le requin en
-  attendant le sien (`moodImage` / `standingImage` : `roi-cendres` → `requin`).
+- **Le Roi des cendres** : une grande carte sous les sept (`EndgameAshesCard.vue`), la liche
+  (`moodImage` / `standingImage` : `roi-cendres` → les images du dossier `liche`).
 - **L'étape conseillée** (`nextStep()`, choisie le 2026-10-24), une étoile sur son nœud, montrée
   en entier tant que le joueur n'en choisit pas une autre : dans l'ordre de la page, la première
   leçon pas encore connue (moins de 2 passages) ; un mini-parcours dont toutes les leçons sont

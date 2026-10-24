@@ -99,7 +99,7 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
   Évaluation, Analyse « Bientôt »), Lizy (Séance sur mesure, Finales), Ray (À
   l'aveugle, Coordonnées) ; « Pourquoi ça aide » déplié d'emblée sur le premier module de chacun.
 - **Les boss** (`TourBosses`, `TOUR_BOSSES`) : le Jongleur, le Métronome, le Cyclope, la
-  Gargouille, le Fantôme, le Roi des cendres (son remplaçant, le requin), puis « Et d'autres… »
+  Gargouille, le Fantôme, le Roi des cendres (la liche), puis « Et d'autres… »
   dans l'ombre. Une bande de cartes (portrait debout, nom, parcours et chapitre, cristaux du boss
   battu), la carte montrée au milieu ; elle tourne seule toutes les 4,2 s jusqu'à ce que le joueur
   la prenne en main (flèches, une carte, un glissement) ; jamais de compteur ni de points. La scène

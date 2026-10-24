@@ -179,10 +179,11 @@ export const BOSS_GLYPHS = /** @type {Record<string, string>} */ ({
 })
 
 /**
- * The folder of expressions standing in for a boss (the Roi des cendres: the shark for now).
+ * The folder of expressions of a boss whose pictures bear another name (the Roi des cendres: the
+ * lich).
  */
 const STAND_INS = /** @type {Record<string, string>} */ ({
-  'roi-cendres': 'requin'
+  'roi-cendres': 'liche'
 })
 
 /**
