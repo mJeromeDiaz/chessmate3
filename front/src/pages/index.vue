@@ -28,6 +28,8 @@
     </q-page-container>
     <!-- After the page: above its own chests (a mind map step's), after the celebration. -->
     <DailyChest v-if="auth.isAuthenticated" />
+    <!-- An admin's gifts, once nothing else is on screen (docs/SHOP.md, § 4 quater). -->
+    <GiftNotice v-if="auth.isAuthenticated" />
   </q-layout>
 </template>
 
@@ -39,6 +41,7 @@ import StreakCelebration from '@/components/gamification/StreakCelebration.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppMenu from '@/components/layout/AppMenu.vue'
 import DailyChest from '@/components/shop/DailyChest.vue'
+import GiftNotice from '@/components/shop/GiftNotice.vue'
 import ThemeMenu from '@/components/theme/ThemeMenu.vue'
 
 const auth = useAuthStore()

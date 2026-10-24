@@ -1170,7 +1170,7 @@ export const gamificationApi = {
 
 /** The store (docs/SHOP.md): crowns, offers, carousel, inventory, how to earn. */
 export const shopApi = {
-  /** `{balance, offers, slides, inventory, freezes, earning}` */
+  /** `{balance, offers, slides, inventory, freezes, earning, dailyWheel, gifts}` */
   get: () => http.get('/api/shop', JSON_LD).then(r => r.data),
   /**
    * Buys an offer `quantity` times (1 to 9); answers with the store after it. 409: `insufficient`
@@ -1257,7 +1257,14 @@ export const shopApi = {
         dailyRewardId ? { dailyRewardId } : {},
         JSON_LD
       )
-      .then(r => r.data)
+      .then(r => r.data),
+  /**
+   * Marks an admin's gifts seen, their message shown (docs/SHOP.md, § 4 quater); 204.
+   *
+   * @param {string[]} ids
+   */
+  markGiftsSeen: ids =>
+    http.post('/api/shop/gifts/seen', { ids }, JSON_LD).then(() => undefined)
 }
 
 /** The guided tour (docs/ONBOARDING.md): the declared level and goal. */
@@ -1507,6 +1514,41 @@ export const adminApi = {
         JSON_LD
       )
       .then(r => r.data),
+  /**
+   * Gives gift wheel tickets to a player (docs/SHOP.md, § 4 quater), the message shown to the
+   * player; resolves the player's detail.
+   *
+   * @param {string} id
+   * @param {number} quantity 1 to 100
+   * @param {string} message
+   */
+  giveTickets: (id, quantity, message) =>
+    http
+      .post(
+        `/api/admin/shop/players/${encodeURIComponent(id)}/wheel-tickets`,
+        { quantity, message },
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** `{count}`: the active accounts a gift to everyone serves. */
+  ticketRecipients: () =>
+    http
+      .get('/api/admin/shop/wheel-tickets/recipients', JSON_LD)
+      .then(r => r.data),
+  /**
+   * Gives gift wheel tickets to every active account; resolves the journal's line
+   * `{id, item, quantity, message, recipients, admin, createdAt}`.
+   *
+   * @param {number} quantity 1 to 100
+   * @param {string} message
+   */
+  giveTicketsToEveryone: (quantity, message) =>
+    http
+      .post('/api/admin/shop/wheel-tickets', { quantity, message }, JSON_LD)
+      .then(r => r.data),
+  /** `{batches}`: the journal of the gifts to everyone, the latest first. */
+  grantBatches: () =>
+    http.get('/api/admin/shop/grant-batches', JSON_LD).then(r => r.data),
   /** The store's figures over 7, 30 or 90 days. */
   shopStats: (days = 30) =>
     http

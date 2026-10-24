@@ -12,7 +12,7 @@ use App\State\Shop\StoreProvider;
 
 /**
  * The store (docs/SHOP.md): the signed-in player's crowns, the offers, the carousel, the inventory,
- * how crowns are earned, today's gift wheel still to spin.
+ * how crowns are earned, today's gift wheel still to spin, an admin's gifts not seen yet.
  * A purchase answers with the store as it stands after it.
  *
  * @phpstan-import-type View from \App\Shop\Catalog\StoreView
@@ -20,6 +20,7 @@ use App\State\Shop\StoreProvider;
  * @phpstan-import-type SlideView from \App\Shop\Catalog\StoreView
  * @phpstan-import-type FreezeView from \App\Shop\Inventory\Inventory
  * @phpstan-import-type EarningView from \App\Shop\Catalog\StoreView
+ * @phpstan-import-type GiftView from \App\Shop\Gift\GiftNotices
  */
 #[ApiResource(
     shortName: 'Shop',
@@ -48,6 +49,13 @@ final class Store
     public ?array $earning = null;
     /** Today's gift wheel still to spin (§ 4 ter): its daily reward's id, null when none. */
     public ?string $dailyWheel = null;
+    /**
+     * An admin's gifts not seen yet (§ 4 quater), the oldest first: their message is shown, then
+     * POST /shop/gifts/seen.
+     *
+     * @var list<GiftView>
+     */
+    public array $gifts = [];
 
     /**
      * @param View $view
@@ -62,6 +70,7 @@ final class Store
         $store->freezes = $view['freezes'];
         $store->earning = $view['earning'];
         $store->dailyWheel = $view['dailyWheel'];
+        $store->gifts = $view['gifts'];
 
         return $store;
     }

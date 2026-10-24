@@ -326,5 +326,12 @@
       "gone": "Cette roue n’est plus à tourner."
     },
     "use": "Tourner la roue"
+  },
+  "gifts": {
+    "kicker": "Cadeau de l’équipe",
+    "title": "L’équipe t’a fait un cadeau !",
+    "tickets": "L’équipe t’offre {n} tour de roue ! | L’équipe t’offre {n} tours de roue !",
+    "spin": "Tourner la roue",
+    "later": "Plus tard"
   }
 }

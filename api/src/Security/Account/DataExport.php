@@ -253,6 +253,8 @@ final readonly class DataExport
                 $id,
             ),
             'wheelSpins' => $this->rows('SELECT prize, gift, crowns, ticket, created_at FROM shop_wheel_spin WHERE user_id = ? ORDER BY created_at', $id),
+            // An admin's gifts (docs/SHOP.md, § 4 quater), without the admin's account.
+            'itemGrants' => $this->rows('SELECT item, quantity, message, created_at, seen_at FROM shop_item_grant WHERE user_id = ? ORDER BY created_at', $id),
         ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(

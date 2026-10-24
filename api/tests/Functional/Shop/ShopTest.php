@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
  * The store (docs/SHOP.md): the default catalogue, purchases paid at once in crowns, never below
  * zero, the items in the inventory.
  *
- * @phpstan-type Store array{balance: int, offers: list<array{id: string, slug: string, section: string, subtitle: string|null, module: string|null, items: list<mixed>, price: int, wasPrice: int|null, comingSoon: bool}>, slides: list<array{offerId: string, tag: string}>, inventory: array<string, int>, freezes: list<array{item: string, days: int, daysLeft: int}>, dailyWheel: string|null}
+ * @phpstan-type Store array{balance: int, offers: list<array{id: string, slug: string, section: string, subtitle: string|null, module: string|null, items: list<mixed>, price: int, wasPrice: int|null, comingSoon: bool}>, slides: list<array{offerId: string, tag: string}>, inventory: array<string, int>, freezes: list<array{item: string, days: int, daysLeft: int}>, dailyWheel: string|null, gifts: list<mixed>}
  */
 final class ShopTest extends WebTestCase
 {
@@ -41,6 +41,7 @@ final class ShopTest extends WebTestCase
         self::assertSame(0, $store['balance']);
         self::assertSame([], $store['inventory']);
         self::assertNull($store['dailyWheel'], 'no exercise played today');
+        self::assertSame([], $store['gifts'], 'no gift of an admin');
         $sections = array_values(array_unique(array_column($store['offers'], 'section')));
         self::assertSame(['freeze', 'puzzle_streak', 'aids', 'packs', 'wheel', 'cosmetics'], $sections);
         $bySlug = array_column($store['offers'], null, 'slug');

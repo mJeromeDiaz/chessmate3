@@ -215,7 +215,10 @@
       <RewardRuleForm />
       <WheelRuleForm />
     </div>
-    <ShopPlayers v-else-if="tab === 'players'" />
+    <div v-else-if="tab === 'players'" class="admin-shop__rules">
+      <TicketGiftAll />
+      <ShopPlayers />
+    </div>
     <ShopStatsPanel v-else />
 
     <OfferForm
@@ -246,6 +249,7 @@ import OfferForm from '@/components/admin/shop/OfferForm.vue'
 import RewardRuleForm from '@/components/admin/shop/RewardRuleForm.vue'
 import WheelRuleForm from '@/components/admin/shop/WheelRuleForm.vue'
 import ShopPlayers from '@/components/admin/shop/ShopPlayers.vue'
+import TicketGiftAll from '@/components/admin/shop/TicketGiftAll.vue'
 import ShopStatsPanel from '@/components/admin/shop/ShopStatsPanel.vue'
 import SlideForm from '@/components/admin/shop/SlideForm.vue'
 import { adminApi } from '@/services/api'

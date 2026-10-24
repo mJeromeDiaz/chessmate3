@@ -338,7 +338,36 @@
     "freeze": "{left}/{days} j",
     "by": "par {who}",
     "gone": "Ce compte n’existe plus.",
-    "negative": "Le solde ne peut pas passer sous zéro."
+    "negative": "Le solde ne peut pas passer sous zéro.",
+    "tickets": "Tickets de roue",
+    "ticketMessage": "Message au joueur *",
+    "ticketHint": "Il le verra à sa prochaine visite.",
+    "giveTickets": "Offrir",
+    "grants": "Tickets de roue reçus",
+    "grantEveryone": "Don à tous",
+    "grantSeen": "Vu le {when}",
+    "grantUnseen": "Pas encore vu",
+    "noGrant": "Aucun."
+  },
+  "ticketGiftAll": {
+    "title": "Offrir des tickets de roue à tous",
+    "lead": "Chaque compte actif (ni suspendu, ni en cours de suppression) reçoit les tickets et voit le message à sa prochaine visite. On ne peut pas les reprendre.",
+    "quantity": "Tickets",
+    "message": "Message aux joueurs *",
+    "messageHint": "Par exemple « Joyeux Noël ! »",
+    "give": "Offrir à tous",
+    "confirmTitle": "Offrir à tous ?",
+    "confirm": "{n} ticket de roue à {accounts} comptes actifs, avec le message « {message} ». | {n} tickets de roue à {accounts} comptes actifs, avec le message « {message} ».",
+    "confirmOk": "Offrir",
+    "done": "{n} ticket offert à {accounts} comptes. | {n} tickets offerts à {accounts} comptes.",
+    "journal": "Dons à tous",
+    "none": "Aucun don à tous pour l’instant.",
+    "columns": {
+      "date": "Date",
+      "quantity": "Tickets",
+      "message": "Message",
+      "recipients": "Comptes"
+    }
   },
   "shopStatsPanel": {
     "couronnesEnCirculation": "Cristaux en circulation",

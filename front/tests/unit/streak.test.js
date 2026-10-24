@@ -16,6 +16,7 @@ vi.mock('@/services/api', () => ({
     openDailyReward: vi.fn(),
     spinWheel: vi.fn(),
     declineDailyWheel: vi.fn(),
+    markGiftsSeen: vi.fn(),
     get: vi.fn()
   }
 }))
@@ -377,5 +378,47 @@ describe('streak celebration', () => {
     await expect(
       store.celebrateStreak({ afterExercise: false })
     ).resolves.toBeUndefined()
+  })
+})
+
+describe('an admin’s gifts in the store (docs/SHOP.md, § 4 quater)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.resetAllMocks()
+  })
+
+  it('marks them seen at once, the tickets kept', async () => {
+    shopApi.get.mockResolvedValue({
+      balance: 0,
+      inventory: { wheel_ticket: 5 },
+      dailyWheel: null,
+      gifts: [
+        { id: 'g1', item: 'wheel_ticket', quantity: 2, message: 'Merci' },
+        { id: 'g2', item: 'wheel_ticket', quantity: 3, message: 'Noël' }
+      ]
+    })
+    shopApi.markGiftsSeen.mockResolvedValue(undefined)
+    const shop = useShopStore()
+    await shop.load()
+
+    await shop.markGiftsSeen()
+    expect(shopApi.markGiftsSeen).toHaveBeenCalledWith(['g1', 'g2'])
+    expect(shop.state?.gifts).toEqual([])
+    expect(shop.wheelsToSpin).toBe(5)
+
+    await shop.markGiftsSeen()
+    expect(shopApi.markGiftsSeen).toHaveBeenCalledTimes(1)
+  })
+
+  it('never rejects: a failure brings them back with the next reading', async () => {
+    shopApi.get.mockResolvedValue({
+      inventory: {},
+      gifts: [{ id: 'g1', item: 'wheel_ticket', quantity: 1, message: 'x' }]
+    })
+    shopApi.markGiftsSeen.mockRejectedValue(new Error('offline'))
+    const shop = useShopStore()
+    await shop.load()
+    await expect(shop.markGiftsSeen()).resolves.toBeUndefined()
+    expect(shop.state?.gifts).toEqual([])
   })
 })

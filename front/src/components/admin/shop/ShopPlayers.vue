@@ -107,6 +107,43 @@
           adjustError
         }}</div>
 
+        <form class="shop-players__adjust" @submit.prevent="giveTickets">
+          <q-input
+            v-model.number="tickets"
+            type="number"
+            min="1"
+            :max="MAX_TICKETS"
+            outlined
+            dense
+            :label="$t('admin.shopPlayers.tickets')"
+            class="shop-players__delta"
+            data-testid="shop-tickets-quantity"
+          />
+          <q-input
+            v-model="ticketMessage"
+            outlined
+            dense
+            :label="$t('admin.shopPlayers.ticketMessage')"
+            :hint="$t('admin.shopPlayers.ticketHint')"
+            maxlength="255"
+            class="admin__filter--grow"
+            data-testid="shop-tickets-message"
+          />
+          <q-btn
+            type="submit"
+            unelevated
+            no-caps
+            color="primary"
+            :label="$t('admin.shopPlayers.giveTickets')"
+            :disable="!ticketGiftValid(tickets, ticketMessage)"
+            :loading="givingTickets"
+            data-testid="shop-tickets-give"
+          />
+        </form>
+        <div v-if="ticketError" class="shop-players__error">{{
+          ticketError
+        }}</div>
+
         <div class="shop-players__label">{{
           $t('admin.shopPlayers.inventaire')
         }}</div>
@@ -194,6 +231,55 @@
             </tr>
           </tbody>
         </q-markup-table>
+
+        <div class="shop-players__label">{{
+          $t('admin.shopPlayers.grants')
+        }}</div>
+        <q-markup-table flat dense class="admin__table">
+          <tbody>
+            <tr
+              v-for="g in detail.grants ?? []"
+              :key="g.id"
+              data-testid="shop-grant-row"
+            >
+              <td class="no-wrap">{{ when(g.createdAt) }}</td>
+              <td>
+                {{ g.message }}
+                <div class="cm-muted">
+                  {{
+                    g.everyone
+                      ? $t('admin.shopPlayers.grantEveryone')
+                      : $t('admin.shopPlayers.by', { who: g.admin ?? '—' })
+                  }}
+                </div>
+              </td>
+              <td>
+                <span
+                  :class="[
+                    'admin__status',
+                    g.seenAt ? 'admin__status--used' : ''
+                  ]"
+                  >{{
+                    g.seenAt
+                      ? $t('admin.shopPlayers.grantSeen', {
+                          when: when(g.seenAt)
+                        })
+                      : $t('admin.shopPlayers.grantUnseen')
+                  }}</span
+                >
+              </td>
+              <td class="text-right no-wrap">{{
+                $t('admin.shopPlayers.item', {
+                  item: ITEMS[g.item]?.label ?? g.item,
+                  n: g.quantity
+                })
+              }}</td>
+            </tr>
+            <tr v-if="!(detail.grants ?? []).length">
+              <td class="cm-muted">{{ $t('admin.shopPlayers.noGrant') }}</td>
+            </tr>
+          </tbody>
+        </q-markup-table>
       </div>
     </div>
   </section>
@@ -202,14 +288,15 @@
 <script setup>
 /**
  * Players' crowns for the admin (docs/SHOP.md): a search (the richest without one), then a
- * player's balance, crowns given or taken back with a reason, inventory, freezes and ledger.
+ * player's balance, crowns given or taken back with a reason, gift wheel tickets given with a
+ * message for the player (§ 4 quater), inventory, freezes, ledger and the tickets given.
  */
 import { onMounted, ref } from 'vue'
 import CrystalGem from '@/components/shop/CrystalGem.vue'
 import { adminApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
 import { t } from '@/i18n'
-import { LEDGER_KINDS } from '@/utils/admin/shop'
+import { LEDGER_KINDS, MAX_TICKETS, ticketGiftValid } from '@/utils/admin/shop'
 import { ITEMS, crowns } from '@/utils/shop'
 import { intlLocale } from '@/i18n'
 
@@ -225,6 +312,11 @@ const delta = ref(null)
 const reason = ref('')
 const saving = ref(false)
 const adjustError = ref('')
+/** @type {import('vue').Ref<number|null>} */
+const tickets = ref(1)
+const ticketMessage = ref('')
+const givingTickets = ref(false)
+const ticketError = ref('')
 
 const dateTime = {
   format: d =>
@@ -254,6 +346,7 @@ async function load() {
 /** @param {string} id */
 async function open(id) {
   adjustError.value = ''
+  ticketError.value = ''
   try {
     detail.value = await adminApi.shopPlayer(id)
   } catch (e) {
@@ -280,6 +373,27 @@ async function adjust() {
     })
   } finally {
     saving.value = false
+  }
+}
+
+/** Gift wheel tickets given to the player shown, never taken back. */
+async function giveTickets() {
+  if (!detail.value || !ticketGiftValid(tickets.value, ticketMessage.value))
+    return
+  givingTickets.value = true
+  ticketError.value = ''
+  try {
+    detail.value = await adminApi.giveTickets(
+      detail.value.player.id,
+      Number(tickets.value),
+      ticketMessage.value.trim()
+    )
+    tickets.value = 1
+    ticketMessage.value = ''
+  } catch (e) {
+    ticketError.value = apiErrorMessage(e)
+  } finally {
+    givingTickets.value = false
   }
 }
 

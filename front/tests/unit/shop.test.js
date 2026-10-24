@@ -13,7 +13,8 @@ import {
   savingOf,
   stockOf,
   tweenAt,
-  carouselSlides
+  carouselSlides,
+  giftsSummary
 } from '@/utils/shop'
 
 /** @returns {import('@/utils/shop').ShopOffer} */
@@ -201,5 +202,28 @@ describe('the carousel', () => {
       }
     ])
     expect(carouselSlides(null, String)).toEqual([])
+  })
+})
+
+describe('an admin’s gifts (docs/SHOP.md, § 4 quater)', () => {
+  it('adds up the tickets and keeps each message once, in order', () => {
+    const gift = (id, quantity, message, item = 'wheel_ticket') => ({
+      id,
+      item,
+      quantity,
+      message
+    })
+    expect(
+      giftsSummary([
+        gift('g1', 2, 'Merci pour ton retour !'),
+        gift('g2', 3, ' Joyeux Noël ! '),
+        gift('g3', 1, 'Joyeux Noël !'),
+        gift('g4', 1, 'Un pardon', 'puzzle_pardon')
+      ])
+    ).toEqual({
+      tickets: 6,
+      messages: ['Merci pour ton retour !', 'Joyeux Noël !', 'Un pardon']
+    })
+    expect(giftsSummary(undefined)).toEqual({ tickets: 0, messages: [] })
   })
 })

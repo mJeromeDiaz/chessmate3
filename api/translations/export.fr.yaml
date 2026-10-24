@@ -20,7 +20,8 @@ readme:
           enregistrées, séries de coordonnées, puzzles à l'aveugle, puzzle streaks et puzzles de
           parcours.
         - boutique.json : vos cristaux (chaque mouvement, ceux gagnés par vos sessions et vos coffres du jour), vos
-          objets, vos gels de série et les jours qu'ils ont couverts.
+          objets, vos gels de série et les jours qu'ils ont couverts, vos tours de roue et les cadeaux de
+          l'équipe.
         - activite.json : le journal de vos exercices terminés.
 
         Les dates sont en UTC (ISO 8601), les identifiants des UUID.

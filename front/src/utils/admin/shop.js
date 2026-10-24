@@ -282,3 +282,23 @@ export function violationsOf(error) {
     ? response.data.violations
     : []
 }
+
+/** Gift wheel tickets an admin gives at once, to a player or to everyone (docs/SHOP.md, § 4 quater). */
+export const MAX_TICKETS = 100
+
+/**
+ * Whether a gift of tickets can be sent: 1 to {@link MAX_TICKETS}, a message for the players.
+ *
+ * @param {number|string|null|undefined} quantity
+ * @param {string|null|undefined} message
+ */
+export function ticketGiftValid(quantity, message) {
+  const n = Number(quantity)
+  return (
+    Number.isInteger(n) &&
+    n >= 1 &&
+    n <= MAX_TICKETS &&
+    !!message?.trim() &&
+    message.trim().length <= 255
+  )
+}

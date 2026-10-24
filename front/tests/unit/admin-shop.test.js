@@ -12,7 +12,9 @@ import {
   violationOf,
   violationsOf,
   wheelAverage,
-  wheelChances
+  wheelChances,
+  MAX_TICKETS,
+  ticketGiftValid
 } from '@/utils/admin/shop'
 
 const offer = {
@@ -169,5 +171,19 @@ describe('the gift wheel odds (docs/SHOP.md, § 4 ter)', () => {
       lose: 0
     })
     expect(wheelChances({})).toEqual({ c5: 0, c30: 0, c300: 0, gift: 0, lose: 0 })
+  })
+})
+
+describe('gift wheel tickets given (docs/SHOP.md, § 4 quater)', () => {
+  it('needs 1 to 100 tickets and a message for the players', () => {
+    expect(ticketGiftValid(2, 'Joyeux Noël !')).toBe(true)
+    expect(ticketGiftValid('3', 'x')).toBe(true)
+    expect(ticketGiftValid(MAX_TICKETS, 'x')).toBe(true)
+    expect(ticketGiftValid(0, 'x')).toBe(false)
+    expect(ticketGiftValid(MAX_TICKETS + 1, 'x')).toBe(false)
+    expect(ticketGiftValid(1.5, 'x')).toBe(false)
+    expect(ticketGiftValid(null, 'x')).toBe(false)
+    expect(ticketGiftValid(2, '   ')).toBe(false)
+    expect(ticketGiftValid(2, 'x'.repeat(256))).toBe(false)
   })
 })

@@ -30,12 +30,13 @@ Choix validés (2026-10-13) :
 | Couche | Emplacement |
 |---|---|
 | Articles, rayons, mouvements | `App\Enum\Shop\{ItemType, Section, LedgerKind}` |
-| Entités | `App\Entity\Shop\{Offer, Slide, Wallet, LedgerEntry, InventoryItem, Freeze}` |
+| Entités | `App\Entity\Shop\{Offer, Slide, Wallet, LedgerEntry, InventoryItem, Freeze, ItemGrant, GrantBatch}` |
 | Catalogue par défaut | `App\Shop\Catalog\DefaultCatalog` (migration `Version20261019090000`, fixtures `DataFixtures\Shop\ShopFixtures`), `StoreView` |
 | Solde | `App\Shop\Wallet\{Wallets, CrownAdjustment}` |
 | Stock | `App\Shop\Inventory\Inventory`, `Shop\Freeze\FreezeStock`, `Shop\Aid\AidStock`, `Shop\Pardon\{PuzzlePardons, BlindfoldPardons, CoordinatesPardons}` |
 | Achat | `App\Shop\Purchase\{Purchaser, PurchaseRefusal}` |
 | Gains | `App\Enum\Shop\RewardTier`, `App\Entity\Shop\{RewardRule, SessionReward, DailyReward}`, `App\Shop\Reward\{Rule, RewardRules, RewardCalculator, SessionRewarder, DailyRewarder}` (implémentent `Training\Session\SessionRewardInterface` et `Gamification\Streak\StreakRewardInterface`), `App\ApiResource\Shop\{Reward, DailyReward}` |
+| Dons d'un admin | `App\Shop\Gift\{TicketGrants, GiftNotices}` (§ 4 quater), `App\ApiResource\Shop\{Gift, GiftsSeenInput}` |
 | API joueur | `App\ApiResource\Shop\*`, `App\State\Shop\*` |
 | Admin | `App\Controller\Shop\AdminShopController`, `App\Shop\Admin\{Payload, InvalidPayload, OfferEditor, SlideEditor, AdminCatalog, PlayerWallets, ShopStats}` |
 | Front | `front/src/pages/index/boutique.vue`, `components/shop/` (dont `TreasureChest.vue`, `CrystalGem.vue`, `CrystalPrice.vue`), `stores/shop.js`, `utils/shop.js`, `utils/shopReward.js`, `composables/shop/useAidPurchase.js` ; admin : `pages/index/admin/boutique.vue`, `components/admin/shop/` (dont `RewardRuleForm.vue`), `utils/admin/shop.js` |
@@ -85,13 +86,18 @@ Ajouter un article : un cas de l'enum (jamais renommé), son effet codé, son as
   `crowns`, `opened_at` (coffre vu).
 - `shop_wheel_rule` : les chances de la roue (une ligne, `id` 1, absente tant qu'un admin ne les
   a pas changées : les valeurs par défaut s'appliquent) ; `shop_wheel_spin` : les tirages (§ 4 ter).
+- `shop_item_grant` : les articles donnés à un joueur par un admin (§ 4 quater) : `item`, `quantity`,
+  `message` (montré au joueur), `admin_id`, `batch_id` (le don à tous dont il fait partie, sinon
+  null), `created_at`, `seen_at` (message vu) ; `shop_grant_batch` : le journal des dons à tous
+  (`item`, `quantity`, `message`, `recipients`, `admin_id`, `created_at`).
 - `shop_daily_reward` : le jour (§ 4 ter), une ligne par joueur et jour local
   (`uniq_shop_daily_reward_user_day`) : `streak` atteinte, `badge_days` (le badge du jour, sinon
   null), `daily_crowns` (le tirage), `badge_crowns` (le bonus du badge, 0 sinon), `crowns` (les
   deux), `wheel` (la roue du jour), `opened_at`.
 
 Tout est supprimé avec le compte (cascade) et exporté (`boutique.json` : mouvements,
-inventaire, gels, jours gelés, gains des sessions, coffres du jour et tirages de la roue).
+inventaire, gels, jours gelés, gains des sessions, coffres du jour, tirages de la roue et cadeaux
+de l'équipe, sans le compte de l'admin).
 
 ## 4. Gels de la série
 
@@ -243,11 +249,44 @@ roue du jour après la célébration (30 cristaux), un cadeau (trois coffres, un
 « Relancer » avec un ticket acheté sur place et la tête de mort, le ticket tourné depuis la
 boutique, la roue fermée reproposée au dashboard, « Ne plus me proposer » et le réglage du profil.
 
+## 4 quater. Des tickets de roue offerts par un admin (2026-10-24)
+
+Règles validées :
+
+- **Un joueur ou tous** : un admin donne de 1 à 100 tickets de roue (`wheel_ticket`) à un joueur
+  (sa fiche, onglet « Joueurs »), ou à **tous les comptes actifs** : ni suspendus, ni en
+  suppression programmée (l'admin compris). Un compte créé ensuite ne reçoit rien.
+- **Donner seulement** : un ticket donné n'est jamais repris ; il se dépense comme un ticket acheté.
+- **Un message pour le joueur**, obligatoire (255 caractères) : montré à sa prochaine visite
+  (« L'équipe t'offre 2 tours de roue ! », puis chaque message entre guillemets). Ce n'est pas un
+  motif interne : le joueur le lit.
+- **La trace** : chaque don a sa ligne pour le joueur (`shop_item_grant` : nombre, message, admin,
+  « vu le »), dans sa fiche admin et son export ; un don à tous a en plus sa ligne de journal
+  (`shop_grant_batch`, avec le nombre de comptes servis). Aucun cristal ne bouge : rien dans
+  `shop_ledger_entry`.
+
+`App\Shop\Gift\TicketGrants` écrit le stock (`shop_inventory_item`) et les dons dans une seule
+transaction ; un don à tous sert les comptes par paquets de 1 000 (une insertion des dons et une du
+stock, `ON DUPLICATE KEY UPDATE`, par paquet), puis écrit le nombre servi sur sa ligne de journal.
+`App\Shop\Gift\GiftNotices` liste les dons pas encore vus (`GET /shop`, `gifts`) et les marque vus
+(`POST /shop/gifts/seen` : ceux d'un autre joueur, ou déjà vus, ne changent pas).
+
+Front : `components/shop/GiftNotice.vue`, dans le layout après `DailyChest`, s'ouvre quand l'état de
+la boutique (lu par l'en-tête) porte des dons, sauf pendant une séance (`/training/…`) et derrière la
+célébration de la série, la roue et les coffres du jour ou une roue ouverte (il revient ensuite :
+masqué ainsi, rien n'est marqué vu). « Tourner la roue » ouvre la roue d'un ticket (`openTicketWheel`),
+« Plus tard » laisse les tickets dans la roue de l'en-tête ; les deux marquent les dons vus
+(`markGiftsSeen` : retirés de l'état tout de suite, un échec les ramène à la lecture suivante).
+Admin : `components/admin/shop/TicketGiftAll.vue` (en haut de l'onglet « Joueurs » : nombre,
+message, confirmation qui nomme le nombre de comptes actifs, journal) et, dans `ShopPlayers.vue`,
+le don à un joueur et ses « Tickets de roue reçus ».
+
 ## 5. API joueur
 
 | Endpoint | Rôle |
 |---|---|
-| `GET /shop` | `{balance, offers, slides, inventory, freezes, earning, dailyWheel}` : offres listées (en vente ou « bientôt »), `inventory` par article (un gel compte tant qu'il couvre un jour), gels un par un, `earning` (la règle des gains et `minutesLeftToday`), `dailyWheel` (l'id de la roue du jour encore à tourner, sinon null : § 4 ter) |
+| `GET /shop` | `{balance, offers, slides, inventory, freezes, earning, dailyWheel, gifts}` : offres listées (en vente ou « bientôt »), `inventory` par article (un gel compte tant qu'il couvre un jour), gels un par un, `earning` (la règle des gains et `minutesLeftToday`), `dailyWheel` (l'id de la roue du jour encore à tourner, sinon null : § 4 ter), `gifts` (les dons d'un admin pas encore vus, du plus ancien : `{id, item, quantity, message}`, § 4 quater) |
+| `POST /shop/gifts/seen` `{ids}` | les dons d'un admin vus, leur message montré (1 à 100 ids ; ceux d'un autre joueur ignorés, idempotent) → 204 ; 422 sans id valable ; limiteur `shop_write` |
 | `GET /shop/rewards/unopened` | les coffres pas encore vus, du plus ancien (20 au plus), la session active d'abord réconciliée → `member` : `{id, crowns, paidMinutes, tier, capped, opened, balance, sessionId}` |
 | `POST /shop/rewards/{id}/open` | le coffre d'un gain vu (idempotent) → `{id, crowns, paidMinutes, tier, capped, opened, balance}` ; 404 pour celui d'un autre ; limiteur `shop_write` |
 | `GET /shop/daily-rewards/unopened` | les coffres pas encore vus (un badge, ou un jour d'avant la roue) et la roue du jour à tourner, du plus ancien (20 au plus) → `member` : `{id, localDate, streak, badgeDays, dailyCrowns, badgeCrowns, crowns, opened, wheel, wheelOpen, balance}` (`wheel` : `offered`, `spun`, `declined`, `off`, null avant la roue ; `wheelOpen` : à tourner aujourd'hui) |
@@ -274,8 +313,12 @@ Contrôleur simple, réponses JSON ; écritures sous le limiteur `admin_write` (
 | `POST /offers`, `PUT /offers/{id}` | créer, modifier (slug immuable ; pas de suppression : suspendre) |
 | `POST /slides`, `PUT /slides/{id}`, `DELETE /slides/{id}` | le carrousel |
 | `GET /players?search=` | joueurs (email, pseudo, nom ; sans recherche : les plus riches) : solde, dépensé |
-| `GET /players/{id}` | solde, inventaire, gels, mouvements |
+| `GET /players/{id}` | solde, inventaire, gels, mouvements, `grants` (les articles donnés : `{id, item, quantity, message, admin, everyone, createdAt, seenAt}`, § 4 quater) |
 | `POST /players/{id}/crowns` `{delta, reason}` | donner ou retirer (motif obligatoire) ; 409 sous zéro |
+| `POST /players/{id}/wheel-tickets` `{quantity, message}` | donner 1 à 100 tickets de roue, le message montré au joueur → sa fiche ; 404, 422 |
+| `GET /wheel-tickets/recipients` | `{count}` : les comptes actifs qu'un don à tous servirait |
+| `POST /wheel-tickets` `{quantity, message}` | donner des tickets à tous les comptes actifs → 201, la ligne de journal `{id, item, quantity, message, recipients, admin, createdAt}` ; 422 |
+| `GET /grant-batches` | `{batches}` : le journal des dons à tous, les 20 derniers |
 | `GET /reward-rule`, `PUT /reward-rule` `{crownsPerHour, perfectPercent, nearPercent, missedPercent, dailyMinutes}` | la règle des gains (§ 4 bis), avec la date et l'admin de la dernière modification |
 | `GET /wheel-rule`, `PUT /wheel-rule` `{c5, c30, c300, gift, lose, freezePercent}` | les chances de la roue (§ 4 ter) : des poids de 0 à 10 000, un au moins au-dessus de 0, la part du gel en %, avec la date et l'admin de la dernière modification |
 | `GET /stats?days=7\|30\|90` | totaux (en circulation, détenteurs, donné, retiré, gagné en session et sessions récompensées, dépensé, achats, acheteurs), ventes par offre, cristaux dépensés et gagnés par jour, articles détenus, jours de gel en stock |
@@ -298,7 +341,7 @@ Statistiques.
 ## 8. Tests
 
 `tests/Unit/Shop/{CatalogTest, RewardCalculatorTest, DailyRewarderTest}.php`, `tests/Unit/Gamification/StreakFreezeTest.php`,
-`tests/Functional/Shop/{ShopTest, AdminShopTest, SessionRewardTest, DailyRewardTest}.php`, les pardons et aides dans
+`tests/Functional/Shop/{ShopTest, AdminShopTest, SessionRewardTest, DailyRewardTest, TicketGrantTest}.php`, les pardons et aides dans
 `Functional/Puzzle/PardonTest.php`, `Functional/Blindfold/PuzzleRunTest.php`,
 `Functional/Coordinates/CoordinatesRunTest.php`, `Functional/PuzzleStreak/StreakRunTest.php` ;
 Vitest `shop.test.js`, `shop-reward.test.js` (dont le coffre du jour), `admin-shop.test.js`, `streak.test.js`, `use-blindfold-puzzle.test.js`,
@@ -307,6 +350,9 @@ donne des cristaux, achat d'un gel ; puzzle classé raté pardonné, pardon ache
 pardon à l'aveugle en jeu, acheté sur place, puzzle résolu ; session terminée : coffre ouvert en
 trois coups, solde, « Voir mes résultats », bilan et « Gagner des cristaux ») et
 `tests/e2e/streak.spec.js` (coffre du jour après la célébration du premier puzzle, coffre de
-badge resté non vu au dashboard). `closeRunEnd()`
+badge resté non vu au dashboard) et `tests/e2e/wheel-tickets.spec.js` (tickets donnés à un
+joueur depuis sa fiche : le message à la visite suivante, « Tourner la roue », plus montré après,
+« Vu le » chez l'admin ; tickets donnés à tous : confirmation, journal, « Plus tard » qui garde le
+ticket dans l'en-tête). `closeRunEnd()`
 ferme le coffre d'une session s'il précède le résultat. La commande e2e
 `app:e2e:seed-user --crowns=N` crée un joueur déjà riche.

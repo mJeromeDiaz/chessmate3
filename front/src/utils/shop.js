@@ -48,6 +48,13 @@ import { intlLocale, t } from '@/i18n'
  * @property {ShopFreeze[]} freezes
  * @property {ShopEarning} earning
  * @property {string|null} [dailyWheel] today's gift wheel still to spin (its daily reward's id)
+ * @property {ShopGift[]} [gifts] an admin's gifts not seen yet, the oldest first (§ 4 quater)
+ *
+ * @typedef {object} ShopGift
+ * @property {string} id
+ * @property {string} item
+ * @property {number} quantity
+ * @property {string} message written by the admin, for the player
  *
  * @typedef {object} ItemLook
  * @property {string} glyph
@@ -388,4 +395,21 @@ export function carouselSlides(state, picture) {
       ? [{ id: slide.id, tag: slide.tag, picture: picture(slide.image), offer }]
       : []
   })
+}
+
+/**
+ * An admin's gifts not seen yet, in one message (docs/SHOP.md, § 4 quater): the gift wheel
+ * tickets given, the messages (each once, in order).
+ *
+ * @param {ShopGift[]|null|undefined} gifts
+ * @returns {{tickets: number, messages: string[]}}
+ */
+export function giftsSummary(gifts) {
+  const list = gifts ?? []
+  return {
+    tickets: list
+      .filter(g => g.item === 'wheel_ticket')
+      .reduce((sum, g) => sum + g.quantity, 0),
+    messages: [...new Set(list.map(g => g.message.trim()).filter(Boolean))]
+  }
 }

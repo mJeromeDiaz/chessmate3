@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shop\Admin;
 
+use App\Shop\Gift\TicketGrants;
 use App\Shop\Inventory\Inventory;
 use App\Shop\Wallet\Wallets;
 use Doctrine\DBAL\Connection;
@@ -12,13 +13,14 @@ use Symfony\Component\Uid\Uuid;
 
 /**
  * Players' crowns for the admin (docs/SHOP.md): a search, then one player's balance, inventory,
- * freezes and ledger.
+ * freezes, ledger and the items given by an admin (§ 4 quater).
  *
  * @phpstan-import-type FreezeView from Inventory
+ * @phpstan-import-type GrantView from TicketGrants
  *
  * @phpstan-type PlayerRow array{id: string, email: string|null, displayName: string|null, handle: string|null, balance: int, spent: int}
  * @phpstan-type LedgerRow array{kind: string, delta: int, balanceAfter: int, offerName: string|null, quantity: int|null, reason: string|null, admin: string|null, createdAt: string}
- * @phpstan-type Detail array{player: PlayerRow, inventory: array<string, int>, freezes: list<FreezeView>, ledger: list<LedgerRow>}
+ * @phpstan-type Detail array{player: PlayerRow, inventory: array<string, int>, freezes: list<FreezeView>, ledger: list<LedgerRow>, grants: list<GrantView>}
  */
 final readonly class PlayerWallets
 {
@@ -29,6 +31,7 @@ final readonly class PlayerWallets
         private Connection $connection,
         private Wallets $wallets,
         private Inventory $inventory,
+        private TicketGrants $grants,
     ) {
     }
 
@@ -91,6 +94,7 @@ final readonly class PlayerWallets
                 'admin' => \is_string($l['admin']) ? $l['admin'] : null,
                 'createdAt' => \is_string($l['created_at']) ? str_replace(' ', 'T', $l['created_at']).'Z' : '',
             ], $ledger),
+            'grants' => $this->grants->ofPlayer($userId),
         ];
     }
 

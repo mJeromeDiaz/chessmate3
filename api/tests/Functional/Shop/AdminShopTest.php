@@ -33,7 +33,7 @@ final class AdminShopTest extends WebTestCase
     public function testAdminsOnly(): void
     {
         $alice = $this->createUser('alice@example.com');
-        foreach ([['GET', '/api/admin/shop/catalog'], ['GET', '/api/admin/shop/players'], ['GET', '/api/admin/shop/stats'], ['POST', '/api/admin/shop/offers'], ['GET', '/api/admin/shop/reward-rule'], ['PUT', '/api/admin/shop/reward-rule'], ['GET', '/api/admin/shop/wheel-rule'], ['PUT', '/api/admin/shop/wheel-rule']] as [$method, $uri]) {
+        foreach ([['GET', '/api/admin/shop/catalog'], ['GET', '/api/admin/shop/players'], ['GET', '/api/admin/shop/stats'], ['POST', '/api/admin/shop/offers'], ['GET', '/api/admin/shop/reward-rule'], ['PUT', '/api/admin/shop/reward-rule'], ['GET', '/api/admin/shop/wheel-rule'], ['PUT', '/api/admin/shop/wheel-rule'], ['GET', '/api/admin/shop/wheel-tickets/recipients'], ['POST', '/api/admin/shop/wheel-tickets'], ['GET', '/api/admin/shop/grant-batches'], ['POST', '/api/admin/shop/players/'.$alice->getId()->toRfc4122().'/wheel-tickets']] as [$method, $uri]) {
             self::assertSame(403, $this->call($alice, $method, $uri, [])->getStatusCode(), $uri);
         }
     }

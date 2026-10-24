@@ -203,6 +203,17 @@ export const useShopStore = defineStore('shop', () => {
     ticketWheel.value = false
   }
 
+  /**
+   * An admin's gifts not seen yet (docs/SHOP.md, § 4 quater), their message just shown: gone from
+   * the state at once; never rejects (a failure brings them back with the next reading).
+   */
+  async function markGiftsSeen() {
+    const ids = (state.value?.gifts ?? []).map(g => g.id)
+    if (!state.value || !ids.length) return
+    state.value = { ...state.value, gifts: [] }
+    await shopApi.markGiftsSeen(ids).catch(() => {})
+  }
+
   /** The daily chest on screen left (opened or not): the next one, or the player goes on. */
   function nextDailyChest() {
     dailyChests.value = dailyChests.value.slice(1)
@@ -231,6 +242,7 @@ export const useShopStore = defineStore('shop', () => {
     openTicketWheel,
     openWheel,
     closeHandWheel,
-    closeTicketWheel
+    closeTicketWheel,
+    markGiftsSeen
   }
 })
