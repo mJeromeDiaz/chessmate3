@@ -11,7 +11,7 @@ import { t } from '@/i18n'
  * @typedef {{uci: string, result: Result|null, dtm: number|null, dtz: number|null, zeroing: boolean}} TablebaseMove
  * @typedef {{fen: string, known: boolean, result: Result|null, dtm: number|null, dtz: number|null, checkmate: boolean, stalemate: boolean, insufficientMaterial: boolean, moves: TablebaseMove[], defence: string[]}} TablebaseAnswer
  *   GET /endgames/tablebase; a move's `result` is for the side playing it
- * @typedef {'won'|'held'|'spoiled'|'overtime'|'resigned'} Outcome
+ * @typedef {'won'|'held'|'spoiled'|'overtime'|'resigned'|'timeout'} Outcome
  */
 
 const RANK = { win: 2, draw: 1, loss: 0 }
@@ -224,16 +224,59 @@ export function endgameFeedback(result, fen, shownMove = null) {
     }),
     resigned: move
       ? t('endgame.feedback.subs.resigned', { move })
-      : t('endgame.feedback.subs.resignedNoMove')
+      : t('endgame.feedback.subs.resignedNoMove'),
+    // The Roi des cendres' clock out (docs/ENDGAMES.md, § 10).
+    timeout: t('endgame.feedback.subs.timeout')
   }
   return {
     kind: /** @type {'win'|'miss'} */ (success ? 'win' : 'miss'),
     // The win kept, too slowly: the yellow sheet.
     palette: /** @type {'help'|null} */ (status === 'overtime' ? 'help' : null),
-    badge: success ? '!' : status === 'overtime' ? '⏱︎' : '?',
+    badge: success
+      ? '!'
+      : status === 'overtime' || status === 'timeout'
+        ? '⏱︎'
+        : '?',
     title: t(`endgame.feedback.titles.${status}`),
     sub: subs[status],
     kicker: t('endgame.feedback.kicker'),
     bubble: t(`endgame.feedback.bubbles.${status}`)
   }
+}
+
+/** A demonstration stops after this many half-moves at most. */
+export const DEMO_MAX_PLIES = 120
+
+/**
+ * A move of a demonstration (docs/ENDGAMES.md, § 9): the player's side plays the first move that
+ * keeps the lesson's result (the tablebase's order: the fastest mate or promotion, a move holding
+ * the draw), the other side the best defence (the server's), else the tablebase's first move.
+ *
+ * @param {TablebaseAnswer} answer the position's
+ * @param {boolean} mine the player's side to move
+ * @param {Result} wanted the lesson's result for the player
+ * @returns {string|null} UCI, null when there is none
+ */
+export function demoMove(answer, mine, wanted) {
+  if (mine) return keepingMoves(answer, wanted)[0] ?? null
+  return answer.defence[0] ?? answer.moves[0]?.uci ?? null
+}
+
+/**
+ * Whether a demonstration ends after this move: the lesson's goal reached (as the game judges it),
+ * the game over, or its length at most.
+ *
+ * @param {{goal: Goal, holdMoves: number|null}} lesson
+ * @param {Chess} game after the move
+ * @param {import('chess.js').Move} move
+ * @param {boolean} mine
+ * @param {number} playerMoves the player's side's moves so far
+ * @param {number} plies the half-moves so far
+ */
+export function demoOver(lesson, game, move, mine, playerMoves, plies) {
+  return (
+    reached(lesson, game, move, mine, playerMoves) !== null ||
+    game.isGameOver() ||
+    plies >= DEMO_MAX_PLIES
+  )
 }

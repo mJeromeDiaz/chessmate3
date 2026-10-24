@@ -34,30 +34,45 @@
               />
             </div>
             <div class="endgames-page__lessons">
-              <button
+              <span
                 v-for="lesson in lessonsOf(family)"
                 :key="lesson.key"
-                type="button"
-                class="endgames-page__lesson"
-                :class="{
-                  'endgames-page__lesson--on': chosen.includes(lesson.key)
-                }"
-                :aria-pressed="chosen.includes(lesson.key)"
-                :data-testid="`endgame-lesson-${lesson.key}`"
-                @click="toggleLesson(lesson.key)"
+                class="endgames-page__lesson-wrap"
               >
-                <span class="endgames-page__lesson-title">{{
-                  lessonTitle(lesson.key)
-                }}</span>
-                <span class="endgames-page__lesson-meta">{{
-                  lesson.played
-                    ? $t('endgame.page.results', {
-                        succeeded: lesson.succeeded,
-                        played: lesson.played
-                      })
-                    : $t('endgame.page.neverPlayed')
-                }}</span>
-              </button>
+                <button
+                  type="button"
+                  class="endgames-page__lesson"
+                  :class="{
+                    'endgames-page__lesson--on': chosen.includes(lesson.key)
+                  }"
+                  :aria-pressed="chosen.includes(lesson.key)"
+                  :data-testid="`endgame-lesson-${lesson.key}`"
+                  @click="toggleLesson(lesson.key)"
+                >
+                  <span class="endgames-page__lesson-title">{{
+                    lessonTitle(lesson.key)
+                  }}</span>
+                  <span class="endgames-page__lesson-meta">{{
+                    lesson.played
+                      ? $t('endgame.page.results', {
+                          succeeded: lesson.succeeded,
+                          played: lesson.played
+                        })
+                      : $t('endgame.page.neverPlayed')
+                  }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="endgames-page__demo"
+                  :aria-label="
+                    $t('endgame.demo.of', { lesson: lessonTitle(lesson.key) })
+                  "
+                  :data-testid="`endgame-demo-${lesson.key}`"
+                  @click="demo = lesson"
+                >
+                  <q-icon name="play_arrow" size="18px" />
+                </button>
+              </span>
             </div>
           </q-card-section>
         </q-card>
@@ -123,17 +138,35 @@
         </q-card>
       </div>
     </div>
+
+    <q-dialog
+      :model-value="!!demo"
+      :maximized="$q.screen.lt.sm"
+      @hide="demo = null"
+    >
+      <EndgameDemo
+        v-if="demo"
+        :lesson-key="demo.key"
+        :fen="demo.textbook"
+        :goal="demo.goal"
+        :result="demo.result"
+        :hold-moves="demo.holdMoves"
+        @close="demo = null"
+      />
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
 /**
- * The endgames module's own page (docs/ENDGAMES.md, § 9): the lessons by theme with my results,
- * the mode (learn or review), Maia's Elo (« Parfait » at the top: the tablebase's defence), and
- * the run's length. Maia starts downloading as the page opens, before the first move, unless the
- * slider is at « Parfait ».
+ * The endgames module's free page, `/finales/libre` (docs/ENDGAMES.md, § 9; `/finales` is the
+ * path): the lessons by theme with my results, the mode (learn or review), Maia's Elo (« Parfait »
+ * at the top: the tablebase's defence), and the run's length; ▶ beside a lesson plays its
+ * demonstration (its textbook position). Maia starts downloading as the page opens, before the
+ * first move, unless the slider is at « Parfait ».
  */
 import { computed, onMounted, ref, watch } from 'vue'
+import EndgameDemo from '@/components/endgame/EndgameDemo.vue'
 import RunLauncher from '@/components/training/RunLauncher.vue'
 import { useMaia } from '@/composables/maia/useMaia'
 import { endgameApi } from '@/services/api'
@@ -165,6 +198,8 @@ const mode = ref('learn')
 const elo = ref(1500)
 /** @type {import('vue').Ref<string[]>} lesson keys */
 const chosen = ref([])
+/** @type {import('vue').Ref<any>} the lesson whose demonstration plays */
+const demo = ref(null)
 
 const subjectId = computed(() => /** @type {any} */ (auth.profile)?.id ?? null)
 const perfect = computed(
@@ -296,6 +331,28 @@ onMounted(async () => {
     background: #ffebdd;
     color: #1b1530;
   }
+
+  &:focus-visible {
+    outline: 3px solid var(--cm-brand);
+    outline-offset: 2px;
+  }
+}
+
+.endgames-page__lesson-wrap {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.endgames-page__demo {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  border: 2px solid var(--cm-line);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--cm-lime-ink);
+  cursor: pointer;
 
   &:focus-visible {
     outline: 3px solid var(--cm-brand);

@@ -486,9 +486,47 @@
       :result="endgameResult"
       :xp="runner.xp.value"
       :actions="endgameActions"
+      :offset-ms="runner.offsetMs.value"
       @resolve="onEndgameResolve"
     >
-      <template #header>
+      <!-- A step of the endgames path: its positions and its lives, no clock (docs/ENDGAMES.md). -->
+      <template v-if="endgameItem.data.count" #header>
+        <div class="row items-center q-gutter-sm">
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            $t('training.page.endgamePathProgress', {
+              n: endgameItem.data.index,
+              count: endgameItem.data.count
+            })
+          }}</div>
+          <div
+            v-if="endgameLives !== null"
+            class="row items-center text-red-6"
+            data-testid="endgame-lives"
+            :data-lives="endgameLives"
+          >
+            <q-icon
+              v-for="i in endgameLivesTotal"
+              :key="i"
+              size="22px"
+              :name="i <= endgameLives ? 'favorite' : 'heart_broken'"
+            />
+          </div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+      <template v-else #header>
         <RunHeader
           :remaining-ms="runner.remainingMs.value"
           :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
@@ -1059,6 +1097,15 @@ const endgameResult = computed(() =>
   endgameItem.value && runner.result.value?.itemId === endgameItem.value.id
     ? runner.result.value.data
     : null
+)
+/** A path's boss: its lives left, null without lives. */
+const endgameLives = computed(() => {
+  const lives = endgameResult.value?.lives ?? endgameItem.value?.data.lives
+  return typeof lives === 'number' ? lives : null
+})
+/** Its lives at the start: those left and those spent. */
+const endgameLivesTotal = computed(
+  () => (endgameLives.value ?? 0) + runner.played.value - runner.solved.value
 )
 const endgameActions = computed(() => [
   {

@@ -8,6 +8,8 @@ import {
   bossName,
   chapterNodes,
   chapterProgress,
+  BOSS_GLYPHS,
+  chestNote,
   chestReward,
   currentStep,
   findPlace,
@@ -26,6 +28,7 @@ import {
   refusalText,
   sectionTitle,
   standingImage,
+  stepDesc,
   stepTitle
 } from '@/utils/mindMapPath'
 
@@ -102,6 +105,32 @@ describe('mind map path', () => {
     expect(mapKey('visualisation')).toBe('visualization')
     expect(pathPage('visualisation')).toBe('/cerveau/visualization')
     expect(pathPage('nope')).toBe('/cerveau')
+    // The endgames path has its own page, off the brain.
+    expect(pathPage('endgames')).toBe('/finales')
+  })
+
+  it('names the endgames path’s lessons by the module’s texts, its bosses by the path’s', () => {
+    expect(stepTitle('endgames', 'kqk')).toBe('Mat avec la dame')
+    expect(stepDesc('endgames', 'kqk')).toMatch(/^Joue ta dame/)
+    expect(stepTitle('endgames', 'mates-boss')).toBe('Le Bourreau')
+    expect(stepTitle('endgames', 'pawns-basics-boss')).toBe(
+      'Le Gardien des pions'
+    )
+    expect(
+      bossName(
+        step('ashes-boss', 'boss', 'open', { character: 'roi-cendres' })
+      )
+    ).toBe('Le Roi des cendres')
+    expect(
+      chestNote('endgames', {
+        id: 'c',
+        step: 'rooks-boss',
+        crystals: 180,
+        opened: false
+      })
+    ).toBe('Finales · Le Maître des tours')
+    expect(badgeName('boss_roi_cendres')).toBe('Le Roi des cendres vaincu')
+    expect(badgeName('endgames_mastered')).toBe('Toutes les finales maîtrisées')
   })
 
   it('names steps, sections and bosses from their keys', () => {
@@ -246,6 +275,12 @@ describe('mind map path', () => {
     expect(standingImage('dragon')).toBe('')
     expect(moodImage(null, 'joy')).toBe('')
     expect(bossImage('metronome')).toContain('cyclope.png')
+    // The Roi des cendres wears the shark's faces for now; the endgames' others stand as a piece.
+    expect(moodImage('roi-cendres', 'pride')).toContain('requin-fierte.png')
+    expect(standingImage('roi-cendres')).toContain('requin-pose.png')
+    expect(moodImage('bourreau', 'joy')).toBe('')
+    expect(BOSS_GLYPHS.bourreau).toBe('♛')
+    expect(BOSS_GLYPHS['cavalier-errant']).toBe('♞')
     expect(fr.characters.metronome.name).toBe('Le Métronome')
   })
 

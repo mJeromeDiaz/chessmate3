@@ -19,10 +19,10 @@ touche pas au classement : il ne rapporte que de l'XP.
 
 Lots : **E1** troisième base et tablebase (fait), **E2a** leçons, variantes, réserve de positions et
 route de la tablebase (fait), **E2b** module (séries, jugement, XP) (fait), **E3** Maia dans le navigateur (fait, [ENGINE.md](ENGINE.md) § 5),
-**E4** front (page `/finales`, tuile du créateur de séance, § 8 et § 9) (fait), **E5** e2e et docs.
+**E4** front (page libre, aujourd'hui `/finales/libre`, tuile du créateur de séance, § 8 et § 9) (fait), **E5** e2e et docs (fait, § 6).
 Puis le **parcours** (§ 10, maquette Claude Design « Parcours echiqueens », validé le 2026-10-23) :
-**P1** API du parcours (fait), **P2** API du Roi des cendres (écrit), **P3** page des parcours, **P4** le
-combat du Roi des cendres, **P5** e2e et docs.
+**P1** API du parcours (fait), **P2** API du Roi des cendres (fait), **P3** page du parcours (fait), **P4** le
+combat du Roi des cendres (fait), **P5** e2e et docs (fait, § 6).
 
 ## 1. Où est le code
 
@@ -211,10 +211,32 @@ séance (la position, la partie et la correction), l'export du profil (`endgameA
   Réviser au niveau « Parfait »), `OverviewTest` (la route de la page libre, les résultats du seul
   joueur, l'Elo proposé, la route de la tablebase non capturée), avec `MockHttpClient` ou des réponses posées dans le cache
   (`KeptAnswersTrait`). Unitaires aussi : `EndgameRulesTest` (coups permis, durées, XP). Aucun test n'atteint Lichess.
+- Vitest (`front/tests/unit/`) : `endgame.test.js` (le jeu, le jugement par Stockfish, la
+  démonstration), `endgame-path.test.js` (états des leçons, étape conseillée), `ashes.test.js` (chrono,
+  effets par palier, mouvement réduit).
+- e2e (Playwright, `front/tests/e2e/`) : la base e2e ne garde aucune réponse de la tablebase et le
+  serveur ne juge qu'avec celles qu'il a gardées. Les appels du navigateur à `GET
+  /endgames/tablebase` sont donc interceptés (`tests/e2e/endgames.js`), jamais Lichess, et Maia
+  n'est pas téléchargé :
+  - pour jouer une série, la tablebase répond **503** (`tablebaseDown`). Stockfish juge dans le
+    navigateur (il faut `npm run engine:fetch`), son verdict part avec la partie et la série reste
+    réelle sur le serveur (`engineJudged`) ;
+  - pour une démonstration, qui n'est que de l'affichage, des réponses écrites à la main
+    (`tablebaseOfPawnRace` : les poussées de pion gardent le gain, le premier coup légal des Noirs
+    est la défense).
+
+  `endgames.spec.js` (la page libre) : la course de pions de « square-promote » gagnée contre
+  « Parfait » ; sur « kqk », Dd4+?? qui rate la position, puis la démonstration indisponible ; la
+  démonstration ▶ jouée jusqu'à a8=D. `endgame-path.spec.js` (le parcours) : les 7 mini-parcours
+  et le Roi des cendres ; l'étape conseillée : le boss des mats une fois leurs leçons connues (semées par
+  `app:e2e:seed-user --mind-map-capacity=endgames --mind-map-steps=…`), la première leçon des pions
+  une fois ce boss battu ; le détail d'une leçon et sa démonstration ; le Roi des cendres avec mouvement réduit :
+  10 positions, 3 vies, le chrono qui décompte, « Passer » qui coûte une vie, puis la position 2 et
+  ses 82 s. Le chrono dépassé est couvert par PHPUnit seulement : le temps appartient au serveur.
 
 ## 7. La page libre (`GET /endgames`)
 
-Ce que la page `/finales` montre avant de lancer une série (joueurs connectés seulement ; une série
+Ce que la page libre (`/finales/libre`) montre avant de lancer une série (joueurs connectés seulement ; une série
 laissée en plan est d'abord fermée, pour que ses positions comptent) :
 
 - `rules` : les durées (`runMinutes`, `defaultMinutes`), le curseur (`minElo` 800, `maxElo` 2600 =
@@ -222,8 +244,8 @@ laissée en plan est d'abord fermée, pour que ses positions comptent) :
   `perfect` 35, `failed` 2) ;
 - `elo` : l'Elo de Maia proposé, le classement puzzles du joueur (1500 sans classement) arrondi à
   100, entre 800 et 2500 (« Parfait » se choisit, il n'est jamais proposé) ;
-- `lessons` : les leçons dans l'ordre du catalogue, `key`, `family`, `goal`, `result`, `holdMoves`
-  (les buts `hold` seulement), `variants` (les variantes en réserve, la position de manuel non
+- `lessons` : les leçons dans l'ordre du catalogue, `key`, `family`, `goal`, `result`, `textbook`
+  (la position de manuel, pour la démonstration), `holdMoves` (les buts `hold` seulement), `variants` (les variantes en réserve, la position de manuel non
   comptée), et les résultats du joueur : `played` (positions jouées jusqu'au bout), `succeeded`
   (gagnées ou tenues), `lastPlayedAt`.
 
@@ -253,8 +275,8 @@ de `front/src/utils/endgame.js` (le jumeau du `GameJudge` du serveur) :
 
 ## 9. Les écrans
 
-- **La page `/finales`** (`front/src/pages/index/finales/index.vue`, lien « Finales » du menu,
-  entraînement libre) : les leçons par thème, à cocher (« Tout » coche ou décoche un thème), avec
+- **La page libre `/finales/libre`** (`front/src/pages/index/finales/libre.vue`, bouton
+  « Entraînement libre » de la page du parcours ; `/finales` est le parcours, § 10) : les leçons par thème, à cocher (« Tout » coche ou décoche un thème), avec
   les résultats du joueur (`réussies / jouées`) ; le mode (Apprendre, Réviser) ; l'adversaire (le
   curseur, l'Elo proposé par `GET /endgames`, « Parfait » tout en haut) et l'XP qu'il rapporte ; la
   durée (2, 5, 10 ou 15 min). Les leçons choisies sont retenues dans le navigateur
@@ -269,6 +291,22 @@ de `front/src/utils/endgame.js` (le jumeau du `GameJudge` du serveur) :
   le résultat s'envole, trop de coups, passée) : la position ratée revient où le bon coup était à
   jouer, la flèche rouge du coup joué, la verte du bon. Une soumission refusée fait rejouer la
   position depuis le début.
+- **La démonstration** (demandée le 2026-10-24 ; `front/src/components/endgame/EndgameDemo.vue`,
+  `composables/endgame/useEndgameDemo.js`) : la meilleure suite des deux camps, jouée sur un
+  échiquier qu'on ne peut pas bouger, un demi-coup par seconde, avec Pause, coup précédent, coup
+  suivant, Recommencer et la liste des coups (dans la langue du joueur ; un coup cliqué y mène).
+  Elle se calcule pendant qu'elle se joue, une position à la fois par `GET /endgames/tablebase`
+  (le même limiteur et les mêmes réponses gardées que les parties) : le camp du joueur joue le
+  premier coup qui garde le résultat (l'ordre de Lichess : le mat ou la promotion le plus rapide,
+  un coup qui tient la nulle), l'autre la meilleure défense (`demoMove`) ; elle s'arrête au but de
+  la leçon, comme le jeu (`demoOver` : mat, promotion, nulle tenue après `holdMoves` coups), à la
+  fin de la partie ou après 120 demi-coups. Lichess indisponible : elle s'arrête là, avec un
+  message (pas de Stockfish). Rien ne compte. Trois boutons : « Démonstration » dans le détail
+  d'une leçon du parcours et ▶ à côté de chaque leçon de la page libre (sa position de manuel,
+  `textbook` de `GET /endgames`) ; « Démonstration » à côté d'« Aide » en mode Apprendre (la
+  position servie ; refermée, la position repart de son début, le chrono d'une série libre
+  continuant) ; « Voir la démonstration » sur la fiche d'une position ratée (tous modes), jamais
+  contre le Roi des cendres.
 - **Le créateur de séance** : la tuile « Finales » de Lizy (`catalog.js`, id `finales`, module
   `endgames`) : durée parmi celles de l'API, mode, thèmes (`basicMates`, `pawns`, `queens`,
   `rooks`, `bishops`, `knights` ; l'ancien « Pièces mineures » devient fous et cavaliers), Elo de
@@ -276,7 +314,9 @@ de `front/src/utils/endgame.js` (le jumeau du `GameJudge` du serveur) :
   attendant).
 - **Ailleurs** : le récapitulatif de la série (gagnées, tenues, ratées, jugées par Stockfish), la
   revue de fin de séance (la leçon et son verdict, sans rejouer la position), la ligne « Finales »
-  du tableau de bord (positions jouées, part réussie, lien vers `/finales`).
+  du tableau de bord (positions jouées, part réussie, lien vers le parcours `/finales`). Une série
+  libre ramène à `/finales/libre`, un pas du parcours à son verdict (`RunOutcome`), puis au
+  parcours.
 
 ## 10. Le parcours
 
@@ -336,7 +376,71 @@ absent du cerveau. **Rien n'est jamais verrouillé** : ses chapitres sont libres
   - **Les coups permis** (`EndgameRules::ashesBudget()`) : la longueur parfaite + 25 % (au moins
     2 coups) jusqu'à la 5e position, + 10 % (au moins 1) dès la 6e ; 40 sans DTM.
   - **La position servie** porte en plus `clockSeconds`, `deadline` (l'échéance, UTC) et `tier`,
-    le palier des distractions (1 : positions 1 à 3 ; 2 : 4 à 6 ; 3 : 7 à 10), que le front
-    joue (lot P4) : tremblements, pluie, tonnerre ; éclairs, coups parasites, fausses flèches ;
-    pièces effacées, échiquier retourné. Hors du Roi, ces trois champs sont `null`.
+    le palier des distractions (1 : positions 1 à 3 ; 2 : 4 à 6 ; 3 : 7 à 10). Hors du Roi, ces
+    trois champs sont `null`.
+  - **Le chrono dans le navigateur** (`EndgamePlayer`, `front/src/utils/ashes.js`) : lu sur
+    l'horloge du serveur (`deadline` moins l'heure locale corrigée de `offsetMs`), il reprend
+    après un rechargement, rougit sous 10 s et tique (son synthétisé) sous 5 s. À zéro, la partie
+    s'arrête (`useEndgameGame.timeUp()`, « Temps écoulé ! ») et part 2,5 s après l'échéance,
+    comme abandonnée (`pass`) : le serveur la trouve en retard et la juge `timeout` ; une horloge
+    locale en avance la ferait juger abandonnée, un échec aussi, jamais un refus. L'adversaire
+    répond sans la pause de 500 ms des autres positions. La fiche dit « Temps écoulé » (⏱︎).
+  - **Les distractions** (`front/src/components/endgame/AshesDistractions.vue`, autour de
+    l'échiquier) : la pluie par averses (de 6 à 10 s, après 8 à 14 s au sec, la première
+    après 1 à 4 s ; choisi le 2026-10-24 : jamais tout du long) — une quarantaine de gouttes
+    fines et légères sur deux plans, de petits éclaboussements, la pluie synthétisée pendant
+    l'averse —, puis un effet tiré à chaque intervalle (`drawEffect`) parmi ceux du palier, chacun gardant ceux d'avant :
 
+    | Palier | Toutes les | Effets ajoutés |
+    |---|---|---|
+    | 1 | 4 s | tremblement, pièces qui traversent, tonnerre (`thunder.mp3` et un voile sombre) |
+    | 2 | 3 s | éclair, son de coup parasite, fausse flèche (un coup légal au hasard, 1,5 s, du style de l'aide) |
+    | 3 | 2 s | cendres sur 1 ou 2 pièces (2 s), échiquier retourné (3 s, le joueur peut jouer) |
+
+    Photosensibilité, pour tous : un éclair toutes les 4 s au plus, un seul éclat de 0,5 s, sur
+    l'échiquier seulement, opacité 0,7 au plus, jamais blanc pur. Quand le système demande moins
+    d'animations (`prefers-reduced-motion`, choisi le 2026-10-24, sans interrupteur dans l'app),
+    ni éclair, ni tremblement, ni pièces volantes, ni retournement : restent la pluie immobile
+    (des gouttes figées, pendant les averses),
+    le son du tonnerre, les sons parasites, les fausses flèches et les cendres. Les sons
+    synthétisés (`front/src/utils/ashesSounds.js` : pluie, tic, souffle du retournement)
+    suivent la préférence « Sons ». Pas de musique propre au Roi pour l'instant.
+
+### La page du parcours (`/finales`)
+
+`front/src/pages/index/finales/index.vue` (lien « Finales » du menu), d'après la maquette « Parcours
+echiqueens », aux couleurs claires et sombres de l'app et au citron vert des finales ; la logique
+pure est dans `front/src/utils/endgamePath.js`.
+
+- **L'en-tête** : « Finales », les leçons maîtrisées sur 27 et les boss battus sur 8, une barre de
+  progression, « Entraînement libre » (`/finales/libre`) et « ? », la légende des états.
+- **Une carte par mini-parcours** (`components/endgame/path/EndgamePathCard.vue`) : ses leçons
+  reliées par un trait, éclairé jusqu'à la dernière leçon connue, puis son boss ; une rangée quand
+  la carte a la place (requête de conteneur, 860 px), une colonne sinon. Le nœud d'une leçon dit
+  son état : « À commencer » (contour, ▶), « En cours · 1/10 » et « Connue · n/10 » (l'anneau des
+  passages), « Maîtrisée » (plein, ✓). Les boss sans image sont une pièce (`BOSS_GLYPHS` de
+  `mindMapPath.js` : ♛ le Bourreau, ♟ le Gardien, ♚ l'Horloger, ♛ la Reine noire, ♜ le Maître des
+  tours, ♝ le Duelliste, ♞ le Cavalier errant), aussi sur l'écran de victoire (`BossPortrait`) ;
+  une image la remplacera.
+- **Le Roi des cendres** : une grande carte sous les sept (`EndgameAshesCard.vue`), le requin en
+  attendant le sien (`moodImage` / `standingImage` : `roi-cendres` → `requin`).
+- **L'étape conseillée** (`nextStep()`, choisie le 2026-10-24), une étoile sur son nœud, montrée
+  en entier tant que le joueur n'en choisit pas une autre : dans l'ordre de la page, la première
+  leçon pas encore connue (moins de 2 passages) ; un mini-parcours dont toutes les leçons sont
+  connues propose son boss s'il n'est pas battu ; puis le Roi des cendres ; tout connu et battu, la
+  première leçon pas maîtrisée.
+- **Le détail** (`EndgameStepDetail.vue`) : dans la colonne de droite sur un grand écran, dans une
+  feuille du bas sur un téléphone. Le fil (« Finales · Tours »), le titre, l'état ; pour une leçon,
+  l'explication de Lizy, les passages, le mode du prochain passage (Apprendre la première fois,
+  Réviser ensuite) ; pour un boss, son portrait, ses répliques, les leçons d'où viennent ses
+  positions, ses règles (et le chrono du Roi) ; les récompenses ; « Commencer », « Réviser » ou
+  « Affronter le boss » (`POST /mind-map/endgames/steps/{clé}/start`, puis la page de séance avec
+  `?mindMap=1`). Maia se télécharge quand une leçon est affichée (les boss jouent la défense
+  parfaite). Sous le détail : les badges du parcours et la règle.
+- **Les coffres** des boss pas encore ouverts s'ouvrent à l'arrivée (`TreasureChest`, « Finales ·
+  le boss »).
+- **La séance d'un pas** : « Position n sur N » et, pour un boss, les vies restantes, sans le
+  chrono de la séance (sa demi-heure n'est qu'une expiration) ; le Roi des cendres a son chrono
+  par position, près de l'échiquier.
+  Les textes des boss sont dans `mindMapPath.characters` et `mindMapPath.endgames`, ceux des
+  leçons restent ceux du module (`endgame.lessons`, `stepTitle()` / `stepDesc()`).

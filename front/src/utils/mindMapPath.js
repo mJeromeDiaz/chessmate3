@@ -89,11 +89,26 @@ export function messageKey(key) {
   return `s${key.replaceAll('-', '_')}`
 }
 
+/** The endgames path (docs/ENDGAMES.md, § 10): its page is the endgames' own, not the brain's. */
+export const ENDGAMES = 'endgames'
+
+/**
+ * A lesson of the endgames path: its step's key is the lesson's, its texts the module's (bosses
+ * end with "-boss").
+ *
+ * @param {string} capacity the API's
+ * @param {string} key a step's
+ */
+function isEndgameLesson(capacity, key) {
+  return capacity === ENDGAMES && !key.endsWith('-boss')
+}
+
 /**
  * @param {string} capacity the API's
  * @param {string} key a step's
  */
 export function stepTitle(capacity, key) {
+  if (isEndgameLesson(capacity, key)) return t(`endgame.lessons.${key}.title`)
   return t(`mindMapPath.${capacity}.steps.${messageKey(key)}.title`)
 }
 
@@ -102,6 +117,7 @@ export function stepTitle(capacity, key) {
  * @param {string} key a step's
  */
 export function stepDesc(capacity, key) {
+  if (isEndgameLesson(capacity, key)) return t(`endgame.lessons.${key}.text`)
   return t(`mindMapPath.${capacity}.steps.${messageKey(key)}.desc`)
 }
 
@@ -137,8 +153,37 @@ export const CHARACTERS = [
   'flash',
   'metronome',
   'compteur',
-  'avocat'
+  'avocat',
+  'bourreau',
+  'gardien',
+  'horloger',
+  'reine-noire',
+  'maitre-tours',
+  'duelliste',
+  'cavalier-errant',
+  'roi-cendres'
 ]
+
+/**
+ * The bosses without a picture yet that stand as a piece (design « Parcours echiqueens »): the
+ * endgames path's.
+ */
+export const BOSS_GLYPHS = /** @type {Record<string, string>} */ ({
+  bourreau: '♛',
+  gardien: '♟',
+  horloger: '♚',
+  'reine-noire': '♛',
+  'maitre-tours': '♜',
+  duelliste: '♝',
+  'cavalier-errant': '♞'
+})
+
+/**
+ * The folder of expressions standing in for a boss (the Roi des cendres: the shark for now).
+ */
+const STAND_INS = /** @type {Record<string, string>} */ ({
+  'roi-cendres': 'requin'
+})
 
 /**
  * A boss's name: its character's, else its kind's ("Mini-boss").
@@ -216,9 +261,8 @@ export const POSE_MOODS = /** @type {Record<string, Mood>} */ ({
  * @param {Mood} mood
  */
 export function moodImage(character, mood) {
-  return character
-    ? bossFile(`${character}-${MOODS[mood] ?? MOODS.neutral}`)
-    : ''
+  const name = character ? (STAND_INS[character] ?? character) : null
+  return name ? bossFile(`${name}-${MOODS[mood] ?? MOODS.neutral}`) : ''
 }
 
 /**
@@ -227,7 +271,8 @@ export function moodImage(character, mood) {
  * @param {string|null} character
  */
 export function standingImage(character) {
-  return character ? bossFile(`${character}-pose`) : ''
+  const name = character ? (STAND_INS[character] ?? character) : null
+  return name ? bossFile(`${name}-pose`) : ''
 }
 
 /** @param {string|null} character */
@@ -474,7 +519,12 @@ export function chestReward(chest) {
  * @param {PathChest} chest
  */
 export function chestNote(capacity, chest) {
-  return t('mindMapPath.chestNote', { title: stepTitle(capacity, chest.step) })
+  return t(
+    capacity === ENDGAMES
+      ? 'mindMapPath.endgames.chestNote'
+      : 'mindMapPath.chestNote',
+    { title: stepTitle(capacity, chest.step) }
+  )
 }
 
 /**
@@ -495,6 +545,7 @@ export function mapKey(capacity) {
  * @param {string} capacity the API's
  */
 export function pathPage(capacity) {
+  if (capacity === ENDGAMES) return '/finales'
   const key = mapKey(capacity)
   return key ? `/cerveau/${key}` : '/cerveau'
 }

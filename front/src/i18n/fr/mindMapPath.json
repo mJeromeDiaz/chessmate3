@@ -140,7 +140,9 @@
     "hidden": "Secret {n}",
     "boss_metronome": "Dans le tempo",
     "boss_compteur": "Le compte est bon",
-    "boss_avocat": "Plaidoirie gagnée"
+    "boss_avocat": "Plaidoirie gagnée",
+    "boss_roi_cendres": "Le Roi des cendres vaincu",
+    "endgames_mastered": "Toutes les finales maîtrisées"
   },
   "generic": {
     "tagline": "Un gardien de section : il vérifie que tu as bien retenu.",
@@ -225,6 +227,62 @@
       "taunt": "Votre idée est séduisante. Défendez-la.",
       "defeat": "Objection rejetée : ton idée tenait.",
       "win": "Ton idée ne résiste pas à l’examen."
+    },
+    "bourreau": {
+      "name": "Le Bourreau",
+      "tagline": "Il ne laisse jamais un roi seul s’échapper… et compte tes coups jusqu’au mat.",
+      "taunt": "Un roi tout seul au milieu de l’échiquier. Saurais-tu seulement le pousser au bord ?",
+      "defeat": "Mat, et proprement. Je range ma hache.",
+      "win": "Pat, ou trop lent : le roi court encore !"
+    },
+    "gardien": {
+      "name": "Le Gardien des pions",
+      "tagline": "Il veille sur les cases clés et connaît chaque opposition par cœur.",
+      "taunt": "Un pion de plus ne suffit pas. Montre-moi que tu sais le faire passer.",
+      "defeat": "Tu as pris l’opposition au bon moment. Passe.",
+      "win": "Ton roi a cédé la case. Le pion ne passera pas."
+    },
+    "horloger": {
+      "name": "L’Horloger",
+      "tagline": "Pour lui, une finale de pions est une affaire de temps : un seul temps de trop, et tout bascule.",
+      "taunt": "Tic, tac. As-tu bien compté tes temps ?",
+      "defeat": "Réglé comme une horloge. Je m’incline.",
+      "win": "Un temps de retard. Tout est perdu."
+    },
+    "reine-noire": {
+      "name": "La Reine noire",
+      "tagline": "Elle règne sur les finales de dames, entre échecs perpétuels et pions qui vont à dame.",
+      "taunt": "Ma dame contre la tienne… ou contre ton pion. Qui tient le plus longtemps ?",
+      "defeat": "Tu as tenu ta dame d’une main ferme. Je te salue.",
+      "win": "Échec, et encore échec : ta position s’effondre."
+    },
+    "maitre-tours": {
+      "name": "Le Maître des tours",
+      "tagline": "Lucena, Philidor, Vancura : il connaît toutes les positions de tours, et les piège toutes.",
+      "taunt": "Les finales de tours sont toutes nulles, dit-on. Prouve-le… ou prouve le contraire.",
+      "defeat": "Pont, coupure, échecs par derrière : tout y était.",
+      "win": "Ta tour est mal placée. La partie est finie."
+    },
+    "duelliste": {
+      "name": "Le Duelliste",
+      "tagline": "Fou contre pion, fous de couleurs opposées, mauvais coin : il se bat sur une seule couleur de cases.",
+      "taunt": "En garde ! Mais vérifie d’abord la couleur de ton fou.",
+      "defeat": "Touché. Tu as vu le bon coin.",
+      "win": "Mauvaise couleur, mauvais coin : c’est nulle, ou pire."
+    },
+    "cavalier-errant": {
+      "name": "Le Cavalier errant",
+      "tagline": "Il saute d’une case à l’autre et arrête les pions qu’on croyait perdus pour lui.",
+      "taunt": "Un cavalier contre un pion… tu crois vraiment que je suis trop loin ?",
+      "defeat": "Tu m’as tenu à distance. Je reprends la route.",
+      "win": "Un saut, une fourchette, et le pion est à moi."
+    },
+    "roi-cendres": {
+      "name": "Le Roi des cendres",
+      "tagline": "Le maître de toutes les finales. Sous son regard, le temps file et l’échiquier lui-même se met à trembler.",
+      "taunt": "Dix finales, dix chronos, trois vies. Rien d’autre ne compte.",
+      "defeat": "Les cendres retombent… Tu es digne de la couronne.",
+      "win": "Le temps t’a manqué. Retourne à tes leçons."
     }
   },
   "visualisation": {
@@ -765,6 +823,53 @@
       "chest": {
         "done": "Gagné",
         "locked": "À gagner"
+      }
+    }
+  },
+  "endgames": {
+    "chestNote": "Finales · {title}",
+    "chapters": {
+      "mates": "Mats élémentaires",
+      "pawns-basics": "Pions : les bases",
+      "pawns-technique": "Pions : la technique",
+      "queens": "Dames",
+      "rooks": "Tours",
+      "bishops": "Fous",
+      "knights": "Cavaliers",
+      "ashes": "Le Roi des cendres"
+    },
+    "steps": {
+      "smates_boss": {
+        "title": "Le Bourreau",
+        "desc": "Six mats mélangés : dame, tour, deux fous, fou et cavalier. Défense parfaite, mate dans les temps."
+      },
+      "spawns_basics_boss": {
+        "title": "Le Gardien des pions",
+        "desc": "Six finales de pions : la règle du carré, l’opposition et les cases clés, dans le désordre."
+      },
+      "spawns_technique_boss": {
+        "title": "L’Horloger",
+        "desc": "Six finales de pions techniques : pion de tour, défense, triangulation et course de pions."
+      },
+      "squeens_boss": {
+        "title": "La Reine noire",
+        "desc": "Six finales de dames : dame contre pion à la 7e, contre pion de fou, contre tour."
+      },
+      "srooks_boss": {
+        "title": "Le Maître des tours",
+        "desc": "Six finales de tours : coupure, Lucena, Philidor, tour contre pion et Vancura, mélangées."
+      },
+      "sbishops_boss": {
+        "title": "Le Duelliste",
+        "desc": "Six finales de fous : mauvais coin, fou contre pion, fous de couleurs opposées, fou et pion."
+      },
+      "sknights_boss": {
+        "title": "Le Cavalier errant",
+        "desc": "Six finales de cavaliers : cavalier contre pion, contre pion de tour, cavalier et pion."
+      },
+      "sashes_boss": {
+        "title": "Le Roi des cendres",
+        "desc": "Dix finales de tout le parcours, chacune contre un chrono qui raccourcit, au milieu des distractions du Roi."
       }
     }
   }

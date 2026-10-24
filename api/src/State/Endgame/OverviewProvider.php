@@ -51,6 +51,8 @@ final class OverviewProvider implements ProviderInterface
                 'family' => $lesson->family->value,
                 'goal' => $lesson->goal->value,
                 'result' => $lesson->result->value,
+                // The textbook position: the lesson's demonstration, outside any run.
+                'textbook' => $lesson->textbook,
                 'holdMoves' => Goal::Hold === $lesson->goal ? $lesson->holdMoves : null,
                 'variants' => $variants[$lesson->key] ?? 0,
                 'played' => $result['played'] ?? 0,

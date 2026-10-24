@@ -24,7 +24,7 @@ import {
  *
  * @typedef {import('@/utils/endgame').TablebaseAnswer} TablebaseAnswer
  * @typedef {import('@/utils/endgame').Outcome} Outcome
- * @typedef {{fen: string, lesson: string, family: string, goal: import('@/utils/endgame').Goal, result: import('@/utils/endgame').Result, textbook: boolean, mode: 'learn'|'review', explain: boolean, budgetMoves: number|null, holdMoves: number|null, opponent: {elo: number|null, perfect: boolean}, index: number}} EndgameItem
+ * @typedef {{fen: string, lesson: string, family: string, goal: import('@/utils/endgame').Goal, result: import('@/utils/endgame').Result, textbook: boolean, mode: 'learn'|'review', explain: boolean, budgetMoves: number|null, holdMoves: number|null, opponent: {elo: number|null, perfect: boolean}, index: number, count?: number|null, lives?: number|null, clockSeconds?: number|null, deadline?: string|null, tier?: number|null}} EndgameItem
  * @typedef {{moves: string[], pass?: true, engine?: {right: boolean, mistakeAt: number|null}}} EndgameReport
  * @typedef {'idle'|'player'|'opponent'|'over'} GamePhase
  * @typedef {'maiaUnavailable'|'tablebaseUnavailable'|null} GameNotice
@@ -32,7 +32,10 @@ import {
 
 /** Stockfish's thinking time for a verdict or a move, when it stands in for the tablebase. */
 export const ENGINE_MOVETIME = 1000
-/** The opponent answers after this long at least: an instant reply feels like a machine. */
+/**
+ * The opponent answers after this long at least: an instant reply feels like a machine. Not against
+ * the Roi des cendres' clock, which counts its time too.
+ */
 export const OPPONENT_DELAY_MS = 500
 
 /**
@@ -262,7 +265,8 @@ export function useEndgameGame({
     const position = fen.value
     const uci = await opponentMove(current, position)
     if (stale()) return
-    const left = delayMs - (Date.now() - started)
+    const pause = current.clockSeconds ? 0 : delayMs
+    const left = pause - (Date.now() - started)
     if (left > 0) await wait(left)
     if (stale() || !uci) return
     const game = gameFrom(position)
@@ -367,6 +371,24 @@ export function useEndgameGame({
   }
 
   /**
+   * The Roi des cendres' clock out: everything stops, the position is lost (`timeout`). Gives the
+   * report to send once the server finds it late (as given up: never refused as unfinished).
+   *
+   * @returns {EndgameReport|null} null when the game was already over
+   */
+  function timeUp() {
+    if (!item.value || phase.value === 'over') return null
+    generation++
+    engine.stop()
+    maia.stop()
+    busy.value = false
+    hint.value = null
+    phase.value = 'over'
+    outcome.value = 'timeout'
+    return { moves: [...moves.value], pass: true }
+  }
+
+  /**
    * @param {Outcome} reachedOutcome
    * @param {boolean} [resigned]
    */
@@ -407,6 +429,7 @@ export function useEndgameGame({
     load,
     play,
     askHint,
-    pass
+    pass,
+    timeUp
   }
 }

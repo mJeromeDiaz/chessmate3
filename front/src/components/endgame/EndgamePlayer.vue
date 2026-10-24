@@ -17,6 +17,16 @@
         <span class="play-chip" data-testid="endgame-counter">{{
           counterText
         }}</span>
+        <span
+          v-if="clocked"
+          class="play-chip endgame-player__clock"
+          :class="{ 'endgame-player__clock--urgent': urgent }"
+          role="timer"
+          :aria-label="$t('endgame.player.clock')"
+          data-testid="ashes-clock"
+          :data-left="Math.ceil(leftMs / 1000)"
+          ><q-icon name="timer" size="18px" />{{ clockLabel(leftMs) }}</span
+        >
       </div>
       <ProfBubble
         :prof="prof"
@@ -29,14 +39,23 @@
     </template>
 
     <template #board>
-      <ChessBoard
-        ref="board"
-        :fen="shownFen"
-        :orientation="orientation"
-        :movable-color="movable"
-        :arrows="arrows"
-        @move="onMove"
-      />
+      <AshesDistractions
+        :tier="data.tier ?? null"
+        :active="playing"
+        :fen="game.fen.value"
+        :orientation="shownOrientation"
+        @decoy="decoy = $event"
+        @flip="flipped = $event"
+      >
+        <ChessBoard
+          ref="board"
+          :fen="shownFen"
+          :orientation="shownOrientation"
+          :movable-color="movable"
+          :arrows="arrows"
+          @move="onMove"
+        />
+      </AshesDistractions>
     </template>
 
     <template v-if="!result" #controls>
@@ -49,6 +68,17 @@
         :disable="!game.canHint.value"
         data-testid="endgame-hint"
         @click="game.askHint()"
+      />
+      <q-btn
+        v-if="data.mode === 'learn' && !clocked"
+        unelevated
+        no-caps
+        class="play-btn play-btn--hint"
+        icon="slideshow"
+        :label="$t('endgame.demo.button')"
+        :disable="game.phase.value === 'over'"
+        data-testid="endgame-demo-open"
+        @click="openDemo(true)"
       />
       <q-btn
         unelevated
@@ -111,9 +141,24 @@
       :title="feedback.title"
       :sub="feedback.sub"
       :xp="xp"
-      :actions="actions"
+      :actions="sheetActions"
       :confetti="feedback.kind === 'win'"
     />
+
+    <q-dialog
+      v-model="demoOpen"
+      :maximized="$q.screen.lt.sm"
+      @hide="closeDemo"
+    >
+      <EndgameDemo
+        :lesson-key="data.lesson"
+        :fen="data.fen"
+        :goal="data.goal"
+        :result="data.result"
+        :hold-moves="data.holdMoves"
+        @close="demoOpen = false"
+      />
+    </q-dialog>
   </PlayLayout>
 </template>
 
@@ -123,12 +168,17 @@
  * Maia (or the perfect defence) from the start, Lizy's bubble holding the goal and, in learn mode,
  * the lesson's explanation; each move judged as it comes (`useEndgameGame`). The game over, it is sent
  * (`resolve`); the server's verdict comes back as `result`, with the result sheet and, when the
- * position was missed, the right move drawn where it should have been played.
+ * position was missed, the right move drawn where it should have been played. Against the Roi des
+ * cendres (docs/ENDGAMES.md, § 10): the position's clock, held by the server (its `deadline`), and
+ * the distractions of its tier around the board; the clock out, the game stops and is sent once the
+ * server finds it late (`timeout`).
  */
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
+import AshesDistractions from '@/components/endgame/AshesDistractions.vue'
+import EndgameDemo from '@/components/endgame/EndgameDemo.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
 import { useEndgameGame } from '@/composables/endgame/useEndgameGame'
@@ -141,6 +191,14 @@ import {
   lessonText,
   lessonTitle
 } from '@/utils/endgame'
+import {
+  clockLabel,
+  remainingMs,
+  sendDelayMs,
+  TICKING_MS,
+  URGENT_MS
+} from '@/utils/ashes'
+import { playTick } from '@/utils/ashesSounds'
 import { feedbackProf } from '@/utils/feedback'
 import { playOutcomeSound } from '@/utils/sounds'
 import { t } from '@/i18n'
@@ -153,7 +211,9 @@ const props = defineProps({
   /** The submission's `xp` (undefined until it answered). */
   xp: { type: [Number, null], default: undefined },
   /** @type {import('vue').PropType<import('@/components/feedback/ResultSheet.vue').SheetAction[]>} */
-  actions: { type: Array, default: () => [] }
+  actions: { type: Array, default: () => [] },
+  /** Server clock minus client clock (useTimeboxedRun), in ms: the Roi des cendres' clock. */
+  offsetMs: { type: Number, default: 0 }
 })
 
 const emit = defineEmits({
@@ -177,11 +237,94 @@ const data = computed(() => props.item.data)
 const orientation = computed(() =>
   data.value.fen.split(' ')[1] === 'b' ? 'black' : 'white'
 )
+/** The Roi des cendres turns the board over for a while. */
+const flipped = ref(false)
+const shownOrientation = computed(() => {
+  if (!flipped.value) return orientation.value
+  return orientation.value === 'white' ? 'black' : 'white'
+})
+/** @type {import('vue').Ref<{from: string, to: string}|null>} a false arrow of the Roi */
+const decoy = ref(null)
+/** The position being played (its distractions run meanwhile). */
+const playing = computed(
+  () =>
+    !props.result &&
+    game.phase.value !== 'over' &&
+    game.phase.value !== 'idle'
+)
+
+/** A position against the Roi des cendres' clock. */
+const clocked = computed(
+  () => !!data.value.clockSeconds && !!data.value.deadline
+)
+const now = ref(Date.now())
+/** @type {ReturnType<typeof setInterval>|undefined} */
+let clockTicker
+/** @type {ReturnType<typeof setTimeout>|undefined} */
+let sendTimer
+/** Frozen once the game is over (its verdict on the way or back). */
+const leftMs = computed(() =>
+  clocked.value
+    ? remainingMs(
+        /** @type {string} */ (data.value.deadline),
+        props.offsetMs,
+        now.value
+      )
+    : 0
+)
+const urgent = computed(() => clocked.value && leftMs.value < URGENT_MS)
+
+function stopClock() {
+  clearInterval(clockTicker)
+  clockTicker = undefined
+}
+
+watch(
+  [clocked, playing],
+  ([on, live]) => {
+    stopClock()
+    if (!on || !live) return
+    now.value = Date.now()
+    clockTicker = setInterval(() => (now.value = Date.now()), 250)
+  },
+  { immediate: true }
+)
+
+/** The last seconds tick; at zero the game stops, sent once late for the server. */
+watch(
+  () => /** @type {const} */ ([Math.ceil(leftMs.value / 1000), playing.value]),
+  ([seconds, live], previous) => {
+    if (!clocked.value || !live) return
+    if (seconds > 0) {
+      const fresh = seconds !== previous?.[0]
+      if (fresh && seconds * 1000 <= TICKING_MS) playTick()
+      return
+    }
+    const report = game.timeUp()
+    stopClock()
+    if (!report) return
+    const deadline = /** @type {string} */ (data.value.deadline)
+    clearTimeout(sendTimer)
+    sendTimer = setTimeout(
+      () => emit('resolve', report),
+      sendDelayMs(deadline, props.offsetMs, Date.now())
+    )
+  }
+)
+
+onBeforeUnmount(() => {
+  stopClock()
+  clearTimeout(sendTimer)
+})
 
 /** Starts the position: its game, Maia downloading meanwhile. */
 function start() {
+  clearTimeout(sendTimer)
+  flipped.value = false
+  decoy.value = null
   game.load(data.value)
   timeline.reset()
+  now.value = Date.now()
   if (!data.value.opponent.perfect) maia.preload().catch(() => {})
 }
 
@@ -246,7 +389,9 @@ const arrows = computed(() => {
     if (best) list.push(arrowOf(best, 'solution'))
     return list
   }
-  return game.hint.value ? [arrowOf(game.hint.value, 'hint')] : []
+  if (game.hint.value) return [arrowOf(game.hint.value, 'hint')]
+  // The Roi des cendres' false arrow, drawn as a hint would be.
+  return decoy.value ? [{ ...decoy.value, type: 'hint' }] : []
 })
 
 /** @param {{uci: string}} move */
@@ -281,6 +426,7 @@ const maiaLoading = computed(
 )
 
 const statusText = computed(() => {
+  if (game.outcome.value === 'timeout') return t('endgame.player.timeUp')
   if (game.busy.value) return t('endgame.player.checking')
   if (game.phase.value === 'opponent') {
     if (maiaLoading.value) {
@@ -318,6 +464,39 @@ const feedback = computed(() =>
       }
 )
 
+/** The demonstration of the position served (learn mode, or after a miss; never the Roi's). */
+const demoOpen = ref(false)
+/** Opened during the game: the position starts again once it is closed. */
+let demoRestarts = false
+
+/** @param {boolean} restarts */
+function openDemo(restarts) {
+  demoRestarts = restarts
+  demoOpen.value = true
+}
+
+function closeDemo() {
+  if (demoRestarts && !props.result && game.phase.value !== 'over') start()
+  demoRestarts = false
+}
+
+/** The result sheet's actions: « Voir la démonstration » first after a miss. */
+const sheetActions = computed(() => {
+  const missed =
+    !!props.result &&
+    props.result.status !== 'won' &&
+    props.result.status !== 'held'
+  if (!missed || clocked.value) return props.actions
+  return [
+    {
+      label: t('endgame.demo.watch'),
+      testid: 'endgame-demo-watch',
+      onClick: () => openDemo(false)
+    },
+    ...props.actions
+  ]
+})
+
 const reacting = computed(
   () => timeline.kind.value !== null && timeline.step.value >= 2
 )
@@ -347,6 +526,32 @@ const bubble = computed(() => {
 .endgame-player__status {
   font-weight: 700;
   font-size: 14px;
+}
+
+// Above PlayLayout's chip rules (a class more).
+.play-chip.endgame-player__clock {
+  gap: 4px;
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+
+  &--urgent {
+    background: var(--cm-danger-soft);
+    color: var(--cm-danger);
+    animation: endgame-clock-pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes endgame-clock-pulse {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-chip.endgame-player__clock--urgent {
+    animation: none;
+  }
 }
 
 .endgame-player__notice {

@@ -111,7 +111,8 @@ export function subjectPath(run) {
   if (run.subjectType === 'puzzle_rush_player') return '/puzzle'
   if (run.subjectType === 'blindfold_recall_player') return '/reconstitution'
   if (run.subjectType === 'notation_player') return '/notation'
-  if (run.subjectType === 'endgame_player') return '/finales'
+  // A free run (a path's step ends on its verdict, never here).
+  if (run.subjectType === 'endgame_player') return '/finales/libre'
   return '/'
 }
 

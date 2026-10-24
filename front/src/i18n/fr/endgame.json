@@ -144,7 +144,9 @@
       "tablebaseUnavailable": "Lichess ne répond pas : Stockfish juge tes coups."
     },
     "hintShown": "La flèche montre un bon coup.",
-    "error": "Le coup n’a pas pu être vérifié. Réessaie, ou passe la position."
+    "error": "Le coup n’a pas pu être vérifié. Réessaie, ou passe la position.",
+    "timeUp": "Temps écoulé !",
+    "clock": "Chrono"
   },
   "feedback": {
     "kicker": "LIZY",
@@ -153,7 +155,8 @@
       "held": "Nulle tenue !",
       "spoiled": "Le résultat s’envole",
       "overtime": "Trop de coups",
-      "resigned": "Position passée"
+      "resigned": "Position passée",
+      "timeout": "Temps écoulé"
     },
     "subs": {
       "won": "En {n} coup. | En {n} coups.",
@@ -162,14 +165,16 @@
       "spoiledNoMove": "Ce coup gâchait le résultat.",
       "overtime": "Le gain est resté, mais il fallait conclure en {n} coups.",
       "resigned": "Un bon coup : {move}.",
-      "resignedNoMove": "On la reverra."
+      "resignedNoMove": "On la reverra.",
+      "timeout": "Le chrono du Roi a sonné avant la fin."
     },
     "bubbles": {
       "won": "Technique propre : c’est exactement ce qu’on attend en finale.",
       "held": "Bien défendu ! Une nulle tenue vaut parfois un gain.",
       "spoiled": "Regarde la flèche : c’est l’idée de la leçon qu’il fallait appliquer.",
       "overtime": "Le plan est bon, cherche le chemin le plus court.",
-      "resigned": "Pas de souci, relis l’idée de la leçon et on recommence."
+      "resigned": "Pas de souci, relis l’idée de la leçon et on recommence.",
+      "timeout": "Le Roi presse : joue l’idée de la leçon sans tout recalculer, le temps compte autant que les coups."
     },
     "engineJudged": "Jugé par Stockfish (Lichess ne répondait pas)."
   },
@@ -204,5 +209,101 @@
   },
   "review": {
     "title": "{lesson} · {status}"
+  },
+  "path": {
+    "title": "Finales",
+    "lead": "Un type de finale par leçon, des mats élémentaires aux cavaliers. Chaque mini-parcours se termine par un boss, et le Roi des cendres attend au bout. Rien n’est verrouillé : commence où tu veux.",
+    "totals": "{mastered} / {lessons} leçons maîtrisées · {beaten} / {bosses} boss battus",
+    "free": "Entraînement libre",
+    "chapterTotals": "{done} / {total} maîtrisés",
+    "next": "Étape conseillée",
+    "states": {
+      "new": "À commencer",
+      "started": "En cours · {n}/{total}",
+      "known": "Connue · {n}/{total}",
+      "mastered": "Maîtrisée"
+    },
+    "bossTag": "BOSS",
+    "bossMix": "Mélange {n} leçons",
+    "bossBeaten": "Vaincu",
+    "bossReady": "Prêt au combat",
+    "positions": "{n} positions",
+    "lives": "{n} vies",
+    "rules": "Une leçon se joue par passages de 5 positions, réussis à 80 % : 2 passages la rendent connue, 10 la font maîtriser. Les boss mélangent les leçons de leur mini-parcours, en défense parfaite, avec 3 vies ; leurs cristaux ne se gagnent qu’une fois.",
+    "ashes": {
+      "kicker": "Boss final",
+      "clock": "Un chrono par position",
+      "all": "Toutes les finales du parcours : une leçon de chaque mini-parcours, puis trois autres."
+    },
+    "detail": {
+      "crumb": "Finales · {chapter}",
+      "positions": "Positions",
+      "passes": "Passages réussis",
+      "lives": "Vies",
+      "modes": {
+        "learn": {
+          "title": "Prochain passage : Apprendre",
+          "text": "Lizy t’explique la leçon, puis tu joues la position de manuel et {variants} variantes. L’aide est permise."
+        },
+        "review": {
+          "title": "Prochain passage : Réviser",
+          "text": "{count} variantes de la leçon, sans aide."
+        }
+      },
+      "lessonRule": "Ton adversaire : Maia, à ton niveau. Un passage est réussi à 4 positions sur 5.",
+      "drawnFrom": "Positions tirées de",
+      "bossRule": "Défense parfaite, sans aide. La 3e position ratée met fin au combat.",
+      "ashesRule": "Défense parfaite, sans aide, 3 vies. Le chrono part à 90 s et perd 8 s à chaque position (30 s au moins) ; une position jouée trop tard est perdue.",
+      "masteryXp": "+{xp} XP à la maîtrise",
+      "crystalsOnce": "Cristaux déjà gagnés : le combat ne rapporte plus que l’XP.",
+      "start": "Commencer",
+      "review": "Réviser",
+      "reviewAgain": "Réviser encore"
+    },
+    "legend": {
+      "title": "Lire le parcours",
+      "new": {
+        "title": "À commencer",
+        "text": "Pas encore joué."
+      },
+      "started": {
+        "title": "En cours",
+        "text": "Un passage réussi, l’anneau montre les passages."
+      },
+      "known": {
+        "title": "Connue",
+        "text": "2 passages réussis ou plus."
+      },
+      "mastered": {
+        "title": "Maîtrisée",
+        "text": "10 passages réussis."
+      },
+      "boss": {
+        "title": "Boss",
+        "text": "À la fin de chaque mini-parcours. L’étoile marque l’étape conseillée."
+      }
+    }
+  },
+  "demo": {
+    "button": "Démonstration",
+    "watch": "Voir la démonstration",
+    "of": "Démonstration : {lesson}",
+    "kicker": "Démonstration",
+    "close": "Fermer la démonstration",
+    "goals": {
+      "mate": "Le mat le plus rapide, contre la meilleure défense.",
+      "promote": "La promotion la plus rapide, en gardant le gain, contre la meilleure défense.",
+      "convert": "Le gain de tout le matériel adverse, au plus vite, contre la meilleure défense.",
+      "hold": "Comment tenir la nulle contre les meilleurs essais adverses."
+    },
+    "play": "Lecture",
+    "pause": "Pause",
+    "previous": "Coup précédent",
+    "next": "Coup suivant",
+    "restart": "Recommencer",
+    "loading": "La suite se prépare…",
+    "progress": "Coup {n} sur {total}",
+    "end": "Fin de la démonstration.",
+    "unavailable": "Démonstration indisponible pour l’instant : Lichess ne répond pas. Réessaie dans un moment."
   }
 }

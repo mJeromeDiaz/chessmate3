@@ -21,6 +21,16 @@
     />
   </div>
   <div
+    v-else-if="glyph"
+    class="boss-portrait boss-portrait--glyph"
+    :class="{ 'boss-portrait--round': round }"
+    :style="{ aspectRatio: round ? '1 / 1' : '5 / 4' }"
+    role="img"
+    :aria-label="label"
+  >
+    <span class="boss-portrait__glyph" aria-hidden="true">{{ glyph }}</span>
+  </div>
+  <div
     v-else
     class="boss-portrait"
     :class="{ 'boss-portrait--round': round }"
@@ -41,11 +51,13 @@
 <script setup>
 /**
  * A boss: in one of its expressions when it has them (src/assets/mindMap/boss/<character>/, the
- * Métronome, the Gargouille), else in one pose cut out of its character sheet (as cyclope.png).
- * Until each boss has its own picture, the cyclops stands in for all of them.
+ * Métronome, the Gargouille), else as a piece (the endgames path's bosses, `BOSS_GLYPHS`), else in
+ * one pose cut out of its character sheet (as cyclope.png): until each boss has its own picture,
+ * the cyclops stands in for the others.
  */
 import { computed } from 'vue'
 import {
+  BOSS_GLYPHS,
   bossImage,
   moodImage,
   POSE_MOODS,
@@ -88,6 +100,9 @@ const picture = computed(
     )
 )
 
+const glyph = computed(() =>
+  props.character ? (BOSS_GLYPHS[props.character] ?? '') : ''
+)
 const src = computed(() => bossImage(props.character))
 const crop = computed(() => poseCrop(/** @type {'idle'} */ (props.pose)))
 </script>
@@ -102,6 +117,31 @@ const crop = computed(() => poseCrop(/** @type {'idle'} */ (props.pose)))
     border-radius: 50%;
     background: #fff;
   }
+}
+
+// A piece in a halo of the endgames' lime (design « Parcours echiqueens »).
+.boss-portrait--glyph {
+  display: grid;
+  place-items: center;
+  container-type: inline-size;
+  border-radius: 24px;
+  background: radial-gradient(
+    circle at 50% 35%,
+    var(--cm-lime-soft),
+    var(--cm-inset) 75%
+  );
+  box-shadow: inset 0 0 0 2px var(--cm-lime);
+
+  &.boss-portrait--round {
+    border-radius: 50%;
+  }
+}
+
+.boss-portrait__glyph {
+  font-size: 55cqi;
+  line-height: 1;
+  color: var(--cm-lime-ink);
+  user-select: none;
 }
 
 .boss-portrait__picture {

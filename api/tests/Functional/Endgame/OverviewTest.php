@@ -54,6 +54,7 @@ final class OverviewTest extends WoodpeckerWebTestCase
         $square = $lessons['square-promote'];
         self::assertSame(['pawns', 'promote', 'win', null, 1, 2, 1], [$square['family'], $square['goal'], $square['result'], $square['holdMoves'], $square['variants'], $square['played'], $square['succeeded']]);
         self::assertNotNull($square['lastPlayedAt']);
+        self::assertSame(Catalogue::get('square-promote')?->textbook, $square['textbook'], 'Its textbook position, for the demonstration.');
         self::assertSame(['hold', 'draw', 8, 0, 0, null], [$lessons['square-stop']['goal'], $lessons['square-stop']['result'], $lessons['square-stop']['holdMoves'], $lessons['square-stop']['variants'], $lessons['square-stop']['played'], $lessons['square-stop']['lastPlayedAt']]);
 
         $other = array_column($this->overview($bob)['lessons'], null, 'key')['square-promote'];

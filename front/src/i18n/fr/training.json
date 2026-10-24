@@ -205,6 +205,7 @@
     "recallProgress": "{played} positions · {exact} exactes",
     "evaluationProgress": "Position {n} · {solved} juste | Position {n} · {solved} justes",
     "endgameProgress": "Position {n} · {solved} réussie | Position {n} · {solved} réussies",
+    "endgamePathProgress": "Position {n} sur {count}",
     "streakTimed": "Streak {now} · meilleur {best}",
     "streak": "Streak : {now}",
     "noHelp": "Sans aide",

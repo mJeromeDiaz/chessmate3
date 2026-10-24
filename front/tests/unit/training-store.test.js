@@ -201,4 +201,10 @@ describe('training utils', () => {
       'Retour à la reconstitution'
     )
   })
+
+  it('sends a free endgames run back to the free page, /finales being the path', () => {
+    expect(subjectPath({ subjectType: 'endgame_player', subjectId: 'u' })).toBe(
+      '/finales/libre'
+    )
+  })
 })

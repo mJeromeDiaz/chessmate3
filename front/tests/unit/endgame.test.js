@@ -5,6 +5,9 @@ import {
   atLeast,
   bareKing,
   counter,
+  DEMO_MAX_PLIES,
+  demoMove,
+  demoOver,
   endgameFeedback,
   engineKeeps,
   goalText,
@@ -18,6 +21,7 @@ import {
 } from '@/utils/endgame'
 import { itemTitle, missedItems } from '@/utils/runEnd'
 import fr from '@/i18n/fr/endgame.json'
+import { useEndgameDemo } from '@/composables/endgame/useEndgameDemo'
 import { useEndgameGame } from '@/composables/endgame/useEndgameGame'
 import { EngineFailureError } from '@/utils/engine/UciEngine'
 
@@ -285,6 +289,18 @@ describe('endgame texts', () => {
         'a5a6'
       ).sub
     ).toBe('Un bon coup : a6.')
+    // The Roi des cendres' clock out.
+    expect(
+      endgameFeedback(
+        { ...base, status: 'timeout', mistakeAt: null, bestMove: null },
+        START
+      )
+    ).toMatchObject({
+      kind: 'miss',
+      badge: '⏱︎',
+      title: 'Temps écoulé',
+      sub: 'Le chrono du Roi a sonné avant la fin.'
+    })
   })
 
   it('lists a missed position in the run’s review, not replayable', () => {
@@ -429,6 +445,55 @@ describe('useEndgameGame', () => {
     expect(finished).toHaveBeenCalledWith({ moves: ['a5a6'] }, 'overtime')
   })
 
+  it('stops on the Roi des cendres’ clock, the game kept to be sent as given up', async () => {
+    const maia = fakeMaia()
+    let release = () => {}
+    maia.chooseMove.mockImplementationOnce(
+      () => new Promise(resolve => (release = () => resolve('f2e3')))
+    )
+    const { game, finished, engine } = setup({ maia })
+    game.load(item())
+    game.play('a5a6')
+    await settle()
+
+    expect(game.timeUp()).toEqual({ moves: ['a5a6'], pass: true })
+    expect(game.outcome.value).toBe('timeout')
+    expect(game.phase.value).toBe('over')
+    expect(maia.stop).toHaveBeenCalled()
+    expect(engine.stop).toHaveBeenCalled()
+    // Sent later by the player, once late for the server: not here.
+    expect(finished).not.toHaveBeenCalled()
+    release()
+    await settle()
+    expect(game.moves.value).toEqual(['a5a6'])
+    // Over already: nothing more to send.
+    expect(game.timeUp()).toBeNull()
+  })
+
+  it('answers at once against the Roi des cendres’ clock, after a pause otherwise', async () => {
+    const wait = vi.fn(async () => {})
+    const scope = effectScope()
+    const game = scope.run(() =>
+      useEndgameGame({
+        tablebase: fakeTablebase(SQUARE),
+        maia: fakeMaia(),
+        engine: fakeEngine(),
+        delayMs: 60_000,
+        wait,
+        random: () => 0
+      })
+    )
+    game.load(item({ clockSeconds: 90, deadline: '2026-10-24T10:00:00Z' }))
+    game.play('a5a6')
+    await settle()
+    expect(wait).not.toHaveBeenCalled()
+
+    game.load(item({ index: 2 }))
+    game.play('a5a6')
+    await settle()
+    expect(wait).toHaveBeenCalledTimes(1)
+  })
+
   it('drops the answers of a position left for another', async () => {
     const maia = fakeMaia()
     let release = () => {}
@@ -445,5 +510,78 @@ describe('useEndgameGame', () => {
 
     expect(game.moves.value).toEqual([])
     expect(game.phase.value).toBe('player')
+  })
+})
+
+describe('the demonstration', () => {
+  it('plays the fastest keeping move for the player, the best defence for the other side', () => {
+    const position = answer(
+      [
+        ['h1h2', 'draw'],
+        ['a5a6', 'win'],
+        ['h1g1', 'win']
+      ],
+      ['f2e3']
+    )
+    // The tablebase's order: its first keeping move.
+    expect(demoMove(position, true, 'win')).toBe('a5a6')
+    expect(demoMove(position, true, 'draw')).toBe('h1h2')
+    expect(demoMove(position, false, 'win')).toBe('f2e3')
+    // No defence given: the tablebase's first move.
+    expect(demoMove(answer([['e3d4', 'loss']]), false, 'win')).toBe('e3d4')
+    expect(demoMove(answer([['h1h2', 'draw']]), true, 'win')).toBeNull()
+  })
+
+  it('stops at the lesson’s goal, the game’s end or its length', () => {
+    const promote = { goal: 'promote', holdMoves: null }
+    const game = new Chess('8/P7/8/8/3k4/8/8/7K w - - 0 1')
+    const move = playUci(game, 'a7a8q')
+    expect(demoOver(promote, game, move, true, 3, 5)).toBe(true)
+    const quiet = new Chess(START)
+    const step = playUci(quiet, 'a5a6')
+    expect(demoOver(promote, quiet, step, true, 1, 1)).toBe(false)
+    const hold = { goal: 'hold', holdMoves: 1 }
+    expect(demoOver(hold, quiet, step, true, 1, 1)).toBe(true)
+    expect(demoOver(promote, quiet, step, true, 1, DEMO_MAX_PLIES)).toBe(true)
+  })
+
+  it('works the whole line out from the tablebase, shown move by move', async () => {
+    const tablebase = fakeTablebase(SQUARE)
+    const scope = effectScope()
+    const demo = scope.run(() => useEndgameDemo({ tablebase }))
+    demo.load({ fen: START, goal: 'promote', result: 'win', holdMoves: null })
+    expect(demo.waiting.value).toBe(true)
+    await settle()
+
+    expect(demo.status.value).toBe('done')
+    expect(demo.moves.value).toEqual(GAME)
+    expect(demo.sans.value).toEqual(['a6', 'Ke3', 'a7', 'Kd4', 'a8=Q'])
+    expect(demo.fen.value).toBe(START)
+    demo.next()
+    demo.next()
+    expect(demo.cursor.value).toBe(2)
+    expect(demo.lastMove.value).toBe('f2e3')
+    demo.previous()
+    expect(demo.fen.value).toMatch(/^8\/8\/P7\/8\/8\/8\/5k2\/7K b/)
+    demo.goTo(99)
+    expect(demo.atEnd.value).toBe(true)
+    demo.restart()
+    expect(demo.cursor.value).toBe(0)
+    scope.stop()
+  })
+
+  it('stops where it is when Lichess cannot answer', async () => {
+    const tablebase = vi.fn(async (/** @type {string} */ fen) => {
+      if (fen === START) return SQUARE['8/8/8/P7/8/8/5k2/7K w']
+      throw Object.assign(new Error('busy'), { response: { status: 503 } })
+    })
+    const scope = effectScope()
+    const demo = scope.run(() => useEndgameDemo({ tablebase }))
+    demo.load({ fen: START, goal: 'promote', result: 'win', holdMoves: null })
+    await settle()
+
+    expect(demo.status.value).toBe('unavailable')
+    expect(demo.moves.value).toEqual(['a5a6'])
+    scope.stop()
   })
 })

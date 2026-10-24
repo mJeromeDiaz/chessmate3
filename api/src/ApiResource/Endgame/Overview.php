@@ -12,7 +12,7 @@ use App\State\Endgame\OverviewProvider;
  * The signed-in user's endgames (docs/ENDGAMES.md, § 7): the settings' bounds, the lessons in the
  * catalogue's order with their variants and the user's results, the Elo proposed.
  *
- * @phpstan-type LessonView array{key: string, family: string, goal: string, result: string, holdMoves: int|null, variants: int, played: int, succeeded: int, lastPlayedAt: string|null}
+ * @phpstan-type LessonView array{key: string, family: string, goal: string, result: string, textbook: string, holdMoves: int|null, variants: int, played: int, succeeded: int, lastPlayedAt: string|null}
  */
 #[ApiResource(
     shortName: 'EndgameOverview',
