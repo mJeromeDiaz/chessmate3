@@ -9,15 +9,15 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * set as the HttpOnly cookie the SPA uses to restore its session on load (the email 2FA login
  * itself is covered by the Phase 1 tests).
  *
- * The streak celebration (docs/GAMIFICATION.md, "Annonce de la série") and the daily chest after it
+ * The streak celebration (docs/GAMIFICATION.md, "Annonce de la série") and the gift wheel after it
  * (docs/SHOP.md, § 4 ter) would cover the page after the user's first exercise: unless `streak` is
- * asked, the API is answered "none pending" and "no chest" (the chest's crystals are still
- * credited: a balance counts them).
+ * asked, the API is answered "none pending" and "no wheel nor chest" (the wheel stays offered on
+ * the server, unspun: no crystal).
  *
  * @param {import('@playwright/test').BrowserContext} context
  * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[], mindMapCapacity?: string, enginePuzzles?: boolean}} [options] an admin
  *   (docs/EARLY_ACCESS.md); a password, for a test that also signs in through the login page;
- *   the real streak announcements and daily chests; crowns of the store (docs/SHOP.md); the first chapters of the
+ *   the real streak announcements, gift wheels and badge chests; crowns of the store (docs/SHOP.md); the first chapters of the
  *   visualisation path completed (docs/MIND_MAP.md), and these steps of it; the puzzles of the
  *   calculation path's chapter 3 added to the catalogue (docs/CALCULATION.md, § 2 quater)
  * @returns {Promise<{id: string, email: string}>}

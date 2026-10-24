@@ -71,6 +71,7 @@
     "fields": {
       "duration": "Durée",
       "elo": "Difficulté (Elo)",
+      "endgameElo": "Adversaire (Elo de Maia)",
       "format": "Format",
       "notes": "Notes",
       "mode": "Mode",
@@ -97,6 +98,7 @@
       "lightSet": "La séance repart du début du set ; il grandit tout seul quand tu l’as presque épuisé.",
       "repertoires": "Les révisions dues passent en premier (répétition espacée automatique).",
       "evaluationDuration": "Une séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent jusqu’au bout.",
+      "endgameDuration": "Une série dure 2, 5, 10 ou 15 minutes : les positions s’enchaînent jusqu’au bout.",
       "rushDuration": "Un rush dure 2, 3 ou 5 minutes : les puzzles s’enchaînent sans pause, de plus en plus durs.",
       "coordinatesDuration": "Une série dure 1, 2, 5 ou 10 minutes."
     },
@@ -111,6 +113,7 @@
     "units": {
       "minutes": "{n} min",
       "elo": "Elo {n}",
+      "perfect": "Parfait",
       "seconds": "{n} s",
       "games": "{n} partie | {n} parties",
       "puzzles": "{n} puzzle | {n} puzzles"
@@ -128,11 +131,12 @@
         "review": "Réviser"
       },
       "endgames": {
-        "pawns": "Pions",
-        "rooks": "Tours",
         "basicMates": "Mats élémentaires",
-        "minorPieces": "Pièces mineures",
-        "queens": "Dames"
+        "pawns": "Pions",
+        "queens": "Dames",
+        "rooks": "Tours",
+        "bishops": "Fous",
+        "knights": "Cavaliers"
       },
       "sides": {
         "white": "Blancs",

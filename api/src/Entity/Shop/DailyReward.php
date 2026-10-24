@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Shop;
 
 use App\Entity\User;
+use App\Enum\Shop\WheelStatus;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -14,6 +15,8 @@ use Symfony\Component\Uid\Uuid;
  * announcement (the first exercise of the local day), plus a streak badge's bonus the day the
  * streak reaches one. One row per player and local day, credited when written; opening the chest
  * only reveals them (shown once). Written in SQL by {@see \App\Shop\Reward\DailyRewarder}.
+ * Since the gift wheel (2026-10-23), the day's draw is the wheel's ({@see WheelSpin}): `dailyCrowns`
+ * stays 0 and the chest holds the badge's bonus only.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'shop_daily_reward')]
@@ -40,7 +43,7 @@ class DailyReward
     #[ORM\Column(type: Types::SMALLINT, nullable: true, options: ['unsigned' => true])]
     private ?int $badgeDays = null;
 
-    /** The daily draw. */
+    /** The daily draw (0 since the gift wheel). */
     #[ORM\Column(type: Types::SMALLINT, options: ['unsigned' => true])]
     private int $dailyCrowns;
 
@@ -51,6 +54,10 @@ class DailyReward
     /** Both together, credited. */
     #[ORM\Column(options: ['unsigned' => true])]
     private int $crowns;
+
+    /** The day's gift wheel, null before the wheel existed. */
+    #[ORM\Column(length: 10, nullable: true, enumType: WheelStatus::class)]
+    private ?WheelStatus $wheel = null;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -118,5 +125,10 @@ class DailyReward
     public function getOpenedAt(): ?\DateTimeImmutable
     {
         return $this->openedAt;
+    }
+
+    public function getWheel(): ?WheelStatus
+    {
+        return $this->wheel;
     }
 }

@@ -252,9 +252,9 @@ test('a completed session opens a chest of crowns, then the results and the stor
   await expect(chest.getByTestId('chest-wallet')).toHaveText(
     String(reward.balance)
   )
-  // The day's first puzzle also brought the daily chest (docs/SHOP.md, § 4 ter, not shown here).
-  expect(reward.balance - reward.crowns).toBeGreaterThanOrEqual(6)
-  expect(reward.balance - reward.crowns).toBeLessThanOrEqual(12)
+  // The day's gift wheel was only offered (docs/SHOP.md, § 4 ter, not shown here): the session's
+  // crystals alone.
+  expect(reward.balance).toBe(reward.crowns)
 
   // "Voir mes résultats": the run's result.
   await chest.getByTestId('chest-results').click()

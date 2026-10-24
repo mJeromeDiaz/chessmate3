@@ -103,6 +103,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $moveSound = true;
 
+    /** The gift wheel offered each day (docs/SHOP.md, § 4 ter); off: never (the badge chests stay). */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $dailyWheel = true;
+
     /**
      * Whether other players may see the level and stats. Stored only: no page shows a profile to
      * other users yet. Private by default.
@@ -308,6 +312,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setMoveSound(bool $moveSound): static
     {
         $this->moveSound = $moveSound;
+
+        return $this;
+    }
+
+    public function hasDailyWheel(): bool
+    {
+        return $this->dailyWheel;
+    }
+
+    public function setDailyWheel(bool $dailyWheel): static
+    {
+        $this->dailyWheel = $dailyWheel;
 
         return $this;
     }

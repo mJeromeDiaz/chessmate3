@@ -31,7 +31,7 @@ test('builder: add, edit, reorder and remove modules; the draft survives a reloa
   await expect(page.getByTestId('session-launch')).toBeDisabled()
 
   // Modules not built yet cannot be added.
-  await expect(page.getByTestId('module-card-finales')).toBeDisabled()
+  await expect(page.getByTestId('module-card-analyse')).toBeDisabled()
 
   await page.getByTestId('session-title').fill('Mardi soir')
   await addModule(page, 'puzzles')

@@ -14,6 +14,7 @@ import {
   settingChips,
   fromStep,
   toStep,
+  upgradeValues,
   withDurationChoice
 } from '@/utils/session/catalog'
 import { PROFS, PROF_SLUGS } from '@/utils/prof/profs'
@@ -22,6 +23,7 @@ describe('session catalogue', () => {
   it('offers only the modules the app has', () => {
     expect(MODULES.filter(m => m.available).map(m => m.id)).toEqual([
       'libre',
+      'finales',
       'puzzles',
       'streak',
       'rush',
@@ -41,6 +43,7 @@ describe('session catalogue', () => {
     expect(keys('woodpecker')).toEqual(['duree', 'set', 'notes'])
     expect(keys('repertoire')).toEqual(['duree', 'repertoires', 'notes'])
     expect(keys('libre')).toEqual(['duree', 'type', 'notes'])
+    expect(keys('finales')).toEqual(['duree', 'mode', 'themes', 'elo', 'notes'])
     expect(keys('coordonnees')).toEqual([
       'duree',
       'mode',
@@ -166,9 +169,26 @@ describe('session catalogue', () => {
       )
     ).toEqual(['Italienne, Caro-Kann +1'])
     expect(settingChips(libre, defaultValues(libre))).toEqual(['Livre'])
+    expect(settingChips(finales, defaultValues(finales))).toEqual([
+      'Réviser',
+      'Tours',
+      'Elo 1500'
+    ])
+    // The top of the slider is the tablebase's perfect defence.
     expect(
-      settingChips(finales, { ...defaultValues(finales), rep: false })
-    ).toEqual(['Réviser', 'Tours', 'Elo 1500'])
+      settingChips(finales, { ...defaultValues(finales), elo: 2600 })
+    ).toContain('Parfait')
+  })
+
+  it('splits the old minor pieces theme into bishops and knights', () => {
+    const { finales } = MODULES_BY_ID
+    expect(
+      upgradeValues(finales, {
+        ...defaultValues(finales),
+        mode: 'Apprendre',
+        themes: ['Pièces mineures', 'rooks', 'minorPieces']
+      })
+    ).toMatchObject({ mode: 'learn', themes: ['bishops', 'knights', 'rooks'] })
   })
 
   it('tells why a module cannot be played', () => {
@@ -280,8 +300,31 @@ describe('session catalogue', () => {
     expect(opening.settings).toEqual({ setId: 's1' })
     expect(fromStep(opening)?.values.set).toBe('s1')
     expect(() =>
-      toStep({ uid: 5, moduleId: 'finales', values: { duree: 5 } })
+      toStep({ uid: 5, moduleId: 'analyse', values: { duree: 5 } })
     ).toThrow()
+
+    // Endgames (docs/ENDGAMES.md): mode, themes and Maia's Elo.
+    const endgames = toStep({
+      uid: 7,
+      moduleId: 'finales',
+      values: {
+        duree: 5,
+        mode: 'learn',
+        themes: ['rooks', 'knights'],
+        elo: 1800,
+        notes: ''
+      }
+    })
+    expect(endgames).toMatchObject({
+      module: 'endgames',
+      minutes: 5,
+      settings: { mode: 'learn', themes: ['rooks', 'knights'], elo: 1800 }
+    })
+    expect(fromStep(endgames)?.values).toMatchObject({
+      mode: 'learn',
+      themes: ['rooks', 'knights'],
+      elo: 1800
+    })
   })
 
   it('gives a coordinates series one of the API lengths and its orientation', () => {

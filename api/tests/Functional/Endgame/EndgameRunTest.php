@@ -47,6 +47,7 @@ final class EndgameRunTest extends WoodpeckerWebTestCase
             [$first['data']['fen'], $first['data']['lesson'], $first['data']['family'], $first['data']['goal'], $first['data']['result'], $first['data']['textbook'], $first['data']['explain'], $first['data']['budgetMoves'], $first['data']['holdMoves'], $first['data']['opponent'], $first['data']['index']],
             'Mate in 23 plies: 12 moves, 18 allowed.',
         );
+        self::assertSame('learn', $first['data']['mode']);
         self::assertSame($first['id'], $this->item($alice, $run)['id'], 'A reload gets the same position.');
 
         $won = $this->submitOk($alice, $run, ['itemId' => $first['id'], 'moves' => self::GAME], XpRules::ENDGAME_STRONG);

@@ -94,7 +94,10 @@
         <div class="step-detail__head-row">
           <span class="step-detail__kicker">
             <template v-if="step.number"
-              >{{ $t('mindMapPath.page.step', { n: step.number }) }} · </template
+              >{{
+                $t('mindMapPath.page.step', { n: step.number })
+              }}
+              · </template
             >{{ $t(`mindMapPath.kinds.${step.kind}`) }}
           </span>
           <button

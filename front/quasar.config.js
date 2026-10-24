@@ -82,7 +82,10 @@ export default defineConfig(ctx => {
         viteConf.worker = { ...viteConf.worker, format: 'es' }
         viteConf.optimizeDeps = {
           ...viteConf.optimizeDeps,
-          exclude: [...(viteConf.optimizeDeps?.exclude ?? []), 'onnxruntime-web']
+          exclude: [
+            ...(viteConf.optimizeDeps?.exclude ?? []),
+            'onnxruntime-web'
+          ]
         }
       },
       // viteVuePluginOptions: {},

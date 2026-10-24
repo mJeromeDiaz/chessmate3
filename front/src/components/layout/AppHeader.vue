@@ -27,6 +27,7 @@
     </div>
 
     <StreakChip />
+    <WheelChip />
     <CrystalChip />
     <q-btn
       flat
@@ -45,13 +46,14 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import StreakChip from '@/components/gamification/StreakChip.vue'
 import CrystalChip from '@/components/layout/CrystalChip.vue'
+import WheelChip from '@/components/layout/WheelChip.vue'
 import { t } from '@/i18n'
 import { useLayoutStore } from '@/stores/layout'
 import { parentPath } from '@/utils/layout/pageHeader'
 
 /**
  * The signed-in header: back arrow to the parent page, the page's subtitle and title (the brand
- * when the page has none), the streak, the crystals and the menu button.
+ * when the page has none), the streak, the gift wheels to spin, the crystals and the menu button.
  */
 const emit = defineEmits(['menu'])
 
@@ -66,8 +68,7 @@ const title = computed(
   () => layout.title ?? (meta.value.title ? t(meta.value.title) : null)
 )
 const subtitle = computed(
-  () =>
-    layout.subtitle ?? (meta.value.subtitle ? t(meta.value.subtitle) : null)
+  () => layout.subtitle ?? (meta.value.subtitle ? t(meta.value.subtitle) : null)
 )
 
 /**
@@ -82,9 +83,7 @@ function exists(path) {
   )
 }
 
-const parent = computed(() =>
-  parentPath(route.path, exists, meta.value.parent)
-)
+const parent = computed(() => parentPath(route.path, exists, meta.value.parent))
 </script>
 
 <style scoped lang="scss">

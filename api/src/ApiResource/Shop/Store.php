@@ -12,7 +12,7 @@ use App\State\Shop\StoreProvider;
 
 /**
  * The store (docs/SHOP.md): the signed-in player's crowns, the offers, the carousel, the inventory,
- * how crowns are earned.
+ * how crowns are earned, today's gift wheel still to spin.
  * A purchase answers with the store as it stands after it.
  *
  * @phpstan-import-type View from \App\Shop\Catalog\StoreView
@@ -46,6 +46,8 @@ final class Store
      * @var EarningView|null
      */
     public ?array $earning = null;
+    /** Today's gift wheel still to spin (§ 4 ter): its daily reward's id, null when none. */
+    public ?string $dailyWheel = null;
 
     /**
      * @param View $view
@@ -59,6 +61,7 @@ final class Store
         $store->inventory = $view['inventory'];
         $store->freezes = $view['freezes'];
         $store->earning = $view['earning'];
+        $store->dailyWheel = $view['dailyWheel'];
 
         return $store;
     }

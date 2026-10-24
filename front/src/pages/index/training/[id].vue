@@ -479,6 +479,37 @@
       </template>
     </EvaluationPlayer>
 
+    <EndgamePlayer
+      v-else-if="endgameItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="endgamePlayer"
+      :item="endgameItem"
+      :result="endgameResult"
+      :xp="runner.xp.value"
+      :actions="endgameActions"
+      @resolve="onEndgameResolve"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">
+            {{
+              $t(
+                'training.page.endgameProgress',
+                { n: endgameItem.data.index, solved: runner.solved.value },
+                runner.solved.value > 1 ? 2 : 1
+              )
+            }}
+          </div>
+        </RunHeader>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </EndgamePlayer>
+
     <FreeRunPanel
       v-else-if="
         runner.phase.value === 'running' &&
@@ -734,6 +765,7 @@ import JongleurPlayer from '@/components/mindMap/JongleurPlayer.vue'
 import VisionPlayer from '@/components/vision/VisionPlayer.vue'
 import CalculationPlayer from '@/components/calculation/CalculationPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
+import EndgamePlayer from '@/components/endgame/EndgamePlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
 import ParcoursHeader from '@/components/parcours/ParcoursHeader.vue'
@@ -809,7 +841,8 @@ const STOP_MESSAGES = [
   'notation',
   'jongleur',
   'vision',
-  'calculation'
+  'calculation',
+  'endgames'
 ]
 const route = useRoute()
 const router = useRouter()
@@ -1005,6 +1038,63 @@ const evaluationActions = computed(() => [
     }
   }
 ])
+
+/**
+ * The endgame position being played, kept once the run closed on it: its correction stays on
+ * screen (`holdEnd`) until "Voir le résultat" (docs/ENDGAMES.md).
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const endgameItem = ref(null)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const endgamePlayer = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'endgame_position') endgameItem.value = item
+    else if (item) endgameItem.value = null
+  }
+)
+const endgameResult = computed(() =>
+  endgameItem.value && runner.result.value?.itemId === endgameItem.value.id
+    ? runner.result.value.data
+    : null
+)
+const endgameActions = computed(() => [
+  {
+    label:
+      runner.phase.value === 'running'
+        ? t('training.page.nextPosition')
+        : t('training.page.seeResult'),
+    primary: true,
+    disable: loading.value,
+    testid: 'run-next',
+    onClick: async () => {
+      holdEnd.value = false
+      if (runner.phase.value === 'running') await next()
+    }
+  }
+])
+
+/**
+ * A game over: sent whole, the server judges it again. Its verdict stays on screen until the
+ * player moves on, the last one too (held: it may close the run). A refusal plays it again.
+ *
+ * @param {import('@/composables/endgame/useEndgameGame').EndgameReport} report
+ */
+async function onEndgameResolve(report) {
+  holdEnd.value = true
+  try {
+    const result = await runner.submit(report)
+    if (result) return
+    holdEnd.value = false
+    endgamePlayer.value?.unlock()
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    endgamePlayer.value?.unlock()
+  }
+}
 
 /**
  * The position being rebuilt, kept once the run closed on the last one: its correction stays on

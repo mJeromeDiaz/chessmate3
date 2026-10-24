@@ -24,7 +24,7 @@ test('a new user is welcomed and pointed to a first session', async ({
   await page.goto('/#/')
   await expect(page.getByTestId('dashboard-welcome')).toBeVisible()
   await expect(page.getByTestId('rating-card')).toHaveCount(0)
-  await expect(page.getByTestId('module-row-finales')).toContainText('Bientôt')
+  await expect(page.getByTestId('module-row-analyse')).toContainText('Bientôt')
   await page.getByTestId('welcome-session').click()
   await expect(page).toHaveURL(/#\/session\/new$/)
 })
@@ -179,7 +179,7 @@ test('with history: streak, rating curve, modules, gamification, and the Lichess
     page.getByTestId('module-row-puzzles').getByTestId('module-level')
   ).toHaveText('Niv. 6')
   await expect(
-    page.getByTestId('module-row-finales').getByTestId('module-level')
+    page.getByTestId('module-row-analyse').getByTestId('module-level')
   ).toHaveCount(0)
   await expect(page.getByTestId('trophies-count')).toHaveText('2 / 3 débloqués')
   await expect(page.getByTestId('trophy-streak_3')).toHaveAttribute(

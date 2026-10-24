@@ -8,7 +8,9 @@
   >
     <CrystalGem :size="22" />
     <span data-testid="crystals-count">{{ crowns(balance) }}</span>
-    <q-tooltip>{{ $t('layout.header.crystals', { n: crowns(balance) }) }}</q-tooltip>
+    <q-tooltip>{{
+      $t('layout.header.crystals', { n: crowns(balance) })
+    }}</q-tooltip>
   </router-link>
 </template>
 

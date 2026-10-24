@@ -280,7 +280,7 @@ seule option.
   Notation (`PuzzlePicker`, `MoveChooser` : roques, promotions, prises, coups à préciser). Chaque
   genre revient autant que les autres (un des moins posés jusque-là) ; sans puzzle, une question de
   case.
-- **Temps** : 6 s par question (`JongleurRules::QUESTION_SECONDS`), pour toutes, sur l'horloge du
+- **Temps** : 7 s par question (`JongleurRules::QUESTION_SECONDS`, 6 s jusqu'au 2026-10-24), pour toutes, sur l'horloge du
   serveur. Le départ est stocké à la seconde (tronqué) : la limite ajoute 1 s et la tolérance réseau
   de 2 s, toujours en faveur du joueur. Une réponse en retard (`late`), ou vide (le temps du client
   écoulé), est un échec. Une question rechargée revient avec son temps qui court.
@@ -297,8 +297,10 @@ seule option.
   rapporter de plus (§ 4).
 - **Écran** (`JongleurPlayer`, page de séance) : « Question n sur N », le Jongleur (il jongle
   pendant la question, jubile à une erreur, boude à une bonne réponse) et sa réplique, les 3 cœurs,
-  une barre de 6 s calée sur le départ du serveur (à zéro, une réponse vide part), au-dessus de
-  l'échiquier la **consigne en grand bandeau** (2026-10-22 : une couleur et une icône par genre, la
+  une barre de 7 s calée sur le départ du serveur (à zéro, une réponse vide part), sous elle la
+  **consigne en grand bandeau** (2026-10-22, sous la barre depuis le 2026-10-24 : à droite de
+  l'échiquier sur grand écran, au-dessus sur téléphone, échiquier réduit d'autant pour tenir dans la
+  hauteur ; une couleur et une icône par genre, la
   case ou le coup demandé, une ligne d'aide ; il rebondit à chaque question et tremble avec
   « Nouveau ! » quand le genre change, `jongleur.order.<genre>`), puis la question :
   échiquier vide à cliquer (`find`), case allumée et son nom tapé au clavier, celui de l'appareil sur écran tactile (`name`), boutons

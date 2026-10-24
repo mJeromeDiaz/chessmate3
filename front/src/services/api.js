@@ -173,7 +173,7 @@ export const profileApi = {
   /**
    * Board colours, move sounds and public profile flag (all three required).
    *
-   * @param {{boardTheme: string, moveSound: boolean, publicProfile: boolean}} preferences
+   * @param {{boardTheme: string, moveSound: boolean, publicProfile: boolean, dailyWheel?: boolean}} preferences
    */
   setPreferences: preferences =>
     http.put('/api/profile/preferences', preferences).then(r => r.data),
@@ -1032,6 +1032,23 @@ export const evaluationApi = {
   overview: () => http.get('/api/evaluation', JSON_LD).then(r => r.data)
 }
 
+/** The endgames module (docs/ENDGAMES.md). */
+export const endgameApi = {
+  /** The rules, the lessons with my results, the Elo proposed (§ 7). */
+  overview: () => http.get('/api/endgames', JSON_LD).then(r => r.data),
+  /**
+   * The tablebase's answer for a position (§ 2): its result, each move's, the best defence. A
+   * 503 carries its reason in X-Lichess-Unavailable.
+   *
+   * @param {string} fen
+   * @param {{signal?: AbortSignal}} [options]
+   */
+  tablebase: (fen, { signal } = {}) =>
+    http
+      .get('/api/endgames/tablebase', { ...JSON_LD, params: { fen }, signal })
+      .then(r => r.data)
+}
+
 export const blindfoldApi = {
   /** The rules (levels, lengths, times) and the results so far, by level and by length. */
   puzzles: () => http.get('/api/blindfold/puzzles', JSON_LD).then(r => r.data),
@@ -1189,8 +1206,9 @@ export const shopApi = {
       .get('/api/shop/rewards/unopened', JSON_LD)
       .then(r => r.data.member ?? []),
   /**
-   * The daily chests not seen yet, oldest first (docs/SHOP.md, § 4 ter): `{id, localDate, streak,
-   * badgeDays, dailyCrowns, badgeCrowns, crowns, opened, balance}` each.
+   * The daily chests not seen yet and today's gift wheel still to spin, oldest first (docs/SHOP.md,
+   * § 4 ter): `{id, localDate, streak, badgeDays, dailyCrowns, badgeCrowns, crowns, opened, wheel,
+   * wheelOpen, balance}` each.
    */
   unopenedDailyRewards: () =>
     http
@@ -1207,6 +1225,36 @@ export const shopApi = {
       .post(
         `/api/shop/daily-rewards/${encodeURIComponent(rewardId)}/open`,
         null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * « Pas aujourd'hui »: the day's gift wheel lost (the badge chest stays), same shape. 409
+   * `no_spin`.
+   *
+   * @param {string} rewardId
+   */
+  declineDailyWheel: rewardId =>
+    http
+      .post(
+        `/api/shop/daily-rewards/${encodeURIComponent(rewardId)}/decline`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Spins the gift wheel: the day's (its daily reward), or once more with a ticket (null).
+   * Answers `{id, prize, gift, crowns, ticket, balance, tickets}`, already credited; 409
+   * `no_spin` or `no_ticket`.
+   *
+   * @param {string|null} dailyRewardId
+   * @returns {Promise<import('@/utils/giftWheel').WheelSpin>}
+   */
+  spinWheel: dailyRewardId =>
+    http
+      .post(
+        '/api/shop/wheel/spins',
+        dailyRewardId ? { dailyRewardId } : {},
         JSON_LD
       )
       .then(r => r.data)
@@ -1474,6 +1522,16 @@ export const adminApi = {
    */
   saveShopRewardRule: rule =>
     http.put('/api/admin/shop/reward-rule', rule, JSON_LD).then(r => r.data),
+  /** The gift wheel's odds (docs/SHOP.md, § 4 ter), with who changed them last. */
+  shopWheelRule: () =>
+    http.get('/api/admin/shop/wheel-rule', JSON_LD).then(r => r.data),
+  /**
+   * Replaces the gift wheel's odds; 422 `{violations}`.
+   *
+   * @param {{c5: number, c30: number, c300: number, gift: number, lose: number, freezePercent: number}} odds
+   */
+  saveShopWheelRule: odds =>
+    http.put('/api/admin/shop/wheel-rule', odds, JSON_LD).then(r => r.data),
   /**
    * Checks a FEN and its evaluation against Lichess, nothing saved: `{verdict, source, lichess,
    * lichessCategory, category, nearBorder, fen, turn}`.

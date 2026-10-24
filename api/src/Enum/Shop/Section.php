@@ -13,5 +13,7 @@ enum Section: string
     case PuzzleStreak = 'puzzle_streak';
     case Aids = 'aids';
     case Packs = 'packs';
+    /** The gift wheel's tickets. */
+    case Wheel = 'wheel';
     case Cosmetics = 'cosmetics';
 }

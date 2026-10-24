@@ -20,6 +20,11 @@
       "title": "Packs",
       "lead": "Plusieurs objets, une seule ponction."
     },
+    "wheel": {
+      "tab": "Roue",
+      "title": "Roue des cadeaux",
+      "lead": "Tente de gagner 300 cristaux et de superbes cadeaux !"
+    },
     "cosmetics": {
       "tab": "Cosmétiques",
       "title": "Cosmétiques",
@@ -101,6 +106,13 @@
         "Ta première mauvaise case ne compte pas.",
         "Pas d’erreur : ton pardon reste en stock."
       ]
+    },
+    "wheel_ticket": {
+      "kicker": "ROUE DES CADEAUX",
+      "label": "Ticket de roue",
+      "how": [
+        "Jusqu’à 300 cristaux à gagner, et de superbes cadeaux !"
+      ]
     }
   },
   "cosmeticKicker": "COSMÉTIQUE",
@@ -117,14 +129,32 @@
   },
   "chest": {
     "closed": {
-      "small": ["Un petit trésor", "pour toi !"],
-      "medium": ["Un trésor", "pour toi !"],
-      "big": ["Un gros trésor", "pour toi !"]
+      "small": [
+        "Un petit trésor",
+        "pour toi !"
+      ],
+      "medium": [
+        "Un trésor",
+        "pour toi !"
+      ],
+      "big": [
+        "Un gros trésor",
+        "pour toi !"
+      ]
     },
     "open": {
-      "perfect": ["Quel", "jackpot !"],
-      "near": ["Beau", "trésor !"],
-      "missed": ["Joli", "butin !"]
+      "perfect": [
+        "Quel",
+        "jackpot !"
+      ],
+      "near": [
+        "Beau",
+        "trésor !"
+      ],
+      "missed": [
+        "Joli",
+        "butin !"
+      ]
     },
     "stages": {
       "closed": {
@@ -133,12 +163,18 @@
       },
       "hit1": {
         "kicker": "ÇA BOUGE…",
-        "title": ["Il résiste", "encore !"],
+        "title": [
+          "Il résiste",
+          "encore !"
+        ],
         "hint": "Encore un coup !"
       },
       "hit2": {
         "kicker": "PRESQUE…",
-        "title": ["Allez,", "le dernier !"],
+        "title": [
+          "Allez,",
+          "le dernier !"
+        ],
         "hint": "Il va céder…"
       },
       "open": {
@@ -203,11 +239,92 @@
   "daily": {
     "label": "Coffre du jour",
     "kicker": "COFFRE DU JOUR",
-    "title": ["Coffre", "du jour !"],
+    "title": [
+      "Coffre",
+      "du jour !"
+    ],
     "badgeKicker": "COFFRE DE SÉRIE · {n} JOURS",
-    "badgeTitle": ["{n} jours", "de série !"],
+    "badgeTitle": [
+      "{n} jours",
+      "de série !"
+    ],
     "note": "Série de {n} jour | Série de {n} jours",
     "badgeNote": "{daily} du jour + {bonus} pour le badge {n} jours",
+    "badgeOnlyNote": "Le bonus du badge {n} jours",
     "continue": "Continuer"
+  },
+  "wheel": {
+    "label": "Roue des cadeaux",
+    "title": "Roue des cadeaux",
+    "sub": "Lance la roue : cristaux, cadeau surprise… ou tête de mort.",
+    "ticketSub": "Tente de gagner 300 cristaux et de superbes cadeaux !",
+    "spin": "Tourner",
+    "again": "Relancer",
+    "spinLabel": "Tourner la roue",
+    "againTicket": "Relancer · {n} ticket | Relancer · {n} tickets",
+    "againBuy": "Relancer · ticket à {price}",
+    "continue": "Continuer",
+    "decline": "Pas aujourd’hui",
+    "never": "Ne plus me proposer la roue",
+    "neverConfirm": {
+      "title": "Plus de roue ?",
+      "message": "La roue des cadeaux ne te sera plus proposée, et celle d’aujourd’hui est perdue. Tu peux la réactiver dans ton profil.",
+      "ok": "Ne plus la proposer"
+    },
+    "hints": {
+      "start": "Touche le centre pour lancer la roue.",
+      "spinning": "La roue tourne…",
+      "again": "Encore {n} ticket : touche « Relancer ». | Encore {n} tickets : touche « Relancer ».",
+      "buy": "Un tour de plus ? Un ticket s’achète ici."
+    },
+    "segments": {
+      "lose": "PERDU",
+      "gift": "CADEAU"
+    },
+    "gems": {
+      "blue": "bleue",
+      "red": "rouge",
+      "yellow": "jaune"
+    },
+    "chests": {
+      "title": "Choisis un coffre",
+      "sub": "Pierre bleue, rouge ou jaune ? Touche-le 3 fois pour l’ouvrir.",
+      "again": "Encore !",
+      "two": "Plus que 2 coups.",
+      "one": "Un dernier coup !",
+      "open": "Il s’ouvre !",
+      "chest": "Coffre à la pierre {gem}"
+    },
+    "gain": {
+      "title": "+{n} cristaux",
+      "sub": "Ils rejoignent ta réserve.",
+      "jackpot": "Jackpot !",
+      "jackpotSub": "300 cristaux d’un coup.",
+      "reserve": "TA RÉSERVE"
+    },
+    "costume": {
+      "head": "Cadeau débloqué !",
+      "headSub": "Le coffre renfermait une surprise pour Albert.",
+      "kicker": "COSTUME SPÉCIAL",
+      "title": "Un nouveau costume pour Albert",
+      "body": "Un avant-goût de sa future garde-robe.",
+      "alt": "Albert en costume spécial"
+    },
+    "freeze": {
+      "head": "Cadeau débloqué !",
+      "headSub": "Le coffre renfermait un gel de série.",
+      "kicker": "GEL DE SÉRIE · 1 JOUR",
+      "title": "Un gel de série",
+      "body": "Rangé avec tes gels : il protège ta série un jour d’absence, tout seul."
+    },
+    "lose": {
+      "kicker": "PERDU",
+      "title": "Tête de mort",
+      "body": "Pas de lot cette fois. Retente ta chance."
+    },
+    "errors": {
+      "gone": "Cette roue n’est plus à tourner."
+    },
+    "use": "Tourner la roue"
   }
 }

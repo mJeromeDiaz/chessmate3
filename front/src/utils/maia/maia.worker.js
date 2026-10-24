@@ -67,9 +67,16 @@ async function run({ id, tokens, eloSelf, eloOppo }) {
       elo_oppo: new ort.Tensor('float32', Float32Array.of(eloOppo), [1])
     })
     // Copies of their own (a tensor's data may be a view on a larger buffer), transferred.
-    const move = Float32Array.from(/** @type {Float32Array} */ (output.logits_move.data))
-    const value = Float32Array.from(/** @type {Float32Array} */ (output.logits_value.data))
-    self.postMessage({ type: 'result', id, move, value }, [move.buffer, value.buffer])
+    const move = Float32Array.from(
+      /** @type {Float32Array} */ (output.logits_move.data)
+    )
+    const value = Float32Array.from(
+      /** @type {Float32Array} */ (output.logits_value.data)
+    )
+    self.postMessage({ type: 'result', id, move, value }, [
+      move.buffer,
+      value.buffer
+    ])
   } catch (error) {
     self.postMessage({ type: 'error', id, message: String(error) })
   }

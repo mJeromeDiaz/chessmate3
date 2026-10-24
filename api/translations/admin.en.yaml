@@ -9,6 +9,7 @@ shop:
     unknown_offer: "Unknown offer."
     image: "A professor's image name (e.g. albert-cool)."
     ends_after_start: "The end must come after the start."
+    wheel_no_prize: "At least one prize must be able to come out."
     slug_format: "Lowercase letters, digits and _ only."
     slug_taken: "This slug already exists."
     unknown_section: "Unknown section."

@@ -21,7 +21,7 @@ test('landing: a visitor sees the landing page with its own header', async ({
       'Bientôt'
     )
   }
-  await expect(page.getByTestId('landing-module-finales')).toContainText(
+  await expect(page.getByTestId('landing-module-analyse')).toContainText(
     'Bientôt'
   )
 

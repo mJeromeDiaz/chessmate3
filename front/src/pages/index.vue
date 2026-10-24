@@ -70,5 +70,4 @@ const showHeader = computed(() => auth.isAuthenticated || !route.meta.landing)
   font-size: 19px;
   white-space: nowrap;
 }
-
 </style>

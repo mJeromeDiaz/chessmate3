@@ -49,9 +49,9 @@ final class JongleurTest extends TestCase
     public function testAnAnswerIsLateAfterItsTimeAndTheTolerances(): void
     {
         $start = new \DateTimeImmutable('2026-10-20 10:00:00.700');
-        // Stored to the second: 10:00:00, then 6 s, 1 s, 2 s.
-        self::assertFalse(JongleurRules::isLate($start, new \DateTimeImmutable('2026-10-20 10:00:09.000')));
-        self::assertTrue(JongleurRules::isLate($start, new \DateTimeImmutable('2026-10-20 10:00:09.001')));
+        // Stored to the second: 10:00:00, then 7 s, 1 s, 2 s.
+        self::assertFalse(JongleurRules::isLate($start, new \DateTimeImmutable('2026-10-20 10:00:10.000')));
+        self::assertTrue(JongleurRules::isLate($start, new \DateTimeImmutable('2026-10-20 10:00:10.001')));
     }
 
     /**

@@ -86,21 +86,39 @@ final readonly class PositionPool
     }
 
     /**
+     * The variants kept for each lesson (the textbook positions not counted), lessons without one
+     * left out.
+     *
+     * @return array<string, int> by lesson key
+     */
+    public function variantCounts(): array
+    {
+        $counts = [];
+        foreach ($this->connection->fetchAllKeyValue('SELECT lesson_key, COUNT(*) FROM endgame_position WHERE textbook = 0 GROUP BY lesson_key') as $key => $count) {
+            $counts[(string) $key] = is_numeric($count) ? (int) $count : 0;
+        }
+
+        return $counts;
+    }
+
+    /**
      * A position of the lesson at random, the textbook one excluded (a variant), null when none.
      *
      * @param list<int> $excluded ids already served
+     * @param int|null  $maxDtm   only mates this short (plies), the distance known (the Roi des cendres)
      *
      * @return PoolPosition|null
      */
-    public function pick(Lesson $lesson, Randomizer $randomizer, array $excluded = []): ?array
+    public function pick(Lesson $lesson, Randomizer $randomizer, array $excluded = [], ?int $maxDtm = null): ?array
     {
         $from = $randomizer->getInt(0, 2_147_483_647);
         $exclusion = [] === $excluded ? '' : ' AND id NOT IN (?)';
+        $length = null === $maxDtm ? '' : ' AND dtm IS NOT NULL AND ABS(dtm) <= ?';
         foreach (['random_key >= ? ORDER BY random_key ASC', 'random_key < ? ORDER BY random_key DESC'] as $order) {
             $row = $this->connection->fetchAssociative(
-                'SELECT id, fen, dtm FROM endgame_position WHERE lesson_key = ? AND textbook = 0'.$exclusion.' AND '.$order.' LIMIT 1',
-                [$lesson->key, ...([] === $excluded ? [] : [$excluded]), $from],
-                [ParameterType::STRING, ...([] === $excluded ? [] : [ArrayParameterType::INTEGER]), ParameterType::INTEGER],
+                'SELECT id, fen, dtm FROM endgame_position WHERE lesson_key = ? AND textbook = 0'.$exclusion.$length.' AND '.$order.' LIMIT 1',
+                [$lesson->key, ...([] === $excluded ? [] : [$excluded]), ...(null === $maxDtm ? [] : [$maxDtm]), $from],
+                [ParameterType::STRING, ...([] === $excluded ? [] : [ArrayParameterType::INTEGER]), ...(null === $maxDtm ? [] : [ParameterType::INTEGER]), ParameterType::INTEGER],
             );
             if (false !== $row) {
                 return [

@@ -22,6 +22,8 @@ use App\Enum\MindMap\StepStatus;
  * - A chest is earned (done) once every exercise before it in its section is passed, never by a
  *   skip ({@see self::chestsDue()}).
  * - A reachable step without module is « soon »: an exercise may be skipped, a boss blocks.
+ * - A free chapter ({@see Chapter::$free}) locks nothing: open whatever came before, its sections,
+ *   exercises and bosses all open at once.
  *
  * @phpstan-type StepProgress array{passes: int, done: bool, skipped: bool}
  */
@@ -38,13 +40,14 @@ final class PathState
         $statuses = [];
         $chapterOpen = true;
         foreach ($chapters as $chapter) {
-            $sectionOpen = $chapterOpen;
+            $open = $chapterOpen || $chapter->free;
+            $sectionOpen = $open;
             foreach ($chapter->sections as $section) {
-                $statuses += self::sectionStatuses($section, $progress, $sectionOpen);
-                $sectionOpen = $sectionOpen && self::isCleared($section, $progress);
+                $statuses += self::sectionStatuses($section, $progress, $sectionOpen, $chapter->free);
+                $sectionOpen = $chapter->free || ($sectionOpen && self::isCleared($section, $progress));
             }
-            $statuses[$chapter->boss->key] = self::reachable($chapter->boss, $progress, $chapterOpen);
-            $chapterOpen = $chapterOpen && self::isDone($chapter->boss, $progress);
+            $statuses[$chapter->boss->key] = self::reachable($chapter->boss, $progress, $open);
+            $chapterOpen = $open && self::isDone($chapter->boss, $progress);
         }
 
         return $statuses;
@@ -108,10 +111,11 @@ final class PathState
 
     /**
      * @param array<string, StepProgress> $progress
+     * @param bool                        $free     every step open, in any order
      *
      * @return array<string, StepStatus>
      */
-    private static function sectionStatuses(Section $section, array $progress, bool $open): array
+    private static function sectionStatuses(Section $section, array $progress, bool $open, bool $free = false): array
     {
         $statuses = [];
         // Whether every exercise so far is passed or skipped.
@@ -127,15 +131,15 @@ final class PathState
                 $cleared => $step->isPlayable() ? StepStatus::Open : StepStatus::Soon,
                 default => StepStatus::Locked,
             };
-            $cleared = $cleared && self::isPassedOrSkipped($step, $progress);
+            $cleared = $free || ($cleared && self::isPassedOrSkipped($step, $progress));
         }
         // The mini-bosses: open with the section, one beaten opens the next.
         $reached = $open;
         foreach ($section->miniBosses as $boss) {
             $statuses[$boss->key] = self::reachable($boss, $progress, $reached);
-            $reached = $reached && self::isDone($boss, $progress);
+            $reached = $free || ($reached && self::isDone($boss, $progress));
         }
-        $sectionCleared = $open && self::isCleared($section, $progress);
+        $sectionCleared = $free || ($open && self::isCleared($section, $progress));
         foreach ($section->hidden as $boss) {
             $statuses[$boss->key] = $sectionCleared ? self::reachable($boss, $progress, true) : StepStatus::Hidden;
         }

@@ -119,17 +119,24 @@ describe('Maia encoding', () => {
     expect(chances[0].uci).toBe('e2e4')
     expect(chances.reduce((sum, move) => sum + move.p, 0)).toBeCloseTo(1, 6)
     // A move never legal here (a1a8) is ignored, however high its logit.
-    expect(legalChances(START, policy(0 * 64 + 56, 50))[0].p).toBeCloseTo(1 / 20, 6)
+    expect(legalChances(START, policy(0 * 64 + 56, 50))[0].p).toBeCloseTo(
+      1 / 20,
+      6
+    )
   })
 
   it('reads the moves of Black in the mirrored policy', () => {
     const chances = legalChances(AFTER_E4, policy(moveIndex('c7c5', true)))
     expect(chances[0].uci).toBe('c7c5')
-    expect(legalChances('8/8/8/8/8/8/p7/2K4k b - - 0 1', policy(4096))[0].uci).toBe('a2a1q')
+    expect(
+      legalChances('8/8/8/8/8/8/p7/2K4k b - - 0 1', policy(4096))[0].uci
+    ).toBe('a2a1q')
   })
 
   it('gives no move when there is none', () => {
-    expect(legalChances('7k/5QQ1/8/8/8/8/8/K7 b - - 0 1', policy(0))).toEqual([])
+    expect(legalChances('7k/5QQ1/8/8/8/8/8/K7 b - - 0 1', policy(0))).toEqual(
+      []
+    )
   })
 
   it('reads the outlook for the side to move', () => {
@@ -156,7 +163,9 @@ describe('drawMove', () => {
 
   it('takes the probabilities again among the moves allowed', () => {
     // b 0.925, c 0.075 among themselves: c is drawn now.
-    expect(drawMove(chances, { among: ['b', 'c'], random: () => 0.99 })).toBe('c')
+    expect(drawMove(chances, { among: ['b', 'c'], random: () => 0.99 })).toBe(
+      'c'
+    )
     expect(drawMove(chances, { among: ['b', 'c'], random: () => 0 })).toBe('b')
   })
 
@@ -179,21 +188,30 @@ describe('MaiaEngine', () => {
     const worker = new FakeMaia()
     /** @type {{loaded: number, total: number}[]} */
     const seen = []
-    const engine = new MaiaEngine(worker, { url: '/maia/m.onnx', onProgress: p => seen.push(p) })
+    const engine = new MaiaEngine(worker, {
+      url: '/maia/m.onnx',
+      onProgress: p => seen.push(p)
+    })
     const prediction = await engine.predict(START, { elo: 3000 })
     expect(worker.sent[0]).toEqual({ type: 'load', url: '/maia/m.onnx' })
     expect(seen).toEqual([{ loaded: 50, total: 100 }])
     expect(prediction.chances[0].uci).toBe('e2e4')
     expect(prediction.outlook.win).toBeGreaterThan(0.9)
     // Ratings kept within what Maia knows, the opponent's the same by default.
-    expect(worker.sent[1]).toMatchObject({ type: 'run', eloSelf: 2600, eloOppo: 2600 })
+    expect(worker.sent[1]).toMatchObject({
+      type: 'run',
+      eloSelf: 2600,
+      eloOppo: 2600
+    })
     expect(worker.sent[1].tokens).toHaveLength(768)
   })
 
   it('fails when the model does not load', async () => {
     const engine = new MaiaEngine(new FakeMaia({ fail: true }), { url: '/m' })
     await expect(engine.ready()).rejects.toBeInstanceOf(EngineFailureError)
-    await expect(engine.predict(START, { elo: 1500 })).rejects.toBeInstanceOf(EngineFailureError)
+    await expect(engine.predict(START, { elo: 1500 })).rejects.toBeInstanceOf(
+      EngineFailureError
+    )
     expect(engine.failed).toBe(true)
   })
 
@@ -201,7 +219,10 @@ describe('MaiaEngine', () => {
     const engine = new MaiaEngine(new FakeMaia({ hold: true }), { url: '/m' })
     await engine.ready()
     const controller = new AbortController()
-    const running = engine.predict(START, { elo: 1500, signal: controller.signal })
+    const running = engine.predict(START, {
+      elo: 1500,
+      signal: controller.signal
+    })
     await flush()
     controller.abort()
     await expect(running).rejects.toBeInstanceOf(EngineAbortError)
@@ -209,8 +230,13 @@ describe('MaiaEngine', () => {
   })
 
   it('fails when the worker stops answering', async () => {
-    const engine = new MaiaEngine(new FakeMaia({ hold: true }), { url: '/m', runTimeoutMs: 5 })
-    await expect(engine.predict(START, { elo: 1500 })).rejects.toBeInstanceOf(EngineFailureError)
+    const engine = new MaiaEngine(new FakeMaia({ hold: true }), {
+      url: '/m',
+      runTimeoutMs: 5
+    })
+    await expect(engine.predict(START, { elo: 1500 })).rejects.toBeInstanceOf(
+      EngineFailureError
+    )
     expect(engine.failed).toBe(true)
   })
 
@@ -254,9 +280,9 @@ describe('useMaia', () => {
     expect(maia.status.value).toBe('thinking')
     // e2e4 is far ahead, every other move below 5 %: always e2e4.
     expect(await choosing).toBe('e2e4')
-    expect(await maia.chooseMove(START, { elo: 1500, among: ['d2d4', 'g1f3'] })).toMatch(
-      /^(d2d4|g1f3)$/
-    )
+    expect(
+      await maia.chooseMove(START, { elo: 1500, among: ['d2d4', 'g1f3'] })
+    ).toMatch(/^(d2d4|g1f3)$/)
     expect(workers).toHaveLength(1)
     scope.stop()
     expect(workers[0].terminated).toBe(true)

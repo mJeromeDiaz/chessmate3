@@ -17,7 +17,7 @@ final class RedactorTest extends TestCase
      * recognized by the Redactor.
      */
     private const HARMLESS_DTO_FIELDS = [
-        'avatar', 'boardTheme', 'displayName', 'email', 'handle', 'locale', 'moveSound', 'publicProfile',
+        'avatar', 'boardTheme', 'dailyWheel', 'displayName', 'email', 'handle', 'locale', 'moveSound', 'publicProfile',
         'theme', 'timezone', 'trustDevice', 'website',
     ];
 

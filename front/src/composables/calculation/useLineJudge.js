@@ -138,9 +138,7 @@ export function useLineJudge() {
    * @returns {Promise<string|null>}
    */
   function bestMove(fen) {
-    return engine
-      .bestMove(fen, { movetime: ANALYSE_MS })
-      .catch(lost)
+    return engine.bestMove(fen, { movetime: ANALYSE_MS }).catch(lost)
   }
 
   /** Forgets the positions analysed and gives up the searches running (a new item). */

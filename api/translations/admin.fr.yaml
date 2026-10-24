@@ -10,6 +10,7 @@ shop:
     unknown_offer: "Offre inconnue."
     image: "Un nom d’image de prof (ex. albert-cool)."
     ends_after_start: "La fin doit suivre le début."
+    wheel_no_prize: "Au moins un lot doit pouvoir sortir."
     slug_format: "Lettres minuscules, chiffres et _ seulement."
     slug_taken: "Ce slug existe déjà."
     unknown_section: "Rayon inconnu."

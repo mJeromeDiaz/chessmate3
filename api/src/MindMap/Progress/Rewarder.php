@@ -83,9 +83,11 @@ final readonly class Rewarder
         return $chest;
     }
 
-    /** The ledger's line: « Carte mentale · visualisation · 2-1-boss ». */
+    /** The ledger's line: « Carte mentale · visualisation · 2-1-boss », « Finales · rooks-boss ». */
     private static function reason(Capacity $capacity, Step $step): string
     {
-        return \sprintf('Carte mentale · %s · %s', $capacity->value, $step->key);
+        return Capacity::Endgames === $capacity
+            ? \sprintf('Finales · %s', $step->key)
+            : \sprintf('Carte mentale · %s · %s', $capacity->value, $step->key);
     }
 }

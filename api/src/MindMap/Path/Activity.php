@@ -19,7 +19,9 @@ final readonly class Activity
     public const SUBJECT_USER = 'user';
 
     /**
-     * @param array<string, mixed> $config the run's, as POST /training/runs takes it
+     * @param array<string, mixed>      $config       the run's, as POST /training/runs takes it
+     * @param array<string, mixed>|null $repeatConfig the run's once the step has a pass (the
+     *                                                endgames' lessons: learn first, then review)
      */
     public function __construct(
         public Module $module,
@@ -28,7 +30,18 @@ final readonly class Activity
         public int $count,
         public ?int $lives = null,
         public string $subject = self::SUBJECT_USER,
+        public ?array $repeatConfig = null,
     ) {
+    }
+
+    /**
+     * The run's config for a player who has $passes passes of the step.
+     *
+     * @return array<string, mixed>
+     */
+    public function configFor(int $passes): array
+    {
+        return $passes > 0 && null !== $this->repeatConfig ? $this->repeatConfig : $this->config;
     }
 
     /**

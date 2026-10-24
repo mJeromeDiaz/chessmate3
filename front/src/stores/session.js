@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import {
   coordinatesApi,
+  endgameApi,
   evaluationApi,
   planApi,
   puzzleRushApi,
@@ -187,14 +188,15 @@ export const useSessionStore = defineStore('session', () => {
       })
       .catch(() => {})
     try {
-      const [repertoireList, sets, , coordinates, evaluation, rush] =
+      const [repertoireList, sets, , coordinates, evaluation, rush, endgames] =
         await Promise.all([
           repertoireApi.list(),
           woodpeckerApi.sets(),
           puzzles.fetchThemes(),
           coordinatesApi.overview(),
           evaluationApi.overview(),
-          puzzleRushApi.overview()
+          puzzleRushApi.overview(),
+          endgameApi.overview()
         ])
       durationChoices.value = {
         coordonnees: {
@@ -205,7 +207,11 @@ export const useSessionStore = defineStore('session', () => {
           minutes: evaluation.rules.runMinutes,
           default: evaluation.rules.defaultMinutes
         },
-        rush: rushMinutes(rush.rules)
+        rush: rushMinutes(rush.rules),
+        finales: {
+          minutes: endgames.rules.runMinutes,
+          default: endgames.rules.defaultMinutes
+        }
       }
       items.value = items.value.map(item => {
         const module = MODULES_BY_ID[item.moduleId]

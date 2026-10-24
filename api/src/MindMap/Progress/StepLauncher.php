@@ -47,7 +47,8 @@ final readonly class StepLauncher
     {
         $found = Paths::find($capacity, $key) ?? throw new StepNotFoundException();
         $step = $found['step'];
-        $status = $this->statusOf($user, $capacity, $key);
+        $rows = $this->progress->byStep($user, $capacity);
+        $status = PathState::statuses(Paths::chapters($capacity), Progresses::state($rows))[$key] ?? StepStatus::Locked;
         $activity = $step->activity;
         // Locked first: a step not reachable yet says so, whether its module exists or not.
         if (!\in_array($status, [StepStatus::Open, StepStatus::Soon, StepStatus::Done, StepStatus::Skipped], true)) {
@@ -57,8 +58,10 @@ final readonly class StepLauncher
             throw new StepRefusedException(StepRefusedException::SOON);
         }
 
-        return $this->entityManager->getConnection()->transactional(function () use ($user, $capacity, $key, $activity): Run {
-            $run = $this->runner->start($user, $activity->module, $this->subjectOf($user, $activity), $activity->budgetSeconds, $activity->config, null, \sprintf('%s:%s', $capacity->value, $key));
+        $config = $activity->configFor(($rows[$key] ?? null)?->getPasses() ?? 0);
+
+        return $this->entityManager->getConnection()->transactional(function () use ($user, $capacity, $key, $activity, $config): Run {
+            $run = $this->runner->start($user, $activity->module, $this->subjectOf($user, $activity), $activity->budgetSeconds, $config, null, \sprintf('%s:%s', $capacity->value, $key));
             $this->entityManager->persist(new Attempt($run, $capacity, $key, $run->getStartedAt()));
             $this->entityManager->flush();
 
@@ -102,13 +105,6 @@ final readonly class StepLauncher
         if (null !== $refusal) {
             throw new StepRefusedException($refusal);
         }
-    }
-
-    private function statusOf(User $user, Capacity $capacity, string $key): StepStatus
-    {
-        $state = Progresses::state($this->progress->byStep($user, $capacity));
-
-        return PathState::statuses(Paths::chapters($capacity), $state)[$key] ?? StepStatus::Locked;
     }
 
     private function subjectOf(User $user, Activity $activity): Uuid

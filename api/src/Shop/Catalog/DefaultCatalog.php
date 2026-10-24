@@ -32,6 +32,7 @@ final class DefaultCatalog
         ['pack_marathon', 'packs', 'Pack Marathon', null, 'Gel 2 semaines et 5 aides Puzzle Streak. Ta série ne craint plus rien.', [['item' => 'streak_freeze_14', 'quantity' => 1], ['item' => 'puzzle_streak_help', 'quantity' => 5]], 590, 770, 2, false],
         ['pack_safety', 'packs', 'Pack Filet de sécurité', null, '3 erreurs pardonnées et 3 aides Puzzle Streak. Tes points dorment tranquilles.', [['item' => 'puzzle_pardon', 'quantity' => 3], ['item' => 'puzzle_streak_help', 'quantity' => 3]], 140, 210, 3, false],
         ['pack_night', 'packs', 'Pack Nuit noire', null, '3 erreurs pardonnées à l’aveugle et 1 aux coordonnées.', [['item' => 'blindfold_pardon', 'quantity' => 3], ['item' => 'coordinates_pardon', 'quantity' => 1]], 130, 150, 4, false],
+        ['wheel_ticket', 'wheel', 'Ticket de roue', null, 'Un tour de roue : 300 cristaux et de superbes cadeaux à gagner.', [['item' => 'wheel_ticket', 'quantity' => 1]], 20, null, 1, false],
         ['cosmetic_sounds', 'cosmetics', 'Pack de sons', null, 'Coups, captures, mats : choisis ta bande-son.', [], 0, null, 1, true],
         ['cosmetic_animations', 'cosmetics', 'Pack d’animations', null, 'Ton échec et mat ne passera plus inaperçu.', [], 0, null, 2, true],
         ['cosmetic_outfits', 'cosmetics', 'Déguisements des profs', null, 'Albert en costume ? On y travaille.', [], 0, null, 3, true],

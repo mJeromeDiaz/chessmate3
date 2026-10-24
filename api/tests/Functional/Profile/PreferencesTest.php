@@ -32,6 +32,7 @@ final class PreferencesTest extends WebTestCase
         self::assertSame('wood', $profile['boardTheme']);
         self::assertTrue($profile['moveSound']);
         self::assertFalse($profile['publicProfile']);
+        self::assertTrue($profile['dailyWheel']);
 
         $this->put($server, ['boardTheme' => 'slate', 'moveSound' => false, 'publicProfile' => true]);
         self::assertResponseIsSuccessful();
@@ -39,6 +40,12 @@ final class PreferencesTest extends WebTestCase
         self::assertSame('slate', $profile['boardTheme']);
         self::assertFalse($profile['moveSound']);
         self::assertTrue($profile['publicProfile']);
+        self::assertTrue($profile['dailyWheel'], 'Not sent: unchanged.');
+
+        // The daily gift wheel turned off (docs/SHOP.md, § 4 ter).
+        $this->put($server, ['boardTheme' => 'slate', 'moveSound' => false, 'publicProfile' => true, 'dailyWheel' => false]);
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->decode()['dailyWheel']);
 
         self::getContainer()->get(EntityManagerInterface::class)->clear();
         $user = self::getContainer()->get(UserRepository::class)->findOneByEmail('alice@example.com');

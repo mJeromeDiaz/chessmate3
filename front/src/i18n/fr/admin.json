@@ -302,6 +302,22 @@
     "defaults": " (valeurs par défaut)",
     "saved": "Règle enregistrée."
   },
+  "wheelRuleForm": {
+    "title": "Roue des cadeaux",
+    "lead": "Le poids de chaque lot : sa chance est son poids sur la somme des poids (0 : il ne sort jamais). La roue affichée ne change pas ; les tirages suivants suivent ces chances.",
+    "prizes": {
+      "c5": "5 cristaux",
+      "c30": "30 cristaux",
+      "c300": "300 cristaux",
+      "gift": "Cadeau",
+      "lose": "Tête de mort"
+    },
+    "chance": "poids · {n} %",
+    "freezePercent": "Cadeau : part des gels",
+    "freezeHint": "Le reste : le costume d’Albert (un message seulement)",
+    "preview": "En moyenne, {n} cristaux par tour (hors cadeaux).",
+    "saved": "Chances enregistrées."
+  },
   "shopPlayers": {
     "emailPseudoOuNom": "Email, pseudo ou nom",
     "couronnesOu": "Cristaux (+ ou −)",

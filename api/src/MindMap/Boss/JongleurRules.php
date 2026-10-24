@@ -15,7 +15,7 @@ final class JongleurRules
 {
     public const BOSS = 'jongleur';
     /** The time of a question, whatever it asks. */
-    public const QUESTION_SECONDS = 6;
+    public const QUESTION_SECONDS = 7;
     /** The fight is lost at this many failures (a late answer is one). */
     public const LIVES = PathRules::BOSS_LIVES;
     /** The longest fight (the chapter 1's boss). */

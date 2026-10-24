@@ -1,3 +1,4 @@
+import { lessonTitle } from '@/utils/endgame'
 import { engineLabel, tagLabel } from '@/utils/evaluation'
 import { formatDuration } from '@/utils/format'
 import { numberedLine } from '@/utils/notation'
@@ -13,7 +14,7 @@ import { t } from '@/i18n'
  *
  * @typedef {object} ReviewItem
  * @property {number} index 1-based, in the order played
- * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'|'streak_puzzle'|'blindfold_recall'|'notation'} type
+ * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'|'streak_puzzle'|'blindfold_recall'|'notation'|'evaluation_position'|'endgame_position'} type
  * @property {ItemStatus} status
  * @property {number|null} durationMs
  * @property {Record<string, any>} data
@@ -104,6 +105,11 @@ export function itemTitle(item, themeLabel) {
           ? engineLabel(item.data.evalCp)
           : ''
     })
+  if (item.type === 'endgame_position')
+    return t('endgame.review.title', {
+      lesson: lessonTitle(item.data.lesson),
+      status: t(`endgame.feedback.titles.${item.data.status}`)
+    })
   if (item.type === 'notation')
     return t('notation.review.title', {
       kind: t(`notation.kinds.${item.data.kind}.title`),
@@ -154,6 +160,7 @@ export function missedItems(items, themeLabel) {
         item.type !== 'evaluation_position' &&
         item.type !== 'blindfold_recall' &&
         item.type !== 'notation' &&
+        item.type !== 'endgame_position' &&
         (item.type !== 'repertoire_unit' || !!item.data.startFen)
     }))
 }

@@ -247,11 +247,12 @@ final readonly class DataExport
                 'SELECT local_date, item_count, success_count, paid_seconds, capped, tier, crowns, created_at, opened_at FROM shop_session_reward WHERE user_id = ? ORDER BY created_at',
                 $id,
             ),
-            // The daily chests (docs/SHOP.md, § 4 ter).
+            // The daily chests and the gift wheel (docs/SHOP.md, § 4 ter).
             'dailyRewards' => $this->rows(
-                'SELECT local_date, streak, badge_days, daily_crowns, badge_crowns, crowns, created_at, opened_at FROM shop_daily_reward WHERE user_id = ? ORDER BY local_date',
+                'SELECT local_date, streak, badge_days, daily_crowns, badge_crowns, crowns, wheel, created_at, opened_at FROM shop_daily_reward WHERE user_id = ? ORDER BY local_date',
                 $id,
             ),
+            'wheelSpins' => $this->rows('SELECT prize, gift, crowns, ticket, created_at FROM shop_wheel_spin WHERE user_id = ? ORDER BY created_at', $id),
         ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(
@@ -295,6 +296,7 @@ final readonly class DataExport
             'boardTheme' => $user->getBoardTheme()->value,
             'moveSound' => $user->hasMoveSound(),
             'publicProfile' => $user->isPublicProfile(),
+            'dailyWheel' => $user->hasDailyWheel(),
             // The guided tour's answers (docs/ONBOARDING.md).
             'onboarding' => $this->rows('SELECT level, goal, updated_at AS updatedAt FROM onboarding_answer WHERE user_id = ?', $user->getId()->toBinary())[0]
                 ?? ['level' => null, 'goal' => null, 'updatedAt' => null],

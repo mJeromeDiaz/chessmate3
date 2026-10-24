@@ -79,4 +79,34 @@ class AttemptRepository extends ServiceEntityRepository
 
         return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $ids);
     }
+
+    /**
+     * The user's positions played out, by lesson: how many, how many won or held, the last one.
+     *
+     * @return array<string, array{played: int, succeeded: int, lastPlayedAt: \DateTimeImmutable}> by lesson key
+     */
+    public function resultsByLesson(User $user): array
+    {
+        $rows = $this->getEntityManager()->getConnection()->fetchAllAssociative(
+            'SELECT lesson_key, COUNT(*) AS played, SUM(status IN (?, ?)) AS succeeded, MAX(submitted_at) AS last_played_at
+             FROM endgame_attempt WHERE user_id = ? AND status <> ? AND submitted_at IS NOT NULL GROUP BY lesson_key',
+            [AttemptStatus::Won->value, AttemptStatus::Held->value, $user->getId()->toBinary(), AttemptStatus::Pending->value],
+            [ParameterType::STRING, ParameterType::STRING, ParameterType::BINARY, ParameterType::STRING],
+        );
+        $results = [];
+        foreach ($rows as $row) {
+            $key = $row['lesson_key'];
+            $last = $row['last_played_at'];
+            if (!\is_string($key) || !\is_string($last)) {
+                continue;
+            }
+            $results[$key] = [
+                'played' => is_numeric($row['played']) ? (int) $row['played'] : 0,
+                'succeeded' => is_numeric($row['succeeded']) ? (int) $row['succeeded'] : 0,
+                'lastPlayedAt' => new \DateTimeImmutable($last, new \DateTimeZone('UTC')),
+            ];
+        }
+
+        return $results;
+    }
 }

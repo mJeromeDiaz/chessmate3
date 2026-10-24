@@ -18,10 +18,12 @@ import { intlLocale, t } from '@/i18n'
  * @property {string} localDate
  * @property {number} streak the streak reached that day
  * @property {number|null} badgeDays the streak badge won that day
- * @property {number} dailyCrowns the daily draw (6 to 12)
+ * @property {number} dailyCrowns the daily draw (6 to 12; 0 since the gift wheel)
  * @property {number} badgeCrowns the badge's bonus (0 without one)
  * @property {number} crowns both together
  * @property {boolean} opened
+ * @property {'offered'|'spun'|'declined'|'off'|null} wheel the day's gift wheel (null before it)
+ * @property {boolean} wheelOpen today's wheel, still to spin
  *
  * @typedef {object} ChestWords what another chest says instead of a session's
  * @property {string} [kicker] the closed chest's kicker
@@ -258,11 +260,14 @@ export function dailyChestWords(daily) {
 }
 
 /**
- * The line under the amount: the streak, or the draw and the badge's bonus.
+ * The line under the amount: the streak, or the draw and the badge's bonus (the badge alone since
+ * the gift wheel).
  *
  * @param {DailyReward} daily
  */
 export function dailyChestNote(daily) {
+  if (daily.badgeDays && !daily.dailyCrowns)
+    return t('shop.daily.badgeOnlyNote', { n: daily.badgeDays })
   if (daily.badgeDays)
     return t('shop.daily.badgeNote', {
       daily: daily.dailyCrowns,

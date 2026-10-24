@@ -21,18 +21,21 @@ const PIECES = 'pnbrqk'
 const PROMOTIONS = 'qrbn'
 
 /** @param {number} square 0 (a1) … 63 (h8) */
-const squareName = square => FILES[square % 8] + String(Math.floor(square / 8) + 1)
+const squareName = square =>
+  FILES[square % 8] + String(Math.floor(square / 8) + 1)
 
 /** The 4352 moves of Maia's policy, in its order. */
 export const MOVES = Object.freeze(
   (() => {
     const moves = []
     for (let from = 0; from < 64; from++) {
-      for (let to = 0; to < 64; to++) moves.push(squareName(from) + squareName(to))
+      for (let to = 0; to < 64; to++)
+        moves.push(squareName(from) + squareName(to))
     }
     for (const fromFile of FILES) {
       for (const toFile of FILES) {
-        for (const piece of PROMOTIONS) moves.push(`${fromFile}7${toFile}8${piece}`)
+        for (const piece of PROMOTIONS)
+          moves.push(`${fromFile}7${toFile}8${piece}`)
       }
     }
     return moves
@@ -105,7 +108,10 @@ export function legalChances(fen, logits) {
   const moves = new Chess(fen)
     .moves({ verbose: true })
     .map(move => move.from + move.to + (move.promotion ?? ''))
-  const scored = moves.map(uci => ({ uci, logit: logits[moveIndex(uci, blackToMove)] }))
+  const scored = moves.map(uci => ({
+    uci,
+    logit: logits[moveIndex(uci, blackToMove)]
+  }))
   if (scored.length === 0) return []
   const top = Math.max(...scored.map(move => move.logit))
   const weights = scored.map(move => Math.exp(move.logit - top))
@@ -140,13 +146,17 @@ export const MIN_CHANCE = 0.05
  * @param {{among?: string[], minChance?: number, random?: () => number}} [options]
  * @returns {string|null} null without a legal move (or none of `among`)
  */
-export function drawMove(chances, { among, minChance = MIN_CHANCE, random = Math.random } = {}) {
+export function drawMove(
+  chances,
+  { among, minChance = MIN_CHANCE, random = Math.random } = {}
+) {
   let pool = chances
   if (among) {
     const allowed = new Set(among)
     pool = pool.filter(move => allowed.has(move.uci))
     const total = pool.reduce((sum, move) => sum + move.p, 0)
-    if (total > 0) pool = pool.map(move => ({ uci: move.uci, p: move.p / total }))
+    if (total > 0)
+      pool = pool.map(move => ({ uci: move.uci, p: move.p / total }))
   }
   if (pool.length === 0) return null
   const kept = pool.filter(move => move.p >= minChance)

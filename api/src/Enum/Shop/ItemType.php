@@ -25,6 +25,8 @@ enum ItemType: string
     case BlindfoldPardon = 'blindfold_pardon';
     /** A coordinates series launched with it: its first wrong square not counted. */
     case CoordinatesPardon = 'coordinates_pardon';
+    /** The gift wheel spun once more (docs/SHOP.md, § 4 ter). */
+    case WheelTicket = 'wheel_ticket';
 
     /** Days covered by a freeze; null for the other items. */
     public function freezeDays(): ?int

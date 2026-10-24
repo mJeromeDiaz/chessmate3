@@ -8,7 +8,7 @@ import { intlLocale, t } from '@/i18n'
  * @typedef {object} ShopOffer
  * @property {string} id
  * @property {string} slug
- * @property {'freeze'|'puzzle_streak'|'aids'|'packs'|'cosmetics'} section
+ * @property {'freeze'|'puzzle_streak'|'aids'|'packs'|'wheel'|'cosmetics'} section
  * @property {string} name
  * @property {string|null} subtitle
  * @property {string} description
@@ -47,6 +47,7 @@ import { intlLocale, t } from '@/i18n'
  * @property {Record<string, number>} inventory
  * @property {ShopFreeze[]} freezes
  * @property {ShopEarning} earning
+ * @property {string|null} [dailyWheel] today's gift wheel still to spin (its daily reward's id)
  *
  * @typedef {object} ItemLook
  * @property {string} glyph
@@ -65,6 +66,7 @@ export const SECTIONS = [
   'puzzle_streak',
   'aids',
   'packs',
+  'wheel',
   'cosmetics'
 ].map(id => ({
   id,
@@ -100,14 +102,15 @@ const ICE = {
 }
 
 /**
- * An item's look with its words, read when shown (shop.items.<id>): kicker, label and the three
- * steps of how it works (a freeze: shop.freezeHow, with how long it lasts).
+ * An item's look with its words, read when shown (shop.items.<id>): kicker, label and the steps
+ * of how it works, three by default (a freeze: shop.freezeHow, with how long it lasts).
  *
  * @param {string} id
  * @param {Pick<ItemLook, 'glyph'|'tile'|'tileInk'|'accent'|'soft'>} colours
+ * @param {number} [steps] its lines in shop.items.<id>.how
  * @returns {ItemLook}
  */
-function item(id, colours) {
+function item(id, colours, steps = 3) {
   const freeze = id.startsWith('streak_freeze_')
   return {
     ...colours,
@@ -118,7 +121,7 @@ function item(id, colours) {
       return t(`shop.items.${id}.label`)
     },
     get how() {
-      return [0, 1, 2].map(i =>
+      return Array.from({ length: steps }, (_, i) =>
         freeze
           ? t(`shop.freezeHow.${i}`, { until: t(`shop.items.${id}.until`) })
           : t(`shop.items.${id}.how.${i}`)
@@ -167,7 +170,19 @@ export const ITEMS = {
     tileInk: '#FFFFFF',
     accent: '#5A3BE0',
     soft: '#EEE9FF'
-  })
+  }),
+  // One descriptive line rather than steps.
+  wheel_ticket: item(
+    'wheel_ticket',
+    {
+      glyph: '☸︎',
+      tile: '#C6F432',
+      tileInk: '#1B1530',
+      accent: '#4D6B00',
+      soft: '#F2FBD6'
+    },
+    1
+  )
 }
 
 /** Numbers in the current language (docs/I18N.md). */

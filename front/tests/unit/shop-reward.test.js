@@ -139,6 +139,10 @@ describe('the daily chest (docs/SHOP.md, § 4 ter)', () => {
       openTitle: ['7 jours', 'de série !']
     })
     expect(dailyChestNote(badge)).toBe('9 du jour + 70 pour le badge 7 jours')
+    // Since the gift wheel: the badge's bonus alone.
+    expect(
+      dailyChestNote(daily({ badgeDays: 7, dailyCrowns: 0, badgeCrowns: 70, crowns: 70 }))
+    ).toBe('Le bonus du badge 7 jours')
   })
 
   it('opens on the chest screen with its own words, sized by its amount', () => {

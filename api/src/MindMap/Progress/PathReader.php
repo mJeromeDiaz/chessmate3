@@ -50,6 +50,7 @@ final readonly class PathReader
         $chapterOpen = true;
         foreach ($chapters as $chapter) {
             $sections = [];
+            $chapterOpen = $chapterOpen || $chapter->free;
             $sectionOpen = $chapterOpen;
             foreach ($chapter->sections as $section) {
                 $cleared = $sectionOpen && PathState::isCleared($section, $state);
@@ -61,7 +62,7 @@ final readonly class PathReader
                     'miniBosses' => $this->steps($section->miniBosses, $statuses, $rows, $chests),
                     'hidden' => $this->steps($section->hidden, $statuses, $rows, $chests),
                 ];
-                $sectionOpen = $cleared;
+                $sectionOpen = $cleared || $chapter->free;
             }
             $bossDone = StepStatus::Done === ($statuses[$chapter->boss->key] ?? null);
             $views[] = [
@@ -77,7 +78,7 @@ final readonly class PathReader
         return [
             'capacity' => $capacity->value,
             'chapters' => $views,
-            'badges' => $this->badges($chapters, $rows),
+            'badges' => $this->badges($capacity, $chapters, $rows),
             'unopenedChests' => $this->unopened($chests),
         ];
     }
@@ -161,19 +162,28 @@ final readonly class PathReader
     }
 
     /**
-     * The badges earned: those of the steps completed, when they were.
+     * The badges earned: those of the steps completed, when they were; then the path's mastery
+     * badge ({@see Paths::masteryBadge()}), every exercise completed, when the last one was.
      *
      * @param list<Chapter>           $chapters
      * @param array<string, Progress> $rows
      *
      * @return list<array{badge: string, step: string, earnedAt: string}>
      */
-    private function badges(array $chapters, array $rows): array
+    private function badges(Capacity $capacity, array $chapters, array $rows): array
     {
         $badges = [];
+        $mastered = true;
+        $last = null;
         foreach ($chapters as $chapter) {
             foreach ($chapter->allSteps() as $step) {
                 $at = ($rows[$step->key] ?? null)?->getCompletedAt();
+                if (StepKind::Exercise === $step->kind) {
+                    $mastered = $mastered && null !== $at;
+                    if (null !== $at && (null === $last || $at > $last['at'])) {
+                        $last = ['step' => $step->key, 'at' => $at];
+                    }
+                }
                 if (null === $at) {
                     continue;
                 }
@@ -181,6 +191,10 @@ final readonly class PathReader
                     $badges[] = ['badge' => $badge, 'step' => $step->key, 'earnedAt' => $at->format(\DATE_ATOM)];
                 }
             }
+        }
+        $badge = Paths::masteryBadge($capacity);
+        if (null !== $badge && $mastered && null !== $last) {
+            $badges[] = ['badge' => $badge, 'step' => $last['step'], 'earnedAt' => $last['at']->format(\DATE_ATOM)];
         }
 
         return $badges;

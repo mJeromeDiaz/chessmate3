@@ -11,6 +11,7 @@
     "blindfold": "Jeu à l’aveugle",
     "recall": "Reconstitution",
     "evaluation": "Évaluation",
+    "endgames": "Finales",
     "menu": "Menu"
   },
   "menu": {
@@ -34,6 +35,10 @@
       "title": "Boutique",
       "text": "Gels de série, aides et bonus avec tes cristaux.",
       "balance": "{n} cristaux"
+    },
+    "wheel": {
+      "title": "Roue des cadeaux",
+      "text": "Tente de gagner 300 cristaux et de superbes cadeaux !"
     }
   },
   "account": {
@@ -67,6 +72,7 @@
   "header": {
     "back": "Retour",
     "crystals": "{n} cristaux",
+    "wheels": "{n} roue à tourner | {n} roues à tourner",
     "kickers": {
       "dashboard": "Tableau de bord",
       "free": "Entraînement libre",

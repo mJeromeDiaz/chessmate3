@@ -5,7 +5,8 @@ import { encodeBoard, legalChances, outlook } from '@/utils/maia/encoding'
 
 // The model maia.worker.js loads, run here by the same runtime (its wasm build, under Node): checks
 // that it loads with these settings and that our encoding reads its answers right.
-const MODEL = new URL('../../public/maia/maia3-23m.fp16.onnx', import.meta.url).pathname
+const MODEL = new URL('../../public/maia/maia3-23m.fp16.onnx', import.meta.url)
+  .pathname
 const WASM = new URL(
   '../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm',
   import.meta.url
@@ -26,7 +27,10 @@ async function predict(fen, elo = 1500) {
     elo_oppo: new ort.Tensor('float32', Float32Array.of(elo), [1])
   })
   const ms = Math.round(performance.now() - started)
-  const chances = legalChances(fen, /** @type {Float32Array} */ (output.logits_move.data))
+  const chances = legalChances(
+    fen,
+    /** @type {Float32Array} */ (output.logits_move.data)
+  )
   const value = outlook(/** @type {Float32Array} */ (output.logits_value.data))
   console.log(fen, `${ms} ms`, chances.slice(0, 3), value)
   return { chances, value, top: chances.slice(0, 3).map(move => move.uci) }
@@ -43,8 +47,15 @@ describe.skipIf(!existsSync(MODEL))('Maia-3 23M (npm run maia:fetch)', () => {
   })
 
   it('has the inputs and outputs we feed and read', () => {
-    expect([...session.inputNames].sort()).toEqual(['elo_oppo', 'elo_self', 'tokens'])
-    expect([...session.outputNames].sort()).toEqual(['logits_move', 'logits_value'])
+    expect([...session.inputNames].sort()).toEqual([
+      'elo_oppo',
+      'elo_self',
+      'tokens'
+    ])
+    expect([...session.outputNames].sort()).toEqual([
+      'logits_move',
+      'logits_value'
+    ])
   })
 
   it('opens as a human does', async () => {
@@ -56,7 +67,9 @@ describe.skipIf(!existsSync(MODEL))('Maia-3 23M (npm run maia:fetch)', () => {
   })
 
   it('answers as Black (the mirrored board and moves)', async () => {
-    const { top } = await predict('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1')
+    const { top } = await predict(
+      'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'
+    )
     expect(top.some(move => ['e7e5', 'c7c5'].includes(move))).toBe(true)
   })
 

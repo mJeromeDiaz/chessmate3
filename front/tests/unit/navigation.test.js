@@ -20,6 +20,7 @@ describe('FREE_TRAINING_LINKS', () => {
       'Jeu à l’aveugle',
       'Reconstitution',
       'Évaluation',
+      'Finales',
       'Parcours'
     ])
   })

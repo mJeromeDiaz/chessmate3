@@ -40,7 +40,8 @@ final class OpenDailyRewardProcessor implements ProcessorInterface
         if (!\is_string($id) || !Uuid::isValid($id)) {
             throw new NotFoundHttpException();
         }
-        $opened = $this->rewards->open($user->getId(), Uuid::fromString($id), $this->clock->now());
+        $now = $this->clock->now();
+        $opened = $this->rewards->open($user->getId(), Uuid::fromString($id), $now->setTimezone($user->getDateTimeZone())->format('Y-m-d'), $now);
         if (null === $opened) {
             throw new NotFoundHttpException('Daily reward not found.');
         }

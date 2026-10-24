@@ -63,6 +63,7 @@ export function buildModuleRows(sources) {
     if (id === 'woodpecker') Object.assign(row, woodpecker(sources.sets))
     if (id === 'repertoire') Object.assign(row, repertoire(sources.repertoires))
     if (id === 'evaluation') Object.assign(row, evaluation(sources))
+    if (id === 'finales') Object.assign(row, endgames(sources))
     return row
   })
 }
@@ -92,6 +93,28 @@ function puzzles({ totals, puzzleRating }) {
     ratioLabel: count
       ? t('dashboard.modules.puzzles.rate', { pct: percent(solved / count) })
       : ''
+  }
+}
+
+/**
+ * Endgame positions played out (docs/ENDGAMES.md): how many, and the share won or held.
+ *
+ * @param {ModuleSources} sources
+ * @returns {Partial<ModuleRow>}
+ */
+function endgames({ totals }) {
+  const played = totals.endgame
+  if (!played?.count)
+    return { to: '/finales', stat: t('dashboard.modules.endgames.none') }
+  const ratio = played.successCount / played.count
+  return {
+    to: '/finales',
+    stat: t('dashboard.modules.endgames.stat', {
+      n: number.format(played.count),
+      pct: percent(ratio)
+    }),
+    ratio,
+    ratioLabel: t('dashboard.modules.endgames.rate', { pct: percent(ratio) })
   }
 }
 

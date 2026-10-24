@@ -85,7 +85,7 @@ describe('moduleLevel', () => {
   })
 
   it('has no level for a module the API does not know, nor before the summary', () => {
-    expect(moduleLevel(summary(), 'finales')).toBeNull()
+    expect(moduleLevel(summary(), 'analyse')).toBeNull()
     expect(moduleLevel(null, 'puzzles')).toBeNull()
   })
 })

@@ -22,7 +22,16 @@ final class Paths
         return self::$chapters[$capacity->value] ??= match ($capacity) {
             Capacity::Visualisation => Visualisation::chapters(),
             Capacity::Calculation => Calculation::chapters(),
+            Capacity::Endgames => Endgames::chapters(),
         };
+    }
+
+    /**
+     * The badge earned once every exercise of the path is completed, null when the path has none.
+     */
+    public static function masteryBadge(Capacity $capacity): ?string
+    {
+        return Capacity::Endgames === $capacity ? Endgames::MASTERY_BADGE : null;
     }
 
     /**

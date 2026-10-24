@@ -22,6 +22,9 @@ final class PreferencesRequest
     #[Assert\NotNull]
     public ?bool $publicProfile = null;
 
+    /** The daily gift wheel (docs/SHOP.md, § 4 ter); null: unchanged. */
+    public ?bool $dailyWheel = null;
+
     /**
      * @return list<string>
      */

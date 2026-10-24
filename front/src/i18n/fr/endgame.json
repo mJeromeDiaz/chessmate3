@@ -1,0 +1,208 @@
+{
+  "families": {
+    "basicMates": "Mats élémentaires",
+    "pawns": "Pions",
+    "queens": "Dames",
+    "rooks": "Tours",
+    "bishops": "Fous",
+    "knights": "Cavaliers"
+  },
+  "lessons": {
+    "kqk": {
+      "title": "Mat avec la dame",
+      "text": "Joue ta dame à un saut de cavalier du roi adverse : sa prison rétrécit à chaque coup et il recule tout seul vers le bord. Une fois au bord, amène ton roi soutenir la dame pour le mat. Attention au pat : tant que ton roi n’est pas arrivé, laisse-lui toujours une case."
+    },
+    "krk": {
+      "title": "Mat avec la tour",
+      "text": "Ta tour coupe le roi adverse sur une rangée ou une colonne. Place ton roi face au sien, une case entre eux, et donne échec avec la tour : il doit reculer d’une ligne. Recommence jusqu’au bord. Si le roi attaque ta tour, éloigne-la sur la même ligne, le plus loin possible."
+    },
+    "kbbk": {
+      "title": "Mat avec les deux fous",
+      "text": "Côte à côte, tes deux fous forment un mur de diagonales que le roi adverse ne traverse pas. Rapproche ton roi, resserre le mur diagonale après diagonale et pousse le roi vers un coin : c’est là que le mat se donne. Méfie-toi du pat quand la prison devient petite."
+    },
+    "kbnk": {
+      "title": "Mat du fou et du cavalier",
+      "text": "Le mat le plus difficile : il ne se donne que dans un coin de la couleur de ton fou. Pousse d’abord le roi adverse au bord, puis fais-le glisser vers le bon coin ; ton cavalier fait la manœuvre en W pour lui couper la route. Roi, fou et cavalier travaillent ensemble, aucun n’y arrive seul."
+    },
+    "square-promote": {
+      "title": "La règle du carré",
+      "text": "Trace le carré du pion : de sa case jusqu’à la case de promotion, puis autant vers le côté. Si le roi adverse ne peut pas y entrer au prochain coup, il ne rattrape jamais le pion. Pousse-le sans perdre un temps : ton roi n’a pas besoin de l’aider."
+    },
+    "square-stop": {
+      "title": "Rattraper le pion",
+      "text": "Tu défends. Vise le carré du pion : ton roi doit y entrer tout de suite. Marche vers la case de promotion, en diagonale si besoin, c’est aussi rapide que la ligne droite. Bloque le pion ou prends-le : la nulle est faite."
+    },
+    "opposition": {
+      "title": "L’opposition",
+      "text": "Deux rois face à face, une case entre eux : celui qui doit jouer cède le passage. Place ton roi devant ton pion, prends l’opposition, et le roi adverse devra s’écarter. Ne pousse le pion qu’après que ton roi lui a ouvert la route : il te reste ainsi un coup d’attente en réserve."
+    },
+    "pawn-defence": {
+      "title": "Défendre contre roi et pion",
+      "text": "Reste devant le pion, sur sa colonne. Quand le roi adverse avance, prends l’opposition ; quand il s’écarte, garde le contact. Sur ta dernière rangée, recule toujours droit devant le pion, jamais sur le côté : si le pion arrive avec échec, il faut une case devant lui pour que ce soit pat."
+    },
+    "rook-pawn": {
+      "title": "Le pion de la tour",
+      "text": "Contre un pion de la colonne a ou h, il suffit à ton roi d’atteindre le coin de promotion : personne ne peut l’en déloger, il n’y a pas de place pour le contourner. Fonce vers le coin et restes-y, en allant d’une case à l’autre."
+    },
+    "key-squares": {
+      "title": "Les cases clés",
+      "text": "Les cases clés d’un pion qui n’a pas passé le milieu sont les trois cases deux rangées devant lui. Si ton roi en atteint une, le pion promeut quoi que fasse l’adversaire. Avance d’abord le roi, pas le pion : le pion suivra tout seul."
+    },
+    "triangulation": {
+      "title": "La triangulation",
+      "text": "Ici, celui qui a le trait perd : tu dois le rendre à l’adversaire. Ton roi décrit un petit triangle en trois coups, quand le roi adverse n’a que deux cases d’aller-retour. Vous revenez à la même position, mais c’est à lui de jouer : il doit céder."
+    },
+    "pawn-race": {
+      "title": "La course de pions",
+      "text": "Les deux pions courent à la promotion : compte les coups de chacun. Pousse le tien sans perdre de temps, puis regarde ce que fait ta nouvelle dame : contrôle-t-elle la case de promotion adverse, ou peut-elle donner un échec qui gagne l’autre dame ?"
+    },
+    "queen-vs-pawn": {
+      "title": "Dame contre pion",
+      "text": "Le pion est en 7e, soutenu par son roi. Approche-toi par des échecs et des clouages qui forcent le roi adverse à se placer devant son pion : chaque fois qu’il le bloque, ton roi gagne un pas. Recommence jusqu’à ce que ton roi aide la dame à prendre le pion."
+    },
+    "queen-vs-bishop-pawn": {
+      "title": "Le pion du fou contre la dame",
+      "text": "Ton pion du fou en 7e est une ressource de pat. Quand la dame te force à quitter ton pion, va dans le coin plutôt que devant lui : si elle prend le pion, c’est pat. Garde ton roi au contact du pion à chaque coup."
+    },
+    "queen-vs-rook": {
+      "title": "Dame contre tour",
+      "text": "La dame gagne, mais lentement. Pousse le roi adverse au bord, puis vise la position de Philidor : au trait, l’adversaire doit éloigner sa tour de son roi. Une fourchette de la dame gagne alors la tour. Attention aux échecs de la tour et aux pièges de pat."
+    },
+    "king-cut-off": {
+      "title": "Le roi coupé",
+      "text": "Ta tour coupe le roi adverse loin du pion : garde-le coupé, il ne doit pas revenir. Sors ton roi de devant le pion en te mettant à l’abri des échecs de la tour adverse, puis promeus."
+    },
+    "lucena": {
+      "title": "La position de Lucena",
+      "text": "Ton roi protège son pion, prêt à avancer vers la promotion. Mais la tour adverse donne sans cesse des échecs à distance !\n\nPour gagner :\n1. éloigne le roi adverse grâce à un échec ;\n2. construis un pont : place ta tour sur la 4e rangée pour bloquer les échecs ;\n3. ton roi sort de l'abri du pion et avance ;\n4. quand la tour adverse reprend ses échecs, ta tour s'interpose jusqu'à la promotion."
+    },
+    "philidor": {
+      "title": "La position de Philidor",
+      "text": "Tu défends contre un roi et un pion qui cherchent à avancer. \n\nPlace ta tour sur la 3e rangée pour empêcher le roi adverse de progresser. Tant que le pion n’a pas atteint cette rangée, garde cette barrière. \n\nDès que le pion avance jusqu’à la 3e rangée, recule ta tour au fond de l’échiquier et donne des échecs par derrière. Le roi adverse ne peut plus se cacher des échecs ni aider son pion à avancer : tu obtiens la nulle !"
+    },
+    "rook-vs-pawn": {
+      "title": "Tour contre pion",
+      "text": "Le pion approche de la promotion, soutenu par son roi. Mets ta tour derrière le pion ou coupe le roi adverse, et ramène ton roi le plus vite possible. Un échec au bon moment peut faire perdre au roi adverse le temps qui lui manque."
+    },
+    "vancura": {
+      "title": "La défense de Vancura",
+      "text": "Pion de la tour en 6e, tour adverse devant lui : attaque le pion par le côté, depuis la même rangée. Ta tour le tient ainsi et donne des échecs latéraux dès que le roi adverse vient l’aider. Ton roi reste près du coin opposé."
+    },
+    "wrong-rook-pawn": {
+      "title": "Le fou de la mauvaise couleur",
+      "text": "Le fou adverse ne contrôle pas la case de promotion de son pion de la tour. Si ton roi atteint ce coin, personne ne peut l’en chasser : la nulle est faite. Fonce vers le coin et restes-y."
+    },
+    "bishop-vs-pawn": {
+      "title": "Fou contre pion",
+      "text": "Ton fou tient une diagonale par laquelle le pion doit passer : il l’arrête ou se sacrifie contre lui. Garde-le loin du roi adverse pour qu’il ne le chasse pas de sa diagonale, et ramène ton roi."
+    },
+    "opposite-bishops": {
+      "title": "Fous de couleurs opposées",
+      "text": "Avec des fous de couleurs opposées, même deux pions de moins ne perdent souvent pas. Bloque les pions sur les cases de la couleur de ton fou, ton roi devant eux, et ne lâche pas la diagonale : un blocus sur tes cases ne se brise pas."
+    },
+    "bishop-pawn": {
+      "title": "Fou et pion",
+      "text": "Ton roi et ton fou escortent le pion : le fou chasse le roi adverse des cases devant le pion, ton roi prend les cases clés. N’avance le pion que quand la case suivante est contrôlée."
+    },
+    "knight-vs-pawn": {
+      "title": "Cavalier contre pion",
+      "text": "Un cavalier arrête un pion en contrôlant une case devant lui, ou la case de promotion. Il est plus fort devant le pion que sur le côté. Compte les sauts, et surveille les cases que le roi adverse enlève à ton cavalier."
+    },
+    "knight-vs-rook-pawn": {
+      "title": "Cavalier contre pion de la tour",
+      "text": "Contre un pion de la tour, le cavalier a peu de cases : c’est son pire adversaire. Vise la case devant le pion et la case de promotion, rapproche ton roi, et donne échec au roi adverse quand il veut chasser ton cavalier."
+    },
+    "knight-pawn": {
+      "title": "Cavalier et pion",
+      "text": "Ton roi précède le pion pendant que le cavalier contrôle les cases devant lui. Pas d’échecs inutiles : place le cavalier là où il couvre la prochaine case du pion."
+    }
+  },
+  "goals": {
+    "mate": "Mate le roi adverse en {n} coups au plus.",
+    "promote": "Promeus ton pion en gardant le gain, en {n} coups au plus.",
+    "convert": "Gagne tout le matériel adverse en {n} coups au plus.",
+    "hold": "Tiens la nulle pendant {n} coups."
+  },
+  "player": {
+    "lessonKicker": "LEÇON",
+    "goalKicker": "TON BUT",
+    "hint": "Aide",
+    "pass": "Passer",
+    "passTitle": "Passer cette position ?",
+    "passText": "Elle comptera comme ratée, et le bon coup te sera montré.",
+    "budget": "Coups : {done} / {total}",
+    "hold": "Tenu : {done} / {total}",
+    "opponent": "Maia {elo}",
+    "perfect": "Défense parfaite",
+    "yourTurn": "À toi de jouer",
+    "checking": "Lizy vérifie ton coup…",
+    "opponentThinking": "L’adversaire réfléchit…",
+    "maiaLoading": "Maia se prépare… {pct} %",
+    "maiaLoadingUnknown": "Maia se prépare…",
+    "notices": {
+      "maiaUnavailable": "Maia n’a pas pu se charger : l’adversaire joue la défense parfaite.",
+      "tablebaseUnavailable": "Lichess ne répond pas : Stockfish juge tes coups."
+    },
+    "hintShown": "La flèche montre un bon coup.",
+    "error": "Le coup n’a pas pu être vérifié. Réessaie, ou passe la position."
+  },
+  "feedback": {
+    "kicker": "LIZY",
+    "titles": {
+      "won": "Gagné !",
+      "held": "Nulle tenue !",
+      "spoiled": "Le résultat s’envole",
+      "overtime": "Trop de coups",
+      "resigned": "Position passée"
+    },
+    "subs": {
+      "won": "En {n} coup. | En {n} coups.",
+      "held": "Tenue {n} coup. | Tenue {n} coups.",
+      "spoiled": "Le bon coup était {move}.",
+      "spoiledNoMove": "Ce coup gâchait le résultat.",
+      "overtime": "Le gain est resté, mais il fallait conclure en {n} coups.",
+      "resigned": "Un bon coup : {move}.",
+      "resignedNoMove": "On la reverra."
+    },
+    "bubbles": {
+      "won": "Technique propre : c’est exactement ce qu’on attend en finale.",
+      "held": "Bien défendu ! Une nulle tenue vaut parfois un gain.",
+      "spoiled": "Regarde la flèche : c’est l’idée de la leçon qu’il fallait appliquer.",
+      "overtime": "Le plan est bon, cherche le chemin le plus court.",
+      "resigned": "Pas de souci, relis l’idée de la leçon et on recommence."
+    },
+    "engineJudged": "Jugé par Stockfish (Lichess ne répondait pas)."
+  },
+  "page": {
+    "title": "Finales",
+    "lead": "Les finales élémentaires avec Lizy : apprends une technique sur la position de manuel, puis applique-la sur des variantes contre Maia, une IA qui joue comme un humain du niveau choisi.",
+    "settings": "Nouvelle série",
+    "mode": "Mode",
+    "modes": {
+      "learn": "Apprendre",
+      "review": "Réviser"
+    },
+    "modeHints": {
+      "learn": "Lizy explique chaque leçon sur sa position de manuel, puis deux variantes. Aide gratuite.",
+      "review": "Des variantes au hasard parmi les leçons choisies, sans aide."
+    },
+    "lessons": "Leçons",
+    "allFamily": "Tout",
+    "noLesson": "Choisis au moins une leçon.",
+    "results": "{succeeded} / {played}",
+    "neverPlayed": "jamais jouée",
+    "level": "Adversaire : {label}",
+    "perfect": "Parfait",
+    "perfectHint": "La défense parfaite de la tablebase.",
+    "maiaHint": "Maia joue comme un humain classé {elo}.",
+    "xp": "{xp} XP par position réussie, {failed} si ratée.",
+    "maiaDownload": "Maia (46 Mo) se télécharge une seule fois, puis reste en cache."
+  },
+  "recap": {
+    "results": "Gagnées : {won} · tenues : {held} · ratées : {failed}.",
+    "engineJudged": "Jugées par Stockfish : {n}."
+  },
+  "review": {
+    "title": "{lesson} · {status}"
+  }
+}

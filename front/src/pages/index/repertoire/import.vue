@@ -2,9 +2,7 @@
   <q-page padding>
     <div class="import-page q-gutter-y-md">
       <div class="row items-center">
-        <div class="text-h5">{{
-          $t('repertoire.importPage.title')
-        }}</div>
+        <div class="text-h5">{{ $t('repertoire.importPage.title') }}</div>
       </div>
 
       <!-- 1. The source -->

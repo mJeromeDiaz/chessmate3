@@ -53,9 +53,7 @@
           :style="{ width: `${(leftMs / (seconds * 1000)) * 100}%` }"
         />
       </div>
-    </template>
-
-    <template #chips>
+      <!-- The order under the clock: beside the board on a wide screen, above it on a phone. -->
       <div
         :key="item.id"
         class="jongleur-player__order"
@@ -335,7 +333,7 @@ let previousQuestion = null
 const isSquare = computed(() =>
   ['find', 'name', 'color'].includes(question.value)
 )
-const seconds = computed(() => props.item.data.seconds ?? 6)
+const seconds = computed(() => props.item.data.seconds ?? 7)
 const distraction = computed(() =>
   distractionOf(props.item.id, props.item.data.distraction)
 )
@@ -584,9 +582,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
+// On a phone the order sits above the board: a smaller board, all on the screen.
+@media (max-width: 1023px) {
+  .jongleur-player.play-layout {
+    --board-max: min(100%, max(240px, 100svh - 450px));
+  }
+}
+
 // The order: a banner as wide as the board, one colour per kind of question.
 .jongleur-player__order {
   --order: #4fc3f7;
+  margin-top: 12px;
   --order-ink: #1b1530;
   position: relative;
   display: flex;

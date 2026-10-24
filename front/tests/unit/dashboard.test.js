@@ -84,14 +84,17 @@ describe('module rows', () => {
     const rows = buildModuleRows(empty)
     expect(rows.map(r => r.module.id)).toEqual(DASHBOARD_MODULES)
     expect(rows.filter(r => r.to === null).map(r => r.module.id)).toEqual([
-      'finales',
       'analyse'
     ])
     expect(rows.find(r => r.module.id === 'evaluation')).toMatchObject({
       to: '/evaluation',
       stat: 'Aucune position jouée'
     })
-    expect(rows.find(r => r.module.id === 'finales').stat).toBe('Bientôt')
+    expect(rows.find(r => r.module.id === 'finales')).toMatchObject({
+      to: '/finales',
+      stat: 'Aucune finale jouée'
+    })
+    expect(rows.find(r => r.module.id === 'analyse').stat).toBe('Bientôt')
     expect(rows.find(r => r.module.id === 'puzzles').stat).toBe(
       'Aucun puzzle joué'
     )

@@ -19,7 +19,9 @@ export const MAIA_URL = `${import.meta.env.BASE_URL ?? '/'}maia/maia3-23m.fp16.o
 
 /** @type {() => MaiaWorkerLike} */
 const defaultFactory = () =>
-  new Worker(new URL('../../utils/maia/maia.worker.js', import.meta.url), { type: 'module' })
+  new Worker(new URL('../../utils/maia/maia.worker.js', import.meta.url), {
+    type: 'module'
+  })
 
 let factory = defaultFactory
 /** @type {MaiaEngine|null} */
@@ -59,7 +61,8 @@ function start() {
   const started = new MaiaEngine(factory(), {
     url: MAIA_URL,
     onProgress: ({ loaded, total }) => {
-      if (engine === started) progress.value = total > 0 ? Math.min(1, loaded / total) : null
+      if (engine === started)
+        progress.value = total > 0 ? Math.min(1, loaded / total) : null
     }
   })
   engine = started
@@ -110,7 +113,10 @@ export function useMaia() {
     controllers.add(controller)
     pending.value++
     try {
-      return await start().predict(fen, { ...options, signal: controller.signal })
+      return await start().predict(fen, {
+        ...options,
+        signal: controller.signal
+      })
     } finally {
       pending.value = Math.max(0, pending.value - 1)
       controllers.delete(controller)
@@ -143,5 +149,12 @@ export function useMaia() {
     shared.value === 'ready' && pending.value > 0 ? 'thinking' : shared.value
   )
 
-  return { status, progress: computed(() => progress.value), preload, predict, chooseMove, stop }
+  return {
+    status,
+    progress: computed(() => progress.value),
+    preload,
+    predict,
+    chooseMove,
+    stop
+  }
 }

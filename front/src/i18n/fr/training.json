@@ -20,7 +20,8 @@
       "puzzle_rush": "Plus aucun puzzle à ce niveau pour ces thèmes : séance close.",
       "blindfold_recall": "Plus aucune position disponible à ce niveau : séance close.",
       "notation": "Plus rien à tirer pour cet exercice : séance close.",
-      "woodpecker": "Le set a été mis en pause ou abandonné : séance close."
+      "woodpecker": "Le set a été mis en pause ou abandonné : séance close.",
+      "endgames": "Plus aucune position pour ces leçons : séance close."
     }
   },
   "back": {
@@ -35,7 +36,8 @@
     "puzzle_rush": "Retour aux puzzles",
     "blindfold_recall": "Retour à la reconstitution",
     "notation": "Retour à la notation",
-    "home": "Retour à l’accueil"
+    "home": "Retour à l’accueil",
+    "endgames": "Retour aux finales"
   },
   "result": {
     "screens": {
@@ -202,6 +204,7 @@
     "blindfoldProgress": "{played} puzzles · {solved} résolus",
     "recallProgress": "{played} positions · {exact} exactes",
     "evaluationProgress": "Position {n} · {solved} juste | Position {n} · {solved} justes",
+    "endgameProgress": "Position {n} · {solved} réussie | Position {n} · {solved} réussies",
     "streakTimed": "Streak {now} · meilleur {best}",
     "streak": "Streak : {now}",
     "noHelp": "Sans aide",
@@ -237,6 +240,7 @@
       "jongleur": "Le combat s’arrête là : il est perdu.",
       "vision": "La question à l’écran ne sera pas comptée.",
       "calculation": "La ligne à l’écran ne sera pas comptée.",
+      "endgames": "La position à l’écran ne sera pas comptée.",
       "default": "Le puzzle en cours ne sera pas compté."
     }
   }

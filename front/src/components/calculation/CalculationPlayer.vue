@@ -328,10 +328,14 @@ let replyLines = /** @type {import('@/utils/engine/uci').EngineLine[]|null} */ (
 )
 /** The mini-boss: the combinations offered (shuffled, coloured), null while the decoys are drawn. */
 const combos = ref(
-  /** @type {{uci: string, san: string, type: string, color: string}[]|null} */ (null)
+  /** @type {{uci: string, san: string, type: string, color: string}[]|null} */ (
+    null
+  )
 )
 /** The mini-boss: the engine's lines on the forcing moves, null without them. */
-let comboLines = /** @type {import('@/utils/engine/uci').EngineLine[]|null} */ (null)
+let comboLines = /** @type {import('@/utils/engine/uci').EngineLine[]|null} */ (
+  null
+)
 /** A refuted combination: the engine's answer to it, shown before the solution. */
 const refutation = ref(/** @type {string|null} */ (null))
 /** 3.2: the first line, once played; the second is on the board. */
@@ -426,11 +430,11 @@ const prof = computed(() =>
           title: ''
         }
       : feedbackProf(
-        'puzzles',
-        timeline.kind.value !== null && timeline.step.value >= 2
-          ? timeline.kind.value
-          : null
-      )
+          'puzzles',
+          timeline.kind.value !== null && timeline.step.value >= 2
+            ? timeline.kind.value
+            : null
+        )
 )
 
 const bubble = computed(() => {

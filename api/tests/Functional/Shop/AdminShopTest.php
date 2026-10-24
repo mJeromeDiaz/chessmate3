@@ -33,7 +33,7 @@ final class AdminShopTest extends WebTestCase
     public function testAdminsOnly(): void
     {
         $alice = $this->createUser('alice@example.com');
-        foreach ([['GET', '/api/admin/shop/catalog'], ['GET', '/api/admin/shop/players'], ['GET', '/api/admin/shop/stats'], ['POST', '/api/admin/shop/offers'], ['GET', '/api/admin/shop/reward-rule'], ['PUT', '/api/admin/shop/reward-rule']] as [$method, $uri]) {
+        foreach ([['GET', '/api/admin/shop/catalog'], ['GET', '/api/admin/shop/players'], ['GET', '/api/admin/shop/stats'], ['POST', '/api/admin/shop/offers'], ['GET', '/api/admin/shop/reward-rule'], ['PUT', '/api/admin/shop/reward-rule'], ['GET', '/api/admin/shop/wheel-rule'], ['PUT', '/api/admin/shop/wheel-rule']] as [$method, $uri]) {
             self::assertSame(403, $this->call($alice, $method, $uri, [])->getStatusCode(), $uri);
         }
     }
@@ -54,7 +54,7 @@ final class AdminShopTest extends WebTestCase
     public function testAnOfferIsCreatedCheckedAndSuspended(): void
     {
         $catalog = $this->json($this->call($this->admin, 'GET', '/api/admin/shop/catalog'));
-        self::assertCount(16, $this->listOf($catalog['offers']));
+        self::assertCount(17, $this->listOf($catalog['offers']));
         self::assertCount(4, $this->listOf($catalog['slides']));
 
         $refused = $this->call($this->admin, 'POST', '/api/admin/shop/offers', [
@@ -182,6 +182,27 @@ final class AdminShopTest extends WebTestCase
         $earning = $this->json($this->call($this->createUser('alice@example.com'), 'GET', '/api/shop'))['earning'] ?? null;
         self::assertIsArray($earning);
         self::assertSame([90, 45, 45], [$earning['crownsPerHour'] ?? null, $earning['dailyMinutes'] ?? null, $earning['minutesLeftToday'] ?? null]);
+    }
+
+    public function testTheGiftWheelsOddsAreSetForTheNextSpins(): void
+    {
+        self::assertSame(
+            ['c5' => 75, 'c30' => 12, 'c300' => 1, 'gift' => 7, 'lose' => 5, 'freezePercent' => 50, 'updatedAt' => null, 'updatedBy' => null],
+            $this->json($this->call($this->admin, 'GET', '/api/admin/shop/wheel-rule')),
+        );
+
+        $nothing = ['c5' => 0, 'c30' => 0, 'c300' => 0, 'gift' => 0, 'lose' => 0, 'freezePercent' => 50];
+        $refused = $this->call($this->admin, 'PUT', '/api/admin/shop/wheel-rule', $nothing, 'fr');
+        self::assertSame(422, $refused->getStatusCode());
+        self::assertSame([['c5', 'Au moins un lot doit pouvoir sortir.']], array_map(static fn (array $violation): array => [$violation['propertyPath'] ?? null, $violation['title'] ?? null], $this->listOf($this->json($refused)['violations'])));
+        $refused = $this->call($this->admin, 'PUT', '/api/admin/shop/wheel-rule', ['c5' => 1, 'freezePercent' => 101] + $nothing);
+        self::assertSame(['freezePercent'], array_column($this->listOf($this->json($refused)['violations']), 'propertyPath'));
+
+        $saved = $this->call($this->admin, 'PUT', '/api/admin/shop/wheel-rule', ['c5' => 60, 'c300' => 2, 'gift' => 20, 'freezePercent' => 30] + $nothing);
+        self::assertSame(200, $saved->getStatusCode(), (string) $saved->getContent());
+        $odds = $this->json($saved);
+        self::assertSame([60, 0, 2, 20, 0, 30, 'admin@example.com'], [$odds['c5'], $odds['c30'], $odds['c300'], $odds['gift'], $odds['lose'], $odds['freezePercent'], $odds['updatedBy']]);
+        self::assertIsString($odds['updatedAt']);
     }
 
     private function createUser(string $email, bool $admin = false): User

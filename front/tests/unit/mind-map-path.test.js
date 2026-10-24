@@ -239,8 +239,11 @@ describe('mind map path', () => {
     expect(standingImage('metronome')).toContain('metronome-pose.png')
     expect(moodImage('jongleur', 'joy')).toContain('jongleur-joie.png')
     expect(moodImage('cyclope', 'joy')).toContain('cyclope-joie.png')
-    expect(moodImage('fantome', 'joy')).toBe('')
-    expect(standingImage('fantome')).toBe('')
+    expect(moodImage('fantome', 'joy')).toContain('fantome-joie.png')
+    expect(standingImage('zombie')).toContain('zombie-pose.png')
+    // A boss without its own images yet.
+    expect(moodImage('dragon', 'joy')).toBe('')
+    expect(standingImage('dragon')).toBe('')
     expect(moodImage(null, 'joy')).toBe('')
     expect(bossImage('metronome')).toContain('cyclope.png')
     expect(fr.characters.metronome.name).toBe('Le Métronome')

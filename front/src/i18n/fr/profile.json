@@ -117,6 +117,8 @@
     },
     "sounds": "Sons",
     "soundsHint": "Coups, fin de puzzle, de module et de session",
+    "wheel": "Roue des cadeaux quotidienne",
+    "wheelHint": "Au premier exercice du jour : cristaux, cadeau surprise… ou tête de mort",
     "public": "Profil public",
     "private": "Profil privé",
     "publicHint": "Les autres joueurs pourront voir ton niveau et tes stats.",

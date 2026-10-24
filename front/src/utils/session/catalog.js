@@ -113,8 +113,17 @@ const duration = (def, max = 90) =>
     { label: 'fields.duration' }
   )
 
-/** @param {number} def @param {string} [label] @returns {Field} */
-const elo = (def, label = 'fields.elo') =>
+/**
+ * @param {number} def
+ * @param {string} [label]
+ * @param {(v: number) => string} [format]
+ * @returns {Field}
+ */
+const elo = (
+  def,
+  label = 'fields.elo',
+  format = v => m('units.elo', { n: v })
+) =>
   field(
     {
       key: 'elo',
@@ -123,7 +132,7 @@ const elo = (def, label = 'fields.elo') =>
       max: 2600,
       step: 50,
       default: def,
-      format: v => m('units.elo', { n: v })
+      format
     },
     { label }
   )
@@ -207,17 +216,6 @@ function optionLabel(labels) {
     : v => m(`options.${labels}.${v}`)
 }
 
-/** @param {boolean} def @returns {Field} */
-const spaced = def =>
-  field(
-    { key: 'rep', type: 'toggle', default: def },
-    {
-      label: 'fields.spaced',
-      hint: 'hints.spaced',
-      chip: 'chips.spaced'
-    }
-  )
-
 /** @param {string} [placeholder] message key @returns {Field} */
 const notes = placeholder =>
   field(
@@ -229,6 +227,17 @@ const notes = placeholder =>
 
 /** Colours, as the API names them. */
 const SIDES = ['white', 'black', 'both']
+
+/** The endgames module's modes and themes, as the API names them (docs/ENDGAMES.md). */
+const ENDGAME_MODES = ['learn', 'review']
+const ENDGAME_THEMES = [
+  'basicMates',
+  'pawns',
+  'queens',
+  'rooks',
+  'bishops',
+  'knights'
+]
 
 /** @param {string} [def] @returns {Field} */
 const color = (def = 'both') =>
@@ -309,24 +318,24 @@ export const MODULES = [
     id: 'finales',
     ...byProf('lizy'),
     glyph: glyph('♚'),
-    available: false,
+    available: true,
     bg: '#FF8A3D',
     ink: '#1B1530',
     soft: '#FFEBDD',
     deep: '#E0601A',
     accentInk: '#B84A0E',
     fields: [
-      duration(20),
-      one('mode', 'fields.mode', ['learn', 'review'], 'review', 'endgameModes'),
-      many(
-        'themes',
-        'fields.themes',
-        ['pawns', 'rooks', 'basicMates', 'minorPieces', 'queens'],
-        ['rooks'],
-        'endgames'
+      field(
+        { key: 'duree', type: 'durationChoice', default: 0 },
+        { label: 'fields.duration', hint: 'hints.endgameDuration' }
       ),
-      elo(1500),
-      spaced(true),
+      one('mode', 'fields.mode', ENDGAME_MODES, 'review', 'endgameModes'),
+      many('themes', 'fields.themes', ENDGAME_THEMES, ['rooks'], 'endgames'),
+      // The top of the slider is the tablebase's perfect defence, not Maia.
+      elo(1500, 'fields.endgameElo', v =>
+        v >= 2600 ? m('units.perfect') : m('units.elo', { n: v })
+      ),
+      // Spaced repetition comes later (docs/ENDGAMES.md): random review meanwhile.
       notes('placeholders.endgames')
     ]
   }),
@@ -585,8 +594,10 @@ const LEGACY_VALUES = {
       Pions: 'pawns',
       Tours: 'rooks',
       'Mats élémentaires': 'basicMates',
-      'Pièces mineures': 'minorPieces',
-      Dames: 'queens'
+      'Pièces mineures': ['bishops', 'knights'],
+      Dames: 'queens',
+      // The tile's first themes (2026-10): minor pieces split into bishops and knights.
+      minorPieces: ['bishops', 'knights']
     }
   },
   streak: { difficulte: { Échelle: 'ladder', Paliers: 'tiers' } },
@@ -630,9 +641,10 @@ export function upgradeValues(module, values) {
       const value = v in map ? map[v] : v
       upgraded[f.key] = options.includes(value) ? value : f.default
     } else if (Array.isArray(v)) {
-      upgraded[f.key] = v
-        .map(x => (x in map ? map[x] : x))
-        .filter(x => options.includes(x))
+      // An old value may stand for several of today's (minor pieces: bishops and knights).
+      upgraded[f.key] = [
+        ...new Set(v.flatMap(x => (x in map ? map[x] : x)))
+      ].filter(x => options.includes(x))
     }
   }
   return upgraded
@@ -897,7 +909,8 @@ export const API_MODULES = {
   rush: 'puzzle_rush',
   reconstitution: 'blindfold_recall',
   notation: 'notation',
-  parcours: 'parcours_puzzles'
+  parcours: 'parcours_puzzles',
+  finales: 'endgames'
 }
 
 /**
@@ -940,6 +953,12 @@ export function toStep(item) {
     settings = {
       elo: v.elo,
       side: oneOf(SIDES, v.couleur, 'both')
+    }
+  if (module === 'endgames')
+    settings = {
+      mode: oneOf(ENDGAME_MODES, v.mode, 'review'),
+      themes: (v.themes ?? []).filter(theme => ENDGAME_THEMES.includes(theme)),
+      elo: v.elo
     }
   if (module === 'puzzle_streak')
     settings = {
@@ -1002,6 +1021,11 @@ export function fromStep(step) {
   if (step.module === 'evaluation') {
     if (Number.isInteger(settings.elo)) values.elo = settings.elo
     values.couleur = oneOf(SIDES, settings.side, values.couleur)
+  }
+  if (step.module === 'endgames') {
+    values.mode = oneOf(ENDGAME_MODES, settings.mode, values.mode)
+    if (Array.isArray(settings.themes)) values.themes = [...settings.themes]
+    if (Number.isInteger(settings.elo)) values.elo = settings.elo
   }
   if (step.module === 'puzzle_streak') {
     values.difficulte = oneOf(

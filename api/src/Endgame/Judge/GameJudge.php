@@ -7,17 +7,19 @@ namespace App\Endgame\Judge;
 use App\Chess\InvalidPositionException;
 use App\Chess\Rules;
 use App\Endgame\Lesson\Lesson;
+use App\Endgame\Tablebase\Answer;
 use App\Endgame\Tablebase\BestDefence;
 use App\Endgame\Tablebase\MoveAnswer;
 use App\Endgame\Tablebase\Tablebase;
 use App\Enum\Endgame\AttemptStatus;
 use App\Enum\Endgame\Goal;
+use App\Enum\Endgame\Result;
 use App\Training\Exception\InvalidItemSubmissionException;
 use PChess\Chess\Move;
 
 /**
  * Judges a whole game of the endgames module (docs/ENDGAMES.md, § 5), replayed from the position
- * served: each move of the player must keep the lesson's result (the tablebase's answers kept in
+ * served: each move of the player must keep at least the lesson's result (the tablebase's answers kept in
  * the endgame database, never asked here: the browser asked them while playing), the goal reached
  * within the moves allowed. At the top of the slider the opponent's moves must be among the best
  * defence; Maia's are only checked to be legal.
@@ -61,8 +63,8 @@ final readonly class GameJudge
             $judged = $judged && (!$needed || null !== $answer);
 
             if (null !== $answer && $mine) {
-                $keeping = array_map(static fn (MoveAnswer $move): string => $move->uci, $answer->keepingMoves());
-                if ($answer->result() !== $lesson->result || !\in_array($uci, $keeping, true)) {
+                $keeping = self::keeping($answer, $lesson->result);
+                if (!\in_array($uci, $keeping, true)) {
                     self::play($rules, $uci, $ply);
 
                     return new Verdict(AttemptStatus::Spoiled, $playerMoves + 1, $ply, $keeping[0] ?? null);
@@ -93,6 +95,19 @@ final readonly class GameJudge
         $status ??= $resigned ? AttemptStatus::Resigned : throw new InvalidItemSubmissionException('The position is not over.');
 
         return new Verdict($status, $playerMoves, engineJudged: !$judged);
+    }
+
+    /**
+     * The player's moves giving at least the lesson's result, the best first: a draw to hold is
+     * kept by a win too (the opponent blundered), a move whose result is uncertain keeps nothing.
+     *
+     * @return list<string>
+     */
+    private static function keeping(Answer $answer, Result $wanted): array
+    {
+        $moves = array_filter($answer->moves, static fn (MoveAnswer $move): bool => $move->resultForMover()?->atLeast($wanted) ?? false);
+
+        return array_values(array_map(static fn (MoveAnswer $move): string => $move->uci, $moves));
     }
 
     /**

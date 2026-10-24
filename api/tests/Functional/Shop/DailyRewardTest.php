@@ -24,12 +24,14 @@ use Symfony\Component\Messenger\Stamp\ReceivedStamp;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The daily chest (docs/SHOP.md, § 4 ter, rules validated on 2026-10-21): 6 to 12 crystals with the
- * streak's announcement (the first exercise of the local day), a streak badge's bonus the day it is
- * won (10 per day), credited at once, rolled back with its exercise, shown once. Today is Monday
- * 2026-10-05 in Paris.
+ * The day's reward (docs/SHOP.md, § 4 ter): the gift wheel offered with the streak's announcement
+ * (the first exercise of the local day, validated on 2026-10-23), its prize drawn by the server
+ * from the admin's odds and credited at once, lost when declined or at local midnight, none when
+ * the player turned it off; a ticket spins it once more; a streak badge's chest (10 per day)
+ * credited when won and shown once. Rolled back with its exercise. Today is Monday 2026-10-05 in
+ * Paris.
  *
- * @phpstan-type DailyJson array{id: string, localDate: string, streak: int, badgeDays: int|null, dailyCrowns: int, badgeCrowns: int, crowns: int, opened: bool, balance: int}
+ * @phpstan-type DailyJson array{id: string, localDate: string, streak: int, badgeDays: int|null, dailyCrowns: int, badgeCrowns: int, crowns: int, opened: bool, wheel: string|null, wheelOpen: bool, balance: int}
  */
 final class DailyRewardTest extends WebTestCase
 {
@@ -54,8 +56,9 @@ final class DailyRewardTest extends WebTestCase
         parent::tearDown();
     }
 
-    public function testTheFirstExerciseOfTheDayEarnsAChestOpenedOnce(): void
+    public function testTheFirstExerciseOfTheDayOffersTheWheelSpunOnce(): void
     {
+        $this->odds(c30: 1);
         $alice = $this->createUser('alice@example.com');
         $this->deliver($this->exercise($alice, '2026-10-04 08:00:00'));
         self::assertSame([], $this->unopened($alice));
@@ -63,43 +66,65 @@ final class DailyRewardTest extends WebTestCase
         $this->publish($this->exercise($alice, '2026-10-05 09:00:00'));
         // A second exercise of the day earns nothing more.
         $this->publish($this->exercise($alice, '2026-10-05 09:30:00'));
-        $chests = $this->unopened($alice);
-        self::assertCount(1, $chests);
-        $chest = $chests[0];
-        self::assertSame(['2026-10-05', 2, null, 0, false], [$chest['localDate'], $chest['streak'], $chest['badgeDays'], $chest['badgeCrowns'], $chest['opened']]);
-        self::assertGreaterThanOrEqual(6, $chest['dailyCrowns']);
-        self::assertLessThanOrEqual(12, $chest['dailyCrowns']);
-        // Credited when earned: the chest only reveals it.
-        self::assertSame([$chest['dailyCrowns'], $chest['dailyCrowns']], [$chest['crowns'], $chest['balance']]);
-        self::assertSame([['reward', $chest['crowns'], 'Coffre du jour']], $this->ledger($alice));
+        $days = $this->unopened($alice);
+        self::assertCount(1, $days);
+        $day = $days[0];
+        self::assertSame(['2026-10-05', 2, null, 0, 0, 'offered', true, 0], [$day['localDate'], $day['streak'], $day['badgeDays'], $day['dailyCrowns'], $day['crowns'], $day['wheel'], $day['wheelOpen'], $day['balance']]);
+        self::assertSame([], $this->ledger($alice), 'Nothing before the spin.');
+        self::assertSame($day['id'], $this->storeWheel($alice), 'The store knows the wheel to spin (header, menu).');
 
-        $response = $this->api('POST', '/api/shop/daily-rewards/'.$chest['id'].'/open', $alice);
-        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
-        $opened = $this->json($response);
-        self::assertSame([$chest['id'], true, $chest['crowns']], [$opened['id'] ?? null, $opened['opened'] ?? null, $opened['balance'] ?? null]);
-        self::assertSame(200, $this->api('POST', '/api/shop/daily-rewards/'.$chest['id'].'/open', $alice)->getStatusCode(), 'idempotent');
-        self::assertSame([], $this->unopened($alice), 'shown once');
-        self::assertCount(1, $this->ledger($alice), 'opening credits nothing more');
+        $spin = $this->spin($alice, $day['id']);
+        self::assertSame(['c30', null, 30, false, 30, 0], [$spin['prize'], $spin['gift'], $spin['crowns'], $spin['ticket'], $spin['balance'], $spin['tickets']]);
+        self::assertSame([['reward', 30, 'Roue des cadeaux']], $this->ledger($alice));
+        self::assertSame([], $this->unopened($alice), 'Spun: nothing left to show.');
+        self::assertNull($this->storeWheel($alice));
+        self::assertSame([409, 'no_spin'], $this->refused($alice, ['dailyRewardId' => $day['id']]), 'Once a day.');
 
-        // Tuesday: a new chest.
-        $this->deliver($this->exercise($alice, '2026-10-05 09:00:00'));
-        Clock::set(new MockClock('2026-10-06 07:00:00', 'UTC'));
-        $this->publish($this->exercise($alice, '2026-10-06 06:59:00'));
-        $tuesday = $this->unopened($alice);
-        self::assertSame([['2026-10-06', 3]], array_map(static fn (array $chest): array => [$chest['localDate'], $chest['streak']], $tuesday));
+        // Once more: a ticket.
+        self::assertSame([409, 'no_ticket'], $this->refused($alice, []));
+        $this->connection()->executeStatement("INSERT INTO shop_inventory_item (user_id, item, quantity) VALUES (?, 'wheel_ticket', 2)", [$alice->getId()->toBinary()]);
+        $again = $this->spin($alice, null);
+        self::assertSame(['c30', true, 60, 1], [$again['prize'], $again['ticket'], $again['balance'], $again['tickets']]);
 
-        // Another player's chest, an unknown one, no credentials.
+        // Another player's wheel, an unknown one, no credentials.
         $bob = $this->createUser('bob@example.com');
-        self::assertSame(404, $this->api('POST', '/api/shop/daily-rewards/'.$tuesday[0]['id'].'/open', $bob)->getStatusCode());
+        self::assertSame([409, 'no_spin'], $this->refused($bob, ['dailyRewardId' => $day['id']]));
+        self::assertSame(404, $this->api('POST', '/api/shop/daily-rewards/'.$day['id'].'/decline', $bob)->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/shop/daily-rewards/'.Uuid::v7()->toRfc4122().'/open', $alice)->getStatusCode());
         self::assertSame([], $this->unopened($bob));
         $this->client->request('GET', '/api/shop/daily-rewards/unopened');
         $read = $this->client->getResponse()->getStatusCode();
-        $this->client->request('POST', '/api/shop/daily-rewards/'.$tuesday[0]['id'].'/open');
+        $this->client->request('POST', '/api/shop/wheel/spins', server: ['CONTENT_TYPE' => 'application/ld+json'], content: '{}');
         self::assertSame([401, 401], [$read, $this->client->getResponse()->getStatusCode()]);
     }
 
-    public function testAStreakBadgeAddsItsBonusToTheDaysChest(): void
+    public function testAGiftIsAOneDayFreezeOrTheCostume(): void
+    {
+        $this->odds(gift: 1, freezePercent: 100);
+        $alice = $this->createUser('alice@example.com');
+        $this->publish($this->exercise($alice, '2026-10-05 09:00:00'));
+
+        $spin = $this->spin($alice, $this->unopened($alice)[0]['id'] ?? '');
+        self::assertSame(['gift', 'freeze', 0, 0], [$spin['prize'], $spin['gift'], $spin['crowns'], $spin['balance']]);
+        self::assertSame([['streak_freeze_1', 1]], $this->freezes($alice));
+
+        // The costume: a message only, nothing kept.
+        $this->odds(gift: 1, freezePercent: 0);
+        $this->connection()->executeStatement("INSERT INTO shop_inventory_item (user_id, item, quantity) VALUES (?, 'wheel_ticket', 1)", [$alice->getId()->toBinary()]);
+        $costume = $this->spin($alice, null);
+        self::assertSame(['gift', 'costume', 0], [$costume['prize'], $costume['gift'], $costume['tickets']]);
+        self::assertSame([['streak_freeze_1', 1]], $this->freezes($alice));
+        self::assertSame([], $this->ledger($alice));
+        self::assertSame(
+            [['gift', 'freeze', 0, 0], ['gift', 'costume', 0, 1]],
+            array_map(static fn (array $row): array => [$row['prize'], $row['gift'], (int) (is_numeric($row['crowns']) ? $row['crowns'] : 0), (int) (is_numeric($row['ticket']) ? $row['ticket'] : 0)], $this->connection()->fetchAllAssociative(
+                'SELECT prize, gift, crowns, ticket FROM shop_wheel_spin WHERE user_id = ? ORDER BY created_at, id',
+                [$alice->getId()->toBinary()],
+            )),
+        );
+    }
+
+    public function testDeclinedTheWheelIsLostAndTheBadgesChestStays(): void
     {
         $alice = $this->createUser('alice@example.com');
         foreach (['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'] as $day) {
@@ -108,9 +133,48 @@ final class DailyRewardTest extends WebTestCase
         $this->publish($this->exercise($alice, '2026-10-05 08:00:00'));
         $chest = $this->unopened($alice)[0] ?? null;
         self::assertNotNull($chest);
-        // 7 days: 70 more, in the same chest.
-        self::assertSame([7, 7, 70, $chest['dailyCrowns'] + 70, $chest['dailyCrowns'] + 70], [$chest['streak'], $chest['badgeDays'], $chest['badgeCrowns'], $chest['crowns'], $chest['balance']]);
-        self::assertSame([['reward', $chest['crowns'], 'Coffre de série · 7 jours']], $this->ledger($alice));
+        // 7 days: 70, credited at once; the wheel besides.
+        self::assertSame([7, 7, 0, 70, 70, 70, true], [$chest['streak'], $chest['badgeDays'], $chest['dailyCrowns'], $chest['badgeCrowns'], $chest['crowns'], $chest['balance'], $chest['wheelOpen']]);
+        self::assertSame([['reward', 70, 'Coffre de série · 7 jours']], $this->ledger($alice));
+
+        // « Pas aujourd'hui »: the wheel lost, the chest still to open.
+        $response = $this->api('POST', '/api/shop/daily-rewards/'.$chest['id'].'/decline', $alice);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+        self::assertSame(['declined', false, false], [$this->json($response)['wheel'] ?? null, $this->json($response)['wheelOpen'] ?? null, $this->json($response)['opened'] ?? null]);
+        self::assertSame(409, $this->api('POST', '/api/shop/daily-rewards/'.$chest['id'].'/decline', $alice)->getStatusCode());
+        self::assertSame([409, 'no_spin'], $this->refused($alice, ['dailyRewardId' => $chest['id']]));
+        self::assertSame([[$chest['id'], 'declined']], array_map(static fn (array $day): array => [$day['id'], $day['wheel']], $this->unopened($alice)));
+
+        $response = $this->api('POST', '/api/shop/daily-rewards/'.$chest['id'].'/open', $alice);
+        self::assertSame([200, true, 70], [$response->getStatusCode(), $this->json($response)['opened'] ?? null, $this->json($response)['balance'] ?? null]);
+        self::assertSame(200, $this->api('POST', '/api/shop/daily-rewards/'.$chest['id'].'/open', $alice)->getStatusCode(), 'idempotent');
+        self::assertSame([], $this->unopened($alice), 'shown once');
+        self::assertCount(1, $this->ledger($alice), 'opening credits nothing more');
+    }
+
+    public function testTheWheelIsLostAtMidnightAndNoneWhenTurnedOff(): void
+    {
+        $alice = $this->createUser('alice@example.com');
+        $this->publish($this->exercise($alice, '2026-10-05 09:00:00'));
+        $monday = $this->unopened($alice)[0]['id'] ?? '';
+        // A chest of the days before the wheel, never opened: still shown.
+        $this->connection()->executeStatement(
+            "INSERT INTO shop_daily_reward (id, user_id, local_date, streak, badge_days, daily_crowns, badge_crowns, crowns, wheel, created_at) VALUES (?, ?, '2026-10-01', 1, NULL, 9, 0, 9, NULL, NOW())",
+            [Uuid::v7()->toBinary(), $alice->getId()->toBinary()],
+        );
+
+        // Tuesday in Paris: Monday's wheel lost.
+        Clock::set(new MockClock('2026-10-05 22:30:00', 'UTC'));
+        self::assertSame([['2026-10-01', null, 9]], array_map(static fn (array $day): array => [$day['localDate'], $day['wheel'], $day['crowns']], $this->unopened($alice)));
+        self::assertSame([409, 'no_spin'], $this->refused($alice, ['dailyRewardId' => $monday]));
+
+        // Turned off in the profile: no wheel, nothing to show.
+        $response = $this->api('PUT', '/api/profile/preferences', $alice, ['boardTheme' => 'wood', 'moveSound' => true, 'publicProfile' => false, 'dailyWheel' => false], json: true);
+        self::assertSame([200, false], [$response->getStatusCode(), $this->json($response)['dailyWheel'] ?? null], (string) $response->getContent());
+        $this->deliver($this->exercise($alice, '2026-10-05 09:00:00'));
+        $this->publish($this->exercise($alice, '2026-10-05 22:40:00'));
+        self::assertSame(['2026-10-01'], array_column($this->unopened($alice), 'localDate'));
+        self::assertSame('off', $this->connection()->fetchOne("SELECT wheel FROM shop_daily_reward WHERE user_id = ? AND local_date = '2026-10-06'", [$alice->getId()->toBinary()]));
     }
 
     public function testRolledBackWithItsExerciseAndNothingForAPastDay(): void
@@ -183,14 +247,75 @@ final class DailyRewardTest extends WebTestCase
         ));
     }
 
-    private function api(string $method, string $uri, User $user): Response
+    /**
+     * @param array<string, mixed>|null $body JSON-LD for API Platform, plain JSON for a controller ($json)
+     */
+    private function api(string $method, string $uri, User $user, ?array $body = null, bool $json = false): Response
     {
         $this->client->request($method, $uri, server: [
             'HTTP_AUTHORIZATION' => 'Bearer '.self::getContainer()->get(JWTTokenManagerInterface::class)->create($user),
             'HTTP_ACCEPT' => 'application/ld+json',
-        ]);
+            ...(null === $body ? [] : ['CONTENT_TYPE' => $json ? 'application/json' : 'application/ld+json']),
+        ], content: null === $body ? null : json_encode($body, \JSON_THROW_ON_ERROR));
 
         return $this->client->getResponse();
+    }
+
+    /** The store's `dailyWheel`: today's wheel still to spin. */
+    private function storeWheel(User $user): mixed
+    {
+        $response = $this->api('GET', '/api/shop', $user);
+        self::assertSame(200, $response->getStatusCode());
+
+        return $this->json($response)['dailyWheel'] ?? null;
+    }
+
+    /**
+     * A spin of the day's wheel ($dailyRewardId) or a ticket's (null).
+     *
+     * @return array{prize: string, gift: string|null, crowns: int, ticket: bool, balance: int, tickets: int}
+     */
+    private function spin(User $user, ?string $dailyRewardId): array
+    {
+        $response = $this->api('POST', '/api/shop/wheel/spins', $user, null === $dailyRewardId ? [] : ['dailyRewardId' => $dailyRewardId]);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+
+        /** @var array{prize: string, gift: string|null, crowns: int, ticket: bool, balance: int, tickets: int} */
+        return $this->json($response);
+    }
+
+    /**
+     * A spin refused: its status and reason.
+     *
+     * @param array<string, mixed> $body
+     *
+     * @return array{int, mixed}
+     */
+    private function refused(User $user, array $body): array
+    {
+        $response = $this->api('POST', '/api/shop/wheel/spins', $user, $body);
+
+        return [$response->getStatusCode(), $this->json($response)['detail'] ?? null];
+    }
+
+    /** The wheel's odds, as an admin sets them: the prizes not given never come out. */
+    private function odds(int $c5 = 0, int $c30 = 0, int $c300 = 0, int $gift = 0, int $lose = 0, int $freezePercent = 50): void
+    {
+        $this->connection()->executeStatement(
+            'REPLACE INTO shop_wheel_rule (id, weight_c5, weight_c30, weight_c300, weight_gift, weight_lose, freeze_percent, updated_at) VALUES (1, ?, ?, ?, ?, ?, ?, NOW())',
+            [$c5, $c30, $c300, $gift, $lose, $freezePercent],
+        );
+    }
+
+    /**
+     * @return list<array{mixed, int}> item, days left
+     */
+    private function freezes(User $user): array
+    {
+        return array_map(static fn (array $row): array => [$row['item'], is_numeric($row['days_left']) ? (int) $row['days_left'] : 0], $this->connection()->fetchAllAssociative(
+            'SELECT item, days_left FROM shop_freeze WHERE user_id = ? ORDER BY acquired_at',
+            [$user->getId()->toBinary()],
+        ));
     }
 
     /**

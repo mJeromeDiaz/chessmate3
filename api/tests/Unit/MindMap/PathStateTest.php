@@ -100,6 +100,29 @@ final class PathStateTest extends TestCase
         self::assertFalse($boss->passes(4, 4));
     }
 
+    public function testAFreeChapterLocksNothing(): void
+    {
+        $activity = new Activity(Module::Coordinates, [], 60, 10);
+        $boss = new Activity(Module::Coordinates, [], 60, 10, 3);
+        $chapters = [
+            new Chapter('a', 1, [new Section('a', null, [
+                new Step('a1', null, StepKind::Exercise, 10, 0, 15, $activity),
+                new Step('a2', null, StepKind::Exercise, 10, 0, 15, $activity),
+            ], [new Step('a-mini', null, StepKind::MiniBoss, 1, 80, 40, $boss), new Step('a-mini-2', null, StepKind::MiniBoss, 1, 80, 40, $boss)])], new Step('a-boss', null, StepKind::Boss, 1, 120, 60, $boss), true),
+            new Chapter('b', 2, [new Section('b', null, [
+                new Step('b1', null, StepKind::Exercise, 10, 0, 15, $activity),
+            ])], new Step('b-boss', null, StepKind::Boss, 1, 120, 60), true),
+        ];
+
+        $statuses = array_map(static fn (StepStatus $status): string => $status->value, PathState::statuses($chapters, ['a1' => self::passes(3)]));
+
+        self::assertSame(
+            ['a1' => 'open', 'a2' => 'open', 'a-mini' => 'open', 'a-mini-2' => 'open', 'a-boss' => 'open', 'b1' => 'open', 'b-boss' => 'soon'],
+            $statuses,
+            'Every step open at once, in any order, the next chapter too; a boss without module is still soon.',
+        );
+    }
+
     /**
      * @param array<string, StepProgress> $progress
      *

@@ -209,6 +209,18 @@ const details = computed(() => {
       )
     return lines
   }
+  if (props.run.module === 'endgames') {
+    lines.push(
+      t('endgame.recap.results', {
+        won: m.won ?? 0,
+        held: m.held ?? 0,
+        failed: (m.spoiled ?? 0) + (m.overtime ?? 0) + (m.resigned ?? 0) + (m.timeout ?? 0)
+      })
+    )
+    if (m.engineJudged)
+      lines.push(t('endgame.recap.engineJudged', { n: m.engineJudged }))
+    return lines
+  }
   if (props.run.module === 'evaluation') {
     lines.push(
       t('training.recap.evaluation', {

@@ -44,7 +44,8 @@ const files = readdirSync(join(ROOT, SOURCE)).filter(
   f => f.endsWith('.json') && (wantedFiles.size === 0 || wantedFiles.has(f))
 )
 const unknown = [...wantedFiles].filter(file => !files.includes(file))
-for (const file of unknown) console.log(`No such message file: ${SOURCE}/${file}`)
+for (const file of unknown)
+  console.log(`No such message file: ${SOURCE}/${file}`)
 if (unknown.length) process.exit(1)
 
 let missingCount = 0

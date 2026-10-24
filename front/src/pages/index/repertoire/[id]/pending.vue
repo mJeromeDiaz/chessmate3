@@ -160,8 +160,7 @@ const store = useRepertoireStore()
 
 const repertoireId = computed(() => /** @type {string} */ (route.params.id))
 usePageHeader(() => ({
-  subtitle:
-    store.graph?.id === repertoireId.value ? store.graph.name : null
+  subtitle: store.graph?.id === repertoireId.value ? store.graph.name : null
 }))
 /** @type {import('vue').Ref<import('@/stores/repertoire').PendingPosition[]|null>} */
 const items = ref(null)

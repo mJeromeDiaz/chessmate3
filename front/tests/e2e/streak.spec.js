@@ -3,7 +3,7 @@ import { signIn, solve } from './helpers.js'
 
 /**
  * The streak (docs/GAMIFICATION.md, § 4): the celebration after the day's first exercise, once, then
- * the daily chest (docs/SHOP.md, § 4 ter), with a streak badge's bonus; the header flame; the "streak in danger" reminder settings (docs/NOTIFICATIONS.md, § 5).
+ * the gift wheel of the day and a streak badge's chest (docs/SHOP.md, § 4 ter); the header flame; the "streak in danger" reminder settings (docs/NOTIFICATIONS.md, § 5).
  */
 
 /**
@@ -67,20 +67,13 @@ test('the first puzzle of the day is celebrated, once', async ({
   expect((await acknowledged).status()).toBe(204)
   await expect(celebration).toBeHidden()
 
-  // Then the day's chest: 6 to 12 crystals, credited already (open at once: reduced motion).
-  const chest = page.getByTestId('daily-chest')
-  await expect(chest).toBeVisible()
-  // Open at once: the open stage's title (the closed one's kicker is never seen).
-  await expect(chest).toHaveAttribute('aria-label', 'Coffre du jour')
-  await expect(chest).toContainText('du jour !')
-  await expect(chest).toContainText('Série de 1 jour')
-  await expect(chest.getByTestId('chest-amount')).toHaveText(
-    /^\s*\+([6-9]|1[0-2])$/
-  )
+  // Then the day's gift wheel (docs/SHOP.md, § 4 ter, played in gift-wheel.spec.js): declined.
+  const wheel = page.getByTestId('gift-wheel')
+  await expect(wheel).toBeVisible()
   const second = await nextPuzzle(page, () =>
-    chest.getByTestId('chest-results').click()
+    wheel.getByTestId('wheel-decline').click()
   )
-  await expect(chest).toBeHidden()
+  await expect(wheel).toBeHidden()
   // The flame is lit, without a reload.
   await expect(page.getByTestId('streak')).not.toHaveClass(
     /streak-chip--waiting/
@@ -91,7 +84,7 @@ test('the first puzzle of the day is celebrated, once', async ({
   await solveAndWait(page, second)
   await nextPuzzle(page, () => page.getByTestId('puzzle-next').click())
   await expect(celebration).toHaveCount(0)
-  await expect(page.getByTestId('daily-chest')).toHaveCount(0)
+  await expect(page.getByTestId('gift-wheel')).toHaveCount(0)
 })
 
 test('a celebration left unseen shows on the dashboard, with its badge', async ({
@@ -124,17 +117,19 @@ test('a celebration left unseen shows on the dashboard, with its badge', async (
       return route.fulfill({ status: 204 })
     }
   )
-  // The badge's day: 9 drawn + 70 for 7 days, in one chest.
+  // The badge's day: the wheel, then 70 crystals for 7 days in the badge's chest.
   const chest = {
     id: '0192f0a0-0000-7000-8000-000000000007',
     localDate: today,
     streak: 7,
     badgeDays: 7,
-    dailyCrowns: 9,
+    dailyCrowns: 0,
     badgeCrowns: 70,
-    crowns: 79,
+    crowns: 70,
     opened: false,
-    balance: 79
+    wheel: 'offered',
+    wheelOpen: true,
+    balance: 70
   }
   let chestOpened = false
   await page.route('**/api/shop/daily-rewards/unopened', route =>
@@ -158,11 +153,17 @@ test('a celebration left unseen shows on the dashboard, with its badge', async (
   await expect(page.getByTestId('streak-celebration')).toBeHidden()
   expect(acknowledged).toBe(true)
 
+  // The wheel first; closed (✕), the badge's chest is still given.
+  const wheel = page.getByTestId('gift-wheel')
+  await expect(wheel).toBeVisible()
+  await wheel.getByTestId('wheel-close').click()
+  await expect(wheel).toBeHidden()
+
   const daily = page.getByTestId('daily-chest')
   await expect(daily).toBeVisible()
   await expect(daily).toContainText('7 joursde série !')
-  await expect(daily.getByTestId('chest-amount')).toHaveText('+79')
-  await expect(daily).toContainText('9 du jour + 70 pour le badge 7 jours')
+  await expect(daily.getByTestId('chest-amount')).toHaveText('+70')
+  await expect(daily).toContainText('Le bonus du badge 7 jours')
   await daily.getByTestId('chest-results').click()
   await expect(daily).toBeHidden()
   expect(chestOpened).toBe(true)
@@ -170,6 +171,7 @@ test('a celebration left unseen shows on the dashboard, with its badge', async (
   await page.reload()
   await expect(page.getByTestId('dashboard')).toBeVisible()
   await expect(page.getByTestId('streak-celebration')).toHaveCount(0)
+  await expect(page.getByTestId('gift-wheel')).toHaveCount(0)
   await expect(page.getByTestId('daily-chest')).toHaveCount(0)
 })
 

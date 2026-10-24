@@ -90,6 +90,48 @@ export const REWARD_RULE_FIELDS = /** @type {const} */ ([
   }
 }))
 
+/** The gift wheel's prizes, whose weights the admin sets (docs/SHOP.md, § 4 ter). */
+export const WHEEL_PRIZES = /** @type {const} */ ([
+  'c5',
+  'c30',
+  'c300',
+  'gift',
+  'lose'
+])
+
+/**
+ * Each prize's chance (rounded %) under the weights; 0 everywhere when they are all 0.
+ *
+ * @param {Record<string, number>} weights
+ * @returns {Record<string, number>}
+ */
+export function wheelChances(weights) {
+  const total = WHEEL_PRIZES.reduce(
+    (sum, p) => sum + Math.max(0, Number(weights[p]) || 0),
+    0
+  )
+  return Object.fromEntries(
+    WHEEL_PRIZES.map(p => [
+      p,
+      total
+        ? Math.round((Math.max(0, Number(weights[p]) || 0) * 1000) / total) / 10
+        : 0
+    ])
+  )
+}
+
+/**
+ * The crystals a spin gives on average under the weights (gifts and the skull: none).
+ *
+ * @param {Record<string, number>} weights
+ */
+export function wheelAverage(weights) {
+  const chances = wheelChances(weights)
+  return Math.round(
+    (chances.c5 * 5 + chances.c30 * 30 + chances.c300 * 300) / 10
+  ) / 10
+}
+
 /**
  * What a session earns under a rule, for the admin's preview: crowns for `minutes` paid minutes
  * at each tier.

@@ -119,6 +119,26 @@
               />
             </div>
 
+            <div v-else-if="section.id === 'wheel'" class="shop__list">
+              <OfferTile
+                v-for="offer in offersIn(state.offers, 'wheel')"
+                :key="offer.id"
+                :offer="offer"
+                :stock="stockOf(offer, state.inventory)"
+                @open="open"
+              />
+              <q-btn
+                v-if="(state.inventory.wheel_ticket ?? 0) > 0"
+                unelevated
+                no-caps
+                color="primary"
+                class="shop__wheel-spin"
+                :label="$t('shop.wheel.use')"
+                data-testid="shop-wheel-spin"
+                @click="shop.openTicketWheel()"
+              />
+            </div>
+
             <div v-else-if="section.id === 'cosmetics'" class="shop__cosmetics">
               <CosmeticCard
                 v-for="offer in offersIn(state.offers, 'cosmetics')"
@@ -205,11 +225,19 @@
 <script setup>
 /**
  * The store (design "Boutique", docs/SHOP.md): the balance, the offers of the moment, the freezes,
- * Puzzle Streak items, module aids, packs, cosmetics to come, and how to earn crowns (§ 4 bis). A phone gets the design's single
+ * Puzzle Streak items, module aids, packs, the gift wheel's tickets (spun from here), cosmetics to come, and how to earn crowns (§ 4 bis). A phone gets the design's single
  * column; from 1024 px, wider grids. A purchase is paid at once, then celebrated while the
  * balance counts down.
  */
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch
+} from 'vue'
 import { useRoute } from 'vue-router'
 import CosmeticCard from '@/components/shop/CosmeticCard.vue'
 import CrystalGem from '@/components/shop/CrystalGem.vue'
@@ -375,6 +403,10 @@ onMounted(async () => {
   const slug = route.query.offer
   const offer = state.value?.offers.find(o => o.slug === slug)
   if (offer) open(offer)
+  // From the menu's wheel, none to spin: the wheel section (its ticket).
+  const section = route.query.section
+  if (typeof section === 'string' && sections.value.some(x => x.id === section))
+    nextTick(() => scrollTo(section))
 })
 
 onBeforeUnmount(() => {
@@ -622,6 +654,14 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.shop__wheel-spin {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-weight: 800;
 }
 
 .shop__modules {

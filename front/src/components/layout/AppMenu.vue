@@ -145,6 +145,36 @@
             >
           </router-link>
 
+          <button
+            type="button"
+            class="app-menu__wheel"
+            data-testid="nav-wheel"
+            @click="wheel"
+          >
+            <WheelGlyph :size="40" />
+            <span class="app-menu__shop-body">
+              <span class="app-menu__shop-title">{{
+                $t('layout.menu.wheel.title')
+              }}</span>
+              <span class="app-menu__shop-text">{{
+                $t('layout.menu.wheel.text')
+              }}</span>
+            </span>
+            <span
+              v-if="shop.wheelsToSpin > 0"
+              class="app-menu__wheel-count"
+              :aria-label="
+                $t(
+                  'layout.header.wheels',
+                  { n: shop.wheelsToSpin },
+                  shop.wheelsToSpin
+                )
+              "
+              data-testid="nav-wheel-count"
+              >{{ shop.wheelsToSpin }}</span
+            >
+          </button>
+
           <q-list class="app-menu__foot">
             <q-separator class="q-mb-sm" />
             <q-item
@@ -211,9 +241,7 @@
               :active="isNavActive(item, route.path)"
               active-class="app-menu__item--on"
               class="app-menu__item"
-              :aria-current="
-                isNavActive(item, route.path) ? 'page' : undefined
-              "
+              :aria-current="isNavActive(item, route.path) ? 'page' : undefined"
               :data-testid="`nav-free-${item.id}`"
             >
               <q-item-section avatar>
@@ -232,9 +260,10 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import UserAvatar from '@/components/layout/UserAvatar.vue'
 import CrystalGem from '@/components/shop/CrystalGem.vue'
+import WheelGlyph from '@/components/shop/WheelGlyph.vue'
 import { useLogout } from '@/composables/layout/useLogout'
 import { useAuthStore } from '@/stores/auth'
 import { useShopStore } from '@/stores/shop'
@@ -259,6 +288,7 @@ const MODULE_COUNT = MODULES.filter(module => module.available).length
 
 const auth = useAuthStore()
 const route = useRoute()
+const router = useRouter()
 const shop = useShopStore()
 const { loggingOut, logout } = useLogout()
 
@@ -276,6 +306,17 @@ const freeActive = computed(() =>
  */
 function onPage(prefix) {
   return route.path === prefix || route.path.startsWith(`${prefix}/`)
+}
+
+/**
+ * The gift wheel (docs/SHOP.md, § 4 ter): spun at once when there is one, else the store's
+ * wheel section (a ticket to buy).
+ */
+function wheel() {
+  if (shop.wheelsToSpin > 0) {
+    open.value = false
+    shop.openWheel()
+  } else router.push({ path: '/boutique', query: { section: 'wheel' } })
 }
 
 watch(open, opened => {
@@ -409,6 +450,55 @@ watch(
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.app-menu__wheel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 14px;
+  border: 0;
+  border-radius: 18px;
+  background: #c6f432;
+  color: #1b1530;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(27, 21, 48, 0.25);
+}
+
+.app-menu__wheel-count {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
+  background: #ff3d5a;
+  color: #fff;
+  font-weight: 800;
+  line-height: 28px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  animation: app-menu-wheel-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes app-menu-wheel-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-menu__wheel-count {
+    animation: none;
+  }
 }
 
 .app-menu__foot {

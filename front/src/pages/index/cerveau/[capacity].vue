@@ -117,14 +117,7 @@
  * its run. Under it: the badges and the rules. Chests not opened yet open on arrival, one after
  * the other.
  */
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch
-} from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import PathChapter from '@/components/mindMap/PathChapter.vue'

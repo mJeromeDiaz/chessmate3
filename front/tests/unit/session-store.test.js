@@ -22,6 +22,11 @@ const api = vi.hoisted(() => ({
       rules: { runMinutes: [1, 2, 5, 10], defaultMinutes: 2 }
     }))
   },
+  endgameApi: {
+    overview: vi.fn(async () => ({
+      rules: { runMinutes: [2, 5, 10, 15], defaultMinutes: 5 }
+    }))
+  },
   puzzleRushApi: {
     overview: vi.fn(async () => ({
       rules: { budgets: [120, 180, 300], defaultBudget: 180, errorWeight: 2 },
@@ -82,7 +87,7 @@ describe('session store', () => {
   it('refuses unknown and not yet available modules', () => {
     const store = useSessionStore()
 
-    expect(store.add('finales')).toBeNull()
+    expect(store.add('analyse')).toBeNull()
     expect(store.add('nope')).toBeNull()
     expect(store.items).toEqual([])
   })
@@ -134,7 +139,7 @@ describe('session store', () => {
         title: 'T',
         items: [
           { uid: 1, moduleId: 'puzzles', values: { duree: 5 } },
-          { uid: 2, moduleId: 'finales', values: { duree: 5 } },
+          { uid: 2, moduleId: 'analyse', values: { duree: 5 } },
           { uid: 'x', moduleId: 'puzzles', values: {} },
           null
         ]

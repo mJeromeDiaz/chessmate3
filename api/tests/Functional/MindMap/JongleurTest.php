@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The Jongleur (docs/MIND_MAP.md, § 8) on the sample puzzles: mixed questions of 6 s, a late or
+ * The Jongleur (docs/MIND_MAP.md, § 8) on the sample puzzles: mixed questions of 7 s, a late or
  * empty answer is a failure, the third failure ends the fight, a fight won beats the chapter 1's
  * boss (its crystals, XP and badges) and opens chapter 2; no XP of its own.
  *
@@ -32,7 +32,7 @@ final class JongleurTest extends WoodpeckerWebTestCase
         $asked = [];
         for ($i = 1; $i <= 20; ++$i) {
             $item = $this->item($alice, $runId);
-            self::assertSame(['jongleur', $i, 20, 3, 6], [$item['type'], $item['data']['position'], $item['data']['count'], $item['data']['lives'], $item['data']['seconds']]);
+            self::assertSame(['jongleur', $i, 20, 3, 7], [$item['type'], $item['data']['position'], $item['data']['count'], $item['data']['lives'], $item['data']['seconds']]);
             if ('write' === $item['data']['question']) {
                 self::assertArrayNotHasKey('san', $item['data']['move'] ?? [], 'The move to write comes without its SAN.');
             }
@@ -67,7 +67,7 @@ final class JongleurTest extends WoodpeckerWebTestCase
 
         // Right, but late.
         $item = $this->item($alice, $runId);
-        $this->travel('+10 seconds');
+        $this->travel('+11 seconds');
         $late = $this->submitOk($alice, $runId, $item['id'], self::answer($item, true));
         self::assertSame([false, 'late', 0], [$late['success'], $late['data']['status'], $late['data']['lives']]);
 
@@ -80,8 +80,8 @@ final class JongleurTest extends WoodpeckerWebTestCase
         $alice = $this->createUserIn('alice@example.com');
         $runId = $this->startBoss($alice);
         $item = $this->item($alice, $runId);
-        // 6 s, the second the start is stored to, the network's 2 s.
-        $this->travel('+8 seconds');
+        // 7 s, the second the start is stored to, the network's 2 s.
+        $this->travel('+9 seconds');
         self::assertSame('right', $this->submitOk($alice, $runId, $item['id'], self::answer($item, true))['data']['status']);
         $item = $this->item($alice, $runId);
         self::assertSame($item['id'], $this->item($alice, $runId)['id'], 'A reload gets the same question back, its time running.');

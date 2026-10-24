@@ -107,6 +107,7 @@ const border = computed(() => {
   font-size: 15px;
   line-height: 1.4;
   text-wrap: pretty;
+  white-space: pre-line;
 }
 
 .prof-bubble--large {

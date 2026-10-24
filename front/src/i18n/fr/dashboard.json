@@ -13,6 +13,11 @@
       "stat": "{n} positions · {pct} justes",
       "rate": "Justes {pct}"
     },
+    "endgames": {
+      "none": "Aucune finale jouée",
+      "stat": "{n} positions · {pct} réussies",
+      "rate": "Réussies {pct}"
+    },
     "woodpecker": {
       "none": "Aucun set en cours",
       "light": "Light · tour {n}",

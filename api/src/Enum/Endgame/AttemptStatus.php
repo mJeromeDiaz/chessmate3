@@ -21,6 +21,8 @@ enum AttemptStatus: string
     case Overtime = 'overtime';
     /** Given up (« Passer »). */
     case Resigned = 'resigned';
+    /** The Roi des cendres: the position's clock ran out (docs/ENDGAMES.md, § 10). */
+    case Timeout = 'timeout';
 
     public function isSuccess(): bool
     {

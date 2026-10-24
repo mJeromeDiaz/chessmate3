@@ -73,9 +73,7 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
     'data-step',
     '1-1'
   )
-  await expect(page.getByTestId('step-detail')).toContainText(
-    'Cliquer la case'
-  )
+  await expect(page.getByTestId('step-detail')).toContainText('Cliquer la case')
 
   // The chapter's boss, at its end: open with its chapter (a strong player may go straight to
   // it).

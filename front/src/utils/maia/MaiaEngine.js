@@ -49,7 +49,8 @@ export class MaiaEngine {
     this.#ready = new Promise((resolve, reject) => {
       this.#rejectReady = reject
       worker.onmessage = ({ data }) => {
-        if (data?.type === 'progress') onProgress?.({ loaded: data.loaded, total: data.total })
+        if (data?.type === 'progress')
+          onProgress?.({ loaded: data.loaded, total: data.total })
         else if (data?.type === 'ready') resolve()
         else if (data?.type === 'failed') {
           this.#fail()
@@ -58,7 +59,8 @@ export class MaiaEngine {
           const run = this.#runs.get(data.id)
           this.#runs.delete(data.id)
           if (data.type === 'result') run?.resolve(data)
-          else run?.reject(new EngineFailureError(`Maia failed: ${data.message}`))
+          else
+            run?.reject(new EngineFailureError(`Maia failed: ${data.message}`))
         }
       }
       worker.onerror = () => {
@@ -126,11 +128,20 @@ export class MaiaEngine {
         }
       })
       this.#worker.postMessage(
-        { type: 'run', id, tokens, eloSelf: clampElo(elo), eloOppo: clampElo(opponentElo) },
+        {
+          type: 'run',
+          id,
+          tokens,
+          eloSelf: clampElo(elo),
+          eloOppo: clampElo(opponentElo)
+        },
         [tokens.buffer]
       )
     })
-    return { chances: legalChances(fen, data.move), outlook: outlook(data.value) }
+    return {
+      chances: legalChances(fen, data.move),
+      outlook: outlook(data.value)
+    }
   }
 
   /** Stops the worker: the predictions waiting are rejected with an `EngineAbortError`. */

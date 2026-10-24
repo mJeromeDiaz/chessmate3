@@ -13,7 +13,10 @@ vi.mock('@/services/api', () => ({
   },
   shopApi: {
     unopenedDailyRewards: vi.fn(),
-    openDailyReward: vi.fn()
+    openDailyReward: vi.fn(),
+    spinWheel: vi.fn(),
+    declineDailyWheel: vi.fn(),
+    get: vi.fn()
   }
 }))
 
@@ -219,6 +222,124 @@ describe('streak celebration', () => {
     shop.nextDailyChest()
     await shown
     expect(done).toBe(true)
+  })
+
+  it("shows the day's gift wheel, then its badge chest, then lets the player go on", async () => {
+    const store = useGamificationStore()
+    const shop = useShopStore()
+    gamificationApi.streakNotice.mockResolvedValue({ pending: false })
+    shopApi.unopenedDailyRewards.mockResolvedValue([
+      { id: 'd1', crowns: 70, opened: false, wheelOpen: true },
+      { id: 'd2', crowns: 0, opened: false, wheelOpen: true }
+    ])
+
+    const shown = store.celebrateStreak({ afterExercise: false })
+    await vi.waitFor(() => expect(shop.dailyChests).toHaveLength(2))
+    // Spun: the credited balance and tickets in the store.
+    shop.state = /** @type {any} */ ({
+      balance: 10,
+      inventory: { wheel_ticket: 1 }
+    })
+    shopApi.spinWheel.mockResolvedValue({
+      prize: 'c30',
+      gift: null,
+      crowns: 30,
+      balance: 40,
+      tickets: 1
+    })
+    await shop.spinWheel('d1')
+    expect(shopApi.spinWheel).toHaveBeenCalledWith('d1')
+    expect([shop.state?.balance, shop.state?.inventory.wheel_ticket]).toEqual([
+      40, 1
+    ])
+
+    // The wheel left: d1's badge chest stays on screen; d2 has none.
+    shop.leaveWheel('d1')
+    expect(shop.dailyChests.map(c => c.id)).toEqual(['d1', 'd2'])
+    expect(shop.wheelsDone.has('d1')).toBe(true)
+    shop.nextDailyChest()
+    shopApi.declineDailyWheel.mockResolvedValue({})
+    await shop.declineWheel('d2')
+    expect(shopApi.declineDailyWheel).toHaveBeenCalledWith('d2')
+    shop.leaveWheel('d2')
+    await shown
+    expect(shop.dailyChests).toHaveLength(0)
+
+    // Left in this tab with nothing to open: not shown again.
+    shopApi.unopenedDailyRewards.mockResolvedValue([
+      { id: 'd2', crowns: 0, opened: false, wheelOpen: true }
+    ])
+    await store.celebrateStreak({ afterExercise: false })
+    expect(shop.dailyChests).toHaveLength(0)
+  })
+
+  it('opens the wheel from the store with a ticket', () => {
+    const shop = useShopStore()
+    shop.openTicketWheel()
+    expect(shop.ticketWheel).toBe(true)
+    shop.closeTicketWheel()
+    expect(shop.ticketWheel).toBe(false)
+  })
+
+  it("counts the wheels to spin and opens today's first, from the header or the menu", async () => {
+    const shop = useShopStore()
+    expect(shop.wheelsToSpin).toBe(0)
+    shop.state = /** @type {any} */ ({
+      balance: 0,
+      inventory: { wheel_ticket: 2 },
+      dailyWheel: 'd1'
+    })
+    expect(shop.wheelsToSpin).toBe(3)
+
+    shop.openWheel()
+    expect([shop.handWheel, shop.ticketWheel]).toEqual(['d1', false])
+    shopApi.spinWheel.mockResolvedValue({
+      prize: 'c5',
+      gift: null,
+      crowns: 5,
+      balance: 5,
+      tickets: 2
+    })
+    await shop.spinWheel('d1')
+    expect([shop.state?.dailyWheel, shop.wheelsToSpin]).toEqual([null, 2])
+    shop.closeHandWheel()
+    expect([shop.handWheel, shop.wheelsDone.has('d1')]).toEqual([null, true])
+
+    // Then the tickets'.
+    shop.openWheel()
+    expect(shop.ticketWheel).toBe(true)
+    shopApi.spinWheel.mockResolvedValue({
+      prize: 'c5',
+      gift: null,
+      crowns: 5,
+      balance: 10,
+      tickets: 1
+    })
+    await shop.spinWheel(null)
+    expect([shop.state?.dailyWheel, shop.wheelsToSpin]).toEqual([null, 1])
+  })
+
+  it("counts today's wheel offered by the day's first exercise, until declined", async () => {
+    const store = useGamificationStore()
+    const shop = useShopStore()
+    shop.state = /** @type {any} */ ({
+      balance: 0,
+      inventory: {},
+      dailyWheel: null
+    })
+    gamificationApi.streakNotice.mockResolvedValue({ pending: false })
+    shopApi.unopenedDailyRewards.mockResolvedValue([
+      { id: 'd1', crowns: 0, opened: false, wheelOpen: true }
+    ])
+
+    const shown = store.celebrateStreak({ afterExercise: false })
+    await vi.waitFor(() => expect(shop.dailyChests).toHaveLength(1))
+    expect([shop.state?.dailyWheel, shop.wheelsToSpin]).toEqual(['d1', 1])
+    shopApi.declineDailyWheel.mockResolvedValue({})
+    await shop.declineWheel('d1')
+    shop.leaveWheel('d1')
+    await shown
+    expect(shop.wheelsToSpin).toBe(0)
   })
 
   it('shows a daily chest left unseen on the dashboard, not after an exercise', async () => {

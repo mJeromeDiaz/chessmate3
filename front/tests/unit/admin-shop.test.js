@@ -10,7 +10,9 @@ import {
   offerStatus,
   toLocalInput,
   violationOf,
-  violationsOf
+  violationsOf,
+  wheelAverage,
+  wheelChances
 } from '@/utils/admin/shop'
 
 const offer = {
@@ -144,5 +146,28 @@ describe('the reward rule', () => {
       'dailyMinutes'
     ])
     expect(LEDGER_KINDS.reward).toBe('Session')
+  })
+})
+
+describe('the gift wheel odds (docs/SHOP.md, § 4 ter)', () => {
+  it('shows each prize chance and the crystals of a spin on average', () => {
+    const defaults = { c5: 75, c30: 12, c300: 1, gift: 7, lose: 5 }
+    expect(wheelChances(defaults)).toEqual({
+      c5: 75,
+      c30: 12,
+      c300: 1,
+      gift: 7,
+      lose: 5
+    })
+    // 3.75 + 3.6 + 3
+    expect(wheelAverage(defaults)).toBe(10.4)
+    expect(wheelChances({ c5: 1, c30: 2, c300: 0, gift: 0, lose: 0 })).toEqual({
+      c5: 33.3,
+      c30: 66.7,
+      c300: 0,
+      gift: 0,
+      lose: 0
+    })
+    expect(wheelChances({})).toEqual({ c5: 0, c30: 0, c300: 0, gift: 0, lose: 0 })
   })
 })

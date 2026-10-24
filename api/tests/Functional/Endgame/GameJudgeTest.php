@@ -94,6 +94,24 @@ final class GameJudgeTest extends KernelTestCase
         self::assertSame(AttemptStatus::Held, $this->judge->judge($lesson, $start, ['d4c5', 'h1g2', 'c5b5'], null, 2, false, false, null)->status);
     }
 
+    public function testADrawToHoldIsKeptByAWinAfterABlunder(): void
+    {
+        $lesson = Catalogue::get('square-stop') ?? throw new \LogicException();
+        $start = '8/8/8/P7/3k4/8/8/7K b - - 0 1';
+        self::keep($start, self::drawWith('d4c5', 'd4d3'));
+        // The opponent blundered (in this made-up answer): the player now wins, a drawing move
+        // still holds the draw the lesson asks for.
+        self::keep('8/8/8/P1k5/8/8/6K1/8 b - - 0 1', ['category' => 'win', 'dtm' => 15, 'moves' => [
+            ['uci' => 'c5b4', 'category' => 'loss', 'dtm' => -14],
+            ['uci' => 'c5b5', 'category' => 'draw'],
+            ['uci' => 'c5d6', 'category' => 'win', 'dtm' => 30],
+        ]]);
+
+        self::assertSame(AttemptStatus::Held, $this->judge->judge($lesson, $start, ['d4c5', 'h1g2', 'c5b5'], null, 2, false, false, null)->status);
+        $lost = $this->judge->judge($lesson, $start, ['d4c5', 'h1g2', 'c5d6'], null, 2, false, false, null);
+        self::assertSame([AttemptStatus::Spoiled, 2, 'c5b4'], [$lost->status, $lost->mistakeAt, $lost->bestMove], 'The best move shown is the win.');
+    }
+
     public function testIllegalUnfinishedOrTooLongGames(): void
     {
         $this->keepTheGame();

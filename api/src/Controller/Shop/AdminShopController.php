@@ -16,6 +16,8 @@ use App\Shop\Admin\SlideEditor;
 use App\Shop\Reward\RewardRules;
 use App\Shop\Reward\Rule;
 use App\Shop\Wallet\CrownAdjustment;
+use App\Shop\Wheel\Odds;
+use App\Shop\Wheel\WheelRules;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -32,7 +34,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * The store's administration (docs/SHOP.md), admins only: the catalogue (offers, carousel), the
  * players' crowns (search, detail, give or take back with a reason), what sessions earn (§ 4 bis),
- * the figures. Writes within
+ * the gift wheel's odds (§ 4 ter), the figures. Writes within
  * the admin's budget (admin_write); a form refused answers 422 `{violations}`.
  */
 #[Route('/api/admin/shop')]
@@ -49,6 +51,7 @@ final class AdminShopController extends AbstractController
         private readonly CrownAdjustment $crowns,
         private readonly ShopStats $stats,
         private readonly RewardRules $rewardRules,
+        private readonly WheelRules $wheelRules,
         private readonly ClockInterface $clock,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.admin_write')]
@@ -176,6 +179,39 @@ final class AdminShopController extends AbstractController
             $this->rewardRules->save($rule, $admin->getId(), $this->clock->now());
 
             return $this->json($this->rewardRules->view());
+        });
+    }
+
+    #[Route('/wheel-rule', name: 'admin_shop_wheel_rule', methods: ['GET'])]
+    public function wheelRule(): JsonResponse
+    {
+        return $this->json($this->wheelRules->view());
+    }
+
+    /**
+     * PUT {c5, c30, c300, gift, lose, freezePercent}: the gift wheel's odds for the next spins
+     * (weights, at least one above 0; a gift's chance to be a freeze, in percent).
+     */
+    #[Route('/wheel-rule', name: 'admin_shop_wheel_rule_update', methods: ['PUT'])]
+    public function updateWheelRule(Request $request, #[CurrentUser] User $admin): JsonResponse
+    {
+        return $this->write($admin, function () use ($request, $admin): JsonResponse {
+            $payload = new Payload($request->toArray());
+            $odds = new Odds(
+                (int) $payload->int('c5', 0, 10_000),
+                (int) $payload->int('c30', 0, 10_000),
+                (int) $payload->int('c300', 0, 10_000),
+                (int) $payload->int('gift', 0, 10_000),
+                (int) $payload->int('lose', 0, 10_000),
+                (int) $payload->int('freezePercent', 0, 100),
+            );
+            if (!$odds->isValid()) {
+                $payload->fail('c5', 'shop.wheel_no_prize');
+            }
+            $payload->done();
+            $this->wheelRules->save($odds, $admin->getId(), $this->clock->now());
+
+            return $this->json($this->wheelRules->view());
         });
     }
 

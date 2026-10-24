@@ -98,8 +98,8 @@ $outline: 0 0 0 calc(3px * var(--s)) #1b1530;
   bottom: 0;
   z-index: 2;
   height: calc(32px * var(--s));
-  border-radius: calc(4px * var(--s)) calc(4px * var(--s))
-    calc(10px * var(--s)) calc(10px * var(--s));
+  border-radius: calc(4px * var(--s)) calc(4px * var(--s)) calc(10px * var(--s))
+    calc(10px * var(--s));
   background: linear-gradient(180deg, #a8642c, #7a4116 60%, #5e3010);
 }
 

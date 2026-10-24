@@ -298,9 +298,7 @@ describe('the Avocat du diable', () => {
   it('shows his face: focused, doubtful, then delighted or sad', () => {
     expect(advocateMood({ phase: 'think', thinkLeftRatio: 0.8 })).toBe('focus')
     expect(advocateMood({ phase: 'think', thinkLeftRatio: 0.3 })).toBe('doubt')
-    expect(advocateMood({ phase: 'answer', thinkLeftRatio: 1 })).toBe(
-      'neutral'
-    )
+    expect(advocateMood({ phase: 'answer', thinkLeftRatio: 1 })).toBe('neutral')
     const state = { phase: 'complete', thinkLeftRatio: 1 }
     expect(advocateMood({ ...state, result: { status: 'wrong' } })).toBe('joy')
     expect(advocateMood({ ...state, result: { status: 'late' } })).toBe('pride')

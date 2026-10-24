@@ -351,10 +351,12 @@ export function chapterProgress(chapter) {
  * @param {MindPath} path
  */
 export function pathProgress(path) {
-  return path.chapters.map(chapterProgress).reduce(
-    (sum, p) => ({ done: sum.done + p.done, total: sum.total + p.total }),
-    { done: 0, total: 0 }
-  )
+  return path.chapters
+    .map(chapterProgress)
+    .reduce(
+      (sum, p) => ({ done: sum.done + p.done, total: sum.total + p.total }),
+      { done: 0, total: 0 }
+    )
 }
 
 /**

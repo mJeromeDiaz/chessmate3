@@ -56,6 +56,7 @@ les gains, `Training\Session\SessionRewardInterface`. Aucun domaine ne dépend d
 | `puzzle_pardon` | `aids` (puzzles) | puzzle classé raté : classement rendu | [PUZZLES.md](PUZZLES.md), « Erreur pardonnée » |
 | `blindfold_pardon` | `aids` (aveugle) | tout le puzzle : erreurs effacées en jeu, ou raté compté résolu | [BLINDFOLD.md § 3 bis](BLINDFOLD.md) |
 | `coordinates_pardon` | `aids` (coordonnées) | la première case ratée d'une série ne compte pas | [COORDINATES.md](COORDINATES.md) |
+| `wheel_ticket` | `wheel` | un tour de plus à la roue des cadeaux | § 4 ter |
 
 Ajouter un article : un cas de l'enum (jamais renommé), son effet codé, son aspect côté front
 (`ITEMS` de `utils/shop.js` : glyphe, couleurs, « Comment ça marche »).
@@ -82,13 +83,15 @@ Ajouter un article : un cas de l'enum (jamais renommé), son effet codé, son as
   boutique ne touche pas aux tables de Training), `local_date` (jour local du joueur, pour le
   plafond), exercices et réussites comptés, `paid_seconds` (après plafond), `capped`, `tier`,
   `crowns`, `opened_at` (coffre vu).
-- `shop_daily_reward` : le coffre du jour (§ 4 ter), une ligne par joueur et jour local
+- `shop_wheel_rule` : les chances de la roue (une ligne, `id` 1, absente tant qu'un admin ne les
+  a pas changées : les valeurs par défaut s'appliquent) ; `shop_wheel_spin` : les tirages (§ 4 ter).
+- `shop_daily_reward` : le jour (§ 4 ter), une ligne par joueur et jour local
   (`uniq_shop_daily_reward_user_day`) : `streak` atteinte, `badge_days` (le badge du jour, sinon
   null), `daily_crowns` (le tirage), `badge_crowns` (le bonus du badge, 0 sinon), `crowns` (les
-  deux), `opened_at`.
+  deux), `wheel` (la roue du jour), `opened_at`.
 
 Tout est supprimé avec le compte (cascade) et exporté (`boutique.json` : mouvements,
-inventaire, gels, jours gelés, gains des sessions et coffres du jour).
+inventaire, gels, jours gelés, gains des sessions, coffres du jour et tirages de la roue).
 
 ## 4. Gels de la série
 
@@ -146,57 +149,111 @@ Un coffre n'est « vu » qu'une fois frappé ou fermé ; affiché puis quitté, 
 coffre prend lui-même le focus (Échap le ferme) : le coffre n'a son contour de focus qu'au
 clavier.
 
-## 4 ter. Coffre du jour et coffre de badge de série (2026-10-21)
+## 4 ter. La roue des cadeaux et le coffre de badge de série (2026-10-23)
 
-Règles validées (2026-10-21) :
+Règles validées le 2026-10-23 (maquette « Roue des cadeaux ») ; jusque-là, un coffre du jour de 6 à
+12 cristaux (2026-10-21, les lignes d'avant gardent `daily_crowns`).
 
 - **Chaque jour joué**, le premier exercice du jour local (celui qui annonce la série,
-  [GAMIFICATION.md](GAMIFICATION.md), « Annonce de la série ») rapporte un **coffre du jour** de
-  **6 à 12 cristaux**, tirés au hasard côté serveur (`DailyRewarder::DAILY_MIN`, `DAILY_MAX`). Les
-  exercices suivants du jour ne rapportent rien de plus.
-- **Le jour d'un badge de série** (3, 7, 14, 30, 50, 100… jours), le même coffre ajoute
+  [GAMIFICATION.md](GAMIFICATION.md), « Annonce de la série ») propose **la roue du jour** (une
+  ligne `shop_daily_reward`, `wheel` = `offered`). Les exercices suivants du jour ne proposent rien
+  de plus.
+- **La roue** a 8 cases : quatre « 5 », un « 30 », un « 300 », un « Cadeau », une tête de mort.
+  **Le serveur tire le lot** (`Shop\Wheel\WheelSpinner`) selon les chances réglées par un admin
+  (`Shop\Wheel\Odds`, `shop_wheel_rule`, onglet « Gains ») ; le front arrête la roue sur une case
+  de ce lot. Par défaut : 5 cristaux 75 %, 30 cristaux 12 %, cadeau 7 %, rien 5 %, 300 cristaux
+  1 % (des poids : la chance d'un lot est son poids sur la somme ; un poids 0 ne sort jamais).
+- **Le cadeau** (les 3 coffres de la maquette ouvrent la même chose) : un **gel de série de 1 jour**
+  (rangé avec les gels achetés, § 4) ou **un costume pour Albert**, un message seulement pour
+  l'instant (rien n'est gardé) ; moitié-moitié par défaut (`freezePercent`).
+- **Crédité au tirage**, dans sa transaction : les cristaux au registre `reward`, motif « Roue des
+  cadeaux » (les statistiques admin les comptent dans « gagné ») ; le tirage dans `shop_wheel_spin`
+  (`prize`, `gift`, `crowns`, `ticket`). Hors du plafond des sessions (§ 4 bis).
+- **Une fois par jour** : la roue du jour se tourne ce jour local seulement. Refusée (« Pas
+  aujourd'hui », `declined`) ou pas tournée avant minuit, elle est perdue.
+- **Jamais de roue** : le réglage du profil `dailyWheel` (`PUT /profile/preferences`, faux = plus de
+  roue, `wheel` = `off`), aussi proposé sous la roue (« Ne plus me proposer la roue »). Il se
+  réactive dans le profil.
+- **Le ticket** (`wheel_ticket`, offre `wheel_ticket` à 20 cristaux, rayon `wheel`, prix réglable
+  comme toute offre) : un tour de plus, à tout moment (« Relancer » après un tirage, ou depuis la
+  boutique).
+- **Le jour d'un badge de série** (3, 7, 14, 30, 50, 100… jours), un **coffre de série** de
   **10 cristaux par jour**, **1 000 au plus** : 3 → 30, 7 → 70, 14 → 140, 30 → 300, 50 → 500,
-  100 et au-delà → 1 000 (`DailyRewarder::badgeCrowns`). Un seul coffre, dont le détail donne le
-  tirage et le bonus.
+  100 et au-delà → 1 000 (`DailyRewarder::badgeCrowns`), montré après la roue. Il est donné même
+  si la roue est refusée ou désactivée.
 - **Pas rétroactif** : les badges gagnés avant le 2026-10-21 ne rapportent rien.
-- Hors du plafond des sessions (§ 4 bis) : ni minutes payées ni palier.
 - Crédité **à l'annonce de la série**, dans la transaction de l'exercice (annulé avec lui) :
   `StreakNoticeWriter` appelle `Gamification\Streak\StreakRewardInterface`, que la boutique
   implémente (`Shop\Reward\DailyRewarder`) ; l'index unique le rend idempotent par jour. Un
-  exercice d'un jour passé (séance close après minuit, rattrapage) n'en donne pas. Écriture au
-  registre `reward`, motif « Coffre du jour » ou « Coffre de série · 7 jours » : les statistiques
-  admin le comptent dans « gagné ».
-- Le coffre ne fait que révéler les cristaux, une fois (`opened_at`), comme ceux des sessions ;
-  aucun n'est perdu (liste des coffres du jour pas encore vus).
+  exercice d'un jour passé (séance close après minuit, rattrapage) ne donne rien. Écriture au
+  registre `reward`, motif « Coffre de série · 7 jours ».
+- Le coffre ne fait que révéler les cristaux, une fois (`opened_at`) ; aucun n'est perdu (la liste
+  des coffres pas encore vus, avec la roue du jour à tourner).
 
 Front : `components/shop/DailyChest.vue`, dans la mise en page (après la page : au-dessus de ses
-propres coffres), réutilise `TreasureChest` avec ses mots (`words` : « COFFRE DU JOUR » ou
-« COFFRE DE SÉRIE · 7 JOURS », titre ouvert « Coffre du jour ! » ou « 7 jours de série ! »), sa
-note (« Série de 5 jours », ou « 9 du jour + 70 pour le badge 7 jours ») et « Continuer ». Le
-store `shop` les tient (`dailyChests`, `showDailyChests()`, `openDailyChest()`,
-`nextDailyChest()`, calculs dans `utils/shopReward.js` : `dailyChestReward`, `dailyChestWords`,
-`dailyChestNote`). `useGamificationStore().celebrateStreak()` les montre **juste après la
-célébration de la série**, l'un après l'autre, et ne se résout qu'une fois le dernier fermé : tous
-les appelants (puzzle, Woodpecker, fin de séance, dashboard) attendent donc le coffre avant de
-reprendre. Sans annonce en attente, le dashboard et la fin de séance montrent quand même un coffre
-du jour resté non vu ; après un exercice, non (déjà montré ailleurs : le dashboard le rattrape).
-Taille du coffre fermé selon le montant, comme une session.
+propres coffres), montre pour chaque jour pas encore vu **la roue du jour** (`wheelOpen`), puis le
+**coffre de badge** (`TreasureChest` avec ses mots : « COFFRE DE SÉRIE · 7 JOURS », titre ouvert
+« 7 jours de série ! », note « Le bonus du badge 7 jours ») ; un coffre d'avant la roue garde ses
+mots (« COFFRE DU JOUR »). Il montre aussi la roue d'un ticket ouverte depuis la boutique
+(« Tourner la roue » dans le rayon `wheel` quand le joueur a un ticket).
+
+Les roues à tourner (2026-10-24) : le store `shop` les compte (`wheelsToSpin` : les tickets en
+stock, plus 1 quand `dailyWheel` attend ; la roue du jour offerte par le premier exercice y entre
+dès `showDailyChests()`, et en sort une fois tournée ou refusée). L'en-tête montre alors une petite
+roue (`components/layout/WheelChip.vue`, `components/shop/WheelGlyph.vue`) avec leur nombre qui
+pulse, cachée quand il n'y en a pas ; le menu, une entrée « Roue des cadeaux » toujours là, en vert
+citron, avec le même nombre. Les deux ouvrent la roue sur place (`openWheel()` : celle du jour
+d'abord, même fermée avec ✕, puis celles des tickets) ; sans roue, le menu mène au rayon `wheel` de
+la boutique (`/boutique?section=wheel`). Les textes du ticket décrivent plutôt qu'ils n'expliquent
+(« Tente de gagner 300 cristaux et de superbes cadeaux ! » ; la description de l'offre, mise à jour
+par `Version20261114090000` si l'admin ne l'avait pas changée). Pas de pulsation avec les
+mouvements réduits.
+
+`components/shop/GiftWheel.vue` (maquette « Roue des cadeaux », nos cristaux `CrystalGem` à la
+place des siens) : une fenêtre plein écran de Quasar, sombre dans les deux thèmes (la feuille
+d'achat s'ouvre par-dessus). Le centre « Tourner » demande le tirage au serveur, puis la roue
+ralentit sur une case du lot (`utils/giftWheel.js` : `SEGMENTS`, `segmentOf`, `landingRotation`,
+`spinCurve`, `wheelHead`) ; les cristaux montent dans la réserve (confettis pour le 300), un cadeau
+fait choisir un coffre parmi trois (3 coups) qui s'ouvre sur le gel ou sur Albert
+(`albert-full`), la tête de mort ouvre la fenêtre « Perdu ». « Relancer » dépense un ticket, acheté
+sur place sans ticket (`useAidPurchase('wheel_ticket')`, la roue tourne une fois l'achat fait).
+Avant le tirage du jour : « Pas aujourd'hui » (`POST …/decline`) et « Ne plus me proposer la
+roue » (confirmation, puis le refus et `dailyWheel` faux). ✕ la ferme sans rien perdre : le
+dashboard la repropose jusqu'à minuit (pas dans le même onglet). Mouvements réduits : pas de
+rotation ni de confettis, le coffre ouvert au premier coup.
+
+Le store `shop` tient les jours (`dailyChests`, `wheelsDone`, `ticketWheel`, `showDailyChests()`,
+`spinWheel()`, `declineWheel()`, `leaveWheel()`, `openDailyChest()`, `nextDailyChest()`, calculs
+dans `utils/shopReward.js` : `dailyChestReward`, `dailyChestWords`, `dailyChestNote`).
+`useGamificationStore().celebrateStreak()` les montre **juste après la célébration de la série**,
+l'un après l'autre, et ne se résout qu'une fois le dernier fermé : tous les appelants (puzzle,
+Woodpecker, fin de séance, dashboard) attendent donc la roue et le coffre avant de reprendre. Sans
+annonce en attente, le dashboard et la fin de séance montrent quand même une roue ou un coffre
+restés non vus ; après un exercice, non (déjà montrés ailleurs : le dashboard les rattrape). Le
+profil (« Préférences ») a le réglage « Roue des cadeaux quotidienne » ; l'admin, les chances dans
+l'onglet « Gains » (`WheelRuleForm`, la chance de chaque lot et les cristaux moyens d'un tour).
 
 En test PHPUnit, `App\Tests\Double\SwitchableStreakReward` coupe le coffre du jour
 (`when@test`) : ses cristaux aléatoires fausseraient les soldes exacts des autres tests ;
-`DailyRewardTest` l'active. En e2e, le coffre est réel côté serveur (le solde le compte), mais
-`signIn()` répond « aucun coffre » à `GET /shop/daily-rewards/unopened` comme « aucune annonce »
-à la série, sauf avec `streak: true`.
+`DailyRewardTest` l'active. En e2e, la roue est proposée côté serveur (rien n'est crédité sans tirage), mais
+`signIn()` répond « ni roue ni coffre » à `GET /shop/daily-rewards/unopened` comme « aucune
+annonce » à la série, sauf avec `streak: true`. `tests/e2e/gift-wheel.spec.js` règle les chances
+par l'onglet « Gains » (un seul lot possible par test, les chances par défaut remises après) : la
+roue du jour après la célébration (30 cristaux), un cadeau (trois coffres, un gel) puis
+« Relancer » avec un ticket acheté sur place et la tête de mort, le ticket tourné depuis la
+boutique, la roue fermée reproposée au dashboard, « Ne plus me proposer » et le réglage du profil.
 
 ## 5. API joueur
 
 | Endpoint | Rôle |
 |---|---|
-| `GET /shop` | `{balance, offers, slides, inventory, freezes, earning}` : offres listées (en vente ou « bientôt »), `inventory` par article (un gel compte tant qu'il couvre un jour), gels un par un, `earning` (la règle des gains et `minutesLeftToday`) |
+| `GET /shop` | `{balance, offers, slides, inventory, freezes, earning, dailyWheel}` : offres listées (en vente ou « bientôt »), `inventory` par article (un gel compte tant qu'il couvre un jour), gels un par un, `earning` (la règle des gains et `minutesLeftToday`), `dailyWheel` (l'id de la roue du jour encore à tourner, sinon null : § 4 ter) |
 | `GET /shop/rewards/unopened` | les coffres pas encore vus, du plus ancien (20 au plus), la session active d'abord réconciliée → `member` : `{id, crowns, paidMinutes, tier, capped, opened, balance, sessionId}` |
 | `POST /shop/rewards/{id}/open` | le coffre d'un gain vu (idempotent) → `{id, crowns, paidMinutes, tier, capped, opened, balance}` ; 404 pour celui d'un autre ; limiteur `shop_write` |
-| `GET /shop/daily-rewards/unopened` | les coffres du jour pas encore vus, du plus ancien (20 au plus) → `member` : `{id, localDate, streak, badgeDays, dailyCrowns, badgeCrowns, crowns, opened, balance}` |
-| `POST /shop/daily-rewards/{id}/open` | un coffre du jour vu (idempotent) → la même forme ; 404 pour celui d'un autre ; limiteur `shop_write` |
+| `GET /shop/daily-rewards/unopened` | les coffres pas encore vus (un badge, ou un jour d'avant la roue) et la roue du jour à tourner, du plus ancien (20 au plus) → `member` : `{id, localDate, streak, badgeDays, dailyCrowns, badgeCrowns, crowns, opened, wheel, wheelOpen, balance}` (`wheel` : `offered`, `spun`, `declined`, `off`, null avant la roue ; `wheelOpen` : à tourner aujourd'hui) |
+| `POST /shop/daily-rewards/{id}/open` | un coffre vu (idempotent) → la même forme ; 404 pour celui d'un autre ; limiteur `shop_write` |
+| `POST /shop/daily-rewards/{id}/decline` | « Pas aujourd'hui » : la roue du jour perdue → la même forme ; 404 pour celle d'un autre, 409 `no_spin` ; limiteur `shop_write` |
+| `POST /shop/wheel/spins` `{dailyRewardId}` | tourne la roue du jour, ou avec un ticket (`dailyRewardId` absent) → `{id, prize, gift, crowns, ticket, balance, tickets}` (`prize` : `c5`, `c30`, `c300`, `gift`, `lose` ; `gift` : `freeze`, `costume`) ; 409 `no_spin` (tournée, refusée, d'un autre jour ou d'un autre joueur) ou `no_ticket` ; limiteur `shop_write` |
 | `POST /shop/purchases` `{offerId, quantity}` | 1 à 9 ; payé d'un coup sur le solde verrouillé, articles en stock, même transaction → l'état de la boutique ; 404 offre inconnue, 409 `detail` `insufficient` ou `not_on_sale`, 422 quantité ; limiteur `shop_write` (60 / 10 min) |
 
 La vue d'une session (`GET /training/sessions/{id}`, la liste, etc.) porte `reward` :
@@ -220,6 +277,7 @@ Contrôleur simple, réponses JSON ; écritures sous le limiteur `admin_write` (
 | `GET /players/{id}` | solde, inventaire, gels, mouvements |
 | `POST /players/{id}/crowns` `{delta, reason}` | donner ou retirer (motif obligatoire) ; 409 sous zéro |
 | `GET /reward-rule`, `PUT /reward-rule` `{crownsPerHour, perfectPercent, nearPercent, missedPercent, dailyMinutes}` | la règle des gains (§ 4 bis), avec la date et l'admin de la dernière modification |
+| `GET /wheel-rule`, `PUT /wheel-rule` `{c5, c30, c300, gift, lose, freezePercent}` | les chances de la roue (§ 4 ter) : des poids de 0 à 10 000, un au moins au-dessus de 0, la part du gel en %, avec la date et l'admin de la dernière modification |
 | `GET /stats?days=7\|30\|90` | totaux (en circulation, détenteurs, donné, retiré, gagné en session et sessions récompensées, dépensé, achats, acheteurs), ventes par offre, cristaux dépensés et gagnés par jour, articles détenus, jours de gel en stock |
 
 Page `/admin/boutique` (onglet « Boutique » de l'admin) : Offres, Carrousel, Gains, Joueurs,

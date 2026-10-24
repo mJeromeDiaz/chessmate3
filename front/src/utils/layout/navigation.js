@@ -51,6 +51,7 @@ export const FREE_TRAINING_LINKS = [
   link('blindfold', '/blindfold', 'layout.nav.blindfold', 'visibility_off'),
   link('recall', '/reconstitution', 'layout.nav.recall', 'psychology'),
   link('evaluation', '/evaluation', 'layout.nav.evaluation', 'balance'),
+  link('endgames', '/finales', 'layout.nav.endgames', 'flag'),
   link('parcours', '/parcours', 'layout.nav.parcours', 'route')
 ]
 

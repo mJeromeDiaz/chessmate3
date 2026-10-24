@@ -44,14 +44,18 @@ describe('store', () => {
       'puzzle_streak_help',
       'puzzle_pardon',
       'blindfold_pardon',
-      'coordinates_pardon'
+      'coordinates_pardon',
+      'wheel_ticket'
     ])
-    for (const look of Object.values(ITEMS)) expect(look.how).toHaveLength(3)
+    // Three steps each; the wheel's ticket, one descriptive line.
+    for (const [id, look] of Object.entries(ITEMS))
+      expect(look.how).toHaveLength(id === 'wheel_ticket' ? 1 : 3)
     expect(SECTIONS.map(s => s.id)).toEqual([
       'freeze',
       'puzzle_streak',
       'aids',
       'packs',
+      'wheel',
       'cosmetics'
     ])
   })

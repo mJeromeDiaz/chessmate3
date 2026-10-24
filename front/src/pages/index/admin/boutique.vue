@@ -211,7 +211,10 @@
       </q-markup-table>
     </section>
 
-    <RewardRuleForm v-else-if="tab === 'rewards'" />
+    <div v-else-if="tab === 'rewards'" class="admin-shop__rules">
+      <RewardRuleForm />
+      <WheelRuleForm />
+    </div>
     <ShopPlayers v-else-if="tab === 'players'" />
     <ShopStatsPanel v-else />
 
@@ -241,6 +244,7 @@ import { useQuasar } from 'quasar'
 import AdminPage from '@/components/admin/AdminPage.vue'
 import OfferForm from '@/components/admin/shop/OfferForm.vue'
 import RewardRuleForm from '@/components/admin/shop/RewardRuleForm.vue'
+import WheelRuleForm from '@/components/admin/shop/WheelRuleForm.vue'
 import ShopPlayers from '@/components/admin/shop/ShopPlayers.vue'
 import ShopStatsPanel from '@/components/admin/shop/ShopStatsPanel.vue'
 import SlideForm from '@/components/admin/shop/SlideForm.vue'
@@ -391,5 +395,10 @@ onMounted(load)
   width: 40px;
   height: 40px;
   object-fit: contain;
+}
+.admin-shop__rules {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 </style>

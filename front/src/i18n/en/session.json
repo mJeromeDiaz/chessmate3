@@ -128,11 +128,12 @@
         "review": "Review"
       },
       "endgames": {
-        "pawns": "Pawns",
-        "rooks": "Rooks",
         "basicMates": "Basic mates",
-        "minorPieces": "Minor pieces",
-        "queens": "Queens"
+        "pawns": "Pawns",
+        "queens": "Queens",
+        "rooks": "Rooks",
+        "bishops": "Bishops",
+        "knights": "Knights"
       },
       "sides": {
         "white": "White",

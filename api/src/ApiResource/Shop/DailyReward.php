@@ -11,6 +11,7 @@ use ApiPlatform\Metadata\NotExposed;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use App\ApiResource\Woodpecker\Set;
+use App\State\Shop\DeclineDailyWheelProcessor;
 use App\State\Shop\OpenDailyRewardProcessor;
 use App\State\Shop\UnopenedDailyRewardsProvider;
 
@@ -35,10 +36,20 @@ use App\State\Shop\UnopenedDailyRewardsProvider;
             deserialize: false,
             processor: OpenDailyRewardProcessor::class,
         ),
+        new Post(
+            uriTemplate: '/shop/daily-rewards/{id}/decline',
+            requirements: ['id' => Set::UUID_PATTERN],
+            status: 200,
+            openapi: new Operation(summary: 'Declines the day\'s gift wheel (« Pas aujourd\'hui »): lost for that day.'),
+            input: false,
+            read: false,
+            deserialize: false,
+            processor: DeclineDailyWheelProcessor::class,
+        ),
         new GetCollection(
             uriTemplate: '/shop/daily-rewards/unopened',
             paginationEnabled: false,
-            openapi: new Operation(summary: 'The daily chests not seen yet, oldest first.'),
+            openapi: new Operation(summary: 'The daily chests not seen yet, oldest first, and today\'s gift wheel still to spin.'),
             provider: UnopenedDailyRewardsProvider::class,
         ),
         // The items' IRI only: a daily chest is read through the list above.
@@ -55,13 +66,17 @@ final class DailyReward
     public int $streak;
     /** The days of the streak badge won that day, null on other days. */
     public ?int $badgeDays;
-    /** The daily draw (6 to 12). */
+    /** The daily draw (6 to 12), 0 since the gift wheel. */
     public int $dailyCrowns;
     /** The badge's bonus (0 without a badge). */
     public int $badgeCrowns;
     /** Both together. */
     public int $crowns;
     public bool $opened;
+    /** The day's gift wheel: offered, spun, declined, off; null before the wheel existed. */
+    public ?string $wheel;
+    /** The wheel is still to spin (today's, offered): shown before the chest. */
+    public bool $wheelOpen;
     /** The player's crowns now. */
     public int $balance;
 
@@ -79,6 +94,8 @@ final class DailyReward
         $reward->badgeCrowns = $view['badgeCrowns'];
         $reward->crowns = $view['crowns'];
         $reward->opened = $view['opened'];
+        $reward->wheel = $view['wheel'];
+        $reward->wheelOpen = $view['wheelOpen'];
         $reward->balance = $balance;
 
         return $reward;
