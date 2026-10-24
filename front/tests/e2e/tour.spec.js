@@ -125,15 +125,15 @@ test('tour: level and goal saved, the professors and Ray, the bosses and the map
     'true'
   )
   await expect(page.getByTestId('tour-end-map')).toContainText('Conseillé')
-  await expect(page.getByTestId('tour-end-coach')).toContainText(
+  // The session and the repertoire: their pages offer both the generated and the hand-made one,
+  // Lichess is asked for there.
+  await expect(page.getByTestId('tour-end-choices')).not.toContainText(
     'Lichess requis'
   )
   await page.getByTestId('tour-end-coach').click()
-  await expect(next).toHaveText('Lier Lichess et continuer')
-  await page.getByTestId('tour-end-builder').click()
   await expect(next).toHaveText('C’est parti !')
   await next.click()
-  await expect(page).toHaveURL(/#\/session\/new$/)
+  await expect(page).toHaveURL(/#\/session$/)
 
   // The answers in the profile, still able to set the starting rating.
   await page.goto('/#/profile')
@@ -183,4 +183,69 @@ test('tour: kept in the browser, back, segments and skip; reopened from the prof
   await page.getByTestId('profile-tour-restart').click()
   await expect(page).toHaveURL(/#\/visite$/)
   await expect(tour).toHaveAttribute('data-step', 'hello')
+})
+
+test('tour: a visitor discovers it from the landing, nothing sent, then the real tour starts with those answers', async ({
+  page,
+  context
+}) => {
+  /** @type {string[]} */
+  const calls = []
+  page.on('request', r => {
+    if (r.url().includes('/api/onboarding')) calls.push(r.method())
+  })
+  await page.goto('/#/')
+  await expect(page.getByTestId('landing')).toBeVisible()
+  await page.getByTestId('landing-tour').click()
+  await expect(page).toHaveURL(/#\/visite$/)
+  const tour = page.getByTestId('tour')
+  const next = page.getByTestId('tour-next')
+  await expect(tour).toHaveAttribute('data-step', 'hello')
+  await expect(page.getByText('Sans compte')).toBeVisible()
+  await next.click()
+
+  // No Lichess to link before an account.
+  await expect(tour).toHaveAttribute('data-step', 'level')
+  await expect(page.getByTestId('tour-link-lichess')).toHaveCount(0)
+  await page.getByTestId('tour-level-expert').click()
+  await next.click()
+  await page.getByTestId('tour-goal-fun').click()
+  await next.click()
+  await expect(tour).toHaveAttribute('data-step', 'albert')
+
+  // The end asks for an account.
+  await page.getByTestId('tour-skip').click()
+  await expect(tour).toHaveAttribute('data-step', 'end')
+  await expect(page.getByTestId('tour-visitor-end')).toBeVisible()
+  await expect(page.getByTestId('tour-visitor-login')).toHaveAttribute(
+    'href',
+    '#/login'
+  )
+  await expect(next).toHaveText('Créer mon compte')
+  await next.click()
+  await expect(page).toHaveURL(/#\/register$/)
+  expect(calls).toEqual([])
+  expect(
+    await page.evaluate(() => localStorage.getItem('dontstayrooky.tourAnswers'))
+  ).toBe('{"level":"expert","goal":"fun"}')
+
+  // Signed up: the real tour starts over, the visitor's answers chosen, then saved and forgotten.
+  await signIn(context)
+  await page.goto('/#/visite')
+  await page.reload()
+  await expect(tour).toHaveAttribute('data-step', 'hello')
+  await next.click()
+  await expect(page.getByTestId('tour-level-expert')).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+  const saved = page.waitForResponse(isSave)
+  await next.click()
+  expect(await (await saved).json()).toMatchObject({
+    level: 'expert',
+    goal: 'fun'
+  })
+  expect(
+    await page.evaluate(() => localStorage.getItem('dontstayrooky.tourAnswers'))
+  ).toBeNull()
 })

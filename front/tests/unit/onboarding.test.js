@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import {
   END_CHOICES,
+  VISITOR_ANSWERS_KEY,
+  clearVisitorAnswers,
+  readVisitorAnswers,
+  writeVisitorAnswers,
   GOALS,
   LEVELS,
   MODULES,
@@ -124,7 +128,7 @@ describe('guided tour', () => {
     expect(lineOf('goal', none)).toContain('Un seul choix')
     expect(lineOf('goal', { ...none, goal: 'kasparov' })).toContain('Garry')
     expect(lineOf('ray', none)).toContain('yeux fermés')
-    expect(lineOf('end', none)).toContain('il me faudra ton Lichess')
+    expect(lineOf('end', none)).toContain('tu lieras ton Lichess en chemin')
     expect(
       lineOf('end', {
         ...none,
@@ -183,12 +187,12 @@ describe('guided tour', () => {
     expect(ctaOf('bosses', base).label).toBe('Même pas peur')
     expect(ctaOf('map', base).label).toBe('Voir mon plan')
     expect(ctaOf('end', base).label).toBe('C’est parti !')
-    expect(ctaOf('end', { ...base, end: 'coach' }).label).toBe(
-      'Lier Lichess et continuer'
-    )
-    expect(ctaOf('end', { ...base, end: 'coach', linked: true }).label).toBe(
-      'C’est parti !'
-    )
+    // No choice links Lichess first: the session's and the repertoire's pages ask for it.
+    for (const choice of END_CHOICES) {
+      expect(ctaOf('end', { ...base, end: choice.id }).label).toBe(
+        'C’est parti !'
+      )
+    }
     expect(footOf('lizy')).toContain('Pourquoi ça aide')
     expect(footOf('goal')).toBe('')
   })
@@ -198,9 +202,9 @@ describe('guided tour', () => {
     expect(defaultEndChoice(false)).toBe('map')
     expect(END_CHOICES.map(c => [c.id, c.path, c.lichess])).toEqual([
       ['map', '/cerveau', false],
-      ['coach', '/session/auto', true],
-      ['repertoire', '/repertoire/auto', true],
-      ['builder', '/session/new', false]
+      ['coach', '/session', false],
+      ['repertoire', '/repertoire', false],
+      ['modules', '/', false]
     ])
   })
 
@@ -275,5 +279,50 @@ describe('guided tour', () => {
     expect(poseOf('map', { level: null, goal: null })).toBe(
       'albert-v2-pointer'
     )
+  })
+})
+
+describe('discovery tour (visitors)', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('keeps the visitor’s level and goal in the browser, the unknown ones dropped', () => {
+    expect(readVisitorAnswers()).toEqual({ level: null, goal: null })
+    writeVisitorAnswers({ level: LEVELS[0].id, goal: GOALS[0].id })
+    expect(readVisitorAnswers()).toEqual({
+      level: LEVELS[0].id,
+      goal: GOALS[0].id
+    })
+    localStorage.setItem(
+      VISITOR_ANSWERS_KEY,
+      JSON.stringify({ level: 'nope', goal: GOALS[1].id })
+    )
+    expect(readVisitorAnswers()).toEqual({ level: null, goal: GOALS[1].id })
+    localStorage.setItem(VISITOR_ANSWERS_KEY, '{oops')
+    expect(readVisitorAnswers()).toEqual({ level: null, goal: null })
+    clearVisitorAnswers()
+    expect(localStorage.getItem(VISITOR_ANSWERS_KEY)).toBeNull()
+  })
+
+  it('ends on the sign-up, without Lichess', () => {
+    const state = {
+      level: null,
+      goal: null,
+      end: 'coach',
+      linked: false,
+      visitor: true
+    }
+    expect(ctaOf('end', state)).toEqual({ label: 'Créer mon compte', ok: true })
+    expect(ctaOf('end', { ...state, visitor: false }).label).not.toBe(
+      'Créer mon compte'
+    )
+    expect(
+      lineOf('end', { level: null, goal: null, answers: null, visitor: true })
+    ).toContain('Crée ton compte')
+    expect(
+      lineOf('level', { level: null, goal: null, answers: null, visitor: true })
+    ).not.toContain('Lichess')
+    expect(footOf('hello', true)).toContain('Sans compte')
+    expect(footOf('end', true)).toContain('ce navigateur')
+    expect(footOf('end')).toBe('Visite à revoir dans Profil › Visite guidée')
   })
 })

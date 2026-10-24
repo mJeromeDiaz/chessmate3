@@ -177,8 +177,8 @@ compte (`entrainement.json` : `sessions[].parcours`, `parcoursPuzzles`) ; les te
   non joués sont perdus).
 - Page de la session : les paliers nommés (« Palier 1 · Mat en 1 »), « Passer » seulement pour une
   étape bloquée. Rejouer un parcours relance `POST /parcours` avec les mêmes choix.
-- Catalogue des modules : `parcours` a sa page (`OWN_PAGE_MODULES`), absent du Session Builder et
-  de la landing.
+- Catalogue des modules : `parcours` a sa page (`OWN_PAGE_MODULES`), absent du Session Builder ; la
+  landing le cite parmi les modules (`LANDING_MODULES`, avec des exemples de thème et d'effort).
 
 ## 8. Tests
 

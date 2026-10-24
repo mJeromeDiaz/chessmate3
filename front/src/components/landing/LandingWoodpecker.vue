@@ -1,5 +1,9 @@
 <template>
-  <section id="suivi" class="landing-section">
+  <section
+    id="woodpecker"
+    class="landing-section landing-section--bleed"
+    data-testid="landing-woodpecker"
+  >
     <div class="landing-woodpecker">
       <div class="landing-woodpecker__text">
         <span class="landing-pill">{{ $t('landing.woodpecker.pill') }}</span>
@@ -67,6 +71,12 @@ const cells = woodpeckerCells(100, 37, WOODPECKER_TODO)
   flex-wrap: wrap;
   gap: 40px;
   align-items: center;
+
+  // Edge to edge on a phone (landing-section--bleed).
+  @media (max-width: $breakpoint-xs-max) {
+    border-radius: 0;
+    padding: 28px 16px;
+  }
 }
 
 .landing-woodpecker__text {

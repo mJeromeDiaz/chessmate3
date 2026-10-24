@@ -131,16 +131,16 @@
       "desc": "Visualisation, calcul, finales : avance de case en case et affronte les boss."
     },
     "coach": {
-      "title": "Séance sur mesure",
-      "desc": "Lizy lit tes parties Lichess et compose ta séance : finales, ouvertures, tactique."
+      "title": "Séance d’entraînement automatique ou personnalisée",
+      "desc": "Lizy compose ta séance d’après tes parties Lichess, ou tu choisis toi-même les modules et les durées."
     },
     "repertoire": {
-      "title": "Répertoire automatique",
-      "desc": "Aaron construit ton répertoire avec les ouvertures que tu joues déjà."
+      "title": "Répertoire automatique ou personnalisé",
+      "desc": "Aaron le construit avec les ouvertures que tu joues sur Lichess, ou tu le montes coup par coup."
     },
-    "builder": {
-      "title": "Je compose ma séance",
-      "desc": "Tu choisis les modules et les durées. Pour les maniaques du contrôle."
+    "modules": {
+      "title": "Modules d’entraînement en libre accès",
+      "desc": "Puzzles, Woodpecker, finales, coordonnées… Ouvre celui qui te tente, quand tu veux."
     }
   },
   "segments": {
@@ -183,8 +183,10 @@
     "noLevel": "Lie ton Lichess, ou avoue ton niveau. Je ne juge pas… pas encore.",
     "noGoal": "Qu’est-ce qui t’amène ? Un seul choix : le plus sincère, pas le plus raisonnable.",
     "endLinked": "Assez de théorie ! Choisis par où commencer, je m’occupe du reste.",
-    "endUnlinked": "Assez de théorie ! Commence par ton parcours ludique, ses boss t’attendent. Pour le sur-mesure, il me faudra ton Lichess.",
-    "map": "Voici un bout du parcours de Visualisation. Chaque exercice se valide à 80 %, plusieurs fois ; des coffres de cristaux t’attendent en chemin, un mini-boss garde chaque section, un boss chaque chapitre. Fais défiler, touche une étape."
+    "endUnlinked": "Assez de théorie ! Commence par ton parcours ludique, ses boss t’attendent. Pour le sur-mesure, tu lieras ton Lichess en chemin.",
+    "map": "Voici un bout du parcours de Visualisation. Chaque exercice se valide à 80 %, plusieurs fois ; des coffres de cristaux t’attendent en chemin, un mini-boss garde chaque section, un boss chaque chapitre. Fais défiler, touche une étape.",
+    "endVisitor": "Assez de théorie ! Crée ton compte : ton niveau et ton objectif t’attendront, et je te dirai par où commencer.",
+    "noLevelVisitor": "Avoue ton niveau. Je ne juge pas… pas encore."
   },
   "rating": {
     "fixed": "Ton classement puzzle ({rating}) est déjà établi : il ne bouge plus qu’en jouant.",
@@ -201,14 +203,17 @@
     "linkLichess": "Lier Lichess et continuer",
     "go": "C’est parti !",
     "bosses": "Même pas peur",
-    "map": "Voir mon plan"
+    "map": "Voir mon plan",
+    "signUp": "Créer mon compte"
   },
   "foot": {
     "hello": "Tu pourras revoir cette visite depuis ton profil",
     "prof": "Touche « Pourquoi ça aide » pour en savoir plus",
     "end": "Visite à revoir dans Profil › Visite guidée",
     "bosses": "Bats-les pour gagner des cristaux",
-    "map": "Exemple de parcours · le tien avance à ton rythme"
+    "map": "Exemple de parcours · le tien avance à ton rythme",
+    "helloVisitor": "Sans compte : rien n’est enregistré avant ton inscription",
+    "endVisitor": "Ton niveau et ton objectif restent dans ce navigateur jusqu’à l’inscription"
   },
   "wait": "Un instant…",
   "hello": {
@@ -265,5 +270,9 @@
       "badges": "{n} badge | {n} badges",
       "hidden": "Un boss caché : il se montre quand tu t’y attends le moins."
     }
+  },
+  "visitorEnd": {
+    "label": "Avec un compte, tu pourras commencer par",
+    "login": "J’ai déjà un compte · Connexion"
   }
 }

@@ -17,6 +17,14 @@ Choix validés (2026-10-13) :
 - **Lancement** : une seule fois d'office, après l'inscription (« C'est parti » de `/bienvenue`) ;
   ensuite depuis le menu (« Visite guidée ») ou le profil (carte « Visite guidée »). Les comptes
   existants ne la voient pas d'office.
+- **Visite « découverte » des visiteurs** (2026-10-24, bouton « Voir la visite guidée » du hero de
+  la landing) : `/visite` est publique. Mêmes écrans, **rien n'est envoyé à l'API** ; pas de
+  liaison Lichess à l'écran du niveau ; niveau et objectif gardés dans le navigateur
+  (`localStorage` `dontstayrooky.tourAnswers`), qui pré-remplissent la vraie visite après
+  l'inscription puis sont oubliés dès qu'elle les enregistre. Étape gardée à part
+  (`dontstayrooky.tourStep.visitor`) : la vraie visite repart du début. Le dernier écran
+  (`TourVisitorEnd`) montre les points de départ sans les faire choisir, « Créer mon compte »
+  (`/register`) et « J'ai déjà un compte · Connexion ».
 - **Ray** (prof des parties à l'aveugle, présenté plus tard) : un écran « mystère », cavalier dans
   l'ombre, avec À l'aveugle et Coordonnées. Analyse de parties est marquée « Bientôt ».
 - **Parcours ludique mis en avant** (2026-10-24, maquette « Visite guidée », écrans « Tes pires
@@ -35,7 +43,7 @@ Choix validés (2026-10-13) :
 | Dépôt | `App\Repository\Onboarding\AnswerRepository` (`of`, `save` en upsert) |
 | Logique | `App\Onboarding\Answer\Answers` (vue, enregistrement), classement de départ : `App\Puzzle\Rating\DeclaredRatingSeeder` |
 | API | `App\ApiResource\Onboarding\{Onboarding, OnboardingInput}`, `App\State\Onboarding\{OnboardingProvider, OnboardingProcessor}` |
-| Front | page `pages/index/visite.vue`, `components/onboarding/{TourStage, TourProgress, TourBubble, TourHello, TourLevel, TourGoals, TourModules, TourBosses, TourMap, TourEnd}.vue`, `composables/onboarding/useTypewriter.js`, `stores/onboarding.js`, `utils/onboarding.js` (écrans, répliques, choix), carte du profil `components/profile/TourCard.vue` |
+| Front | page `pages/index/visite.vue`, `components/onboarding/{TourStage, TourProgress, TourBubble, TourHello, TourLevel, TourGoals, TourModules, TourBosses, TourMap, TourEnd, TourVisitorEnd}.vue`, `composables/onboarding/useTypewriter.js`, `stores/onboarding.js`, `utils/onboarding.js` (écrans, répliques, choix), carte du profil `components/profile/TourCard.vue` |
 
 ## 2. Niveau et classement de départ
 
@@ -113,10 +121,13 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
   haut), ouverte sur l'étape à jouer (`SAMPLE_PATH_CURRENT`) ; une étape touchée dit dessous ce
   qu'elle demande et rapporte (`tourStepFacts` : passages à 80 %, vies, cristaux, XP, badges).
   Rien ne s'y joue : c'est un exemple.
-- **Plan** (`TourEnd`, confettis) : Mon parcours ludique (`/cerveau`, conseillé et choix par défaut
-  sans Lichess), Séance sur mesure (`/session/auto`, conseillée avec Lichess), Répertoire
-  automatique (`/repertoire/auto`), Je compose ma séance (`/session/new`). Un choix qui demande Lichess sans compte lié passe par la liaison, qui
-  revient directement sur la page choisie.
+- **Plan** (`TourEnd`, confettis), dans cet ordre (2026-10-24) : Mon parcours ludique (`/cerveau`,
+  conseillé et choix par défaut sans Lichess), Séance d'entraînement automatique ou personnalisée
+  (`/session`, « Mes sessions » : séance sur mesure ou composée à la main ; conseillée avec
+  Lichess), Répertoire automatique ou personnalisé (`/repertoire` : généré depuis Lichess ou monté
+  à la main), Modules d'entraînement en libre accès (`/`, le tableau de bord). Aucun choix n'exige
+  plus Lichess ici : la page choisie le demande au besoin (le champ `lichess` d'`END_CHOICES`, qui
+  ferait passer par la liaison, est à `false` partout).
 - **Étape gardée** dans le navigateur (`localStorage` `dontstayrooky.tourStep`, remise à 0 au
   départ vers le plan, par « Revoir » du profil et par `/bienvenue`) : une simple commodité.
 - **Vues** : téléphone (sous 1024 px) comme la maquette, scène en haut et feuille blanche dessous,
@@ -136,4 +147,5 @@ Playwright `tests/e2e/tour.spec.js` (visite complète sans Lichess jusqu'au Sess
 la galerie des boss — flèches, retour jusqu'à « Et d'autres… », aucun compteur — et la carte — une
 étape touchée et ses récompenses —, le parcours ludique coché d'office au plan, réponses
 dans le profil et niveau changé ; étape gardée, retour, segments, « Passer »,
-« Revoir » du profil).
+« Revoir » du profil ; visite d'un visiteur depuis la landing, sans appel à l'API, puis vraie visite
+pré-remplie après l'inscription).

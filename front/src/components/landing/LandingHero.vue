@@ -3,7 +3,7 @@
     <div class="landing-hero__card">
       <div class="landing-shade landing-hero__shade" />
       <div class="landing-hero__glow" />
-      <div class="landing-hero__text">
+      <div class="landing-hero__head">
         <span class="landing-pill">{{ $t('landing.hero.pill') }}</span>
         <h1 class="landing-hero__title cm-heading" data-testid="landing-slogan">
           <span
@@ -15,37 +15,33 @@
             >{{ slogan }}</span
           >
         </h1>
+      </div>
+      <div class="landing-hero__text">
         <p class="landing-hero__lead">
           {{ $t('landing.hero.lead') }}
         </p>
         <div class="landing-actions">
           <router-link
-            to="/session/auto"
-            class="landing-btn landing-btn--dark landing-hero__coach"
-            data-testid="landing-coach"
+            :to="TOUR_PATH"
+            class="landing-btn landing-btn--dark"
+            data-testid="landing-tour"
             ><span class="landing-btn__knight" aria-hidden="true">♞︎</span
-            >{{ $t('landing.hero.coach') }}</router-link
+            >{{ $t('landing.hero.tour') }}</router-link
+          >
+          <button
+            type="button"
+            class="landing-btn landing-btn--light"
+            data-testid="landing-discover"
+            @click="scrollToSection('parcours')"
+            >{{ $t('landing.hero.discover') }}</button
           >
         </div>
       </div>
-      <div v-if="hasCast" class="landing-hero__cast">
+      <div v-if="LANDING_IMAGES.albertFull" class="landing-hero__cast">
         <img
-          v-if="LANDING_IMAGES.lizyFull"
-          :src="LANDING_IMAGES.lizyFull"
-          alt="Lizy"
-          class="landing-hero__prof landing-hero__prof--left"
-        />
-        <img
-          v-if="LANDING_IMAGES.albertFull"
           :src="LANDING_IMAGES.albertFull"
           alt="Albert Stein"
-          class="landing-hero__prof landing-hero__prof--right"
-        />
-        <img
-          v-if="LANDING_IMAGES.aaronFull"
-          :src="LANDING_IMAGES.aaronFull"
-          alt="Aaron"
-          class="landing-hero__prof landing-hero__prof--center"
+          class="landing-hero__prof"
         />
       </div>
     </div>
@@ -54,14 +50,17 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { TOUR_PATH } from '@/utils/auth/authFlow'
 import {
   HERO_SLOGANS,
   HERO_SLOGAN_INTERVAL_MS,
-  LANDING_IMAGES
+  LANDING_IMAGES,
+  scrollToSection
 } from '@/utils/landing/content'
 
 /**
- * The landing page's hero: the slogans in turn, the pitch and the three professors. Both slogans
+ * The landing page's hero: the slogans in turn, the pitch, the guided tour (open to visitors,
+ * docs/ONBOARDING.md) and the paths, and Albert, who leads the tour. Both slogans
  * share one grid cell (the title keeps the height of the longer one, no jump). Paused while the
  * tab is hidden; with reduced motion, no rotation: one slogan picked at random per visit.
  */
@@ -104,27 +103,16 @@ onBeforeUnmount(() => {
   stop()
   document.removeEventListener('visibilitychange', onVisibility)
 })
-
-/** Without any full-length picture (not dropped in src/assets/profs yet), no empty space. */
-const hasCast = Boolean(
-  LANDING_IMAGES.lizyFull ||
-  LANDING_IMAGES.albertFull ||
-  LANDING_IMAGES.aaronFull
-)
 </script>
 
 <style scoped lang="scss">
-// The long label wraps on a phone instead of overflowing.
-.landing-hero__coach {
-  height: auto;
-  min-height: 56px;
-  padding-block: 10px;
-  line-height: 1.25;
-  text-wrap: balance;
-}
-
 .landing-hero {
   padding: 24px 16px 0;
+
+  // Edge to edge on a phone, right under the header.
+  @media (max-width: $breakpoint-xs-max) {
+    padding: 0;
+  }
 }
 
 .landing-hero__card {
@@ -138,8 +126,13 @@ const hasCast = Boolean(
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 24px;
+  gap: 20px 24px;
   padding: clamp(32px, 6vw, 72px) clamp(24px, 5vw, 64px) 0;
+
+  @media (max-width: $breakpoint-xs-max) {
+    border-radius: 0;
+    padding: 32px 16px 0;
+  }
 }
 
 .landing-hero__shade {
@@ -162,6 +155,16 @@ const hasCast = Boolean(
   pointer-events: none;
 }
 
+// The pill and the slogans over the card's whole width; the pitch, the buttons and Albert below.
+.landing-hero__head {
+  position: relative;
+  flex: 0 0 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .landing-hero__text {
   position: relative;
   flex: 1 1 380px;
@@ -175,8 +178,8 @@ const hasCast = Boolean(
 .landing-hero__title {
   margin: 0;
   display: grid;
-  font-size: clamp(40px, 6vw, 72px);
-  line-height: 1;
+  font-size: clamp(40px, 5.6vw, 76px);
+  line-height: 0.98;
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
@@ -205,31 +208,22 @@ const hasCast = Boolean(
 
 .landing-hero__cast {
   position: relative;
-  flex: 1 1 420px;
-  min-width: 0;
-  height: clamp(300px, 38vw, 460px);
+  flex: 0 1 260px;
+  min-width: 180px;
+  height: clamp(200px, 22vw, 290px);
+  margin-left: auto;
+
+  // Alone on its line under the buttons on a phone: centred.
+  @media (max-width: $breakpoint-xs-max) {
+    margin-right: auto;
+  }
 }
 
 .landing-hero__prof {
   position: absolute;
-  bottom: -24px;
-  height: 72%;
-
-  &--left {
-    left: 0;
-  }
-
-  &--right {
-    right: 0;
-  }
-
-  // Aaron is drawn full-length with long legs: taller and sunk so the edge cuts him at the
-  // thighs, like the short-legged Lizy and Albert.
-  &--center {
-    left: 50%;
-    bottom: -36%;
-    height: 120%;
-    transform: translateX(-50%);
-  }
+  left: 50%;
+  bottom: -16px;
+  height: 100%;
+  transform: translateX(-50%);
 }
 </style>

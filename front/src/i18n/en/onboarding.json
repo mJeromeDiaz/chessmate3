@@ -126,17 +126,21 @@
     }
   },
   "endChoices": {
+    "map": {
+      "title": "My game path",
+      "desc": "Visualisation, calculation, endgames: move from square to square and face the bosses."
+    },
     "coach": {
-      "title": "Tailored session",
-      "desc": "Lizy reads your Lichess games and builds your session: endgames, openings, tactics."
+      "title": "Automatic or custom training session",
+      "desc": "Lizy builds your session from your Lichess games, or you pick the modules and durations yourself."
     },
     "repertoire": {
-      "title": "Automatic repertoire",
-      "desc": "Aaron builds your repertoire with the openings you already play."
+      "title": "Automatic or custom repertoire",
+      "desc": "Aaron builds it with the openings you play on Lichess, or you put it together move by move."
     },
-    "builder": {
-      "title": "I build my session",
-      "desc": "You choose the modules and the durations. For control freaks."
+    "modules": {
+      "title": "Training modules, open access",
+      "desc": "Puzzles, Woodpecker, endgames, coordinates… Open whichever you like, whenever you want."
     }
   },
   "segments": {
@@ -174,7 +178,9 @@
     "noLevel": "Link your Lichess, or admit your level. I'm not judging… not yet.",
     "noGoal": "What brings you here? Just one choice: the most honest, not the most reasonable.",
     "endLinked": "Enough theory! Choose where to start, I'll take care of the rest.",
-    "endUnlinked": "Enough theory! For something tailored, I'll need your Lichess. Otherwise, build your session yourself."
+    "endUnlinked": "Enough theory! Start with your game path, its bosses are waiting. For something tailored, you'll link your Lichess along the way.",
+    "endVisitor": "Enough theory! Create your account: your level and your goal will be waiting, and I'll tell you where to start.",
+    "noLevelVisitor": "Own up to your level. I'm not judging… not yet."
   },
   "rating": {
     "fixed": "Your puzzle rating ({rating}) is already established: it only moves by playing now.",
@@ -189,12 +195,15 @@
     "ray": "See my plan",
     "nextProf": "Next prof",
     "linkLichess": "Link Lichess and continue",
-    "go": "Let's go!"
+    "go": "Let's go!",
+    "signUp": "Create my account"
   },
   "foot": {
     "hello": "You can replay this tour from your profile",
     "prof": "Tap “Why it helps” to learn more",
-    "end": "Replay the tour in Profile › Guided tour"
+    "end": "Replay the tour in Profile › Guided tour",
+    "helloVisitor": "No account needed: nothing is saved before you sign up",
+    "endVisitor": "Your level and goal stay in this browser until you sign up"
   },
   "wait": "One moment…",
   "hello": {
@@ -224,5 +233,9 @@
   "progress": {
     "back": "Previous step",
     "skip": "Skip"
+  },
+  "visitorEnd": {
+    "label": "With an account, you can start with",
+    "login": "I already have an account · Sign in"
   }
 }

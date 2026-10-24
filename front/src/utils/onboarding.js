@@ -1,8 +1,4 @@
-import {
-  AUTO_REPERTOIRE_PATH,
-  COACH_PATH,
-  TOUR_PATH
-} from '@/utils/auth/authFlow'
+import { TOUR_PATH } from '@/utils/auth/authFlow'
 import { standingImage } from '@/utils/mindMapPath'
 import { profImage } from '@/utils/prof/images'
 import { intlLocale, t } from '@/i18n'
@@ -50,6 +46,52 @@ export { TOUR_PATH }
 
 /** The step the tour is at, per browser (a convenience: lost storage restarts it). */
 export const TOUR_STEP_KEY = 'dontstayrooky.tourStep'
+
+/**
+ * The step of a visitor's discovery tour: its own key, so that the real tour, after the sign-up,
+ * starts from the beginning.
+ */
+export const VISITOR_STEP_KEY = 'dontstayrooky.tourStep.visitor'
+
+/**
+ * A visitor's level and goal, kept in this browser (never sent): they prefill the real tour after
+ * the sign-up, then are forgotten once saved.
+ */
+export const VISITOR_ANSWERS_KEY = 'dontstayrooky.tourAnswers'
+
+/**
+ * The level and goal a visitor chose, the unknown values dropped.
+ *
+ * @returns {{level: string|null, goal: string|null}}
+ */
+export function readVisitorAnswers() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(VISITOR_ANSWERS_KEY) ?? '{}')
+    return {
+      level: levelOf(raw?.level)?.id ?? null,
+      goal: goalOf(raw?.goal)?.id ?? null
+    }
+  } catch {
+    return { level: null, goal: null }
+  }
+}
+
+/** @param {{level: string|null, goal: string|null}} answers */
+export function writeVisitorAnswers({ level, goal }) {
+  try {
+    localStorage.setItem(VISITOR_ANSWERS_KEY, JSON.stringify({ level, goal }))
+  } catch {
+    // Storage unavailable: the real tour asks again.
+  }
+}
+
+export function clearVisitorAnswers() {
+  try {
+    localStorage.removeItem(VISITOR_ANSWERS_KEY)
+  } catch {
+    // Nothing to forget.
+  }
+}
 
 /** The screens, in order. */
 export const STEPS = [
@@ -812,7 +854,10 @@ export const GOALS = [
 ]
 
 /**
- * Where to start, at the end of the tour.
+ * Where to start, at the end of the tour: the mind map, then the pages that offer both the
+ * generated and the hand-made session or repertoire (Lichess asked for there, not here), then the
+ * dashboard, where every module opens freely. `lichess`: the choice links Lichess first (none
+ * today).
  *
  * @type {{id: string, glyph: string, title: string, desc: string, path: string, lichess: boolean}[]}
  */
@@ -838,8 +883,8 @@ export const END_CHOICES = [
     get desc() {
       return t('onboarding.endChoices.coach.desc')
     },
-    path: COACH_PATH,
-    lichess: true
+    path: '/session',
+    lichess: false
   },
   {
     id: 'repertoire',
@@ -850,19 +895,19 @@ export const END_CHOICES = [
     get desc() {
       return t('onboarding.endChoices.repertoire.desc')
     },
-    path: AUTO_REPERTOIRE_PATH,
-    lichess: true
+    path: '/repertoire',
+    lichess: false
   },
   {
-    id: 'builder',
+    id: 'modules',
     glyph: '♞︎',
     get title() {
-      return t('onboarding.endChoices.builder.title')
+      return t('onboarding.endChoices.modules.title')
     },
     get desc() {
-      return t('onboarding.endChoices.builder.desc')
+      return t('onboarding.endChoices.modules.desc')
     },
-    path: '/session/new',
+    path: '/',
     lichess: false
   }
 ]
@@ -1000,11 +1045,12 @@ export function kickerOf(step, boss = 0) {
  * What the professor says on a screen, given what was chosen so far.
  *
  * @param {string} step
- * @param {{level: string|null, goal: string|null, answers: OnboardingAnswers|null, linking?: boolean, boss?: number}} state
+ * @param {{level: string|null, goal: string|null, answers: OnboardingAnswers|null, linking?: boolean, boss?: number, visitor?: boolean}} state
+ *   `visitor`: the discovery tour of someone not signed in (its end asks for an account)
  */
 export function lineOf(
   step,
-  { level, goal, answers, linking = false, boss = 0 }
+  { level, goal, answers, linking = false, boss = 0, visitor = false }
 ) {
   if (step === 'hello') return t('onboarding.lines.hello')
   if (step === 'bosses') {
@@ -1031,10 +1077,12 @@ export function lineOf(
           : lichess.perf,
         line: chosen.line
       })
-    return chosen ? chosen.line : t('onboarding.lines.noLevel')
+    if (chosen) return chosen.line
+    return t(visitor ? 'onboarding.lines.noLevelVisitor' : 'onboarding.lines.noLevel')
   }
   if (step === 'goal') return goalOf(goal)?.line ?? t('onboarding.lines.noGoal')
   if (PROF_SCREENS[step]) return PROF_SCREENS[step].line
+  if (visitor) return t('onboarding.lines.endVisitor')
   return answers?.lichess.linked
     ? t('onboarding.lines.endLinked')
     : t('onboarding.lines.endUnlinked')
@@ -1093,10 +1141,13 @@ export function defaultEndChoice(linked) {
  * The main button: its label, and whether it can be pressed.
  *
  * @param {string} step
- * @param {{level: string|null, goal: string|null, end: string, linked: boolean, linking?: boolean}} state
+ * @param {{level: string|null, goal: string|null, end: string, linked: boolean, linking?: boolean, visitor?: boolean}} state
  * @returns {{label: string, ok: boolean}}
  */
-export function ctaOf(step, { level, goal, end, linked, linking = false }) {
+export function ctaOf(
+  step,
+  { level, goal, end, linked, linking = false, visitor = false }
+) {
   const cta = (key, ok = true) => ({ label: t(`onboarding.cta.${key}`), ok })
   if (step === 'hello') return cta('hello')
   if (step === 'level')
@@ -1106,6 +1157,7 @@ export function ctaOf(step, { level, goal, end, linked, linking = false }) {
   if (PROF_SCREENS[step]) return cta('nextProf')
   if (step === 'bosses') return cta('bosses')
   if (step === 'map') return cta('map')
+  if (visitor) return cta('signUp')
   const choice = END_CHOICES.find(c => c.id === end)
   if (choice?.lichess && !linked) return cta('linkLichess')
   return cta('go')
@@ -1115,8 +1167,11 @@ export function ctaOf(step, { level, goal, end, linked, linking = false }) {
  * The small line under the main button.
  *
  * @param {string} step
+ * @param {boolean} [visitor] the discovery tour of someone not signed in
  */
-export function footOf(step) {
+export function footOf(step, visitor = false) {
+  if (visitor && (step === 'hello' || step === 'end'))
+    return t(`onboarding.foot.${step}Visitor`)
   if (step === 'hello') return t('onboarding.foot.hello')
   if (PROF_SCREENS[step]) return t('onboarding.foot.prof')
   if (step === 'bosses') return t('onboarding.foot.bosses')

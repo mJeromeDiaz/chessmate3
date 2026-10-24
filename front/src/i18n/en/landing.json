@@ -1,31 +1,18 @@
 {
-  "legend": {
-    "fast": "Fast",
-    "ok": "Solved",
-    "hint": "With help",
-    "fail": "Missed",
-    "todo": "To do"
-  },
-  "example": {
-    "repertoire": "My White openings",
-    "puzzles": "Fork, Pin",
-    "finales": "Review · Rooks",
-    "minutes": "{n} min"
-  },
   "perks": [
     "Automatic import of your games",
     "Repertoire and Elo in sync",
     "Puzzles drawn from your own mistakes"
   ],
   "anchors": {
+    "parcours": "Paths",
+    "seances": "Sessions",
     "modules": "Modules",
-    "profs": "The profs",
-    "suivi": "Tracking",
-    "lichess": "Lichess"
+    "versus": "Profs vs bosses"
   },
   "signIn": "Sign in",
   "cta": {
-    "title": "Your first session is waiting.",
+    "title": "Don't Stay Rooky ! Become the King !",
     "email": "With an email"
   },
   "footer": {
@@ -39,21 +26,82 @@
     "soon": "Content coming soon.",
     "home": "← Back to home"
   },
-  "profs": {
-    "kicker": "THE PROFS",
-    "title": "Three personalities, one obsession: your progress.",
-    "profile": "See the profile →"
-  },
   "hero": {
     "pill": "Lichess compatible",
-    "lead": "Build your chess training, move by move.",
-    "coach": "Generate my personalized training session"
+    "lead": "A path for each cognitive skill, sessions tailored to you, profs who help you and bosses who challenge you.",
+    "discover": "Discover the paths",
+    "tour": "Take the guided tour"
   },
   "modules": {
-    "kicker": "{n} MODULES",
-    "title": "Each module has its own color, prof and settings.",
-    "lead": "Duration, Elo, themes, color played, per-move clock, spaced repetition: you set it up, we keep it going.",
+    "kicker": "MODULES",
+    "title": "{n} modules. Hundreds of settings.",
+    "lead": "Every module has its settings: length, themes, level, colour, mode. You never play the same session twice, unless you want to.",
     "soon": "Coming soon"
+  },
+  "auto": {
+    "kicker": "LICHESS",
+    "title": "Your Lichess account, linked in one click.",
+    "who": "AARON",
+    "quote": "With your Lichess games, I prepare your repertoire and a session tailored to you.",
+    "repertoireButton": "Generate my repertoire with Lichess",
+    "sessionButton": "Generate my session with Lichess",
+    "note": "Early access: an invitation key is required to sign up. Already signed up with Lichess? You go straight to the generation.",
+    "points": [
+      "Your repertoire drawn from your most played moves",
+      "A session built from your last 200 games",
+      "Your Lichess rating curve on your dashboard"
+    ]
+  },
+  "start": "Get started",
+  "paths": {
+    "kicker": "COGNITIVE PATHS",
+    "title": "Six skills to train. A path for each one.",
+    "soon": "Coming soon",
+    "cta": "Start a path →",
+    "chapter": "{capacity} · Chapter 1",
+    "chapterText": "Mates on a frozen board: calculate the whole line, then play it in one go, both sides.",
+    "chest": "Chest",
+    "current": "{n} · Your turn",
+    "crystals": "+{n} crystals",
+    "boss": "The King of Ashes"
+  },
+  "sessions": {
+    "kicker": "TAILORED SESSIONS",
+    "title": "Your session, built your way.",
+    "lead": "Pick your modules, set each one up and play them in a row. Or let your profs prepare it from your games.",
+    "cta": "Build a session →",
+    "example": "Tuesday night · tactics",
+    "add": "+ Add a module"
+  },
+  "versus": {
+    "kicker": "PROFS VS BOSSES",
+    "title": "Some help you. Others challenge you.",
+    "helpTitle": "They help you",
+    "helpNote": "tip · hint · solution",
+    "challengeTitle": "They challenge you",
+    "challengeNote": "mechanic · trap · weakness",
+    "more": "And also the Metronome, the Cyclops and other guardians to discover.",
+    "bosses": {
+      "jongleur": {
+        "name": "Juggler",
+        "title": "The jester of double threats"
+      },
+      "requin": {
+        "name": "Shark",
+        "title": "The king of murky waters"
+      },
+      "gargouille": {
+        "name": "Gargoyle",
+        "title": "The stone guardian"
+      }
+    }
+  },
+  "legend": {
+    "fast": "Fast",
+    "ok": "Solved",
+    "hint": "With help",
+    "fail": "Missed",
+    "todo": "To do"
   },
   "woodpecker": {
     "pill": "Woodpecker method",
@@ -62,40 +110,5 @@
     "cta": "Try a cycle →",
     "set": "Set of 100 puzzles · Cycle 2",
     "done": "37 done · 85% solved"
-  },
-  "steps": {
-    "compose": "Build",
-    "composeText": "A title, a cover, then your modules in whatever order you like.",
-    "train": "Train",
-    "trainText": "Your prof slips you a tip, a hint or the solution when you get stuck.",
-    "tipLabel": "ALBERT · TIP",
-    "tip": "Look at every open diagonal.",
-    "progress": "Progress",
-    "progressText": "Every puzzle leaves a trace. Mistakes come back until they become reflexes."
-  },
-  "auto": {
-    "kicker": "FROM YOUR LICHESS GAMES",
-    "title": "Your games work for you.",
-    "who": "AARON",
-    "quote": "Connect your Lichess account: I read your games and prepare training that suits you.",
-    "repertoireKicker": "REPERTOIRE",
-    "repertoireTitle": "Generate your repertoire",
-    "repertoireText": "We keep the moves you actually play, opening by opening, and show you where you win and where you lose.",
-    "repertoireButton": "Generate my repertoire with Lichess",
-    "sessionKicker": "TRAINING SESSION",
-    "sessionTitle": "Generate your training session",
-    "sessionText": "We read your last 200 games: your openings, your endgames, the advantages you let slip. Your session of the day comes out of it.",
-    "sessionButton": "Generate my session with Lichess",
-    "note": "Early access: an invitation key is required to sign up. Already signed up with Lichess? You go straight to the generation.",
-    "sessionPoints": [
-      "Woodpecker on your two main openings",
-      "Your endgames under the microscope",
-      "Saved in your profile, ready to replay every day"
-    ],
-    "repertoirePoints": [
-      "Your most played moves, line by line",
-      "Wins, draws, losses and mistakes flagged by Lichess",
-      "Ready to review, you keep control over every move"
-    ]
   }
 }

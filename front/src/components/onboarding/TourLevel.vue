@@ -19,7 +19,7 @@
         {{ $t('onboarding.level.disagree') }}
       </div>
     </template>
-    <template v-else-if="!lichess.linked">
+    <template v-else-if="!lichess.linked && !visitor">
       <button
         type="button"
         class="tour-level__link"
@@ -71,7 +71,7 @@
 <script setup>
 /**
  * The tour's level screen: the linked Lichess account's rating and the level it suggests, or a
- * button to link it; then the five levels (one choice) and what it does to the puzzle rating.
+ * button to link it (not for a visitor); then the five levels (one choice) and what it does to the puzzle rating.
  */
 import { computed } from 'vue'
 import { LEVELS, levelOf, ratingNote } from '@/utils/onboarding'
@@ -84,7 +84,9 @@ const props = defineProps({
   modelValue: { type: String, default: null },
   /** @type {import('vue').PropType<import('@/utils/onboarding').OnboardingAnswers|null>} */
   answers: { type: Object, default: null },
-  linking: { type: Boolean, default: false }
+  linking: { type: Boolean, default: false },
+  /** The discovery tour of someone not signed in: no Lichess to link yet. */
+  visitor: { type: Boolean, default: false }
 })
 
 const emit = defineEmits({

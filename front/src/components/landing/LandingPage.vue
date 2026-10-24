@@ -2,10 +2,11 @@
   <q-page class="landing" data-testid="landing">
     <LandingHeader />
     <LandingHero />
+    <LandingPaths />
+    <LandingSessions />
     <LandingModules />
-    <LandingSteps />
-    <LandingProfs />
     <LandingWoodpecker />
+    <LandingVersus />
     <LandingAuto />
     <LandingCta />
   </q-page>
@@ -17,12 +18,13 @@ import LandingCta from '@/components/landing/LandingCta.vue'
 import LandingHeader from '@/components/landing/LandingHeader.vue'
 import LandingHero from '@/components/landing/LandingHero.vue'
 import LandingModules from '@/components/landing/LandingModules.vue'
-import LandingProfs from '@/components/landing/LandingProfs.vue'
-import LandingSteps from '@/components/landing/LandingSteps.vue'
+import LandingPaths from '@/components/landing/LandingPaths.vue'
+import LandingSessions from '@/components/landing/LandingSessions.vue'
+import LandingVersus from '@/components/landing/LandingVersus.vue'
 import LandingWoodpecker from '@/components/landing/LandingWoodpecker.vue'
 
 /**
- * The visitors' home page (design "Landing"). The layout hides its own header here: the page has
+ * The visitors' home page (design "Landing v3"). The layout hides its own header here: the page has
  * its own, with in-page anchors. Showcase content: utils/landing/content.js.
  */
 </script>
@@ -43,6 +45,14 @@ import LandingWoodpecker from '@/components/landing/LandingWoodpecker.vue'
     padding-left: 16px;
     padding-right: 16px;
     scroll-margin-top: 110px;
+  }
+
+  // A section whose card runs edge to edge on a phone (the card squares its corners itself).
+  &--bleed {
+    @media (max-width: $breakpoint-xs-max) {
+      padding-left: 0;
+      padding-right: 0;
+    }
   }
 }
 
@@ -102,7 +112,10 @@ import LandingWoodpecker from '@/components/landing/LandingWoodpecker.vue'
   display: flex;
   align-items: center;
   gap: 10px;
+  border: 0;
+  font-family: inherit;
   text-decoration: none;
+  cursor: pointer;
 
   &--dark {
     background: #1b1530;

@@ -13,10 +13,11 @@ test('landing: a visitor sees the landing page with its own header', async ({
     "Don't Stay Rooky"
   )
 
-  // The session builder's whole catalogue (`MODULES`: thirteen since the notation module), those
-  // not built yet tagged "Bientôt".
+  // The app's modules by their catalogue name (`MODULES` and the parcours, but the free study:
+  // thirteen), the analysis not built yet tagged "Bientôt".
   await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(13)
-  for (const id of ['puzzles', 'coordonnees', 'aveugle']) {
+  await expect(page.getByTestId('landing-module-libre')).toHaveCount(0)
+  for (const id of ['puzzles', 'coordonnees', 'aveugle', 'parcours']) {
     await expect(page.getByTestId(`landing-module-${id}`)).not.toContainText(
       'Bientôt'
     )
@@ -24,23 +25,67 @@ test('landing: a visitor sees the landing page with its own header', async ({
   await expect(page.getByTestId('landing-module-analyse')).toContainText(
     'Bientôt'
   )
-
-  // The hero's call to action: the tailored session, which offers the Lichess sign-in itself.
-  await expect(page.getByTestId('landing-coach')).toHaveAttribute(
-    'href',
-    '#/session/auto'
+  await expect(page.getByTestId('landing-variants')).toContainText(
+    '1 min · Nommer la case'
   )
+
+  // The paths: the six capacities, those without a path yet tagged "Bientôt"; the calculation
+  // path's first chapter, up to the Roi des cendres.
+  await expect(page.getByTestId('landing-capacity-calculation')).not.toContainText(
+    'Bientôt'
+  )
+  await expect(page.getByTestId('landing-capacity-strategy')).toContainText(
+    'Bientôt'
+  )
+  await expect(page.getByTestId('landing-paths')).toContainText(
+    'Le Roi des cendres'
+  )
+
+  // The Woodpecker method and its cycle grid.
+  await expect(page.getByTestId('landing-woodpecker')).toContainText(
+    'Le même set, toujours plus vite.'
+  )
+
+  // The example session: real modules with real settings, each with a drag handle.
+  await expect(page.getByTestId('landing-session-puzzles')).toContainText(
+    'Fourchette, Clouage'
+  )
+  await expect(
+    page.getByTestId('landing-sessions').locator('.landing-sessions__grip')
+  ).toHaveCount(4)
+  await expect(page.getByTestId('landing-sessions-cta')).toHaveAttribute(
+    'href',
+    '#/session/new'
+  )
+
+  // The hero's calls to action: the guided tour, open to visitors (tour.spec.js), and the paths,
+  // in the page.
+  await expect(page.getByTestId('landing-tour')).toHaveAttribute(
+    'href',
+    '#/visite'
+  )
+  await page.getByTestId('landing-discover').click()
+  await expect(page).toHaveURL(/#\/$/)
+  await expect(page.getByTestId('landing-paths-start')).toBeInViewport()
 
   // Lichess sign-in goes to the API's OAuth start.
   await expect(page.getByTestId('landing-lichess').first()).toHaveAttribute(
     'href',
     /\/api\/auth\/oauth\/lichess/
   )
+  await expect(page.getByTestId('landing-start')).toHaveAttribute(
+    'href',
+    '#/register'
+  )
 
-  // Header anchors scroll in the page without changing the route.
-  await page.getByRole('button', { name: 'Les profs' }).click()
+  // Header anchors scroll in the page without changing the route: the professors face the
+  // bosses.
+  await page.getByRole('button', { name: 'Profs vs boss' }).click()
   await expect(page).toHaveURL(/#\/$/)
   await expect(page.getByTestId('landing-prof-lizy')).toBeInViewport()
+  for (const boss of ['jongleur', 'requin', 'gargouille']) {
+    await expect(page.getByTestId(`landing-boss-${boss}`)).toBeVisible()
+  }
 
   // The "from my games" section: a Lichess sign-in too.
   for (const id of ['landing-auto-card', 'landing-auto-session-btn']) {
@@ -49,8 +94,6 @@ test('landing: a visitor sees the landing page with its own header', async ({
       /\/api\/auth\/oauth\/lichess\/redirect$/
     )
   }
-  await page.getByRole('button', { name: 'Lichess', exact: true }).click()
-  await expect(page.getByTestId('landing-auto')).toBeInViewport()
 })
 
 /** The page a landing call to action noted for after the Lichess sign-in. */

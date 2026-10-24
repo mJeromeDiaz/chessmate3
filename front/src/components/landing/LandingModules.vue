@@ -1,58 +1,86 @@
 <template>
   <section id="modules" class="landing-section">
-    <div class="landing-section__inner">
+    <div class="landing-section__inner landing-modules">
       <div class="landing-modules__head">
         <div class="landing-modules__heading">
-          <div class="landing-kicker">{{
-            $t('landing.modules.kicker', { n: MODULES.length })
-          }}</div>
+          <div class="landing-kicker">{{ $t('landing.modules.kicker') }}</div>
           <h2 class="landing-h2 cm-heading">{{
-            $t('landing.modules.title')
+            $t('landing.modules.title', { n: liveCount })
           }}</h2>
         </div>
         <p class="landing-modules__lead">
           {{ $t('landing.modules.lead') }}
         </p>
       </div>
-      <div class="landing-modules__grid">
-        <div
-          v-for="module in MODULES"
+
+      <div class="landing-modules__families">
+        <span
+          v-for="module in LANDING_MODULES"
           :key="module.id"
-          class="landing-module"
+          class="landing-modules__family cm-heading"
+          :class="{ 'landing-modules__family--soon': !module.available }"
           :style="{ background: module.bg, color: module.ink }"
           :data-testid="`landing-module-${module.id}`"
+          ><span class="landing-modules__glyph" aria-hidden="true">{{
+            module.glyph
+          }}</span
+          >{{ module.title
+          }}<span v-if="!module.available" class="landing-modules__soon">{{
+            $t('landing.modules.soon')
+          }}</span></span
+        >
+      </div>
+
+      <div class="landing-modules__marquee" data-testid="landing-variants">
+        <div
+          v-for="(row, r) in rows"
+          :key="r"
+          class="landing-modules__row"
+          :class="{ 'landing-modules__row--reverse': r % 2 }"
+          :style="{ animationDuration: `${50 + r * 12}s` }"
         >
           <div
-            class="landing-shade landing-module__shade"
-            :style="{ background: module.deep }"
-          />
-          <div class="landing-module__glow" />
-          <div class="landing-module__title cm-heading">{{ module.title }}</div>
-          <div class="landing-module__desc">{{ module.desc }}</div>
-          <span v-if="!module.available" class="landing-module__soon">{{
-            $t('landing.modules.soon')
-          }}</span>
-          <ProfAvatar
-            class="landing-module__avatar"
-            :image="module.image"
-            :deep="module.deep"
-            :ink="module.ink"
-            :glyph="module.glyph"
-          />
+            v-for="copy in 2"
+            :key="copy"
+            class="landing-modules__run"
+            :aria-hidden="copy === 2 ? 'true' : undefined"
+          >
+            <span
+              v-for="(v, i) in row"
+              :key="i"
+              class="landing-modules__variant"
+              ><span
+                class="landing-modules__swatch"
+                :style="{ background: v.module.bg }"
+              /><b>{{ v.module.title }}</b
+              ><span class="landing-modules__meta">{{ v.meta }}</span></span
+            >
+          </div>
         </div>
+        <div class="landing-modules__fade landing-modules__fade--left" />
+        <div class="landing-modules__fade landing-modules__fade--right" />
       </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { MODULES } from '@/utils/session/catalog'
-import ProfAvatar from '@/components/session/ProfAvatar.vue'
+import { LANDING_MODULES, variantRows } from '@/utils/landing/content'
 
-/** The session builder's catalogue, shown in full; modules not built yet are tagged "Bientôt". */
+/**
+ * Every module of the app (those not built yet tagged "Bientôt"), then rows of real settings
+ * scrolling on their own (each row twice, for a seamless loop; still with reduced motion).
+ */
+
+const liveCount = LANDING_MODULES.filter(m => m.available).length
+const rows = variantRows(3)
 </script>
 
 <style scoped lang="scss">
+.landing-modules {
+  gap: 28px;
+}
+
 .landing-modules__head {
   display: flex;
   flex-wrap: wrap;
@@ -62,7 +90,7 @@ import ProfAvatar from '@/components/session/ProfAvatar.vue'
 }
 
 .landing-modules__heading {
-  max-width: 620px;
+  max-width: 640px;
 }
 
 .landing-modules__lead {
@@ -74,74 +102,140 @@ import ProfAvatar from '@/components/session/ProfAvatar.vue'
   text-wrap: pretty;
 }
 
-.landing-modules__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
-  gap: 12px;
+.landing-modules__families {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.landing-module {
+.landing-modules__family {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  padding: 9px 14px;
+  border-radius: 14px;
+
+  &--soon {
+    opacity: 0.6;
+  }
+}
+
+.landing-modules__glyph {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.landing-modules__soon {
+  font-family: var(--cm-body, inherit);
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.7);
+  color: #1b1530;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.landing-modules__marquee {
   position: relative;
+  background: #1b1530;
+  border-radius: 32px;
+  padding: 20px 0;
   overflow: hidden;
-  border-radius: 24px;
-  padding: 18px 100px 18px 20px;
-  min-height: 104px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 4px;
+  gap: 10px;
+
+  // Edge to edge on a phone: out of the section's 16 px gutters, square corners.
+  @media (max-width: $breakpoint-xs-max) {
+    margin: 0 -16px;
+    border-radius: 0;
+  }
 }
 
-.landing-module__shade {
-  width: 55%;
-  opacity: 0.55;
+.landing-modules__row {
+  display: flex;
+  width: max-content;
+  animation: landing-marquee-left linear infinite;
+
+  &--reverse {
+    animation-name: landing-marquee-right;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
-.landing-module__glow {
-  position: absolute;
-  right: -20px;
-  top: 50%;
-  width: 150px;
-  height: 150px;
-  transform: translateY(-50%);
-  background: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.28),
-    transparent 65%
-  );
-  pointer-events: none;
+.landing-modules__run {
+  display: flex;
+  gap: 8px;
+  padding-right: 8px;
 }
 
-.landing-module__title {
-  position: relative;
-  font-size: 19px;
-  line-height: 1.15;
-}
-
-.landing-module__desc {
-  position: relative;
+.landing-modules__variant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  background: #2a2347;
+  color: #fff;
   font-size: 13.5px;
-  line-height: 1.4;
-  text-wrap: pretty;
+  padding: 8px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+
+  b {
+    font-weight: 700;
+  }
 }
 
-.landing-module__soon {
-  position: relative;
-  align-self: flex-start;
-  margin-top: 4px;
-  padding: 2px 9px;
-  border-radius: 999px;
-  background: #fff;
-  color: #1b1530;
-  font-size: 11px;
-  font-weight: 700;
+.landing-modules__swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex: none;
 }
 
-.landing-module__avatar {
+.landing-modules__meta {
+  color: #b4afc6;
+}
+
+.landing-modules__fade {
   position: absolute;
-  right: 4px;
-  bottom: -10px;
-  width: 92px;
-  height: 92px;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  pointer-events: none;
+
+  &--left {
+    left: 0;
+    background: linear-gradient(to right, #1b1530, rgba(27, 21, 48, 0));
+  }
+
+  &--right {
+    right: 0;
+    background: linear-gradient(to left, #1b1530, rgba(27, 21, 48, 0));
+  }
+}
+
+@keyframes landing-marquee-left {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes landing-marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 </style>

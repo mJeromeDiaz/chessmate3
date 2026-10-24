@@ -23,6 +23,12 @@
           data-testid="landing-login"
           >{{ $t('landing.signIn') }}</router-link
         >
+        <router-link
+          to="/register"
+          class="landing-header__btn landing-header__btn--dark"
+          data-testid="landing-start"
+          >{{ $t('landing.start') }}</router-link
+        >
       </div>
     </div>
   </header>
@@ -31,17 +37,9 @@
 <script setup>
 import LocaleMenu from '@/components/theme/LocaleMenu.vue'
 import ThemeMenu from '@/components/theme/ThemeMenu.vue'
-import { LANDING_ANCHORS } from '@/utils/landing/content'
+import { LANDING_ANCHORS, scrollToSection } from '@/utils/landing/content'
 
-/**
- * The landing page's own sticky header. Its anchors scroll in the page instead of being links:
- * with the hash router, `href="#modules"` would navigate to the route `/modules`.
- *
- * @param {string} id section element id
- */
-function scrollToSection(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-}
+/** The landing page's own sticky header: in-page anchors, language, theme, sign-in and sign-up. */
 </script>
 
 <style scoped lang="scss">
@@ -57,10 +55,10 @@ function scrollToSection(id) {
 .landing-header__inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 14px 32px;
   display: flex;
   align-items: center;
-  gap: 12px 24px;
+  gap: 12px 40px;
   flex-wrap: wrap;
 
   @media (max-width: $breakpoint-xs-max) {
@@ -68,13 +66,19 @@ function scrollToSection(id) {
   }
 }
 
+// The wordmark gets room to breathe: no squeezing by the anchors, a touch of tracking.
 .landing-header__brand {
-  font-size: 22px;
+  flex: none;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: 0.015em;
+  word-spacing: 0.08em;
 }
 
 .landing-header__nav {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 8px 28px;
   flex: 1;
   flex-wrap: wrap;
 
@@ -120,6 +124,20 @@ function scrollToSection(id) {
   &--soft {
     background: var(--cm-brand-soft);
     color: var(--cm-brand-deep);
+  }
+
+  &--dark {
+    background: #1b1530;
+    color: #fff;
+
+    &:hover {
+      color: #fff;
+    }
+
+    // The page's ink is light in dark mode: the button keeps a visible edge.
+    body.body--dark & {
+      box-shadow: inset 0 0 0 1px var(--cm-line);
+    }
   }
 }
 </style>

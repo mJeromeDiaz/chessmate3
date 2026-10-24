@@ -31,8 +31,9 @@
           <TourLevel
             v-else-if="step === 'level'"
             v-model="level"
-            :answers="onboarding.answers"
+            :answers="visitor ? null : onboarding.answers"
             :linking="linking"
+            :visitor="visitor"
             @link="linkLichess(TOUR_PATH)"
           />
           <TourGoals v-else-if="step === 'goal'" v-model="goal" />
@@ -45,6 +46,7 @@
             :open="open"
             @toggle="open[$event] = !open[$event]"
           />
+          <TourVisitorEnd v-else-if="visitor" />
           <TourEnd v-else v-model="end" :linked="linked" />
         </div>
 
@@ -60,7 +62,7 @@
           >
             {{ busy ? $t('onboarding.wait') : cta.label }}
           </button>
-          <div class="tour__foot">{{ footOf(step) }}</div>
+          <div class="tour__foot">{{ footOf(step, visitor) }}</div>
         </div>
       </section>
 
@@ -82,6 +84,10 @@
  * and the map shows a piece of a path, then where to start. A phone gets the
  * design's screen (stage above, sheet below); from 1024 px, two columns. The step is kept in this
  * browser; the answers are saved when leaving their screen (or skipping).
+ *
+ * Open to visitors (the landing's "Voir la visite guidée"): the same screens, nothing sent to the
+ * API. Their level and goal stay in this browser and prefill the real tour after the sign-up;
+ * no Lichess link, and the last screen asks for an account instead of where to start.
  */
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -97,6 +103,7 @@ import TourMap from '@/components/onboarding/TourMap.vue'
 import TourModules from '@/components/onboarding/TourModules.vue'
 import TourProgress from '@/components/onboarding/TourProgress.vue'
 import TourStage from '@/components/onboarding/TourStage.vue'
+import TourVisitorEnd from '@/components/onboarding/TourVisitorEnd.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -107,7 +114,9 @@ import {
   STEPS,
   TOUR_PATH,
   TOUR_STEP_KEY,
+  VISITOR_STEP_KEY,
   accentOn,
+  clearVisitorAnswers,
   ctaOf,
   defaultEndChoice,
   footOf,
@@ -117,14 +126,16 @@ import {
   stepIndex,
   themeOf,
   titleOf,
+  readVisitorAnswers,
   tourBoss,
-  tourBossImage
+  tourBossImage,
+  writeVisitorAnswers
 } from '@/utils/onboarding'
 import { profImage } from '@/utils/prof/images'
 
 definePage({
   meta: {
-    auth: 'required',
+    auth: 'public',
     header: { title: 'layout.header.titles.tour', parent: false }
   }
 })
@@ -142,6 +153,11 @@ const $q = useQuasar()
 const router = useRouter()
 const auth = useAuthStore()
 const onboarding = useOnboardingStore()
+
+/** The discovery tour of someone not signed in (fixed for the page's life). */
+const visitor = !auth.isAuthenticated
+/** Each tour keeps its own step: the real one starts over after the sign-up. */
+const stepKey = visitor ? VISITOR_STEP_KEY : TOUR_STEP_KEY
 
 const index = ref(readStep())
 /** Plays the stage again when the same screen comes back. */
@@ -175,7 +191,8 @@ const state = computed(() => ({
   goal: goal.value,
   answers: onboarding.answers,
   linking: linking.value,
-  boss: boss.value
+  boss: boss.value,
+  visitor
 }))
 const line = computed(() => lineOf(step.value, state.value))
 const image = computed(() =>
@@ -194,13 +211,14 @@ const cta = computed(() =>
     goal: goal.value,
     end: end.value,
     linked: linked.value,
-    linking: linking.value
+    linking: linking.value,
+    visitor
   })
 )
 
 function readStep() {
   try {
-    return stepIndex(localStorage.getItem(TOUR_STEP_KEY))
+    return stepIndex(localStorage.getItem(stepKey))
   } catch {
     return 0
   }
@@ -209,7 +227,7 @@ function readStep() {
 /** @param {number} i */
 function writeStep(i) {
   try {
-    localStorage.setItem(TOUR_STEP_KEY, String(i))
+    localStorage.setItem(stepKey, String(i))
   } catch {
     // Storage unavailable: the tour starts over next time.
   }
@@ -228,10 +246,15 @@ watch(index, writeStep)
  * Saves the answers chosen so far; false (and the reason on screen) when the API refused.
  */
 async function saveAnswers() {
+  if (visitor) {
+    writeVisitorAnswers({ level: level.value, goal: goal.value })
+    return true
+  }
   busy.value = true
   error.value = ''
   try {
     await onboarding.save({ level: level.value, goal: goal.value })
+    clearVisitorAnswers()
     return true
   } catch (e) {
     error.value = apiErrorMessage(e)
@@ -251,12 +274,16 @@ async function next() {
 }
 
 async function skip() {
-  if (onboarding.answers) await saveAnswers()
+  if (visitor || onboarding.answers) await saveAnswers()
   go(STEPS.length - 1)
 }
 
-/** Leaves for the chosen start, through Lichess when it needs it. */
+/** Leaves for the chosen start, through Lichess when it needs it; a visitor, for the sign-up. */
 async function start() {
+  if (visitor) {
+    writeStep(0)
+    return router.push('/register')
+  }
   const choice = END_CHOICES.find(c => c.id === end.value) ?? END_CHOICES[0]
   writeStep(0)
   if (choice.lichess && !linked.value) return linkLichess(choice.path)
@@ -281,10 +308,17 @@ async function linkLichess(path) {
 }
 
 onMounted(async () => {
+  // A visitor's answers so far, and those chosen before the sign-up for the real tour.
+  const kept = readVisitorAnswers()
+  if (visitor) {
+    level.value = kept.level
+    goal.value = kept.goal
+    return
+  }
   try {
     const answers = await onboarding.load()
-    level.value = answers.level ?? answers.suggestedLevel
-    goal.value = answers.goal
+    level.value = answers.level ?? kept.level ?? answers.suggestedLevel
+    goal.value = answers.goal ?? kept.goal
     end.value = defaultEndChoice(answers.lichess.linked)
   } catch (e) {
     error.value = apiErrorMessage(e)
