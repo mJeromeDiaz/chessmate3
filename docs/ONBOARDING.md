@@ -4,7 +4,9 @@
 
 La **visite guidée** présente l'outil en deux minutes (maquette « Visite guidée », reprise pour son
 esthétique, textes réécrits) : Albert se présente, demande le **niveau** et l'**objectif**, les profs
-présentent leurs modules, Ray reste dans l'ombre, puis le joueur choisit **par où commencer**.
+présentent leurs modules, Ray reste dans l'ombre, les **boss** de la carte mentale défilent, un
+**bout de parcours** se montre, puis le joueur choisit **par où commencer** (la carte mentale
+d'abord).
 
 Choix validés (2026-10-13) :
 
@@ -16,7 +18,13 @@ Choix validés (2026-10-13) :
   ensuite depuis le menu (« Visite guidée ») ou le profil (carte « Visite guidée »). Les comptes
   existants ne la voient pas d'office.
 - **Ray** (prof des parties à l'aveugle, présenté plus tard) : un écran « mystère », cavalier dans
-  l'ombre, avec À l'aveugle et Coordonnées. Finales et Analyse de parties sont marqués « Bientôt ».
+  l'ombre, avec À l'aveugle et Coordonnées. Analyse de parties est marquée « Bientôt ».
+- **Carte mentale mise en avant** (2026-10-24, maquette « Visite guidée », écrans « Tes pires
+  ennemis » et « Ta carte d'aventure ») : un segment « Les boss » puis un segment « Ta carte »
+  avant le plan ; la galerie des boss **sans compteur ni points** (on doit croire qu'il y en a
+  beaucoup plus : sa dernière carte, « Et d'autres… », est dans l'ombre) ; la carte, un vrai bout
+  de parcours qu'on fait défiler à la main (l'écran de la maquette, une liste qui défilait seule,
+  écarté) ; « Ma carte mentale » premier choix du plan, coché sans Lichess.
 
 ## 1. Organisation du code
 
@@ -27,7 +35,7 @@ Choix validés (2026-10-13) :
 | Dépôt | `App\Repository\Onboarding\AnswerRepository` (`of`, `save` en upsert) |
 | Logique | `App\Onboarding\Answer\Answers` (vue, enregistrement), classement de départ : `App\Puzzle\Rating\DeclaredRatingSeeder` |
 | API | `App\ApiResource\Onboarding\{Onboarding, OnboardingInput}`, `App\State\Onboarding\{OnboardingProvider, OnboardingProcessor}` |
-| Front | page `pages/index/visite.vue`, `components/onboarding/{TourStage, TourProgress, TourBubble, TourHello, TourLevel, TourGoals, TourModules, TourEnd}.vue`, `composables/onboarding/useTypewriter.js`, `stores/onboarding.js`, `utils/onboarding.js` (écrans, répliques, choix), carte du profil `components/profile/TourCard.vue` |
+| Front | page `pages/index/visite.vue`, `components/onboarding/{TourStage, TourProgress, TourBubble, TourHello, TourLevel, TourGoals, TourModules, TourBosses, TourMap, TourEnd}.vue`, `composables/onboarding/useTypewriter.js`, `stores/onboarding.js`, `utils/onboarding.js` (écrans, répliques, choix), carte du profil `components/profile/TourCard.vue` |
 
 ## 2. Niveau et classement de départ
 
@@ -72,8 +80,8 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
 
 ## 5. Front
 
-- **Écrans** (`STEPS`) : `hello`, `level`, `goal`, `albert`, `aaron`, `lizy`, `ray`, `end`, en cinq
-  segments (Accueil, Niveau, Objectif, Les profs, Ton plan). La barre se remplit prof par prof ; un
+- **Écrans** (`STEPS`) : `hello`, `level`, `goal`, `albert`, `aaron`, `lizy`, `ray`, `bosses`, `map`,
+  `end`, en sept segments (Accueil, Niveau, Objectif, Les profs, Les boss, Ta carte, Ton plan). La barre se remplit prof par prof ; un
   segment touché mène à son premier écran ; « Passer » mène au plan (en enregistrant les réponses),
   « ← » revient d'un écran.
 - **Scène** (`TourStage`) : la couleur du prof (violet d'Albert pour les écrans de la visite), le
@@ -88,11 +96,26 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
   Les réponses sont enregistrées en quittant leur écran (`useOnboardingStore().save()`, rien si
   rien n'a changé ; le classement est relu si le niveau a pu le fixer).
 - **Profs** (`TourModules`) : Albert (Woodpecker, Puzzles, Puzzle streak), Aaron (Répertoire,
-  Évaluation, Analyse « Bientôt »), Lizy (Séance sur mesure, Finales « Bientôt »), Ray (À
+  Évaluation, Analyse « Bientôt »), Lizy (Séance sur mesure, Finales), Ray (À
   l'aveugle, Coordonnées) ; « Pourquoi ça aide » déplié d'emblée sur le premier module de chacun.
-- **Plan** (`TourEnd`, confettis) : Séance sur mesure (`/session/auto`, conseillée avec Lichess),
-  Répertoire automatique (`/repertoire/auto`), Je compose ma séance (`/session/new`, choix par
-  défaut sans Lichess). Un choix qui demande Lichess sans compte lié passe par la liaison, qui
+- **Les boss** (`TourBosses`, `TOUR_BOSSES`) : le Jongleur, le Métronome, le Cyclope, la
+  Gargouille, le Fantôme, le Roi des cendres (son remplaçant, le requin), puis « Et d'autres… »
+  dans l'ombre. Une bande de cartes (portrait debout, nom, parcours et chapitre, cristaux du boss
+  battu), la carte montrée au milieu ; elle tourne seule toutes les 4,2 s jusqu'à ce que le joueur
+  la prenne en main (flèches, une carte, un glissement) ; jamais de compteur ni de points. La scène
+  prend les couleurs du boss montré et son portrait (`profKey` : seul le personnage remonte, pas le
+  titre) ; la bulle, sa provocation (`mindMapPath.characters.<boss>.taunt`). Mouvement réduit : elle
+  ne tourne pas seule.
+- **La carte** (`TourMap`, `SAMPLE_PATH`) : un bout du parcours de Visualisation dessiné comme sur
+  `/cerveau` (`PathNode`) : la fin du chapitre 1, le Jongleur battu, puis le chapitre 2 en cours
+  (sections 2.1 à 2.3, leurs mini-boss, le mini-boss caché « ? », le Cyclope), avec les vrais
+  passages et récompenses (MIND_MAP.md § 5). Elle défile à la main (en-tête du chapitre collé en
+  haut), ouverte sur l'étape à jouer (`SAMPLE_PATH_CURRENT`) ; une étape touchée dit dessous ce
+  qu'elle demande et rapporte (`tourStepFacts` : passages à 80 %, vies, cristaux, XP, badges).
+  Rien ne s'y joue : c'est un exemple.
+- **Plan** (`TourEnd`, confettis) : Ma carte mentale (`/cerveau`, conseillée et choix par défaut
+  sans Lichess), Séance sur mesure (`/session/auto`, conseillée avec Lichess), Répertoire
+  automatique (`/repertoire/auto`), Je compose ma séance (`/session/new`). Un choix qui demande Lichess sans compte lié passe par la liaison, qui
   revient directement sur la page choisie.
 - **Étape gardée** dans le navigateur (`localStorage` `dontstayrooky.tourStep`, remise à 0 au
   départ vers le plan, par « Revoir » du profil et par `/bienvenue`) : une simple commodité.
@@ -109,6 +132,8 @@ L'export des données (`profil.json`) contient `onboarding {level, goal, updated
 `tests/Functional/Onboarding/OnboardingTest.php` (compte neuf, niveau déclaré puis remplacé, même
 niveau sans nouvelle ligne, plus rien après un puzzle classé ou un import Lichess, niveau suggéré,
 import Lichess toujours proposé, 422, export) ; Vitest `onboarding.test.js`, `auth-flow.test.js` ;
-Playwright `tests/e2e/tour.spec.js` (visite complète sans Lichess jusqu'au Session Builder, réponses
+Playwright `tests/e2e/tour.spec.js` (visite complète sans Lichess jusqu'au Session Builder, avec
+la galerie des boss — flèches, retour jusqu'à « Et d'autres… », aucun compteur — et la carte — une
+étape touchée et ses récompenses —, la carte mentale cochée d'office au plan, réponses
 dans le profil et niveau changé ; étape gardée, retour, segments, « Passer »,
 « Revoir » du profil).

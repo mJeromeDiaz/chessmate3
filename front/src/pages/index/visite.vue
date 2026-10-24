@@ -5,10 +5,11 @@
         class="tour__stage"
         :theme="theme"
         :image="image"
-        :glyph="screen?.glyph ?? ''"
-        :mystery="step === 'ray'"
+        :glyph="glyph"
+        :mystery="step === 'ray' || (step === 'bosses' && !image)"
         :title="title"
         :stage-key="`${step}-${visit}`"
+        :prof-key="step === 'bosses' ? `boss-${boss}` : ''"
       >
         <TourProgress
           :step="step"
@@ -20,7 +21,11 @@
 
       <section class="tour__sheet" :style="{ '--accent': accent }">
         <div class="tour__content">
-          <TourBubble :kicker="kickerOf(step)" :text="line" :accent="accent" />
+          <TourBubble
+            :kicker="kickerOf(step, boss)"
+            :text="line"
+            :accent="accent"
+          />
 
           <TourHello v-if="step === 'hello'" />
           <TourLevel
@@ -31,6 +36,8 @@
             @link="linkLichess(TOUR_PATH)"
           />
           <TourGoals v-else-if="step === 'goal'" v-model="goal" />
+          <TourBosses v-else-if="step === 'bosses'" v-model="boss" />
+          <TourMap v-else-if="step === 'map'" />
           <TourModules
             v-else-if="screen"
             :key="step"
@@ -71,7 +78,8 @@
 /**
  * The guided tour (design "Visite guidée", docs/ONBOARDING.md): Albert introduces himself, asks
  * the level (Lichess suggests it; it may set the starting puzzle rating) and the goal (one), the
- * professors present their modules, Ray stays in the shadow, then where to start. A phone gets the
+ * professors present their modules, Ray stays in the shadow, the bosses come out (their gallery)
+ * and the map shows a piece of a path, then where to start. A phone gets the
  * design's screen (stage above, sheet below); from 1024 px, two columns. The step is kept in this
  * browser; the answers are saved when leaving their screen (or skipping).
  */
@@ -79,11 +87,13 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import ConfettiBurst from '@/components/training/ConfettiBurst.vue'
+import TourBosses from '@/components/onboarding/TourBosses.vue'
 import TourBubble from '@/components/onboarding/TourBubble.vue'
 import TourEnd from '@/components/onboarding/TourEnd.vue'
 import TourGoals from '@/components/onboarding/TourGoals.vue'
 import TourHello from '@/components/onboarding/TourHello.vue'
 import TourLevel from '@/components/onboarding/TourLevel.vue'
+import TourMap from '@/components/onboarding/TourMap.vue'
 import TourModules from '@/components/onboarding/TourModules.vue'
 import TourProgress from '@/components/onboarding/TourProgress.vue'
 import TourStage from '@/components/onboarding/TourStage.vue'
@@ -106,7 +116,9 @@ import {
   poseOf,
   stepIndex,
   themeOf,
-  titleOf
+  titleOf,
+  tourBoss,
+  tourBossImage
 } from '@/utils/onboarding'
 import { profImage } from '@/utils/prof/images'
 
@@ -138,7 +150,9 @@ const visit = ref(0)
 const level = ref(null)
 /** @type {import('vue').Ref<string|null>} */
 const goal = ref(null)
-const end = ref('builder')
+/** The gallery's boss shown (an index of TOUR_BOSSES). */
+const boss = ref(0)
+const end = ref('map')
 const linking = ref(false)
 const busy = ref(false)
 const error = ref('')
@@ -153,17 +167,27 @@ const open = reactive({
 const step = computed(() => STEPS[index.value])
 const screen = computed(() => PROF_SCREENS[step.value] ?? null)
 const linked = computed(() => !!onboarding.answers?.lichess.linked)
-const theme = computed(() => themeOf(step.value))
+const theme = computed(() => themeOf(step.value, boss.value))
 const accent = computed(() => accentOn(theme.value, $q.dark.isActive))
 const title = computed(() => titleOf(step.value))
 const state = computed(() => ({
   level: level.value,
   goal: goal.value,
   answers: onboarding.answers,
-  linking: linking.value
+  linking: linking.value,
+  boss: boss.value
 }))
 const line = computed(() => lineOf(step.value, state.value))
-const image = computed(() => profImage(poseOf(step.value, state.value)))
+const image = computed(() =>
+  step.value === 'bosses'
+    ? tourBossImage(tourBoss(boss.value))
+    : profImage(poseOf(step.value, state.value))
+)
+/** Ray's knight in the shadow; the bosses' shadow, a crowned king. */
+const glyph = computed(() => {
+  if (step.value === 'bosses') return '♚︎'
+  return screen.value?.glyph ?? ''
+})
 const cta = computed(() =>
   ctaOf(step.value, {
     level: level.value,
@@ -233,7 +257,7 @@ async function skip() {
 
 /** Leaves for the chosen start, through Lichess when it needs it. */
 async function start() {
-  const choice = END_CHOICES.find(c => c.id === end.value) ?? END_CHOICES[2]
+  const choice = END_CHOICES.find(c => c.id === end.value) ?? END_CHOICES[0]
   writeStep(0)
   if (choice.lichess && !linked.value) return linkLichess(choice.path)
   router.push(choice.path)

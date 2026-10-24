@@ -7,7 +7,7 @@ const isSave = r =>
 // The guided tour (docs/ONBOARDING.md). The level's effect on the puzzle rating is covered by
 // PHPUnit (tests/Functional/Onboarding/OnboardingTest.php); here, the screens, the saved answers
 // and the ways in and out. The seeded user has no Lichess account.
-test('tour: level and goal saved, the professors and Ray, then the session builder', async ({
+test('tour: level and goal saved, the professors and Ray, the bosses and the map, then the session builder', async ({
   page,
   context
 }) => {
@@ -80,16 +80,51 @@ test('tour: level and goal saved, the professors and Ray, then the session build
   await expect(line).toContainText('yeux fermés')
   await expect(page.getByTestId('tour-module-aveugle')).toBeVisible()
   await expect(page.getByTestId('tour-module-coordonnees')).toBeVisible()
+  await expect(next).toHaveText('Voir les boss')
+  await next.click()
+
+  // The bosses, going round: no count anywhere, the last ones in the shadow.
+  await expect(tour).toHaveAttribute('data-step', 'bosses')
+  // The chip counts the tour's steps, never the bosses (« BOSS 1 / 5 »).
+  await expect(page.getByTestId('tour-chip')).toContainText('5 / 7')
+  await expect(page.getByTestId('tour-chip')).not.toContainText(/BOSS \d/)
+  await page.getByTestId('tour-boss-next').click()
+  await expect(page.getByTestId('tour-boss-metronome')).toHaveAttribute(
+    'aria-current',
+    'true'
+  )
+  await expect(line).toContainText('la mesure est perdue')
+  // Back past the first one: the gallery goes round to the shadow.
+  await page.getByTestId('tour-boss-previous').click()
+  await page.getByTestId('tour-boss-previous').click()
+  const others = page.getByTestId('tour-boss-others')
+  await expect(others).toHaveAttribute('aria-current', 'true')
+  await expect(others).toContainText('Et d’autres…')
+  await expect(line).toContainText('garder des surprises')
+  await expect(next).toHaveText('Même pas peur')
+  await next.click()
+
+  // The map: a real piece of path, opened on the step to play; a step shows what it earns.
+  await expect(tour).toHaveAttribute('data-step', 'map')
+  const map = page.getByTestId('tour-map')
+  const detail = page.getByTestId('tour-map-detail')
+  await expect(detail).toContainText('Passages : 2 / 3 à 80 %')
+  await map.getByTestId('path-step-2-1-boss').click()
+  await expect(detail).toContainText('+80 cristaux')
+  await map.getByTestId('path-step-2-boss').click()
+  await expect(detail).toContainText('Le Cyclope')
+  await expect(detail).toContainText('+240 cristaux')
   await expect(next).toHaveText('Voir mon plan')
   await next.click()
 
-  // Where to start: without Lichess, the session builder first.
+  // Where to start: without Lichess, the mind map first.
   await expect(tour).toHaveAttribute('data-step', 'end')
   await expect(page.getByTestId('tour-skip')).toBeHidden()
-  await expect(page.getByTestId('tour-end-builder')).toHaveAttribute(
+  await expect(page.getByTestId('tour-end-map')).toHaveAttribute(
     'aria-checked',
     'true'
   )
+  await expect(page.getByTestId('tour-end-map')).toContainText('Conseillé')
   await expect(page.getByTestId('tour-end-coach')).toContainText(
     'Lichess requis'
   )

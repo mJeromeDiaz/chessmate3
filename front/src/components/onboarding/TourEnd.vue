@@ -38,8 +38,8 @@
 
 <script setup>
 /**
- * The tour's last screen: where to start (one choice). The tailored session and the automatic
- * repertoire need Lichess.
+ * The tour's last screen: where to start (one choice): the mind map first (advised without
+ * Lichess), the tailored session (advised with it) and the automatic repertoire need Lichess.
  */
 import { END_CHOICES } from '@/utils/onboarding'
 import { t } from '@/i18n'
@@ -57,6 +57,7 @@ const emit = defineEmits({
 /** @param {(typeof END_CHOICES)[number]} choice */
 function tagOf(choice) {
   if (choice.id === 'coach' && props.linked) return t('onboarding.end.advised')
+  if (choice.id === 'map' && !props.linked) return t('onboarding.end.advised')
   return choice.lichess && !props.linked
     ? t('onboarding.end.lichessRequired')
     : ''

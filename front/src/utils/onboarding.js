@@ -3,6 +3,7 @@ import {
   COACH_PATH,
   TOUR_PATH
 } from '@/utils/auth/authFlow'
+import { standingImage } from '@/utils/mindMapPath'
 import { profImage } from '@/utils/prof/images'
 import { intlLocale, t } from '@/i18n'
 
@@ -59,6 +60,8 @@ export const STEPS = [
   'aaron',
   'lizy',
   'ray',
+  'bosses',
+  'map',
   'end'
 ]
 
@@ -68,6 +71,8 @@ export const SEGMENTS = [
   ['level', ['level']],
   ['goal', ['goal']],
   ['profs', ['albert', 'aaron', 'lizy', 'ray']],
+  ['bosses', ['bosses']],
+  ['map', ['map']],
   ['end', ['end']]
 ].map(([key, steps]) => ({
   get label() {
@@ -218,7 +223,6 @@ export const MODULES = {
     get title() {
       return t('onboarding.modules.finales.title')
     },
-    soon: true,
     glyph: '♚︎',
     bg: '#FF8A3D',
     soft: '#FFEBDD',
@@ -352,6 +356,331 @@ export const PROF_SCREENS = {
     },
     modules: ['aveugle', 'coordonnees']
   }
+}
+
+/**
+ * @typedef {object} TourBoss
+ * @property {string} id
+ * @property {string|null} character the mind map's (its name, taunt, picture), null: the others
+ * @property {'visualisation'|'calculation'|'endgames'|null} path
+ * @property {string} chapter its place on the path, e.g. "CH. 1"
+ * @property {number|null} crystals what beating it earns (docs/MIND_MAP.md, docs/ENDGAMES.md)
+ * @property {string} dark the card's and the stage's colour
+ * @property {string} glow
+ * @property {string} accent bright, on the dark
+ * @property {string} ink the stage's deep colour
+ */
+
+/**
+ * The bosses shown on the tour (design « Visite guidée », « Tes pires ennemis »): a few of each
+ * path, then the others in the shadow. No count anywhere: there are always more.
+ *
+ * @type {TourBoss[]}
+ */
+export const TOUR_BOSSES = [
+  {
+    id: 'jongleur',
+    character: 'jongleur',
+    path: 'visualisation',
+    chapter: '1',
+    crystals: 200,
+    dark: '#2B1630',
+    glow: 'rgba(230,70,60,.38)',
+    accent: '#F2B640',
+    ink: '#C0392B'
+  },
+  {
+    id: 'metronome',
+    character: 'metronome',
+    path: 'calculation',
+    chapter: '1',
+    crystals: 200,
+    dark: '#231B3A',
+    glow: 'rgba(245,180,60,.4)',
+    accent: '#F5C04A',
+    ink: '#B07A12'
+  },
+  {
+    id: 'cyclope',
+    character: 'cyclope',
+    path: 'visualisation',
+    chapter: '2',
+    crystals: 240,
+    dark: '#16263A',
+    glow: 'rgba(80,170,255,.4)',
+    accent: '#7CC8FF',
+    ink: '#1C86E0'
+  },
+  {
+    id: 'gargouille',
+    character: 'gargouille',
+    path: 'visualisation',
+    chapter: '3',
+    crystals: 300,
+    dark: '#2A2347',
+    glow: 'rgba(160,140,230,.45)',
+    accent: '#F5A524',
+    ink: '#6B5BD6'
+  },
+  {
+    id: 'fantome',
+    character: 'fantome',
+    path: 'visualisation',
+    chapter: '5',
+    crystals: 440,
+    dark: '#1E1B40',
+    glow: 'rgba(150,160,255,.45)',
+    accent: '#AEB8FF',
+    ink: '#5562D9'
+  },
+  {
+    id: 'roi-cendres',
+    character: 'roi-cendres',
+    path: 'endgames',
+    chapter: 'final',
+    crystals: 600,
+    dark: '#2A1A14',
+    glow: 'rgba(255,120,40,.42)',
+    accent: '#FF8A3D',
+    ink: '#E0601A'
+  },
+  {
+    id: 'others',
+    character: null,
+    path: null,
+    chapter: '',
+    crystals: null,
+    dark: '#1B1530',
+    glow: 'rgba(198,244,50,.3)',
+    accent: '#C6F432',
+    ink: '#5A3BE0'
+  }
+]
+
+/**
+ * A boss of the gallery, the index wrapping around (the gallery loops).
+ *
+ * @param {number} index
+ */
+export function tourBoss(index) {
+  const n = TOUR_BOSSES.length
+  return TOUR_BOSSES[((index % n) + n) % n]
+}
+
+/**
+ * A boss's name, as the mind map says it ("Le Jongleur"), « Et d'autres… » for the shadow.
+ *
+ * @param {TourBoss} boss
+ */
+export function tourBossName(boss) {
+  return boss.character
+    ? t(`mindMapPath.characters.${boss.character}.name`)
+    : t('onboarding.bosses.others.name')
+}
+
+/**
+ * Where it waits: "VISUALISATION · CH. 1", "FINALES · BOSS FINAL", « ILS SE CACHENT PARTOUT ».
+ *
+ * @param {TourBoss} boss
+ */
+export function tourBossPlace(boss) {
+  if (!boss.path) return t('onboarding.bosses.others.place')
+  const path = t(`onboarding.bosses.paths.${boss.path}`)
+  return boss.chapter === 'final'
+    ? t('onboarding.bosses.final', { path })
+    : t('onboarding.bosses.chapter', { path, n: boss.chapter })
+}
+
+/**
+ * Its picture standing (the Roi des cendres: its stand-in), '' for the shadow.
+ *
+ * @param {TourBoss} boss
+ */
+export function tourBossImage(boss) {
+  return boss.character ? standingImage(boss.character) : ''
+}
+
+/**
+ * A step of the tour's sample path (the mind map's own shape, docs/MIND_MAP.md).
+ *
+ * @param {string} key
+ * @param {string|null} number
+ * @param {import('@/utils/mindMapPath').PathStep['kind']} kind
+ * @param {import('@/utils/mindMapPath').PathStep['status']} status
+ * @param {{passes?: number, required?: number, crystals?: number, xp?: number, character?: string|null, badges?: string[]}} [more]
+ * @returns {import('@/utils/mindMapPath').PathStep}
+ */
+function sampleStep(key, number, kind, status, more = {}) {
+  return {
+    key,
+    number,
+    kind,
+    status,
+    passes: more.passes ?? (status === 'done' ? (more.required ?? 1) : 0),
+    required: more.required ?? 1,
+    crystals: more.crystals ?? 0,
+    xp: more.xp ?? (kind === 'exercise' ? 15 : 0),
+    character: more.character ?? null,
+    badges: more.badges ?? [],
+    skippable: false,
+    chest:
+      kind === 'chest' && status === 'done'
+        ? { id: key, step: key, crystals: more.crystals ?? 0, opened: true }
+        : null
+  }
+}
+
+/**
+ * @param {string} key
+ * @param {string} number
+ * @param {import('@/utils/mindMapPath').PathStep['status']} status
+ * @param {import('@/utils/mindMapPath').PathStep[]} steps
+ * @param {import('@/utils/mindMapPath').PathStep[]} miniBosses
+ * @param {import('@/utils/mindMapPath').PathStep[]} [hidden]
+ * @returns {import('@/utils/mindMapPath').PathSection}
+ */
+function sampleSection(key, number, status, steps, miniBosses, hidden = []) {
+  return { key, number, status, steps, miniBosses, hidden }
+}
+
+/**
+ * The map's example (design « Visite guidée », « Ta carte d'aventure », redrawn as the real
+ * path): the end of the Visualisation path's chapter 1, its boss beaten, then chapter 2 under way,
+ * with its real steps, passes, mini-bosses, hidden boss and rewards (docs/MIND_MAP.md, § 5).
+ *
+ * @type {import('@/utils/mindMapPath').PathChapter[]}
+ */
+export const SAMPLE_PATH = [
+  {
+    key: 'c1',
+    number: 1,
+    status: 'done',
+    sections: [
+      sampleSection(
+        '1',
+        null,
+        'done',
+        [
+          sampleStep('1-7', '1.7', 'exercise', 'done', { required: 3 }),
+          sampleStep('1-8', '1.8', 'exercise', 'done', { required: 2 }),
+          sampleStep('1-9', '1.9', 'exercise', 'done', { required: 2 })
+        ],
+        []
+      )
+    ],
+    boss: sampleStep('1-boss', null, 'boss', 'done', {
+      crystals: 200,
+      xp: 100,
+      character: 'jongleur',
+      badges: ['chapter_1', 'boss_jongleur']
+    })
+  },
+  {
+    key: 'c2',
+    number: 2,
+    status: 'open',
+    sections: [
+      sampleSection(
+        '2-1',
+        '2.1',
+        'open',
+        [
+          sampleStep('2-1-1', '2.1.1', 'exercise', 'done', { required: 2 }),
+          sampleStep('2-1-2', '2.1.2', 'exercise', 'open', {
+            required: 3,
+            passes: 2
+          }),
+          sampleStep('2-1-3', '2.1.3', 'exercise', 'open', { required: 3 }),
+          sampleStep('2-1-4', '2.1.4', 'exercise', 'locked', { required: 4 })
+        ],
+        [
+          sampleStep('2-1-boss', null, 'mini_boss', 'open', {
+            crystals: 80,
+            xp: 40,
+            badges: ['section_2_1']
+          })
+        ]
+      ),
+      sampleSection(
+        '2-2',
+        '2.2',
+        'locked',
+        [
+          sampleStep('2-2-1', '2.2.1', 'exercise', 'locked', { required: 2 }),
+          sampleStep('2-2-2', '2.2.2', 'exercise', 'locked', { required: 3 })
+        ],
+        [
+          sampleStep('2-2-boss', null, 'mini_boss', 'locked', {
+            crystals: 100,
+            xp: 40,
+            badges: ['section_2_2']
+          })
+        ]
+      ),
+      sampleSection(
+        '2-3',
+        '2.3',
+        'locked',
+        [sampleStep('2-3-1', '2.3.1', 'exercise', 'locked', { required: 3 })],
+        [
+          sampleStep('2-3-boss', null, 'mini_boss', 'locked', {
+            crystals: 120,
+            xp: 40,
+            badges: ['section_2_3']
+          })
+        ],
+        [
+          sampleStep('2-3-hidden', null, 'hidden_boss', 'hidden', {
+            crystals: 60,
+            xp: 40,
+            badges: ['hidden_2_3']
+          })
+        ]
+      )
+    ],
+    boss: sampleStep('2-boss', null, 'boss', 'locked', {
+      crystals: 240,
+      xp: 100,
+      character: 'cyclope',
+      badges: ['chapter_2', 'boss_cyclope']
+    })
+  }
+]
+
+/** The sample's step to play next: where the map opens, and the detail shown first. */
+export const SAMPLE_PATH_CURRENT = '2-1-2'
+
+/**
+ * What a step of the sample asks and earns, for the line under the map.
+ *
+ * @param {import('@/utils/mindMapPath').PathStep} step
+ * @returns {string[]}
+ */
+export function tourStepFacts(step) {
+  if (step.status === 'hidden') return [t('onboarding.map.facts.hidden')]
+  /** @type {string[]} */
+  const facts = []
+  if (step.kind === 'exercise')
+    facts.push(
+      t('onboarding.map.facts.passes', {
+        done: step.passes,
+        n: step.required
+      })
+    )
+  if (step.kind === 'mini_boss' || step.kind === 'boss')
+    facts.push(t('onboarding.map.facts.lives', { n: 3 }))
+  if (step.crystals)
+    facts.push(t('onboarding.map.facts.crystals', { n: step.crystals }))
+  if (step.xp) facts.push(t('onboarding.map.facts.xp', { n: step.xp }))
+  if (step.badges.length)
+    facts.push(
+      t(
+        'onboarding.map.facts.badges',
+        { n: step.badges.length },
+        step.badges.length
+      )
+    )
+  return facts
 }
 
 /** The level cards, weakest first. */
@@ -489,6 +818,18 @@ export const GOALS = [
  */
 export const END_CHOICES = [
   {
+    id: 'map',
+    glyph: '✸',
+    get title() {
+      return t('onboarding.endChoices.map.title')
+    },
+    get desc() {
+      return t('onboarding.endChoices.map.desc')
+    },
+    path: '/cerveau',
+    lichess: false
+  },
+  {
     id: 'coach',
     glyph: '✦',
     get title() {
@@ -605,12 +946,24 @@ export function goalOf(id) {
 }
 
 /**
- * The screen's look: a professor's colours, or the tour's violet.
+ * The screen's look: a professor's colours, the boss shown's, or the tour's violet.
  *
  * @param {string} step
+ * @param {number} [boss] the gallery's boss shown
  * @returns {TourTheme}
  */
-export function themeOf(step) {
+export function themeOf(step, boss = 0) {
+  if (step === 'bosses') {
+    const b = tourBoss(boss)
+    return {
+      bg: b.dark,
+      deep: b.ink,
+      accent: b.ink,
+      darkAccent: b.accent,
+      line1: '#FFFFFF',
+      line2: b.accent
+    }
+  }
   return PROF_SCREENS[step] ?? VIOLET
 }
 
@@ -632,9 +985,14 @@ export function titleOf(step) {
  * The line over the bubble.
  *
  * @param {string} step
+ * @param {number} [boss] the gallery's boss shown
  */
-export function kickerOf(step) {
+export function kickerOf(step, boss = 0) {
   if (PROF_SCREENS[step]) return PROF_SCREENS[step].kicker
+  if (step === 'bosses') {
+    const b = tourBoss(boss)
+    return `${tourBossName(b).toUpperCase()} · ${tourBossPlace(b)}`
+  }
   return t(`onboarding.kickers.${step}`)
 }
 
@@ -642,10 +1000,20 @@ export function kickerOf(step) {
  * What the professor says on a screen, given what was chosen so far.
  *
  * @param {string} step
- * @param {{level: string|null, goal: string|null, answers: OnboardingAnswers|null, linking?: boolean}} state
+ * @param {{level: string|null, goal: string|null, answers: OnboardingAnswers|null, linking?: boolean, boss?: number}} state
  */
-export function lineOf(step, { level, goal, answers, linking = false }) {
+export function lineOf(
+  step,
+  { level, goal, answers, linking = false, boss = 0 }
+) {
   if (step === 'hello') return t('onboarding.lines.hello')
+  if (step === 'bosses') {
+    const b = tourBoss(boss)
+    return b.character
+      ? t(`mindMapPath.characters.${b.character}.taunt`)
+      : t('onboarding.bosses.others.line')
+  }
+  if (step === 'map') return t('onboarding.lines.map')
   if (step === 'level') {
     if (linking) return t('onboarding.lines.linking')
     const chosen = levelOf(level)
@@ -690,6 +1058,7 @@ export function poseOf(step, { level, goal, linking = false }) {
   if (step === 'goal')
     return goal === 'kasparov' ? 'albert-v2-wow' : 'albert-v2-pointer'
   if (step === 'end') return 'albert-v2-book'
+  if (step === 'map') return 'albert-v2-pointer'
   return 'albert-v2-cheer'
 }
 
@@ -712,12 +1081,12 @@ export function ratingNote(level, answers) {
 }
 
 /**
- * The end screen's default choice: the tailored session with Lichess, the builder without.
+ * The end screen's default choice: the tailored session with Lichess, the mind map without.
  *
  * @param {boolean} linked
  */
 export function defaultEndChoice(linked) {
-  return linked ? 'coach' : 'builder'
+  return linked ? 'coach' : 'map'
 }
 
 /**
@@ -735,6 +1104,8 @@ export function ctaOf(step, { level, goal, end, linked, linking = false }) {
   if (step === 'goal') return goal ? cta('goalOk') : cta('goal', false)
   if (step === 'ray') return cta('ray')
   if (PROF_SCREENS[step]) return cta('nextProf')
+  if (step === 'bosses') return cta('bosses')
+  if (step === 'map') return cta('map')
   const choice = END_CHOICES.find(c => c.id === end)
   if (choice?.lichess && !linked) return cta('linkLichess')
   return cta('go')
@@ -748,6 +1119,8 @@ export function ctaOf(step, { level, goal, end, linked, linking = false }) {
 export function footOf(step) {
   if (step === 'hello') return t('onboarding.foot.hello')
   if (PROF_SCREENS[step]) return t('onboarding.foot.prof')
+  if (step === 'bosses') return t('onboarding.foot.bosses')
+  if (step === 'map') return t('onboarding.foot.map')
   if (step === 'end') return t('onboarding.foot.end')
   return ''
 }

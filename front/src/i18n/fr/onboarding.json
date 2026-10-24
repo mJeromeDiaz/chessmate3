@@ -39,7 +39,7 @@
     },
     "finales": {
       "title": "Finales",
-      "desc": "Tours, pions, pièces mineures : les finales essentielles.",
+      "desc": "Mats, pions, tours, pièces mineures : un parcours de leçons contre Maia ou la défense parfaite, de boss en boss jusqu’au Roi des cendres.",
       "why": "Un pion de plus ne vaut rien si tu ne sais pas l’emmener à dame."
     },
     "aveugle": {
@@ -126,6 +126,10 @@
     }
   },
   "endChoices": {
+    "map": {
+      "title": "Ma carte mentale",
+      "desc": "Visualisation, calcul, finales : avance de case en case et affronte les boss."
+    },
     "coach": {
       "title": "Séance sur mesure",
       "desc": "Lizy lit tes parties Lichess et compose ta séance : finales, ouvertures, tactique."
@@ -144,6 +148,8 @@
     "level": "Niveau",
     "goal": "Objectif",
     "profs": "Les profs",
+    "bosses": "Les boss",
+    "map": "Ta carte",
     "end": "Ton plan"
   },
   "perfs": {
@@ -159,13 +165,16 @@
     "hello": ["Bonjour,", "champion !"],
     "level": ["Ton niveau,", "sans tricher"],
     "goal": ["Ton grand", "objectif ?"],
-    "end": ["À toi", "de jouer !"]
+    "end": ["À toi", "de jouer !"],
+    "bosses": ["Tes pires", "ennemis"],
+    "map": ["Ta carte", "d’aventure"]
   },
   "kickers": {
     "hello": "ALBERT · TON PROF PRINCIPAL",
     "level": "ALBERT · FAISONS CONNAISSANCE",
     "goal": "ALBERT · TES AMBITIONS",
-    "end": "ALBERT · ON S’Y MET ?"
+    "end": "ALBERT · ON S’Y MET ?",
+    "map": "ALBERT · TA CARTE MENTALE"
   },
   "lines": {
     "hello": "Bonjour, je suis Albert Stein, ton prof principal. Promis, je serai plus patient que ton adversaire quand tu laisses ta dame en prise.",
@@ -174,7 +183,8 @@
     "noLevel": "Lie ton Lichess, ou avoue ton niveau. Je ne juge pas… pas encore.",
     "noGoal": "Qu’est-ce qui t’amène ? Un seul choix : le plus sincère, pas le plus raisonnable.",
     "endLinked": "Assez de théorie ! Choisis par où commencer, je m’occupe du reste.",
-    "endUnlinked": "Assez de théorie ! Pour le sur-mesure, il me faudra ton Lichess. Sinon, compose ta séance toi-même."
+    "endUnlinked": "Assez de théorie ! Commence par ta carte mentale, ses boss t’attendent. Pour le sur-mesure, il me faudra ton Lichess.",
+    "map": "Voici un bout du parcours de Visualisation. Chaque exercice se valide à 80 %, plusieurs fois ; des coffres de cristaux t’attendent en chemin, un mini-boss garde chaque section, un boss chaque chapitre. Fais défiler, touche une étape."
   },
   "rating": {
     "fixed": "Ton classement puzzle ({rating}) est déjà établi : il ne bouge plus qu’en jouant.",
@@ -186,19 +196,23 @@
     "level": "Choisis ton niveau",
     "goalOk": "Voilà mon objectif",
     "goal": "Choisis ton objectif",
-    "ray": "Voir mon plan",
+    "ray": "Voir les boss",
     "nextProf": "Prof suivant",
     "linkLichess": "Lier Lichess et continuer",
-    "go": "C’est parti !"
+    "go": "C’est parti !",
+    "bosses": "Même pas peur",
+    "map": "Voir mon plan"
   },
   "foot": {
     "hello": "Tu pourras revoir cette visite depuis ton profil",
     "prof": "Touche « Pourquoi ça aide » pour en savoir plus",
-    "end": "Visite à revoir dans Profil › Visite guidée"
+    "end": "Visite à revoir dans Profil › Visite guidée",
+    "bosses": "Bats-les pour gagner des cristaux",
+    "map": "Exemple de parcours · le tien avance à ton rythme"
   },
   "wait": "Un instant…",
   "hello": {
-    "note": "Cinq petites étapes, deux minutes. Tu peux revenir en arrière ou passer quand tu veux : je ne compte pas les points… pas encore."
+    "note": "Sept petites étapes, trois minutes. Tu peux revenir en arrière ou passer quand tu veux : je ne compte pas les points… pas encore."
   },
   "level": {
     "aria": "Ton niveau",
@@ -224,5 +238,32 @@
   "progress": {
     "back": "Étape précédente",
     "skip": "Passer"
+  },
+  "bosses": {
+    "paths": {
+      "visualisation": "VISUALISATION",
+      "calculation": "CALCUL",
+      "endgames": "FINALES"
+    },
+    "chapter": "{path} · CH. {n}",
+    "final": "{path} · BOSS FINAL",
+    "others": {
+      "name": "Et d’autres…",
+      "place": "ILS SE CACHENT PARTOUT",
+      "line": "Le Caméléon, le Sith aveugle, l’Avocat du diable… et d’autres qui ne se montrent qu’au dernier moment. Je ne te les présente pas tous : il faut garder des surprises."
+    },
+    "previous": "Boss précédent",
+    "next": "Boss suivant",
+    "hint": "Glisse pour les voir défiler"
+  },
+  "map": {
+    "facts": {
+      "passes": "Passages : {done} / {n} à 80 %",
+      "lives": "{n} vies",
+      "crystals": "+{n} cristaux",
+      "xp": "+{n} XP",
+      "badges": "{n} badge | {n} badges",
+      "hidden": "Un boss caché : il se montre quand tu t’y attends le moins."
+    }
   }
 }

@@ -5,7 +5,7 @@
     <slot />
     <div class="tour-stage__prof">
       <ProfStage
-        :key="`prof-${stageKey}`"
+        :key="`prof-${profKey || stageKey}`"
         :image="image"
         :glyph="glyph || '♞︎'"
         :glyph-ink="glyph ? '#FFFFFF' : '#1B1530'"
@@ -63,7 +63,9 @@ const props = defineProps({
   title: { type: Array, required: true },
   /** A professor in the shadow (a question mark next to the glyph). */
   mystery: { type: Boolean, default: false },
-  stageKey: { type: String, required: true }
+  stageKey: { type: String, required: true },
+  /** The figure alone rises again on its change (a boss of the gallery), '' with the stage. */
+  profKey: { type: String, default: '' }
 })
 
 const risen = ref(false)
@@ -76,6 +78,7 @@ function rise() {
 
 onMounted(rise)
 watch(() => props.stageKey, rise)
+watch(() => props.profKey, rise)
 
 const letters = computed(() => {
   const [l1, l2] = props.title

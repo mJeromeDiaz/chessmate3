@@ -6,6 +6,9 @@ import {
   MODULES,
   PROF_SCREENS,
   STEPS,
+  TOUR_BOSSES,
+  SAMPLE_PATH,
+  SAMPLE_PATH_CURRENT,
   accentOn,
   chipOf,
   ctaOf,
@@ -16,9 +19,16 @@ import {
   progressOf,
   ratingNote,
   stepIndex,
+  kickerOf,
   themeOf,
-  titleOf
+  titleOf,
+  tourBoss,
+  tourBossImage,
+  tourBossName,
+  tourBossPlace,
+  tourStepFacts
 } from '@/utils/onboarding'
+import { chapterNodes } from '@/utils/mindMapPath'
 
 /** @returns {import('@/utils/onboarding').OnboardingAnswers} */
 const answers = (overrides = {}) => ({
@@ -41,6 +51,8 @@ describe('guided tour', () => {
       'aaron',
       'lizy',
       'ray',
+      'bosses',
+      'map',
       'end'
     ])
     for (const step of STEPS) {
@@ -66,14 +78,18 @@ describe('guided tour', () => {
   })
 
   it('fills the progress bar one professor at a time', () => {
-    expect(progressOf('hello').map(s => s.percent)).toEqual([100, 0, 0, 0, 0])
+    expect(progressOf('hello').map(s => s.percent)).toEqual([
+      100, 0, 0, 0, 0, 0, 0
+    ])
     expect(progressOf('aaron').map(s => s.percent)).toEqual([
-      100, 100, 100, 50, 0
+      100, 100, 100, 50, 0, 0, 0
     ])
     expect(progressOf('aaron')[1]).toMatchObject({ done: true, first: 1 })
     expect(progressOf('end')[3]).toMatchObject({ percent: 100, first: 3 })
-    expect(chipOf('level')).toEqual({ name: 'NIVEAU', count: '2 / 5' })
+    expect(progressOf('map')[4]).toMatchObject({ done: true, first: 7 })
+    expect(chipOf('level')).toEqual({ name: 'NIVEAU', count: '2 / 7' })
     expect(chipOf('ray')).toEqual({ name: 'LES PROFS', count: 'PROF 4 / 4' })
+    expect(chipOf('bosses')).toEqual({ name: 'LES BOSS', count: '5 / 7' })
   })
 
   it('reads a stored step back within the tour', () => {
@@ -163,7 +179,9 @@ describe('guided tour', () => {
       'Voilà mon objectif'
     )
     expect(ctaOf('albert', base).label).toBe('Prof suivant')
-    expect(ctaOf('ray', base).label).toBe('Voir mon plan')
+    expect(ctaOf('ray', base).label).toBe('Voir les boss')
+    expect(ctaOf('bosses', base).label).toBe('Même pas peur')
+    expect(ctaOf('map', base).label).toBe('Voir mon plan')
     expect(ctaOf('end', base).label).toBe('C’est parti !')
     expect(ctaOf('end', { ...base, end: 'coach' }).label).toBe(
       'Lier Lichess et continuer'
@@ -175,10 +193,11 @@ describe('guided tour', () => {
     expect(footOf('goal')).toBe('')
   })
 
-  it('starts with the tailored session when Lichess is linked', () => {
+  it('starts with the tailored session with Lichess, the mind map without', () => {
     expect(defaultEndChoice(true)).toBe('coach')
-    expect(defaultEndChoice(false)).toBe('builder')
+    expect(defaultEndChoice(false)).toBe('map')
     expect(END_CHOICES.map(c => [c.id, c.path, c.lichess])).toEqual([
+      ['map', '/cerveau', false],
       ['coach', '/session/auto', true],
       ['repertoire', '/repertoire/auto', true],
       ['builder', '/session/new', false]
@@ -190,5 +209,71 @@ describe('guided tour', () => {
     expect(accentOn(themeOf('aaron'), true)).toBe('#4FB2FF')
     expect(accentOn(themeOf('ray'), true)).toBe('#C6F432')
     expect(accentOn(MODULES.aveugle, true)).toBe('#B3A1FF')
+  })
+
+  it('shows the bosses going round, the last ones in the shadow, never counted', () => {
+    const others = TOUR_BOSSES[TOUR_BOSSES.length - 1]
+    expect(others).toMatchObject({ id: 'others', character: null })
+    expect(tourBoss(TOUR_BOSSES.length)).toBe(TOUR_BOSSES[0])
+    expect(tourBoss(-1)).toBe(others)
+    const jongleur = tourBoss(0)
+    expect(tourBossName(jongleur)).toBe('Le Jongleur')
+    expect(tourBossPlace(jongleur)).toBe('VISUALISATION · CH. 1')
+    const ashes = TOUR_BOSSES.find(b => b.id === 'roi-cendres')
+    expect(ashes && tourBossPlace(ashes)).toBe('FINALES · BOSS FINAL')
+    expect(tourBossName(others)).toBe('Et d’autres…')
+    expect(tourBossImage(others)).toBe('')
+    for (const boss of TOUR_BOSSES.slice(0, -1))
+      expect(tourBossImage(boss)).not.toBe('')
+
+    const state = { level: null, goal: null, answers: null }
+    expect(lineOf('bosses', { ...state, boss: 0 })).toBe(
+      'Trois balles en l’air, et tu regardes encore l’échiquier ?'
+    )
+    expect(kickerOf('bosses', 0)).toBe('LE JONGLEUR · VISUALISATION · CH. 1')
+    expect(themeOf('bosses', 0)).toMatchObject({
+      bg: '#2B1630',
+      line2: '#F2B640'
+    })
+    expect(chipOf('bosses').count).not.toMatch(/BOSS/)
+  })
+
+  it('draws a real piece of path on the map, opened on the step to play', () => {
+    const steps = SAMPLE_PATH.flatMap(chapter =>
+      chapterNodes(chapter).map(node => node.step)
+    )
+    expect(steps.map(s => s.kind)).toEqual(
+      expect.arrayContaining(['exercise', 'mini_boss', 'hidden_boss', 'boss'])
+    )
+    expect(steps.find(s => s.key === SAMPLE_PATH_CURRENT)).toMatchObject({
+      status: 'open',
+      passes: 2,
+      required: 3
+    })
+    /** @param {string} key */
+    const step = key =>
+      /** @type {import('@/utils/mindMapPath').PathStep} */ (
+        steps.find(s => s.key === key)
+      )
+    expect(tourStepFacts(step(SAMPLE_PATH_CURRENT))).toEqual([
+      'Passages : 2 / 3 à 80 %',
+      '+15 XP'
+    ])
+    expect(tourStepFacts(step('2-1-boss'))).toEqual([
+      '3 vies',
+      '+80 cristaux',
+      '+40 XP',
+      '1 badge'
+    ])
+    expect(tourStepFacts(step('2-boss'))).toEqual([
+      '3 vies',
+      '+240 cristaux',
+      '+100 XP',
+      '2 badges'
+    ])
+    expect(tourStepFacts(step('2-3-hidden'))).toHaveLength(1)
+    expect(poseOf('map', { level: null, goal: null })).toBe(
+      'albert-v2-pointer'
+    )
   })
 })
