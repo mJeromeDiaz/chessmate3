@@ -601,18 +601,6 @@ export const repertoireApi = {
       .get(`/api/repertoires/${encodeURIComponent(id)}/graph`, JSON_LD)
       .then(r => r.data),
   /**
-   * @param {string} id
-   * @param {{fromPositionId: string, uci: string, baseVersion?: number}} payload
-   */
-  addMove: (id, payload) =>
-    http
-      .post(
-        `/api/repertoires/${encodeURIComponent(id)}/moves`,
-        payload,
-        JSON_LD
-      )
-      .then(r => r.data),
-  /**
    * A line drafted in the editor, saved in one change (replace: another prepared move on the way
    * goes to the trash; otherwise 409).
    *

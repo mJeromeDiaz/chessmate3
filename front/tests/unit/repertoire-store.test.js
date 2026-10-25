@@ -11,7 +11,6 @@ vi.mock('@/services/api', () => ({
     rename: vi.fn(),
     remove: vi.fn(),
     graph: vi.fn(),
-    addMove: vi.fn(),
     saveLine: vi.fn(),
     moveAction: vi.fn(),
     replaceMove: vi.fn(),
@@ -25,12 +24,7 @@ vi.mock('@/services/api', () => ({
 }))
 
 const { repertoireApi } = await import('@/services/api')
-const {
-  useRepertoireStore,
-  RepeatedPositionError,
-  PositionOccupiedError,
-  isTemporaryId
-} = await import('@/stores/repertoire')
+const { useRepertoireStore } = await import('@/stores/repertoire')
 
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -'
 const AFTER_E4 = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -'
@@ -71,17 +65,6 @@ const change = (version, extra = {}) => ({
   ...extra
 })
 
-/** A promise the test settles by hand (a request in flight). */
-function deferred() {
-  let resolve
-  let reject
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return { promise, resolve, reject }
-}
-
 async function loaded(moves = [], positions = [], color = 'white') {
   repertoireApi.graph.mockResolvedValue({
     id: 'r1',
@@ -116,192 +99,15 @@ describe('repertoire store', () => {
     expect(store.saving).toBe(false)
   })
 
-  it('shows a new move at once and swaps in the server ids when saved', async () => {
-    const store = await loaded()
-    const first = deferred()
-    repertoireApi.addMove.mockReturnValueOnce(first.promise)
-
-    const added = store.addMove('root', 'e2e4')
-
-    expect(added.created).toBe(true)
-    expect(isTemporaryId(added.moveId)).toBe(true)
-    const temp = store.graph.moves[added.moveId]
-    expect(temp).toMatchObject({
-      san: 'e4',
-      role: 'reference',
-      canonical: true
-    })
-    expect(store.graph.positions[temp.to].fen).toBe(AFTER_E4)
-    expect(store.saving).toBe(true)
-
-    // Played on before the server answers: sent from the real position once it is known.
-    const second = deferred()
-    repertoireApi.addMove.mockReturnValueOnce(second.promise)
-    const reply = store.addMove(temp.to, 'e7e5')
-    expect(store.graph.moves[reply.moveId].role).toBe('reply')
-    await flushPromises()
-    expect(repertoireApi.addMove).toHaveBeenCalledTimes(1)
-
-    first.resolve(
-      change(4, {
-        moveId: 'm1',
-        positions: [position('p1', AFTER_E4, 1)],
-        moves: [move('m1', 'root', 'p1', 'e2e4', 'e4', 'reference')]
-      })
-    )
-    await flushPromises()
-
-    expect(store.resolve(added.moveId)).toBe('m1')
-    expect(store.graph.moves[added.moveId]).toBeUndefined()
-    expect(Object.keys(store.graph.positions).sort()).toEqual([
-      'p1',
-      'root',
-      expect.stringMatching(/^tmp-/)
-    ])
-    expect(repertoireApi.addMove).toHaveBeenLastCalledWith('r1', {
-      fromPositionId: 'p1',
-      uci: 'e7e5',
-      baseVersion: 4
-    })
-
-    second.resolve(
-      change(5, {
-        moveId: 'm2',
-        positions: [position('p2', AFTER_E4_E5, 2)],
-        moves: [move('m2', 'p1', 'p2', 'e7e5', 'e5', 'reply')]
-      })
-    )
-    await flushPromises()
-
-    expect(store.resolve(reply.moveId)).toBe('m2')
-    expect(Object.keys(store.graph.moves).sort()).toEqual(['m1', 'm2'])
-    expect(Object.keys(store.graph.positions).sort()).toEqual([
-      'p1',
-      'p2',
-      'root'
-    ])
-    expect(store.graph.version).toBe(5)
-    expect(store.saving).toBe(false)
-  })
-
-  it('replays an existing move without asking the server', async () => {
+  it('drops the queued changes and reloads the graph when one is refused', async () => {
     const store = await loaded(
       [move('m1', 'root', 'p1', 'e2e4', 'e4', 'reference')],
       [position('p1', AFTER_E4, 1)]
     )
+    repertoireApi.saveLine.mockRejectedValueOnce({ response: { status: 409 } })
 
-    expect(store.addMove('root', 'e2e4')).toEqual({
-      moveId: 'm1',
-      created: false,
-      transposition: false
-    })
-    expect(repertoireApi.addMove).not.toHaveBeenCalled()
-  })
-
-  it('refuses a second prepared move and tells at once about a transposition', async () => {
-    const store = await loaded(
-      [
-        move('m1', 'root', 'p1', 'e2e4', 'e4', 'reference'),
-        move('m2', 'p1', 'p2', 'e7e5', 'e5', 'reply')
-      ],
-      [position('p1', AFTER_E4, 1), position('p2', AFTER_E4_E5, 2)]
-    )
-    repertoireApi.addMove.mockReturnValue(new Promise(() => {}))
-
-    let refused = null
-    try {
-      store.addMove('root', 'd2d4')
-    } catch (e) {
-      refused = e
-    }
-    expect(refused).toBeInstanceOf(PositionOccupiedError)
-    expect(refused.prepared.id).toBe('m1')
-    expect(Object.keys(store.graph.moves)).toEqual(['m1', 'm2'])
-    expect(repertoireApi.addMove).not.toHaveBeenCalled()
-    // An opponent's move is a reply: any number.
-    expect(store.addMove('p1', 'c7c5').created).toBe(true)
-
-    // 1…e5 answered again after 1.e4 from a line that reached it otherwise: here, a second
-    // reply leading to an existing position.
-    const other = await loaded(
-      [
-        move('m1', 'root', 'p1', 'e2e4', 'e4', 'reference'),
-        move('m3', 'p1', 'p3', 'g8f6', 'Nf6', 'reply', { sortOrder: 1 }),
-        move('m4', 'p3', 'p4', 'b1c3', 'Nc3', 'reference'),
-        move('m5', 'p4', 'p5', 'e7e5', 'e5', 'reply'),
-        move('m6', 'p1', 'p6', 'e7e5', 'e5', 'reply'),
-        move('m7', 'p6', 'p7', 'b1c3', 'Nc3', 'reference', { canonical: true })
-      ],
-      [
-        position('p1', AFTER_E4, 1),
-        position(
-          'p3',
-          'rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -',
-          2
-        ),
-        position(
-          'p4',
-          'rnbqkb1r/pppppppp/5n2/8/4P3/2N5/PPPP1PPP/R1BQKBNR b KQkq -',
-          3
-        ),
-        position(
-          'p5',
-          'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/2N5/PPPP1PPP/R1BQKBNR w KQkq -',
-          4
-        ),
-        position('p6', AFTER_E4_E5, 2),
-        position(
-          'p7',
-          'rnbqkbnr/pppp1ppp/8/4p3/4P3/2N5/PPPP1PPP/R1BQKBNR b KQkq -',
-          3
-        )
-      ]
-    )
-    const joined = other.addMove('p7', 'g8f6')
-    expect(joined.transposition).toBe(true)
-    expect(other.graph.moves[joined.moveId]).toMatchObject({
-      to: 'p5',
-      canonical: false
-    })
-  })
-
-  it('refuses a move back to a position the line comes from', async () => {
-    const store = await loaded(
-      [
-        move('m1', 'root', 'p1', 'g1f3', 'Nf3', 'reference'),
-        move('m2', 'p1', 'p2', 'g8f6', 'Nf6', 'reply'),
-        move('m3', 'p2', 'p3', 'f3g1', 'Ng1', 'reference')
-      ],
-      [
-        position(
-          'p1',
-          'rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b KQkq -',
-          1
-        ),
-        position(
-          'p2',
-          'rnbqkb1r/pppppppp/5n2/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq -',
-          2
-        ),
-        position(
-          'p3',
-          'rnbqkb1r/pppppppp/5n2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq -',
-          3
-        )
-      ]
-    )
-
-    expect(() => store.addMove('p3', 'f6g8')).toThrow(RepeatedPositionError)
-    expect(repertoireApi.addMove).not.toHaveBeenCalled()
-    expect(() => store.addMove('root', 'e2e5')).toThrow()
-  })
-
-  it('drops the queued changes and reloads the graph when one is refused', async () => {
-    const store = await loaded()
-    repertoireApi.addMove.mockRejectedValueOnce({ response: { status: 409 } })
-
-    const added = store.addMove('root', 'e2e4')
-    store.annotate(added.moveId, { comment: 'Best by test', nags: [1] })
+    store.saveLine('p1', ['e7e5'], false)
+    store.annotate('m1', { comment: 'Best by test', nags: [1] })
     repertoireApi.graph.mockResolvedValue({
       id: 'r1',
       name: 'Blancs',
@@ -314,7 +120,7 @@ describe('repertoire store', () => {
     })
     await flushPromises()
 
-    expect(store.failure).toEqual({ status: 409, operation: 'add' })
+    expect(store.failure).toEqual({ status: 409, operation: 'line' })
     expect(repertoireApi.annotate).not.toHaveBeenCalled()
     expect(store.graph.version).toBe(9)
     expect(store.graph.moves).toEqual({})

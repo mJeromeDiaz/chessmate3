@@ -26,7 +26,6 @@ final class RoutingTest extends RepertoireWebTestCase
         yield ['DELETE', '/api/repertoires/'.self::UUID, '_api_/repertoires/{id}_delete'];
         yield ['POST', '/api/repertoires/'.self::UUID.'/rename', 'repertoire_rename'];
         yield ['GET', '/api/repertoires/'.self::UUID.'/graph', '_api_/repertoires/{id}/graph_get'];
-        yield ['POST', '/api/repertoires/'.self::UUID.'/moves', 'repertoire_move_add'];
         yield ['POST', '/api/repertoires/'.self::UUID.'/lines', 'repertoire_line_save'];
         yield ['POST', '/api/repertoires/'.self::UUID.'/moves/'.self::MOVE.'/replace', 'repertoire_move_replace'];
         yield ['POST', '/api/repertoires/'.self::UUID.'/moves/'.self::MOVE.'/promote', 'repertoire_move_promote'];
@@ -76,7 +75,6 @@ final class RoutingTest extends RepertoireWebTestCase
 
         self::assertSame(404, $this->api('GET', '/api/repertoires/not-a-uuid', $user)->getStatusCode());
         self::assertSame(404, $this->api('GET', '/api/repertoires/not-a-uuid/graph', $user)->getStatusCode());
-        self::assertSame(404, $this->api('POST', '/api/repertoires/not-a-uuid/moves', $user, [])->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/repertoires/not-a-uuid/lines', $user, [])->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/repertoires/'.self::UUID.'/moves/nope/delete', $user, [])->getStatusCode());
         self::assertSame(404, $this->api('GET', '/api/repertoires/'.self::UUID.'/change', $user)->getStatusCode());

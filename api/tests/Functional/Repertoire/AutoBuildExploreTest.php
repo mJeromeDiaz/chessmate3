@@ -163,9 +163,7 @@ final class AutoBuildExploreTest extends RepertoireWebTestCase
         self::assertSame(422, $this->api('POST', '/api/repertoires/'.$repertoireId.'/pending/'.$c5['id'].'/answer', $alice, ['uci' => 'e1e8'])->getStatusCode());
         $afterE4 = $this->positionId($alice, $repertoireId, self::fen('e2e4'));
         /** @var ChangeJson $reply */
-        $reply = $this->json($this->api('POST', '/api/repertoires/'.$repertoireId.'/moves', $alice, ['fromPositionId' => $afterE4, 'uci' => 'c7c5']));
-        $afterC5 = $this->positionId($alice, $repertoireId, self::fen('e2e4 c7c5'));
-        self::assertSame(200, $this->api('POST', '/api/repertoires/'.$repertoireId.'/moves', $alice, ['fromPositionId' => $afterC5, 'uci' => 'b1c3'])->getStatusCode());
+        $reply = $this->json($this->api('POST', '/api/repertoires/'.$repertoireId.'/lines', $alice, ['fromPositionId' => $afterE4, 'ucis' => ['c7c5', 'b1c3']]));
         $refused = $this->api('POST', '/api/repertoires/'.$repertoireId.'/pending/'.$c5['id'].'/answer', $alice, ['uci' => 'g1f3']);
         self::assertSame(409, $refused->getStatusCode());
         self::assertStringContainsString('position_occupied', (string) $refused->getContent());

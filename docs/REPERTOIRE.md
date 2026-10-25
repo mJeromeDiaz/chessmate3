@@ -107,7 +107,8 @@ ambigu, tout autre coup est une erreur. La base le garantit (index unique sur
 `reference_from_position_id`, contrainte `chk_repertoire_move_role` : `reference` ou `reply`).
 
 - Ajouter un second coup de l'utilisateur dans une position est refusé (`PositionOccupiedException`,
-  409 `position_occupied`) : on **remplace** le coup (`replace`), après confirmation dans l'éditeur.
+  409 `position_occupied`) : on **remplace** le coup (`replace`, ou une ligne enregistrée avec
+  `replace`), après confirmation dans l'éditeur.
 - Rien de préparé n'est perdu : un coup remplacé ou supprimé part à la **corbeille** avec tout ce qui
   n'est atteignable que par lui (sa **suite**), restaurable avec ses identifiants.
 - Migration (`Version20260930105948`, 2026-09-30) : dans les répertoires qui avaient des
@@ -166,7 +167,8 @@ Chaque modification tient dans une transaction qui **verrouille d'abord la ligne
 
 | Opération | Effet | Refus |
 |---|---|---|
-| `addMove(position, uci)` | Coup légal depuis une position du répertoire ; la position atteinte est retrouvée par sa FEN normalisée (transposition signalée) ou créée. Rejouer un coup existant ne change rien. | coup illégal, position d'un autre répertoire, position répétée, limites |
+| `addMove(position, uci)` | Coup légal depuis une position du répertoire ; la position atteinte est retrouvée par sa FEN normalisée (transposition signalée) ou créée. Rejouer un coup existant ne change rien. Plus exposé par l'API depuis le brouillon (§ 10) : il sert aux tests. | coup illégal, position d'un autre répertoire, position répétée, limites |
+| ligne (`LineWriter::save(position, coups, replace)`) | Une ligne du brouillon (§ 10) en **une** modification, par le chemin de l'import (`ImportPlanner` puis `import`) : les coups déjà là sont rejoints, une transposition est retrouvée par sa FEN ; là où l'utilisateur a le trait, le coup de la ligne est imposé comme choix. Un autre coup préparé sur le chemin part à la corbeille (raison `replaced`) avec `replace`, sinon refus. Une ligne déjà entière dans le répertoire ne change rien. | coup illégal, position répétée (dans la ligne ou par le graphe), position d'un autre répertoire, `position_occupied` sans `replace`, limites |
 | `replace(coup, uci)` | Un autre coup préparé à la place de celui de l'utilisateur ; l'ancien part à la corbeille avec sa suite (une position que le nouveau coup atteint reste, même si seul l'ancien y menait) | coup adverse, coup illégal, position répétée, limites |
 | `promote(coup)` | En tête parmi les coups de sa position (ligne principale) | — |
 | `annotate(coup, commentaire, NAG)` | Commentaire en **texte brut** (caractères de contrôle retirés, 2 000 caractères au plus, vide = aucun) ; 4 NAG distincts au plus, de 1 à 255, une seule appréciation de coup (1 à 6) | au-delà |
@@ -200,7 +202,7 @@ Chaque modification tient dans une transaction qui **verrouille d'abord la ligne
 
 Une **suite** : un coup et tout ce qui n'est atteignable que par lui, gardés tels quels (lignes des
 positions et des coups, identifiants, annotations, plus la FEN des positions extérieures qu'ils
-touchent). Raisons : `replaced` (éditeur, restauration), `deleted`, `imported` (un import a choisi le
+touchent). Raisons : `replaced` (éditeur, ligne enregistrée, restauration), `deleted`, `imported` (un import a choisi le
 coup du fichier), `migrated`. Pas de limite de durée ni de nombre ; la suppression du répertoire la
 vide.
 
@@ -268,7 +270,7 @@ Les routes d'item ont une contrainte UUID (`RoutingTest` couvre chaque route sœ
 | GET, DELETE | `/repertoires/{id}` | lecture ; suppression définitive (statistiques comprises) |
 | POST | `/repertoires/{id}/rename` | `{name}` |
 | GET | `/repertoires/{id}/graph` | positions, coups, tronçons actifs, version (une requête) |
-| POST | `/repertoires/{id}/moves` | `{fromPositionId, uci, baseVersion?}` |
+| POST | `/repertoires/{id}/lines` | `{fromPositionId, ucis, replace?, baseVersion?}` : une ligne du brouillon (1 à 200 coups), une seule modification (`operation` `import`, `none` si rien de neuf) |
 | POST | `/repertoires/{id}/moves/{moveId}/replace` | `{uci, baseVersion?}` |
 | POST | `/repertoires/{id}/moves/{moveId}/{promote\|delete}` | `{baseVersion?}` |
 | POST | `/repertoires/{id}/moves/{moveId}/annotation` | `{comment, nags, baseVersion?}` |
@@ -304,28 +306,42 @@ Toutes les modifications partagent le limiteur `repertoire_edit` (600 par 10 min
   transposition marquée `⤳` avec un lien vers la ligne rejointe. Navigation par un **chemin** (les
   coups depuis la position initiale) : ← → coup précédent et suivant, ↑ ↓ variante précédente et
   suivante, Début et Fin. Une réponse adverse encore sans réponse est soulignée en orange.
-- **Un seul coup préparé** : jouer un autre coup de l'utilisateur là où un coup est préparé ouvre
-  « Remplacer 4.e3 par 4.Nf3 ? » (ce qui part à la corbeille : nombre de coups, dont préparés), avec
-  « Explorer sans enregistrer ». Le store refuse ce coup avant tout envoi (`PositionOccupiedError`) ;
-  le remplacement n'est pas optimiste (ce qui reste dépend du graphe entier) : l'éditeur va au
-  nouveau coup quand le serveur répond.
-- **Mode Explorer** (interrupteur au-dessus de l'échiquier) : les coups ne sont pas enregistrés. Un
-  coup connu suit le répertoire ; un autre sort du répertoire (« Hors répertoire : 5.Nf3 Nc6 (non
-  enregistré) », ← revient en arrière coup par coup, l'explorateur Lichess et le moteur suivent la
-  position). Choisir un coup dans l'arbre ou quitter le mode efface ces coups.
+- **Brouillon** (`useRepertoireEditor`, `utils/repertoireDraft.js`) : rien n'est enregistré coup par
+  coup. Un coup du répertoire le suit ; tout autre coup ouvre (ou prolonge) un brouillon parti de la
+  position affichée, jamais envoyé. Barre « Brouillon : 3.Bc4 Nf6 » sous l'échiquier, avec
+  **Enregistrer la ligne** et **Abandonner** (confirmé). ← → Début Fin parcourent le brouillon (les
+  coups après le curseur sont estompés) ; un autre coup joué après un retour en arrière remplace la
+  suite. L'explorateur Lichess et le moteur suivent la position affichée ; « Tester cette ligne » est
+  désactivé pendant un brouillon.
+  - **Enregistrer** : toute la ligne part en une modification (`POST …/lines`, une seule annulation),
+    puis l'éditeur va à sa fin. Si la ligne joue un autre coup que le coup préparé quelque part
+    (« Remplacer 3.Bb5 par 3.Bc4 ? », avec ce qui part à la corbeille), elle est envoyée avec
+    `replace` après confirmation. Une ligne refusée reste en brouillon.
+  - **Gardé dans le navigateur** (`localStorage`, clé `dontstayrooky.repertoire.draft.<id>`, par
+    répertoire) : il revient après un rechargement. Il est abandonné, avec un message, quand sa
+    position de départ quitte le répertoire (annulation, rechargement). Choisir un coup dans l'arbre
+    ou une ligne pendant un brouillon demande « Abandonner le brouillon ? ».
+  - Pas d'alerte du navigateur en quittant la page avec un brouillon : il est gardé.
+- **Lignes** (onglet, `RepertoireLines.vue`, `utils/repertoireLines.js`) : une ligne par fin de ligne,
+  du coup initial à une position sans suite ou à une transposition (incluse, marquée ⤳), dans l'ordre
+  de l'arbre ; coups numérotés, ouverture (ECO, nom), nombre de coups préparés, « sans réponse » si
+  elle finit sur un coup adverse. Filtre sur les coups et le nom (casse et accents ignorés, plusieurs
+  mots), liste virtuelle. Un clic montre la fin de la ligne. La corbeille de la ligne supprime ce que
+  seule cette ligne contient : son coup après sa **dernière bifurcation** (le premier coup si c'est
+  la seule ligne), confirmé avec ce qui part, à la corbeille, annulable.
 - **Corbeille** (`repertoire/[id]/trash`, bouton de l'éditeur et menu de la liste) : suites avec leur
   chemin (« 1.e4 e5 2.Nf3 Nc6 3.Bb5 »), raison, taille, date ; Restaurer (aperçu, choix par conflit,
   aperçu redemandé à chaque choix) ; Supprimer définitivement (confirmé).
-- **Store** (`stores/repertoire.js`) : chaque modification s'affiche **tout de suite** puis part au
-  serveur **une à la fois, dans l'ordre**, avec la version sur laquelle elle s'appuie. Coups et
-  positions créés localement portent un identifiant temporaire jusqu'à la réponse (`resolve()` suit la
-  correspondance). Un refus abandonne les modifications en file et **recharge le graphe** : la copie
-  locale ne diverge jamais de ce qui est enregistré. Le coup illégal ou la position répétée sont
-  refusés avant tout envoi.
+- **Store** (`stores/repertoire.js`) : les modifications partent au serveur **une à la fois, dans
+  l'ordre**, avec la version sur laquelle elles s'appuient. Promotion, annotation et suppression
+  s'affichent **tout de suite** ; une ligne enregistrée, un remplacement, une restauration et
+  l'annulation, à la réponse du serveur. Un refus abandonne les modifications en file et **recharge
+  le graphe** : la copie locale ne diverge jamais de ce qui est enregistré. Dans le brouillon, le coup
+  illégal ou la position répétée sont refusés tout de suite.
 - **Page** `repertoire/[id]` : nom de l'ouverture (la dernière position nommée du chemin), bouton
   pour retourner l'échiquier (`F`), « Enregistré », Annuler (`Ctrl+Z`), export PGN ou OpenBook,
   corbeille, statistiques, Tester (« Tester cette ligne » depuis la position affichée, ou tout le
-  répertoire, § 15), onglets Coups, Explorateur, Moteur. Commentaires affichés en texte brut (interpolation, jamais `v-html`).
+  répertoire, § 15), onglets Coups, Lignes, Explorateur, Moteur. Commentaires affichés en texte brut (interpolation, jamais `v-html`).
 
 ## 11. Proxy Lichess (explorateur, évaluation, études)
 
@@ -802,6 +818,15 @@ tronçons non atteints restent `interrupted`). Les réponses déjà données res
   absente, suppression définitive, promotion, commentaires en texte brut, recherche par empreinte,
   suppression d'un répertoire), `SegmentEvolutionTest.php` (OpenBook : prolongement,
   découpage, fusion, réactivation, suppression du premier coup).
+- Brouillon et lignes : `tests/Unit/Repertoire/Graph/LineWriterTest.php`,
+  `tests/Functional/Repertoire/LineApiTest.php` (une modification et une annulation pour toute la
+  ligne, coups rejoints, ligne déjà connue, remplacement seulement avec `replace`, refus) ; Vitest
+  `repertoire-draft.test.js` (suivre le répertoire puis brouillon, curseur et suite remplacée,
+  position répétée, abandon quand le chemin change, brouillon retrouvé ou perdu, conflit),
+  `repertoire-lines.test.js` (lignes, transposition, point de coupe, filtre) ; Playwright
+  `repertoire.spec.js` (ligne enregistrée puis annulée d'un bloc, brouillon parcouru et retrouvé
+  après rechargement, remplacement à l'enregistrement, abandon, onglet Lignes). Les tests HTTP
+  construisent leurs répertoires par `POST …/lines` (`RepertoireWebTestCase::playLine`).
 - Import, export, Lichess : `tests/Unit/Repertoire/Import/{PgnAnalyzerTest, ImportPlannerTest, OpenBookReaderTest}.php`,
   `tests/Functional/Repertoire/{ImportApplierTest, ImportApiTest, StudyImportTest, ExportTest,
   LichessProxyTest, RepertoireApiTest, RoutingTest}.php`, `tests/Unit/DataFixtures/RepertoireFixturesDataTest.php`,

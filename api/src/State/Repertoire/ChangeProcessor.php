@@ -6,7 +6,6 @@ namespace App\State\Repertoire;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
-use App\ApiResource\Repertoire\AddMoveInput;
 use App\ApiResource\Repertoire\AnswerPendingInput;
 use App\ApiResource\Repertoire\AnnotateInput;
 use App\ApiResource\Repertoire\ReplaceMoveInput;
@@ -75,9 +74,6 @@ final class ChangeProcessor implements ProcessorInterface
 
         try {
             $change = match ($operation->getName()) {
-                'repertoire_move_add' => $data instanceof AddMoveInput
-                    ? $this->editor->addMove($user, $id, Uuid::fromString($data->fromPositionId), $data->uci, $data->baseVersion)
-                    : throw new \LogicException('Unexpected input.'),
                 'repertoire_line_save' => $data instanceof SaveLineInput
                     ? $this->lines->save($user, $id, Uuid::fromString($data->fromPositionId), $data->ucis, $data->replace, $data->baseVersion)
                     : throw new \LogicException('Unexpected input.'),

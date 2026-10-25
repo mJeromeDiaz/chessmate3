@@ -55,7 +55,7 @@ final class RepertoireApiTest extends RepertoireWebTestCase
         self::assertSame(404, $this->api('GET', $base.'/graph', $mallory)->getStatusCode());
         self::assertSame(404, $this->api('POST', $base.'/rename', $mallory, ['name' => 'Mine'])->getStatusCode());
         self::assertSame(404, $this->api('DELETE', $base, $mallory)->getStatusCode());
-        self::assertSame(404, $this->api('POST', $base.'/moves', $mallory, ['fromPositionId' => $root, 'uci' => 'd2d4'])->getStatusCode());
+        self::assertSame(404, $this->api('POST', $base.'/lines', $mallory, ['fromPositionId' => $root, 'ucis' => ['d2d4']])->getStatusCode());
         self::assertSame(404, $this->api('POST', $base.'/moves/'.$moveId.'/replace', $mallory, ['uci' => 'd2d4'])->getStatusCode());
         self::assertSame(404, $this->api('GET', $base.'/trash', $mallory)->getStatusCode());
         foreach (['promote', 'delete'] as $action) {
@@ -66,7 +66,7 @@ final class RepertoireApiTest extends RepertoireWebTestCase
 
         // Mallory's own repertoire, with Alice's position or move ids: not found either.
         $own = $this->createRepertoireVia($mallory);
-        self::assertSame(404, $this->api('POST', '/api/repertoires/'.$own['id'].'/moves', $mallory, ['fromPositionId' => $root, 'uci' => 'd2d4'])->getStatusCode());
+        self::assertSame(404, $this->api('POST', '/api/repertoires/'.$own['id'].'/lines', $mallory, ['fromPositionId' => $root, 'ucis' => ['d2d4']])->getStatusCode());
         self::assertSame(404, $this->api('POST', '/api/repertoires/'.$own['id'].'/moves/'.$moveId.'/delete', $mallory, [])->getStatusCode());
         self::assertCount(4, $this->graph($alice, $repertoire['id'])['positions'], 'nothing changed');
     }
@@ -101,29 +101,30 @@ final class RepertoireApiTest extends RepertoireWebTestCase
         $repertoire = $this->createRepertoireVia($alice);
         [$e4] = $this->playLine($alice, $repertoire['id'], ['e2e4']);
 
-        self::assertSame(['add', 1, false, null], [$e4['operation'], $e4['version'], $e4['transposition'], $e4['trashId']]);
+        self::assertSame(['import', 1, false, null], [$e4['operation'], $e4['version'], $e4['transposition'], $e4['trashId']]);
         self::assertCount(1, $e4['positions']);
         self::assertSame('e4', $e4['moves'][0]['san'] ?? null);
         self::assertNotNull($e4['moves'][0]['segmentId'] ?? null);
         self::assertSame($e4['moves'][0]['segmentId'], $e4['segments'][0]['id'] ?? null);
 
         $root = $this->graph($alice, $repertoire['id'])['rootPositionId'];
-        $refused = $this->api('POST', '/api/repertoires/'.$repertoire['id'].'/moves', $alice, ['fromPositionId' => $root, 'uci' => 'd2d4']);
+        $refused = $this->api('POST', '/api/repertoires/'.$repertoire['id'].'/lines', $alice, ['fromPositionId' => $root, 'ucis' => ['d2d4']]);
         self::assertSame(409, $refused->getStatusCode(), 'one prepared move per position: replace it');
         self::assertSame('position_occupied', $this->json($refused)['detail'] ?? null);
     }
 
-    public function testATranspositionIsReported(): void
+    public function testATranspositionJoinsThePositionAlreadyThere(): void
     {
         $alice = $this->createUser('alice@example.com');
         $repertoire = $this->createRepertoireVia($alice, 'Noirs', 'black');
         $this->playLine($alice, $repertoire['id'], ['d2d4', 'g8f6', 'c2c4', 'e7e6', 'g1f3', 'd7d5']);
         $changes = $this->playLine($alice, $repertoire['id'], ['d2d4', 'g8f6', 'g1f3', 'e7e6', 'c2c4']);
 
-        $last = end($changes);
-        self::assertNotFalse($last);
-        self::assertTrue($last['transposition']);
-        self::assertCount(9, $this->graph($alice, $repertoire['id'])['positions']);
+        $lastId = $changes[4]['moveId'];
+        $graph = $this->graph($alice, $repertoire['id']);
+        self::assertCount(9, $graph['positions']);
+        $last = array_values(array_filter($graph['moves'], static fn (array $move): bool => $move['id'] === $lastId))[0];
+        self::assertSame(['c4', false], [$last['san'], $last['canonical']], '3.c4 joins 1.d4 Nf6 2.c4 e6 3.Nf3');
     }
 
     public function testRefusedChanges(): void
@@ -133,15 +134,15 @@ final class RepertoireApiTest extends RepertoireWebTestCase
         $base = '/api/repertoires/'.$repertoire['id'];
         $root = $this->graph($alice, $repertoire['id'])['rootPositionId'];
 
-        self::assertSame(422, $this->api('POST', $base.'/moves', $alice, ['fromPositionId' => $root, 'uci' => 'e2e5'])->getStatusCode(), 'illegal');
-        self::assertSame(422, $this->api('POST', $base.'/moves', $alice, ['fromPositionId' => $root, 'uci' => 'castle'])->getStatusCode(), 'not UCI');
-        self::assertSame(422, $this->api('POST', $base.'/moves', $alice, ['fromPositionId' => 'x', 'uci' => 'e2e4'])->getStatusCode());
+        self::assertSame(422, $this->api('POST', $base.'/lines', $alice, ['fromPositionId' => $root, 'ucis' => ['e2e5']])->getStatusCode(), 'illegal');
+        self::assertSame(422, $this->api('POST', $base.'/lines', $alice, ['fromPositionId' => $root, 'ucis' => ['castle']])->getStatusCode(), 'not UCI');
+        self::assertSame(422, $this->api('POST', $base.'/lines', $alice, ['fromPositionId' => 'x', 'ucis' => ['e2e4']])->getStatusCode());
         self::assertSame(409, $this->api('POST', $base.'/undo', $alice, [])->getStatusCode(), 'nothing to undo');
 
         [$e4] = $this->playLine($alice, $repertoire['id'], ['e2e4']);
-        self::assertSame(409, $this->api('POST', $base.'/moves', $alice, ['fromPositionId' => $e4['moves'][0]['to'], 'uci' => 'e7e5', 'baseVersion' => 0])->getStatusCode(), 'stale version');
+        self::assertSame(409, $this->api('POST', $base.'/lines', $alice, ['fromPositionId' => $e4['moves'][0]['to'], 'ucis' => ['e7e5'], 'baseVersion' => 0])->getStatusCode(), 'stale version');
         self::assertSame(422, $this->api('POST', $base.'/moves/'.$e4['moveId'].'/replace', $alice, ['uci' => 'e2e5'])->getStatusCode(), 'illegal replacement');
-        $e5 = $this->change($alice, $base.'/moves', ['fromPositionId' => $e4['moves'][0]['to'], 'uci' => 'e7e5']);
+        [, $e5] = $this->playLine($alice, $repertoire['id'], ['e2e4', 'e7e5']);
         self::assertSame(422, $this->api('POST', $base.'/moves/'.$e5['moveId'].'/replace', $alice, ['uci' => 'c7c5'])->getStatusCode(), 'a reply is not replaced');
 
         // 1.Nf3 Nf6 2.Ng1 Ng8 would lead back to the initial position.
@@ -150,7 +151,7 @@ final class RepertoireApiTest extends RepertoireWebTestCase
         $this->playLine($alice, $other['id'], ['g1f3', 'g8f6', 'f3g1']);
         $graph = $this->graph($alice, $other['id']);
         $ng1 = array_values(array_filter($graph['moves'], static fn (array $move): bool => 'f3g1' === $move['uci']))[0];
-        self::assertSame(422, $this->api('POST', $base.'/moves', $alice, ['fromPositionId' => $ng1['to'], 'uci' => 'f6g8'])->getStatusCode(), 'repeated position');
+        self::assertSame(422, $this->api('POST', $base.'/lines', $alice, ['fromPositionId' => $ng1['to'], 'ucis' => ['f6g8']])->getStatusCode(), 'repeated position');
     }
 
     public function testAnnotatePromoteDeleteAndUndo(): void
@@ -255,7 +256,7 @@ final class RepertoireApiTest extends RepertoireWebTestCase
         $limiter = self::getContainer()->get('limiter.repertoire_edit');
         $limiter->create($alice->getId()->toRfc4122())->consume(600);
 
-        self::assertSame(429, $this->api('POST', '/api/repertoires/'.$repertoire['id'].'/moves', $alice, ['fromPositionId' => $root, 'uci' => 'e2e4'])->getStatusCode());
+        self::assertSame(429, $this->api('POST', '/api/repertoires/'.$repertoire['id'].'/lines', $alice, ['fromPositionId' => $root, 'ucis' => ['e2e4']])->getStatusCode());
     }
 
     public function testEndpointsRequireAuthentication(): void

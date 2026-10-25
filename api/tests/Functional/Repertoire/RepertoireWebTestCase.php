@@ -142,7 +142,9 @@ abstract class RepertoireWebTestCase extends WebTestCase
     }
 
     /**
-     * Plays UCI moves from the initial position through the API.
+     * Plays UCI moves from the initial position through the API, one saved line of one move each
+     * (one change per new move). The helper fills each change's moveId with the move played (a
+     * saved line answers none).
      *
      * @param list<string> $moves
      *
@@ -153,11 +155,14 @@ abstract class RepertoireWebTestCase extends WebTestCase
         $position = $this->graph($user, $repertoireId)['rootPositionId'];
         $changes = [];
         foreach ($moves as $uci) {
-            $change = $this->change($user, '/api/repertoires/'.$repertoireId.'/moves', ['fromPositionId' => $position, 'uci' => $uci]);
-            $played = array_values(array_filter($change['moves'], static fn (array $move): bool => $move['id'] === $change['moveId']))[0] ?? null;
+            $change = $this->change($user, '/api/repertoires/'.$repertoireId.'/lines', ['fromPositionId' => $position, 'ucis' => [$uci]]);
+            $from = $position;
+            $isPlayed = static fn (array $move): bool => $move['from'] === $from && $move['uci'] === $uci;
+            $played = array_values(array_filter($change['moves'], $isPlayed))[0] ?? null;
             if (null === $played) {
-                $played = array_values(array_filter($this->graph($user, $repertoireId)['moves'], static fn (array $move): bool => $move['id'] === $change['moveId']))[0];
+                $played = array_values(array_filter($this->graph($user, $repertoireId)['moves'], $isPlayed))[0];
             }
+            $change['moveId'] = $played['id'];
             $position = $played['to'];
             $changes[] = $change;
         }

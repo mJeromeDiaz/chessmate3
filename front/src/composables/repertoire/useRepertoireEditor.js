@@ -24,8 +24,7 @@ import { emptyDraft, loadDraft, storeDraft } from '@/utils/repertoireDraft'
  * the board shows (position, last move, known continuations, annotation), the opening name, and
  * playing a move on the board.
  *
- * The path may hold temporary ids of moves not saved yet: it is read through the store's
- * mapping, cut where a move no longer exists (deletion, undo, reload).
+ * The path is cut where a move no longer exists (deletion, undo, reload).
  *
  * The draft (docs/REPERTOIRE.md, "Brouillon"): a move of the repertoire follows it; any other one
  * starts a line drafted from the path's position, never sent until the page saves it. The board
@@ -51,7 +50,7 @@ export function useRepertoireEditor(store) {
   const path = computed({
     get: () =>
       store.graph
-        ? validPrefix(store.graph, rawPath.value.map(store.resolve))
+        ? validPrefix(store.graph, rawPath.value)
         : [],
     set: value => {
       rawPath.value = value
