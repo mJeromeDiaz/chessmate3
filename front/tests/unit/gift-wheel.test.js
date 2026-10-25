@@ -18,7 +18,7 @@ import {
  * @param {number} rotation
  */
 const under = rotation =>
-  Math.floor((((360 - (rotation % 360)) % 360) + 360) % 360 / SEGMENT_DEG) %
+  Math.floor(((((360 - (rotation % 360)) % 360) + 360) % 360) / SEGMENT_DEG) %
   SEGMENTS.length
 
 describe('the gift wheel (docs/SHOP.md, § 4 ter)', () => {
@@ -33,9 +33,17 @@ describe('the gift wheel (docs/SHOP.md, § 4 ter)', () => {
       'c5',
       'c300'
     ])
-    expect(PRIZE_CROWNS).toEqual({ c5: 5, c30: 30, c300: 300, gift: 0, lose: 0 })
+    expect(PRIZE_CROWNS).toEqual({
+      c5: 5,
+      c30: 30,
+      c300: 300,
+      gift: 0,
+      lose: 0
+    })
     expect(under(REST_ROTATION)).toBe(0)
-    expect(wheelGradient()).toMatch(/^conic-gradient\(#221D30 0deg 45deg,#0B0910 45deg 90deg,/)
+    expect(wheelGradient()).toMatch(
+      /^conic-gradient\(#221D30 0deg 45deg,#0B0910 45deg 90deg,/
+    )
   })
 
   it('stops on a segment of the prize the server drew', () => {
@@ -75,7 +83,9 @@ describe('the gift wheel (docs/SHOP.md, § 4 ter)', () => {
   })
 
   it('counts up quicker for the jackpot', () => {
-    expect([countUpMs(5), countUpMs(30), countUpMs(300)]).toEqual([2000, 1800, 1400])
+    expect([countUpMs(5), countUpMs(30), countUpMs(300)]).toEqual([
+      2000, 1800, 1400
+    ])
   })
 
   it('titles each stage', () => {
@@ -88,7 +98,9 @@ describe('the gift wheel (docs/SHOP.md, § 4 ter)', () => {
       'Encore !',
       'Plus que 2 coups.'
     ])
-    expect(wheelHead('chests', { picked: 1, hits: 2 })[1]).toBe('Un dernier coup !')
+    expect(wheelHead('chests', { picked: 1, hits: 2 })[1]).toBe(
+      'Un dernier coup !'
+    )
     expect(wheelHead('chests', { picked: 1, hits: 3, open: true })).toEqual([
       'Il s’ouvre !',
       ''

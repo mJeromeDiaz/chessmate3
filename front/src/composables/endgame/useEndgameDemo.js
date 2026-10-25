@@ -85,9 +85,7 @@ export function useEndgameDemo({
       if (mine !== generation) return
       const game = gameFrom(position)
       const isMine = game.turn() === side
-      const uci = answer.known
-        ? demoMove(answer, isMine, current.result)
-        : null
+      const uci = answer.known ? demoMove(answer, isMine, current.result) : null
       const move = uci ? playUci(game, uci) : null
       if (!move || !uci) {
         status.value = moves.value.length ? 'done' : 'unavailable'

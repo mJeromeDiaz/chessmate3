@@ -84,6 +84,10 @@ final class XpRules
     public const CALCULATION_RIGHT = 4;
     public const CALCULATION_WRONG = 1;
 
+    /** Brillant ou Blunder (docs/BRILLIANCY.md): the right answer, or a wrong one. */
+    public const BRILLIANCY_RIGHT = 4;
+    public const BRILLIANCY_WRONG = 1;
+
     /**
      * Endgames (docs/ENDGAMES.md): a position won or held, by the opponent's strength (Maia under
      * ENDGAME_STRONG_ELO, Maia from it, the tablebase's best defence); a position failed.
@@ -143,6 +147,7 @@ final class XpRules
             // The Métronome's lines: only the boss's reward (docs/MIND_MAP.md, § 5 bis).
             ExerciseType::Calculation => true === ($metadata['boss'] ?? null) ? 0 : ($success ? self::CALCULATION_RIGHT : self::CALCULATION_WRONG),
             ExerciseType::Endgame => $success ? self::endgame(\is_int($metadata['opponentElo'] ?? null) ? $metadata['opponentElo'] : null) : self::ENDGAME_FAILED,
+            ExerciseType::Brilliancy => $success ? self::BRILLIANCY_RIGHT : self::BRILLIANCY_WRONG,
         };
     }
 
@@ -222,6 +227,7 @@ final class XpRules
             ExerciseType::Vision => Module::Vision,
             ExerciseType::Calculation => Module::Calculation,
             ExerciseType::Endgame => Module::Endgames,
+            ExerciseType::Brilliancy => Module::Brilliancy,
         };
     }
 

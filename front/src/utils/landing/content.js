@@ -198,11 +198,7 @@ function configured(id, values) {
  * An example session ("Ta séance"): catalogue modules with real settings, then the length of each.
  */
 export const EXAMPLE_PROGRAM = [
-  [
-    'coordonnees',
-    { mode: 'find', orientation: 'black' },
-    { duree: 2 }
-  ],
+  ['coordonnees', { mode: 'find', orientation: 'black' }, { duree: 2 }],
   ['puzzles', { themes: ['fork', 'pin'] }, { duree: 20 }],
   ['evaluation', { elo: 1700, couleur: 'white' }, { duree: 5 }],
   ['finales', { mode: 'review', themes: ['rooks'] }, { duree: 15 }]

@@ -105,6 +105,8 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['endgame_attempt', 'lesson_key'],
             ['endgame_attempt', 'fen'],
             ['endgame_attempt', 'best_move'],
+            ['brilliancy_attempt', 'fen'],
+            ['brilliancy_attempt', 'move'],
         ] as [$table, $column]) {
             yield "$table.$column" => [$table, $column];
         }

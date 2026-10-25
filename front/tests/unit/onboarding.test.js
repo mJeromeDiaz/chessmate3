@@ -276,9 +276,7 @@ describe('guided tour', () => {
       '2 badges'
     ])
     expect(tourStepFacts(step('2-3-hidden'))).toHaveLength(1)
-    expect(poseOf('map', { level: null, goal: null })).toBe(
-      'albert-v2-pointer'
-    )
+    expect(poseOf('map', { level: null, goal: null })).toBe('albert-v2-pointer')
   })
 })
 

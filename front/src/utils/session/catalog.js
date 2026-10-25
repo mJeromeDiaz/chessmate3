@@ -12,7 +12,7 @@ import { GENERAL, RAMPS, topicLabel } from '@/utils/puzzleStreak'
  * Field types beyond the generic ones: `themes` (puzzle theme keys, picked in a second panel),
  * `repertoire` (ids of the user's repertoires, at least one) and `lightSet` (the user's Woodpecker light
  * set: shown, not chosen, as there is at most one; no value) and `durationChoice` (the length of a
- * module whose runs last one of a few lengths only, the coordinates series, the evaluation and the puzzle rush: picked among the API's
+ * module whose runs last one of a few lengths only, the coordinates series, the evaluation, « Brillant ou Blunder » and the puzzle rush: picked among the API's
  * lengths in `context.durationChoices`, its default from there too) and `streakTopic` (a puzzle
  * streak's topic, docs/PUZZLE_STREAK.md: its key, picked among `context.streakRules` and
  * `context.streakOpenings`).
@@ -397,6 +397,24 @@ export const MODULES = [
     ]
   }),
   defineModule({
+    id: 'brillant',
+    ...byProf('albert-stein'),
+    glyph: glyph('♛'),
+    available: true,
+    bg: '#1BC5B4',
+    ink: '#1B1530',
+    soft: '#DDF7F4',
+    deep: '#0E9C8E',
+    accentInk: '#0A7469',
+    fields: [
+      field(
+        { key: 'duree', type: 'durationChoice', default: 0 },
+        { label: 'fields.duration', hint: 'hints.brilliancyDuration' }
+      ),
+      notes()
+    ]
+  }),
+  defineModule({
     id: 'woodpecker',
     ...byProf('albert-stein'),
     glyph: glyph('♝'),
@@ -753,7 +771,7 @@ export function sessionMinutes(items) {
  *   one of them (its `set` value: the set id; null: the light set)
  * @property {(key: string) => string} themeLabel
  * @property {Record<string, {minutes: number[], default: number}>} durationChoices the lengths a
- *   module's runs may last and the one offered first (catalogue id: the coordinates, the evaluation, the rush), from the API
+ *   module's runs may last and the one offered first (catalogue id: the coordinates, the evaluation, « Brillant ou Blunder », the rush), from the API
  * @property {import('@/utils/puzzleStreak').StreakRules|null} [streakRules] the puzzle streak's rules
  * @property {import('@/utils/puzzleStreak').StreakOpenings|null} [streakOpenings] the openings a streak can draw from
  */
@@ -906,6 +924,7 @@ export const API_MODULES = {
   coordonnees: 'coordinates',
   aveugle: 'blindfold',
   evaluation: 'evaluation',
+  brillant: 'brilliancy',
   streak: 'puzzle_streak',
   rush: 'puzzle_rush',
   reconstitution: 'blindfold_recall',

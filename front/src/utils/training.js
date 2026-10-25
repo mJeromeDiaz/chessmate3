@@ -25,6 +25,7 @@ const UNAVAILABLE = [
   'puzzles',
   'blindfold',
   'evaluation',
+  'brilliancy',
   'puzzle_streak',
   'parcours_puzzles',
   'puzzle_rush',
@@ -41,6 +42,7 @@ const BACK_MODULES = [
   'coordinates',
   'blindfold',
   'evaluation',
+  'brilliancy',
   'puzzle_streak',
   'parcours_puzzles',
   'puzzle_rush',
@@ -106,6 +108,7 @@ export function subjectPath(run) {
   if (run.subjectType === 'coordinates_player') return '/coordinates'
   if (run.subjectType === 'blindfold_player') return '/blindfold'
   if (run.subjectType === 'evaluation_player') return '/evaluation'
+  if (run.subjectType === 'brilliancy_player') return '/brillant-ou-blunder'
   if (run.subjectType === 'puzzle_streak_player') return '/streak'
   if (run.subjectType === 'parcours_player') return '/defis'
   if (run.subjectType === 'puzzle_rush_player') return '/puzzle'

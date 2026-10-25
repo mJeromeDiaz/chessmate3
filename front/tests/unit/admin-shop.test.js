@@ -170,7 +170,13 @@ describe('the gift wheel odds (docs/SHOP.md, § 4 ter)', () => {
       gift: 0,
       lose: 0
     })
-    expect(wheelChances({})).toEqual({ c5: 0, c30: 0, c300: 0, gift: 0, lose: 0 })
+    expect(wheelChances({})).toEqual({
+      c5: 0,
+      c30: 0,
+      c300: 0,
+      gift: 0,
+      lose: 0
+    })
   })
 })
 

@@ -127,9 +127,10 @@ export function wheelChances(weights) {
  */
 export function wheelAverage(weights) {
   const chances = wheelChances(weights)
-  return Math.round(
-    (chances.c5 * 5 + chances.c30 * 30 + chances.c300 * 300) / 10
-  ) / 10
+  return (
+    Math.round((chances.c5 * 5 + chances.c30 * 30 + chances.c300 * 300) / 10) /
+    10
+  )
 }
 
 /**

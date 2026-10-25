@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import {
+  brilliancyApi,
   coordinatesApi,
   endgameApi,
   evaluationApi,
@@ -170,7 +171,7 @@ export const useSessionStore = defineStore('session', () => {
 
   /**
    * Fetches what the modules play on: the user's repertoires, their ongoing light set, the
-   * puzzle themes and the lengths of a coordinates series, of an evaluation run and of a puzzle
+   * puzzle themes and the lengths of a coordinates series, of an evaluation run, of a « Brillant ou Blunder » run and of a puzzle
    * rush (the program's items follow them). Fetched again on each call (the user may have created
    * one meanwhile).
    */
@@ -188,16 +189,25 @@ export const useSessionStore = defineStore('session', () => {
       })
       .catch(() => {})
     try {
-      const [repertoireList, sets, , coordinates, evaluation, rush, endgames] =
-        await Promise.all([
-          repertoireApi.list(),
-          woodpeckerApi.sets(),
-          puzzles.fetchThemes(),
-          coordinatesApi.overview(),
-          evaluationApi.overview(),
-          puzzleRushApi.overview(),
-          endgameApi.overview()
-        ])
+      const [
+        repertoireList,
+        sets,
+        ,
+        coordinates,
+        evaluation,
+        rush,
+        endgames,
+        brilliancy
+      ] = await Promise.all([
+        repertoireApi.list(),
+        woodpeckerApi.sets(),
+        puzzles.fetchThemes(),
+        coordinatesApi.overview(),
+        evaluationApi.overview(),
+        puzzleRushApi.overview(),
+        endgameApi.overview(),
+        brilliancyApi.overview()
+      ])
       durationChoices.value = {
         coordonnees: {
           minutes: coordinates.rules.seriesMinutes,
@@ -206,6 +216,10 @@ export const useSessionStore = defineStore('session', () => {
         evaluation: {
           minutes: evaluation.rules.runMinutes,
           default: evaluation.rules.defaultMinutes
+        },
+        brillant: {
+          minutes: brilliancy.rules.runMinutes,
+          default: brilliancy.rules.defaultMinutes
         },
         rush: rushMinutes(rush.rules),
         finales: {

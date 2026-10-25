@@ -34,6 +34,7 @@ import {
 } from '@/utils/format'
 import { LEVELS } from '@/utils/blindfold'
 import { recallLines } from '@/utils/blindfoldRecall'
+import { recapLines as brilliancyLines } from '@/utils/brilliancy'
 import { rushLines } from '@/utils/puzzleRush'
 import { RAMPS, streakText, topicLabel, wonBadges } from '@/utils/puzzleStreak'
 import {
@@ -96,7 +97,7 @@ const stats = computed(() => {
   ]
 })
 
-/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles, position evaluation, puzzle streak, puzzle rush, position recall). */
+/** Module-specific lines (Woodpecker, the repertoire test, puzzles, free study, coordinates, blindfold puzzles, position evaluation, « Brillant ou Blunder », puzzle streak, puzzle rush, position recall). */
 const details = computed(() => {
   const m = summary.value?.metrics ?? {}
   const lines = []
@@ -214,11 +215,23 @@ const details = computed(() => {
       t('endgame.recap.results', {
         won: m.won ?? 0,
         held: m.held ?? 0,
-        failed: (m.spoiled ?? 0) + (m.overtime ?? 0) + (m.resigned ?? 0) + (m.timeout ?? 0)
+        failed:
+          (m.spoiled ?? 0) +
+          (m.overtime ?? 0) +
+          (m.resigned ?? 0) +
+          (m.timeout ?? 0)
       })
     )
     if (m.engineJudged)
       lines.push(t('endgame.recap.engineJudged', { n: m.engineJudged }))
+    return lines
+  }
+  if (props.run.module === 'brilliancy') {
+    lines.push(...brilliancyLines(m))
+    if (m.averageMs)
+      lines.push(
+        t('training.recap.perPosition', { time: formatDuration(m.averageMs) })
+      )
     return lines
   }
   if (props.run.module === 'evaluation') {

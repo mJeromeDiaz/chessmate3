@@ -213,6 +213,13 @@ final readonly class DataExport
                 $id,
                 ['moves'],
             ),
+            // The sacrifices judged in « Brillant ou Blunder » (docs/BRILLIANCY.md).
+            'brilliancyAttempts' => $this->withLichessIds($this->rows(
+                'SELECT BIN_TO_UUID(id) AS id, BIN_TO_UUID(run_id) AS training_run_id, puzzle_id AS puzzle, puzzle_rating, kind, fen, move, status, answer,
+                        served_at, submitted_at, duration_ms
+                   FROM brilliancy_attempt WHERE user_id = ? ORDER BY served_at',
+                $id,
+            )),
             // The mind map paths (docs/MIND_MAP.md): progress by step, runs played for a step, chests.
             'mindMapProgress' => $this->rows(
                 'SELECT capacity, step, passes, completed_at, skipped_at, updated_at FROM mind_map_progress WHERE user_id = ? ORDER BY updated_at, step',

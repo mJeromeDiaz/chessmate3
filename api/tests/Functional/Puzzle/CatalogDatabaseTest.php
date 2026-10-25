@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Puzzle;
 
 use App\Doctrine\Mapping\SeparateDatabaseMappingPass;
+use App\Entity\Catalog\BrilliancyPosition;
 use App\Entity\Catalog\Puzzle;
 use App\Entity\Catalog\Theme;
 use App\Entity\Catalog\ThemeMembership;
@@ -22,7 +23,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  */
 final class CatalogDatabaseTest extends KernelTestCase
 {
-    private const CATALOG_CLASSES = [Puzzle::class, Theme::class, ThemeMembership::class];
+    private const CATALOG_CLASSES = [BrilliancyPosition::class, Puzzle::class, Theme::class, ThemeMembership::class];
 
     private EntityManagerInterface $default;
     private EntityManagerInterface $catalog;

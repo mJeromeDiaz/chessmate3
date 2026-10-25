@@ -39,6 +39,8 @@ enum Module: string
     case Calculation = 'calculation';
     /** Endgames: elementary endgames won or held against Maia or the tablebase, judged by the tablebase (docs/ENDGAMES.md). */
     case Endgames = 'endgames';
+    /** Brillant ou Blunder: a sacrifice shown, brilliant or a blunder? (docs/BRILLIANCY.md). */
+    case Brilliancy = 'brilliancy';
 
     /**
      * @return list<string>

@@ -31,9 +31,9 @@ test('landing: a visitor sees the landing page with its own header', async ({
 
   // The paths: the six capacities, those without a path yet tagged "Bientôt"; the calculation
   // path's first chapter, up to the Roi des cendres.
-  await expect(page.getByTestId('landing-capacity-calculation')).not.toContainText(
-    'Bientôt'
-  )
+  await expect(
+    page.getByTestId('landing-capacity-calculation')
+  ).not.toContainText('Bientôt')
   await expect(page.getByTestId('landing-capacity-strategy')).toContainText(
     'Bientôt'
   )

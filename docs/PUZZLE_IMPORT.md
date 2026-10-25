@@ -122,7 +122,7 @@ Mesures sur la machine de dev (export de 2026 en 1 016 fichiers, 718 Mo ; MySQL 
 
 ## 5. Après l'import
 
-Avec `--rebuild`, rien à faire. Sinon :
+Avec `--rebuild`, rien d'autre à faire que l'index de Brillant ou Blunder (ci-dessous). Sinon :
 
 ```bash
 # Les thèmes d'abord (la reconstruction associe les clés aux id de thèmes), puis l'index de
@@ -136,9 +136,16 @@ place** (docs/PUZZLES.md, § 2) : pendant une à deux minutes, les puzzles **par
 « catalogue en maintenance », les puzzles sans thème restent servis. À lancer après chaque import, et
 après un changement des seuils de qualité.
 
+Puis l'index de Brillant ou Blunder, qui lit `selectable` (docs/BRILLIANCY.md, § 2 : une
+trentaine de secondes, à relancer s'il est interrompu) :
+
+```bash
+bin/console app:brilliancy:rebuild
+```
+
 ```sql
 -- Statistiques à jour pour l'optimiseur.
-ANALYZE TABLE puzzle, puzzle_theme_membership, puzzle_theme;
+ANALYZE TABLE puzzle, puzzle_theme_membership, puzzle_theme, brilliancy_position;
 ```
 
 Pour de bonnes performances sur un serveur que l'on contrôle, donner assez de mémoire à InnoDB pour

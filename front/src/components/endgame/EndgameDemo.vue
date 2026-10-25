@@ -2,7 +2,9 @@
   <q-card class="endgame-demo" data-testid="endgame-demo">
     <div class="endgame-demo__head">
       <div class="endgame-demo__titles">
-        <span class="endgame-demo__kicker">{{ $t('endgame.demo.kicker') }}</span>
+        <span class="endgame-demo__kicker">{{
+          $t('endgame.demo.kicker')
+        }}</span>
         <span class="endgame-demo__title">{{ lessonTitle(lessonKey) }}</span>
       </div>
       <q-btn
@@ -77,11 +79,7 @@
     </div>
 
     <ol class="endgame-demo__moves" data-testid="endgame-demo-moves">
-      <li
-        v-for="entry in entries"
-        :key="entry.ply"
-        class="endgame-demo__move"
-      >
+      <li v-for="entry in entries" :key="entry.ply" class="endgame-demo__move">
         <span v-if="entry.number" class="endgame-demo__number">{{
           entry.number
         }}</span>

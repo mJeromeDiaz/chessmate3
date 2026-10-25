@@ -504,6 +504,37 @@
       </template>
     </EvaluationPlayer>
 
+    <BrilliancyPlayer
+      v-else-if="bobItem && (runner.phase.value === 'running' || holdEnd)"
+      ref="bobPlayer"
+      :item="bobItem"
+      :result="bobResult"
+      :xp="runner.xp.value"
+      :actions="evaluationActions"
+      @resolve="onBrilliancyResolve"
+    >
+      <template #header>
+        <RunHeader
+          :remaining-ms="runner.remainingMs.value"
+          :budget-seconds="runner.run.value?.budgetSeconds ?? 1"
+          @stop="confirmStop"
+        >
+          <div class="text-subtitle2" data-testid="run-progress">
+            {{
+              $t('training.page.brilliancyProgress', {
+                n: bobItem.data.index,
+                right: bobTally.right,
+                wrong: bobTally.wrong
+              })
+            }}
+          </div>
+        </RunHeader>
+        <q-banner v-if="error" rounded class="bg-negative text-white">{{
+          error
+        }}</q-banner>
+      </template>
+    </BrilliancyPlayer>
+
     <EndgamePlayer
       v-else-if="endgameItem && (runner.phase.value === 'running' || holdEnd)"
       ref="endgamePlayer"
@@ -839,7 +870,7 @@
  * recap at the end. Reloading or coming back before the end resumes the same run and item. The
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
  * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series, blindfold puzzles (docs/BLINDFOLD.md),
- * positions to evaluate (docs/EVALUATION.md), a puzzle streak (docs/PUZZLE_STREAK.md: no free
+ * positions to evaluate (docs/EVALUATION.md), moves to judge (docs/BRILLIANCY.md), a puzzle streak (docs/PUZZLE_STREAK.md: no free
  * help, the store's helps and passes, bought in place when out of stock; its overtime asked in
  * `OvertimeDialog`) or a tier of a parcours (docs/PARCOURS.md: no clock, its count of puzzles or
  * lines; between two tiers, Lizy's banner starts the next one; "Terminer" abandons the parcours)
@@ -865,6 +896,7 @@ import JongleurPlayer from '@/components/mindMap/JongleurPlayer.vue'
 import VisionPlayer from '@/components/vision/VisionPlayer.vue'
 import CalculationPlayer from '@/components/calculation/CalculationPlayer.vue'
 import EvaluationPlayer from '@/components/evaluation/EvaluationPlayer.vue'
+import BrilliancyPlayer from '@/components/brilliancy/BrilliancyPlayer.vue'
 import EndgamePlayer from '@/components/endgame/EndgamePlayer.vue'
 import PuzzlePlayer from '@/components/puzzle/PuzzlePlayer.vue'
 import OvertimeDialog from '@/components/puzzleStreak/OvertimeDialog.vue'
@@ -935,6 +967,7 @@ const STOP_MESSAGES = [
   'coordinates',
   'blindfold',
   'evaluation',
+  'brilliancy',
   'puzzle_streak',
   'puzzle_rush',
   'blindfold_recall',
@@ -1123,6 +1156,32 @@ const evalResult = computed(() =>
     ? runner.result.value.data
     : null
 )
+/**
+ * The move to judge of « Brillant ou Blunder » (docs/BRILLIANCY.md), kept like the evaluated
+ * position once the run closed on it (`holdEnd`, the same « Suivante » / « Voir le résultat »).
+ *
+ * @type {import('vue').Ref<import('@/composables/training/useTimeboxedRun').RunItem|null>}
+ */
+const bobItem = ref(null)
+/** @type {import('vue').Ref<{unlock: () => void}|null>} */
+const bobPlayer = ref(null)
+watch(
+  () => runner.item.value,
+  item => {
+    if (item?.type === 'brilliancy_position') bobItem.value = item
+    else if (item) bobItem.value = null
+  }
+)
+const bobResult = computed(() =>
+  bobItem.value && runner.result.value?.itemId === bobItem.value.id
+    ? runner.result.value.data
+    : null
+)
+/** Right and wrong so far: the verdict's counts once answered, the item's before. */
+const bobTally = computed(() => {
+  const source = bobResult.value ?? bobItem.value?.data ?? {}
+  return { right: source.right ?? 0, wrong: source.wrong ?? 0 }
+})
 const evaluationActions = computed(() => [
   {
     label:
@@ -1954,6 +2013,22 @@ async function onEvaluationResolve(answer) {
   }
 }
 
+/** @param {'brilliant'|'blunder'} choice */
+async function onBrilliancyResolve(choice) {
+  // Held as for the evaluation: the last answer closes the run, its correction stays on screen.
+  holdEnd.value = true
+  try {
+    const result = await runner.submit({ choice })
+    if (result) return
+    holdEnd.value = false
+    bobPlayer.value?.unlock()
+  } catch (e) {
+    holdEnd.value = false
+    error.value = apiErrorMessage(e)
+    bobPlayer.value?.unlock()
+  }
+}
+
 /**
  * @param {string} _outcome
  * @param {{moves: string[], hintLevel: number, solutionShown: boolean}} report
@@ -2193,6 +2268,7 @@ watch(
     chestOpen.value = false
     holdEnd.value = false
     evalItem.value = null
+    bobItem.value = null
     recallItem.value = null
     notationItem.value = null
     jongleurItem.value = null

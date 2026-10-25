@@ -52,7 +52,9 @@ describe('landing content', () => {
           for (const x of value) expect(field.options).toContain(x)
         }
         if (field?.type === 'slider') {
-          expect(value).toBeGreaterThanOrEqual(/** @type {number} */ (field.min))
+          expect(value).toBeGreaterThanOrEqual(
+            /** @type {number} */ (field.min)
+          )
           expect(value).toBeLessThanOrEqual(/** @type {number} */ (field.max))
         }
       }
@@ -124,9 +126,9 @@ describe('landing content', () => {
 
   it('tags the capacities without a path', () => {
     expect(LANDING_CAPACITIES).toHaveLength(6)
-    expect(
-      LANDING_CAPACITIES.filter(c => c.available).map(c => c.key)
-    ).toEqual(expect.arrayContaining(['calculation', 'visualization']))
+    expect(LANDING_CAPACITIES.filter(c => c.available).map(c => c.key)).toEqual(
+      expect.arrayContaining(['calculation', 'visualization'])
+    )
   })
 
   it('shows the three professors facing three bosses', () => {

@@ -1,0 +1,60 @@
+{
+  "page": {
+    "title": "Brilliant or Blunder",
+    "lead": "A move gives material. A brilliant sacrifice that wins, or a blunder the opponent punishes? The positions come from real puzzles, around your level. Answer fast: the run is timed and doesn't change your rating.",
+    "new": "New run",
+    "empty": "No move to judge yet: the index hasn't been built."
+  },
+  "kinds": {
+    "brilliant": "Brilliant",
+    "blunder": "Blunder"
+  },
+  "results": {
+    "none": "No move judged yet.",
+    "played": "{n} move judged | {n} moves judged",
+    "right": "{n} right ({rate}) | {n} right ({rate})",
+    "brilliant": "brilliant: {rate}",
+    "blunder": "blunders: {rate}"
+  },
+  "player": {
+    "plays": {
+      "white": "White plays",
+      "black": "Black plays"
+    },
+    "question": "Brilliant or blunder?",
+    "keys": "Keys B / N (or 1 / 2)",
+    "tipKicker": "Albert",
+    "tip": "This move gives material. Genius or blunder? Trust your first look.",
+    "was": {
+      "brilliant": "It was a brilliant move",
+      "blunder": "It was a blunder"
+    },
+    "explain": {
+      "brilliant": "The puzzle's combination: the material given comes back with interest.",
+      "blunder": "The move gives material for nothing: the line shows how the opponent punishes it."
+    },
+    "previous": "Previous move",
+    "next": "Next move",
+    "replay": "Replay the line",
+    "pause": "Pause",
+    "source": "Lichess puzzle {id} ({rating})"
+  },
+  "feedback": {
+    "kicker": "Albert",
+    "winTitles": ["Well spotted!", "Right!", "You felt it!"],
+    "missTitle": "Missed",
+    "brilliant": "A real sacrifice: the combination wins.",
+    "blunder": "A blunder: the line punishes it.",
+    "brilliantRight": "You saw the genius behind the sacrifice. Look at the combination!",
+    "brilliantWrong": "It wasn't a blunder: look at what the sacrifice brings.",
+    "blunderRight": "Well spotted: this move doesn't hold. Look at the punishment.",
+    "blunderWrong": "Beware of moves that look too good: this one gets punished."
+  },
+  "recap": {
+    "results": "Right: {right} · wrong: {wrong}.",
+    "kinds": "Brilliant: {brilliantRight} of {brilliantPlayed} · blunders: {blunderRight} of {blunderPlayed}."
+  },
+  "review": {
+    "title": "{move} · {kind}"
+  }
+}

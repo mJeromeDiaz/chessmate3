@@ -68,9 +68,7 @@ test('the page: three chapters, the advised step, no opening chapter without a r
   await expect(page.getByTestId('challenge-path-totals')).toContainText(
     '1 / 15 étapes maîtrisées · 0 / 3 boss battus'
   )
-  await expect(
-    page.getByTestId('challenge-path-no-opening')
-  ).toBeVisible()
+  await expect(page.getByTestId('challenge-path-no-opening')).toBeVisible()
 
   // Mate in 1 mastered (seeded): the advised step is mate in 2.
   await expect(page.getByTestId('path-step-mates-1')).toHaveAttribute(
@@ -151,9 +149,7 @@ test('a pass of a tier: no clock, its zones, a miss goes on, "Terminer" ends it 
     'data-outcome',
     'failed'
   )
-  await expect(outcome.getByTestId('mind-outcome-passes')).toContainText(
-    '0'
-  )
+  await expect(outcome.getByTestId('mind-outcome-passes')).toContainText('0')
   await outcome.getByTestId('mind-outcome-back').click()
   await expect(page).toHaveURL(/#\/defis$/)
 })

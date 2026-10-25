@@ -164,11 +164,7 @@
       :confetti="feedback.kind === 'win'"
     />
 
-    <q-dialog
-      v-model="demoOpen"
-      :maximized="$q.screen.lt.sm"
-      @hide="closeDemo"
-    >
+    <q-dialog v-model="demoOpen" :maximized="$q.screen.lt.sm" @hide="closeDemo">
       <EndgameDemo
         :lesson-key="data.lesson"
         :fen="data.fen"
@@ -268,9 +264,7 @@ const decoy = ref(null)
 /** The position being played (its distractions run meanwhile). */
 const playing = computed(
   () =>
-    !props.result &&
-    game.phase.value !== 'over' &&
-    game.phase.value !== 'idle'
+    !props.result && game.phase.value !== 'over' && game.phase.value !== 'idle'
 )
 
 /** A position against the Roi des cendres' clock. */
@@ -407,9 +401,7 @@ watch(
 )
 
 const movable = computed(() =>
-  game.phase.value === 'player' && !game.busy.value
-    ? orientation.value
-    : null
+  game.phase.value === 'player' && !game.busy.value ? orientation.value : null
 )
 
 /** The position missed: back to where the right move was to be played. */

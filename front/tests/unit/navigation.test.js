@@ -20,7 +20,13 @@ describe('FREE_TRAINING_SECTIONS', () => {
       ['Les ouvertures', ['Répertoires']],
       [
         'Milieu de jeu',
-        ['Woodpecker', 'Puzzles', 'Puzzle Rush', 'Puzzle streak']
+        [
+          'Woodpecker',
+          'Puzzles',
+          'Puzzle Rush',
+          'Puzzle streak',
+          'Brillant ou Blunder'
+        ]
       ],
       ['Fin de jeu', ['Finales']],
       [
@@ -34,7 +40,8 @@ describe('FREE_TRAINING_SECTIONS', () => {
         ]
       ]
     ])
-    expect(FREE_TRAINING_LINKS).toHaveLength(11)
+    expect(FREE_TRAINING_LINKS).toHaveLength(12)
+    expect(link('brilliancy').to).toBe('/brillant-ou-blunder')
   })
 
   it('sends the endgames to their free mode, the défis to the card', () => {

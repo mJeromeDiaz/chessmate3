@@ -26,7 +26,19 @@ final class Attacks
      */
     public static function attackers(string $fen, string $square, string $color): array
     {
-        $board = self::board($fen);
+        return self::attackersOn(self::board($fen), $square, $color);
+    }
+
+    /**
+     * The squares of the pieces of $color attacking $square, on a board of {@see self::board()}.
+     *
+     * @param array<string, string> $board
+     * @param 'w'|'b'               $color
+     *
+     * @return list<string> sorted
+     */
+    public static function attackersOn(array $board, string $square, string $color): array
+    {
         [$file, $rank] = self::coordinates($square);
         $found = [];
         $own = static fn (?string $piece, string $type): bool => null !== $piece

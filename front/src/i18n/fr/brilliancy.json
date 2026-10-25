@@ -1,0 +1,60 @@
+{
+  "page": {
+    "title": "Brillant ou Blunder",
+    "lead": "Un coup donne du matériel. Sacrifice brillant qui gagne, ou blunder que l’adversaire punit ? Les positions viennent de vrais puzzles, autour de ton niveau. Réponds vite : la séance est chronométrée et ne change pas ton classement.",
+    "new": "Nouvelle séance",
+    "empty": "Aucun coup à juger pour l’instant : l’index n’est pas encore construit."
+  },
+  "kinds": {
+    "brilliant": "Brillant",
+    "blunder": "Blunder"
+  },
+  "results": {
+    "none": "Aucun coup jugé pour l’instant.",
+    "played": "{n} coup jugé | {n} coups jugés",
+    "right": "{n} juste ({rate}) | {n} justes ({rate})",
+    "brilliant": "brillants : {rate}",
+    "blunder": "blunders : {rate}"
+  },
+  "player": {
+    "plays": {
+      "white": "Les Blancs jouent",
+      "black": "Les Noirs jouent"
+    },
+    "question": "Brillant ou blunder ?",
+    "keys": "Touches B / N (ou 1 / 2)",
+    "tipKicker": "Albert",
+    "tip": "Ce coup donne du matériel. Génie ou gaffe ? Fie-toi à ton premier regard.",
+    "was": {
+      "brilliant": "C’était un coup brillant",
+      "blunder": "C’était un blunder"
+    },
+    "explain": {
+      "brilliant": "La combinaison du puzzle : le matériel donné revient avec les intérêts.",
+      "blunder": "Le coup donne du matériel sans compensation : la suite montre comment l’adversaire le punit."
+    },
+    "previous": "Coup précédent",
+    "next": "Coup suivant",
+    "replay": "Rejouer la ligne",
+    "pause": "Pause",
+    "source": "Puzzle Lichess {id} ({rating})"
+  },
+  "feedback": {
+    "kicker": "Albert",
+    "winTitles": ["Bien vu !", "Exact !", "Tu l’as senti !"],
+    "missTitle": "Raté",
+    "brilliant": "Un vrai sacrifice : la combinaison gagne.",
+    "blunder": "Une gaffe : la suite la punit.",
+    "brilliantRight": "Tu as vu le génie derrière le sacrifice. Regarde la combinaison !",
+    "brilliantWrong": "Ce n’était pas une gaffe : regarde ce que le sacrifice rapporte.",
+    "blunderRight": "Bien vu : ce coup ne tient pas. Regarde la punition.",
+    "blunderWrong": "Méfie-toi des coups trop beaux : celui-ci se fait punir."
+  },
+  "recap": {
+    "results": "Justes : {right} · faux : {wrong}.",
+    "kinds": "Brillants : {brilliantRight} sur {brilliantPlayed} · blunders : {blunderRight} sur {blunderPlayed}."
+  },
+  "review": {
+    "title": "{move} · {kind}"
+  }
+}

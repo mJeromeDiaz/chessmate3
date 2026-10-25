@@ -73,4 +73,9 @@ enum ExerciseType: string
      * tablebase's best defence; the XP depends on it).
      */
     case Endgame = 'endgame';
+    /**
+     * A sacrifice judged in « Brillant ou Blunder » (docs/BRILLIANCY.md), never rated;
+     * `metadata.status` (right, wrong), `metadata.kind` and `metadata.answer` (brilliant, blunder).
+     */
+    case Brilliancy = 'brilliancy';
 }

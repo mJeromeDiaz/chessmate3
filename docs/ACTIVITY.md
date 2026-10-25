@@ -61,7 +61,7 @@ n'en supprime jamais.
 | `PuzzleStreak\Event\RecordBeaten` | un streak bat le record de sa difficulté et de sa thématique ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) | streak, séance, difficulté, thématique, longueur, record précédent |
 | `Training\Event\SessionClosed` | clôture d'une session ([TRAINING.md § 9](TRAINING.md#9-sessions)) : terminée, abandonnée ou expirée (paresseusement) | session, statut, étapes, faites, passées, temps joué, `startedAt` |
 
-`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study`, `coordinates_series`, `blindfold_puzzle`, `position_evaluation`, `streak_puzzle`, `parcours_puzzle`, `puzzle_rush`, `blindfold_recall`, `notation`, `jongleur`, `vision`, `calculation`, `endgame` (extensible).
+`ExerciseType` : `puzzle_rated`, `puzzle_unrated`, `woodpecker_puzzle`, `repertoire_segment`, `free_study`, `coordinates_series`, `blindfold_puzzle`, `position_evaluation`, `streak_puzzle`, `parcours_puzzle`, `puzzle_rush`, `blindfold_recall`, `notation`, `jongleur`, `vision`, `calculation`, `endgame`, `brilliancy` (extensible).
 
 | Source | `type` | `sourceType` |
 |---|---|---|
@@ -81,6 +81,7 @@ n'en supprime jamais.
 | Question du module Vision ([VISION.md](VISION.md)) ; `success` = juste ; `metadata` : `kind`, `ask`, `status`, `puzzleId`, `trainingRunId` | `vision` | `vision_question` |
 | Ligne du module Calcul ([CALCULATION.md](CALCULATION.md)) ; `success` = juste ; `metadata` : `mate`, `status`, `puzzleId`, `trainingRunId`, `lineKind` (`line`, ou le genre du chapitre 3 jugé par le moteur : `reply`, `two_replies`, `defence`, `intermezzo`) | `calculation` | `calculation_attempt` |
 | Position du module Finales ([ENDGAMES.md](ENDGAMES.md)) ; `success` = gagnée ou tenue ; `metadata` : `status` (`won`, `held`, `spoiled`, `overtime`, `resigned`), `lesson`, `family`, `opponentElo` (null : la tablebase), `textbook`, `playerMoves`, `engineJudged`, `trainingRunId` | `endgame` | `endgame_attempt` |
+| Coup jugé de Brillant ou Blunder ([BRILLIANCY.md](BRILLIANCY.md)) ; `success` = juste ; `metadata` : `status`, `kind`, `answer`, `puzzle`, `rating`, `seconds`, `trainingRunId` | `brilliancy` | `brilliancy_attempt` |
 
 `metadata` d'un puzzle Woodpecker : `setId`, `cycle`, `run`, `puzzleId` (Lichess), `mode`
 (`classic`, `light`) et, joué en séance, `trainingRunId`. Un puzzle classé ou rejoué porte aussi

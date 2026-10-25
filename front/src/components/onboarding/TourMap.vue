@@ -134,9 +134,7 @@ function titleOf(step) {
 /** Opens on the step to play next, a little below the top. */
 onMounted(async () => {
   await nextTick()
-  const node = box.value?.querySelector(
-    `[data-key="${SAMPLE_PATH_CURRENT}"]`
-  )
+  const node = box.value?.querySelector(`[data-key="${SAMPLE_PATH_CURRENT}"]`)
   if (box.value && node instanceof HTMLElement)
     box.value.scrollTop = Math.max(0, node.offsetTop - 70)
 })

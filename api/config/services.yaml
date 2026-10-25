@@ -65,6 +65,7 @@ when@test:
         App\Endgame\Tablebase\Tablebase: { autowire: true, public: true }
         App\Endgame\Pool\PositionPool: { autowire: true, public: true }
         App\Endgame\Judge\GameJudge: { autowire: true, public: true }
+        App\Brilliancy\Index\Indexer: { autowire: true, public: true }
         # The daily chest, off unless a test switches it on (its random crystals in exact balances).
         App\Tests\Double\SwitchableStreakReward: { autowire: true }
         App\Gamification\Streak\StreakRewardInterface: '@App\Tests\Double\SwitchableStreakReward'

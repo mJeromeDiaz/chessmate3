@@ -371,7 +371,10 @@ chemin sert donc au premier import et aux mises à jour mensuelles.
 
 - pendant l'import : relancez la même commande ; l'upsert sur l'id Lichess ne crée jamais de doublon ;
 - pendant la reconstruction : `app:deploy:check` signale « selection index incomplete » ; relancez
-  `$PHP bin/console app:puzzle:rebuild-selection`, qui repart de zéro.
+  `$PHP bin/console app:puzzle:rebuild-selection`, qui repart de zéro ;
+- pendant l'index de Brillant ou Blunder (`$PHP bin/console app:brilliancy:rebuild`, à lancer après
+  la reconstruction) : relancez-le ; chaque tranche est remplacée dans sa transaction, l'index reste
+  utilisable entre-temps (docs/BRILLIANCY.md, § 2).
 
 **Chaque mois** : téléchargez le nouvel export, puis refaites les étapes 1 à 4. Les puzzles déjà en
 base gardent leur id, et aucun n'est supprimé (docs/PUZZLE_IMPORT.md, § 6). La base grossit d'environ

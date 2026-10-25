@@ -27,6 +27,11 @@ const api = vi.hoisted(() => ({
       rules: { runMinutes: [2, 5, 10, 15], defaultMinutes: 5 }
     }))
   },
+  brilliancyApi: {
+    overview: vi.fn(async () => ({
+      rules: { runMinutes: [1, 2, 5, 10], defaultMinutes: 2 }
+    }))
+  },
   puzzleRushApi: {
     overview: vi.fn(async () => ({
       rules: { budgets: [120, 180, 300], defaultBudget: 180, errorWeight: 2 },

@@ -34,9 +34,7 @@
           <h3 class="endgame-detail__title" data-testid="boss-name">{{
             title
           }}</h3>
-          <p class="endgame-detail__tagline">{{
-            bossLine(step, 'tagline')
-          }}</p>
+          <p class="endgame-detail__tagline">{{ bossLine(step, 'tagline') }}</p>
         </div>
       </div>
       <h3 v-else class="endgame-detail__title">{{ title }}</h3>
@@ -249,9 +247,7 @@ const lines = computed(
   () => challenges.value && stepPlan(props.step.key).kind === 'lines'
 )
 const boss = computed(() => isBoss(props.step.kind))
-const ashes = computed(
-  () => !challenges.value && props.chapter.key === ASHES
-)
+const ashes = computed(() => !challenges.value && props.chapter.key === ASHES)
 const beaten = computed(() => boss.value && bossBeaten(props.step))
 const mode = computed(() => nextMode(props.step))
 const title = computed(() =>

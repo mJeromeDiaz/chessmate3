@@ -185,10 +185,7 @@ test('the Roi des cendres: 10 positions, 3 lives, a clock; a position given up c
     timeout: ENGINE_TIMEOUT
   })
   await page.getByTestId('endgame-pass').click()
-  await page
-    .getByRole('dialog')
-    .getByRole('button', { name: 'Passer' })
-    .click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Passer' }).click()
   const response = await submitted
   expect(response.request().postDataJSON()).toMatchObject({ pass: true })
   const { result } = await response.json()

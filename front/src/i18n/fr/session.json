@@ -31,6 +31,10 @@
         "title": "Puzzle Rush",
         "desc": "Un maximum de puzzles en 2, 3 ou 5 minutes. Une erreur efface deux réussites : la vitesse ne paie que si tu restes juste."
       },
+      "brillant": {
+        "title": "Brillant ou Blunder",
+        "desc": "Un coup qui donne du matériel : sacrifice génial ou gaffe ? Réponds vite, en 1 à 10 minutes."
+      },
       "woodpecker": {
         "title": "Woodpecker",
         "desc": "Ton set light : des puzzles faciles, revus encore et encore."
@@ -100,6 +104,7 @@
       "evaluationDuration": "Une séance dure 1, 2, 5 ou 10 minutes : les positions s’enchaînent jusqu’au bout.",
       "endgameDuration": "Une série dure 2, 5, 10 ou 15 minutes : les positions s’enchaînent jusqu’au bout.",
       "rushDuration": "Un rush dure 2, 3 ou 5 minutes : les puzzles s’enchaînent sans pause, de plus en plus durs.",
+      "brilliancyDuration": "Une séance dure 1, 2, 5 ou 10 minutes : les coups à juger s’enchaînent jusqu’au bout.",
       "coordinatesDuration": "Une série dure 1, 2, 5 ou 10 minutes."
     },
     "placeholders": {

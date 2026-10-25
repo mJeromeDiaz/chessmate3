@@ -331,8 +331,7 @@ $panel: #1f1a2e;
   }
 
   &--current {
-    --shadow:
-      0 5px 0 #{$pink-deep}, 0 0 0 5px #{$panel}, 0 0 0 8px #{$pink};
+    --shadow: 0 5px 0 #{$pink-deep}, 0 0 0 5px #{$panel}, 0 0 0 8px #{$pink};
     --kicker: #c6f432;
     --title: #fff;
   }

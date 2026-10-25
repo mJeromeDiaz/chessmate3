@@ -1,4 +1,5 @@
 import { lessonTitle } from '@/utils/endgame'
+import { reviewTitle } from '@/utils/brilliancy'
 import { engineLabel, tagLabel } from '@/utils/evaluation'
 import { formatDuration } from '@/utils/format'
 import { numberedLine } from '@/utils/notation'
@@ -14,7 +15,7 @@ import { t } from '@/i18n'
  *
  * @typedef {object} ReviewItem
  * @property {number} index 1-based, in the order played
- * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'|'streak_puzzle'|'blindfold_recall'|'notation'|'evaluation_position'|'endgame_position'} type
+ * @property {'puzzle'|'woodpecker_puzzle'|'repertoire_unit'|'coordinate'|'blindfold_puzzle'|'streak_puzzle'|'blindfold_recall'|'notation'|'evaluation_position'|'brilliancy_position'|'endgame_position'} type
  * @property {ItemStatus} status
  * @property {number|null} durationMs
  * @property {Record<string, any>} data
@@ -105,6 +106,7 @@ export function itemTitle(item, themeLabel) {
           ? engineLabel(item.data.evalCp)
           : ''
     })
+  if (item.type === 'brilliancy_position') return reviewTitle(item.data)
   if (item.type === 'endgame_position')
     return t('endgame.review.title', {
       lesson: lessonTitle(item.data.lesson),
@@ -155,9 +157,10 @@ export function missedItems(items, themeLabel) {
         duration: formatDuration(item.durationMs)
       }),
       color: STATUS[item.status].color,
-      // A position to evaluate or to rebuild has no line to replay.
+      // A position to evaluate, a move to judge or a position to rebuild has no line to replay.
       replayable:
         item.type !== 'evaluation_position' &&
+        item.type !== 'brilliancy_position' &&
         item.type !== 'blindfold_recall' &&
         item.type !== 'notation' &&
         item.type !== 'endgame_position' &&

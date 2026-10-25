@@ -201,9 +201,7 @@ onBeforeUnmount(stop)
   display: flex;
   gap: var(--gap);
   transform: translateX(
-    calc(
-      var(--card-w) / -2 - var(--index) * (var(--card-w) + var(--gap))
-    )
+    calc(var(--card-w) / -2 - var(--index) * (var(--card-w) + var(--gap)))
   );
   transition: transform 0.55s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
@@ -243,11 +241,7 @@ onBeforeUnmount(stop)
 .tour-bosses__glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at 70% 80%,
-    var(--glow),
-    transparent 65%
-  );
+  background: radial-gradient(circle at 70% 80%, var(--glow), transparent 65%);
 }
 
 .tour-bosses__img {

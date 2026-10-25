@@ -27,6 +27,7 @@ describe('session catalogue', () => {
       'puzzles',
       'streak',
       'rush',
+      'brillant',
       'woodpecker',
       'repertoire',
       'evaluation',
@@ -566,5 +567,28 @@ describe('session catalogue', () => {
       values: { duree: 3, themes: ['fork', 'pin'], notes: 'vite' }
     })
     expect(MODULES_BY_ID.rush.profSlug).toBe('albert-stein')
+  })
+
+  it('gives « Brillant ou Blunder » one of the API lengths and no setting', () => {
+    expect(MODULES_BY_ID.brillant.fields.map(f => f.key)).toEqual([
+      'duree',
+      'notes'
+    ])
+    const step = toStep({
+      uid: 14,
+      moduleId: 'brillant',
+      values: { duree: 5, notes: '' }
+    })
+    expect(step).toEqual({
+      module: 'brilliancy',
+      minutes: 5,
+      notes: '',
+      settings: {}
+    })
+    expect(fromStep(step)).toEqual({
+      moduleId: 'brillant',
+      values: { duree: 5, notes: '' }
+    })
+    expect(MODULES_BY_ID.brillant.profSlug).toBe('albert-stein')
   })
 })

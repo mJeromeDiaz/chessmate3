@@ -1,7 +1,9 @@
 <template>
   <section class="cm-card wheel-rule" data-testid="wheel-rule">
     <h2 class="cm-card__title">{{ $t('admin.wheelRuleForm.title') }}</h2>
-    <p class="cm-muted wheel-rule__lead">{{ $t('admin.wheelRuleForm.lead') }}</p>
+    <p class="cm-muted wheel-rule__lead">{{
+      $t('admin.wheelRuleForm.lead')
+    }}</p>
     <q-banner v-if="error" class="cm-banner--danger q-mb-md" rounded>{{
       error
     }}</q-banner>

@@ -1078,7 +1078,9 @@ export function lineOf(
         line: chosen.line
       })
     if (chosen) return chosen.line
-    return t(visitor ? 'onboarding.lines.noLevelVisitor' : 'onboarding.lines.noLevel')
+    return t(
+      visitor ? 'onboarding.lines.noLevelVisitor' : 'onboarding.lines.noLevel'
+    )
   }
   if (step === 'goal') return goalOf(goal)?.line ?? t('onboarding.lines.noGoal')
   if (PROF_SCREENS[step]) return PROF_SCREENS[step].line

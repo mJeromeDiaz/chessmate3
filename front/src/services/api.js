@@ -1019,6 +1019,11 @@ export const evaluationApi = {
   overview: () => http.get('/api/evaluation', JSON_LD).then(r => r.data)
 }
 
+/** « Brillant ou Blunder » (docs/BRILLIANCY.md): the run lengths, the index's size by kind, my results. */
+export const brilliancyApi = {
+  overview: () => http.get('/api/brilliancy', JSON_LD).then(r => r.data)
+}
+
 /** The endgames module (docs/ENDGAMES.md). */
 export const endgameApi = {
   /** The rules, the lessons with my results, the Elo proposed (§ 7). */

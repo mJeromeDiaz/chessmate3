@@ -90,7 +90,9 @@ import { premoveTargets, premoveToMove } from '@/utils/chess/premove'
  * @typedef {{square: string, type: 'lastMove'|'hint'|'error'|'success'|'net'}} Highlight
  *   `net`: a square denied to the enemy king (the endgames' net, docs/ENDGAMES.md, § 8)
  * @typedef {{from: string, to: string, type?: 'hint'|'solution'|'explorer'|'error'}} Arrow
- * @typedef {{square: string, text: string}} Glyph an annotation shown on a square ("!", "?!"...)
+ * @typedef {{square: string, text: string, tone?: 'brilliant'|'blunder'}} Glyph an annotation shown on a
+ *   square ("!", "?!"...); `tone` overrides the colour its text gives (« Brillant ou Blunder »'s
+ *   round badges, docs/BRILLIANCY.md)
  */
 
 // Marker and arrow types are matched by reference: module-level constants only.
@@ -199,7 +201,7 @@ const toBoardColor = color => (color === 'black' ? COLOR.black : COLOR.white)
 const placedGlyphs = computed(() =>
   props.glyphs
     .filter(g => /^[a-h][1-8]$/.test(g.square))
-    .map(({ square, text }) => {
+    .map(({ square, text, tone }) => {
       const file = square.charCodeAt(0) - 97
       const rank = Number(square[1]) - 1
       const column = props.orientation === 'black' ? 7 - file : file
@@ -207,7 +209,7 @@ const placedGlyphs = computed(() =>
       return {
         square,
         text,
-        tone: GLYPH_TONES[text] ?? 'neutral',
+        tone: tone ?? GLYPH_TONES[text] ?? 'neutral',
         style: { left: `${(column + 1) * 12.5}%`, top: `${row * 12.5}%` }
       }
     })
@@ -579,6 +581,25 @@ defineExpose({ setPosition, shake })
 }
 .chess-board__glyph--neutral {
   background: #546e7a;
+}
+.chess-board__glyph--brilliant,
+.chess-board__glyph--blunder {
+  min-width: 1.9em;
+  height: 1.9em;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  font-size: clamp(11px, 2.6vw, 16px);
+  font-weight: 800;
+  line-height: calc(1.9em - 4px);
+}
+.chess-board__glyph--brilliant {
+  background: #1bc5b4;
+  color: #fff;
+}
+.chess-board__glyph--blunder {
+  background: #e5383b;
+  color: #000;
 }
 .chess-board--shake {
   animation: chess-board-shake 0.4s ease-in-out;

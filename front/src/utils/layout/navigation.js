@@ -77,7 +77,13 @@ export const FREE_TRAINING_SECTIONS = [
     link('rush', '/puzzle', 'layout.nav.rush', 'bolt', {
       query: { rush: '1' }
     }),
-    link('streak', '/streak', 'layout.nav.streak', 'local_fire_department')
+    link('streak', '/streak', 'layout.nav.streak', 'local_fire_department'),
+    link(
+      'brilliancy',
+      '/brillant-ou-blunder',
+      'layout.nav.brilliancy',
+      'auto_awesome'
+    )
   ]),
   section('endgame', 'layout.menu.free.sections.endgame', [
     link('endgames', '/finales/libre', 'layout.nav.endgames', 'flag')

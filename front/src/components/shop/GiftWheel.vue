@@ -98,7 +98,14 @@
                   </template>
                   <template v-else-if="segment.prize === 'gift'">
                     <svg width="36" height="36" viewBox="0 0 24 24">
-                      <rect x="3" y="9" width="18" height="4" rx="1" fill="#fff" />
+                      <rect
+                        x="3"
+                        y="9"
+                        width="18"
+                        height="4"
+                        rx="1"
+                        fill="#fff"
+                      />
                       <rect
                         x="4.5"
                         y="13"
@@ -129,7 +136,9 @@
                     <CrystalGem :size="segment.prize === 'c300' ? 34 : 30" />
                     <span
                       class="wheel__amount"
-                      :class="{ 'wheel__amount--jackpot': segment.prize === 'c300' }"
+                      :class="{
+                        'wheel__amount--jackpot': segment.prize === 'c300'
+                      }"
                       >{{ PRIZE_CROWNS[segment.prize] }}</span
                     >
                   </template>
@@ -161,7 +170,11 @@
                 { 'wheel-chest--big': picked === i }
               ]"
               :style="{ animationDelay: `${0.45 + i * 0.12}s` }"
-              :aria-label="$t('shop.wheel.chests.chest', { gem: $t(`shop.wheel.gems.${gem.id}`) })"
+              :aria-label="
+                $t('shop.wheel.chests.chest', {
+                  gem: $t(`shop.wheel.gems.${gem.id}`)
+                })
+              "
               :data-testid="`wheel-chest-${i}`"
               @click="pick(i)"
             >
@@ -171,7 +184,10 @@
                 :class="{ 'wheel-chest__body--hit': picked === i && hits > 0 }"
               >
                 <span class="wheel-chest__shadow" />
-                <span v-if="picked === i && chestOpen" class="wheel-chest__glow" />
+                <span
+                  v-if="picked === i && chestOpen"
+                  class="wheel-chest__glow"
+                />
                 <span class="wheel-chest__box">
                   <span class="wheel-chest__band wheel-chest__band--left" />
                   <span class="wheel-chest__band wheel-chest__band--right" />
@@ -182,10 +198,15 @@
                   class="wheel-chest__crack"
                   :style="crackStyle(i)"
                 />
-                <span v-if="picked === i && chestOpen" class="wheel-chest__gold" />
+                <span
+                  v-if="picked === i && chestOpen"
+                  class="wheel-chest__gold"
+                />
                 <span
                   class="wheel-chest__lid"
-                  :class="{ 'wheel-chest__lid--off': picked === i && chestOpen }"
+                  :class="{
+                    'wheel-chest__lid--off': picked === i && chestOpen
+                  }"
                 >
                   <span class="wheel-chest__band wheel-chest__band--left" />
                   <span class="wheel-chest__band wheel-chest__band--right" />
@@ -193,7 +214,9 @@
                 </span>
                 <span
                   class="wheel-chest__lock"
-                  :class="{ 'wheel-chest__lock--off': picked === i && chestOpen }"
+                  :class="{
+                    'wheel-chest__lock--off': picked === i && chestOpen
+                  }"
                 >
                   <span class="wheel-chest__gem" :style="gemStyle(gem, i)" />
                 </span>
@@ -231,7 +254,11 @@
           </div>
 
           <!-- The crystals won -->
-          <div v-if="stage === 'gain' && result" class="wheel-gain" data-testid="wheel-gain">
+          <div
+            v-if="stage === 'gain' && result"
+            class="wheel-gain"
+            data-testid="wheel-gain"
+          >
             <div
               v-if="result.crowns >= 30"
               class="wheel-screen__rays"
@@ -245,7 +272,9 @@
               :class="{ 'wheel-gain__glow--big': result.crowns >= 300 }"
             />
             <span
-              v-for="(s, i) in sparkles(result.crowns >= 300 ? 14 : result.crowns >= 30 ? 8 : 4)"
+              v-for="(s, i) in sparkles(
+                result.crowns >= 300 ? 14 : result.crowns >= 30 ? 8 : 4
+              )"
               :key="i"
               class="wheel-screen__sparkle"
               :style="s"
@@ -267,18 +296,25 @@
               }"
             >
               <CrystalGem :size="result.crowns >= 300 ? 120 : 100" spin />
-              <span :key="shown" class="wheel-gain__count" :class="{ 'wheel-gain__count--tick': counting }">{{
-                crowns(shown)
-              }}</span>
+              <span
+                :key="shown"
+                class="wheel-gain__count"
+                :class="{ 'wheel-gain__count--tick': counting }"
+                >{{ crowns(shown) }}</span
+              >
             </div>
-            <span class="wheel-gain__label">{{ $t('shop.wheel.gain.reserve') }}</span>
+            <span class="wheel-gain__label">{{
+              $t('shop.wheel.gain.reserve')
+            }}</span>
           </div>
         </div>
 
         <!-- Under the stage -->
         <div class="wheel-screen__bottom">
           <template v-if="stage === 'wheel'">
-            <span class="wheel-screen__hint" aria-live="polite">{{ hint }}</span>
+            <span class="wheel-screen__hint" aria-live="polite">{{
+              hint
+            }}</span>
             <template v-if="canDecline">
               <button
                 type="button"
@@ -318,13 +354,21 @@
             <span
               class="wheel-screen__badge"
               :class="{ 'wheel-screen__badge--ice': result.gift === 'freeze' }"
-              >{{ $t(`shop.wheel.${result.gift === 'freeze' ? 'freeze' : 'costume'}.kicker`) }}</span
+              >{{
+                $t(
+                  `shop.wheel.${result.gift === 'freeze' ? 'freeze' : 'costume'}.kicker`
+                )
+              }}</span
             >
             <span class="wheel-screen__gift-title">{{
-              $t(`shop.wheel.${result.gift === 'freeze' ? 'freeze' : 'costume'}.title`)
+              $t(
+                `shop.wheel.${result.gift === 'freeze' ? 'freeze' : 'costume'}.title`
+              )
             }}</span>
             <span class="wheel-screen__gift-body">{{
-              $t(`shop.wheel.${result.gift === 'freeze' ? 'freeze' : 'costume'}.body`)
+              $t(
+                `shop.wheel.${result.gift === 'freeze' ? 'freeze' : 'costume'}.body`
+              )
             }}</span>
           </div>
 
@@ -348,7 +392,9 @@
             </button>
           </div>
 
-          <q-banner v-if="error" class="wheel-screen__error" rounded>{{ error }}</q-banner>
+          <q-banner v-if="error" class="wheel-screen__error" rounded>{{
+            error
+          }}</q-banner>
         </div>
       </div>
 
@@ -360,8 +406,12 @@
         @click="loseOpen = false"
       >
         <div class="wheel-lose__card" @click.stop>
-          <span class="wheel-lose__kicker">{{ $t('shop.wheel.lose.kicker') }}</span>
-          <span class="wheel-lose__title">{{ $t('shop.wheel.lose.title') }}</span>
+          <span class="wheel-lose__kicker">{{
+            $t('shop.wheel.lose.kicker')
+          }}</span>
+          <span class="wheel-lose__title">{{
+            $t('shop.wheel.lose.title')
+          }}</span>
           <span class="wheel-lose__body">{{ $t('shop.wheel.lose.body') }}</span>
           <div class="wheel-lose__actions">
             <button
@@ -589,7 +639,10 @@ async function spin() {
     drawn = await shop.spinWheel(dailyId)
   } catch (e) {
     busy.value = false
-    if (e?.response?.status === 409 && e.response.data?.detail === 'no_ticket') {
+    if (
+      e?.response?.status === 409 &&
+      e.response.data?.detail === 'no_ticket'
+    ) {
       await buyTicket()
       return
     }
@@ -1384,12 +1437,20 @@ $outline: 0 0 0 3px #0b0910;
   width: 70%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 138, 61, 0.45), transparent 65%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 138, 61, 0.45),
+    transparent 65%
+  );
   animation: wheel-glow 0.6s ease-out both;
 }
 
 .wheel-gift__glow--ice {
-  background: radial-gradient(circle, rgba(79, 178, 255, 0.55), transparent 65%);
+  background: radial-gradient(
+    circle,
+    rgba(79, 178, 255, 0.55),
+    transparent 65%
+  );
 }
 
 .wheel-gain__glow {
@@ -1399,7 +1460,11 @@ $outline: 0 0 0 3px #0b0910;
 
   &--big {
     width: 90%;
-    background: radial-gradient(circle, rgba(91, 63, 208, 0.7), transparent 65%);
+    background: radial-gradient(
+      circle,
+      rgba(91, 63, 208, 0.7),
+      transparent 65%
+    );
   }
 }
 
@@ -1419,7 +1484,12 @@ $outline: 0 0 0 3px #0b0910;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 32% 28%, #e2f2ff, #9ed8ff 40%, #4fb2ff 75%);
+  background: radial-gradient(
+    circle at 32% 28%,
+    #e2f2ff,
+    #9ed8ff 40%,
+    #4fb2ff 75%
+  );
   box-shadow:
     0 0 0 6px rgba(255, 255, 255, 0.25),
     0 24px 50px rgba(0, 0, 0, 0.4);

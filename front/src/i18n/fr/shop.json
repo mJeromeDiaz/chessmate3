@@ -110,9 +110,7 @@
     "wheel_ticket": {
       "kicker": "ROUE DES CADEAUX",
       "label": "Ticket de roue",
-      "how": [
-        "Jusqu’à 300 cristaux à gagner, et de superbes cadeaux !"
-      ]
+      "how": ["Jusqu’à 300 cristaux à gagner, et de superbes cadeaux !"]
     }
   },
   "cosmeticKicker": "COSMÉTIQUE",
@@ -129,32 +127,14 @@
   },
   "chest": {
     "closed": {
-      "small": [
-        "Un petit trésor",
-        "pour toi !"
-      ],
-      "medium": [
-        "Un trésor",
-        "pour toi !"
-      ],
-      "big": [
-        "Un gros trésor",
-        "pour toi !"
-      ]
+      "small": ["Un petit trésor", "pour toi !"],
+      "medium": ["Un trésor", "pour toi !"],
+      "big": ["Un gros trésor", "pour toi !"]
     },
     "open": {
-      "perfect": [
-        "Quel",
-        "jackpot !"
-      ],
-      "near": [
-        "Beau",
-        "trésor !"
-      ],
-      "missed": [
-        "Joli",
-        "butin !"
-      ]
+      "perfect": ["Quel", "jackpot !"],
+      "near": ["Beau", "trésor !"],
+      "missed": ["Joli", "butin !"]
     },
     "stages": {
       "closed": {
@@ -163,18 +143,12 @@
       },
       "hit1": {
         "kicker": "ÇA BOUGE…",
-        "title": [
-          "Il résiste",
-          "encore !"
-        ],
+        "title": ["Il résiste", "encore !"],
         "hint": "Encore un coup !"
       },
       "hit2": {
         "kicker": "PRESQUE…",
-        "title": [
-          "Allez,",
-          "le dernier !"
-        ],
+        "title": ["Allez,", "le dernier !"],
         "hint": "Il va céder…"
       },
       "open": {
@@ -239,15 +213,9 @@
   "daily": {
     "label": "Coffre du jour",
     "kicker": "COFFRE DU JOUR",
-    "title": [
-      "Coffre",
-      "du jour !"
-    ],
+    "title": ["Coffre", "du jour !"],
     "badgeKicker": "COFFRE DE SÉRIE · {n} JOURS",
-    "badgeTitle": [
-      "{n} jours",
-      "de série !"
-    ],
+    "badgeTitle": ["{n} jours", "de série !"],
     "note": "Série de {n} jour | Série de {n} jours",
     "badgeNote": "{daily} du jour + {bonus} pour le badge {n} jours",
     "badgeOnlyNote": "Le bonus du badge {n} jours",

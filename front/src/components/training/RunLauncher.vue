@@ -69,7 +69,7 @@
  * Picks a duration (5 to 30 minutes, or custom) and starts a timed run on a subject; only one
  * run at a time: when one is in progress, offers to resume or end it. A module's options go in
  * `config`; the repertoire test adds its unit (segments or whole lines) with `showUnit`; a module
- * with lengths of its own (`durations`: the coordinates series, the evaluation) offers those only,
+ * with lengths of its own (`durations`: the coordinates series, the evaluation, « Brillant ou Blunder ») offers those only,
  * no "Autre"; one with a length of its own (`fixedMinutes`: a single puzzle streak) offers none.
  */
 import { computed, ref } from 'vue'
@@ -115,6 +115,7 @@ const MESSAGES = {
   coordinates: { 422: 'invalidSettings' },
   blindfold: { 409: 'noBlindfold', 422: 'invalidSettings' },
   evaluation: { 409: 'noPosition', 422: 'invalidSettings' },
+  brilliancy: { 409: 'noBrilliancy', 422: 'invalidSettings' },
   puzzle_streak: { 409: 'noStreakPuzzle', 422: 'invalidSettings' },
   puzzle_rush: { 409: 'noPuzzleThemes', 422: 'invalidSettings' },
   blindfold_recall: { 409: 'noRecall', 422: 'invalidSettings' },

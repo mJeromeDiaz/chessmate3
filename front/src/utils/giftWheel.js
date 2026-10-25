@@ -72,7 +72,7 @@ export function segmentOf(prize, random = Math.random) {
  */
 export function landingRotation(from, index, seconds, jitter = 0) {
   const want = 360 - (index * SEGMENT_DEG + SEGMENT_DEG / 2 + jitter)
-  const delta = ((((want - (from % 360)) % 360) + 360) % 360)
+  const delta = (((want - (from % 360)) % 360) + 360) % 360
   return from + 360 * Math.round(seconds + 1) + delta
 }
 
@@ -152,7 +152,10 @@ export function wheelHead(stage, s = {}) {
   if (stage === 'gain')
     return (s.gain ?? 0) >= 300
       ? [t('shop.wheel.gain.jackpot'), t('shop.wheel.gain.jackpotSub')]
-      : [t('shop.wheel.gain.title', { n: s.gain ?? 0 }), t('shop.wheel.gain.sub')]
+      : [
+          t('shop.wheel.gain.title', { n: s.gain ?? 0 }),
+          t('shop.wheel.gain.sub')
+        ]
   return [
     t('shop.wheel.title'),
     s.ticket ? t('shop.wheel.ticketSub') : t('shop.wheel.sub')

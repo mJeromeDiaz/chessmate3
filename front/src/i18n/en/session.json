@@ -31,6 +31,10 @@
         "title": "Puzzle Rush",
         "desc": "As many puzzles as possible in 2, 3 or 5 minutes. A mistake wipes out two solved puzzles: speed only pays if you stay accurate."
       },
+      "brillant": {
+        "title": "Brilliant or Blunder",
+        "desc": "A move that gives material: brilliant sacrifice or blunder? Answer fast, in 1 to 10 minutes."
+      },
       "woodpecker": {
         "title": "Woodpecker",
         "desc": "Your light set: easy puzzles, reviewed again and again."
@@ -98,6 +102,7 @@
       "repertoires": "Due reviews come first (automatic spaced repetition).",
       "evaluationDuration": "A run lasts 1, 2, 5 or 10 minutes: positions follow one another until the end.",
       "rushDuration": "A rush lasts 2, 3 or 5 minutes: puzzles follow one another without a break, harder and harder.",
+      "brilliancyDuration": "A run lasts 1, 2, 5 or 10 minutes: the moves to judge follow one another until the end.",
       "coordinatesDuration": "A series lasts 1, 2, 5 or 10 minutes."
     },
     "placeholders": {

@@ -117,9 +117,7 @@ describe('mind map path', () => {
       'Le Gardien des pions'
     )
     expect(
-      bossName(
-        step('ashes-boss', 'boss', 'open', { character: 'roi-cendres' })
-      )
+      bossName(step('ashes-boss', 'boss', 'open', { character: 'roi-cendres' }))
     ).toBe('Le Roi des cendres')
     expect(
       chestNote('endgames', {
