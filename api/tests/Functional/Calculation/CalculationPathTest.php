@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Calculation;
 
+use App\Calculation\CalculationRules;
 use App\Calculation\Drawing\Forcing;
 use App\Chess\Rules;
 use App\Entity\Catalog\Puzzle;
@@ -30,7 +31,7 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         for ($i = 0; $i < 10; ++$i) {
             $item = $this->item($alice, $runId);
             if (0 === $i) {
-                self::assertSame(['calculation', 1, 120, 2, 1, 10, null, null], [
+                self::assertSame(['calculation', 1, 120, CalculationRules::PLY_SECONDS, 1, 10, null, null], [
                     $item['type'], $item['data']['mate'] ?? null, $item['data']['thinkSeconds'] ?? null, $item['data']['plySeconds'] ?? null,
                     $item['data']['position'] ?? null, $item['data']['count'] ?? null, $item['data']['lives'] ?? null, $item['data']['readyAt'] ?? null,
                 ]);
@@ -63,17 +64,17 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertSame(['passed', 10, 8], [$outcome['outcome'] ?? null, $outcome['itemCount'] ?? null, $outcome['successCount'] ?? null], '80 % right.');
     }
 
-    public function testTheAnswerHasTwoSecondsPerHalfMove(): void
+    public function testTheAnswerHasItsSecondsPerHalfMove(): void
     {
         $alice = $this->createUserIn('alice@example.com');
         self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/1-1/skip', $alice)->getStatusCode());
         $runId = $this->startStep($alice, '1-2');
 
-        // A mate in 2, 3 half-moves: 6 s, one more second and the 2 s of the network.
+        // A mate in 2, 3 half-moves: 3 × PLY_SECONDS, one more second and the 2 s of the network.
         $item = $this->item($alice, $runId);
         self::assertSame(2, $item['data']['mate'] ?? null);
         $this->ready($alice, $runId, $item['id']);
-        $this->travel('+10 seconds');
+        $this->travel(\sprintf('+%d seconds', 3 * CalculationRules::PLY_SECONDS + 4));
         $late = $this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item)]);
         self::assertSame([false, 'late'], [$late['success'] ?? null, \is_array($late['data'] ?? null) ? $late['data']['status'] ?? null : null], 'Right, but late.');
 
@@ -356,13 +357,13 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertIsArray(self::dataOf($result)['second'] ?? null);
         self::assertCount(\count($other), self::dataOf($result)['second']);
 
-        // 2 s per half-move of each line: 2 × 2 × 3 s, one more, and the network's 2 s.
+        // PLY_SECONDS per half-move of each line, one more second, and the network's 2 s.
         $item = $this->item($alice, $runId);
         $fen = self::fenOf($item);
         $solution = $this->expected($item);
         $other = self::completeLine($fen, [$solution[0], self::otherReply($fen, $solution[0], $solution[1])], \count($solution));
         $this->ready($alice, $runId, $item['id']);
-        $this->travel(\sprintf('+%d seconds', 4 * \count($solution) + 4));
+        $this->travel(\sprintf('+%d seconds', 2 * CalculationRules::PLY_SECONDS * \count($solution) + 4));
         $result = $this->submitOk($alice, $runId, $item['id'], ['lines' => [$solution, $other], 'engine' => ['right' => true]]);
         self::assertSame('late', self::dataOf($result)['status'] ?? null);
     }

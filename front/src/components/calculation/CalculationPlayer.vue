@@ -49,7 +49,7 @@
         :square-input="phase === 'question' && item.data.ask === 'where'"
         @square="onSquare"
       />
-      <!-- No animation: a move played at 2 s per half-move must never wait for one (a click
+      <!-- No animation: a move played at 3 s per half-move must never wait for one (a click
         during an animation is lost). -->
       <ChessBoard
         v-else
@@ -264,7 +264,7 @@ const emit = defineEmits({
 })
 
 /**
- * What the server allows past the line's 2 s per half-move (1 s of rounding, 2 s of network),
+ * What the server allows past the line's 3 s per half-move (1 s of rounding, 2 s of network),
  * less a margin: the engine's verdict is waited for until then.
  */
 const JUDGE_SLACK_MS = 2500
@@ -348,7 +348,7 @@ const right = computed(() => props.result?.status === 'right')
 /** « Mat en 3 », « Gain en 3 coups »… nothing for the Métronome. */
 const level = computed(() => levelText(props.item.data))
 const thinkSeconds = computed(() => props.item.data.thinkSeconds ?? 120)
-const plySeconds = computed(() => props.item.data.plySeconds ?? 2)
+const plySeconds = computed(() => props.item.data.plySeconds ?? 3)
 const clockSeconds = computed(() =>
   phase.value === 'answer' ? plySeconds.value : thinkSeconds.value
 )
@@ -770,7 +770,7 @@ async function lineVerdict(line) {
 
 /**
  * How long the engine's verdict may still be waited for: the server times the line from « Je
- * réponds » up to the submission (2 s per half-move of the solution, for each line of 3.2).
+ * réponds » up to the submission (3 s per half-move of the solution, for each line of 3.2).
  */
 function judgeWaitMs() {
   const lines = kind.value === 'two_replies' ? 2 : 1

@@ -179,7 +179,7 @@ Contenu de l'utilisateur : [mindMap/profondeur_de_calcul.md](mindMap/profondeur_
 (10 chapitres ; les 3 premiers d'abord, `App\MindMap\Path\Calculation`, capacité
 `calculation`, page `/cerveau/calculation`). Format validé le 2026-10-21 : la position est montrée
 sur un **échiquier figé** le temps de la réflexion (libre, « Je réponds », plafond 2 min), puis la
-ligne entière est jouée **d'un trait, les deux camps**, chaque demi-coup moins de 2 s après le
+ligne entière est jouée **d'un trait, les deux camps**, chaque demi-coup moins de 3 s après le
 précédent ; elle est jugée une fois, à la fin (les coups de la solution, défense comprise, le
 dernier pouvant être n'importe quel mat). Puzzles de mat, non classés : le module Calcul ([CALCULATION.md](CALCULATION.md)), branché
 sur le chapitre 1 et le Métronome (lots K1a à K1c, [CALCULATION.md](CALCULATION.md), § 6) ; les
@@ -244,7 +244,9 @@ l'appli.
 - **Détail d'une étape** (`StepDetail`) : sur grand écran, dans la colonne à droite (collante),
   l'étape à jouer tant que le joueur n'en a pas choisi une autre ; sur téléphone, en volet par le
   bas au clic. Exercice : en-tête aux couleurs de la capacité, « En bref », passages, règle des
-  80 %, « Commencer » / « Recommencer » / « S'entraîner », « Passer » (confirmé). Boss : sa scène
+  80 %, « Commencer » / « Recommencer » / « S'entraîner », « Passer » (confirmé) ; sur grand écran,
+  un second clic sur l'exercice choisi le lance comme « Commencer » (`startsOnSecondClick()`, aussi
+  sur `/finales` et `/defis` ; jamais un boss, dont le combat s'annonce). Boss : sa scène
   (en pied), sa pastille et son chapitre, son nom, sa devise, sa réplique, le défi, 3 vies,
   « Affronter ». Coffre : ce qu'il contient. Puis les gains (cristaux, XP, badges), l'état, et le
   bouton (grisé « Verrouillé » ou « Bientôt »). Un boss choisi par le joueur joue son thème tant

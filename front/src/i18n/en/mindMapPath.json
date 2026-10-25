@@ -647,11 +647,11 @@
     "steps": {
       "s1_1": {
         "title": "The obvious move",
-        "desc": "Mates in 1. The board is frozen: calculate, click “I'm ready”, then play your move within 2 seconds. 10 positions and 80% correct."
+        "desc": "Mates in 1. The board is frozen: calculate, click “I'm ready”, then play your move within 3 seconds. 10 positions and 80% correct."
       },
       "s1_2": {
         "title": "Two moves",
-        "desc": "Mates in 2: calculate the whole line, then play it in one go, both sides, 2 seconds per half-move. 10 positions and 80% correct."
+        "desc": "Mates in 2: calculate the whole line, then play it in one go, both sides, 3 seconds per half-move. 10 positions and 80% correct."
       },
       "s1_chest": {
         "title": "Straight line chest",

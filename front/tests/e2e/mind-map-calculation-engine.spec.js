@@ -171,6 +171,7 @@ test('calculation 3.4: the solution right at once, another line judged by Stockf
 
   // The solution: right, the engine never waited for.
   await player.getByTestId('calculation-ready').click()
+  await expect(player).toHaveAttribute('data-phase', 'answer')
   let submitted = page.waitForResponse(isRunSubmission)
   let served = page.waitForResponse(isRunNext)
   for (const uci of item.data.solution) await playMove(page, uci)
@@ -307,6 +308,7 @@ test('calculation: the Avocat du diable judges the idea, then its refutation', a
     .find(uci => uci !== item.data.solution[0])
   const idea = completeLine(item.data.fen, [first], item.data.solution.length)
   await page.getByTestId('calculation-ready').click()
+  await expect(player).toHaveAttribute('data-phase', 'answer')
   let submitted = page.waitForResponse(isRunSubmission, {
     timeout: ENGINE_TIMEOUT
   })
@@ -329,6 +331,7 @@ test('calculation: the Avocat du diable judges the idea, then its refutation', a
   item = (await (await served).json()).item
   const solution = item.data.solution
   await page.getByTestId('calculation-ready').click()
+  await expect(player).toHaveAttribute('data-phase', 'answer')
   submitted = page.waitForResponse(isRunSubmission)
   for (const uci of solution) await playMove(page, uci)
   response = await submitted

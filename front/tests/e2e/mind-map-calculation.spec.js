@@ -66,6 +66,7 @@ test('calculation: a mate in 1 thought over on a frozen board, then played', asy
   ready = page.waitForResponse(isReady)
   await player.getByTestId('calculation-ready').click()
   await ready
+  await expect(player).toHaveAttribute('data-phase', 'answer')
   submitted = page.waitForResponse(isRunSubmission)
   await playMove(page, moveOf(item.data.fen, false))
   result = (await (await submitted).json()).result

@@ -85,6 +85,19 @@ export function isBoss(kind) {
   return BOSS_KINDS.includes(kind)
 }
 
+/**
+ * Whether a second click on a step already shown launches it, as its « Commencer » does: an
+ * exercise one can play (bosses keep their button: their fight is announced).
+ *
+ * @param {PathStep} step
+ */
+export function startsOnSecondClick(step) {
+  return (
+    step.kind === 'exercise' &&
+    !['locked', 'soon', 'hidden'].includes(step.status)
+  )
+}
+
 /** A boss's lives (docs/MIND_MAP.md: 3 failures and the boss wins). */
 export const BOSS_LIVES = 3
 

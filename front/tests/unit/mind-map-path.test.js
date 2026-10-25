@@ -28,6 +28,7 @@ import {
   refusalText,
   sectionTitle,
   standingImage,
+  startsOnSecondClick,
   stepDesc,
   stepTitle
 } from '@/utils/mindMapPath'
@@ -301,5 +302,23 @@ describe('mind map path', () => {
       capped: false,
       opened: false
     })
+  })
+})
+
+describe('a second click on a step', () => {
+  it('launches a playable exercise, never a boss nor a locked step', () => {
+    const step = (kind, status) => /** @type {any} */ ({
+      key: 'k',
+      kind,
+      status
+    })
+    expect(startsOnSecondClick(step('exercise', 'open'))).toBe(true)
+    expect(startsOnSecondClick(step('exercise', 'done'))).toBe(true)
+    expect(startsOnSecondClick(step('exercise', 'skipped'))).toBe(true)
+    expect(startsOnSecondClick(step('exercise', 'locked'))).toBe(false)
+    expect(startsOnSecondClick(step('exercise', 'soon'))).toBe(false)
+    expect(startsOnSecondClick(step('boss', 'open'))).toBe(false)
+    expect(startsOnSecondClick(step('mini_boss', 'open'))).toBe(false)
+    expect(startsOnSecondClick(step('chest', 'done'))).toBe(false)
   })
 })

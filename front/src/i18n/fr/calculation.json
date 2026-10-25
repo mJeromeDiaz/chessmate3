@@ -19,7 +19,7 @@
     },
     "thinkText": "L’échiquier est figé : calcule toute la ligne, les deux camps. Clique « Je réponds » quand tu la tiens.",
     "thinkHidden": "L’échiquier est figé : calcule la ligne jusqu’au bout, les deux camps.",
-    "answerText": "Joue la ligne d’un trait, les deux camps : 2 secondes par demi-coup.",
+    "answerText": "Joue la ligne d’un trait, les deux camps : 3 secondes par demi-coup.",
     "rightText": "Calculée de bout en bout.",
     "wrongText": "La solution est rejouée sur l’échiquier.",
     "lateText": "Le temps de jouer était écoulé.",
@@ -34,7 +34,7 @@
     "moves": "{n} coups",
     "positions": "Position {n} sur {count}",
     "solveText": "Joue tes coups, l’adversaire répond. Retiens bien toute la ligne.",
-    "replayText": "De mémoire : rejoue toute la ligne d’un trait, les deux camps, 2 secondes par demi-coup.",
+    "replayText": "De mémoire : rejoue toute la ligne d’un trait, les deux camps, 3 secondes par demi-coup.",
     "kinds": {
       "reply": "Ton premier coup est joué. Quelle est la meilleure réponse de l’adversaire ?",
       "two_replies": "L’adversaire n’a que deux réponses à ton premier coup : calcule une ligne contre chacune. Clique « Je réponds » quand tu les tiens.",
@@ -43,8 +43,8 @@
       "combo": "Trois coups forcés, une seule combinaison tient. Choisis-la, puis joue toute sa ligne, les deux camps.",
       "advocate": "Propose ton coup, puis fais l’avocat du diable : joue la meilleure réponse de l’adversaire, puis ta suite, d’un trait. Clique « Je réponds » quand tu tiens toute la ligne."
     },
-    "firstLineText": "Première ligne : ton coup, une des deux réponses, puis la suite. 2 secondes par demi-coup.",
-    "secondLineText": "Seconde ligne : l’autre réponse est jouée, continue. 2 secondes par demi-coup.",
+    "firstLineText": "Première ligne : ton coup, une des deux réponses, puis la suite. 3 secondes par demi-coup.",
+    "secondLineText": "Seconde ligne : l’autre réponse est jouée, continue. 3 secondes par demi-coup.",
     "judgingText": "Stockfish vérifie ta ligne…",
     "preparing": "Le moteur prépare les réponses…",
     "engineDown": "Moteur indisponible : seule la ligne de la solution peut être jugée juste.",

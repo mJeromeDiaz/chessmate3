@@ -166,7 +166,9 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             $status = AttemptStatus::Late;
         } else {
             try {
-                $judged = LineJudge::judge($attempt->getFen(), $attempt->getExpected(), $played);
+                // A mate takes other defences and forced mates; not before a question on its position.
+                $free = Ending::Mate === $attempt->getEnding() && !self::check($run->getConfig())['question'];
+                $judged = LineJudge::judge($attempt->getFen(), $attempt->getExpected(), $played, $free);
             } catch (IllegalLineException $e) {
                 throw new InvalidItemSubmissionException($e->getMessage());
             } catch (InvalidPositionException) {

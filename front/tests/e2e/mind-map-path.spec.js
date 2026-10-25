@@ -86,8 +86,9 @@ test('mind map path: chapters and steps, a pass, a failed lesson, a boss announc
   // Exercise 1.1: a one-minute coordinates series, 10 answers at 80 %.
   await page.getByTestId('path-step-1-1').click()
   await expect(page.getByTestId('step-passes')).toContainText('Passage 1 sur 2')
+  // Clicked again while shown: played, as « Commencer » does.
   let served = page.waitForResponse(isRunNext)
-  await page.getByTestId('step-start').click()
+  await page.getByTestId('path-step-1-1').click()
   await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1(&boss=\w+)?$/)
   let item = (await (await served).json()).item
   expect(item.type).toBe('coordinates_series')

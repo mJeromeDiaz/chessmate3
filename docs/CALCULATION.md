@@ -10,8 +10,9 @@ camps**, très vite. Il sert la capacité « Profondeur de calcul » de la carte
 l'instant que depuis une étape du parcours**.
 
 Choix validés (2026-10-21) : réflexion libre, plafonnée à 2 min, close par « Je réponds » ; chaque
-demi-coup joué moins de 2 s après le précédent (le premier, 2 s après « Je réponds ») ; le joueur
-joue aussi la défense, qui doit être celle de la solution ; le dernier coup peut être n'importe quel
+demi-coup joué moins de 3 s après le précédent (le premier, 3 s après « Je réponds » ; 2 s jusqu'au 2026-10-25) ; le joueur
+joue aussi la défense, qui doit être celle de la solution (depuis le 2026-10-25, toute défense
+légale dans une ligne de mat, § 3) ; le dernier coup peut être n'importe quel
 mat ; puzzles de mat, non classés ; 4 XP par ligne juste, 1 par ligne fausse ou en retard.
 
 ## 1. Organisation du code
@@ -20,7 +21,7 @@ mat ; puzzles de mat, non classés ; 4 XP par ligne juste, 1 par ligne fausse ou
 |---|---|
 | Règles | `App\Calculation\CalculationRules`, XP dans `App\Gamification\Xp\XpRules` (`CALCULATION_*`) |
 | Tirage | `App\Calculation\Drawing\{LinePicker, LineSpec, Line}` |
-| Jugement | `App\Calculation\Judge\{LineJudge, IllegalLineException}` |
+| Jugement | `App\Calculation\Judge\{LineJudge, MateSearch, IllegalLineException, SearchBudgetExceededException}`, `App\Chess\Rules::{push, pop}` (coups sans SAN pour la recherche) |
 | Entité | `App\Entity\Calculation\Attempt` (table `calculation_attempt`, migration `Version20261106090000`) |
 | Enums | `App\Enum\Calculation\{AttemptStatus, Ending}` (`pending`, `right`, `wrong`, `late` ; `mate`, `material`) |
 | Module de séance | `App\Calculation\Training\CalculationModule` (`Module::Calculation`, `calculation`) |
@@ -74,7 +75,7 @@ ligne se **résout d'abord** comme un puzzle : l'élément donne sa `solution` (
 la donne), le joueur joue ses coups, l'adversaire répond seul ; un coup hors solution (et qui ne mate
 pas) est un échec : le front envoie `solutionShown: true`, le serveur compte la ligne fausse sans
 rien rejouer. Résolue, l'échiquier revient au départ, « Je réponds » part tout seul, et la ligne
-se **rejoue de mémoire** d'un trait, les deux camps, 2 s par demi-coup, jugée par le serveur comme
+se **rejoue de mémoire** d'un trait, les deux camps, 3 s par demi-coup, jugée par le serveur comme
 toute ligne. La résolution a 5 min (`SOLVE_SECONDS`, en `thinkSeconds`), pour que l'horloge de la
 reconstitution parte toujours de « Je réponds » ; passé ce temps, un échec.
 
@@ -90,10 +91,10 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
 | Genre | Étape | Le puzzle | Ce que fait le joueur |
 |---|---|---|---|
 | `reply` | 3.1 (10) | 3 demi-coups au moins, l'adversaire a 2 réponses au moins au premier coup | son premier coup est montré joué ; il **choisit** la meilleure de deux réponses adverses : celle de la solution et un leurre que le moteur tire (une réponse naturelle, prise ou échec d'abord, à 1,5 pion au moins de la meilleure, `decoyGapCp`). Réponse `choice` (UCI), dans la réflexion (120 s) |
-| `two_replies` | 3.2 (6 positions) | l'adversaire n'a que **2 coups légaux** contre le premier coup de la solution | il joue **deux lignes** d'un trait (`lines`), le même premier coup puis chacune des deux réponses ; 2 s par demi-coup de chaque ligne |
+| `two_replies` | 3.2 (6 positions) | l'adversaire n'a que **2 coups légaux** contre le premier coup de la solution | il joue **deux lignes** d'un trait (`lines`), le même premier coup puis chacune des deux réponses ; 3 s par demi-coup de chaque ligne |
 | `defence` | 3.3 (10) | thème `defensiveMove`, l'adversaire **menace un mat en 1** (`Threat::mateInOne` : la position vue comme si l'adversaire avait le trait) ; 1 ou 2 coups | la ligne qui pare, d'un trait |
 | `intermezzo` | 3.4 (10) | la réponse adverse de la solution est un **échec** ; 2 ou 3 coups | la ligne qui gagne malgré l'intermédiaire, d'un trait |
-| `advocate` | boss `3-boss`, L'Avocat du diable (5 positions, 3 vies) | 3 demi-coups au moins ; 2 ou 3 coups | il **propose son coup**, puis joue d'un trait la **meilleure réponse adverse** (l'avocat du diable de sa propre idée) et sa suite, 120 s de réflexion puis 2 s par demi-coup, jugé comme 3.3. Une idée qui ne tient pas (`mistakeAt` 0) est un échec ; la feuille dit si la réponse jouée la réfutait. Aucune XP par ligne (`metadata.boss`), seulement la récompense du boss |
+| `advocate` | boss `3-boss`, L'Avocat du diable (5 positions, 3 vies) | 3 demi-coups au moins ; 2 ou 3 coups | il **propose son coup**, puis joue d'un trait la **meilleure réponse adverse** (l'avocat du diable de sa propre idée) et sa suite, 120 s de réflexion puis 3 s par demi-coup, jugé comme 3.3. Une idée qui ne tient pas (`mistakeAt` 0) est un échec ; la feuille dit si la réponse jouée la réfutait. Aucune XP par ligne (`metadata.boss`), seulement la récompense du boss |
 | `combo` | mini-boss `3-mini` (4 positions, 3 vies) | le premier coup de la solution est un **échec ou une prise**, parmi 3 coups forcés au moins (`Forcing::moves`, `COMBOS`) ; 2 ou 3 coups | il **choisit** une combinaison parmi trois (celle de la solution et deux leurres que le moteur réfute) ; refusée, faux tout de suite (`moves` d'un seul coup : `mistakeAt` 0) ; sinon elle est jouée d'office et il joue la suite, d'un trait |
 
 - **Forme** (`LineShape::complete`) : chaque demi-coup légal, aucun après un mat, jamais plus que la
@@ -154,16 +155,21 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
    premier). Passé `thinkSeconds`, la réponse s'ouvre d'elle-même : sans appel, l'horloge de la
    réponse part de la fin de la réflexion, et un appel plus tardif n'y change rien.
 2. **Réponse** : la ligne entière en UCI (`moves`), les deux camps. Le serveur accepte jusqu'à
-   `readyAt` (à la seconde, + 1 s) + 2 s × demi-coups de la solution + 2 s de tolérance réseau ;
-   l'horloge par demi-coup (2 s après le précédent) n'est tenue que par le front. En retard, ou
+   `readyAt` (à la seconde, + 1 s) + 3 s (`PLY_SECONDS`) × demi-coups de la solution + 2 s de tolérance réseau ;
+   l'horloge par demi-coup (3 s après le précédent) n'est tenue que par le front. En retard, ou
    `pass: true` (le front l'envoie quand son horloge tombe) : `late`, un échec.
-3. **Jugement** (`LineJudge`) : chaque demi-coup légal (sinon 400) ; ceux de la solution, défense
-   comprise, jusqu'à sa fin ; un mat donné par le joueur termine la ligne juste, même plus tôt ou
-   par un autre coup (comme Lichess) ; une ligne de gain doit être jouée entière, coup pour coup ;
-   une ligne arrêtée avant est fausse là où elle s'arrête.
+3. **Jugement** (`LineJudge`) : chaque demi-coup légal (sinon 400) ; un mat donné par le joueur
+   termine la ligne juste, même plus tôt ou par un autre coup (comme Lichess) ; une ligne de gain
+   doit être jouée entière, coup pour coup, défense comprise ; une ligne arrêtée avant est fausse là
+   où elle s'arrête. **Une ligne de mat** (depuis le 2026-10-25, sauf avant une question sur sa
+   position, 2.7 et 2.8) prend **toute défense légale** (le roi a deux cases de fuite : Dg4+ Rf8 ou
+   Rh8, Dg7# dans les deux cas), et un coup du joueur hors solution s'il **mate encore de force**
+   dans les coups qui restent, contre toute défense (`MateSearch` : échecs d'abord, 40 000
+   positions au plus, ~0,5 s ; au-delà, rien n'est prouvé : faux). Un coup qui ne mate qu'après
+   une mauvaise défense (Dd4 contre …Td8??, quand …Te1+ tient) reste faux.
 
 Le résultat : `status`, `expected` et `answer` (`{uci, san}`), `mistakeAt` (le premier demi-coup
-hors solution), `position`, `count`, `lives`, `durationMs`. La séance se ferme (`subject_finished`)
+hors solution, ou qui laisse filer le mat), `position`, `count`, `lives`, `durationMs`. La séance se ferme (`subject_finished`)
 à son compte (`count_done`) ou à court de vies (`lives_out`). Le résumé : `mate`, `count`, `lives`,
 `right`, `wrong`, `late`, `activeMs`, `averageMs`. La relecture rejoue chaque ligne.
 
@@ -179,7 +185,7 @@ lignes sont supprimées avec le compte (cascade) et exportées (`entrainement.js
 - K1a (2026-10-21) : l'API, le chapitre 1 du parcours calcul branché (1.1 à 1.4, mini-boss).
 - K1b (2026-10-21) : le lecteur du front. Réflexion : échiquier figé, barre de 120 s (depuis le
   départ du serveur, `offsetMs`), « Je réponds » (`calculation-ready`) ; réponse : les deux camps
-  jouables tour à tour, une barre de 2 s remise à zéro à chaque demi-coup ; la ligne part au mat,
+  jouables tour à tour, une barre de 3 s remise à zéro à chaque demi-coup ; la ligne part au mat,
   à la longueur du mat (`mate` connu ; sinon un mat en 4) ou quand la barre tombe (ce qui a été
   joué, sinon `pass`). Verdict : la feuille de résultat (solution numérotée, ta ligne, l'écart),
   la flèche du bon coup, puis la solution rejouée coup par coup ; une ligne juste passe à la
@@ -210,7 +216,7 @@ justes d'affilée** ; un échec (faux, en retard, rien joué) remet la série à
 (`CalculationRules::streakMates` : en 1 ou 2 au début, jusqu'à 4 à partir de 9 ; un mat d'une autre
 longueur quand le catalogue n'a plus rien). La réflexion suit le **tempo** : 40 s, 3 s de moins par
 ligne juste du combat, jamais moins de 15 s (`tempo()`, colonne `think_seconds`, migration
-`Version20261107090000`) ; la réponse garde ses 2 s par demi-coup. Le front envoie la ligne au mat
+`Version20261107090000`) ; la réponse garde ses 3 s par demi-coup. Le front envoie la ligne au mat
 ou quand l'horloge tombe (au plus 7 demi-coups, un mat en 4).
 
 L'élément et le résultat portent `streak` (la série en cours), `streakTarget`, `lives`, et

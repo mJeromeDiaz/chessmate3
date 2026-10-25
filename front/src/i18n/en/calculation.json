@@ -19,7 +19,7 @@
     },
     "thinkText": "The board is frozen: calculate the entire line for both sides. Click “I'm ready” when you've worked it out.",
     "thinkHidden": "The board is frozen: calculate the line all the way to the end, for both sides.",
-    "answerText": "Play the entire line in one go, for both sides: 2 seconds per ply.",
+    "answerText": "Play the entire line in one go, for both sides: 3 seconds per ply.",
     "rightText": "Calculated from beginning to end.",
     "wrongText": "The solution is replayed on the board.",
     "lateText": "Time to play has run out.",
@@ -34,7 +34,7 @@
     "moves": "{n} moves",
     "positions": "Position {n} of {count}",
     "solveText": "Play your moves; your opponent replies. Remember the entire line.",
-    "replayText": "From memory: replay the entire line in one go, for both sides, 2 seconds per ply.",
+    "replayText": "From memory: replay the entire line in one go, for both sides, 3 seconds per ply.",
     "kinds": {
       "reply": "Your first move has been played. What is your opponent's best reply?",
       "two_replies": "Your opponent has only two replies to your first move: calculate a line against each. Click “I'm ready” when you've worked them out.",
@@ -43,8 +43,8 @@
       "combo": "Three forced moves, only one combination works. Choose it, then play the entire line, for both sides.",
       "advocate": "Suggest your move, then play devil's advocate: play your opponent's best reply, followed by your continuation, all in one go. Click “I'm ready” when you have the entire line."
     },
-    "firstLineText": "First line: your move, one of the two replies, then the continuation. 2 seconds per ply.",
-    "secondLineText": "Second line: the other reply is played; continue. 2 seconds per ply.",
+    "firstLineText": "First line: your move, one of the two replies, then the continuation. 3 seconds per ply.",
+    "secondLineText": "Second line: the other reply is played; continue. 3 seconds per ply.",
     "judgingText": "Stockfish is checking your line…",
     "preparing": "The engine is preparing the replies…",
     "engineDown": "Engine unavailable: only the solution line can be judged correct.",

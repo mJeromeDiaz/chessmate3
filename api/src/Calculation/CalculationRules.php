@@ -17,7 +17,7 @@ final class CalculationRules
     /** The mini-boss of chapter 2: solving the puzzle first takes up to this long (docs/CALCULATION.md, § 2 ter). */
     public const SOLVE_SECONDS = 300;
     /** Each half-move played at most this long after the previous one (the first after « Je réponds »). */
-    public const PLY_SECONDS = 2;
+    public const PLY_SECONDS = 3;
     /** The positions are drawn this far below the player's puzzle rating (calm lessons). */
     public const RATING_GAP = 150;
     /** A run's items at most, its lives at most. */

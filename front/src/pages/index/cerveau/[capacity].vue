@@ -138,7 +138,8 @@ import {
   currentStep,
   findPlace,
   findStep,
-  refusalText
+  refusalText,
+  startsOnSecondClick
 } from '@/utils/mindMapPath'
 import { t } from '@/i18n'
 
@@ -261,6 +262,17 @@ onBeforeUnmount(() => headerObserver?.disconnect())
 
 /** @param {import('@/utils/mindMapPath').PathStep} step */
 function select(step) {
+  // Clicked again while shown beside the path: played, as « Commencer » (a phone's sheet hides
+  // the path, so a tap there only opens it again).
+  if (
+    wide.value &&
+    chosenKey.value === step.key &&
+    !busy.value &&
+    startsOnSecondClick(step)
+  ) {
+    start(step)
+    return
+  }
   if (step.key !== shown.value?.key) actionError.value = ''
   chosenKey.value = step.key
   sheetOpen.value = true

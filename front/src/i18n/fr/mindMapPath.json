@@ -734,11 +734,11 @@
     "steps": {
       "s1_1": {
         "title": "Le coup évident",
-        "desc": "Des mats en 1. L’échiquier est figé : calcule, clique « Je réponds », puis joue ton coup en 2 secondes. 10 positions et 80 % justes."
+        "desc": "Des mats en 1. L’échiquier est figé : calcule, clique « Je réponds », puis joue ton coup en 3 secondes. 10 positions et 80 % justes."
       },
       "s1_2": {
         "title": "Deux coups",
-        "desc": "Des mats en 2 : calcule toute la ligne, puis joue-la d’un trait, les deux camps, 2 secondes par demi-coup. 10 positions et 80 % justes."
+        "desc": "Des mats en 2 : calcule toute la ligne, puis joue-la d’un trait, les deux camps, 3 secondes par demi-coup. 10 positions et 80 % justes."
       },
       "s1_chest": {
         "title": "Coffre de la ligne droite",
