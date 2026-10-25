@@ -140,9 +140,9 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
   3.3. Une idée qui tombe (`mistakeAt` 0) : le demi-coup 1 jugé seul (`holdsAt` de
   `useLineJudge`), pour la feuille seulement (`advocateNote` : réfutation trouvée, ou l'adversaire
   avait mieux) ; une idée qui tient et une réponse trop faible (`mistakeAt` 1) : « avocat trop
-  indulgent ». Son visage (`advocateMood`, `assets/mindMap/boss/avocat/` quand les images
-  viendront, sinon un glyphe) : concentré, puis doute passé la moitié de la réflexion ; joie quand
-  l'idée tombe, fierté au temps écoulé, tristesse quand elle tient. Ses répliques :
+  indulgent ». Son visage (`advocateMood`, le démon : `assets/mindMap/boss/demon/`, docs/MIND_MAP.md
+  § 7) : réflexion, puis malice passé la moitié de la réflexion ; triomphe quand l'idée tombe,
+  fierté au temps écoulé, agacement quand elle tient. Ses répliques :
   `calculation.advocate.*`.
 - **3.2** : la première ligne jouée, l'échiquier repart après le premier coup et **l'autre
   réponse, joués d'office** ; le joueur joue la suite. `mistakeAt` compte la seconde ligne après

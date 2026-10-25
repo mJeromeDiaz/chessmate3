@@ -263,7 +263,11 @@ l'appli.
   la Gargouille, le Jongleur, le Cyclope ; le Requin aussi, pas encore placé dans un parcours) a un dossier `assets/mindMap/boss/<personnage>/` : `<personnage>-<humeur>.png`
   (bustes : joie, surprise, doute, tristesse, fierte, colere, concentration, angoisse, neutre ;
   `MOODS` de `utils/mindMapPath.js`, clés anglaises) et `<personnage>-pose.png` (en pied, dans son
-  détail `StepDetail`). `BossPortrait` prend une `mood`, sinon celle de sa pose (`POSE_MOODS` : `idle`
+  détail `StepDetail`). Un personnage dont les images portent un autre nom passe par `STAND_INS`
+  (le Roi des cendres : `liche/` ; l'Avocat du diable : `demon/`), et un dossier aux expressions
+  différentes, par `BOSS_MOODS` (le démon : joie → triomphe, doute → malice, tristesse → agacement,
+  concentration → réflexion, surprise → gêne, angoisse → doute). Le Minotaure (`minotaure/`)
+  attend le chapitre 5 du calcul, « Le labyrinthe ». `BossPortrait` prend une `mood`, sinon celle de sa pose (`POSE_MOODS` : `idle`
   → neutre, `cheer` → joie, `angry` → colère, `search` → concentration, `beaten` → tristesse) et
   `full` (en pied). Les autres découpent une pose (`POSES`) dans la planche du personnage
   (`assets/mindMap/boss/<personnage>.png`, 1536 × 1024) ; sans planche, celle du cyclope.

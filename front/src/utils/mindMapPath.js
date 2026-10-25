@@ -222,10 +222,11 @@ export const BOSS_GLYPHS = /** @type {Record<string, string>} */ ({
 
 /**
  * The folder of expressions of a boss whose pictures bear another name (the Roi des cendres: the
- * lich).
+ * lich; the Avocat du diable: the demon).
  */
 const STAND_INS = /** @type {Record<string, string>} */ ({
-  'roi-cendres': 'liche'
+  'roi-cendres': 'liche',
+  avocat: 'demon'
 })
 
 /**
@@ -288,6 +289,24 @@ export const MOODS = {
 
 /** @typedef {keyof typeof MOODS} Mood */
 
+/**
+ * The expressions of a boss drawn with another set than {@link MOODS}, by mood (the demon: no
+ * sadness, focus, surprise or anxiety, but annoyance, reflection, triumph, malice…).
+ */
+const BOSS_MOODS = /** @type {Record<string, Record<Mood, string>>} */ ({
+  demon: {
+    joy: 'triomphe',
+    surprise: 'gene',
+    doubt: 'malice',
+    sadness: 'agacement',
+    pride: 'fierte',
+    anger: 'colere',
+    focus: 'reflexion',
+    anxiety: 'doute',
+    neutral: 'neutre'
+  }
+})
+
 /** The mood that stands for a pose of the sheet, for a boss drawn by expressions. */
 export const POSE_MOODS = /** @type {Record<string, Mood>} */ ({
   idle: 'neutral',
@@ -305,7 +324,9 @@ export const POSE_MOODS = /** @type {Record<string, Mood>} */ ({
  */
 export function moodImage(character, mood) {
   const name = character ? (STAND_INS[character] ?? character) : null
-  return name ? bossFile(`${name}-${MOODS[mood] ?? MOODS.neutral}`) : ''
+  if (!name) return ''
+  const moods = BOSS_MOODS[name] ?? MOODS
+  return bossFile(`${name}-${moods[mood] ?? moods.neutral}`)
 }
 
 /**

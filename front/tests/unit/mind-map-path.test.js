@@ -279,6 +279,14 @@ describe('mind map path', () => {
     // The Roi des cendres is the lich; the endgames' others stand as a piece.
     expect(moodImage('roi-cendres', 'pride')).toContain('liche-fierte.png')
     expect(standingImage('roi-cendres')).toContain('liche-pose.png')
+    // The Avocat du diable is the demon, with expressions of its own.
+    expect(standingImage('avocat')).toContain('demon-pose.png')
+    expect(moodImage('avocat', 'sadness')).toContain('demon-agacement.png')
+    expect(moodImage('avocat', 'focus')).toContain('demon-reflexion.png')
+    expect(moodImage('avocat', 'joy')).toContain('demon-triomphe.png')
+    expect(moodImage('avocat', 'pride')).toContain('demon-fierte.png')
+    expect(moodImage('avocat', 'doubt')).toContain('demon-malice.png')
+    expect(moodImage('avocat', 'neutral')).toContain('demon-neutre.png')
     expect(moodImage('bourreau', 'joy')).toBe('')
     expect(BOSS_GLYPHS.bourreau).toBe('♛')
     expect(BOSS_GLYPHS['cavalier-errant']).toBe('♞')
