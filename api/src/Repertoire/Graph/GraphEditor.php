@@ -321,14 +321,16 @@ final class GraphEditor
      * are written in SQL, in batches.
      *
      * @param callable(Repertoire): ImportPlan $plan
+     * @param TrashReason                      $reason why the replaced moves are in the trash (a
+     *                                                 line saved from the editor: replaced)
      *
      * @throws RepertoireNotFoundException
      * @throws LimitReachedException
      * @throws StaleVersionException
      */
-    public function import(User $user, Uuid $repertoireId, callable $plan, ?int $baseVersion = null): Change
+    public function import(User $user, Uuid $repertoireId, callable $plan, ?int $baseVersion = null, TrashReason $reason = TrashReason::Imported): Change
     {
-        return $this->mutate($user, $repertoireId, $baseVersion, function (Repertoire $repertoire, Change $change, \DateTimeImmutable $now) use ($plan): ?array {
+        return $this->mutate($user, $repertoireId, $baseVersion, function (Repertoire $repertoire, Change $change, \DateTimeImmutable $now) use ($plan, $reason): ?array {
             $import = $plan($repertoire);
             if ($import->positionsAfter > $this->limits->maxPositions) {
                 throw new LimitReachedException('positions', $this->limits->maxPositions);
@@ -350,7 +352,7 @@ final class GraphEditor
                 $moveIds[$i] = Uuid::v7()->toRfc4122();
                 $graph->addMove(new GraphMove($moveIds[$i], $positionIds[$move['from']] ?? $existing[$move['from']], $positionIds[$move['to']] ?? $existing[$move['to']], MoveRole::from($move['role']), $move['sortOrder'], false, null, $move['san']));
             }
-            $trashed = $this->toTrash($repertoire, $graph, $import->replaced, TrashReason::Imported, $change, $now, commit: false);
+            $trashed = $this->toTrash($repertoire, $graph, $import->replaced, $reason, $change, $now, commit: false);
             $this->checkLimits($graph);
 
             // What undoing restores, read before writing.

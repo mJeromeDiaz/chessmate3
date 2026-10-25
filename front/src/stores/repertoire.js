@@ -302,6 +302,28 @@ export const useRepertoireStore = defineStore('repertoire', () => {
   }
 
   /**
+   * Saves a line drafted in the editor: the moves played from a position of the repertoire, in one
+   * change (one undo). Not optimistic: resolves with the change once saved, null when refused (the
+   * graph was reloaded).
+   *
+   * @param {string} fromPositionId
+   * @param {string[]} ucis
+   * @param {boolean} replace another prepared move on the way goes to the trash
+   * @returns {Promise<Change|null>}
+   */
+  function saveLine(fromPositionId, ucis, replace) {
+    const g = requireGraph()
+    return enqueue('line', v =>
+      repertoireApi.saveLine(g.id, {
+        fromPositionId: resolve(fromPositionId),
+        ucis,
+        replace,
+        baseVersion: v
+      })
+    )
+  }
+
+  /**
    * Makes a move the main line of its position.
    *
    * @param {string} moveId
@@ -593,6 +615,7 @@ export const useRepertoireStore = defineStore('repertoire', () => {
     load,
     resolve,
     addMove,
+    saveLine,
     replaceMove,
     promote,
     annotate,

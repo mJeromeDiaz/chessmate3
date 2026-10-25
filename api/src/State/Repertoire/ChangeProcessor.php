@@ -11,6 +11,7 @@ use App\ApiResource\Repertoire\AnswerPendingInput;
 use App\ApiResource\Repertoire\AnnotateInput;
 use App\ApiResource\Repertoire\ReplaceMoveInput;
 use App\ApiResource\Repertoire\RestoreInput;
+use App\ApiResource\Repertoire\SaveLineInput;
 use App\ApiResource\Repertoire\Change;
 use App\ApiResource\Repertoire\ChangeInput;
 use App\Chess\InvalidPositionException;
@@ -31,6 +32,7 @@ use App\Repertoire\Exception\StaleVersionException;
 use App\Repertoire\Graph\Change as GraphChange;
 use App\Repertoire\Graph\GraphEditor;
 use App\Repertoire\Graph\GraphReader;
+use App\Repertoire\Graph\LineWriter;
 use App\Repository\Repertoire\RepertoireRepository;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
@@ -41,7 +43,8 @@ use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Every change of a repertoire's graph (docs/REPERTOIRE.md), a pending position answered included:
+ * Every change of a repertoire's graph (docs/REPERTOIRE.md), a pending position answered and a line
+ * saved included:
  * 404 unknown repertoire, move, position or pending position (another user's included), 422 illegal
  * move, repeated position, limit or annotation, 409 stale baseVersion, nothing to undo, position
  * occupied or pending position not open, 429.
@@ -53,6 +56,7 @@ final class ChangeProcessor implements ProcessorInterface
     public function __construct(
         private readonly GraphEditor $editor,
         private readonly GraphReader $reader,
+        private readonly LineWriter $lines,
         private readonly PendingService $pendings,
         private readonly RepertoireRepository $repertoires,
         private readonly AuthenticatedUser $authenticatedUser,
@@ -73,6 +77,9 @@ final class ChangeProcessor implements ProcessorInterface
             $change = match ($operation->getName()) {
                 'repertoire_move_add' => $data instanceof AddMoveInput
                     ? $this->editor->addMove($user, $id, Uuid::fromString($data->fromPositionId), $data->uci, $data->baseVersion)
+                    : throw new \LogicException('Unexpected input.'),
+                'repertoire_line_save' => $data instanceof SaveLineInput
+                    ? $this->lines->save($user, $id, Uuid::fromString($data->fromPositionId), $data->ucis, $data->replace, $data->baseVersion)
                     : throw new \LogicException('Unexpected input.'),
                 'repertoire_move_replace' => $data instanceof ReplaceMoveInput
                     ? $this->editor->replace($user, $id, $move(), $data->uci, $data->baseVersion)

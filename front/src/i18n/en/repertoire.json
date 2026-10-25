@@ -373,22 +373,18 @@
     "testLineHint": "Segments from the displayed position",
     "testAll": "Test the whole repertoire",
     "start": "Starting position",
-    "explore": "Explore",
-    "exploreTip": "Play moves without saving them in the repertoire",
     "flip": "Flip the board",
-    "offBook": "Off repertoire:",
-    "notSaved": "(not saved)",
-    "backToBook": "Back to the repertoire",
     "first": "Start",
     "previous": "Previous move",
     "next": "Next move",
     "last": "End of the line",
     "tabs": {
       "moves": "Moves",
+      "lines": "Lines",
       "explorer": "Explorer",
       "engine": "Engine"
     },
-    "playHint": "Play a move on the board to add it to the repertoire. Only one move is prepared for you per position; your opponent can have several replies.",
+    "playHint": "Play moves on the board: outside the repertoire, they make a draft you save once the line suits you. One move is prepared for you per position; the opponent may have several replies.",
     "empty": "No moves yet.",
     "unanswered": "unanswered",
     "transposition": "⤳ transposition",
@@ -397,15 +393,12 @@
     "replaceMany": "{prepared} and {others} reached only through it will go to the trash: you can restore them.",
     "replaceManyPrepared": "{prepared} and {others} reached only through it (including {preparedMoves}) will go to the trash: you can restore them.",
     "replaceSingle": "{prepared} will go to the trash: you can restore it.",
-    "exploreInstead": "Explore without saving",
     "replace": "Replace",
     "origin": "From your games",
     "originGames": "From your games · {n} games",
     "testLineCaption": "Segments that start from the displayed position or further on.",
     "inTrash": "{move} is in the trash.",
     "seeTrash": "See the trash",
-    "transposed": "Transposition: this position is already in the repertoire, the two lines are linked.",
-    "seeLine": "See the line",
     "repeated": "This move leads back to a position the line comes from.",
     "impossible": "Impossible move here.",
     "failures": {
@@ -416,10 +409,19 @@
       "refused": "Change refused (limit reached or repeated position): the repertoire has been reloaded.",
       "tooMany": "Too many changes in a short time: wait a little. The repertoire has been reloaded.",
       "offline": "Server unreachable: the last change was not saved.",
-      "notSaved": "The last change was not saved: the repertoire has been reloaded."
+      "notSaved": "The last change was not saved: the repertoire has been reloaded.",
+      "lineRefused": "Line refused (limit reached or repeated position): the draft is kept.",
+      "draftStartGone": "The draft starts from a position no longer in the repertoire."
     },
     "pending": "On hold",
-    "pendingTip": "Positions on hold: frequent Lichess replies to prepare"
+    "pendingTip": "Positions on hold: frequent Lichess replies to prepare",
+    "draft": "Draft:",
+    "saveLine": "Save the line",
+    "discardDraft": "Discard",
+    "discardTitle": "Discard the draft?",
+    "discardMessage": "The draft’s moves are not saved: they will be lost.",
+    "draftLost": "The draft started from a position no longer in the repertoire: it was discarded.",
+    "replaceThenSave": "Your line will be saved in its place."
   },
   "pending": {
     "title": "On hold",
@@ -439,5 +441,16 @@
     "openEditor": "See in the editor",
     "occupied": "This position already has a prepared move: replace it in the editor.",
     "refused": "This move could not be added."
+  },
+  "lines": {
+    "filter": "Filter: Bc4, Italian, C50…",
+    "count": "{n} line | {n} lines",
+    "matching": "{n} line of {total} | {n} lines of {total}",
+    "none": "No line yet: play moves, then save the line.",
+    "delete": "Delete the line",
+    "deleteTitle": "Delete this line?",
+    "deleteAll": "It is the repertoire’s only line: it will be empty.",
+    "deleteOne": "{move} will go to the trash: you can restore it.",
+    "deleteMany": "{move} and the move after it will go to the trash: you can restore them. | {move} and the {n} moves after it will go to the trash: you can restore them."
   }
 }

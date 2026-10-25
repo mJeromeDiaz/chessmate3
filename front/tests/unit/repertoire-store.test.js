@@ -12,6 +12,7 @@ vi.mock('@/services/api', () => ({
     remove: vi.fn(),
     graph: vi.fn(),
     addMove: vi.fn(),
+    saveLine: vi.fn(),
     moveAction: vi.fn(),
     replaceMove: vi.fn(),
     annotate: vi.fn(),
@@ -421,6 +422,46 @@ describe('repertoire store', () => {
     })
     expect(Object.keys(store.graph.moves)).toEqual(['m9'])
     expect(store.graph.version).toBe(4)
+  })
+
+  it('saves a drafted line in one change once the server answers', async () => {
+    const store = await loaded()
+    repertoireApi.saveLine.mockResolvedValue(
+      change(4, {
+        operation: 'import',
+        positions: [
+          position('p1', AFTER_E4, 1),
+          position('p2', AFTER_E4_E5, 2)
+        ],
+        moves: [
+          move('m1', 'root', 'p1', 'e2e4', 'e4', 'reference'),
+          move('m2', 'p1', 'p2', 'e7e5', 'e5', 'reply')
+        ]
+      })
+    )
+
+    const saved = store.saveLine('root', ['e2e4', 'e7e5'], false)
+    expect(store.graph.moves).toEqual({})
+    expect(store.saving).toBe(true)
+    expect((await saved).operation).toBe('import')
+
+    expect(repertoireApi.saveLine).toHaveBeenCalledWith('r1', {
+      fromPositionId: 'root',
+      ucis: ['e2e4', 'e7e5'],
+      replace: false,
+      baseVersion: 3
+    })
+    expect(Object.keys(store.graph.moves).sort()).toEqual(['m1', 'm2'])
+    expect(store.graph.version).toBe(4)
+  })
+
+  it('reloads the graph when a line is refused', async () => {
+    const store = await loaded()
+    repertoireApi.saveLine.mockRejectedValueOnce({ response: { status: 422 } })
+
+    expect(await store.saveLine('root', ['e2e4'], false)).toBeNull()
+    expect(store.failure).toEqual({ status: 422, operation: 'line' })
+    expect(repertoireApi.graph).toHaveBeenCalledTimes(2)
   })
 
   it('restores from the trash as a change, and discards for good', async () => {

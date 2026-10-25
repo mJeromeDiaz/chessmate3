@@ -613,6 +613,21 @@ export const repertoireApi = {
       )
       .then(r => r.data),
   /**
+   * A line drafted in the editor, saved in one change (replace: another prepared move on the way
+   * goes to the trash; otherwise 409).
+   *
+   * @param {string} id
+   * @param {{fromPositionId: string, ucis: string[], replace?: boolean, baseVersion?: number}} payload
+   */
+  saveLine: (id, payload) =>
+    http
+      .post(
+        `/api/repertoires/${encodeURIComponent(id)}/lines`,
+        payload,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
    * Another prepared move in place of the user's move (the former one goes to the trash).
    *
    * @param {string} id

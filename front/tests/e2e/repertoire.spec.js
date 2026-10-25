@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test'
 import { playMove, signIn } from './helpers.js'
 
 const isChange = r =>
-  /\/api\/repertoires\/[^/]+\/(moves|undo)(\/|$)/.test(r.url()) &&
+  /\/api\/repertoires\/[^/]+\/(moves|lines|undo)(\/|$)/.test(r.url()) &&
   r.request().method() === 'POST'
 
 /**
- * Plays a move and waits until the server saved it.
+ * Plays a move (into the draft, or along the repertoire): nothing is sent.
  *
  * @param {import('@playwright/test').Page} page
  * @param {string} uci
@@ -14,12 +14,30 @@ const isChange = r =>
 async function play(page, uci) {
   const board = page.getByTestId('chess-board')
   const before = await board.getAttribute('data-fen')
-  const saved = page.waitForResponse(isChange)
   await playMove(page, uci)
-  expect((await saved).status()).toBe(200)
   // data-fen changes once the board is done animating: ready for the next move.
   await expect(board).not.toHaveAttribute('data-fen', before ?? '')
 }
+
+/**
+ * Saves the draft and waits until the server saved the line.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+async function saveLine(page) {
+  const saved = page.waitForResponse(isChange)
+  await page.getByTestId('editor-draft-save').click()
+  expect((await saved).status()).toBe(200)
+  await expect(page.getByTestId('editor-draft')).toHaveCount(0)
+}
+
+/**
+ * The draft's moves as shown ("1.e4", "e5").
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+const draftMoves = page =>
+  page.getByTestId('editor-draft-moves').locator('.editor__draft-move')
 
 /**
  * The tree as written, without spaces ("1.e4e5(1…c5)2.Nf3").
@@ -32,7 +50,7 @@ const treeText = page =>
     .innerText()
     .then(t => t.replace(/\s+/g, ''))
 
-test('builds a repertoire move by move, with a variation, a comment, a deletion and undo', async ({
+test('builds a repertoire line by line, with a variation, a comment, a deletion and undo', async ({
   page,
   context
 }) => {
@@ -44,9 +62,22 @@ test('builds a repertoire move by move, with a variation, a comment, a deletion 
   await expect(page.getByTestId('editor-name')).toHaveText('Blancs e2e')
   await expect(page.getByTestId('move-tree')).toContainText('Aucun coup')
 
+  // The moves make a draft, sent only when the line is saved; undo takes the whole line back.
+  await play(page, 'e2e4')
+  await play(page, 'e7e5')
+  await expect(draftMoves(page)).toHaveText(['1.e4', 'e5'])
+  await expect(page.getByTestId('move-tree')).toContainText('Aucun coup')
+  await saveLine(page)
+  expect(await treeText(page)).toBe('1.e4e5')
+  const undoneLine = page.waitForResponse(isChange)
+  await page.getByTestId('editor-undo').click()
+  await undoneLine
+  await expect(page.getByTestId('move-tree')).toContainText('Aucun coup')
+
   await play(page, 'e2e4')
   await play(page, 'e7e5')
   await play(page, 'g1f3')
+  await saveLine(page)
   await expect(page.getByTestId('editor-save-state')).toHaveText('Enregistré')
   expect(await treeText(page)).toBe('1.e4e52.Nf3')
   // Opening names come from lichess-org/chess-openings (loaded with the fixtures).
@@ -62,6 +93,7 @@ test('builds a repertoire move by move, with a variation, a comment, a deletion 
     /^rnbqkbnr\/pppppppp\/8\/8\/4P3\/8\/PPPP1PPP\/RNBQKBNR b KQkq -/
   )
   await play(page, 'c7c5')
+  await saveLine(page)
   expect(await treeText(page)).toBe('1.e4e51…c52.Nf3')
 
   // The keyboard walks the variation back to the main line.
@@ -97,7 +129,7 @@ test('builds a repertoire move by move, with a variation, a comment, a deletion 
   expect(await treeText(page)).toBe('1.e4e51…c52.Nf3!')
 })
 
-test('one prepared move per position: explore without saving, replace, restore from the trash', async ({
+test('one prepared move per position: a draft kept on reload, replacing at save, restore from the trash', async ({
   page,
   context
 }) => {
@@ -111,36 +143,53 @@ test('one prepared move per position: explore without saving, replace, restore f
   for (const uci of ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5']) {
     await play(page, uci)
   }
+  await saveLine(page)
   expect(await treeText(page)).toBe('1.e4e52.Nf3Nc63.Bb5')
 
-  // Another move of mine after 2…Nc6: replace it, or explore.
+  // Another move of mine after 2…Nc6: a draft, stepped through with the arrows.
   await page.keyboard.press('ArrowLeft')
-  await playMove(page, 'f1c4')
+  await play(page, 'f1c4')
+  await play(page, 'g8f6')
+  await expect(draftMoves(page)).toHaveText(['3.Bc4', 'Nf6'])
+  const after = page.locator('.editor__draft-move--after')
+  await page.keyboard.press('ArrowLeft')
+  await expect(after).toHaveText('Nf6')
+  await page.keyboard.press('ArrowRight')
+  await expect(after).toHaveCount(0)
+
+  // Kept in the browser: back after a reload, nothing saved.
+  await page.reload()
+  await expect(draftMoves(page)).toHaveText(['3.Bc4', 'Nf6'])
+  expect(await treeText(page)).toBe('1.e4e52.Nf3Nc63.Bb5')
+
+  // Another move picked in the tree asks before dropping the draft.
+  await page.locator('[data-testid="tree-move"]', { hasText: 'e4' }).click()
+  await page
+    .locator('.q-dialog')
+    .getByRole('button', { name: 'Annuler' })
+    .click()
+  await expect(draftMoves(page)).toHaveText(['3.Bc4', 'Nf6'])
+
+  // Saving it replaces 3.Bb5, which goes to the trash.
+  await page.getByTestId('editor-draft-save').click()
   const dialog = page.getByTestId('replace-dialog')
   await expect(dialog).toContainText('Remplacer 3.Bb5 par 3.Bc4 ?')
-  await page.getByTestId('replace-explore').click()
-  await expect(page.getByTestId('editor-off-book')).toContainText('3.Bc4')
-  await expect(page.getByTestId('editor-explore')).toHaveAttribute(
-    'aria-checked',
-    'true'
-  )
-  await playMove(page, 'g8f6')
-  await expect(page.getByTestId('editor-off-book')).toContainText('3.Bc4 Nf6')
-  // Off book, ← goes back through the explored moves; nothing was saved.
-  await page.keyboard.press('ArrowLeft')
-  await expect(page.getByTestId('editor-off-book')).not.toContainText('Nf6')
-  await page.getByTestId('editor-off-book-leave').click()
-  await expect(page.getByTestId('editor-off-book')).toHaveCount(0)
-  await page.getByTestId('editor-explore').click()
-  expect(await treeText(page)).toBe('1.e4e52.Nf3Nc63.Bb5')
-
-  // Replaced: 3.Bb5 goes to the trash.
-  await playMove(page, 'f1c4')
   const replaced = page.waitForResponse(isChange)
   await page.getByTestId('replace-confirm').click()
   expect((await replaced).status()).toBe(200)
-  await expect(page.getByTestId('move-tree')).toContainText('Bc4')
-  expect(await treeText(page)).toBe('1.e4e52.Nf3Nc63.Bc4')
+  await expect(page.getByTestId('editor-draft')).toHaveCount(0)
+  expect(await treeText(page)).toBe('1.e4e52.Nf3Nc63.Bc4Nf6')
+  await expect(page.locator('.move-tree__move--current')).toHaveText('Nf6')
+
+  // A draft dropped on purpose.
+  await play(page, 'd2d3')
+  await page.getByTestId('editor-draft-discard').click()
+  await page
+    .locator('.q-dialog')
+    .getByRole('button', { name: 'Abandonner' })
+    .click()
+  await expect(page.getByTestId('editor-draft')).toHaveCount(0)
+  expect(await treeText(page)).toBe('1.e4e52.Nf3Nc63.Bc4Nf6')
 
   // The trash: restore 3.Bb5, 3.Bc4 goes there in turn.
   await page.getByTestId('editor-trash').click()
@@ -254,9 +303,7 @@ test('the Lichess panels: explorer and engine lines play their moves (Lichess si
   await page.getByTestId('explorer-source').getByText('Lichess').click()
   await expect(page.getByTestId('explorer-move')).toHaveCount(2)
 
-  const added = page.waitForResponse(isChange)
   await page.locator('[data-testid="explorer-move"][data-uci="e2e4"]').click()
-  expect((await added).status()).toBe(200)
   await expect(page.getByTestId('chess-board')).toHaveAttribute(
     'data-fen',
     /^rnbqkbnr\/pppppppp\/8\/8\/4P3\//
@@ -269,9 +316,68 @@ test('the Lichess panels: explorer and engine lines play their moves (Lichess si
   await expect(page.getByTestId('cloud-eval-line').first()).toContainText(
     '1…e5 2.Nf3'
   )
-  const reply = page.waitForResponse(isChange)
   await page.getByTestId('cloud-eval-line').nth(1).click()
-  expect((await reply).status()).toBe(200)
+  await expect(draftMoves(page)).toHaveText(['1.e4', 'c5'])
+  await saveLine(page)
   await page.getByTestId('tab-moves').click()
   expect(await treeText(page)).toBe('1.e4c5')
+})
+
+test('the Lines tab: every line, filtered, shown on the board, deleted then undone', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/repertoire/new')
+  await page.getByTestId('repertoire-name').fill('Lignes e2e')
+  await page.getByTestId('repertoire-create').click()
+  await expect(page.getByTestId('editor-name')).toHaveText('Lignes e2e')
+  for (const uci of ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5']) {
+    await play(page, uci)
+  }
+  await saveLine(page)
+  // Back to 1.e4: 1…c5 2.Nf3, a second line.
+  await page.locator('[data-testid="tree-move"]', { hasText: 'e4' }).click()
+  await play(page, 'c7c5')
+  await play(page, 'g1f3')
+  await saveLine(page)
+
+  await page.getByTestId('tab-lines').click()
+  const items = page.getByTestId('line-item')
+  await expect(page.getByTestId('lines-count')).toHaveText('2 lignes')
+  await expect(items.getByTestId('line-moves')).toHaveText([
+    '1.e4 e5 2.Nf3 Nc6 3.Bb5',
+    '1.e4 c5 2.Nf3'
+  ])
+
+  await page.getByTestId('lines-filter').fill('c5')
+  await expect(items).toHaveCount(1)
+  await expect(page.getByTestId('lines-count')).toHaveText('1 ligne sur 2')
+  await page.getByTestId('lines-filter').fill('')
+  await expect(items).toHaveCount(2)
+
+  // A click shows the line's end.
+  await items.first().click()
+  await expect(page.getByTestId('chess-board')).toHaveAttribute(
+    'data-fen',
+    /^r1bqkbnr\/pppp1ppp\/2n5\/1B2p3\/4P3\/5N2\/PPPP1PPP\/RNBQK2R b KQkq -/
+  )
+
+  // The bin removes what only this line has: 1…e5 and what follows.
+  await items.first().getByTestId('line-delete').click()
+  await expect(page.locator('.q-dialog')).toContainText(
+    '1…e5 et les 3 coups qui le suivent'
+  )
+  const deleted = page.waitForResponse(isChange)
+  await page
+    .locator('.q-dialog')
+    .getByRole('button', { name: 'Supprimer la ligne' })
+    .click()
+  expect((await deleted).status()).toBe(200)
+  await expect(items.getByTestId('line-moves')).toHaveText(['1.e4 c5 2.Nf3'])
+
+  const undone = page.waitForResponse(isChange)
+  await page.getByTestId('editor-undo').click()
+  await undone
+  await expect(items).toHaveCount(2)
 })

@@ -1,0 +1,27 @@
+0 / ajouter une animation type éclair pour battre le boss de fin de parcours
+
+5 / revoir le design des parcours depuis claude design
+
+message roulette et cristaux offert non distribué. // a retester !
+
+5 / session entrainement type : 
+- repertoire - evaluation - woodpecker - brillant ou blunder - finale au hasard
+
+4 / analyse de ses partie avec maia et stockfish
+
+# 9 / repertoire, enregistrer une ligne a la fin et pas coup par coup
+
+4 / module partie multiple contre maia
+
+0 / abonnement/paiement
+
+# 7 / parcours visualisation 1.6, il faut voir la correction joué et ecrite 
+
+# 10 / Ligne comptés fausses : profondeur de calcul
+
+# Écart au demi-coup 2 · Solution : 19. Dg4+ Rf8 20. Dg7# · Ta ligne : 19. Dg4+ Rh8 20. Dg7#
+
+# Écart au demi-coup 2 · Solution : 37… Dg3+ 38. Fg2 Dh2# · Ta ligne : 37… Dg3+ 38. Rh1 Dh2#
+
+# Écart au demi-coup 1 · Solution : 35… Dh1+ 36. Rg3 Dxg2# · Ta ligne : 35… Dg4+ 36. Rh2 Dxg2#
+

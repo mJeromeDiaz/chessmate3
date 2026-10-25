@@ -203,18 +203,6 @@
               >
             </div>
             <q-space />
-            <q-toggle
-              :model-value="editor.exploring.value"
-              dense
-              icon="explore"
-              :label="$t('repertoire.editor.explore')"
-              left-label
-              class="q-mr-sm"
-              data-testid="editor-explore"
-              @update:model-value="on => editor.setExploring(on)"
-            >
-              <q-tooltip>{{ $t('repertoire.editor.exploreTip') }}</q-tooltip>
-            </q-toggle>
             <q-btn
               flat
               round
@@ -238,28 +226,49 @@
           />
 
           <div
-            v-if="editor.offBook.value.length"
-            class="editor__off-book row items-center no-wrap q-mt-sm q-pa-sm"
-            data-testid="editor-off-book"
+            v-if="editor.drafting.value"
+            class="editor__draft q-mt-sm q-pa-sm"
+            data-testid="editor-draft"
           >
-            <q-icon name="explore" class="q-mr-sm" />
-            <div class="col ellipsis">
-              <span class="text-weight-medium">{{
-                $t('repertoire.editor.offBook')
-              }}</span>
-              {{ offBookText }}
-              <span class="cm-muted">{{
-                $t('repertoire.editor.notSaved')
-              }}</span>
+            <div class="row items-center no-wrap">
+              <q-icon name="edit_note" size="20px" class="q-mr-sm" />
+              <div class="col" data-testid="editor-draft-moves">
+                <span class="text-weight-medium">{{
+                  $t('repertoire.editor.draft')
+                }}</span>
+                <span
+                  v-for="(label, i) in draftText"
+                  :key="i"
+                  class="editor__draft-move"
+                  :class="{
+                    'editor__draft-move--after': i >= editor.draft.value.cursor
+                  }"
+                  >{{ label }}</span
+                >
+              </div>
             </div>
-            <q-btn
-              flat
-              dense
-              no-caps
-              :label="$t('repertoire.editor.backToBook')"
-              data-testid="editor-off-book-leave"
-              @click="editor.offBook.value = []"
-            />
+            <div class="row justify-end q-gutter-xs q-mt-xs">
+              <q-btn
+                flat
+                dense
+                no-caps
+                :label="$t('repertoire.editor.discardDraft')"
+                data-testid="editor-draft-discard"
+                @click="confirmDiscard()"
+              />
+              <q-btn
+                unelevated
+                dense
+                no-caps
+                color="primary"
+                icon="save"
+                class="q-px-sm"
+                :label="$t('repertoire.editor.saveLine')"
+                :loading="savingLine"
+                data-testid="editor-draft-save"
+                @click="saveDraft"
+              />
+            </div>
           </div>
 
           <div class="row justify-center q-mt-sm q-gutter-xs">
@@ -309,6 +318,11 @@
               data-testid="tab-moves"
             />
             <q-tab
+              name="lines"
+              :label="$t('repertoire.editor.tabs.lines')"
+              data-testid="tab-lines"
+            />
+            <q-tab
               name="explorer"
               :label="$t('repertoire.editor.tabs.explorer')"
               data-testid="tab-explorer"
@@ -338,12 +352,13 @@
               </div>
               <MoveTree
                 ref="tree"
-                v-model:path="editor.path.value"
-                :keyboard="!editor.offBook.value.length"
+                :path="editor.path.value"
+                :keyboard="!editor.drafting.value"
                 class="editor__tree"
                 :graph="store.graph"
                 :index="store.index"
                 :move-class="moveClass"
+                @update:path="onTreePath"
               >
                 <template #empty>{{ $t('repertoire.editor.empty') }}</template>
               </MoveTree>
@@ -358,6 +373,9 @@
                   $t('repertoire.editor.transposition')
                 }}</span>
               </div>
+            </q-tab-panel>
+            <q-tab-panel name="lines" class="q-px-none">
+              <RepertoireLines :path="editor.path.value" @select="onTreePath" />
             </q-tab-panel>
             <q-tab-panel name="explorer" class="q-px-none">
               <ExplorerPanel
@@ -392,6 +410,7 @@
         }}</q-card-section>
         <q-card-section class="q-pt-none">
           {{ $t('repertoire.editor.replaceOnly') }}
+          {{ $t('repertoire.editor.replaceThenSave') }}
           {{
             replacing.others > 0
               ? $t(
@@ -421,15 +440,6 @@
           />
           <q-btn
             v-close-popup
-            flat
-            no-caps
-            icon="explore"
-            :label="$t('repertoire.editor.exploreInstead')"
-            data-testid="replace-explore"
-            @click="exploreInstead"
-          />
-          <q-btn
-            v-close-popup
             color="primary"
             no-caps
             :label="$t('repertoire.editor.replace')"
@@ -444,7 +454,6 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { Chess } from 'chess.js'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
@@ -453,18 +462,12 @@ import MoveActions from '@/components/repertoire/MoveActions.vue'
 import GameStatCard from '@/components/repertoire/GameStatCard.vue'
 import ShortcutsHelp from '@/components/repertoire/ShortcutsHelp.vue'
 import ExplorerPanel from '@/components/repertoire/ExplorerPanel.vue'
+import RepertoireLines from '@/components/repertoire/RepertoireLines.vue'
 import CloudEvalPanel from '@/components/repertoire/CloudEvalPanel.vue'
 import RepertoireTestDialog from '@/components/repertoire/RepertoireTestDialog.vue'
-import {
-  canonicalPath,
-  moveNumber,
-  pathToMove
-} from '@/components/chess/moveTree'
-import {
-  PositionOccupiedError,
-  RepeatedPositionError,
-  useRepertoireStore
-} from '@/stores/repertoire'
+import { moveNumber } from '@/components/chess/moveTree'
+import { RepeatedPositionError, useRepertoireStore } from '@/stores/repertoire'
+import { draftConflict, draftLabels, walkLine } from '@/utils/repertoireDraft'
 import { useRepertoireEditor } from '@/composables/repertoire/useRepertoireEditor'
 import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -512,9 +515,9 @@ const originLabel = computed(() => {
 const testOpen = ref(false)
 /** @type {import('vue').Ref<{title: string, caption: string, config: Record<string, any>}|null>} */
 const testScope = ref(null)
-/** The position shown, when it is in the repertoire (not while exploring off-book). */
+/** The position shown, when it is in the repertoire (not while drafting). */
 const testRoot = computed(() =>
-  editor.offBook.value.length ? null : (editor.position.value?.id ?? null)
+  editor.drafting.value ? null : (editor.position.value?.id ?? null)
 )
 
 /** @param {'line'|'all'} scope */
@@ -562,14 +565,13 @@ watch(
 )
 
 /**
- * The replacement being confirmed: the prepared move, the move played instead, and what goes to
- * the trash with the former one.
+ * The replacement being confirmed before saving the draft: the prepared move, the draft's move
+ * played instead, and what goes to the trash with the former one.
  */
 const replacing = reactive({
   open: false,
   /** @type {import('@/stores/repertoire').Move|null} */
   prepared: null,
-  uci: '',
   label: '',
   preparedLabel: '',
   /** Moves only reached through the prepared one. */
@@ -577,19 +579,12 @@ const replacing = reactive({
   /** Of which prepared moves of the user. */
   preparedCount: 0
 })
+const savingLine = ref(false)
 
-/** The moves explored off book, numbered: "5.Nf3 Nc6". */
-const offBookText = computed(() => {
-  const start = editor.position.value?.depth ?? 0
-  return editor.offBook.value
-    .map((m, i) => {
-      const ply = start + i
-      const number = Math.floor(ply / 2) + 1
-      if (ply % 2 === 0) return `${number}.${m.san}`
-      return i === 0 ? `${number}…${m.san}` : m.san
-    })
-    .join(' ')
-})
+/** The draft's moves, numbered: "5.Nf3", "Nc6". */
+const draftText = computed(() =>
+  draftLabels(editor.position.value?.depth ?? 0, editor.draft.value.moves)
+)
 
 /** @param {import('@/stores/repertoire').Move} move */
 function moveClass(move) {
@@ -598,40 +593,63 @@ function moveClass(move) {
 }
 
 /**
- * The board buttons, off book first.
+ * The board buttons: through the draft, else along the tree.
  *
  * @param {'start'|'back'|'forward'|'end'} action
  */
 function navigate(action) {
-  if (editor.offBook.value.length && action === 'back') return editor.back()
-  if (editor.offBook.value.length && action === 'forward') return
-  editor.offBook.value = []
+  if (editor.stepDraft(action)) return
   tree.value?.navigate(action)
 }
 
 /**
- * A second move of the user where one is prepared: offer to replace it, or to explore.
+ * Another place picked in the tree: the draft is dropped, after confirmation.
  *
- * @param {import('@/stores/repertoire').Move} prepared
- * @param {string} uci
+ * @param {string[]} path
  */
-function offerReplacement(prepared, uci) {
-  const from = store.graph.positions[prepared.from]
-  const number = from ? moveNumber(from) : ''
-  const probe = new Chess(editor.fen.value)
-  const san = probe.move({
-    from: uci.slice(0, 2),
-    to: uci.slice(2, 4),
-    promotion: uci[4]
-  }).san
-  const { moveIds } = store.removalOf(prepared.id)
-  const others = moveIds.filter(id => id !== prepared.id)
+function onTreePath(path) {
+  if (!editor.drafting.value) {
+    editor.path.value = path
+    return
+  }
+  confirmDiscard(() => {
+    editor.discardDraft()
+    editor.path.value = path
+  })
+}
+
+/** @param {() => void} [then] what to do once the draft is dropped (default: nothing more) */
+function confirmDiscard(then) {
+  $q.dialog({
+    title: t('repertoire.editor.discardTitle'),
+    message: t('repertoire.editor.discardMessage'),
+    cancel: { flat: true, noCaps: true, label: t('common.actions.cancel') },
+    ok: {
+      color: 'negative',
+      noCaps: true,
+      label: t('repertoire.editor.discardDraft')
+    }
+  }).onOk(() => (then ? then() : editor.discardDraft()))
+}
+
+/** Saves the draft, after confirming the replacement of a prepared move on the way. */
+function saveDraft() {
+  const { from, moves } = editor.draft.value
+  if (!from || !moves.length || savingLine.value) return
+  const conflict = draftConflict(store.graph, store.index, from, moves)
+  if (!conflict) {
+    sendDraft(false)
+    return
+  }
+  const position = store.graph.positions[conflict.positionId]
+  const number = position ? moveNumber(position) : ''
+  const { moveIds } = store.removalOf(conflict.prepared.id)
+  const others = moveIds.filter(id => id !== conflict.prepared.id)
   Object.assign(replacing, {
     open: true,
-    prepared,
-    uci,
-    label: `${number}${san}`,
-    preparedLabel: `${number}${prepared.san}`,
+    prepared: conflict.prepared,
+    label: `${number}${conflict.san}`,
+    preparedLabel: `${number}${conflict.prepared.san}`,
     others: others.length,
     preparedCount: others.filter(
       id => store.graph.moves[id]?.role === 'reference'
@@ -639,67 +657,55 @@ function offerReplacement(prepared, uci) {
   })
 }
 
-async function confirmReplace() {
-  const prepared = replacing.prepared
-  if (!prepared) return
-  const moveId = await store.replaceMove(prepared.id, replacing.uci)
-  if (!moveId || !store.index) return
-  editor.path.value = pathToMove(store.index, store.graph, moveId)
-  $q.notify({
-    type: 'info',
-    message: t('repertoire.editor.inTrash', { move: replacing.preparedLabel }),
-    actions: [
-      {
-        label: t('repertoire.editor.seeTrash'),
-        color: 'white',
-        noCaps: true,
-        handler: () => router.push(`/repertoire/${store.graph.id}/trash`)
-      }
-    ]
-  })
+function confirmReplace() {
+  sendDraft(true)
 }
 
-function exploreInstead() {
+/**
+ * Sends the draft, then shows the end of the saved line. A refused line stays in the draft (the
+ * store reloaded the graph and the page says why).
+ *
+ * @param {boolean} replace
+ */
+async function sendDraft(replace) {
+  const { from, moves } = editor.draft.value
+  if (!from) return
+  const ucis = moves.map(m => m.uci)
+  const base = editor.path.value
+  savingLine.value = true
   try {
-    editor.explore(replacing.uci)
-  } catch {
-    // The position changed meanwhile: nothing to explore.
+    const change = await store.saveLine(from, ucis, replace)
+    if (!change || !store.index) return
+    editor.discardDraft()
+    editor.path.value = [...base, ...walkLine(store.index, from, ucis)]
+    if (replace) {
+      $q.notify({
+        type: 'info',
+        message: t('repertoire.editor.inTrash', {
+          move: replacing.preparedLabel
+        }),
+        actions: [
+          {
+            label: t('repertoire.editor.seeTrash'),
+            color: 'white',
+            noCaps: true,
+            handler: () => router.push(`/repertoire/${store.graph.id}/trash`)
+          }
+        ]
+      })
+    }
+  } finally {
+    savingLine.value = false
   }
 }
 
 /** @param {{uci: string, san: string}} move */
 function onBoardMove({ uci }) {
   try {
-    const result = editor.play(uci)
-    if (!('created' in result) || !result.created) return
-    if (result.transposition) {
-      const target = store.graph.moves[result.moveId]?.to
-      $q.notify({
-        type: 'info',
-        message: t('repertoire.editor.transposed'),
-        actions: [
-          {
-            label: t('repertoire.editor.seeLine'),
-            color: 'white',
-            noCaps: true,
-            handler: () => {
-              editor.path.value = canonicalPath(
-                store.index,
-                store.graph,
-                store.resolve(target)
-              )
-            }
-          }
-        ]
-      })
-    }
+    editor.play(uci)
   } catch (e) {
     // The board already shows the move: put the position back.
     board.value?.setPosition(editor.fen.value, false)
-    if (e instanceof PositionOccupiedError) {
-      offerReplacement(e.prepared, uci)
-      return
-    }
     $q.notify({
       type: 'negative',
       message:
@@ -749,8 +755,13 @@ watch(
       404:
         failure.operation === 'restore'
           ? t('repertoire.editor.failures.suiteGone')
-          : t('repertoire.editor.failures.moveGone'),
-      422: t('repertoire.editor.failures.refused'),
+          : failure.operation === 'line'
+            ? t('repertoire.editor.failures.draftStartGone')
+            : t('repertoire.editor.failures.moveGone'),
+      422:
+        failure.operation === 'line'
+          ? t('repertoire.editor.failures.lineRefused')
+          : t('repertoire.editor.failures.refused'),
       429: t('repertoire.editor.failures.tooMany')
     }
     $q.notify({
@@ -773,16 +784,22 @@ function onKeydown(event) {
     )
   )
     return
+  const draftKeys = {
+    ArrowLeft: 'back',
+    ArrowRight: 'forward',
+    Home: 'start',
+    End: 'end'
+  }
   if (
-    editor.offBook.value.length &&
+    editor.drafting.value &&
     !event.ctrlKey &&
     !event.metaKey &&
     !event.altKey &&
-    (event.key === 'ArrowLeft' || event.key === 'Home')
+    draftKeys[event.key]
   ) {
-    // Off book, the tree does not handle the keys: back through the explored moves.
+    // In a draft, the tree does not handle the keys: through the draft's moves.
     event.preventDefault()
-    navigate(event.key === 'Home' ? 'start' : 'back')
+    navigate(draftKeys[event.key])
   } else if (
     (event.ctrlKey || event.metaKey) &&
     !event.shiftKey &&
@@ -821,6 +838,11 @@ watch(
   id => id && load()
 )
 
+// The draft's start position left the repertoire (undo, reload): the draft is gone.
+watch(editor.draftLost, () =>
+  $q.notify({ type: 'warning', message: t('repertoire.editor.draftLost') })
+)
+
 onMounted(() => {
   load()
   window.addEventListener('keydown', onKeydown)
@@ -851,9 +873,15 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 0.5em 1.2em;
 }
-.editor__off-book {
+.editor__draft {
   border-radius: 6px;
   background: rgba(25, 118, 210, 0.08);
+}
+.editor__draft-move {
+  margin-left: 0.3em;
+}
+.editor__draft-move--after {
+  opacity: 0.45;
 }
 .move-tree__move--unanswered {
   text-decoration: underline wavy #ef6c00;

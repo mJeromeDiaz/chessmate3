@@ -373,22 +373,18 @@
     "testLineHint": "Les tronçons à partir de la position affichée",
     "testAll": "Tester tout le répertoire",
     "start": "Position de départ",
-    "explore": "Explorer",
-    "exploreTip": "Jouer des coups sans les enregistrer dans le répertoire",
     "flip": "Retourner l’échiquier",
-    "offBook": "Hors répertoire :",
-    "notSaved": "(non enregistré)",
-    "backToBook": "Revenir au répertoire",
     "first": "Début",
     "previous": "Coup précédent",
     "next": "Coup suivant",
     "last": "Fin de la ligne",
     "tabs": {
       "moves": "Coups",
+      "lines": "Lignes",
       "explorer": "Explorateur",
       "engine": "Moteur"
     },
-    "playHint": "Jouez un coup sur l’échiquier pour l’ajouter au répertoire. Un seul coup vous est préparé par position ; l’adversaire peut avoir plusieurs réponses.",
+    "playHint": "Jouez des coups sur l’échiquier : hors du répertoire, ils forment un brouillon que vous enregistrez quand la ligne vous convient. Un seul coup vous est préparé par position ; l’adversaire peut avoir plusieurs réponses.",
     "empty": "Aucun coup pour l’instant.",
     "unanswered": "sans réponse",
     "transposition": "⤳ transposition",
@@ -397,15 +393,12 @@
     "replaceMany": "{prepared} et {others} qui ne sont atteints que par lui partiront à la corbeille : vous pourrez les restaurer.",
     "replaceManyPrepared": "{prepared} et {others} qui ne sont atteints que par lui (dont {preparedMoves}) partiront à la corbeille : vous pourrez les restaurer.",
     "replaceSingle": "{prepared} partira à la corbeille : vous pourrez le restaurer.",
-    "exploreInstead": "Explorer sans enregistrer",
     "replace": "Remplacer",
     "origin": "Depuis tes parties",
     "originGames": "Depuis tes parties · {n} parties",
     "testLineCaption": "Les tronçons qui partent de la position affichée ou plus loin.",
     "inTrash": "{move} est dans la corbeille.",
     "seeTrash": "Voir la corbeille",
-    "transposed": "Transposition : cette position est déjà dans le répertoire, les deux lignes sont reliées.",
-    "seeLine": "Voir la ligne",
     "repeated": "Ce coup ramène à une position d’où vient la ligne.",
     "impossible": "Coup impossible ici.",
     "failures": {
@@ -416,10 +409,19 @@
       "refused": "Modification refusée (limite atteinte ou position répétée) : le répertoire a été rechargé.",
       "tooMany": "Trop de modifications en peu de temps : patientez un peu. Le répertoire a été rechargé.",
       "offline": "Serveur injoignable : la dernière modification n’a pas été enregistrée.",
-      "notSaved": "La dernière modification n’a pas été enregistrée : le répertoire a été rechargé."
+      "notSaved": "La dernière modification n’a pas été enregistrée : le répertoire a été rechargé.",
+      "lineRefused": "Ligne refusée (limite atteinte ou position répétée) : le brouillon est gardé.",
+      "draftStartGone": "Le brouillon part d’une position qui n’est plus dans le répertoire."
     },
     "pending": "En suspens",
-    "pendingTip": "Positions en suspens : réponses fréquentes sur Lichess à préparer"
+    "pendingTip": "Positions en suspens : réponses fréquentes sur Lichess à préparer",
+    "draft": "Brouillon :",
+    "saveLine": "Enregistrer la ligne",
+    "discardDraft": "Abandonner",
+    "discardTitle": "Abandonner le brouillon ?",
+    "discardMessage": "Les coups du brouillon ne sont pas enregistrés : ils seront perdus.",
+    "draftLost": "Le brouillon partait d’une position qui n’est plus dans le répertoire : il a été abandonné.",
+    "replaceThenSave": "Votre ligne sera enregistrée à sa place."
   },
   "pending": {
     "title": "En suspens",
@@ -439,5 +441,16 @@
     "openEditor": "Voir dans l’éditeur",
     "occupied": "Cette position a déjà un coup préparé : remplace-le dans l’éditeur.",
     "refused": "Ce coup n’a pas pu être ajouté."
+  },
+  "lines": {
+    "filter": "Filtrer : Bc4, Italienne, C50…",
+    "count": "{n} ligne | {n} lignes",
+    "matching": "{n} ligne sur {total} | {n} lignes sur {total}",
+    "none": "Aucune ligne pour l’instant : jouez des coups puis enregistrez la ligne.",
+    "delete": "Supprimer la ligne",
+    "deleteTitle": "Supprimer cette ligne ?",
+    "deleteAll": "C’est la seule ligne du répertoire : il sera vide.",
+    "deleteOne": "{move} ira à la corbeille : vous pourrez le restaurer.",
+    "deleteMany": "{move} et le coup qui le suit iront à la corbeille : vous pourrez les restaurer. | {move} et les {n} coups qui le suivent iront à la corbeille : vous pourrez les restaurer."
   }
 }

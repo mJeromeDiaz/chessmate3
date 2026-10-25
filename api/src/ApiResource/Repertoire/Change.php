@@ -26,6 +26,7 @@ use App\State\Repertoire\ChangeProcessor;
     normalizationContext: ['skip_null_values' => false],
     operations: [
         new Post(uriTemplate: '/repertoires/{id}/moves', requirements: ['id' => Repertoire::UUID_PATTERN], status: 200, input: AddMoveInput::class, read: false, name: 'repertoire_move_add', processor: ChangeProcessor::class),
+        new Post(uriTemplate: '/repertoires/{id}/lines', requirements: ['id' => Repertoire::UUID_PATTERN], status: 200, input: SaveLineInput::class, read: false, name: 'repertoire_line_save', processor: ChangeProcessor::class),
         new Post(uriTemplate: '/repertoires/{id}/moves/{moveId}/replace', requirements: ['id' => Repertoire::UUID_PATTERN, 'moveId' => Repertoire::UUID_PATTERN], status: 200, input: ReplaceMoveInput::class, read: false, name: 'repertoire_move_replace', processor: ChangeProcessor::class),
         new Post(uriTemplate: '/repertoires/{id}/moves/{moveId}/promote', requirements: ['id' => Repertoire::UUID_PATTERN, 'moveId' => Repertoire::UUID_PATTERN], status: 200, input: ChangeInput::class, read: false, name: 'repertoire_move_promote', processor: ChangeProcessor::class),
         new Post(uriTemplate: '/repertoires/{id}/moves/{moveId}/annotation', requirements: ['id' => Repertoire::UUID_PATTERN, 'moveId' => Repertoire::UUID_PATTERN], status: 200, input: AnnotateInput::class, read: false, name: 'repertoire_move_annotate', processor: ChangeProcessor::class),
@@ -43,7 +44,7 @@ final class Change
     #[ApiProperty(identifier: true)]
     public string $id;
     public int $version;
-    /** add, replace, delete, promote, annotate, import (a pending position answered too), restore, undo; none when nothing changed */
+    /** add, replace, delete, promote, annotate, import (a pending position answered or a line saved too), restore, undo; none when nothing changed */
     public string $operation;
     /** The move added (or found already there) by an add. */
     public ?string $moveId = null;
