@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { parcoursApi, planApi, sessionApi } from '@/services/api'
+import { planApi, sessionApi } from '@/services/api'
 import { useSessionStep } from '@/composables/session/useSessionStep'
 import { requestNotifications } from '@/utils/alerts'
 import { apiErrorMessage } from '@/utils/apiError'
@@ -8,8 +8,7 @@ import { replayProgram } from '@/utils/session/steps'
 import { t } from '@/i18n'
 
 /**
- * Launches a saved session, a parcours (docs/PARCOURS.md), or replays a played one, and starts its
- * first module. Another session in progress today: it is offered (`inProgress`) to resume or
+ * Launches a saved session, or replays a played one, and starts its first module. Another session in progress today: it is offered (`inProgress`) to resume or
  * abandon; a module that cannot be played now: an error.
  */
 export function usePlanLaunch() {
@@ -66,14 +65,13 @@ export function usePlanLaunch() {
   }
 
   /**
-   * Plays a session again: a parcours launched anew (its tiers drawn again), its saved session as
-   * it is now when it still exists, else the very program it played.
+   * Plays a session again: its saved session as it is now when it still exists, else the very
+   * program it played; a parcours (docs/PARCOURS.md), replaced by the défis, opens their page.
    *
    * @param {import('@/utils/session/steps').TrainingSession} session
    */
   function replay(session) {
-    const parcours = session.parcours
-    if (parcours) return begin(session.id, () => parcoursApi.launch(parcours))
+    if (session.parcours) return router.push('/defis').then(() => {})
     return session.planId
       ? begin(session.id, () =>
           planApi.launch(/** @type {string} */ (session.planId))

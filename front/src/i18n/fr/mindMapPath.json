@@ -144,7 +144,8 @@
     "boss_compteur": "Le compte est bon",
     "boss_avocat": "Plaidoirie gagnée",
     "boss_roi_cendres": "Le Roi des cendres vaincu",
-    "endgames_mastered": "Toutes les finales maîtrisées"
+    "endgames_mastered": "Toutes les finales maîtrisées",
+    "challenges_mastered": "Tous les défis maîtrisés"
   },
   "generic": {
     "tagline": "Un gardien de section : il vérifie que tu as bien retenu.",
@@ -285,6 +286,34 @@
       "taunt": "Dix finales, dix chronos, trois vies. Rien d’autre ne compte.",
       "defeat": "Les cendres retombent… Tu es digne de la couronne.",
       "win": "Le temps t’a manqué. Retourne à tes leçons."
+    },
+    "defi-mates": {
+      "name": "Le Maître du mat",
+      "tagline": "Il voit le mat avant tout le monde… et il compte bien te le prouver.",
+      "taunt": "Mat en 1, c’est pour les débutants. Voyons jusqu’où tu tiens.",
+      "defeat": "Tu as vu chaque mat. Je n’ai plus rien à t’apprendre.",
+      "win": "Trois mats manqués : le roi s’en sort, et moi je souris."
+    },
+    "defi-endgames": {
+      "name": "La Vieille Tour",
+      "tagline": "Des siècles de finales derrière elle, et pas une technique oubliée.",
+      "taunt": "Peu de pièces, beaucoup de pièges. Montre-moi ta technique.",
+      "defeat": "Propre, précis, sans un coup de trop. Je m’incline.",
+      "win": "Une finale gagnée se perd en un coup. Tu viens d’en perdre trois."
+    },
+    "defi-tactics": {
+      "name": "Le Filou",
+      "tagline": "Fourchettes, clouages, enfilades : il cache un tour dans chaque position.",
+      "taunt": "Tu vois le coup ? Moi, j’en vois deux d’avance.",
+      "defeat": "Bien vu… Tu as trouvé tous mes tours.",
+      "win": "Trois pièges, trois fois dedans. Le Filou a encore frappé !"
+    },
+    "defi-opening": {
+      "name": "Le Portier",
+      "tagline": "Il garde l’entrée de ton ouverture et connaît toutes ses ficelles.",
+      "taunt": "Tu dis jouer cette ouverture ? Prouve-le.",
+      "defeat": "Tu connais ton ouverture jusqu’au bout des doigts. Passe.",
+      "win": "Tu joues l’ouverture… mais tu n’en connais pas les pièges."
     }
   },
   "visualisation": {

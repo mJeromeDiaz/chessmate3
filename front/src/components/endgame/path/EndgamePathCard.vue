@@ -1,13 +1,14 @@
 <template>
   <section
     class="path-card cm-card"
-    :data-testid="`endgame-path-${chapter.key}`"
+    :data-testid="`${capacity === CHALLENGES ? 'challenge' : 'endgame'}-path-${chapter.key}`"
   >
     <div class="path-card__head">
-      <h2 class="path-card__name">{{ chapterName(chapter.key) }}</h2>
+      <h2 class="path-card__name">{{ pathChapterName(capacity, chapter) }}</h2>
       <span class="path-card__meta">{{
-        $t('endgame.path.chapterTotals', chapterTotals(chapter))
+        $t(`${texts}.chapterTotals`, chapterTotals(chapter))
       }}</span>
+      <span v-if="lead" class="path-card__lead">{{ lead }}</span>
     </div>
 
     <!-- The lessons linked by a line, then the boss: a row when there is room, else a column. -->
@@ -39,20 +40,20 @@
             <span
               v-if="nextKey === step.key"
               class="path-card__star"
-              :title="$t('endgame.path.next')"
+              :title="$t(`${texts}.next`)"
               >★</span
             >
           </span>
           <span class="path-card__text">
             <span class="path-card__title">{{
-              stepTitle(ENDGAMES, step.key)
+              stepTitle(capacity, step.key)
             }}</span>
             <span
               class="path-card__state"
               :class="{
                 'path-card__state--on': lessonState(step) !== 'new'
               }"
-              >{{ lessonStatusText(step) }}</span
+              >{{ lessonStatusText(step, texts) }}</span
             >
           </span>
         </button>
@@ -91,19 +92,19 @@
           <span
             v-if="nextKey === chapter.boss.key"
             class="path-card__star"
-            :title="$t('endgame.path.next')"
+            :title="$t(`${texts}.next`)"
             >★</span
           >
         </span>
         <span class="path-card__text">
-          <span class="path-card__tag">{{ $t('endgame.path.bossTag') }}</span>
+          <span class="path-card__tag">{{ $t(`${texts}.bossTag`) }}</span>
           <span class="path-card__title path-card__title--boss">{{
             bossName(chapter.boss)
           }}</span>
           <span class="path-card__state">{{
             bossBeaten(chapter.boss)
-              ? $t('endgame.path.bossBeaten')
-              : $t('endgame.path.bossMix', { n: lessons.length })
+              ? $t(`${texts}.bossBeaten`)
+              : $t(`${texts}.bossMix`, { n: lessons.length })
           }}</span>
         </span>
       </button>
@@ -113,15 +114,16 @@
 
 <script setup>
 /**
- * A mini-parcours of the endgames path (design « Parcours echiqueens »): its lessons linked by a
- * line, lit up to the last lesson known, then its boss. Each lesson's node tells its state (to
- * start, its passes as a ring, mastered); the step to play next wears a star. A row when the card
- * is wide enough, a column otherwise (a container query: the detail column takes room too).
+ * A mini-parcours of the endgames path (design « Parcours echiqueens »), or a chapter of the défis'
+ * (docs/DEFIS.md, `capacity`): its lessons (tiers) linked by a line, lit up to the last one
+ * known, then its boss. Each lesson's node tells its state (to start, its passes as a ring,
+ * mastered); the step to play next wears a star. A row when the card is wide enough, a column
+ * otherwise (a container query: the detail column takes room too).
  */
 import { computed } from 'vue'
+import { CHALLENGES, challengeChapterLead } from '@/utils/challengePath'
 import {
   bossBeaten,
-  chapterName,
   chapterTotals,
   KNOWN_PASSES,
   lessonProgress,
@@ -134,10 +136,13 @@ import {
   bossName,
   ENDGAMES,
   moodImage,
+  pathChapterName,
   stepTitle
 } from '@/utils/mindMapPath'
 
 const props = defineProps({
+  /** The path's capacity (the API's): the endgames', or the défis'. */
+  capacity: { type: String, default: ENDGAMES },
   /** @type {import('vue').PropType<import('@/utils/mindMapPath').PathChapter>} */
   chapter: { type: Object, required: true },
   /** The step shown in full. */
@@ -148,6 +153,14 @@ const props = defineProps({
 
 const emit = defineEmits(['select'])
 
+/** The messages of the path's page. */
+const texts = computed(() =>
+  props.capacity === CHALLENGES ? 'challenge.path' : 'endgame.path'
+)
+/** What the chapter plays (the défis': its tiers, an opening's repertoire). */
+const lead = computed(() =>
+  props.capacity === CHALLENGES ? challengeChapterLead(props.chapter) : ''
+)
 const lessons = computed(() => lessonsOf(props.chapter))
 /** Its own face when it has one (sad once beaten), else its piece. */
 const bossPicture = computed(() =>
@@ -207,6 +220,13 @@ function glyphOf(step) {
   font-weight: 700;
   color: var(--cm-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.path-card__lead {
+  flex-basis: 100%;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--cm-muted);
 }
 
 // A column: each step a line (its node, then its texts), the links short and vertical.

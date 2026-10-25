@@ -652,8 +652,9 @@ export function upgradeValues(module, values) {
 
 /** @type {Record<string, Module>} */
 /**
- * Modules played only through their own page, never added by hand to a session: the parcours
- * (docs/PARCOURS.md), whose tiers of puzzles are steps of the session it launches.
+ * Modules played only through their own page, never added by hand to a session: the défis
+ * (docs/DEFIS.md, the former parcours of docs/PARCOURS.md), whose tiers of puzzles are steps of
+ * their path.
  *
  * @type {Module[]}
  */

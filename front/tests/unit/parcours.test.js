@@ -3,12 +3,9 @@ import { fromStep } from '@/utils/session/catalog'
 import { catalogModule } from '@/utils/runEnd'
 import { subjectPath } from '@/utils/training'
 import {
-  effortName,
-  launchErrorText,
   parcoursScore,
   ratingZone,
   stepPlan,
-  themeName,
   tierName,
   tierOfRun
 } from '@/utils/parcours'
@@ -64,15 +61,6 @@ describe('stepPlan', () => {
   })
 })
 
-describe('themeName and effortName', () => {
-  it('translates the known ones, keeps the others', () => {
-    expect(themeName('tactics')).toBe('Tactique')
-    expect(effortName('intense')).toBe('Intense')
-    expect(effortName('steady')).toBe('Soutenu')
-    expect(themeName('other')).toBe('other')
-  })
-})
-
 describe('tierOfRun', () => {
   const session = {
     steps: [
@@ -106,28 +94,12 @@ describe('parcoursScore', () => {
   })
 })
 
-describe('launchErrorText', () => {
-  const refused = (status, detail) => ({
-    response: { status, data: { detail } }
-  })
-
-  it('tells the parcours own refusals, leaves the others', () => {
-    expect(launchErrorText(refused(409, 'no_opening'))).toContain('ouverture')
-    expect(launchErrorText(refused(409, 'empty_repertoire'))).toContain(
-      'lignes'
-    )
-    expect(launchErrorText(refused(404, ''))).toContain('répertoire')
-    expect(launchErrorText(refused(409, 'session_in_progress'))).toBe('')
-    expect(launchErrorText(new Error('network'))).toBe('')
-  })
-})
-
 describe('the parcours module', () => {
-  it('belongs to Lizy, back to its page, never in a hand-made session', () => {
+  it('belongs to Lizy, back to the défis, never in a hand-made session', () => {
     expect(catalogModule('parcours_puzzles')?.profSlug).toBe('lizy')
     expect(
       subjectPath({ subjectType: 'parcours_player', subjectId: 'u' })
-    ).toBe('/parcours')
+    ).toBe('/defis')
     expect(
       fromStep({
         module: 'parcours_puzzles',

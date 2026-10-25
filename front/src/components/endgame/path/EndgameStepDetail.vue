@@ -8,7 +8,9 @@
     <div class="endgame-detail__head">
       <div class="endgame-detail__crumb-row">
         <span class="endgame-detail__crumb">{{
-          $t('endgame.path.detail.crumb', { chapter: chapterName(chapter.key) })
+          $t(`${texts}.detail.crumb`, {
+            chapter: pathChapterName(capacity, chapter)
+          })
         }}</span>
         <button
           v-if="closable"
@@ -28,9 +30,7 @@
           :label="title"
         />
         <div class="endgame-detail__boss-text">
-          <span class="endgame-detail__tag">{{
-            $t('endgame.path.bossTag')
-          }}</span>
+          <span class="endgame-detail__tag">{{ $t(`${texts}.bossTag`) }}</span>
           <h3 class="endgame-detail__title" data-testid="boss-name">{{
             title
           }}</h3>
@@ -53,18 +53,16 @@
       <div v-if="boss" class="endgame-detail__bubble">
         « {{ bossLine(step, 'taunt') }} »
       </div>
-      <p class="endgame-detail__goal">{{ stepDesc(ENDGAMES, step.key) }}</p>
+      <p class="endgame-detail__goal">{{ stepDesc(capacity, step.key) }}</p>
 
       <div class="endgame-detail__tiles">
         <div class="endgame-detail__tile">
-          <span class="endgame-detail__tile-label">{{
-            $t('endgame.path.detail.positions')
-          }}</span>
+          <span class="endgame-detail__tile-label">{{ itemsLabel }}</span>
           <span class="endgame-detail__tile-value">{{ positions }}</span>
         </div>
         <div v-if="boss" class="endgame-detail__tile">
           <span class="endgame-detail__tile-label">{{
-            $t('endgame.path.detail.lives')
+            $t(`${texts}.detail.lives`)
           }}</span>
           <span class="endgame-detail__tile-value endgame-detail__lives"
             ><q-icon v-for="i in BOSS_LIVES" :key="i" name="favorite"
@@ -72,7 +70,7 @@
         </div>
         <div v-else class="endgame-detail__tile" data-testid="step-passes">
           <span class="endgame-detail__tile-label">{{
-            $t('endgame.path.detail.passes')
+            $t(`${texts}.detail.passes`)
           }}</span>
           <span class="endgame-detail__tile-value"
             >{{ step.passes }} / {{ step.required }}</span
@@ -81,7 +79,7 @@
       </div>
 
       <!-- A lesson: how its next pass is played. -->
-      <div v-if="!boss" class="endgame-detail__section">
+      <div v-if="!boss && !challenges" class="endgame-detail__section">
         <span class="endgame-detail__label">{{
           $t(`endgame.path.detail.modes.${mode}.title`)
         }}</span>
@@ -96,16 +94,30 @@
         }}</p>
       </div>
 
+      <!-- A tier of the défis: how a pass is played. -->
+      <div v-else-if="!boss" class="endgame-detail__section">
+        <span class="endgame-detail__label">{{
+          $t('challenge.path.detail.passTitle')
+        }}</span>
+        <p class="endgame-detail__text">{{ challengePassText }}</p>
+        <p class="endgame-detail__note">{{
+          $t('challenge.path.detail.passRule')
+        }}</p>
+      </div>
+
       <!-- A boss: where its positions come from, how it is fought. -->
       <div v-else class="endgame-detail__section">
         <span class="endgame-detail__label">{{
-          $t('endgame.path.detail.drawnFrom')
+          $t(`${texts}.detail.drawnFrom`)
         }}</span>
         <p class="endgame-detail__text">{{ drawnFrom }}</p>
         <p class="endgame-detail__note">{{
           ashes
             ? $t('endgame.path.detail.ashesRule')
-            : $t('endgame.path.detail.bossRule')
+            : $t(`${texts}.detail.bossRule`, {
+                from: BOSS_GAPS[0],
+                to: BOSS_GAPS[1]
+              })
         }}</p>
       </div>
 
@@ -118,7 +130,7 @@
         <span class="endgame-detail__reward endgame-detail__reward--xp">{{
           boss
             ? $t('mindMapPath.sheet.xp', { xp: step.xp })
-            : $t('endgame.path.detail.masteryXp', { xp: step.xp })
+            : $t(`${texts}.detail.masteryXp`, { xp: step.xp })
         }}</span>
         <span
           v-for="badge in step.badges"
@@ -128,8 +140,14 @@
         >
       </div>
       <p v-if="boss && step.crystals && beaten" class="endgame-detail__note">{{
-        $t('endgame.path.detail.crystalsOnce')
+        $t(`${texts}.detail.crystalsOnce`)
       }}</p>
+      <p
+        v-else-if="boss && challenges && !step.crystals && !beaten"
+        class="endgame-detail__note"
+        data-testid="step-paid"
+        >{{ $t('challenge.path.detail.openingPaid') }}</p
+      >
 
       <div v-if="error" class="endgame-detail__error" role="alert">{{
         error
@@ -146,7 +164,7 @@
         @click="emit('start', step)"
       />
       <q-btn
-        v-if="!boss && demoable"
+        v-if="!boss && !challenges && demoable"
         flat
         no-caps
         icon="slideshow"
@@ -161,20 +179,28 @@
 
 <script setup>
 /**
- * A step of the endgames path in full (design « Parcours echiqueens », its panel): where it is,
- * its state, what it asks (Lizy's explanation for a lesson, the boss's words for a boss), its
- * positions and passes or lives, how the next pass is played, what it gives, and the button that
- * plays it; a lesson's demonstration below it. Nothing is ever locked.
+ * A step of the endgames path in full (design « Parcours echiqueens », its panel), or of the
+ * défis' (docs/DEFIS.md, `capacity`): where it is, its state, what it asks (Lizy's explanation for
+ * a lesson or a tier, the boss's words for a boss), its positions (puzzles, lines) and passes or
+ * lives, how the next pass is played, what it gives, and the button that plays it; a lesson's
+ * demonstration below it. Nothing is ever locked.
  */
 import { computed } from 'vue'
 import BossPortrait from '@/components/mindMap/BossPortrait.vue'
 import CrystalGem from '@/components/shop/CrystalGem.vue'
 import {
+  BOSS_COUNT,
+  BOSS_GAPS,
+  CHALLENGES,
+  isOpening,
+  PASS_COUNT,
+  stepPlan
+} from '@/utils/challengePath'
+import {
   ASHES,
   ASHES_POSITIONS,
   BOSS_POSITIONS,
   bossBeaten,
-  chapterName,
   LESSON_POSITIONS,
   lessonState,
   lessonStatusText,
@@ -188,12 +214,15 @@ import {
   bossName,
   ENDGAMES,
   isBoss,
+  pathChapterName,
   stepDesc,
   stepTitle
 } from '@/utils/mindMapPath'
 import { t } from '@/i18n'
 
 const props = defineProps({
+  /** The path's capacity (the API's): the endgames', or the défis'. */
+  capacity: { type: String, default: ENDGAMES },
   /** @type {import('vue').PropType<import('@/utils/mindMapPath').PathStep>} */
   step: { type: Object, required: true },
   /** @type {import('vue').PropType<import('@/utils/mindMapPath').PathChapter>} its chapter */
@@ -210,45 +239,77 @@ const props = defineProps({
 
 const emit = defineEmits(['start', 'close', 'demo'])
 
+const challenges = computed(() => props.capacity === CHALLENGES)
+/** The messages of the path's page. */
+const texts = computed(() =>
+  challenges.value ? 'challenge.path' : 'endgame.path'
+)
+/** A tier of the défis: puzzles, or lines of an opening's repertoire. */
+const lines = computed(
+  () => challenges.value && stepPlan(props.step.key).kind === 'lines'
+)
 const boss = computed(() => isBoss(props.step.kind))
-const ashes = computed(() => props.chapter.key === ASHES)
+const ashes = computed(
+  () => !challenges.value && props.chapter.key === ASHES
+)
 const beaten = computed(() => boss.value && bossBeaten(props.step))
 const mode = computed(() => nextMode(props.step))
 const title = computed(() =>
-  boss.value ? bossName(props.step) : stepTitle(ENDGAMES, props.step.key)
+  boss.value ? bossName(props.step) : stepTitle(props.capacity, props.step.key)
 )
+const itemsLabel = computed(() => {
+  if (!challenges.value) return t('endgame.path.detail.positions')
+  return lines.value
+    ? t('challenge.path.detail.lines')
+    : t('challenge.path.detail.puzzles')
+})
 const positions = computed(() => {
+  if (challenges.value) {
+    if (boss.value) return BOSS_COUNT
+    return lines.value
+      ? t('challenge.path.detail.upTo', { n: PASS_COUNT })
+      : PASS_COUNT
+  }
   if (!boss.value) return LESSON_POSITIONS
   return ashes.value ? ASHES_POSITIONS : BOSS_POSITIONS
 })
+/** How a tier's pass of the défis is played. */
+const challengePassText = computed(() =>
+  lines.value
+    ? t('challenge.path.detail.passLines', { n: PASS_COUNT })
+    : t('challenge.path.detail.passPuzzles', { n: PASS_COUNT })
+)
 const statusText = computed(() => {
   if (boss.value)
     return beaten.value
-      ? t('endgame.path.bossBeaten')
-      : t('endgame.path.bossReady')
-  return lessonStatusText(props.step)
+      ? t(`${texts.value}.bossBeaten`)
+      : t(`${texts.value}.bossReady`)
+  return lessonStatusText(props.step, texts.value)
 })
 const statusOn = computed(() =>
   boss.value ? beaten.value : lessonState(props.step) !== 'new'
 )
-/** The lessons a boss draws its positions from. */
-const drawnFrom = computed(() =>
-  ashes.value
-    ? t('endgame.path.ashes.all')
-    : lessonsOf(props.chapter)
-        .map(s => stepTitle(ENDGAMES, s.key))
-        .join(', ')
-)
+/** The lessons (tiers) a boss draws its positions from; an opening's boss, its opening's puzzles. */
+const drawnFrom = computed(() => {
+  if (ashes.value) return t('endgame.path.ashes.all')
+  if (challenges.value && isOpening(props.chapter.key))
+    return t('challenge.path.detail.openingDrawn', {
+      opening: props.chapter.meta?.opening ?? ''
+    })
+  return lessonsOf(props.chapter)
+    .map(s => stepTitle(props.capacity, s.key))
+    .join(', ')
+})
 const buttonLabel = computed(() => {
   if (boss.value)
     return beaten.value
       ? t('mindMapPath.boss.fightAgain')
       : t('mindMapPath.boss.fight')
   const state = lessonState(props.step)
-  if (state === 'new') return t('endgame.path.detail.start')
+  if (state === 'new') return t(`${texts.value}.detail.start`)
   return state === 'mastered'
-    ? t('endgame.path.detail.reviewAgain')
-    : t('endgame.path.detail.review')
+    ? t(`${texts.value}.detail.reviewAgain`)
+    : t(`${texts.value}.detail.review`)
 })
 </script>
 

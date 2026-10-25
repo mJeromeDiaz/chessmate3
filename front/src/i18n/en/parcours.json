@@ -1,45 +1,4 @@
 {
-  "page": {
-    "kicker": "With Lizy",
-    "title": "Parcours",
-    "lead": "Five tiers of one theme, back to back with no clock. In each tier: a third below your level, a third at your level, a third above. A mistake? The solution appears and you carry on.",
-    "theme": "Theme",
-    "effort": "Effort",
-    "repertoire": "Repertoire",
-    "noRepertoire": "You need a repertoire for an opening parcours.",
-    "createRepertoire": "Create a repertoire",
-    "noOpening": "Not enough puzzles from this opening",
-    "effortLine": "{perTier} per tier · {total} in all · +{bonus} XP at the finish",
-    "rating": "Your puzzle level: {rating}. Puzzles range from about {low} to {high}.",
-    "launch": "Start the parcours",
-    "inProgress": "A parcours is in progress today: {title}.",
-    "resume": "Resume",
-    "untilMidnight": "You can resume it until midnight.",
-    "unrated": "Puzzles in a parcours do not change your rating."
-  },
-  "themes": {
-    "mates": {
-      "name": "Mates",
-      "desc": "From mate in 1 to mate in 5."
-    },
-    "opening": {
-      "name": "Opening",
-      "desc": "The lines of your repertoire, then the puzzles of its opening, alternately."
-    },
-    "endgames": {
-      "name": "Endgames",
-      "desc": "Pawns, rooks, bishops, knights, queens."
-    },
-    "tactics": {
-      "name": "Tactics",
-      "desc": "Fork, pin, skewer, discovered attack, deflection."
-    }
-  },
-  "efforts": {
-    "light": "Light",
-    "steady": "Steady",
-    "intense": "Intense"
-  },
   "tier": {
     "lines": "Repertoire lines",
     "openingPuzzles": "Opening puzzles",
@@ -84,15 +43,5 @@
   },
   "session": {
     "step": "Tier {n} · {name}"
-  },
-  "card": {
-    "title": "Parcours",
-    "desc": "Mates, opening, endgames or tactics: 15, 30 or 50 exercises in 5 tiers, no clock.",
-    "go": "Choose a parcours"
-  },
-  "errors": {
-    "no_opening": "Not enough puzzles from this repertoire's opening for a parcours.",
-    "empty_repertoire": "This repertoire has no lines to review yet.",
-    "repertoire": "This repertoire no longer exists."
   }
 }

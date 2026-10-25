@@ -43,17 +43,17 @@
       </router-link>
 
       <router-link
-        to="/parcours"
+        to="/defis"
         class="plans-page__parcours cm-card"
-        data-testid="plans-parcours"
+        data-testid="plans-challenges"
       >
         <img :src="PROFS.lizy.bust" alt="" class="plans-page__parcours-prof" />
         <span class="plans-page__parcours-body">
-          <strong>{{ $t('parcours.card.title') }}</strong>
-          <span>{{ $t('parcours.card.desc') }}</span>
+          <strong>{{ $t('challenge.card.title') }}</strong>
+          <span>{{ $t('challenge.card.desc') }}</span>
         </span>
         <span class="plans-page__current-go"
-          >{{ $t('parcours.card.go') }} →</span
+          >{{ $t('challenge.card.go') }} →</span
         >
       </router-link>
 

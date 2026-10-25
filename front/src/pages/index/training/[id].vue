@@ -131,6 +131,31 @@
           :count="parcoursRun.count.value"
           @stop="confirmStop"
         />
+        <!-- A lines step of the défis (docs/DEFIS.md): its count, no clock. -->
+        <div
+          v-else-if="mindMapRun && runner.item.value?.data.limit"
+          class="row items-center q-gutter-sm"
+        >
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            $t('challenge.run.lines', {
+              n: Math.min(
+                runner.item.value.data.limit,
+                (runner.item.value.data.played ?? 0) + 1
+              ),
+              count: runner.item.value.data.limit
+            })
+          }}</div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
         <RunHeader
           v-else
           :remaining-ms="runner.remainingMs.value"
@@ -634,12 +659,46 @@
       :loading="loading"
       after-mistake="showSolution"
       module="parcours_puzzles"
+      :help="parcoursLives === null"
       :xp="runner.xp.value"
       :actions="parcoursActions"
       @resolve="onParcoursResolve"
     >
       <template #header>
+        <!-- A step of the défis (docs/DEFIS.md): its puzzles, a boss's lives, no clock. -->
+        <div v-if="mindMapRun" class="row items-center q-gutter-sm">
+          <div class="text-h6 text-weight-medium" data-testid="run-progress">{{
+            $t('challenge.run.puzzles', {
+              n: parcoursItem.data.position + 1,
+              count: parcoursItem.data.count
+            })
+          }}</div>
+          <div
+            v-if="parcoursLives !== null"
+            class="row items-center text-red-6"
+            data-testid="challenge-lives"
+            :data-lives="parcoursLives"
+          >
+            <q-icon
+              v-for="i in parcoursItem.data.lives"
+              :key="i"
+              size="22px"
+              :name="i <= parcoursLives ? 'favorite' : 'heart_broken'"
+            />
+          </div>
+          <q-space />
+          <q-btn
+            flat
+            no-caps
+            color="negative"
+            icon="stop"
+            :label="$t('training.stop')"
+            data-testid="run-stop"
+            @click="confirmStop"
+          />
+        </div>
         <ParcoursHeader
+          v-else
           :tier="parcoursItem.data.tier"
           :tiers="parcoursRun.tiers"
           :name="parcoursRun.name.value"
@@ -654,9 +713,11 @@
 
       <template #chips>
         <span class="play-chip" data-testid="parcours-zone">{{
-          $t(
-            `parcours.run.zones.${ratingZone(parcoursItem.data.position, parcoursItem.data.count)}`
-          )
+          parcoursLives !== null
+            ? $t('challenge.run.boss')
+            : $t(
+                `parcours.run.zones.${ratingZone(parcoursItem.data.position, parcoursItem.data.count)}`
+              )
         }}</span>
       </template>
     </PuzzlePlayer>
@@ -790,7 +851,8 @@
  * or a question of vision (docs/VISION.md: a position hidden, a question about it; the lives of a
  * mind map boss).
  * A run played for a step of a mind map path (`?mindMap=1`, docs/MIND_MAP.md) ends on the step's
- * verdict (`RunOutcome`) instead of the recap.
+ * verdict (`RunOutcome`) instead of the recap; a step of the défis (docs/DEFIS.md) shows its
+ * count of puzzles or lines and a boss's lives instead of a clock, without help against a boss.
  */
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -1685,6 +1747,20 @@ watch(
     else if (item) parcoursItem.value = null
   }
 )
+/**
+ * A boss of the défis (docs/DEFIS.md): its lives left, the answer's misses once answered, else
+ * the puzzle's; null without lives (a tier).
+ */
+const parcoursLives = computed(() => {
+  const item = parcoursItem.value
+  const lives = item?.data.lives
+  if (typeof lives !== 'number') return null
+  const answered =
+    runner.result.value?.itemId === item?.id
+      ? runner.result.value?.data?.failures
+      : null
+  return Math.max(0, lives - (answered ?? item?.data.failures ?? 0))
+})
 /** After a miss: the next puzzle, or, the tier over, what comes next. */
 const parcoursActions = computed(() => {
   const result = runner.result.value
@@ -1695,7 +1771,11 @@ const parcoursActions = computed(() => {
   return missed || error.value
     ? [
         {
-          label: t('training.page.next'),
+          // A step of the défis over on a miss (its last puzzle, a boss's last life): its verdict.
+          label:
+            mindMapRun.value && runner.phase.value !== 'running'
+              ? t('training.page.seeResult')
+              : t('training.page.next'),
           primary: true,
           disable: loading.value,
           testid: 'run-next',

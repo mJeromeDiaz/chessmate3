@@ -1,4 +1,10 @@
 import { t } from '@/i18n'
+import {
+  CHALLENGES,
+  challengeChapterName,
+  challengeStepDesc,
+  challengeStepTitle
+} from '@/utils/challengePath'
 
 /**
  * The mind map's paths (docs/MIND_MAP.md): what the API sends (chapters, sections, steps and their
@@ -39,6 +45,8 @@ import { t } from '@/i18n'
  * @property {'locked'|'open'|'done'} status
  * @property {PathSection[]} sections
  * @property {PathStep} boss
+ * @property {Record<string, any>|null} [meta] what names a chapter its texts cannot (the défis'
+ *   opening chapters: their repertoire)
  *
  * @typedef {object} MindPath
  * @property {string} capacity
@@ -109,6 +117,7 @@ function isEndgameLesson(capacity, key) {
  */
 export function stepTitle(capacity, key) {
   if (isEndgameLesson(capacity, key)) return t(`endgame.lessons.${key}.title`)
+  if (capacity === CHALLENGES) return challengeStepTitle(key)
   return t(`mindMapPath.${capacity}.steps.${messageKey(key)}.title`)
 }
 
@@ -118,7 +127,19 @@ export function stepTitle(capacity, key) {
  */
 export function stepDesc(capacity, key) {
   if (isEndgameLesson(capacity, key)) return t(`endgame.lessons.${key}.text`)
+  if (capacity === CHALLENGES) return challengeStepDesc(key)
   return t(`mindMapPath.${capacity}.steps.${messageKey(key)}.desc`)
+}
+
+/**
+ * A chapter's name on a path drawn as cards (the endgames', the défis').
+ *
+ * @param {string} capacity the API's
+ * @param {PathChapter} chapter
+ */
+export function pathChapterName(capacity, chapter) {
+  if (capacity === CHALLENGES) return challengeChapterName(chapter)
+  return t(`mindMapPath.${capacity}.chapters.${chapter.key}`)
 }
 
 /**
@@ -161,12 +182,16 @@ export const CHARACTERS = [
   'maitre-tours',
   'duelliste',
   'cavalier-errant',
-  'roi-cendres'
+  'roi-cendres',
+  'defi-mates',
+  'defi-endgames',
+  'defi-tactics',
+  'defi-opening'
 ]
 
 /**
  * The bosses without a picture yet that stand as a piece (design « Parcours echiqueens »): the
- * endgames path's.
+ * endgames path's, the défis'.
  */
 export const BOSS_GLYPHS = /** @type {Record<string, string>} */ ({
   bourreau: '♛',
@@ -175,7 +200,11 @@ export const BOSS_GLYPHS = /** @type {Record<string, string>} */ ({
   'reine-noire': '♛',
   'maitre-tours': '♜',
   duelliste: '♝',
-  'cavalier-errant': '♞'
+  'cavalier-errant': '♞',
+  'defi-mates': '♛',
+  'defi-endgames': '♜',
+  'defi-tactics': '♞',
+  'defi-opening': '♝'
 })
 
 /**
@@ -522,12 +551,13 @@ export function chestReward(chest) {
  * @param {PathChest} chest
  */
 export function chestNote(capacity, chest) {
-  return t(
-    capacity === ENDGAMES
-      ? 'mindMapPath.endgames.chestNote'
-      : 'mindMapPath.chestNote',
-    { title: stepTitle(capacity, chest.step) }
-  )
+  const own = /** @type {Record<string, string>} */ ({
+    [ENDGAMES]: 'mindMapPath.endgames.chestNote',
+    [CHALLENGES]: 'challenge.chestNote'
+  })
+  return t(own[capacity] ?? 'mindMapPath.chestNote', {
+    title: stepTitle(capacity, chest.step)
+  })
 }
 
 /**
@@ -549,6 +579,7 @@ export function mapKey(capacity) {
  */
 export function pathPage(capacity) {
   if (capacity === ENDGAMES) return '/finales'
+  if (capacity === CHALLENGES) return '/defis'
   const key = mapKey(capacity)
   return key ? `/cerveau/${key}` : '/cerveau'
 }

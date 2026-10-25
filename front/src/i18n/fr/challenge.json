@@ -1,0 +1,137 @@
+{
+  "chestNote": "Défis · {title}",
+  "path": {
+    "title": "Défis",
+    "lead": "Avec Lizy, des défis de plus en plus durs : les mats, les finales, la tactique, et un chapitre pour chacun de tes répertoires. Chaque chapitre se termine par un boss. Rien n’est verrouillé : commence où tu veux.",
+    "totals": "{mastered} / {lessons} étapes maîtrisées · {beaten} / {bosses} boss battus",
+    "chapterTotals": "{done} / {total} maîtrisés",
+    "next": "Étape conseillée",
+    "states": {
+      "new": "À commencer",
+      "started": "En cours · {n}/{total}",
+      "known": "Connue · {n}/{total}",
+      "mastered": "Maîtrisée"
+    },
+    "bossTag": "BOSS",
+    "bossMix": "Mélange des {n} étapes",
+    "bossBeaten": "Vaincu",
+    "bossReady": "Prêt au combat",
+    "rules": "Une étape se joue par passages de 10 puzzles : 3 sous ton niveau, 4 à ton niveau, 3 au-dessus. Un passage est réussi à 8 sur 10 ; 2 passages rendent l’étape connue, 10 la font maîtriser. Les boss mélangent les étapes de leur chapitre, au-dessus de ton niveau, sans aide, avec 3 vies ; leurs cristaux ne se gagnent qu’une fois. Les puzzles des défis ne changent pas ton classement.",
+    "noOpening": "Ajoute un répertoire : chacun ouvre son chapitre d’ouverture, ses lignes et les puzzles de son ouverture.",
+    "noOpeningLink": "Mes répertoires",
+    "legend": {
+      "title": "Lire les défis",
+      "new": {
+        "title": "À commencer",
+        "text": "Pas encore joué."
+      },
+      "started": {
+        "title": "En cours",
+        "text": "Un passage réussi, l’anneau montre les passages."
+      },
+      "known": {
+        "title": "Connue",
+        "text": "2 passages réussis ou plus."
+      },
+      "mastered": {
+        "title": "Maîtrisée",
+        "text": "10 passages réussis."
+      },
+      "boss": {
+        "title": "Boss",
+        "text": "À la fin de chaque chapitre. L’étoile marque l’étape conseillée."
+      }
+    },
+    "detail": {
+      "crumb": "Défis · {chapter}",
+      "puzzles": "Puzzles",
+      "lines": "Lignes",
+      "upTo": "{n} au plus",
+      "passes": "Passages réussis",
+      "lives": "Vies",
+      "passTitle": "Un passage",
+      "passPuzzles": "{n} puzzles à la suite : 3 sous ton niveau, 4 à ton niveau, 3 au-dessus. Une erreur ? La solution s’affiche et tu continues.",
+      "passLines": "Les lignes de ton répertoire, {n} au plus. Une ligne ratée montre le bon coup et n’est pas reproposée.",
+      "passRule": "Réussi à 8 sur 10. L’aide et la solution comptent comme une erreur.",
+      "drawnFrom": "Puzzles tirés de",
+      "bossRule": "Deux puzzles par étape, de {from} à {to} points au-dessus de ton niveau, sans aide. Le 3e raté met fin au combat.",
+      "openingDrawn": "Les puzzles de ton ouverture, {opening}, de ton côté de l’échiquier.",
+      "openingPaid": "Les cristaux de ce boss sont déjà gagnés avec un autre répertoire de la même ouverture et de la même couleur : le combat ne rapporte que l’XP.",
+      "masteryXp": "+{xp} XP à la maîtrise",
+      "crystalsOnce": "Cristaux déjà gagnés : le combat ne rapporte plus que l’XP.",
+      "start": "Commencer",
+      "review": "Rejouer",
+      "reviewAgain": "Rejouer encore"
+    }
+  },
+  "chapters": {
+    "mates": {
+      "name": "Mats",
+      "lead": "Du mat en 1 au mat en 5.",
+      "steps": {
+        "s1": "Mat en 1",
+        "s2": "Mat en 2",
+        "s3": "Mat en 3",
+        "s4": "Mat en 4",
+        "s5": "Mat en 5"
+      }
+    },
+    "endgames": {
+      "name": "Finales",
+      "lead": "Des puzzles de finales : pions, tours, fous, cavaliers, dames.",
+      "steps": {
+        "s1": "Finales de pions",
+        "s2": "Finales de tours",
+        "s3": "Finales de fous",
+        "s4": "Finales de cavaliers",
+        "s5": "Finales de dames"
+      }
+    },
+    "tactics": {
+      "name": "Tactique",
+      "lead": "Fourchette, clouage, enfilade, attaque à la découverte, déviation.",
+      "steps": {
+        "s1": "Fourchette",
+        "s2": "Clouage",
+        "s3": "Enfilade",
+        "s4": "Attaque à la découverte",
+        "s5": "Déviation"
+      }
+    },
+    "opening": {
+      "name": "Ouverture · {name}",
+      "lead": "{opening} · {color}"
+    }
+  },
+  "colors": {
+    "white": "avec les Blancs",
+    "black": "avec les Noirs"
+  },
+  "opening": {
+    "lines": "Lignes du répertoire",
+    "puzzles": "Puzzles de l’ouverture",
+    "linesDesc": "Rejoue les lignes de ton répertoire, de mémoire, comme au test du répertoire.",
+    "puzzlesDesc": "Des puzzles tirés de parties jouées dans ton ouverture, de ton côté de l’échiquier."
+  },
+  "bosses": {
+    "mates": "Le boss des mats",
+    "endgames": "Le boss des finales",
+    "tactics": "Le boss de la tactique",
+    "opening": "Le boss de l’ouverture"
+  },
+  "detail": {
+    "stepDesc": "{title} : dix puzzles, du plus simple au plus dur, autour de ton niveau.",
+    "bossDesc": "Dix puzzles des étapes du chapitre {chapter}, deux de chacune, au-dessus de ton niveau.",
+    "openingBossDesc": "Dix puzzles de ton ouverture, au-dessus de ton niveau."
+  },
+  "run": {
+    "puzzles": "Puzzle {n} sur {count}",
+    "lines": "Ligne {n} sur {count}",
+    "boss": "Au-dessus de ton niveau"
+  },
+  "card": {
+    "title": "Défis",
+    "desc": "Mats, finales, tactique et tes ouvertures : des étapes à réussir et des boss à battre, sans chrono.",
+    "go": "Voir les défis"
+  }
+}

@@ -56,7 +56,7 @@ describe('landing content', () => {
           expect(value).toBeLessThanOrEqual(/** @type {number} */ (field.max))
         }
       }
-      expect(v.meta).not.toMatch(/undefined|session\.catalog|parcours\./)
+      expect(v.meta).not.toMatch(/undefined|session\.catalog|challenge\./)
     }
   })
 
@@ -71,8 +71,11 @@ describe('landing content', () => {
     expect(settingLabel(MODULES_BY_ID.aveugle, 'longueur', 4)).toBe(
       '4 coups et +'
     )
-    expect(settingLabel(MODULES_BY_ID.parcours, 'effort', 'intense')).toBe(
-      'Intense'
+    expect(settingLabel(MODULES_BY_ID.parcours, 'chapter', 'mates')).toBe(
+      'Mats'
+    )
+    expect(settingLabel(MODULES_BY_ID.parcours, 'step', 'tactics-4')).toBe(
+      'Attaque à la découverte'
     )
     expect(() => settingLabel(puzzles, 'nope', 1)).toThrow()
   })

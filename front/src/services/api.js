@@ -506,19 +506,6 @@ export const sessionApi = {
       .then(r => r.data)
 }
 
-/** Parcours (docs/PARCOURS.md): five tiers of a theme, ended by their counts, played as a session. */
-export const parcoursApi = {
-  /** The themes and their tiers, the efforts, my repertoires (with their opening), my rating. */
-  overview: () => http.get('/api/parcours', JSON_LD).then(r => r.data),
-  /**
-   * Launches a parcours: its session, whose first tier `sessionApi.next` starts.
-   *
-   * @param {{theme: string, effort: string, repertoireId?: string|null}} payload
-   */
-  launch: payload =>
-    http.post('/api/parcours', payload, JSON_LD).then(r => r.data)
-}
-
 /** Web Push for this browser (docs/NOTIFICATIONS.md). */
 export const notificationApi = {
   /** `{enabled, publicKey}`: whether the server sends browser notifications. */

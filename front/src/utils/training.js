@@ -107,7 +107,7 @@ export function subjectPath(run) {
   if (run.subjectType === 'blindfold_player') return '/blindfold'
   if (run.subjectType === 'evaluation_player') return '/evaluation'
   if (run.subjectType === 'puzzle_streak_player') return '/streak'
-  if (run.subjectType === 'parcours_player') return '/parcours'
+  if (run.subjectType === 'parcours_player') return '/defis'
   if (run.subjectType === 'puzzle_rush_player') return '/puzzle'
   if (run.subjectType === 'blindfold_recall_player') return '/reconstitution'
   if (run.subjectType === 'notation_player') return '/notation'

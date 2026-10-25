@@ -3,8 +3,9 @@ import { t } from '@/i18n'
 /**
  * The endgames path (docs/ENDGAMES.md, § 10; design « Parcours echiqueens »): the mind map's path
  * `endgames` as its page shows it. One chapter per mini-parcours (its lessons, then its boss), the
- * Roi des cendres' chapter last (its boss only). Nothing is ever locked. Pure, so that it can be
- * tested alone.
+ * Roi des cendres' chapter last (its boss only). Nothing is ever locked. The défis' path
+ * (docs/DEFIS.md) is drawn the same way, its tiers as lessons, without a Roi des cendres. Pure, so
+ * that it can be tested alone.
  *
  * @typedef {import('@/utils/mindMapPath').MindPath} MindPath
  * @typedef {import('@/utils/mindMapPath').PathChapter} PathChapter
@@ -49,9 +50,10 @@ export function lessonProgress(step) {
  * The line under a lesson: « À commencer », « En cours · 1/10 », « Connue · 4/10 », « Maîtrisée ».
  *
  * @param {PathStep} step
+ * @param {string} [texts] the messages of its path's page (the défis': `challenge.path`)
  */
-export function lessonStatusText(step) {
-  return t(`endgame.path.states.${lessonState(step)}`, {
+export function lessonStatusText(step, texts = 'endgame.path') {
+  return t(`${texts}.states.${lessonState(step)}`, {
     n: step.passes,
     total: step.required
   })

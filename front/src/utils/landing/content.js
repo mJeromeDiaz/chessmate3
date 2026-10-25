@@ -6,7 +6,7 @@ import {
 } from '@/utils/session/catalog'
 import { CAPACITIES, capacityName } from '@/utils/mindMap'
 import { hasPath, moodImage, standingImage } from '@/utils/mindMapPath'
-import { effortName, themeName } from '@/utils/parcours'
+import { challengeStepTitle } from '@/utils/challengePath'
 import { TOPICS, topicLabel } from '@/utils/puzzleStreak'
 import { PROFS } from '@/utils/prof/profs'
 import { profImage } from '@/utils/prof/images'
@@ -147,8 +147,11 @@ export const CALCULATION_CHAPTER = {
  * @returns {string}
  */
 export function settingLabel(module, key, value) {
+  // The défis (docs/DEFIS.md): a chapter and one of its steps, not a session's settings.
   if (module.id === 'parcours') {
-    return key === 'theme' ? themeName(value) : effortName(value)
+    return key === 'chapter'
+      ? t(`challenge.chapters.${value}.name`)
+      : challengeStepTitle(value)
   }
   const field = module.fields.find(f => f.key === key)
   if (!field) throw new Error(`No setting ${key} in ${module.id}`)
@@ -259,7 +262,7 @@ export const MODULE_VARIANTS = [
   configured('notation', { exercice: 'game_play' }),
   configured('puzzles', { themes: ['skewer', 'deflection'] }),
   configured('repertoire', { duree: 15 }),
-  configured('parcours', { theme: 'tactics', effort: 'intense' }),
+  configured('parcours', { chapter: 'tactics', step: 'tactics-4' }),
   configured('finales', { mode: 'review', themes: ['pawns', 'rooks'] }),
   configured('aveugle', { longueur: 4, memorisation: 5 }),
   configured('streak', { difficulte: 'tiers', thematique: 'theme:fork' }),
@@ -268,13 +271,13 @@ export const MODULE_VARIANTS = [
   configured('rush', { duree: 5, themes: ['mateIn1'] }),
   configured('notation', { exercice: 'write' }),
   configured('reconstitution', { niveau: 'mine' }),
-  configured('parcours', { theme: 'mates', effort: 'light' }),
+  configured('parcours', { chapter: 'mates', step: 'mates-2' }),
   configured('finales', { themes: ['knights'], elo: 2600 }),
   configured('puzzles', { duree: 30, themes: ['discoveredAttack'] }),
   configured('aveugle', { niveau: 'hard', memorisation: 15 }),
   configured('streak', { thematique: 'theme:rookEndgame' }),
   configured('notation', { exercice: 'line' }),
-  configured('parcours', { theme: 'endgames', effort: 'steady' })
+  configured('parcours', { chapter: 'endgames', step: 'endgames-boss' })
 ]
 
 /**

@@ -3,6 +3,8 @@ import { t } from '@/i18n'
 /**
  * The parcours (docs/PARCOURS.md): five tiers of a theme, the effort's count of exercises in each,
  * chained without a pause and without a clock, played as a session whose steps are the tiers.
+ * The défis replaced them (docs/DEFIS.md, `utils/challengePath.js`): none is launched any more,
+ * the sessions played still show their tiers.
  *
  * @typedef {'mates'|'opening'|'endgames'|'tactics'} ParcoursTheme
  * @typedef {'light'|'steady'|'intense'} ParcoursEffort
@@ -10,13 +12,6 @@ import { t } from '@/i18n'
  * @typedef {object} TierPlan what a tier plays, as the API describes it
  * @property {'lines'|'puzzles'} kind lines of the repertoire, or puzzles
  * @property {string[]} themes the Lichess themes of its puzzles (none: the opening's family)
- *
- * @typedef {object} ParcoursOverview `GET /parcours`
- * @property {{theme: ParcoursTheme, tiers: TierPlan[]}[]} themes
- * @property {{effort: ParcoursEffort, perTier: number, total: number, bonusXp: number}[]} efforts
- * @property {{id: string, name: string, color: string, opening: {family: string, name: string}|null}[]} repertoires
- * @property {number} rating the player's puzzle rating, the middle of each tier
- * @property {number} ratingGap below and above it, for the first and last thirds
  *
  * @typedef {{theme: ParcoursTheme, effort: ParcoursEffort, repertoireId: string|null}} SessionParcours
  *   what a session says of its parcours (null for any other session)
@@ -27,26 +22,6 @@ export const TIERS = 5
 
 /** The pause between two tiers before the next one starts by itself. */
 export const NEXT_TIER_MS = 2000
-
-/** @type {ParcoursTheme[]} */
-export const THEMES = ['mates', 'opening', 'endgames', 'tactics']
-
-/** @type {ParcoursEffort[]} */
-export const EFFORTS = ['light', 'steady', 'intense']
-
-/** @param {string} theme */
-export function themeName(theme) {
-  return THEMES.includes(/** @type {any} */ (theme))
-    ? t(`parcours.themes.${theme}.name`)
-    : theme
-}
-
-/** @param {string} effort */
-export function effortName(effort) {
-  return EFFORTS.includes(/** @type {any} */ (effort))
-    ? t(`parcours.efforts.${effort}`)
-    : effort
-}
 
 /**
  * What a tier plays, for the player: "Mat en 2", "Fourchette", "Lignes du répertoire", "Puzzles
@@ -121,19 +96,4 @@ export function parcoursScore(session) {
     total += step.settings?.count ?? step.settings?.limit ?? 0
   }
   return { played, solved, total }
-}
-
-/**
- * Why a parcours cannot be launched (`POST /parcours` refused), for the player.
- *
- * @param {any} error
- * @returns {string} '' when the error is not one of the parcours' own
- */
-export function launchErrorText(error) {
-  const status = error?.response?.status
-  const detail = String(error?.response?.data?.detail ?? '')
-  if (status === 409 && ['no_opening', 'empty_repertoire'].includes(detail))
-    return t(`parcours.errors.${detail}`)
-  if (status === 404) return t('parcours.errors.repertoire')
-  return ''
 }

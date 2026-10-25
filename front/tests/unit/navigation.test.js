@@ -21,7 +21,7 @@ describe('FREE_TRAINING_LINKS', () => {
       'Reconstitution',
       'Évaluation',
       'Finales',
-      'Parcours'
+      'Défis'
     ])
   })
 })
