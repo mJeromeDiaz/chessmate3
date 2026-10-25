@@ -50,16 +50,19 @@
   "need": {
     "noWoodpecker": "No games as {side}: no Woodpecker on that side.",
     "woodpecker": "{family}: your #1 with {side}, {games}.",
-    "existing": "Your repertoires: {n} to review.",
-    "generated": "Your repertoire, drawn from your games: {n}.",
+    "existing": "Your White repertoire: “{name}”.",
+    "generated": "Your White repertoire, drawn from your games: “{name}”.",
     "not_asked": "No repertoire yet: you're missing one.",
     "no_opening": "No opening played often enough for a repertoire.",
     "failed": "The repertoire could not be created.",
     "repertoire": "Your repertoire.",
-    "blindfoldWeak": "“{type}” endgames: {slip}.",
     "blindfold": "See without looking, to calculate further.",
     "evaluationLost": "In endgames, you let {slip} slip.",
-    "evaluation": "Judge a position before choosing a plan."
+    "evaluation": "Judge a position before choosing a plan.",
+    "existingOpening": "{family}, your #1 with White ({games}): your repertoire “{name}”.",
+    "brilliancy": "Winning sacrifice or blunder? Tell at a glance.",
+    "endgamesWeak": "“{type}” endgames: {slip}.",
+    "endgames": "An endgame at random: {theme}."
   },
   "card": {
     "woodpecker": "Woodpecker",
@@ -83,19 +86,24 @@
     },
     "blindfold": "Blindfold chess",
     "blindfoldSub": "You play without seeing the pieces",
-    "blindfoldWeak": "To visualize better, and calculate all the way. Your “{type}” endgames: {slip}.",
     "blindfoldText": "To visualize better: the position appears, disappears, and you play from memory.",
     "evaluation": "Evaluation",
     "evaluationSub": "Who's better, and by how much?",
     "evaluationLost": "Out of {endgames}, you had the advantage in {advantages} and let {lost} slip. Judging the position is choosing the right plan.",
-    "evaluationText": "Judge a position at a glance, before choosing a plan."
+    "evaluationText": "Judge a position at a glance, before choosing a plan.",
+    "brilliancy": "Brilliant or Blunder",
+    "brilliancySub": "Winning sacrifice or blunder?",
+    "brilliancyText": "A move that gives material: brilliant or a blunder? You decide fast, and learn to recognise both.",
+    "endgames": "Endgames · {theme}",
+    "endgamesSub": "Against Maia, at your level",
+    "endgamesWeak": "Your “{type}” endgames: {slip}. 10 minutes of endgames ({theme}) to finally convert your advantages.",
+    "endgamesText": "Endgames to win or hold against Maia, a lesson at random, then its variants."
   },
   "session": {
-    "two": "We start with your two flagship openings.",
-    "one": "We start with your flagship opening.",
     "none": "We start with your vision of the game.",
-    "weakest": "{start} Then, a heading for your “{type}” endgames: that's where you let the most advantages slip.",
-    "keep": "{start} Then, we maintain your vision and your judgment."
+    "weakest": "{start} Then, on to your “{type}” endgames: that is where you let the most advantages slip.",
+    "keep": "{start} Then your judgement, your tactics and your endgames.",
+    "repertoire": "We start with your White repertoire."
   },
   "errors": {
     "limit_plans": "You've reached the limit of 50 saved sessions: delete one before continuing."
@@ -178,6 +186,8 @@
     "go": "Go!",
     "woodpeckerSays": "Tactics from games played in your opening, repeated until they become reflexes. Fast, but accurate.",
     "says": "Let's start. Focus on accuracy before speed.",
-    "countWoodpecker": "{family} · {n} puzzles"
+    "countWoodpecker": "{family} · {n} puzzles",
+    "repertoireSays": "Your prepared moves, played from memory: the lines due come first.",
+    "countRepertoire": "{name} · {n} min"
   }
 }

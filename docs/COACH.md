@@ -14,10 +14,15 @@ Choix validés (2026-10-11, design « Session perso ») :
   (§ 3). Pas de temps libre.
 - Ce que le design affichait sans donnée réelle est retiré (précision par phase, « sort de la
   théorie au coup 6 »…) : le texte ne dit que ce que les parties disent (`front/src/utils/coach.js`).
-- Woodpecker sur des **sets light d'ouverture**, un par couleur, à côté du set light habituel.
+- Woodpecker sur des **sets light d'ouverture**, un par couleur, à côté du set light habituel
+  (depuis le 2026-10-25, la séance n'utilise que celui des Blancs).
+- Composition revue le 2026-10-25 : le répertoire blanc de l'ouverture n°1, l'évaluation, le
+  Woodpecker de l'ouverture blanche, Brillant ou Blunder, une finale du type le plus faible (sinon au
+  hasard), l'aveugle (§ 3).
 - Avantage à l'entrée en finale : **l'évaluation Lichess si la partie est analysée, sinon le
   matériel** ; laissé filer : la partie n'est pas gagnée.
-- Répertoire généré, si demandé, à partir **des mêmes parties**, avec les choix par défaut.
+- Répertoire généré, si demandé, à partir **des mêmes parties**, avec les choix par défaut (côté
+  blanc seulement).
 - **Une seule séance sur mesure par utilisateur**, remplacée à chaque analyse (horaire et rappel
   gardés).
 
@@ -29,7 +34,7 @@ Choix validés (2026-10-11, design « Session perso ») :
 | Lecture des parties | builds du répertoire automatique (`App\Repertoire\Auto\*`, [REPERTOIRE.md](REPERTOIRE.md)) : `GameReader` rejoue chaque partie jusqu'au bout, `GameRecord` garde `rating` et `endgame{Type,Ply,Balance,Eval}` |
 | Règles | `App\Coach\CoachRules` (pur) |
 | Diagnostic | `App\Coach\Diagnosis\Diagnosis` (pur) |
-| Composition | `App\Coach\Session\{Composer, CoachException}` |
+| Composition | `App\Coach\Session\{Composer, EndgameTheme, CoachException}`, `RepertoireRepository::findByFamily` |
 | Sets d'ouverture | `App\Puzzle\Opening\OpeningFamily`, `App\Woodpecker\Set\{OpeningSets, OpeningPool, Pool, PoolFactory}`, `RandomSeeker::{drawOpening, countOpening}` |
 | Séance enregistrée | `Plan.origin` (`Plan::ORIGIN_COACH`), `PlanRepository::findByOrigin`, `PlanManager::saveForOrigin` |
 | API | `App\ApiResource\Coach\{Diagnosis, Composition, ComposeInput}`, `App\State\Coach\{DiagnosisProvider, ComposeProcessor}` |
@@ -59,7 +64,8 @@ des puzzles).
 | `GAMES`, `PERFS` | 200 ; blitz, rapid, classical | parties lues |
 | `ADVANTAGE_CP` | 200 | avantage selon l'analyse (point de vue de l'utilisateur) |
 | `ADVANTAGE_POINTS` | 2 | avantage selon le matériel, sans analyse |
-| `WOODPECKER_MINUTES`, `REPERTOIRE_MINUTES`, `BLINDFOLD_MINUTES`, `EVALUATION_MINUTES` | 10, 10, 5, 2 | durée des étapes |
+| `REPERTOIRE_MINUTES`, `EVALUATION_MINUTES`, `WOODPECKER_MINUTES`, `BRILLIANCY_MINUTES`, `ENDGAME_MINUTES`, `BLINDFOLD_MINUTES` | 10, 2, 10, 2, 10, 5 | durée des étapes (39 minutes) |
+| `ENDGAME_MODE` | `review` | finales : une leçon au hasard puis ses variantes, contre Maia |
 | `BLINDFOLD_LENGTH`, `BLINDFOLD_VISIBLE_SECONDS` | 2 coups, 10 s | réglages de l'aveugle |
 | `BLINDFOLD_MEDIUM_FROM`, `BLINDFOLD_HARD_FROM` | 1 400, 1 900 | niveau de l'aveugle selon le classement |
 | `DEFAULT_RATING` | 1 500 | classement sans aucun dans les parties |
@@ -83,16 +89,17 @@ séance enregistrée :
 
 | Module | Minutes | Contenu | Absent si |
 |---|---|---|---|
-| Woodpecker, blancs | 10 | set d'ouverture de la famille n°1 avec les blancs (`settings.setId`) | `no_games` (aucune partie), `no_puzzles` (< 30 puzzles) |
-| Woodpecker, noirs | 10 | idem avec les noirs | idem |
-| Répertoire | 10 | les répertoires de l'utilisateur (tronçons) ; aucun : générés depuis ces parties si demandé | `not_asked`, `no_opening` (aucune famille jouée assez souvent), `failed` |
-| Aveugle | 5 | niveau selon le classement, 2 coups, 10 s | jamais |
+| Répertoire | 10 | **un** répertoire blanc : celui dont une position porte le nom de la famille n°1 avec les Blancs (« Italian Game », nom de `repertoire_opening` avant « : »), sinon le plus récent des blancs ; aucun : généré depuis ces parties si demandé, côté blanc seulement | `not_asked`, `no_opening` (aucune famille jouée assez souvent avec les Blancs), `failed` |
 | Évaluation | 2 | Elo = classement arrondi à la centaine (bornes du module), les deux camps | jamais |
+| Woodpecker | 10 | set d'ouverture de la famille n°1 avec les Blancs (`settings.setId`) | `no_games` (aucune partie avec les Blancs), `no_puzzles` (< 30 puzzles) |
+| Brillant ou Blunder | 2 | sans réglage | jamais |
+| Finales | 10 | mode `review`, Maia au niveau `EndgameRules::proposedElo(classement)`, un thème (`EndgameTheme`) : le type le plus faible (`weakest`) — pions → pions, tours et tours + mineure → tours, dames → dames, mineures → fous ou cavaliers au hasard —, sinon (aucun, ou mixte) un des 6 thèmes au hasard | jamais |
+| Aveugle | 5 | niveau selon le classement, 2 coups, 10 s | jamais |
 
-Le répertoire (`repertoire.status`) : `existing` (les siens, `Scope::MAX_REPERTOIRES` au plus),
-`generated` (la famille la plus jouée de chaque couleur, via `AutoBuildService::select` + `apply`,
-sans exploration Lichess, lignes courtes conservées sans demander : `confirmShortLines: false`),
-`not_asked`, `no_opening`, `failed`.
+Le répertoire (`repertoire.status`) : `existing` (le sien), `generated` (la famille blanche la plus
+jouée, via `AutoBuildService::select` + `apply`, sans exploration Lichess, lignes courtes conservées
+sans demander : `confirmShortLines: false`), `not_asked`, `no_opening`, `failed`. Ses `facts`
+portent aussi l'ouverture n°1 avec les Blancs (`opening`) ; ceux des finales, le point faible.
 
 Chaque module porte ses `facts` (réglages, ouverture et ses V/N/D, nombre de puzzles, point faible…)
 pour que la page n'invente rien. La séance est enregistrée par `PlanManager::saveForOrigin` : la
@@ -142,10 +149,16 @@ Cinq écrans (`useCoachSession`) :
    besoin auquel ils répondent.
 4. **Séance** (`CoachSession`) : la séance du jour, chaque module expliqué par les parties ; un
    module absent dit pourquoi (répertoire manquant : lien vers `/repertoire/auto`).
-5. **Module 1** (`CoachGo`) : pour Woodpecker, la méthode light (chaque séance repart du premier
+5. **Module 1** (`CoachGo`) : en général le répertoire blanc (son nom, ce qu'Albert en dit) ; s'il
+   manque, le module suivant. Pour Woodpecker, la méthode light (chaque séance repart du premier
    puzzle ; pas de cycles) et pourquoi ça aide (trois raisons de l'utilisateur,
-   `WOODPECKER_REASONS`) ; puis 3, 2, 1, Go et lancement de la séance enregistrée
+   `WOODPECKER_REASONS`). Puis 3, 2, 1, Go et lancement de la séance enregistrée
    (`usePlanLaunch`).
+
+Textes des modules (`front/src/utils/coach.js`, `coach.json`) : le répertoire nomme le sien et
+l'ouverture n°1 ; Brillant ou Blunder ; les finales nomment leur thème (`endgame.families`) et le
+point faible des parties s'il y en a un ; l'aveugle ne parle plus du point faible (les finales s'en
+chargent).
 
 L'analyse en cours survit à un rechargement de l'onglet (`sessionStorage`
 `dontstayrooky.coach`). Points d'entrée : carte « Séance sur mesure » de l'accueil visiteur
@@ -157,7 +170,10 @@ un set d'ouverture (valeur `set` = id du set).
 
 - Unitaires : `tests/Unit/Chess/Endgame/EndgameTest`, `tests/Unit/Repertoire/Auto/GameReaderTest`,
   `tests/Unit/Puzzle/Opening/OpeningFamilyTest`, `tests/Unit/Coach/DiagnosisTest`.
-- Fonctionnels : `tests/Functional/Woodpecker/OpeningSetTest`, `tests/Functional/Coach/{CoachSessionTest, RoutingTest}`, `AutoBuildApiTest` (flux), `CaseSensitiveColumnsTest`.
+- Unitaires aussi : `tests/Unit/Coach/EndgameThemeTest` (type faible → thème, tirage sans point faible).
+- Front : Vitest `coach.test.js` (cartes et besoins de chaque module, mot d'Albert, couleurs),
+  Playwright `coach.spec.js` (6 modules composés, Woodpecker absent, répertoire en module 1).
+- Fonctionnels : `tests/Functional/Woodpecker/OpeningSetTest`, `tests/Functional/Coach/{CoachSessionTest, RoutingTest}` (ordre et réglages, répertoire blanc seulement, choisi par son ouverture sinon le plus récent), `AutoBuildApiTest` (flux), `CaseSensitiveColumnsTest`.
 - Front : `tests/unit/coach.test.js`, `auth-flow`, `session-catalog`, `session-store` ;
   e2e `tests/e2e/coach.spec.js` (API des builds et de la séance simulée, Lichess jamais atteint) et
   `landing.spec.js`.

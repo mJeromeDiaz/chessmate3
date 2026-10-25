@@ -100,7 +100,8 @@
 
 <script setup>
 /**
- * Step 5 of the tailored session (design "Session perso"): the first module before it starts.
+ * Step 5 of the tailored session (design "Session perso"): the first module before it starts
+ * (the White repertoire, unless it is missing).
  * Woodpecker: the light method the session plays (no cycles: each run starts from the first
  * puzzle) and why it helps; then 3, 2, 1, go and the session is launched.
  */
@@ -132,18 +133,25 @@ const heading = computed(() =>
     : card.value.title
 )
 const says = computed(() =>
-  props.module.module === 'woodpecker'
-    ? t('coach.go.woodpeckerSays')
-    : t('coach.go.says')
+  ({
+    woodpecker: t('coach.go.woodpeckerSays'),
+    repertoire: t('coach.go.repertoireSays')
+  })[props.module.module] ?? t('coach.go.says')
 )
-const countSub = computed(() =>
-  props.module.module === 'woodpecker'
-    ? t('coach.go.countWoodpecker', {
-        family: props.module.facts.opening?.family ?? '',
-        n: props.module.facts.puzzleCount
-      })
-    : t('coach.compose.minutes', { n: props.module.minutes })
-)
+const countSub = computed(() => {
+  const { module, facts, minutes } = props.module
+  if (module === 'woodpecker')
+    return t('coach.go.countWoodpecker', {
+      family: facts.opening?.family ?? '',
+      n: facts.puzzleCount
+    })
+  if (module === 'repertoire' && facts.repertoires?.[0])
+    return t('coach.go.countRepertoire', {
+      name: facts.repertoires[0].name,
+      n: minutes
+    })
+  return t('coach.compose.minutes', { n: minutes })
+})
 
 const counting = ref(false)
 const count = ref(3)

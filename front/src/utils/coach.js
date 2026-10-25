@@ -65,8 +65,8 @@ export function woodpeckerMethod() {
 }
 
 /**
- * The colour of each step, in the session's order: Woodpecker with White, with Black, repertoire,
- * blindfold, evaluation.
+ * The colour of each step, in the session's order: repertoire, evaluation, Woodpecker, Brillant ou
+ * Blunder, endgames, blindfold.
  *
  * @param {CoachModule} module
  * @returns {string}
@@ -76,11 +76,23 @@ export function moduleColor(module) {
     return module.facts.color === 'black' ? '#FFE27A' : '#FFD43B'
   }
   return (
-    { repertoire: '#FFB38A', blindfold: '#4FB2FF', evaluation: '#CBBEFF' }[
-      module.module
-    ] ?? '#E9E6F3'
+    {
+      repertoire: '#FFB38A',
+      evaluation: '#CBBEFF',
+      brilliancy: '#7FE3D6',
+      endgames: '#A8E6A1',
+      blindfold: '#4FB2FF'
+    }[module.module] ?? '#E9E6F3'
   )
 }
+
+/**
+ * The endgames theme of the session's step: "Tours".
+ *
+ * @param {CoachModule} module
+ */
+const endgameTheme = module =>
+  t(`endgame.families.${module.facts.settings?.themes?.[0] ?? 'rooks'}`)
 
 /** @param {string} color 'white' or 'black' */
 const side = color => t(`coach.sides.${color === 'black' ? 'black' : 'white'}`)
@@ -159,22 +171,32 @@ export function needText(module, composition) {
       })
     case 'repertoire': {
       const status = module.missing ?? composition.repertoire.status
-      const n = f.repertoires?.length ?? 0
+      const name = f.repertoires?.[0]?.name ?? ''
       if (status === 'existing')
-        return t('coach.need.existing', { n: count(n, 'repertoires') })
+        return f.opening
+          ? t('coach.need.existingOpening', {
+              name,
+              family: f.opening.family,
+              games: count(f.opening.games, 'games')
+            })
+          : t('coach.need.existing', { name })
       if (status === 'generated')
-        return t('coach.need.generated', { n: count(n, 'openings') })
+        return t('coach.need.generated', { name })
       return ['not_asked', 'no_opening', 'failed'].includes(status)
         ? t(`coach.need.${status}`)
         : t('coach.need.repertoire')
     }
-    case 'blindfold':
+    case 'brilliancy':
+      return t('coach.need.brilliancy')
+    case 'endgames':
       return f.weakest
-        ? t('coach.need.blindfoldWeak', {
+        ? t('coach.need.endgamesWeak', {
             type: endgameName(f.weakest),
             slip: slipText(f.weakest)
           })
-        : t('coach.need.blindfold')
+        : t('coach.need.endgames', { theme: endgameTheme(module) })
+    case 'blindfold':
+      return t('coach.need.blindfold')
     case 'evaluation':
       return f.endgames?.lost
         ? t('coach.need.evaluationLost', { slip: slipText(f.endgames) })
@@ -236,26 +258,38 @@ export function moduleCard(module) {
         : 'default'
       return {
         title: t(`${k}repertoire`),
-        subtitle: module.included
-          ? names.slice(0, 2).join(', ') +
-            (names.length > 2 ? ` +${names.length - 2}` : '')
-          : t(`${k}missing`),
+        subtitle: module.included ? names[0] : t(`${k}missing`),
         text: module.included
           ? t(`${k}repertoireText`)
           : t(`${k}repertoireMissing.${missing}`),
         glyph: null
       }
     }
+    case 'brilliancy':
+      return {
+        title: t('coach.card.brilliancy'),
+        subtitle: t('coach.card.brilliancySub'),
+        text: t('coach.card.brilliancyText'),
+        glyph: '!!'
+      }
+    case 'endgames':
+      return {
+        title: t('coach.card.endgames', { theme: endgameTheme(module) }),
+        subtitle: t('coach.card.endgamesSub'),
+        text: f.weakest
+          ? t('coach.card.endgamesWeak', {
+              type: endgameName(f.weakest),
+              slip: slipText(f.weakest),
+              theme: endgameTheme(module)
+            })
+          : t('coach.card.endgamesText'),
+        glyph: null
+      }
     case 'blindfold':
       return {
         title: t('coach.card.blindfold'),
         subtitle: t('coach.card.blindfoldSub'),
-        text: f.weakest
-          ? t('coach.card.blindfoldWeak', {
-              type: endgameName(f.weakest),
-              slip: slipText(f.weakest)
-            })
-          : t('coach.card.blindfoldText'),
+        text: t('coach.card.blindfoldText'),
         glyph: null
       }
     case 'evaluation':
@@ -282,16 +316,12 @@ export function moduleCard(module) {
  * @param {Composition} composition
  */
 export function sessionSays(composition) {
-  const woodpeckers = composition.modules.filter(
-    m => m.module === 'woodpecker' && m.included
-  ).length
-  const start = t(
-    woodpeckers === 2
-      ? 'coach.session.two'
-      : woodpeckers === 1
-        ? 'coach.session.one'
-        : 'coach.session.none'
+  const repertoire = composition.modules.find(
+    m => m.module === 'repertoire' && m.included
   )
+  const start = repertoire
+    ? t('coach.session.repertoire')
+    : t('coach.session.none')
   const weakest = composition.diagnosis.weakest
   return weakest
     ? t('coach.session.weakest', { start, type: endgameName(weakest) })

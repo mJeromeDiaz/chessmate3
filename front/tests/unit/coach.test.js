@@ -56,7 +56,7 @@ const woodpecker = (color, over = {}) => ({
 /** @returns {import('@/utils/coach').Composition} */
 const composition = (modules, over = {}) => ({
   planId: 'p1',
-  minutes: 37,
+  minutes: 39,
   diagnosis: diagnosis(),
   repertoire: { status: 'generated', repertoires: [] },
   modules,
@@ -124,12 +124,39 @@ describe('tailored session words', () => {
       missing: null,
       facts: { weakest: rook, settings: {} }
     }
-    expect(moduleCard(blindfold).text).toBe(
-      'Pour mieux visualiser, et calculer jusqu’au bout. Tes finales de type « tours » : 4 avantages laissés filer sur 6.'
-    )
-    expect(moduleCard({ ...blindfold, facts: { weakest: null } }).text).toMatch(
-      'de mémoire'
-    )
+    expect(moduleCard(blindfold).text).toMatch('de mémoire')
+
+    const endgames = {
+      module: 'endgames',
+      minutes: 10,
+      included: true,
+      missing: null,
+      facts: {
+        weakest: rook,
+        settings: { mode: 'review', themes: ['rooks'], elo: 1800 }
+      }
+    }
+    expect(moduleCard(endgames)).toEqual({
+      title: 'Finales · Tours',
+      subtitle: 'Contre Maia, à ton niveau',
+      text: 'Tes finales de type « tours » : 4 avantages laissés filer sur 6. 10 minutes de finales (Tours) pour convertir enfin tes avantages.',
+      glyph: null
+    })
+    expect(
+      moduleCard({
+        ...endgames,
+        facts: { weakest: null, settings: { themes: ['knights'] } }
+      }).title
+    ).toBe('Finales · Cavaliers')
+    expect(
+      moduleCard({
+        module: 'brilliancy',
+        minutes: 2,
+        included: true,
+        missing: null,
+        facts: { settings: {} }
+      }).title
+    ).toBe('Brillant ou Blunder')
 
     const repertoire = {
       module: 'repertoire',
@@ -144,15 +171,9 @@ describe('tailored session words', () => {
         ...repertoire,
         included: true,
         missing: null,
-        facts: {
-          repertoires: [
-            { id: 'a', name: 'Italian Game (auto)' },
-            { id: 'b', name: 'Sicilian Defense (auto)' },
-            { id: 'c', name: 'Caro' }
-          ]
-        }
+        facts: { repertoires: [{ id: 'a', name: 'Italienne' }] }
       }).subtitle
-    ).toBe('Italian Game (auto), Sicilian Defense (auto) +1')
+    ).toBe('Italienne')
 
     const evaluation = {
       module: 'evaluation',
@@ -167,39 +188,75 @@ describe('tailored session words', () => {
   })
 
   it('tells the need each module answers, and Albert sums the session up', () => {
-    const modules = [woodpecker('white'), woodpecker('black')]
-    expect(needText(modules[0], composition(modules))).toBe(
-      'Italian Game : ta n°1 avec les blancs, 38 parties.'
+    const repertoire = {
+      module: 'repertoire',
+      minutes: 10,
+      included: true,
+      missing: null,
+      facts: {
+        repertoires: [{ id: 'a', name: 'Italienne', color: 'white' }],
+        opening: diagnosis().white[0],
+        settings: { repertoireIds: ['a'] }
+      }
+    }
+    const endgames = {
+      module: 'endgames',
+      minutes: 10,
+      included: true,
+      missing: null,
+      facts: { weakest: rook, settings: { themes: ['rooks'] } }
+    }
+    const modules = [repertoire, woodpecker('white'), endgames]
+    const existing = composition(modules, {
+      repertoire: { status: 'existing', repertoires: [] }
+    })
+    expect(needText(repertoire, existing)).toBe(
+      'Italian Game, ta n°1 avec les Blancs (38 parties) : ton répertoire « Italienne ».'
+    )
+    expect(needText(repertoire, composition(modules))).toBe(
+      'Ton répertoire blanc, tiré de tes parties : « Italienne ».'
     )
     expect(
       needText(
-        {
-          module: 'repertoire',
-          minutes: 10,
-          included: false,
-          missing: 'not_asked',
-          facts: {}
-        },
+        { ...repertoire, included: false, missing: 'not_asked', facts: {} },
         composition(modules)
       )
     ).toMatch('Pas encore de répertoire')
-    expect(sessionSays(composition(modules))).toBe(
-      'On commence par tes deux ouvertures phares. Ensuite, cap sur tes finales de type « tours » : c’est là que tu laisses filer le plus d’avantages.'
+    expect(needText(modules[1], composition(modules))).toBe(
+      'Italian Game : ta n°1 avec les blancs, 38 parties.'
     )
-    const one = [woodpecker('white'), woodpecker('black', { included: false })]
+    expect(needText(endgames, composition(modules))).toBe(
+      'Finales de type « tours » : 4 avantages laissés filer sur 6.'
+    )
     expect(
-      sessionSays(composition(one, { diagnosis: diagnosis({ weakest: null }) }))
-    ).toBe(
-      'On commence par ton ouverture phare. Ensuite, on entretient ta vision et ton jugement.'
+      needText(
+        { ...endgames, facts: { weakest: null, settings: { themes: ['pawns'] } } },
+        composition(modules)
+      )
+    ).toBe('Une finale au hasard : Pions.')
+
+    expect(sessionSays(composition(modules))).toBe(
+      'On commence par ton répertoire blanc. Ensuite, cap sur tes finales de type « tours » : c’est là que tu laisses filer le plus d’avantages.'
     )
-    expect(playedModules(composition(one))).toHaveLength(1)
+    const without = [{ ...repertoire, included: false }, woodpecker('white')]
+    expect(
+      sessionSays(
+        composition(without, { diagnosis: diagnosis({ weakest: null }) })
+      )
+    ).toBe(
+      'On commence par ta vision du jeu. Ensuite, ton jugement, tes tactiques et tes finales.'
+    )
+    expect(playedModules(composition(without))).toHaveLength(1)
   })
 
   it('colours the steps and keeps the three reasons', () => {
-    expect([
-      moduleColor(woodpecker('white')),
-      moduleColor(woodpecker('black'))
-    ]).toEqual(['#FFD43B', '#FFE27A'])
+    expect(
+      [
+        woodpecker('white'),
+        { module: 'brilliancy', facts: {} },
+        { module: 'endgames', facts: {} }
+      ].map(moduleColor)
+    ).toEqual(['#FFD43B', '#7FE3D6', '#A8E6A1'])
     expect(WOODPECKER_REASONS.map(r => r.title)).toEqual([
       'Automatiser la reconnaissance des motifs',
       'Améliorer la vitesse de calcul',

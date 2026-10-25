@@ -50,16 +50,19 @@
   "need": {
     "noWoodpecker": "Aucune partie avec {side} : pas de Woodpecker de ce côté.",
     "woodpecker": "{family} : ta n°1 avec {side}, {games}.",
-    "existing": "Tes répertoires : {n} à réviser.",
-    "generated": "Ton répertoire, tiré de tes parties : {n}.",
+    "existing": "Ton répertoire blanc : « {name} ».",
+    "generated": "Ton répertoire blanc, tiré de tes parties : « {name} ».",
     "not_asked": "Pas encore de répertoire : il te manque.",
     "no_opening": "Aucune ouverture jouée assez souvent pour un répertoire.",
     "failed": "Le répertoire n’a pas pu être créé.",
     "repertoire": "Ton répertoire.",
-    "blindfoldWeak": "Finales de type « {type} » : {slip}.",
     "blindfold": "Voir sans regarder, pour calculer plus loin.",
     "evaluationLost": "En finale, tu as laissé filer {slip}.",
-    "evaluation": "Juger une position avant de choisir un plan."
+    "evaluation": "Juger une position avant de choisir un plan.",
+    "existingOpening": "{family}, ta n°1 avec les Blancs ({games}) : ton répertoire « {name} ».",
+    "brilliancy": "Sacrifice gagnant ou gaffe ? Le dire en un coup d’œil.",
+    "endgamesWeak": "Finales de type « {type} » : {slip}.",
+    "endgames": "Une finale au hasard : {theme}."
   },
   "card": {
     "woodpecker": "Woodpecker",
@@ -83,19 +86,24 @@
     },
     "blindfold": "Jeu à l’aveugle",
     "blindfoldSub": "Tu joues sans voir les pièces",
-    "blindfoldWeak": "Pour mieux visualiser, et calculer jusqu’au bout. Tes finales de type « {type} » : {slip}.",
     "blindfoldText": "Pour mieux visualiser : la position s’affiche, disparaît, et tu joues de mémoire.",
     "evaluation": "Évaluation",
     "evaluationSub": "Qui est mieux, et de combien ?",
     "evaluationLost": "Sur {endgames}, tu avais l’avantage dans {advantages} et tu en as laissé filer {lost}. Juger la position, c’est choisir le bon plan.",
-    "evaluationText": "Juger une position au premier coup d’œil, avant de choisir un plan."
+    "evaluationText": "Juger une position au premier coup d’œil, avant de choisir un plan.",
+    "brilliancy": "Brillant ou Blunder",
+    "brilliancySub": "Sacrifice gagnant ou gaffe ?",
+    "brilliancyText": "Un coup qui donne du matériel : coup brillant ou gaffe ? Tu tranches vite, et tu apprends à reconnaître les deux.",
+    "endgames": "Finales · {theme}",
+    "endgamesSub": "Contre Maia, à ton niveau",
+    "endgamesWeak": "Tes finales de type « {type} » : {slip}. 10 minutes de finales ({theme}) pour convertir enfin tes avantages.",
+    "endgamesText": "Des finales à gagner ou à tenir contre Maia, une leçon au hasard puis ses variantes."
   },
   "session": {
-    "two": "On commence par tes deux ouvertures phares.",
-    "one": "On commence par ton ouverture phare.",
     "none": "On commence par ta vision du jeu.",
     "weakest": "{start} Ensuite, cap sur tes finales de type « {type} » : c’est là que tu laisses filer le plus d’avantages.",
-    "keep": "{start} Ensuite, on entretient ta vision et ton jugement."
+    "keep": "{start} Ensuite, ton jugement, tes tactiques et tes finales.",
+    "repertoire": "On commence par ton répertoire blanc."
   },
   "errors": {
     "limit_plans": "Tu as atteint la limite de 50 sessions enregistrées : supprimes-en une avant de continuer."
@@ -178,6 +186,8 @@
     "go": "Go !",
     "woodpeckerSays": "Des tactiques de parties jouées dans ton ouverture, répétées jusqu’à devenir des réflexes. Vite, mais juste.",
     "says": "On démarre. Concentre-toi sur la justesse avant la vitesse.",
-    "countWoodpecker": "{family} · {n} puzzles"
+    "countWoodpecker": "{family} · {n} puzzles",
+    "repertoireSays": "Tes coups préparés, joués de mémoire : les lignes à réviser passent d’abord.",
+    "countRepertoire": "{name} · {n} min"
   }
 }

@@ -86,51 +86,19 @@ const repertoires = [
 
 const composition = {
   planId: PLAN,
-  minutes: 27,
+  minutes: 29,
   diagnosis,
   repertoire: { status: 'generated', repertoires },
   modules: [
-    {
-      module: 'woodpecker',
-      minutes: 10,
-      included: true,
-      missing: null,
-      facts: {
-        settings: { setId: 'set-white' },
-        color: 'white',
-        opening: italian,
-        puzzleCount: 100,
-        bothColors: false
-      }
-    },
-    {
-      module: 'woodpecker',
-      minutes: 10,
-      included: false,
-      missing: 'no_puzzles',
-      facts: {
-        settings: [],
-        color: 'black',
-        opening: sicilian,
-        puzzleCount: null,
-        bothColors: null
-      }
-    },
     {
       module: 'repertoire',
       minutes: 10,
       included: true,
       missing: null,
-      facts: { settings: { repertoireIds: [repertoires[0].id] }, repertoires }
-    },
-    {
-      module: 'blindfold',
-      minutes: 5,
-      included: true,
-      missing: null,
       facts: {
-        settings: { level: 'medium', length: 2, visibleSeconds: 10 },
-        weakest: rook
+        settings: { repertoireIds: [repertoires[0].id] },
+        repertoires,
+        opening: italian
       }
     },
     {
@@ -141,6 +109,46 @@ const composition = {
       facts: {
         settings: { elo: 1700, side: 'both' },
         endgames: { games: 2, advantages: 2, lost: 2 }
+      }
+    },
+    {
+      module: 'woodpecker',
+      minutes: 10,
+      included: false,
+      missing: 'no_puzzles',
+      facts: {
+        settings: [],
+        color: 'white',
+        opening: italian,
+        puzzleCount: null,
+        bothColors: null
+      }
+    },
+    {
+      module: 'brilliancy',
+      minutes: 2,
+      included: true,
+      missing: null,
+      facts: { settings: [] }
+    },
+    {
+      module: 'endgames',
+      minutes: 10,
+      included: true,
+      missing: null,
+      facts: {
+        settings: { mode: 'review', themes: ['rooks'], elo: 1700 },
+        weakest: rook
+      }
+    },
+    {
+      module: 'blindfold',
+      minutes: 5,
+      included: true,
+      missing: null,
+      facts: {
+        settings: { level: 'medium', length: 2, visibleSeconds: 10 },
+        weakest: rook
       }
     }
   ]
@@ -287,36 +295,42 @@ test('from the games to the first module: read, diagnose, compose, look, launch'
   expect(sent.compose).toEqual({ withRepertoire: true })
 
   // Composition: the modules forged one by one.
-  await expect(page.getByTestId('coach-forged')).toHaveCount(5, {
+  await expect(page.getByTestId('coach-forged')).toHaveCount(6, {
     timeout: 15_000
   })
-  await expect(page.getByTestId('coach-forged').nth(1)).toContainText(
+  await expect(page.getByTestId('coach-forged').nth(2)).toContainText(
     'Pas cette fois'
   )
   await page.getByTestId('coach-to-session').click()
 
-  // The session: 27 minutes, the absent module says why.
-  await expect(page.getByTestId('coach-minutes')).toHaveText('27 min')
+  // The session: 29 minutes, the absent module says why.
+  await expect(page.getByTestId('coach-minutes')).toHaveText('29 min')
+  await expect(page.getByTestId('coach-module-0')).toContainText('Répertoire')
   await expect(page.getByTestId('coach-module-0')).toContainText(
-    'Woodpecker · Italian Game'
+    'Italian Game'
   )
-  await expect(page.getByTestId('coach-module-1')).toContainText('Absent')
-  await expect(page.getByTestId('coach-module-2')).toContainText('Italian Game')
+  await expect(page.getByTestId('coach-module-2')).toContainText('Absent')
+  await expect(page.getByTestId('coach-module-3')).toContainText(
+    'Brillant ou Blunder'
+  )
+  await expect(page.getByTestId('coach-module-4')).toContainText(
+    'Finales · Tours'
+  )
   await expect(page.getByTestId('coach-says')).toContainText(
-    'ton ouverture phare'
+    'ton répertoire blanc'
   )
 
   // A reload of the tab comes back to the same screen.
   await page.reload()
-  await expect(page.getByTestId('coach-minutes')).toHaveText('27 min')
+  await expect(page.getByTestId('coach-minutes')).toHaveText('29 min')
 
-  // Module 1: the light method, then 3, 2, 1, go.
+  // Module 1: the White repertoire, then 3, 2, 1, go.
   await page.getByTestId('coach-begin').click()
   await expect(page.getByTestId('coach-go-kicker')).toContainText(
-    'MODULE 1 SUR 4 · 10 MIN'
+    'MODULE 1 SUR 5 · 10 MIN'
   )
   await expect(
-    page.getByText('Automatiser la reconnaissance des motifs')
+    page.getByText('Tes coups préparés, joués de mémoire')
   ).toBeVisible()
   await page.getByTestId('coach-launch').click()
   await expect(page.getByTestId('coach-countdown')).toBeVisible()

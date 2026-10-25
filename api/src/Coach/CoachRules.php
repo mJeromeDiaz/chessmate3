@@ -25,10 +25,14 @@ final class CoachRules
     public const ADVANTAGE_POINTS = 2;
 
     /** The session, always the same: minutes of each step. */
-    public const WOODPECKER_MINUTES = 10;
     public const REPERTOIRE_MINUTES = 10;
-    public const BLINDFOLD_MINUTES = 5;
     public const EVALUATION_MINUTES = 2;
+    public const WOODPECKER_MINUTES = 10;
+    public const BRILLIANCY_MINUTES = 2;
+    public const ENDGAME_MINUTES = 10;
+    public const BLINDFOLD_MINUTES = 5;
+    /** Endgames: review mode (a lesson at random, then its variants), against Maia. */
+    public const ENDGAME_MODE = 'review';
     /** Blindfold puzzles: solutions of 2 moves, shown 10 s. */
     public const BLINDFOLD_LENGTH = 2;
     public const BLINDFOLD_VISIBLE_SECONDS = 10;

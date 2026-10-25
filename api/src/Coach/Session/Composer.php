@@ -11,6 +11,7 @@ use App\Entity\Repertoire\Repertoire;
 use App\Entity\Training\Plan;
 use App\Entity\User;
 use App\Enum\Repertoire\AutoBuildStatus;
+use App\Endgame\EndgameRules;
 use App\Enum\Repertoire\Color;
 use App\Enum\Training\Module;
 use App\Repertoire\Auto\AutoBuildException;
@@ -19,7 +20,6 @@ use App\Repertoire\Auto\GameRecord;
 use App\Repertoire\Auto\Synthesis;
 use App\Repertoire\Exception\LimitReachedException;
 use App\Repertoire\Limits;
-use App\Repertoire\Training\Scope;
 use App\Repository\Repertoire\RepertoireRepository;
 use App\Training\Exception\InvalidSessionException;
 use App\Training\Exception\PlanLimitException;
@@ -29,10 +29,11 @@ use Psr\Clock\ClockInterface;
 
 /**
  * Composes the tailored session from a build of the user's games (docs/COACH.md), always the same
- * way: Woodpecker on the most played opening with White, then with Black (an opening set each,
- * {@see OpeningSets}), the repertoire (the user's repertoires; none: generated from these games
- * when asked, with the most played opening of each colour), blindfold puzzles, position
- * evaluation. Saved as the user's coach plan ({@see Plan::ORIGIN_COACH}), replaced each time.
+ * way: the White repertoire (the user's of the opening most played with White, else their newest
+ * White one; none: generated from these games when asked), position evaluation, Woodpecker on the
+ * opening most played with White (an opening set, {@see OpeningSets}), Brillant ou Blunder, the
+ * endgames of the weakest kind ({@see EndgameTheme}), blindfold puzzles. Saved as the user's coach
+ * plan ({@see Plan::ORIGIN_COACH}), replaced each time.
  *
  * Each module comes with the facts the page tells about it; a module that cannot be played (no
  * opening, too few puzzles, no repertoire) is listed with the reason, not saved in the plan.
@@ -51,6 +52,7 @@ final class Composer
         private readonly PlanManager $plans,
         private readonly Limits $limits,
         private readonly ClockInterface $clock,
+        private readonly EndgameTheme $endgameTheme,
     ) {
     }
 
@@ -68,36 +70,56 @@ final class Composer
         $games = GameRecord::listFromJson($build->getGames());
         $diagnosis = Diagnosis::of($games);
 
+        $repertoire = $this->repertoire($user, $build, $games, $diagnosis, $withRepertoire);
         $modules = [
-            $this->woodpecker($user, $diagnosis, Color::White),
-            $this->woodpecker($user, $diagnosis, Color::Black),
-        ];
-        $repertoire = $this->repertoire($user, $build, $games, $withRepertoire);
-        $modules[] = [
-            'module' => Module::Repertoire->value,
-            'minutes' => CoachRules::REPERTOIRE_MINUTES,
-            'included' => [] !== $repertoire['repertoires'],
-            'missing' => [] === $repertoire['repertoires'] ? $repertoire['status'] : null,
-            'facts' => ['settings' => ['repertoireIds' => array_column($repertoire['repertoires'], 'id')], 'repertoires' => $repertoire['repertoires']],
-        ];
-        $modules[] = [
-            'module' => Module::Blindfold->value,
-            'minutes' => CoachRules::BLINDFOLD_MINUTES,
-            'included' => true,
-            'missing' => null,
-            'facts' => [
-                'settings' => ['level' => CoachRules::blindfoldLevel($diagnosis['rating'])->value, 'length' => CoachRules::BLINDFOLD_LENGTH, 'visibleSeconds' => CoachRules::BLINDFOLD_VISIBLE_SECONDS],
-                'weakest' => $diagnosis['weakest'],
+            [
+                'module' => Module::Repertoire->value,
+                'minutes' => CoachRules::REPERTOIRE_MINUTES,
+                'included' => [] !== $repertoire['repertoires'],
+                'missing' => [] === $repertoire['repertoires'] ? $repertoire['status'] : null,
+                'facts' => ['settings' => ['repertoireIds' => array_column($repertoire['repertoires'], 'id')], 'repertoires' => $repertoire['repertoires'], 'opening' => $diagnosis['white'][0] ?? null],
             ],
-        ];
-        $modules[] = [
-            'module' => Module::Evaluation->value,
-            'minutes' => CoachRules::EVALUATION_MINUTES,
-            'included' => true,
-            'missing' => null,
-            'facts' => [
-                'settings' => ['elo' => CoachRules::evaluationElo($diagnosis['rating']), 'side' => 'both'],
-                'endgames' => ['games' => $diagnosis['endgames']['games'], 'advantages' => $diagnosis['endgames']['advantages'], 'lost' => $diagnosis['endgames']['lost']],
+            [
+                'module' => Module::Evaluation->value,
+                'minutes' => CoachRules::EVALUATION_MINUTES,
+                'included' => true,
+                'missing' => null,
+                'facts' => [
+                    'settings' => ['elo' => CoachRules::evaluationElo($diagnosis['rating']), 'side' => 'both'],
+                    'endgames' => ['games' => $diagnosis['endgames']['games'], 'advantages' => $diagnosis['endgames']['advantages'], 'lost' => $diagnosis['endgames']['lost']],
+                ],
+            ],
+            $this->woodpecker($user, $diagnosis, Color::White),
+            [
+                'module' => Module::Brilliancy->value,
+                'minutes' => CoachRules::BRILLIANCY_MINUTES,
+                'included' => true,
+                'missing' => null,
+                'facts' => ['settings' => []],
+            ],
+            [
+                'module' => Module::Endgames->value,
+                'minutes' => CoachRules::ENDGAME_MINUTES,
+                'included' => true,
+                'missing' => null,
+                'facts' => [
+                    'settings' => [
+                        'mode' => CoachRules::ENDGAME_MODE,
+                        'themes' => [$this->endgameTheme->for($diagnosis['weakest']['type'] ?? null)->value],
+                        'elo' => EndgameRules::proposedElo($diagnosis['rating']),
+                    ],
+                    'weakest' => $diagnosis['weakest'],
+                ],
+            ],
+            [
+                'module' => Module::Blindfold->value,
+                'minutes' => CoachRules::BLINDFOLD_MINUTES,
+                'included' => true,
+                'missing' => null,
+                'facts' => [
+                    'settings' => ['level' => CoachRules::blindfoldLevel($diagnosis['rating'])->value, 'length' => CoachRules::BLINDFOLD_LENGTH, 'visibleSeconds' => CoachRules::BLINDFOLD_VISIBLE_SECONDS],
+                    'weakest' => $diagnosis['weakest'],
+                ],
             ],
         ];
 
@@ -151,32 +173,41 @@ final class Composer
     }
 
     /**
-     * The user's repertoires; none: generated from these games when asked. Status: existing,
-     * generated, not_asked, no_opening (no opening played often enough), failed.
+     * One White repertoire: the user's of the opening most played with White, else their newest
+     * White one; none: generated from these games when asked, the White side only. Status:
+     * existing, generated, not_asked, no_opening (no opening played often enough with White),
+     * failed.
      *
      * @param list<GameRecord> $games
+     * @param DiagnosisArray   $diagnosis
      *
      * @return array{status: string, repertoires: list<array{id: string, name: string, color: string}>}
      */
-    private function repertoire(User $user, AutoBuild $build, array $games, bool $withRepertoire): array
+    private function repertoire(User $user, AutoBuild $build, array $games, array $diagnosis, bool $withRepertoire): array
     {
-        $existing = \array_slice($this->repertoires->findByUser($user), 0, Scope::MAX_REPERTOIRES);
-        if ([] !== $existing) {
-            return ['status' => 'existing', 'repertoires' => self::views($existing)];
+        $family = $diagnosis['white'][0]['family'] ?? null;
+        $existing = (null === $family ? null : $this->repertoires->findByFamily($user, Color::White, $family))
+            ?? array_values(array_filter($this->repertoires->findByUser($user), static fn (Repertoire $repertoire): bool => Color::White === $repertoire->getColor()))[0]
+            ?? null;
+        if (null !== $existing) {
+            return ['status' => 'existing', 'repertoires' => self::views([$existing])];
         }
         if (!$withRepertoire) {
             return ['status' => 'not_asked', 'repertoires' => []];
         }
 
-        $families = [];
-        foreach (Synthesis::of($games, $this->limits->autoFamilyMinGames)['families'] as $family) {
-            $families[$family['color']] ??= $family['key'];
+        $key = null;
+        foreach (Synthesis::of($games, $this->limits->autoFamilyMinGames)['families'] as $candidate) {
+            if (Color::White->value === $candidate['color']) {
+                $key = $candidate['key'];
+                break;
+            }
         }
-        if ([] === $families) {
+        if (null === $key) {
             return ['status' => 'no_opening', 'repertoires' => []];
         }
         try {
-            $this->builds->select($build, array_values($families), [], []);
+            $this->builds->select($build, [$key], [], []);
             // The coach builds without asking: its short lines are kept, nothing is explored.
             $ids = $this->builds->apply($build, confirmShortLines: false);
         } catch (AutoBuildException|LimitReachedException) {
