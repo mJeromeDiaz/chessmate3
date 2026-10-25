@@ -22,6 +22,7 @@ readme:
         - boutique.json : vos cristaux (chaque mouvement, ceux gagnés par vos sessions et vos coffres du jour), vos
           objets, vos gels de série et les jours qu'ils ont couverts, vos tours de roue et les cadeaux de
           l'équipe.
+        - annonces.json : les annonces de l'équipe que vous avez fermées ou reçues par email.
         - activite.json : le journal de vos exercices terminés.
 
         Les dates sont en UTC (ISO 8601), les identifiants des UUID.

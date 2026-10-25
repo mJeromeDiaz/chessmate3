@@ -1,0 +1,11 @@
+{% trans_default_domain 'emails' %}
+<!DOCTYPE html>
+<html>
+    <body style="font-family: sans-serif;">
+        <h2 style="margin: 0 0 16px;">{{ title }}</h2>
+        {# Sanitized when saved (App\Announcement\Admin\AnnouncementEditor). #}
+        <div>{{ body|raw }}</div>
+        <p style="margin-top: 24px;"><a href="{{ url }}">{{ 'announcement.button'|trans }}</a></p>
+        <p style="color: #6e6a80; font-size: 13px;">{{ 'announcement.unsubscribe'|trans({'%link%': '<a href="' ~ unsubscribeUrl|e ~ '">' ~ 'announcement.unsubscribe_link'|trans|e ~ '</a>'})|raw }}</p>
+    </body>
+</html>

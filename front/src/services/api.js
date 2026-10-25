@@ -173,7 +173,7 @@ export const profileApi = {
   /**
    * Board colours, move sounds and public profile flag (all three required).
    *
-   * @param {{boardTheme: string, moveSound: boolean, publicProfile: boolean, dailyWheel?: boolean}} preferences
+   * @param {{boardTheme: string, moveSound: boolean, publicProfile: boolean, dailyWheel?: boolean, announcementEmails?: boolean}} preferences
    */
   setPreferences: preferences =>
     http.put('/api/profile/preferences', preferences).then(r => r.data),
@@ -1259,6 +1259,35 @@ export const shopApi = {
     http.post('/api/shop/gifts/seen', { ids }, JSON_LD).then(() => undefined)
 }
 
+/** The team's announcements (docs/ANNOUNCEMENTS.md), on the player's side. */
+export const announcementApi = {
+  /**
+   * `{announcements}`: those still to see, the oldest first, in the player's language.
+   *
+   * @returns {Promise<{announcements: import('@/utils/announcement').CurrentAnnouncement[]}>}
+   */
+  current: () => http.get('/api/announcements').then(r => r.data),
+  /**
+   * The player closed the modal: never shown again; 204.
+   *
+   * @param {string} id
+   */
+  markRead: id =>
+    http
+      .post(`/api/announcements/${encodeURIComponent(id)}/read`)
+      .then(() => undefined),
+  /**
+   * The email's « stop these emails » link, signed-in or not; 204, 400 for a wrong link.
+   *
+   * @param {string} u the account's id
+   * @param {string} t its token
+   */
+  unsubscribe: (u, t) =>
+    http
+      .post('/api/announcements/unsubscribe', { u, t }, PUBLIC)
+      .then(() => undefined)
+}
+
 /** The guided tour (docs/ONBOARDING.md): the declared level and goal. */
 export const onboardingApi = {
   /** `{level, goal, suggestedLevel, lichess: {linked, perf, rating}, canSeedRating, puzzleRating}` */
@@ -1573,5 +1602,46 @@ export const adminApi = {
   checkEvaluationPosition: (fen, evalCp) =>
     http
       .post('/api/admin/evaluation/verification', { fen, evalCp }, JSON_LD)
+      .then(r => r.data),
+  /**
+   * The team's announcements (docs/ANNOUNCEMENTS.md, § 2), the latest first, archived ones
+   * included.
+   *
+   * @returns {Promise<{announcements: import('@/utils/admin/announcement').AdminAnnouncement[]}>}
+   */
+  announcements: () => http.get('/api/admin/announcements').then(r => r.data),
+  /**
+   * A draft, or published at once with `publish`; 201 with the announcement, 422 `{violations}`.
+   *
+   * @param {import('@/utils/admin/announcement').AnnouncementPayload} payload
+   */
+  createAnnouncement: payload =>
+    http.post('/api/admin/announcements', payload).then(r => r.data),
+  /**
+   * Every field replaced; `publish` publishes a draft. 422 `{violations}`.
+   *
+   * @param {string} id
+   * @param {import('@/utils/admin/announcement').AnnouncementPayload} payload
+   */
+  updateAnnouncement: (id, payload) =>
+    http
+      .put(`/api/admin/announcements/${encodeURIComponent(id)}`, payload)
+      .then(r => r.data),
+  /** @param {string} id */
+  archiveAnnouncement: id =>
+    http
+      .post(`/api/admin/announcements/${encodeURIComponent(id)}/archive`)
+      .then(r => r.data),
+  /** `{count}`: the accounts an email asked now would serve. */
+  announcementRecipients: () =>
+    http.get('/api/admin/announcements/email-recipients').then(r => r.data),
+  /**
+   * The email to the active accounts, once (it waits for a scheduled start); 422 `{violations}`.
+   *
+   * @param {string} id
+   */
+  emailAnnouncement: id =>
+    http
+      .post(`/api/admin/announcements/${encodeURIComponent(id)}/email`)
       .then(r => r.data)
 }

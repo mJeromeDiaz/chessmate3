@@ -10,12 +10,13 @@ vi.mock('@/services/api', () => ({
     themes: vi.fn(),
     repertoire: vi.fn()
   },
+  mindMapApi: { path: vi.fn() },
   puzzleApi: { rating: vi.fn() },
   woodpeckerApi: { sets: vi.fn() },
   repertoireApi: { overview: vi.fn() }
 }))
 
-const { dashboardApi } = await import('@/services/api')
+const { dashboardApi, mindMapApi } = await import('@/services/api')
 const { useDashboardStore } = await import('@/stores/dashboard')
 const {
   DEFAULT_PERIOD,
@@ -25,7 +26,6 @@ const {
   scaleMax,
   sessionFigures,
   validPeriod,
-  weakestTheme,
   weekChart
 } = await import('@/utils/dashboard/stats')
 
@@ -118,12 +118,6 @@ describe('statistics utils', () => {
       }).map(f => f.value)
     ).toEqual(['1', '1', '1', '5 min'])
     expect(sessionFigures(null).map(f => f.value)).toEqual(['0', '0', '0', '—'])
-    expect(
-      weakestTheme({ weak: [{ key: 'pin', attempts: 5, successRate: 0.2 }] })
-        ?.key
-    ).toBe('pin')
-    expect(weakestTheme({ weak: [] })).toBeNull()
-    expect(weakestTheme(null)).toBeNull()
   })
 })
 
@@ -193,16 +187,34 @@ describe('statistics store', () => {
     expect(store.training?.weeks).toEqual(['latest'])
   })
 
-  it('hides the home tip when its themes cannot be loaded', async () => {
+  it('loads the rating curve alone, its error cleared on success', async () => {
     const store = useDashboardStore()
-    dashboardApi.themes.mockResolvedValueOnce({
-      weak: [{ key: 'pin', successRate: 0.2 }]
-    })
-    await store.loadTip()
-    expect(dashboardApi.themes).toHaveBeenCalledWith(30)
-    expect(store.tipThemes?.weak[0].key).toBe('pin')
-    dashboardApi.themes.mockRejectedValueOnce(new Error('down'))
-    await store.loadTip()
-    expect(store.tipThemes).toBeNull()
+    dashboardApi.ratingHistory.mockRejectedValueOnce(new Error('down'))
+    await store.loadRating()
+    expect(store.errors.rating).toBeTruthy()
+    dashboardApi.ratingHistory.mockResolvedValueOnce({ points: [] })
+    await store.loadRating()
+    expect(dashboardApi.ratingHistory).toHaveBeenCalledWith(90)
+    expect(store.errors.rating).toBeUndefined()
+    expect(store.rating).toEqual({ points: [] })
+  })
+
+  it('loads the home paths, each failing on its own', async () => {
+    const store = useDashboardStore()
+    mindMapApi.path.mockImplementation(capacity =>
+      capacity === 'endgames'
+        ? Promise.reject(new Error('down'))
+        : Promise.resolve({ capacity, chapters: [] })
+    )
+    await store.loadPaths()
+    expect(mindMapApi.path.mock.calls.map(([c]) => c)).toEqual([
+      'visualisation',
+      'calculation',
+      'endgames',
+      'challenges'
+    ])
+    expect(store.paths.endgames).toBeNull()
+    expect(store.paths.challenges?.capacity).toBe('challenges')
+    expect(store.pathsLoaded).toBe(true)
   })
 })

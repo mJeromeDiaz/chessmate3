@@ -30,6 +30,8 @@
     <DailyChest v-if="auth.isAuthenticated" />
     <!-- An admin's gifts, once nothing else is on screen (docs/SHOP.md, § 4 quater). -->
     <GiftNotice v-if="auth.isAuthenticated" />
+    <!-- The team's announcements, after the gifts (docs/ANNOUNCEMENTS.md). -->
+    <AnnouncementNotice v-if="auth.isAuthenticated" />
   </q-layout>
 </template>
 
@@ -37,6 +39,7 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import AnnouncementNotice from '@/components/announcement/AnnouncementNotice.vue'
 import StreakCelebration from '@/components/gamification/StreakCelebration.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppMenu from '@/components/layout/AppMenu.vue'

@@ -115,7 +115,8 @@
         "invitations": "Invitations",
         "requests": "Demandes",
         "positions": "Positions",
-        "shop": "Boutique"
+        "shop": "Boutique",
+        "announcements": "Annonces"
       }
     }
   }

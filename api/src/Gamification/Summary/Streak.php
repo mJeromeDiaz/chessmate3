@@ -110,6 +110,38 @@ final class Streak
     }
 
     /**
+     * The local month holding $today, day by day (docs/DASHBOARD.md, the streak's sheet): `played`
+     * (active), `frozen`, `missed` (neither, from the first active day on), `none` (before it),
+     * `future` (after today, and today while nothing is played yet).
+     *
+     * @param list<string> $days   active local days (Y-m-d)
+     * @param list<string> $frozen frozen local days (Y-m-d)
+     *
+     * @return array{first: string, days: list<string>}
+     */
+    public static function month(array $days, array $frozen, string $today): array
+    {
+        $first = substr($today, 0, 8).'01';
+        $length = (int) (new \DateTimeImmutable($first.' 00:00:00', new \DateTimeZone('UTC')))->format('t');
+        $active = array_flip($days);
+        $kept = array_flip($frozen);
+        $start = $days[0] ?? null;
+        $states = [];
+        for ($i = 1; $i <= $length; ++$i) {
+            $day = substr($first, 0, 8).\sprintf('%02d', $i);
+            $states[] = match (true) {
+                isset($active[$day]) => 'played',
+                isset($kept[$day]) => 'frozen',
+                $day >= $today => 'future',
+                null !== $start && $day > $start => 'missed',
+                default => 'none',
+            };
+        }
+
+        return ['first' => $first, 'days' => $states];
+    }
+
+    /**
      * Active and frozen days in order: day => active (true) or frozen (false).
      *
      * @param list<string> $days

@@ -157,7 +157,8 @@
     "demandes": "Demandes",
     "joueurs": "Joueurs",
     "positions": "Positions",
-    "boutique": "Boutique"
+    "boutique": "Boutique",
+    "annonces": "Annonces"
   },
   "page": {
     "administration": "Administration"
@@ -565,5 +566,67 @@
     "played": "Déjà jouée : désactive-la plutôt."
   },
   "adminPage": {},
-  "adminTabs": {}
+  "adminTabs": {},
+  "announcements": {
+    "new": "Nouvelle annonce",
+    "lead": "Une annonce s’affiche une fois à chaque joueur, dans une fenêtre en haut de l’écran (jamais pendant un entraînement), y compris aux comptes créés après sa publication. L’email aux comptes actifs qui l’acceptent s’envoie une seule fois, quelques-uns par minute.",
+    "none": "Aucune annonce pour l’instant.",
+    "by": "{when} · {author}",
+    "from": "Dès {when}",
+    "publication": "la publication",
+    "until": "Jusqu’au {when}",
+    "columns": {
+      "title": "Annonce",
+      "state": "Statut",
+      "window": "Affichage",
+      "reads": "Lue par",
+      "email": "Email",
+      "actions": "Actions"
+    },
+    "states": {
+      "draft": "Brouillon",
+      "scheduled": "Programmée",
+      "live": "En ligne",
+      "ended": "Terminée",
+      "archived": "Archivée"
+    },
+    "email": {
+      "none": "—",
+      "waiting": "Demandé, attend le début",
+      "sending": "Envoi en cours : {sent} envoyés, {queued} en file",
+      "done": "Mis en file pour {queued} comptes, {sent} envoyés"
+    },
+    "edit": "Modifier",
+    "sendEmail": "Envoyer par email",
+    "archive": "Archiver",
+    "archiveTitle": "Archiver l’annonce ?",
+    "archiveMessage": "Elle ne sera plus affichée aux joueurs qui ne l’ont pas encore vue, et ne pourra plus être modifiée.",
+    "emailTitle": "Envoyer par email ?",
+    "emailConfirm": "« {title} » sera envoyée à {accounts} compte actif qui accepte les annonces par email, quelques-uns par minute. Une seule fois. | « {title} » sera envoyée à {accounts} comptes actifs qui acceptent les annonces par email, quelques-uns par minute. Une seule fois.",
+    "emailConfirmScheduled": "« {title} » sera envoyée à son début aux comptes actifs qui acceptent les annonces par email ({accounts} aujourd’hui), quelques-uns par minute. Une seule fois.",
+    "emailOk": "Envoyer"
+  },
+  "announcementForm": {
+    "new": "Nouvelle annonce",
+    "edit": "Modifier l’annonce",
+    "close": "Fermer",
+    "titleFr": "Titre (français) *",
+    "bodyFr": "Texte (français) *",
+    "english": "Version anglaise",
+    "englishHint": "Sans version anglaise, les joueurs anglophones voient le texte français.",
+    "titleEn": "Titre (anglais) *",
+    "bodyEn": "Texte (anglais) *",
+    "startsAt": "Début",
+    "startsAtHint": "Vide : dès la publication",
+    "endsAt": "Fin",
+    "endsAtHint": "Vide : sans fin",
+    "preview": "Aperçu",
+    "saveDraft": "Enregistrer le brouillon",
+    "publish": "Publier",
+    "publishTitle": "Publier l’annonce ?",
+    "publishNow": "Chaque joueur la verra à sa prochaine visite.",
+    "publishScheduled": "Chaque joueur la verra à partir du début choisi.",
+    "checkFields": "Vérifie les champs en rouge.",
+    "gone": "Cette annonce n’existe plus."
+  }
 }

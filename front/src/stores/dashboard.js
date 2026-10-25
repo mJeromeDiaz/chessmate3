@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import {
   dashboardApi,
+  mindMapApi,
   puzzleApi,
   repertoireApi,
   woodpeckerApi
@@ -78,8 +79,13 @@ import { t } from '@/i18n'
 export const ACTIVITY_DAYS = 84
 /** Rating curves. */
 export const CURVE_DAYS = 90
-/** The home page's weak-theme tip. */
-export const TIP_DAYS = 30
+/** The paths the home page shows (docs/DASHBOARD.md): the brain's, the endgames', the défis'. */
+export const HOME_PATHS = [
+  'visualisation',
+  'calculation',
+  'endgames',
+  'challenges'
+]
 /** The statistics page's period, remembered in this browser. */
 const PERIOD_KEY = 'cm.stats.days'
 
@@ -131,8 +137,13 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const statsErrors = ref({})
   /** Only the answers of the latest period are kept. */
   let statsRequest = 0
-  /** @type {import('vue').Ref<Themes|null>} the home page's tip, over {@link TIP_DAYS} days */
-  const tipThemes = ref(null)
+  /**
+   * The home page's paths by capacity (the API's), null for one that failed to load.
+   *
+   * @type {import('vue').Ref<Record<string, import('@/utils/dashboard/home').PlayedPath|null>>}
+   */
+  const paths = ref({})
+  const pathsLoaded = ref(false)
 
   /** Nothing played yet: the page welcomes the user instead of drawing empty charts. */
   const isNewUser = computed(
@@ -170,7 +181,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     statsLoading.value = false
     statsErrors.value = {}
     statsRequest++
-    tipThemes.value = null
+    paths.value = {}
+    pathsLoaded.value = false
   }
 
   /**
@@ -273,17 +285,37 @@ export const useDashboardStore = defineStore('dashboard', () => {
   }
 
   /**
-   * The home page's tip: the weakest theme of the last {@link TIP_DAYS} days. A failure only hides
-   * the tip.
+   * The puzzle rating's curve alone (the statistics page; the home page loads it with the rest).
    *
    * @returns {Promise<void>}
    */
-  async function loadTip() {
+  async function loadRating() {
+    errors.value = Object.fromEntries(
+      Object.entries(errors.value).filter(([section]) => section !== 'rating')
+    )
     try {
-      tipThemes.value = await dashboardApi.themes(TIP_DAYS)
+      rating.value = await dashboardApi.ratingHistory(CURVE_DAYS)
     } catch {
-      tipThemes.value = null
+      errors.value = { ...errors.value, rating: t('dashboard.loadError') }
     }
+  }
+
+  /**
+   * The home page's paths ({@link HOME_PATHS}); each one fails on its own (its card hides).
+   *
+   * @returns {Promise<void>}
+   */
+  async function loadPaths() {
+    const results = await Promise.allSettled(
+      HOME_PATHS.map(capacity => mindMapApi.path(capacity))
+    )
+    paths.value = Object.fromEntries(
+      HOME_PATHS.map((capacity, i) => {
+        const result = results[i]
+        return [capacity, result.status === 'fulfilled' ? result.value : null]
+      })
+    )
+    pathsLoaded.value = true
   }
 
   return {
@@ -293,9 +325,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
     health,
     statsLoading,
     statsErrors,
-    tipThemes,
+    paths,
+    pathsLoaded,
     loadStats,
-    loadTip,
+    loadRating,
+    loadPaths,
     activity,
     rating,
     puzzleRating,

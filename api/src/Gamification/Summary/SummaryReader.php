@@ -22,7 +22,7 @@ use Psr\Clock\ClockInterface;
  *
  * @phpstan-type ModuleLevel array{xp: int, level: int, xpInLevel: int, xpForNext: int}
  * @phpstan-type Summary array{xp: int, level: int, xpInLevel: int, xpForNext: int, rank: string, nextRank: array{rank: string, level: int}|null, modules: array<string, ModuleLevel>, streak: StreakView, today: array{date: string, exerciseXp: int, cap: int}}
- * @phpstan-type StreakView array{current: int, best: int, playedToday: bool, week: list<bool>, frozenWeek: list<bool>, protected: bool, freezeDays: int, nextMilestone: int|null}
+ * @phpstan-type StreakView array{current: int, best: int, playedToday: bool, week: list<bool>, frozenWeek: list<bool>, protected: bool, freezeDays: int, nextMilestone: int|null, month: array{first: string, days: list<string>}}
  */
 final readonly class SummaryReader
 {
@@ -85,6 +85,7 @@ final readonly class SummaryReader
                 'protected' => $streakDays['protected'],
                 'freezeDays' => $streakDays['freezeDays'],
                 'nextMilestone' => Streak::nextMilestone($streak['current']),
+                'month' => Streak::month($days, $streakDays['frozen'], $today),
             ],
             'today' => ['date' => $today, 'exerciseXp' => is_numeric($todayXp) ? (int) $todayXp : 0, 'cap' => XpRules::DAILY_EXERCISE_CAP],
         ];

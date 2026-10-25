@@ -27,6 +27,8 @@ security:
         - { path: ^/api/calendar/, roles: PUBLIC_ACCESS }
         # Operations routes (docs/DEPLOY_OVH.md): a secret header is the credential, checked by the controllers.
         - { path: ^/api/ops/(tick|check)$, roles: PUBLIC_ACCESS }
+        # The announcement emails' "stop these emails" link (docs/ANNOUNCEMENTS.md): its signed token is the credential.
+        - { path: ^/api/announcements/unsubscribe$, roles: PUBLIC_ACCESS }
         # Admin dashboard (docs/EARLY_ACCESS.md); every admin resource also checks the role itself.
         - { path: ^/api/admin(/|$), roles: ROLE_ADMIN }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

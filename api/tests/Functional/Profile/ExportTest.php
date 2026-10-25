@@ -82,7 +82,7 @@ final class ExportTest extends WebTestCase
         }
         sort($names);
         // No language chosen: the notice in English; the data files keep their names (docs/I18N.md, § 5).
-        self::assertSame(['README.txt', 'activite.json', 'boutique.json', 'entrainement.json', 'profil.json', 'puzzles.json', 'repertoires.json', 'repertoires/01-italienne.pgn', 'woodpecker.json'], $names);
+        self::assertSame(['README.txt', 'activite.json', 'annonces.json', 'boutique.json', 'entrainement.json', 'profil.json', 'puzzles.json', 'repertoires.json', 'repertoires/01-italienne.pgn', 'woodpecker.json'], $names);
 
         self::assertStringContainsString('Generated on', (string) $zip->getFromName('README.txt'));
 

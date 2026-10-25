@@ -25,6 +25,9 @@ final class PreferencesRequest
     /** The daily gift wheel (docs/SHOP.md, § 4 ter); null: unchanged. */
     public ?bool $dailyWheel = null;
 
+    /** The team's announcements by email too (docs/ANNOUNCEMENTS.md); null: unchanged. */
+    public ?bool $announcementEmails = null;
+
     /**
      * @return list<string>
      */

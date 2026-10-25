@@ -12,14 +12,17 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * The streak celebration (docs/GAMIFICATION.md, "Annonce de la série") and the gift wheel after it
  * (docs/SHOP.md, § 4 ter) would cover the page after the user's first exercise: unless `streak` is
  * asked, the API is answered "none pending" and "no wheel nor chest" (the wheel stays offered on
- * the server, unspun: no crystal).
+ * the server, unspun: no crystal). The team's announcements (docs/ANNOUNCEMENTS.md) would cover
+ * every page while one is live in the e2e database: unless `announcements` is asked, the API is
+ * answered "none to see".
  *
  * @param {import('@playwright/test').BrowserContext} context
- * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[], mindMapCapacity?: string, enginePuzzles?: boolean}} [options] an admin
+ * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[], mindMapCapacity?: string, enginePuzzles?: boolean, announcements?: boolean}} [options] an admin
  *   (docs/EARLY_ACCESS.md); a password, for a test that also signs in through the login page;
  *   the real streak announcements, gift wheels and badge chests; crowns of the store (docs/SHOP.md); the first chapters of the
  *   visualisation path completed (docs/MIND_MAP.md), and these steps of it; the puzzles of the
- *   calculation path's chapter 3 added to the catalogue (docs/CALCULATION.md, § 2 quater)
+ *   calculation path's chapter 3 added to the catalogue (docs/CALCULATION.md, § 2 quater); the
+ *   real announcements, and their emails kept on for the account (off for the others)
  * @returns {Promise<{id: string, email: string}>}
  */
 export async function signIn(
@@ -32,7 +35,8 @@ export async function signIn(
     mindMapChapters = 0,
     mindMapSteps = [],
     mindMapCapacity = '',
-    enginePuzzles = false
+    enginePuzzles = false,
+    announcements = false
   } = {}
 ) {
   if (!streak) {
@@ -41,6 +45,11 @@ export async function signIn(
     )
     await context.route('**/api/shop/daily-rewards/unopened', route =>
       route.fulfill({ json: { member: [] } })
+    )
+  }
+  if (!announcements) {
+    await context.route('**/api/announcements', route =>
+      route.fulfill({ json: { announcements: [] } })
     )
   }
   const args = ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user']
@@ -52,6 +61,7 @@ export async function signIn(
     args.push(`--mind-map-steps=${mindMapSteps.join(',')}`)
   if (mindMapCapacity) args.push(`--mind-map-capacity=${mindMapCapacity}`)
   if (enginePuzzles) args.push('--engine-puzzles')
+  if (announcements) args.push('--announcement-emails')
   const output = execFileSync('php', args, {
     cwd: API_DIR,
     env: { ...process.env, APP_ENV: 'e2e' }

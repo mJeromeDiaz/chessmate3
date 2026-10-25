@@ -185,12 +185,3 @@ export function sessionFigures(s) {
     }
   ]
 }
-
-/**
- * The tip of the home page: the weakest theme, null when there is none to work on.
- *
- * @param {{weak: {key: string, attempts: number, successRate: number}[]}|null|undefined} themes
- */
-export function weakestTheme(themes) {
-  return themes?.weak?.[0] ?? null
-}

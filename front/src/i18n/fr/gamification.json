@@ -87,16 +87,13 @@
   },
   "weekDays": ["L", "M", "M", "J", "V", "S", "D"],
   "card": {
-    "title": "Série",
     "best": "Record : {days}",
-    "unit": "jour d’affilée | jours d’affilée",
     "week": "Ta semaine",
     "frozen": "Gelé : ta série a tenu sans toi",
-    "protected": "Un gel protège ta série. Joue aujourd’hui pour ne pas l’entamer.",
-    "keep": "Un exercice aujourd’hui et ta série continue.",
-    "start": "Un exercice aujourd’hui pour lancer une série.",
-    "nextBadge": "Prochain badge dans {days}.",
-    "allBadges": "Tous les badges sont à toi."
+    "kicker": "SÉRIE QUOTIDIENNE",
+    "unitShort": "jour | jours",
+    "freezes": "Jours couverts par tes gels",
+    "more": "En voir plus"
   },
   "chip": {
     "played": "Série : {days} · record {best}",
@@ -114,5 +111,26 @@
     "strategist": "Stratège",
     "expert": "Expert",
     "master": "Maître"
+  },
+  "sheet": {
+    "inARow": "{days} d’affilée",
+    "counts": "{played} joués · {frozen} gelés",
+    "legend": {
+      "played": "Joué",
+      "frozen": "Gelé",
+      "missed": "Manqué"
+    },
+    "badges": "Badges de série",
+    "daysCaps": "JOURS",
+    "badgeStates": {
+      "reached": "Obtenu",
+      "next": "Prochain",
+      "later": "À venir"
+    },
+    "nextTier": "PROCHAIN PALIER · {days} JOURS",
+    "left": "Plus qu’un jour ! | Encore {n} jours",
+    "rewardLine": "Récompense : +{n} cristaux et le badge « {days} jours ».",
+    "freezes": "Gels de série",
+    "stock": "❄︎ {n} j en stock"
   }
 }

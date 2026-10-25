@@ -87,16 +87,9 @@
   },
   "weekDays": ["M", "T", "W", "T", "F", "S", "S"],
   "card": {
-    "title": "Streak",
     "best": "Best: {days}",
-    "unit": "day in a row | days in a row",
     "week": "Your week",
-    "frozen": "Frozen: your streak held without you",
-    "protected": "A freeze protects your streak. Play today so you don't use it.",
-    "keep": "One exercise today and your streak continues.",
-    "start": "One exercise today to start a streak.",
-    "nextBadge": "Next badge in {days}.",
-    "allBadges": "All the badges are yours."
+    "frozen": "Frozen: your streak held without you"
   },
   "chip": {
     "played": "Streak: {days} · best {best}",

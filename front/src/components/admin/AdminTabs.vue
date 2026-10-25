@@ -38,6 +38,11 @@
         :label="$t('admin.tabs.boutique')"
         data-testid="admin-tab-shop"
       />
+      <q-route-tab
+        to="/admin/annonces"
+        :label="$t('admin.tabs.annonces')"
+        data-testid="admin-tab-announcements"
+      />
     </q-tabs>
   </nav>
 </template>

@@ -65,7 +65,10 @@
   "period": "Période",
   "shop": {
     "title": "En ce moment à la boutique",
-    "link": "Voir la boutique →"
+    "link": "Tout voir",
+    "endsSoon": "Dernière heure",
+    "endsHours": "Fin dans {n} h",
+    "endsDays": "Fin dans {n} j"
   },
   "sessions": {
     "title": "Sessions",
@@ -78,12 +81,6 @@
     "text": "Compose une session sur mesure ou commence par quelques puzzles : ta régularité, ton classement et ta progression s’afficheront ici.",
     "compose": "Composer ma première session",
     "puzzles": "Résoudre des puzzles"
-  },
-  "weak": {
-    "kicker": "À TRAVAILLER · {days} JOURS",
-    "rate": "{pct} de réussite",
-    "train": "S’entraîner",
-    "stats": "Mes statistiques →"
   },
   "quest": {
     "kicker": "{prof} · DÉFI DE LA SEMAINE",
@@ -105,7 +102,8 @@
     "title": "Mes sessions",
     "all": "Toutes →",
     "empty": "Enregistre une session pour la retrouver ici.",
-    "compose": "Composer une session"
+    "compose": "Composer une session",
+    "current": "En cours"
   },
   "recent": {
     "title": "Dernières sessions",
@@ -176,8 +174,40 @@
   "home": {
     "hello": "Bonjour 👋︎",
     "title": "Ta progression",
-    "stats": "Mes statistiques →",
     "newSession": "+ Nouvelle session",
-    "sectionError": "Certaines statistiques des modules n’ont pas pu être chargées."
+    "sectionError": "Certaines statistiques des modules n’ont pas pu être chargées.",
+    "statsTile": "Mes statistiques détaillées",
+    "statsOpen": "Ouvrir →"
+  },
+  "path": {
+    "title": "Parcours",
+    "all": "Tous les parcours",
+    "nextBoss": "Prochain boss",
+    "step": "Étape {done} / {total}",
+    "chapter": "Chapitre {n} · {title}",
+    "track": "Ton chemin sur le parcours",
+    "here": "TU ES ICI",
+    "continue": "Continuer",
+    "start": "Commencer",
+    "now": "À jouer : {title}",
+    "soon": "Bientôt",
+    "finished": "Terminé",
+    "percent": "{n} %",
+    "discover": "À découvrir"
+  },
+  "endgames": {
+    "title": "Finales",
+    "count": "{done} / {total} étapes",
+    "finalBoss": "BOSS FINAL",
+    "beaten": "Vaincu ! Toutes les finales s’inclinent.",
+    "waiting": "Le boss de toutes les finales · encore {left} étapes",
+    "next": "Prochain : {title}",
+    "allDone": "Tout est maîtrisé, bravo !",
+    "resume": "Reprendre →",
+    "start": "Commencer →"
+  },
+  "challenges": {
+    "title": "Défis",
+    "done": "{n} réussis"
   }
 }

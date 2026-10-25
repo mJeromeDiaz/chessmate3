@@ -191,7 +191,7 @@ export const useAuthStore = defineStore('auth', () => {
    * Changes some of the profile's preferences. Applied at once (boards follow the profile), put
    * back if the API refuses.
    *
-   * @param {Partial<{boardTheme: string, moveSound: boolean, publicProfile: boolean, dailyWheel: boolean}>} changes
+   * @param {Partial<{boardTheme: string, moveSound: boolean, publicProfile: boolean, dailyWheel: boolean, announcementEmails: boolean}>} changes
    */
   async function setPreferences(changes) {
     const before = profile.value
@@ -200,6 +200,7 @@ export const useAuthStore = defineStore('auth', () => {
       moveSound: before.moveSound,
       publicProfile: before.publicProfile,
       dailyWheel: before.dailyWheel ?? true,
+      announcementEmails: before.announcementEmails ?? true,
       ...changes
     }
     profile.value = { ...before, ...next }

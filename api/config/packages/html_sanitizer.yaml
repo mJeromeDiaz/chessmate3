@@ -1,0 +1,32 @@
+# The HTML an admin writes for the announcements (docs/ANNOUNCEMENTS.md): the simple tags of the
+# SPA's editor (QEditor) only, links to https or mailto opened in a new tab; no script, style,
+# image nor frame. Sanitized once when saved, then shown as is in the modal and the email.
+framework:
+    html_sanitizer:
+        sanitizers:
+            announcement:
+                allow_elements:
+                    p: []
+                    div: []
+                    br: []
+                    b: []
+                    strong: []
+                    i: []
+                    em: []
+                    u: []
+                    s: []
+                    strike: []
+                    ul: []
+                    ol: []
+                    li: []
+                    h2: []
+                    h3: []
+                    h4: []
+                    blockquote: []
+                    a: ['href']
+                allowed_link_schemes: ['https', 'mailto']
+                force_attributes:
+                    a:
+                        target: '_blank'
+                        rel: 'noopener noreferrer'
+                max_input_length: 20000

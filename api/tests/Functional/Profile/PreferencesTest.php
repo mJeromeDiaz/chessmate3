@@ -46,6 +46,12 @@ final class PreferencesTest extends WebTestCase
         $this->put($server, ['boardTheme' => 'slate', 'moveSound' => false, 'publicProfile' => true, 'dailyWheel' => false]);
         self::assertResponseIsSuccessful();
         self::assertFalse($this->decode()['dailyWheel']);
+        self::assertTrue($this->decode()['announcementEmails'], 'Not sent: unchanged.');
+
+        // The announcement emails turned off (docs/ANNOUNCEMENTS.md, § 5).
+        $this->put($server, ['boardTheme' => 'slate', 'moveSound' => false, 'publicProfile' => true, 'announcementEmails' => false]);
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->decode()['announcementEmails']);
 
         self::getContainer()->get(EntityManagerInterface::class)->clear();
         $user = self::getContainer()->get(UserRepository::class)->findOneByEmail('alice@example.com');
@@ -53,6 +59,7 @@ final class PreferencesTest extends WebTestCase
         self::assertSame(BoardTheme::Slate, $user->getBoardTheme());
         self::assertFalse($user->hasMoveSound());
         self::assertTrue($user->isPublicProfile());
+        self::assertFalse($user->hasAnnouncementEmails());
     }
 
     public function testInvalidOrMissingValuesAreRefused(): void

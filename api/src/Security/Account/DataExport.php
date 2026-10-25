@@ -263,6 +263,14 @@ final readonly class DataExport
             // An admin's gifts (docs/SHOP.md, § 4 quater), without the admin's account.
             'itemGrants' => $this->rows('SELECT item, quantity, message, created_at, seen_at FROM shop_item_grant WHERE user_id = ? ORDER BY created_at', $id),
         ]));
+        // The team's announcements (docs/ANNOUNCEMENTS.md): those closed or emailed, with their French title.
+        $zip->addFromString('annonces.json', self::json([
+            'announcements' => $this->rows(
+                'SELECT a.title_fr AS title, r.read_at, r.emailed_at FROM announcement_receipt r JOIN announcement a ON a.id = r.announcement_id
+                  WHERE r.user_id = ? ORDER BY a.created_at',
+                $id,
+            ),
+        ]));
         $zip->addFromString('activite.json', self::json([
             'entries' => $this->rows(
                 'SELECT exercise_type, success, duration_ms, item_count, source_type, source_id, occurred_at, local_date, timezone, metadata
@@ -306,6 +314,7 @@ final readonly class DataExport
             'moveSound' => $user->hasMoveSound(),
             'publicProfile' => $user->isPublicProfile(),
             'dailyWheel' => $user->hasDailyWheel(),
+            'announcementEmails' => $user->hasAnnouncementEmails(),
             // The guided tour's answers (docs/ONBOARDING.md).
             'onboarding' => $this->rows('SELECT level, goal, updated_at AS updatedAt FROM onboarding_answer WHERE user_id = ?', $user->getId()->toBinary())[0]
                 ?? ['level' => null, 'goal' => null, 'updatedAt' => null],

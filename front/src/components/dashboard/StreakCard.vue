@@ -1,38 +1,33 @@
 <template>
-  <section v-if="streak" class="cm-card streak-card" data-testid="streak-card">
+  <section v-if="streak" class="streak-card" data-testid="streak-card">
     <div class="streak-card__head">
-      <h2 class="cm-card__title">{{ $t('gamification.card.title') }}</h2>
-      <span class="streak-card__best" data-testid="streak-card-best">{{
-        $t('gamification.card.best', { days: days(streak.best) })
-      }}</span>
-    </div>
-
-    <div class="streak-card__now">
       <div
         class="streak-card__flame"
         :class="{ 'streak-card__flame--out': streak.current === 0 }"
-        :style="{
-          width: `${FLAME_PX * scale}px`,
-          height: `${FLAME_PX * scale}px`
-        }"
-        :data-scale="scale"
+        :style="{ '--flame': `${flamePx}px` }"
         data-testid="streak-card-flame"
+        aria-hidden="true"
       >
-        <div class="streak-card__art" :style="{ transform: `scale(${scale})` }">
-          <div class="streak-card__glow" aria-hidden="true" />
-          <div class="streak-card__drops" aria-hidden="true">
-            <div class="streak-card__drop streak-card__drop--outer" />
-            <div class="streak-card__drop streak-card__drop--inner" />
-          </div>
-          <div class="streak-card__count" data-testid="streak-card-count">{{
-            streak.current
-          }}</div>
-        </div>
+        <span class="streak-card__drop streak-card__drop--outer" />
+        <span class="streak-card__drop streak-card__drop--inner" />
       </div>
-      <div class="streak-card__unit">{{
-        $t('gamification.card.unit', streak.current > 1 ? 2 : 1)
-      }}</div>
-      <p class="streak-card__hint">{{ hint }}</p>
+      <div class="streak-card__title">
+        <span class="streak-card__kicker">{{
+          $t('gamification.card.kicker')
+        }}</span>
+        <span class="streak-card__days"
+          ><span data-testid="streak-card-count">{{ streak.current }}</span>
+          {{
+            $t('gamification.card.unitShort', streak.current > 1 ? 2 : 1)
+          }}</span
+        >
+      </div>
+      <span
+        class="streak-card__freezes"
+        :title="$t('gamification.card.freezes')"
+        data-testid="streak-card-freezes"
+        >❄︎ {{ streak.freezeDays }}</span
+      >
     </div>
 
     <div class="streak-card__week" :aria-label="$t('gamification.card.week')">
@@ -43,7 +38,9 @@
         :class="{
           'streak-card__day--on': day.done,
           'streak-card__day--frozen': day.frozen,
-          'streak-card__day--today': day.today
+          'streak-card__day--today': day.today,
+          'streak-card__day--missed':
+            !day.done && !day.frozen && !day.today && !day.future
         }"
         :data-testid="`streak-day-${i}`"
         :data-done="day.done || undefined"
@@ -56,36 +53,62 @@
         }}</span>
       </div>
     </div>
+
+    <div class="streak-card__foot">
+      <div class="streak-card__tier">
+        <span>{{ tierText }}</span>
+        <div class="streak-card__tier-bar">
+          <div :style="{ width: `${tierPercent}%` }" />
+        </div>
+      </div>
+      <button
+        type="button"
+        class="streak-card__more"
+        data-testid="streak-card-more"
+        @click="sheetOpen = true"
+      >
+        {{ $t('gamification.card.more') }}
+      </button>
+    </div>
+
+    <StreakSheet v-model="sheetOpen" />
   </section>
 </template>
 
 <script setup>
 /**
- * The streak card of the dashboard (docs/GAMIFICATION.md, § 4): a flame holding the current streak,
- * lit and flickering while the streak is alive (grey and still at 0), small below a week and bigger
- * with each streak badge reached; the record, the active days of the week. The streak badges are
- * in the trophy grid.
+ * The streak card of the dashboard (design « Dashboard v2 », docs/GAMIFICATION.md § 4): the
+ * streak with its flame (grey at 0, a little bigger with each streak badge reached), the freezes'
+ * days in stock, the week, the way to the next badge; « En voir plus » opens the month, the badges
+ * and the freezes on sale (`StreakSheet`).
  */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import StreakSheet from '@/components/dashboard/StreakSheet.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGamificationStore } from '@/stores/gamification'
-import { days, flameScale, localToday, weekRow } from '@/utils/streak'
-import { t } from '@/i18n'
+import {
+  FLAME_BASE,
+  STREAK_BADGES,
+  flameScale,
+  localToday,
+  nextMilestoneText,
+  weekRow
+} from '@/utils/streak'
 
 const auth = useAuthStore()
 const gamification = useGamificationStore()
 
-/** The flame's size at scale 1, in px. */
-const FLAME_PX = 132
+/** The flame's size before any badge, in px; each badge reached adds to it. */
+const FLAME_PX = 30
 
+const sheetOpen = ref(false)
 const streak = computed(() => gamification.summary?.streak ?? null)
-const scale = computed(() => flameScale(streak.value?.current ?? 0))
-const today = computed(() => localToday(auth.profile?.timezone))
-const playedToday = computed(
-  () =>
-    !!streak.value?.playedToday &&
-    gamification.summary?.today?.date === today.value
+const flamePx = computed(() =>
+  Math.round(
+    FLAME_PX * (flameScale(streak.value?.current ?? 0) / FLAME_BASE) ** 0.5
+  )
 )
+const today = computed(() => localToday(auth.profile?.timezone))
 const week = computed(() =>
   weekRow(
     streak.value?.week ?? [],
@@ -93,19 +116,21 @@ const week = computed(() =>
     streak.value?.frozenWeek ?? []
   )
 )
-const hint = computed(() => {
+const tierText = computed(() =>
+  nextMilestoneText(
+    streak.value?.current ?? 0,
+    streak.value?.nextMilestone ?? null
+  )
+)
+/** From the last badge reached to the next one. */
+const tierPercent = computed(() => {
   const s = streak.value
-  if (!s) return ''
-  if (!playedToday.value && s.protected) return t('gamification.card.protected')
-  if (!playedToday.value)
-    return s.current > 0
-      ? t('gamification.card.keep')
-      : t('gamification.card.start')
-  return s.nextMilestone
-    ? t('gamification.card.nextBadge', {
-        days: days(s.nextMilestone - s.current)
-      })
-    : t('gamification.card.allBadges')
+  if (!s?.nextMilestone) return 100
+  const previous =
+    [...STREAK_BADGES].reverse().find(b => b.goal <= s.current)?.goal ?? 0
+  return Math.round(
+    (100 * (s.current - previous)) / (s.nextMilestone - previous)
+  )
 })
 </script>
 
@@ -114,34 +139,32 @@ const hint = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  background: #1b1530;
+  color: #fff;
+
+  @media (min-width: $breakpoint-md-min) {
+    gap: 16px;
+    padding: 20px;
+    border-radius: 26px;
+  }
 }
 
 .streak-card__head {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.streak-card__best {
-  font-size: 13px;
-  color: var(--cm-muted);
-}
-
-.streak-card__now {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  text-align: center;
+  gap: 12px;
 }
 
-// The flame of the celebration screen, smaller: two drops, the streak in the heart.
+// Two drops, as the celebration screen's flame.
 .streak-card__flame {
   position: relative;
-  transition:
-    width 0.6s cubic-bezier(0.34, 1.6, 0.64, 1),
-    height 0.6s cubic-bezier(0.34, 1.6, 0.64, 1);
+  flex: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  background: rgba(255, 138, 61, 0.16);
 
   &--out {
     filter: grayscale(1);
@@ -149,90 +172,32 @@ const hint = computed(() => {
   }
 }
 
-.streak-card__art {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 132px;
-  height: 132px;
-  margin: -66px 0 0 -66px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform-origin: 50% 50%;
-  transition: transform 0.6s cubic-bezier(0.34, 1.6, 0.64, 1);
-}
-
-.streak-card__glow {
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ff8a3d 0%, transparent 65%);
-  opacity: 0.35;
-
-  .streak-card__flame--out & {
-    display: none;
-  }
-}
-
-.streak-card__drops {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 14px;
-}
-
 .streak-card__drop {
   position: absolute;
+  left: 50%;
   border-radius: 50% 0 50% 50%;
   transform: rotate(-45deg);
 
   &--outer {
-    width: 100px;
-    height: 100px;
+    bottom: calc(50% - var(--flame) * 0.5);
+    width: calc(var(--flame) * 0.74);
+    height: calc(var(--flame) * 0.74);
+    margin-left: calc(var(--flame) * -0.37);
     background: #ff8a3d;
-    box-shadow: inset -8px 8px 0 #ffa85e;
     animation: streak-card-flicker 1.6s ease-in-out infinite;
   }
 
   &--inner {
-    top: 46px;
-    width: 62px;
-    height: 62px;
-    background: #ffd43b;
-    animation: streak-card-flicker-2 1.2s ease-in-out infinite;
+    bottom: calc(50% - var(--flame) * 0.46);
+    width: calc(var(--flame) * 0.4);
+    height: calc(var(--flame) * 0.4);
+    margin-left: calc(var(--flame) * -0.2);
+    background: #ffd84d;
   }
 
   .streak-card__flame--out & {
     animation: none;
   }
-}
-
-.streak-card__count {
-  position: relative;
-  top: 26px;
-  font-family: var(--cm-heading);
-  font-weight: 800;
-  font-size: 34px;
-  line-height: 1;
-  color: #1b1530;
-  font-variant-numeric: tabular-nums;
-}
-
-.streak-card__unit {
-  font-family: var(--cm-heading);
-  font-weight: 800;
-  font-size: 17px;
-  color: var(--cm-orange-ink);
-}
-
-.streak-card__hint {
-  margin: 0;
-  font-size: 13px;
-  color: var(--cm-ink-soft);
-  text-wrap: pretty;
 }
 
 @keyframes streak-card-flicker {
@@ -245,42 +210,68 @@ const hint = computed(() => {
   }
 }
 
-@keyframes streak-card-flicker-2 {
-  0%,
-  100% {
-    transform: rotate(-45deg) scale(1);
-  }
-  50% {
-    transform: rotate(-47deg) scale(1.08, 0.94);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .streak-card__drop {
     animation: none;
   }
 }
 
+.streak-card__title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.streak-card__kicker {
+  color: #ffa552;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.streak-card__days {
+  font-family: var(--cm-heading);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-card__freezes {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 11px;
+  background: rgba(124, 196, 255, 0.14);
+  color: #9ed4ff;
+  font-weight: 800;
+  font-size: 13px;
+}
+
 .streak-card__week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
+  gap: 6px;
 }
 
 .streak-card__day {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .streak-card__day-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--cm-muted);
+  color: #8a85a0;
+  font-size: 11px;
+  font-weight: 800;
 
   .streak-card__day--today & {
-    color: var(--cm-orange-ink);
+    color: #ffa552;
   }
 }
 
@@ -288,30 +279,78 @@ const hint = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--cm-subtle);
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1.5px #3a3450;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 14px;
 
   .streak-card__day--on & {
-    background: #ff8a3d;
+    background: #ff7a1a;
+    box-shadow: none;
     color: #1b1530;
   }
 
   .streak-card__day--frozen & {
-    background: radial-gradient(
-      circle at 35% 30%,
-      #ffffff 0,
-      #b9ddfb 45%,
-      #4fb2ff 100%
-    );
-    color: #0f6bba;
+    background: #7cc4ff;
+    box-shadow: none;
+    color: #0b3a66;
+  }
+
+  .streak-card__day--missed & {
+    background: #3a3450;
+    box-shadow: none;
   }
 
   .streak-card__day--today & {
-    box-shadow: 0 0 0 3px var(--cm-orange-line);
+    box-shadow:
+      0 0 0 2px #1b1530,
+      0 0 0 4px #ffa552;
   }
+}
+
+.streak-card__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.streak-card__tier {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  color: #b4afc6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.streak-card__tier-bar {
+  height: 7px;
+  border-radius: 7px;
+  background: #2e2840;
+  overflow: hidden;
+
+  > div {
+    height: 100%;
+    border-radius: 7px;
+    background: #ff8a3d;
+  }
+}
+
+.streak-card__more {
+  flex: none;
+  height: 40px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 13px;
+  background: #ff8a3d;
+  box-shadow: 0 3px 0 #c2531a;
+  color: #1b1530;
+  font-weight: 800;
+  font-size: 13.5px;
+  cursor: pointer;
 }
 </style>

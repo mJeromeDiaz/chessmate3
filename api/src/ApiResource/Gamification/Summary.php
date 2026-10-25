@@ -40,9 +40,10 @@ final class Summary
      * @var StreakView week: the active days of the current local week, Monday first; frozenWeek: its
      *                 days covered by a freeze; protected: alive thanks to the freezes in stock
      *                 (docs/SHOP.md); freezeDays: the days they still cover; nextMilestone: the next
-     *                 streak badge's length
+     *                 streak badge's length; month: the local month day by day (played, frozen,
+     *                 missed, none before the first active day, future)
      */
-    public array $streak = ['current' => 0, 'best' => 0, 'playedToday' => false, 'week' => [false, false, false, false, false, false, false], 'frozenWeek' => [false, false, false, false, false, false, false], 'protected' => false, 'freezeDays' => 0, 'nextMilestone' => 3];
+    public array $streak = ['current' => 0, 'best' => 0, 'playedToday' => false, 'week' => [false, false, false, false, false, false, false], 'frozenWeek' => [false, false, false, false, false, false, false], 'protected' => false, 'freezeDays' => 0, 'nextMilestone' => 3, 'month' => ['first' => '', 'days' => []]];
     /** @var array{date: string, exerciseXp: int, cap: int} date: the user's local day (Y-m-d) */
     public array $today = ['date' => '', 'exerciseXp' => 0, 'cap' => 0];
 }

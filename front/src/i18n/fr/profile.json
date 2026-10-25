@@ -122,7 +122,9 @@
     "public": "Profil public",
     "private": "Profil privé",
     "publicHint": "Les autres joueurs pourront voir ton niveau et tes stats.",
-    "privateHint": "Ton niveau et tes stats ne sont visibles que par toi."
+    "privateHint": "Ton niveau et tes stats ne sont visibles que par toi.",
+    "announcementEmails": "Annonces par email",
+    "announcementEmailsHint": "Les nouvelles de l’équipe, aussi dans ta boîte mail"
   },
   "appearance": {
     "title": "Apparence",

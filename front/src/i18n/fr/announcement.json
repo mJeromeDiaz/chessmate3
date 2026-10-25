@@ -1,0 +1,13 @@
+{
+  "notice": {
+    "kicker": "L’équipe Don't Stay Rooky",
+    "ok": "J’ai compris"
+  },
+  "unsubscribe": {
+    "title": "Annonces par email",
+    "pending": "Un instant…",
+    "done": "C’est noté : tu ne recevras plus les annonces de l’équipe par email. Tu les verras toujours dans l’application, et tu peux réactiver les emails dans ton profil.",
+    "profile": "Mon profil",
+    "invalid": "Ce lien n’est pas valide. Tu peux couper les annonces par email dans ton profil."
+  }
+}

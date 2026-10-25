@@ -68,6 +68,24 @@
       />
     </div>
 
+    <div class="profile-row">
+      <div class="profile-row__text">
+        <div class="profile-row__title">{{
+          $t('profile.preferences.announcementEmails')
+        }}</div>
+        <div class="profile-row__sub">{{
+          $t('profile.preferences.announcementEmailsHint')
+        }}</div>
+      </div>
+      <q-toggle
+        :model-value="profile.announcementEmails ?? true"
+        color="primary"
+        :aria-label="$t('profile.preferences.announcementEmails')"
+        data-testid="announcement-emails-toggle"
+        @update:model-value="choose({ announcementEmails: $event })"
+      />
+    </div>
+
     <ThemeSection />
     <LocaleSection />
 
@@ -102,8 +120,9 @@
 <script setup>
 /**
  * Profile: the "Préférences" card. Board colours, move sounds, the daily gift wheel (docs/SHOP.md,
- * § 4 ter) and the public flag are saved at once (the boards follow the profile); the public flag
- * is stored only, no page shows a profile to other players yet.
+ * § 4 ter), the announcement emails (docs/ANNOUNCEMENTS.md) and the public flag are saved at once
+ * (the boards follow the profile); the public flag is stored only, no page shows a profile to
+ * other players yet.
  */
 import { computed, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
@@ -134,7 +153,7 @@ const boards = BOARD_THEMES.map(theme => ({
 }))
 const current = computed(() => boardTheme(props.profile.boardTheme))
 
-/** @param {Partial<{boardTheme: string, moveSound: boolean, publicProfile: boolean, dailyWheel: boolean}>} changes */
+/** @param {Partial<{boardTheme: string, moveSound: boolean, publicProfile: boolean, dailyWheel: boolean, announcementEmails: boolean}>} changes */
 async function choose(changes) {
   error.value = ''
   try {

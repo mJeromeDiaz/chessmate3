@@ -107,6 +107,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(options: ['default' => true])]
     private bool $dailyWheel = true;
 
+    /** The team's announcements by email too (docs/ANNOUNCEMENTS.md); off: in the app only. */
+    #[ORM\Column(options: ['default' => true])]
+    private bool $announcementEmails = true;
+
     /**
      * Whether other players may see the level and stats. Stored only: no page shows a profile to
      * other users yet. Private by default.
@@ -324,6 +328,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setDailyWheel(bool $dailyWheel): static
     {
         $this->dailyWheel = $dailyWheel;
+
+        return $this;
+    }
+
+    public function hasAnnouncementEmails(): bool
+    {
+        return $this->announcementEmails;
+    }
+
+    public function setAnnouncementEmails(bool $announcementEmails): static
+    {
+        $this->announcementEmails = $announcementEmails;
 
         return $this;
     }

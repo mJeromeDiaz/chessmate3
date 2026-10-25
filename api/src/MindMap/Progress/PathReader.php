@@ -14,6 +14,7 @@ use App\MindMap\Path\Paths;
 use App\MindMap\Path\PathState;
 use App\MindMap\Path\Chapter;
 use App\MindMap\Path\Step;
+use App\Repository\MindMap\AttemptRepository;
 use App\Repository\MindMap\ChestRepository;
 use App\Repository\MindMap\ProgressRepository;
 
@@ -25,7 +26,7 @@ use App\Repository\MindMap\ProgressRepository;
  * @phpstan-type StepView array{key: string, number: string|null, kind: string, status: string, passes: int, required: int, crystals: int, xp: int, character: string|null, badges: list<string>, skippable: bool, chest: ChestView|null}
  * @phpstan-type SectionView array{key: string, number: string|null, status: string, steps: list<StepView>, miniBosses: list<StepView>, hidden: list<StepView>}
  * @phpstan-type ChapterView array{key: string, number: int, status: string, sections: list<SectionView>, boss: StepView, meta: array<string, mixed>|null}
- * @phpstan-type PathView array{capacity: string, chapters: list<ChapterView>, badges: list<array{badge: string, step: string, earnedAt: string}>, unopenedChests: list<ChestView>}
+ * @phpstan-type PathView array{capacity: string, chapters: list<ChapterView>, badges: list<array{badge: string, step: string, earnedAt: string}>, unopenedChests: list<ChestView>, lastPlayedAt: string|null}
  */
 final readonly class PathReader
 {
@@ -33,6 +34,7 @@ final readonly class PathReader
         private ProgressRepository $progress,
         private ChestRepository $chests,
         private PathCatalog $catalog,
+        private AttemptRepository $attempts,
     ) {
     }
 
@@ -82,6 +84,7 @@ final readonly class PathReader
             'chapters' => $views,
             'badges' => $this->badges($capacity, $chapters, $rows),
             'unopenedChests' => $this->unopened($chests),
+            'lastPlayedAt' => $this->attempts->lastStartedAt($user, $capacity)?->format(\DATE_ATOM),
         ];
     }
 

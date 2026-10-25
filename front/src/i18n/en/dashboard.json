@@ -74,12 +74,6 @@
     "compose": "Build my first session",
     "puzzles": "Solve puzzles"
   },
-  "weak": {
-    "kicker": "TO WORK ON · {days} DAYS",
-    "rate": "{pct} success",
-    "train": "Train",
-    "stats": "My statistics →"
-  },
   "quest": {
     "kicker": "{prof} · CHALLENGE OF THE WEEK",
     "done": "✓ DONE",
@@ -171,7 +165,6 @@
   "home": {
     "hello": "Hello 👋︎",
     "title": "Your progress",
-    "stats": "My statistics →",
     "newSession": "+ New session",
     "sectionError": "Some module statistics could not be loaded."
   }

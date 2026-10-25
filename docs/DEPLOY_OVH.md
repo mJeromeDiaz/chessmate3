@@ -26,7 +26,8 @@ l'appelle **chaque minute** (cron-job.org, gratuit : méthode POST et en-tête p
 chaque appel :
 
 1. les rappels dus sont mis en file : sessions (`ReminderDispatcher`) et « série en danger »
-   (`StreakReminderDispatcher`), la même logique que `app:training:send-reminders` ;
+   (`StreakReminderDispatcher`), la même logique que `app:training:send-reminders`, plus les
+   emails d'annonce suivants (`Announcement\Email\EmailDispatcher`, docs/ANNOUNCEMENTS.md § 4) ;
 2. les files sont vidées, `activity` puis `async` (domaine, emails, imports, rappels), et le tick
    s'arrête dès que :
    - les files sont vides ;
@@ -152,7 +153,9 @@ routeur à `#` : aucune réécriture d'URL n'est nécessaire.
 11. **Emails** : `MAILER_DSN=mailfunction://default` envoie par la fonction `mail()` de PHP
     (`App\Mailer\MailFunctionTransport`), avec le quota horaire de l'offre. L'expéditeur
     (`MAILER_FROM_ADDRESS`) doit être une adresse du domaine. Activez SPF et DKIM dans la zone DNS
-    (manager OVH), sans quoi Gmail range les emails en spam.
+    (manager OVH), sans quoi Gmail range les emails en spam. Les emails d'annonce partent par
+    paquets de `ANNOUNCEMENT_EMAILS_PER_MINUTE` (20 par défaut) à chaque tick : baissez-le si le
+    quota horaire de l'offre est plus serré (docs/ANNOUNCEMENTS.md, § 4).
 
 ### Déployer une version
 

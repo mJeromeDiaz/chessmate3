@@ -108,3 +108,10 @@ streak_reminder:
     settings: "To change the time of this reminder or stop receiving it by email, go to %profile%."
     settings_text: "To change the time of this reminder or stop receiving it by email, go to your profile:"
     profile: "your profile"
+announcement:
+    subject: "%title%"
+    button: "Open Don’t Stay Rooky"
+    button_text: "Open Don’t Stay Rooky:"
+    unsubscribe: "You receive the team's announcements. %link%"
+    unsubscribe_link: "Stop receiving them by email"
+    unsubscribe_text: "To stop receiving the team's announcements by email:"

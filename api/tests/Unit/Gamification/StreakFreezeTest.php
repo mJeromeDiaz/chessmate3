@@ -26,6 +26,19 @@ final class StreakFreezeTest extends TestCase
         self::assertSame([true, false, false, false, false, false, false], Streak::week(['2026-10-05'], '2026-10-08'));
     }
 
+    public function testTheMonthDayByDay(): void
+    {
+        $month = Streak::month(['2026-09-30', '2026-10-02', '2026-10-04'], ['2026-10-03'], '2026-10-06');
+        self::assertSame('2026-10-01', $month['first']);
+        self::assertCount(31, $month['days']);
+        self::assertSame(['missed', 'played', 'frozen', 'played', 'missed', 'future', 'future'], \array_slice($month['days'], 0, 7), 'Today unplayed is still to come.');
+
+        $february = Streak::month(['2026-02-10'], [], '2026-02-10');
+        self::assertSame(['2026-02-01', 28], [$february['first'], \count($february['days'])]);
+        self::assertSame(['none', 'none', 'played', 'future'], \array_slice($february['days'], 7, 4), 'Nothing missed before the first active day.');
+        self::assertSame([...array_fill(0, 29, 'none'), 'future'], Streak::month([], [], '2026-11-30')['days'], 'Never played.');
+    }
+
     public function testTheGapIsTheMissedDaysUntilYesterday(): void
     {
         self::assertSame(['2026-10-06', '2026-10-07'], Streak::gap(['2026-10-05'], [], '2026-10-08'));

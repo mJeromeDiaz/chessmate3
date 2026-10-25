@@ -20,3 +20,13 @@ shop:
     duplicate_item: "Cet objet est déjà dans l’offre."
     empty_offer: "Une offre en vente contient au moins un objet."
     nonzero: "Un nombre différent de 0 est attendu."
+# The announcements' form (App\Announcement\Admin\AnnouncementEditor, docs/ANNOUNCEMENTS.md).
+announcement:
+    empty_body: "Le texte est vide une fois nettoyé."
+    english_pair: "En anglais, le titre et le texte vont ensemble."
+    ends_after_start: "La fin doit suivre le début."
+    ends_in_past: "La fin est déjà passée."
+    archived: "Une annonce archivée ne change plus."
+    not_published: "Publie l’annonce avant d’envoyer l’email."
+    ended: "L’annonce est terminée."
+    email_already: "L’email de cette annonce est déjà demandé."

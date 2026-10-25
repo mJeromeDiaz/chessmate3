@@ -125,7 +125,9 @@ déjà faite est de l'entraînement, jugé, jamais payé à nouveau.
 - `POST /mind-map/chests/{id}/open` → `{id, capacity, step, crystals, opened, balance}` (idempotent,
   404 pour le coffre d'un autre).
 - `GET /mind-map/{capacité}` → `{capacity, chapters: [{key, number, status, sections: [{key,
-  number, status, steps, miniBosses, hidden}], boss}], badges, unopenedChests}` ; une étape :
+  number, status, steps, miniBosses, hidden}], boss}], badges, unopenedChests, lastPlayedAt}`
+  (`lastPlayedAt` : le début de la dernière séance d'étape du parcours, null avant la première ; le
+  dashboard propose le parcours joué en dernier) ; une étape :
   `{key, number, kind, status, passes, required, crystals, xp, character, badges, skippable,
   chest}`. Une séance d'étape dont le temps est passé est d'abord close (donc jugée).
 

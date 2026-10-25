@@ -10,6 +10,11 @@
       </header>
 
       <div class="stats__grid">
+        <!-- The rating curves left the home page for here (design « Dashboard v2 »). -->
+        <div class="stats__wide">
+          <RatingCard />
+        </div>
+
         <div class="stats__wide">
           <q-skeleton
             v-if="!store.training && store.statsLoading"
@@ -33,6 +38,10 @@
             v-if="store.training"
             :sessions="store.training.sessions"
           />
+        </div>
+
+        <div class="stats__wide">
+          <RecentSessions />
         </div>
 
         <div>
@@ -76,6 +85,8 @@
 import { onMounted } from 'vue'
 import { useDashboardStore } from '@/stores/dashboard'
 import PeriodPicker from '@/components/dashboard/PeriodPicker.vue'
+import RatingCard from '@/components/dashboard/RatingCard.vue'
+import RecentSessions from '@/components/dashboard/RecentSessions.vue'
 import RepertoireHealthCard from '@/components/dashboard/RepertoireHealthCard.vue'
 import SectionError from '@/components/dashboard/SectionError.vue'
 import SessionSummary from '@/components/dashboard/SessionSummary.vue'
@@ -83,9 +94,10 @@ import ThemeStrengthsCard from '@/components/dashboard/ThemeStrengthsCard.vue'
 import TrainingTimeChart from '@/components/dashboard/TrainingTimeChart.vue'
 
 /**
- * Statistics (docs/DASHBOARD.md § 6, lot B): training time by week and module, sessions, strong
- * and weak puzzle themes, repertoire health, over a period remembered in this browser. Reached
- * from the home page (the main menu is unchanged). Each block loads and fails on its own.
+ * Statistics (docs/DASHBOARD.md § 3 bis): the puzzle and Lichess rating curves (90 days), then
+ * training time by week and module, sessions and the latest ones, strong and weak puzzle themes,
+ * repertoire health, over a period remembered in this browser. Reached from the home page. Each
+ * block loads and fails on its own.
  */
 definePage({
   meta: {
@@ -100,7 +112,10 @@ definePage({
 
 const store = useDashboardStore()
 
-onMounted(() => store.loadStats())
+onMounted(() => {
+  store.loadStats()
+  if (!store.rating) store.loadRating()
+})
 </script>
 
 <style scoped lang="scss">

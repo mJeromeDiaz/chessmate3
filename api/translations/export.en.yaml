@@ -19,6 +19,7 @@ readme:
           coordinates series, blindfold puzzles, puzzle streaks and parcours puzzles.
         - boutique.json: your crystals (each movement, those earned by your sessions and your daily chests), your items,
           your streak freezes and the days they covered, your gift wheel spins and the team's gifts.
+        - annonces.json: the team's announcements you closed or received by email.
         - activite.json: the log of your finished exercises.
 
         Dates are in UTC (ISO 8601), identifiers are UUIDs.

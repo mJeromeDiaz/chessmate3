@@ -7,13 +7,6 @@
             $t('dashboard.home.hello')
           }}</div>
           <h1 class="dashboard__title">{{ $t('dashboard.home.title') }}</h1>
-          <router-link
-            v-if="!store.isNewUser"
-            to="/stats"
-            class="dashboard__stats-link"
-            data-testid="dashboard-stats"
-            >{{ $t('dashboard.home.stats') }}</router-link
-          >
         </div>
         <div class="dashboard__head-actions">
           <q-btn
@@ -43,22 +36,29 @@
         <!-- A first session launched but no exercise logged yet: it can still be resumed. -->
         <MyPlans hide-empty class="q-mt-md" />
         <RecentSessions hide-empty class="q-mt-md" />
+        <PathCard v-if="store.pathsLoaded" class="q-mt-md" />
         <ModuleProgress :rows="moduleRows" class="q-mt-md" />
       </template>
 
+      <!-- Design « Dashboard v2 »: the order of the phone's column, two columns from md. -->
       <div v-else class="dashboard__grid">
         <div class="dashboard__col dashboard__col--main">
-          <LevelBanner class="dashboard__banner" />
-          <ShopSpotlight class="dashboard__shop" />
-          <RatingCard class="dashboard__rating" />
+          <div class="dashboard__hero">
+            <LevelBanner class="dashboard__banner" />
+            <StatsLink class="dashboard__stats" />
+          </div>
+          <PathCard v-if="store.pathsLoaded" class="dashboard__path" />
+          <div class="dashboard__pair">
+            <EndgameCard class="dashboard__endgames" />
+            <ChallengesCard class="dashboard__challenges" />
+          </div>
           <ModuleProgress :rows="moduleRows" class="dashboard__modules" />
         </div>
         <div class="dashboard__col">
           <StreakCard class="dashboard__streak-card" />
-          <WeakThemeTip class="dashboard__tip" />
-          <WeeklyQuest class="dashboard__quest" />
           <MyPlans class="dashboard__sessions" />
-          <RecentSessions class="dashboard__sessions" />
+          <WeeklyQuest class="dashboard__quest" />
+          <ShopDeals class="dashboard__shop" />
           <TrophyGrid class="dashboard__trophies" />
         </div>
       </div>
@@ -105,22 +105,24 @@ import { buildModuleRows } from '@/utils/dashboard/modules'
 import { useGamificationStore } from '@/stores/gamification'
 import { useShopStore } from '@/stores/shop'
 import TreasureChest from '@/components/shop/TreasureChest.vue'
+import ChallengesCard from '@/components/dashboard/ChallengesCard.vue'
+import EndgameCard from '@/components/dashboard/EndgameCard.vue'
 import LevelBanner from '@/components/dashboard/LevelBanner.vue'
 import ModuleProgress from '@/components/dashboard/ModuleProgress.vue'
-import RatingCard from '@/components/dashboard/RatingCard.vue'
 import MyPlans from '@/components/dashboard/MyPlans.vue'
+import PathCard from '@/components/dashboard/PathCard.vue'
 import RecentSessions from '@/components/dashboard/RecentSessions.vue'
-import ShopSpotlight from '@/components/dashboard/ShopSpotlight.vue'
+import ShopDeals from '@/components/dashboard/ShopDeals.vue'
+import StatsLink from '@/components/dashboard/StatsLink.vue'
 import StreakCard from '@/components/dashboard/StreakCard.vue'
 import TrophyGrid from '@/components/dashboard/TrophyGrid.vue'
-import WeakThemeTip from '@/components/dashboard/WeakThemeTip.vue'
 import WeeklyQuest from '@/components/dashboard/WeeklyQuest.vue'
 import WelcomeCard from '@/components/dashboard/WelcomeCard.vue'
 import LandingPage from '@/components/landing/LandingPage.vue'
 import { t } from '@/i18n'
 
 /**
- * Home: the dashboard once signed in (design "Dashboard", docs/DASHBOARD.md), the landing page
+ * Home: the dashboard once signed in (design « Dashboard v2 », docs/DASHBOARD.md), the landing page
  * otherwise (design "Landing": the layout then hides its header, see `meta.landing`).
  */
 definePage({ meta: { landing: true } })
@@ -171,6 +173,7 @@ const sectionError = computed(() =>
 /** Loads the dashboard; an announcement left unseen (a run closed later, another tab) shows. */
 function loadAll() {
   store.load()
+  store.loadPaths()
   const unopened = shopApi.unopenedRewards().catch(() => [])
   gamification
     .load()
@@ -232,15 +235,6 @@ watch(
   }
 }
 
-.dashboard__stats-link {
-  display: inline-block;
-  margin-top: 4px;
-  color: var(--cm-brand);
-  font-weight: 700;
-  font-size: 13px;
-  text-decoration: none;
-}
-
 .dashboard__head-actions {
   display: flex;
   align-items: center;
@@ -256,7 +250,7 @@ watch(
   }
 }
 
-// Mobile: one column in the design's order; from md: two columns (1.55 / 1).
+// Mobile: one column in the design's order; from md: a main column and a 400 px side one.
 .dashboard__grid {
   display: flex;
   flex-direction: column;
@@ -264,44 +258,75 @@ watch(
 
   @media (min-width: $breakpoint-md-min) {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 22px;
     align-items: start;
   }
 }
 
-.dashboard__col {
+.dashboard__col,
+.dashboard__hero,
+.dashboard__pair {
   display: contents;
+}
 
-  @media (min-width: $breakpoint-md-min) {
+@media (min-width: $breakpoint-md-min) {
+  .dashboard__col {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 22px;
     min-width: 0;
+  }
+
+  .dashboard__hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 250px;
+    gap: 16px;
+  }
+
+  .dashboard__pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
   }
 }
 
-.dashboard__banner,
-.dashboard__streak-card {
-  order: 1;
-}
-// Phone: the streak card stays just under the banner; the store's carousel comes before the rating.
-.dashboard__shop,
-.dashboard__rating {
-  order: 2;
-}
-.dashboard__tip,
-.dashboard__quest {
-  order: 4;
-}
-.dashboard__modules {
-  order: 5;
-}
-.dashboard__sessions {
-  order: 6;
-}
-.dashboard__trophies {
-  order: 7;
+// Phone: the design's order (stats, level, streak, sessions, quest, paths, levels, store, trophies).
+@media (max-width: $breakpoint-sm-max) {
+  .dashboard__stats {
+    order: 1;
+  }
+  .dashboard__banner {
+    order: 2;
+  }
+  .dashboard__streak-card {
+    order: 3;
+  }
+  .dashboard__sessions {
+    order: 4;
+  }
+  .dashboard__quest {
+    order: 5;
+  }
+  .dashboard__path {
+    order: 6;
+  }
+  .dashboard__endgames {
+    order: 7;
+  }
+  .dashboard__challenges {
+    order: 8;
+  }
+  .dashboard__modules {
+    order: 9;
+  }
+  .dashboard__shop {
+    order: 10;
+  }
+  .dashboard__trophies {
+    order: 11;
+  }
 }
 
 .dashboard__skeleton {

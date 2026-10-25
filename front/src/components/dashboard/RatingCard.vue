@@ -143,7 +143,7 @@ const ticks = computed(() =>
 
 const busy = computed(() =>
   selected.value === 'puzzles'
-    ? store.loading && !store.rating
+    ? !store.rating && !store.errors.rating
     : store.lichessLoading
 )
 
@@ -153,7 +153,10 @@ const notice = computed(() => {
     if (store.errors.rating)
       return {
         text: store.errors.rating,
-        action: { label: t('common.actions.retry'), click: () => store.load() }
+        action: {
+          label: t('common.actions.retry'),
+          click: () => store.loadRating()
+        }
       }
     if (store.rating && !store.rating.points.length) {
       return {

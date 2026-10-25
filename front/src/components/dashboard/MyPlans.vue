@@ -1,6 +1,6 @@
 <template>
   <section
-    v-if="plans.length || !hideEmpty"
+    v-if="plans.length || current || !hideEmpty"
     class="cm-card my-plans"
     data-testid="my-plans"
   >
@@ -10,7 +10,22 @@
         $t('dashboard.plans.all')
       }}</router-link>
     </div>
-    <div v-if="!plans.length" class="my-plans__empty">
+    <router-link
+      v-if="current"
+      :to="`/session/${current.id}`"
+      class="my-plans__row my-plans__row--current"
+      data-testid="my-plan-current"
+    >
+      <div class="my-plans__main">
+        <div class="my-plans__kicker">{{ $t('dashboard.plans.current') }}</div>
+        <div class="my-plans__title">{{
+          current.title || $t('session.untitled')
+        }}</div>
+        <div class="my-plans__meta">{{ sessionProgressText(current) }}</div>
+      </div>
+      <span class="my-plans__resume">{{ $t('session.resumeArrow') }}</span>
+    </router-link>
+    <div v-if="!plans.length && !current" class="my-plans__empty">
       <span>{{
         loaded ? $t('dashboard.plans.empty') : $t('common.loading')
       }}</span>
@@ -67,13 +82,15 @@
 
 <script setup>
 /**
- * Saved sessions on the dashboard: the next ones to come first (then those on demand), launched in
- * one click; the full list is on the "Mes sessions" page.
+ * « Mes sessions » on the dashboard: the session in progress to resume, then the saved ones, the
+ * next ones to come first (then those on demand), launched in one click; the full list is on the
+ * "Mes sessions" page.
  */
 import { computed, onMounted, ref } from 'vue'
 import { usePlanLaunch } from '@/composables/session/usePlanLaunch'
-import { planApi } from '@/services/api'
+import { planApi, sessionApi } from '@/services/api'
 import { nextText, repetitionText } from '@/utils/session/plans'
+import { sessionProgressText } from '@/utils/session/steps'
 
 defineProps({
   /** Shows nothing until there is a saved session (the new user's dashboard). */
@@ -86,6 +103,8 @@ const LIMIT = 3
 const launcher = usePlanLaunch()
 /** @type {import('vue').Ref<import('@/utils/session/plans').Plan[]>} */
 const plans = ref([])
+/** @type {import('vue').Ref<import('@/utils/session/steps').TrainingSession|null>} the active session */
+const current = ref(null)
 const loaded = ref(false)
 
 /** Scheduled ones by next occurrence, then on-demand ones as listed (latest changed first). */
@@ -101,13 +120,14 @@ const shown = computed(() =>
 )
 
 onMounted(async () => {
-  try {
-    plans.value = await planApi.list()
-  } catch {
-    // The rest of the dashboard does not depend on it.
-  } finally {
-    loaded.value = true
-  }
+  // Each one fails on its own: the rest of the dashboard does not depend on them.
+  const [saved, active] = await Promise.allSettled([
+    planApi.list(),
+    sessionApi.current()
+  ])
+  if (saved.status === 'fulfilled') plans.value = saved.value
+  if (active.status === 'fulfilled') current.value = active.value
+  loaded.value = true
 })
 </script>
 
@@ -157,6 +177,28 @@ onMounted(async () => {
   padding: 10px 12px;
   border-radius: 14px;
   background: var(--cm-inset);
+}
+
+.my-plans__row--current {
+  background: var(--cm-brand-soft);
+  box-shadow: inset 0 0 0 2px var(--cm-hero);
+  color: var(--cm-ink);
+  text-decoration: none;
+}
+
+.my-plans__kicker {
+  color: var(--cm-brand);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.my-plans__resume {
+  flex: none;
+  color: var(--cm-brand);
+  font-weight: 800;
+  font-size: 13.5px;
 }
 
 .my-plans__main {

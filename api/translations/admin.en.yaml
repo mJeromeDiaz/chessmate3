@@ -19,3 +19,12 @@ shop:
     duplicate_item: "This item is already in the offer."
     empty_offer: "An offer on sale contains at least one item."
     nonzero: "A number other than 0 is expected."
+announcement:
+    empty_body: "The text is empty once cleaned."
+    english_pair: "In English, the title and the text go together."
+    ends_after_start: "The end must follow the start."
+    ends_in_past: "The end has already passed."
+    archived: "An archived announcement no longer changes."
+    not_published: "Publish the announcement before sending the email."
+    ended: "The announcement has ended."
+    email_already: "This announcement's email has already been requested."

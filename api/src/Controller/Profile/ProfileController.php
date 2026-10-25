@@ -163,7 +163,7 @@ final class ProfileController extends AbstractController
         return $this->json($this->describe($user));
     }
 
-    /** Board colours, move sounds and the public profile flag, all replaced at once (the daily wheel when sent). */
+    /** Board colours, move sounds and the public profile flag, all replaced at once (the daily wheel and the announcement emails when sent). */
     #[Route('/preferences', name: 'app_profile_preferences', methods: ['PUT'])]
     public function setPreferences(#[MapRequestPayload] PreferencesRequest $payload, #[CurrentUser] User $user): JsonResponse
     {
@@ -174,6 +174,9 @@ final class ProfileController extends AbstractController
             ->setPublicProfile((bool) $payload->publicProfile);
         if (null !== $payload->dailyWheel) {
             $user->setDailyWheel($payload->dailyWheel);
+        }
+        if (null !== $payload->announcementEmails) {
+            $user->setAnnouncementEmails($payload->announcementEmails);
         }
         $this->entityManager->flush();
 
@@ -251,6 +254,7 @@ final class ProfileController extends AbstractController
             'moveSound' => $user->hasMoveSound(),
             'publicProfile' => $user->isPublicProfile(),
             'dailyWheel' => $user->hasDailyWheel(),
+            'announcementEmails' => $user->hasAnnouncementEmails(),
             // Account deletion scheduled (frozen account): when it will be purged.
             'deletionScheduledAt' => $user->getDeletionScheduledAt()?->format(\DATE_ATOM),
             'linkableProviders' => array_values(array_map(

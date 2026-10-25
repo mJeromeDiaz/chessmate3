@@ -49,6 +49,9 @@ final class Path
     /** @var list<ChestView> */
     public array $unopenedChests = [];
 
+    /** When a step of the path was last started (ATOM, UTC), null before the first. */
+    public ?string $lastPlayedAt = null;
+
     /**
      * @param PathView $view
      */
@@ -59,6 +62,7 @@ final class Path
         $path->chapters = $view['chapters'];
         $path->badges = $view['badges'];
         $path->unopenedChests = $view['unopenedChests'];
+        $path->lastPlayedAt = $view['lastPlayedAt'];
 
         return $path;
     }

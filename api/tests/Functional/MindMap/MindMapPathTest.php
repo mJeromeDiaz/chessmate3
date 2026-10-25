@@ -19,7 +19,7 @@ use Symfony\Component\Uid\Uuid;
  *
  * @phpstan-type StepJson array{key: string, number: string|null, kind: string, status: string, passes: int, required: int, crystals: int, xp: int, character: string|null, badges: list<string>, skippable: bool, chest: array{id: string, step: string, crystals: int, opened: bool}|null}
  * @phpstan-type SectionJson array{key: string, number: string|null, status: string, steps: list<StepJson>, miniBosses: list<StepJson>, hidden: list<StepJson>}
- * @phpstan-type PathJson array{capacity: string, chapters: list<array{key: string, number: int, status: string, sections: list<SectionJson>, boss: StepJson}>, badges: list<array{badge: string, step: string, earnedAt: string}>, unopenedChests: list<array{id: string, step: string, crystals: int, opened: bool}>}
+ * @phpstan-type PathJson array{capacity: string, chapters: list<array{key: string, number: int, status: string, sections: list<SectionJson>, boss: StepJson}>, badges: list<array{badge: string, step: string, earnedAt: string}>, unopenedChests: list<array{id: string, step: string, crystals: int, opened: bool}>, lastPlayedAt: string|null}
  * @phpstan-type OutcomeJson array{id: string, capacity: string, step: string, kind: string, outcome: string, itemCount: int, successCount: int, count: int, lives: int|null, passes: int, required: int, completed: bool, xp: int, chest: array{id: string, step: string, crystals: int, opened: bool}|null, unopenedChests: list<array{id: string, step: string, crystals: int, opened: bool}>}
  */
 final class MindMapPathTest extends WoodpeckerWebTestCase
@@ -39,7 +39,18 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
         self::assertSame(['boss', 'open', 'jongleur', 200, 100], [$boss['kind'], $boss['status'], $boss['character'], $boss['crystals'], $boss['xp']], 'Announced at the top of its chapter, open at once.');
         $hidden = $path['chapters'][1]['sections'][2]['hidden'][0];
         self::assertSame(['2-3-hidden', 'hidden', null, 0, []], [$hidden['key'], $hidden['status'], $hidden['character'], $hidden['crystals'], $hidden['badges']], 'A hidden boss shows nothing of itself.');
-        self::assertSame([[], []], [$path['badges'], $path['unopenedChests']]);
+        self::assertSame([[], [], null], [$path['badges'], $path['unopenedChests'], $path['lastPlayedAt']]);
+    }
+
+    public function testThePathTellsWhenItWasLastPlayed(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $startedAt = $this->clock->now()->format(\DATE_ATOM);
+        $this->playExercise($alice, 10);
+
+        self::assertSame($startedAt, $this->path($alice)['lastPlayedAt'], 'When its run started.');
+        self::assertNull($this->path($alice, 'calculation')['lastPlayedAt'], 'Per path.');
+        self::assertNull($this->path($this->createUserIn('bob@example.com'))['lastPlayedAt'], 'Per player.');
     }
 
     public function testTheCalculationPathOpensOnItsFirstLesson(): void

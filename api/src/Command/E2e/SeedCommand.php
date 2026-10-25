@@ -35,7 +35,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  * the visualisation path (docs/MIND_MAP.md), every step but the hidden bosses, without rewards;
  * --mind-map-steps completes the steps named; --mind-map-capacity picks the path (visualisation by
  * default, or calculation); --engine-puzzles adds to the catalogue, if missing, puzzles of the
- * calculation path's chapter 3 (docs/CALCULATION.md, § 2 quater), few among the samples.
+ * calculation path's chapter 3 (docs/CALCULATION.md, § 2 quater), few among the samples;
+ * --announcement-emails keeps the team's announcement emails on (docs/ANNOUNCEMENTS.md, § 4): off
+ * by default, so that an announcement's email goes to the test's account and the fixtures', not to
+ * every account the earlier runs left.
  */
 #[When(env: 'e2e')]
 #[AsCommand(name: 'app:e2e:seed-user', description: 'E2E only: creates a user and prints a refresh token')]
@@ -77,7 +80,8 @@ final class SeedCommand extends Command
             ->addOption('mind-map-chapters', null, InputOption::VALUE_REQUIRED, 'Complete this many chapters of the visualisation path')
             ->addOption('mind-map-steps', null, InputOption::VALUE_REQUIRED, 'Complete these steps of the visualisation path (keys, comma-separated)')
             ->addOption('mind-map-capacity', null, InputOption::VALUE_REQUIRED, 'The path of --mind-map-chapters and --mind-map-steps', Capacity::Visualisation->value)
-            ->addOption('engine-puzzles', null, InputOption::VALUE_NONE, 'Add the puzzles of the calculation path\'s chapter 3 to the catalogue');
+            ->addOption('engine-puzzles', null, InputOption::VALUE_NONE, 'Add the puzzles of the calculation path\'s chapter 3 to the catalogue')
+            ->addOption('announcement-emails', null, InputOption::VALUE_NONE, 'Keep the announcement emails on (off by default)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -85,6 +89,7 @@ final class SeedCommand extends Command
         $user = new User();
         $user->setEmail(sprintf('e2e-%s@example.com', bin2hex(random_bytes(6))));
         $user->markEmailVerified();
+        $user->setAnnouncementEmails(true === $input->getOption('announcement-emails'));
         if (true === $input->getOption('admin')) {
             $user->setRoles(['ROLE_ADMIN']);
         }

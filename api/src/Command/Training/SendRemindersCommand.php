@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command\Training;
 
+use App\Announcement\Email\EmailDispatcher;
 use App\Gamification\Streak\StreakReminderDispatcher;
 use App\Training\Plan\Reminder\ReminderDispatcher;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -12,7 +13,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Sends the reminders now due: saved sessions (docs/TRAINING.md) and "streak in danger"
- * (docs/NOTIFICATIONS.md, § 5). Run by cron every minute
+ * (docs/NOTIFICATIONS.md, § 5), and the next announcement emails (docs/ANNOUNCEMENTS.md, § 4). Run by cron every minute
  * (`* * * * * bin/console app:training:send-reminders`). Each occurrence is claimed once in the
  * reminder log, then sent by the async worker. On shared hosting, the tick does it instead
  * (docs/DEPLOY_OVH.md).
@@ -23,12 +24,14 @@ final class SendRemindersCommand
     public function __construct(
         private readonly ReminderDispatcher $reminders,
         private readonly StreakReminderDispatcher $streakReminders,
+        private readonly EmailDispatcher $announcementEmails,
     ) {
     }
 
     public function __invoke(SymfonyStyle $io): int
     {
         $io->writeln(sprintf('%d reminder(s) queued.', $this->reminders->dispatchDue() + $this->streakReminders->dispatchDue()));
+        $io->writeln(sprintf('%d announcement email(s) queued.', $this->announcementEmails->dispatchDue()));
 
         return Command::SUCCESS;
     }

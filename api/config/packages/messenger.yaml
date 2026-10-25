@@ -33,6 +33,8 @@ framework:
             'App\Training\Plan\Reminder\SessionReminderDue': async
             # "Streak in danger" reminders: Web Push and email (docs/NOTIFICATIONS.md).
             'App\Gamification\Streak\StreakReminderDue': async
+            # The team's announcements by email (docs/ANNOUNCEMENTS.md), a few each minute.
+            'App\Announcement\Email\AnnouncementEmailDue': async
             # Early access invitations (docs/EARLY_ACCESS.md): retried, marked failed once given up.
             'App\EarlyAccess\Invitation\Message\SendInvitationEmail': async
             # Domain events of every exercise and milestone (docs/ACTIVITY.md).

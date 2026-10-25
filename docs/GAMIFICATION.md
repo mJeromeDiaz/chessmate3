@@ -204,7 +204,7 @@ Modèles validés le 2026-10-05 :
 
 | Endpoint | Contenu |
 |---|---|
-| `GET /api/gamification/summary` | `xp`, `level`, `xpInLevel`, `xpForNext`, `rank` (clé du grade), `nextRank` (`{rank, level}` ou null), `modules.{woodpecker, repertoire, puzzles, free}` (`xp`, `level`, `xpInLevel`, `xpForNext`), `streak` (`current`, `best`, `playedToday`, `week` : 7 booléens du lundi au dimanche, `nextMilestone` ou null), `today` (`date` : jour local, `exerciseXp`, `cap`) |
+| `GET /api/gamification/summary` | `xp`, `level`, `xpInLevel`, `xpForNext`, `rank` (clé du grade), `nextRank` (`{rank, level}` ou null), `modules.{woodpecker, repertoire, puzzles, free}` (`xp`, `level`, `xpInLevel`, `xpForNext`), `streak` (`current`, `best`, `playedToday`, `week` : 7 booléens du lundi au dimanche, `frozenWeek`, `protected`, `freezeDays`, `nextMilestone` ou null, `month` : `{first, days}`, le mois local jour par jour, `played`, `frozen`, `missed`, `none` avant le premier jour actif, `future` après aujourd'hui et aujourd'hui tant que rien n'est joué : le calendrier de la série du dashboard), `today` (`date` : jour local, `exerciseXp`, `cap`) |
 | `GET /api/gamification/streak/notice` | L'annonce de série du jour pas encore montrée : `pending` (false : aucune, autres champs null), `streak`, `previousStreak` (0 : cassée), `badge` (clé de trophée) ou null, `week` (aujourd'hui compris), `nextMilestone`, `localDate` |
 | `POST /api/gamification/streak/notice/acknowledgement` | 204 : l'annonce du jour est montrée (idempotent) |
 | `GET /api/gamification/quest` | Le défi de la semaine : `id`, `template`, `theme`, `module`, `goal`, `current`, `reward`, `completed`, `completedAt`, `weekStart`, `weekEnd` (dimanche) ; le tire au premier affichage, le termine et verse sa récompense |
