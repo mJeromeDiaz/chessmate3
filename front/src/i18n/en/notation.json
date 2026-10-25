@@ -58,8 +58,6 @@
     "wrongText": "Look at the right answer before moving on.",
     "wasPlay": "It was {san}.",
     "mistakeAt": "Mistake on move {n}: it was {san}.",
-    "expected": "The right line: {line}",
-    "yours": "Your line: {line}",
     "placeholder": "e.g. 1. {example}",
     "send": "Submit",
     "erase": "Erase",
@@ -74,6 +72,13 @@
     "gameWriteText": "{label}: write the {n} half-moves you just saw.",
     "replay": "Watch again",
     "gameFrom": "Moves {from} to {to}"
+  },
+  "correction": {
+    "yours": "Your transcription",
+    "right": "The correction",
+    "prev": "Previous half-move",
+    "next": "Next half-move",
+    "step": "{n} / {total}"
   },
   "reasons": {
     "illegal": "Half-move {n} is not a legal move.",

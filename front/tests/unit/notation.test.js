@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  correctionBoard,
+  correctionRows,
   englishSan,
   localSan,
   numberedLine,
   pieceLetters,
-  writtenMistake
+  writtenMistake,
+  writtenTokens
 } from '@/utils/notation'
 
 describe('notation', () => {
@@ -45,5 +48,88 @@ describe('notation', () => {
       'Le demi-coup 2 n’est pas un coup légal.'
     )
     expect(writtenMistake(null, null)).toBe('')
+  })
+})
+
+describe('the correction of a written line', () => {
+  // White mates in 2: Qg4+ Kf8 (or Kh8) Qg7#.
+  const FEN = '4r1k1/5p1p/5P2/8/8/8/8/3Q2K1 w - - 0 1'
+  const EXPECTED = [
+    { uci: 'd1g4', san: 'Qg4+' },
+    { uci: 'g8f8', san: 'Kf8' },
+    { uci: 'g4g7', san: 'Qg7#' }
+  ]
+
+  it('reads the half-moves as the server does', () => {
+    expect(writtenTokens(['1. Qg4+ Kf8 2.Qg7#'])).toEqual([
+      'Qg4+',
+      'Kf8',
+      'Qg7#'
+    ])
+    expect(writtenTokens(['12... Bxe4  13. Qd1', ' '])).toEqual(['Bxe4', 'Qd1'])
+  })
+
+  it('puts each half-move written beside the solution', () => {
+    const c = correctionRows(
+      FEN,
+      EXPECTED,
+      ['1. Qg4+ Kh8 2. Qg5'],
+      1,
+      'wrong',
+      'fr'
+    )
+    expect(c.rows).toEqual([
+      { number: '1.', yours: 'Dg4+', right: 'Dg4+', state: 'ok' },
+      { number: '1…', yours: 'Rh8', right: 'Rf8', state: 'wrong' },
+      { number: '2.', yours: 'Dg5', right: 'Dg7#', state: 'after' }
+    ])
+    expect(c.wrongUci).toBe('g8h8')
+    expect(c.fens).toHaveLength(4)
+    expect(c.fens[0]).toBe(FEN)
+  })
+
+  it('marks the missing half-moves, one too many, an illegal one', () => {
+    const short = correctionRows(FEN, EXPECTED, ['Qg4+'], 1, 'short', 'fr')
+    expect(short.rows.map(r => [r.yours, r.state])).toEqual([
+      ['Dg4+', 'ok'],
+      [null, 'missing'],
+      [null, 'after']
+    ])
+    const long = correctionRows(
+      FEN,
+      EXPECTED,
+      ['Qg4+ Kf8 Qg7# Kf7'],
+      3,
+      'long',
+      'en'
+    )
+    expect(long.rows[3]).toEqual({
+      number: '2…',
+      yours: 'Kf7',
+      right: null,
+      state: 'extra'
+    })
+    const illegal = correctionRows(FEN, EXPECTED, ['Kg9'], 0, 'illegal', 'en')
+    expect([illegal.rows[0].state, illegal.wrongUci]).toEqual(['wrong', null])
+  })
+
+  it('shows the solution on the board, the wrong move beside the right one', () => {
+    const c = correctionRows(FEN, EXPECTED, ['1. Qg4+ Kh8'], 1, 'wrong', 'fr')
+    expect(correctionBoard(c, EXPECTED, 0)).toEqual({
+      fen: FEN,
+      highlights: [],
+      arrows: []
+    })
+    const mistake = correctionBoard(c, EXPECTED, 1)
+    expect(mistake.fen).toBe(c.fens[1])
+    expect(mistake.highlights).toEqual([
+      { square: 'd1', type: 'lastMove' },
+      { square: 'g4', type: 'lastMove' },
+      { square: 'g8', type: 'error' },
+      { square: 'h8', type: 'error' }
+    ])
+    expect(mistake.arrows).toEqual([{ from: 'g8', to: 'f8', type: 'solution' }])
+    const end = correctionBoard(c, EXPECTED, 9)
+    expect([end.fen, end.arrows]).toEqual([c.fens[3], []])
   })
 })

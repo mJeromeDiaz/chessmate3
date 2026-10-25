@@ -102,8 +102,15 @@ Choix validés (2026-10-20) :
   de suite (le premier faux finit la suite) ; `write` : un champ, les touches des pièces de la
   langue, `x + # = O-O O-O-O` et ⌫, « Valider ». Faux : l'échiquier revient avant le coup, la
   case du mauvais coup en rouge, le bon en flèche ; la feuille de résultat dit la bonne réponse
-  (et, pour une ligne écrite, l'erreur, la bonne ligne et celle du joueur). Juste : l'exercice
-  suivant arrive seul après 1,2 s. Leçon comptée : « Exercice n sur N » au lieu du chrono.
+  (pour une ligne écrite, l'erreur seulement). **Ligne écrite fausse** (`write`, `line`,
+  `game_write`, 2026-10-25) : le formulaire laisse la place à la correction
+  (`components/notation/NotationCorrection.vue`), un demi-coup par ligne, « Ta transcription »
+  à côté de « La correction » (juste en vert, le premier faux en rouge, un manquant « — », un de
+  trop barré, ceux d'après l'erreur en gris) ; l'échiquier rejoue seul la solution (0,9 s par
+  demi-coup, 2 s sur l'erreur), puis ‹ › ou un clic sur une ligne pour s'y arrêter ; sur l'erreur,
+  le coup écrit en rouge s'il était légal et le bon en flèche. Le front relit ce qui a été écrit
+  comme le serveur (`writtenTokens`, jumelle de `WrittenLine::tokens`) : `correctionRows`,
+  `correctionBoard` (`utils/notation.js`). Juste : l'exercice suivant arrive seul après 1,2 s. Leçon comptée : « Exercice n sur N » au lieu du chrono.
 - **Langue** (`utils/notation.js`) : `localSan` (l'API → l'écran), `englishSan` (la saisie →
   l'API ; seules les capitales sont des pièces, `0-0` devient `O-O`), `numberedLine`
   (« 12… Fxe4 13. Dd1 »).

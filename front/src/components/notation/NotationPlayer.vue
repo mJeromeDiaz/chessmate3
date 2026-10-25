@@ -36,11 +36,13 @@
 
     <template #board>
       <ChessBoard
-        :fen="fen"
+        :fen="correction && correctionView ? correctionView.fen : fen"
         :orientation="orientation"
         :movable-color="movableColor"
-        :highlights="highlights"
-        :arrows="arrows"
+        :highlights="
+          correction && correctionView ? correctionView.highlights : highlights
+        "
+        :arrows="correction && correctionView ? correctionView.arrows : arrows"
         @move="onMove"
       />
     </template>
@@ -86,8 +88,15 @@
         @click="showMoves"
       />
 
+      <NotationCorrection
+        v-if="correction"
+        :correction="correction"
+        :expected="result?.expected ?? []"
+        @board="view => (correctionView = view)"
+      />
+
       <form
-        v-if="isWritten && !watching"
+        v-else-if="isWritten && !watching"
         class="notation-player__write"
         data-testid="notation-write"
         @submit.prevent="send"
@@ -164,6 +173,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { Chess } from 'chess.js'
 import ChessBoard from '@/components/chess/ChessBoard.vue'
+import NotationCorrection from '@/components/notation/NotationCorrection.vue'
 import PlayLayout from '@/components/chess/PlayLayout.vue'
 import ProfBubble from '@/components/feedback/ProfBubble.vue'
 import ResultSheet from '@/components/feedback/ResultSheet.vue'
@@ -173,6 +183,7 @@ import {
   GAMES,
   SEQUENCES,
   WRITTEN,
+  correctionRows,
   englishSan,
   localSan,
   numberedLine,
@@ -394,7 +405,25 @@ const bubble = computed(() => {
   }
 })
 
-/** The sheet: the verdict, and the right answer when wrong. */
+/**
+ * A wrong written line beside the right one, the board stepping through the solution
+ * (NotationCorrection); null otherwise.
+ */
+const correction = computed(() => {
+  const r = props.result
+  if (!r || r.status === 'right' || !isWritten.value) return null
+  return correctionRows(
+    props.item.data.fen,
+    r.expected ?? [],
+    r.answer ?? [],
+    r.mistakeAt ?? null,
+    r.reason ?? null
+  )
+})
+/** @type {import('vue').Ref<ReturnType<typeof import('@/utils/notation').correctionBoard>|null>} what the correction shows on the board */
+const correctionView = ref(null)
+
+/** The sheet: the verdict, and the right answer when wrong (a written line's in its correction). */
 const copy = computed(() => {
   const r = props.result
   if (!r) return { title: '', sub: '' }
@@ -420,16 +449,9 @@ const copy = computed(() => {
         san: localSan(r.expected?.[r.mistakeAt ?? 0]?.san ?? '')
       })
     }
-  const yours = numberedLine(r.answer ?? [], start)
   return {
     title: t('notation.player.kickers.wrong'),
-    sub: [
-      writtenMistake(r.reason, r.mistakeAt),
-      t('notation.player.expected', { line }),
-      yours ? t('notation.player.yours', { line: yours }) : ''
-    ]
-      .filter(Boolean)
-      .join(' · ')
+    sub: writtenMistake(r.reason, r.mistakeAt)
   }
 })
 
@@ -527,6 +549,7 @@ watch(
     timeline.reset()
     fen.value = props.item.data.fen
     played.value = []
+    correctionView.value = null
     before.value = ''
     written.value = ''
     answered.value = false

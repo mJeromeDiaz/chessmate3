@@ -58,8 +58,6 @@
     "wrongText": "Regarde la bonne réponse avant de continuer.",
     "wasPlay": "C’était {san}.",
     "mistakeAt": "Erreur au coup {n} : il fallait {san}.",
-    "expected": "La bonne ligne : {line}",
-    "yours": "Ta ligne : {line}",
     "placeholder": "ex. 1. {example}",
     "send": "Valider",
     "erase": "Effacer",
@@ -74,6 +72,13 @@
     "gameWriteText": "{label} : écris les {n} demi-coups que tu viens de voir.",
     "replay": "Revoir",
     "gameFrom": "Coups {from} à {to}"
+  },
+  "correction": {
+    "yours": "Ta transcription",
+    "right": "La correction",
+    "prev": "Demi-coup précédent",
+    "next": "Demi-coup suivant",
+    "step": "{n} / {total}"
   },
   "reasons": {
     "illegal": "Le demi-coup {n} n’est pas un coup légal.",

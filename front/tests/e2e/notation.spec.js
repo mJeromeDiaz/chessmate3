@@ -80,13 +80,41 @@ test('notation: a move announced played right then wrong, a line written', async
   await page.getByTestId('notation-key-R').click()
   await page.getByTestId('notation-input').pressSequentially('g9')
   await expect(page.getByTestId('notation-input')).toHaveValue('Rg9')
+  const judged = page.waitForResponse(
+    r => r.url().endsWith('/submission') && r.request().method() === 'POST'
+  )
   await page.getByTestId('notation-send').click()
+  const expected = (await (await judged).json()).result.data.expected
   await expect(page.getByTestId('notation-result')).toContainText(
     'Le demi-coup 1 n’est pas un coup légal.'
   )
-  await expect(page.getByTestId('notation-result')).toContainText(
-    'La bonne ligne'
-  )
+  // The correction: the transcription beside the solution, the board stepping through it.
+  await expect(page.getByTestId('notation-write')).toHaveCount(0)
+  const first = page.getByTestId('notation-correction-row-0')
+  await expect(first).toHaveAttribute('data-state', 'wrong')
+  await expect(first).toContainText('Rg9')
+  await expect(first).toContainText(french(expected[0].san))
+  if (item.data.plies > 1)
+    await expect(page.getByTestId('notation-correction-row-1')).toContainText(
+      '—'
+    )
+  // A row stops the replay: the start, the right move as an arrow; › plays it.
+  await first.click()
+  const correction = page.getByTestId('notation-correction')
+  const board = page.getByTestId('chess-board')
+  await expect(correction).toHaveAttribute('data-frame', '0')
+  const chess = new Chess(item.data.fen)
+  await expect(board).toHaveAttribute('data-fen', chess.fen())
+  await page.getByTestId('notation-correction-next').click()
+  await expect(correction).toHaveAttribute('data-frame', '1')
+  chess.move({
+    from: expected[0].uci.slice(0, 2),
+    to: expected[0].uci.slice(2, 4),
+    promotion: expected[0].uci[4]
+  })
+  await expect(board).toHaveAttribute('data-fen', chess.fen())
+  await page.getByTestId('notation-correction-prev').click()
+  await expect(correction).toHaveAttribute('data-frame', '0')
 })
 
 test('notation: completing a line needs a repertoire of 10 segments', async ({
