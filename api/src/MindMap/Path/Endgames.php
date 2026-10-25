@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MindMap\Path;
 
 use App\Endgame\EndgameRules;
+use App\Endgame\Training\EndgameModule;
 use App\Enum\MindMap\StepKind;
 use App\Enum\Training\Module;
 
@@ -13,7 +14,9 @@ use App\Enum\Training\Module;
  * free chapter per mini-parcours, nothing ever locked. Each lesson of the catalogue is a step
  * whose key is the lesson's: a pass is a lesson of {@see self::LESSON_COUNT} positions at 80 %,
  * the first in learn mode (the textbook position, then variants, help allowed), the next ones in
- * review mode (variants, no help), Maia at the Elo proposed to the player. 2 passes: « known »;
+ * review mode (variants, no help), Maia at the Elo proposed to the player. The net (the squares
+ * denied to the enemy king) is shown on the first two passes, offered after: a pass played with it
+ * switched on does not count. 2 passes: « known »;
  * {@see self::MASTERY_PASSES}: mastered. Each mini-parcours ends with a boss mixing its lessons
  * (perfect defence, 3 lives); the Roi des cendres, every endgame against a clock per position
  * ({@see \App\Endgame\Training\AshesDraw}), closes the path. Crystals come
@@ -100,7 +103,8 @@ final class Endgames
     }
 
     /**
-     * A lesson's step: learn mode first (its textbook position, then variants), review mode next.
+     * A lesson's step: learn mode first (its textbook position, then variants), review mode next;
+     * the net shown on the first two passes, offered after.
      */
     private static function lesson(string $key): Step
     {
@@ -108,10 +112,11 @@ final class Endgames
 
         return new Step($key, null, StepKind::Exercise, self::MASTERY_PASSES, 0, PathRules::EXERCISE_XP, new Activity(
             Module::Endgames,
-            ['mode' => 'learn', 'variants' => self::LESSON_COUNT - 1, ...$config],
+            ['mode' => 'learn', 'variants' => self::LESSON_COUNT - 1, 'net' => EndgameModule::NET_SHOWN, ...$config],
             self::LESSON_SECONDS,
             self::LESSON_COUNT,
-            repeatConfig: ['mode' => 'review', ...$config],
+            repeatConfig: ['mode' => 'review', 'net' => EndgameModule::NET_SHOWN, ...$config],
+            laterConfig: ['mode' => 'review', 'net' => EndgameModule::NET_OFFERED, ...$config],
         ));
     }
 

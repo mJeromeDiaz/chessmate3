@@ -226,6 +226,8 @@ describe('mind map path', () => {
     expect(outcomeKey(verdict('boss', 'passed', true))).toBe('victory')
     expect(outcomeKey(verdict('mini_boss', 'passed'))).toBe('practice')
     expect(outcomeKey(verdict('boss', 'failed'))).toBe('defeat')
+    // Passed with the endgames' net switched on: not counted.
+    expect(outcomeKey(verdict('exercise', 'assisted'))).toBe('assisted')
     expect(livesLeft({ itemCount: 7, successCount: 5, lives: 3 })).toBe(1)
     expect(livesLeft({ itemCount: 9, successCount: 4, lives: null })).toBe(0)
     // A recall boss: its pieces wrong or missing, not its positions.

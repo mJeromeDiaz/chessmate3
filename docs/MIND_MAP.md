@@ -112,9 +112,10 @@ déjà faite est de l'entraînement, jugé, jamais payé à nouveau.
   appelle les `RunClosedListenerInterface` dans la même transaction : `PassRecorder` juge la séance
   sur son récapitulatif (`itemCount`, `successCount`, et `metrics.failures` quand le module compte
   ses échecs autrement, comme les pièces fausses ou oubliées d'une reconstitution) et, réussie,
-  compte un passage. Le dernier
+  compte un passage ; réussie avec une aide qui l'empêche de compter (le maillage des finales
+  allumé, `metrics.netUsed`, [ENDGAMES.md](ENDGAMES.md) § 8), elle est `assisted` et ne compte pas. Le dernier
   passage termine l'étape et la récompense (§ 5), puis les coffres en chemin qu'elle débloque.
-- `GET /mind-map/runs/{id}` → le verdict (`pending`, `passed`, `failed`), les éléments, `failures`
+- `GET /mind-map/runs/{id}` → le verdict (`pending`, `passed`, `failed`, `assisted`), les éléments, `failures`
   (ce qui compte contre les vies : éléments ratés, ou `metrics.failures`), `count`, `lives`, les passages, `completed`, l'XP et le coffre de l'étape si cette séance l'a terminée, et
   tous les coffres pas encore ouverts du parcours. 404 pour une séance qui n'est pas celle d'une
   étape du joueur.

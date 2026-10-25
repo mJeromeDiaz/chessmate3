@@ -17,8 +17,9 @@ import {
  *
  * @param {import('@playwright/test').Page} page
  * @param {string} lesson
+ * @param {'learn'|'review'} [mode]
  */
-async function startRun(page, lesson) {
+async function startRun(page, lesson, mode = 'learn') {
   await page.goto('/#/finales/libre')
   await expect(page.getByTestId('endgame-lessons')).toBeVisible()
   // The first theme's lessons are chosen by default: none of them, then the lesson.
@@ -29,6 +30,12 @@ async function startRun(page, lesson) {
     'aria-pressed',
     'true'
   )
+
+  if (mode === 'review')
+    await page
+      .getByTestId('endgame-mode')
+      .getByRole('button', { name: 'Réviser' })
+      .click()
 
   const slider = page.getByTestId('endgame-elo')
   await slider.focus()
@@ -191,4 +198,89 @@ test('the demonstration of a lesson plays its line up to the goal', async ({
   )
   await demo.getByTestId('endgame-demo-close').click()
   await expect(demo).toBeHidden()
+})
+
+/**
+ * The net of the pawn race (« square-promote », 8/8/8/P7/8/8/5k2/7K w): the pawn's capture b6 and
+ * the king's g1, g2, h2.
+ */
+const PAWN_RACE_NET = 4
+
+test('the net: shown from the start in learn mode, switched off and on', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await tablebaseDown(page)
+  const item = await startRun(page, 'square-promote')
+  expect(item.data.net).toBe('shown')
+
+  const board = page.getByTestId('endgame-player').getByTestId('chess-board')
+  const net = page.getByTestId('endgame-net')
+  await expect(net).toHaveAttribute('aria-pressed', 'true')
+  await expect(board.locator('.cb-marker-net')).toHaveCount(PAWN_RACE_NET)
+  for (const square of ['b6', 'g1', 'g2', 'h2'])
+    await expect(
+      board.locator(`[data-square="${square}"] .cb-marker-net`)
+    ).toHaveCount(1)
+  // Free outside the path: no warning.
+  await expect(page.getByTestId('endgame-net-note')).toHaveCount(0)
+
+  await net.click()
+  await expect(net).toHaveAttribute('aria-pressed', 'false')
+  await expect(board.locator('.cb-marker-net')).toHaveCount(0)
+  await net.click()
+  await expect(board.locator('.cb-marker-net')).toHaveCount(PAWN_RACE_NET)
+
+  // Shown from the start: nothing to report.
+  const submitted = page.waitForResponse(isRunSubmission)
+  await page.getByTestId('endgame-pass').click()
+  await page.getByRole('button', { name: 'Passer' }).last().click()
+  expect((await submitted).request().postDataJSON().net).toBeUndefined()
+})
+
+test('the net: offered in review mode, switched on, it goes with the submission', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await tablebaseDown(page)
+  const item = await startRun(page, 'square-promote', 'review')
+  expect(item.data).toMatchObject({ mode: 'review', net: 'offered' })
+
+  const board = page.getByTestId('endgame-player').getByTestId('chess-board')
+  const net = page.getByTestId('endgame-net')
+  await expect(net).toHaveAttribute('aria-pressed', 'false')
+  await expect(board.locator('.cb-marker-net')).toHaveCount(0)
+  await net.click()
+  await expect(board.locator('.cb-marker-net')).toHaveCount(PAWN_RACE_NET)
+
+  const submitted = page.waitForResponse(isRunSubmission)
+  await page.getByTestId('endgame-pass').click()
+  await page.getByRole('button', { name: 'Passer' }).last().click()
+  const response = await submitted
+  expect(response.request().postDataJSON().net).toBe(true)
+  expect((await response.json()).result.data.netUsed).toBe(true)
+})
+
+test('the net offered in the path warns that the pass will not count', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await tablebaseDown(page)
+  // The position as a path's third pass serves it (a count of positions); its server side is
+  // covered by PHPUnit (EndgamePathTest).
+  await page.route(/\/api\/training\/runs\/[^/]+\/next$/, async route => {
+    const response = await route.fetch()
+    const body = await response.json()
+    body.item.data = { ...body.item.data, net: 'offered', count: 5 }
+    await route.fulfill({ response, json: body })
+  })
+  await startRun(page, 'square-promote', 'review')
+
+  const note = page.getByTestId('endgame-net-note')
+  await expect(note).toContainText('ce passage ne comptera pas')
+  await page.getByTestId('endgame-net').click()
+  await expect(note).toContainText('Maillage utilisé')
 })

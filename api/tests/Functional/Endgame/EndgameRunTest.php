@@ -47,7 +47,7 @@ final class EndgameRunTest extends WoodpeckerWebTestCase
             [$first['data']['fen'], $first['data']['lesson'], $first['data']['family'], $first['data']['goal'], $first['data']['result'], $first['data']['textbook'], $first['data']['explain'], $first['data']['budgetMoves'], $first['data']['holdMoves'], $first['data']['opponent'], $first['data']['index']],
             'Mate in 23 plies: 12 moves, 18 allowed.',
         );
-        self::assertSame('learn', $first['data']['mode']);
+        self::assertSame(['learn', 'shown'], [$first['data']['mode'], $first['data']['net']], 'Learn mode: the net shown from the start.');
         self::assertSame($first['id'], $this->item($alice, $run)['id'], 'A reload gets the same position.');
 
         $won = $this->submitOk($alice, $run, ['itemId' => $first['id'], 'moves' => self::GAME], XpRules::ENDGAME_STRONG);
@@ -91,6 +91,7 @@ final class EndgameRunTest extends WoodpeckerWebTestCase
         $item = $this->item($alice, $run);
 
         self::assertSame([$variant, false, false, 24, ['elo' => null, 'perfect' => true]], [$item['data']['fen'], $item['data']['textbook'], $item['data']['explain'], $item['data']['budgetMoves'], $item['data']['opponent']]);
+        self::assertSame('offered', $item['data']['net'], 'Review mode: the net to switch on.');
     }
 
     public function testSettingsAreChecked(): void

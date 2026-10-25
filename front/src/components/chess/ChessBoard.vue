@@ -87,7 +87,8 @@ import { premoveTargets, premoveToMove } from '@/utils/chess/premove'
 /**
  * @typedef {'white'|'black'} Color
  * @typedef {{from: string, to: string, promotion?: string}} MoveInput
- * @typedef {{square: string, type: 'lastMove'|'hint'|'error'|'success'}} Highlight
+ * @typedef {{square: string, type: 'lastMove'|'hint'|'error'|'success'|'net'}} Highlight
+ *   `net`: a square denied to the enemy king (the endgames' net, docs/ENDGAMES.md, § 8)
  * @typedef {{from: string, to: string, type?: 'hint'|'solution'|'explorer'|'error'}} Arrow
  * @typedef {{square: string, text: string}} Glyph an annotation shown on a square ("!", "?!"...)
  */
@@ -99,7 +100,8 @@ const MARKERS = {
   error: { class: 'cb-marker-error', slice: 'markerSquare' },
   success: { class: 'cb-marker-success', slice: 'markerSquare' },
   selected: { class: 'cb-marker-selected', slice: 'markerSquare' },
-  premove: { class: 'cb-marker-premove', slice: 'markerSquare' }
+  premove: { class: 'cb-marker-premove', slice: 'markerSquare' },
+  net: { class: 'cb-marker-net', slice: 'markerSquare' }
 }
 const ARROWS = {
   hint: { class: 'arrow-info' },
@@ -615,6 +617,10 @@ defineExpose({ setPosition, shake })
 .cm-chessboard .markers .marker.cb-marker-error {
   fill: #e53935;
   opacity: 0.6;
+}
+.cm-chessboard .markers .marker.cb-marker-net {
+  fill: #ff6fae;
+  opacity: 0.42;
 }
 /* Extra arrow types, on the model of cm-chessboard's arrows.css. */
 .cm-chessboard .arrow-explorer .arrow-head {

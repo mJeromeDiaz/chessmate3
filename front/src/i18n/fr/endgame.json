@@ -305,5 +305,10 @@
     "progress": "Coup {n} sur {total}",
     "end": "Fin de la démonstration.",
     "unavailable": "Démonstration indisponible pour l’instant : Lichess ne répond pas. Réessaie dans un moment."
+  },
+  "net": {
+    "button": "Maillage",
+    "offered": "Le maillage montre en rose les cases interdites au roi adverse. L’allumer ici : ce passage ne comptera pas pour la maîtrise.",
+    "notCounted": "Maillage utilisé : ce passage ne comptera pas pour la maîtrise."
   }
 }

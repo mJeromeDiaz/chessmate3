@@ -14,6 +14,7 @@ import {
   keepingMoves,
   lessonText,
   lessonTitle,
+  netSquares,
   opponentLabel,
   playUci,
   reached,
@@ -583,5 +584,36 @@ describe('the demonstration', () => {
     expect(demo.status.value).toBe('unavailable')
     expect(demo.moves.value).toEqual(['a5a6'])
     scope.stop()
+  })
+
+  describe('net', () => {
+    it('draws the squares the rook and the king deny to the enemy king', () => {
+      const net = netSquares('8/4k3/8/R7/8/8/8/4K3 w - - 0 1', 'white')
+      // The rook cuts the fifth rank and the a-file; the king guards its own squares.
+      for (const square of ['b5', 'e5', 'h5', 'a8', 'a1', 'd2', 'e2', 'f1'])
+        expect(net).toContain(square)
+      // Not under the player's own pieces, nor beyond the rook's lines.
+      for (const square of ['a5', 'e1', 'e6', 'd7'])
+        expect(net).not.toContain(square)
+    })
+
+    it('denies the square behind a checked king on the checking line', () => {
+      const net = netSquares('8/8/8/4k3/8/8/4R3/K7 b - - 0 1', 'white')
+      expect(net).toContain('e6')
+      expect(net).toContain('e8')
+    })
+
+    it('counts a pawn’s captures, not its push, and works for Black', () => {
+      const white = netSquares('8/8/8/8/3P4/8/8/k1K5 w - - 0 1', 'white')
+      expect(white).toEqual(expect.arrayContaining(['c5', 'e5']))
+      expect(white).not.toContain('d5')
+      const black = netSquares('8/8/8/3p4/8/8/8/k1K5 b - - 0 1', 'black')
+      expect(black).toEqual(expect.arrayContaining(['c4', 'e4', 'a2', 'b2']))
+      expect(black).not.toContain('d4')
+    })
+
+    it('draws nothing for a position it cannot read', () => {
+      expect(netSquares('not a fen', 'white')).toEqual([])
+    })
   })
 })

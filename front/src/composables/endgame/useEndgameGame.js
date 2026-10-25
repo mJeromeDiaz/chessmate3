@@ -24,8 +24,9 @@ import {
  *
  * @typedef {import('@/utils/endgame').TablebaseAnswer} TablebaseAnswer
  * @typedef {import('@/utils/endgame').Outcome} Outcome
- * @typedef {{fen: string, lesson: string, family: string, goal: import('@/utils/endgame').Goal, result: import('@/utils/endgame').Result, textbook: boolean, mode: 'learn'|'review', explain: boolean, budgetMoves: number|null, holdMoves: number|null, opponent: {elo: number|null, perfect: boolean}, index: number, count?: number|null, lives?: number|null, clockSeconds?: number|null, deadline?: string|null, tier?: number|null}} EndgameItem
- * @typedef {{moves: string[], pass?: true, engine?: {right: boolean, mistakeAt: number|null}}} EndgameReport
+ * @typedef {{fen: string, lesson: string, family: string, goal: import('@/utils/endgame').Goal, result: import('@/utils/endgame').Result, textbook: boolean, mode: 'learn'|'review', explain: boolean, budgetMoves: number|null, holdMoves: number|null, opponent: {elo: number|null, perfect: boolean}, index: number, count?: number|null, lives?: number|null, clockSeconds?: number|null, deadline?: string|null, tier?: number|null, net?: 'shown'|'offered'|null}} EndgameItem
+ *   `net`: the squares denied to the enemy king, shown from the start or offered (docs/ENDGAMES.md, § 8)
+ * @typedef {{moves: string[], pass?: true, engine?: {right: boolean, mistakeAt: number|null}, net?: true}} EndgameReport
  * @typedef {'idle'|'player'|'opponent'|'over'} GamePhase
  * @typedef {'maiaUnavailable'|'tablebaseUnavailable'|null} GameNotice
  */

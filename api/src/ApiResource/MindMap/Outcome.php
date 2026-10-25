@@ -39,7 +39,7 @@ final class Outcome
     public string $step;
     /** exercise, mini_boss, hidden_boss or boss */
     public string $kind;
-    /** pending, passed or failed */
+    /** pending, passed, failed or assisted (passed with a help that makes it not count: the endgames' net) */
     public string $outcome;
     public int $itemCount = 0;
     public int $successCount = 0;

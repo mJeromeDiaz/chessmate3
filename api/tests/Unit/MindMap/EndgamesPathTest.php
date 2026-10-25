@@ -65,8 +65,11 @@ final class EndgamesPathTest extends TestCase
         $activity = $step->activity ?? self::fail('Playable.');
 
         self::assertSame([StepKind::Exercise, 10, 0, PathRules::EXERCISE_XP], [$step->kind, $step->passes, $step->crystals, $step->xp]);
-        self::assertSame(['mode' => 'learn', 'variants' => 4, 'lessons' => ['lucena'], 'count' => 5], $activity->configFor(0));
-        self::assertSame(['mode' => 'review', 'lessons' => ['lucena'], 'count' => 5], $activity->configFor(1));
+        // The net shown on the first two passes, offered from the third.
+        self::assertSame(['mode' => 'learn', 'variants' => 4, 'net' => 'shown', 'lessons' => ['lucena'], 'count' => 5], $activity->configFor(0));
+        self::assertSame(['mode' => 'review', 'net' => 'shown', 'lessons' => ['lucena'], 'count' => 5], $activity->configFor(1));
+        self::assertSame(['mode' => 'review', 'net' => 'offered', 'lessons' => ['lucena'], 'count' => 5], $activity->configFor(2));
+        self::assertSame($activity->configFor(2), $activity->configFor(9));
         self::assertSame([5, null], [$activity->count, $activity->lives]);
         self::assertTrue($activity->passes(5, 4), '80 %.');
         self::assertFalse($activity->passes(5, 3));

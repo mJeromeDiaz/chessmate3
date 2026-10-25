@@ -115,7 +115,9 @@
     "replay": "Rejouer",
     "nextPass": "Passage suivant",
     "back": "Retour au parcours",
-    "chests": "Coffres à ouvrir"
+    "chests": "Coffres à ouvrir",
+    "assisted": "Réussi avec le maillage",
+    "assistedText": "Ce passage ne compte pas pour la maîtrise : rejoue-le sans le maillage."
   },
   "refusals": {
     "locked": "Cette étape n’est pas encore ouverte.",

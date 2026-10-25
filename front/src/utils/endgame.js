@@ -16,6 +16,42 @@ import { t } from '@/i18n'
 
 const RANK = { win: 2, draw: 1, loss: 0 }
 
+/** The board's files, for {@link netSquares}. */
+const FILES = 'abcdefgh'
+
+/**
+ * The net (docs/ENDGAMES.md, § 8): the squares `side`'s pieces (king and pawns included) deny to
+ * the other king. Computed with that king off the board, so that a square behind it on a checking
+ * line is denied too; the squares under `side`'s own pieces are left out (the pieces show there).
+ *
+ * @param {string} fen
+ * @param {'white'|'black'} side
+ * @returns {string[]} squares ("e4"), file by file
+ */
+export function netSquares(fen, side) {
+  const mine = side === 'white' ? 'w' : 'b'
+  const theirs = mine === 'w' ? 'b' : 'w'
+  /** @type {Chess} */
+  let game
+  try {
+    game = new Chess(fen, { skipValidation: true })
+  } catch {
+    return []
+  }
+  for (const square of game.findPiece({ type: 'k', color: theirs }))
+    game.remove(square)
+  /** @type {string[]} */
+  const squares = []
+  for (const file of FILES) {
+    for (let rank = 1; rank <= 8; rank++) {
+      const square = /** @type {import('chess.js').Square} */ (file + rank)
+      if (game.get(square)?.color === mine) continue
+      if (game.isAttacked(square, mine)) squares.push(square)
+    }
+  }
+  return squares
+}
+
 /**
  * Whether `result` is as good as `wanted` or better: a win keeps a draw to hold.
  *

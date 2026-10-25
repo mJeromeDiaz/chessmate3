@@ -62,9 +62,15 @@ use Symfony\Component\Uid\Uuid;
  * per position held by the server (a late submission is a timeout, a life lost), margins tighter
  * ({@see EndgameRules::ashesBudget()}), only short mates, a tier of distractions per position.
  *
+ * The net (the squares the player's pieces deny to the enemy king, drawn by the browser; § 8):
+ * outside the path, shown from the start in learn mode, offered (to switch on, free) in review
+ * mode. A path's run says it with `net` (`shown`, `offered`), none without; there, the net
+ * switched on where it was offered makes the run's pass not count (`netUsed` of the summary,
+ * {@see \App\MindMap\Progress\PassRecorder}).
+ *
  * @phpstan-import-type PoolPosition from PositionPool
  *
- * @phpstan-type Config array{mode: string, themes: list<string>, lessons: list<string>, elo: int|null, count: int|null, lives: int|null, variants: int, ashes: list<list<string>>|null}
+ * @phpstan-type Config array{mode: string, themes: list<string>, lessons: list<string>, elo: int|null, count: int|null, lives: int|null, variants: int, ashes: list<list<string>>|null, net: string|null}
  */
 final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleInterface, BudgetChoicesInterface, CountedModuleInterface
 {
@@ -72,8 +78,11 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
     public const ITEM_TYPE = 'endgame_position';
     public const SOURCE_TYPE = 'endgame_attempt';
     public const MODES = ['learn', 'review'];
+    /** The net: drawn from the start, or offered (the player switches it on). */
+    public const NET_SHOWN = 'shown';
+    public const NET_OFFERED = 'offered';
     /** The options of a path's run only. */
-    private const PATH_OPTIONS = ['count', 'lives', 'variants', 'ashes'];
+    private const PATH_OPTIONS = ['count', 'lives', 'variants', 'ashes', 'net'];
     /** A path's run: positions, lives and variants at most. */
     private const MAX_COUNT = 20;
     private const MAX_LIVES = 3;
@@ -167,6 +176,10 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
         } else {
             $verdict = $this->judge->judge($lesson, $attempt->getFen(), $submission->moves, $attempt->getBudgetMoves(), $attempt->getHoldMoves(), null === $attempt->getOpponentElo(), $submission->pass, $submission->engine);
             $attempt->resolve($verdict->status, $submission->moves, $verdict->mistakeAt, $verdict->bestMove, $verdict->playerMoves, $verdict->engineJudged, $now);
+            // Only where it was offered: shown from the start, it costs nothing; none, never drawn.
+            if ($submission->net && self::NET_OFFERED === self::netOf($run, $config)) {
+                $attempt->useNet();
+            }
             $this->entityManager->flush();
             $this->publish($run, $attempt, $lesson, $now);
         }
@@ -202,10 +215,12 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
     {
         $stats = array_fill_keys(array_map(static fn (AttemptStatus $status): string => $status->value, AttemptStatus::cases()), 0);
         $engineJudged = 0;
+        $netUsed = 0;
         $attempts = $this->attempts->findResolvedOfRun($run);
         foreach ($attempts as $attempt) {
             ++$stats[$attempt->getStatus()->value];
             $engineJudged += $attempt->isEngineJudged() ? 1 : 0;
+            $netUsed += $attempt->isNetUsed() ? 1 : 0;
         }
         unset($stats[AttemptStatus::Pending->value]);
 
@@ -213,7 +228,7 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
             durationMs: max(0, (int) round(((float) $closedAt->format('U.u') - (float) $run->getStartedAt()->format('U.u')) * 1000)),
             itemCount: \count($attempts),
             successCount: $stats[AttemptStatus::Won->value] + $stats[AttemptStatus::Held->value],
-            metrics: [...$stats, 'engineJudged' => $engineJudged],
+            metrics: [...$stats, 'engineJudged' => $engineJudged, 'netUsed' => $netUsed],
         );
     }
 
@@ -297,6 +312,8 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
             'textbook' => $attempt->isTextbook(),
             // Learn mode allows hints (a move that keeps the result, free).
             'mode' => $config['mode'],
+            // The net: shown from the start, offered, or null (none).
+            'net' => self::netOf($attempt->getRun(), $config),
             // Lizy explains the lesson before its first position, in learn mode (the textbook
             // one; it comes back in place of a variant when the pool has none, unexplained).
             'explain' => 'learn' === $config['mode'] && $attempt->isTextbook() && 0 === ($index - 1) % (1 + $config['variants']),
@@ -449,6 +466,7 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
                 'textbook' => $attempt->isTextbook(),
                 'playerMoves' => $attempt->getPlayerMoves(),
                 'engineJudged' => $attempt->isEngineJudged(),
+                'netUsed' => $attempt->isNetUsed(),
                 'trainingRunId' => $run->getId()->toRfc4122(),
             ],
         ));
@@ -471,6 +489,7 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
             'budgetMoves' => $attempt->getBudgetMoves(),
             'holdMoves' => $attempt->getHoldMoves(),
             'engineJudged' => $attempt->isEngineJudged(),
+            'netUsed' => $attempt->isNetUsed(),
             'durationMs' => $attempt->getDurationMs(),
         ];
     }
@@ -502,7 +521,7 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
     private static function check(array $config): array
     {
         if ([] !== array_diff(array_keys($config), ['mode', 'themes', 'lessons', 'elo', ...self::PATH_OPTIONS])) {
-            throw new InvalidRunConfigException('Unknown option: only mode, themes, lessons, elo, count, lives, variants and ashes are accepted.');
+            throw new InvalidRunConfigException('Unknown option: only mode, themes, lessons, elo, count, lives, variants, ashes and net are accepted.');
         }
         $mode = $config['mode'] ?? null;
         if (!\is_string($mode) || !\in_array($mode, self::MODES, true)) {
@@ -533,6 +552,10 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
         if (null !== $ashes && null === $count) {
             throw new InvalidRunConfigException('ashes needs count.');
         }
+        $net = $config['net'] ?? null;
+        if (null !== $net && !\in_array($net, [self::NET_SHOWN, self::NET_OFFERED], true)) {
+            throw new InvalidRunConfigException(\sprintf('net must be %s or %s.', self::NET_SHOWN, self::NET_OFFERED));
+        }
         $elo = $config['elo'] ?? null;
         if (null !== $elo && (!\is_int($elo) || $elo < EndgameRules::MIN_ELO || $elo > EndgameRules::MAX_ELO)) {
             throw new InvalidRunConfigException(\sprintf('elo must be %d to %d.', EndgameRules::MIN_ELO, EndgameRules::MAX_ELO));
@@ -548,6 +571,7 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
             'lives' => self::limit($config, 'lives', self::MAX_LIVES),
             'variants' => self::limit($config, 'variants', self::MAX_VARIANTS) ?? EndgameRules::LEARN_VARIANTS,
             'ashes' => null === $ashes ? null : array_map(static fn (mixed $group): array => \is_array($group) ? array_values(array_filter($group, \is_string(...))) : [], $ashes),
+            'net' => $net,
         ];
     }
 
@@ -582,10 +606,25 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
         if (null === $config['elo']) {
             throw new InvalidRunConfigException(\sprintf('elo must be %d to %d.', EndgameRules::MIN_ELO, EndgameRules::MAX_ELO));
         }
-        if (null !== $config['count'] || null !== $config['lives'] || EndgameRules::LEARN_VARIANTS !== $config['variants'] || null !== $config['ashes']) {
-            throw new InvalidRunConfigException('count, lives, variants and ashes are the endgames path\'s only.');
+        if (null !== $config['count'] || null !== $config['lives'] || EndgameRules::LEARN_VARIANTS !== $config['variants'] || null !== $config['ashes'] || null !== $config['net']) {
+            throw new InvalidRunConfigException('count, lives, variants, ashes and net are the endgames path\'s only.');
         }
 
         return $config;
+    }
+
+    /**
+     * The net of a run's positions: a path's says it (none without), a free run's follows its mode
+     * (shown in learn mode, offered in review mode).
+     *
+     * @param Config $config
+     */
+    private static function netOf(Run $run, array $config): ?string
+    {
+        if ($run->isPathStep()) {
+            return $config['net'];
+        }
+
+        return 'learn' === $config['mode'] ? self::NET_SHOWN : self::NET_OFFERED;
     }
 }

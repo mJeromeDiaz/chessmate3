@@ -162,7 +162,8 @@ comptée.
   la position de manuel quand la réserve n'a rien pour aucune leçon.
 
 **L'item** (`endgame_position`) : `fen` (le joueur a le trait), `lesson`, `family`, `goal`, `result`
-(`win` ou `draw` : ce que le joueur doit obtenir), `textbook`, `mode` (`learn` permet l'aide), `explain`, `budgetMoves` (gagner en
+(`win` ou `draw` : ce que le joueur doit obtenir), `textbook`, `mode` (`learn` permet l'aide), `net`
+(le maillage, § 8 : `shown`, `offered` ou `null`), `explain`, `budgetMoves` (gagner en
 autant de coups au plus) ou `holdMoves` (tenir autant de coups), `opponent` (`elo`, `perfect`),
 `servedAt`, `index`. Un rechargement rend la même position, à rejouer depuis le début.
 
@@ -172,7 +173,9 @@ DTM (6 et 7 pièces). Le DTM vient de la réserve, ou des réponses gardées pou
 manuel : jamais d'appel à Lichess pendant la transaction de la série.
 
 **La soumission** : `moves`, la partie entière (les deux camps, UCI, 240 demi-coups au plus),
-`pass` (« Passer » : abandon), et `engine` `{right, mistakeAt}` quand la tablebase n'a pas pu juger.
+`pass` (« Passer » : abandon), `engine` `{right, mistakeAt}` quand la tablebase n'a pas pu juger, et
+`net` (le maillage allumé pendant la position, § 8 : retenu sur l'essai, `net_used`, seulement là où
+il n'était que proposé ; `netUsed` du verdict et du récapitulatif).
 Le serveur rejoue la partie depuis la position servie :
 
 - chaque coup du joueur doit donner **au moins** le résultat de la leçon (réponses **gardées**
@@ -207,7 +210,7 @@ séance (la position, la partie et la correction), l'export du profil (`endgameA
   `TablebaseApiTest` (la route, 422, 503 et son en-tête, 401), `FillPoolTest` (variantes vérifiées
   une fois, budget d'appels, réponses refusées, tirage sans la position de manuel), `GameJudgeTest`
   (promotion, coup qui annule, coups épuisés, abandon, meilleure défense, verdict du moteur, nulle
-  tenue, parties refusées), `EndgameRunTest` (Apprendre puis variantes, XP, revue, réglages refusés,
+  tenue, parties refusées), `EndgameRunTest` (Apprendre puis variantes, XP, revue, réglages refusés, le maillage selon le mode,
   Réviser au niveau « Parfait »), `OverviewTest` (la route de la page libre, les résultats du seul
   joueur, l'Elo proposé, la route de la tablebase non capturée), avec `MockHttpClient` ou des réponses posées dans le cache
   (`KeptAnswersTrait`). Unitaires aussi : `EndgameRulesTest` (coups permis, durées, XP). Aucun test n'atteint Lichess.
@@ -227,7 +230,10 @@ séance (la position, la partie et la correction), l'export du profil (`endgameA
 
   `endgames.spec.js` (la page libre) : la course de pions de « square-promote » gagnée contre
   « Parfait » ; sur « kqk », Dd4+?? qui rate la position, puis la démonstration indisponible ; la
-  démonstration ▶ jouée jusqu'à a8=D. `endgame-path.spec.js` (le parcours) : les 7 mini-parcours
+  démonstration ▶ jouée jusqu'à a8=D ; le maillage affiché d'office en Apprendre (ses 4 cases
+  roses, éteint puis rallumé, rien d'envoyé), à allumer en Réviser (envoyé, `netUsed`), et
+  l'avertissement d'un passage du parcours (réponse de `next` retouchée ; le passage `assisted`
+  est couvert par PHPUnit, `EndgamePathTest`). `endgame-path.spec.js` (le parcours) : les 7 mini-parcours
   et le Roi des cendres ; l'étape conseillée : le boss des mats une fois leurs leçons connues (semées par
   `app:e2e:seed-user --mind-map-capacity=endgames --mind-map-steps=…`), la première leçon des pions
   une fois ce boss battu ; le détail d'une leçon et sa démonstration ; le Roi des cendres avec mouvement réduit :
@@ -272,6 +278,17 @@ de `front/src/utils/endgame.js` (le jumeau du `GameJudge` du serveur) :
   engine?}`, la soumission de la série ; le verdict du serveur fait foi.
 - **L'aide** (mode Apprendre seulement, validé 2026-10-23) : `askHint()` montre un coup qui garde
   le résultat (la tablebase, Stockfish sinon), gratuitement.
+- **Le maillage** (demandé et validé le 2026-10-24) : en rose, les cases que les pièces du joueur
+  (roi et pions compris) interdisent au roi adverse, sur tout l'échiquier, pour voir la cage se
+  refermer et apprendre ses schémas (`netSquares()` d'`utils/endgame.js`, marqueur `net` de
+  `ChessBoard`). Calculé sans le roi adverse sur l'échiquier : la case derrière lui sur une ligne
+  d'échec est rose aussi ; les cases sous les pièces du joueur ne le sont pas. Bouton « Maillage »
+  (`endgame-net`) ; l'item dit s'il est **affiché d'office** (`shown`) ou **à allumer**
+  (`offered`), jamais contre un boss (`null`). Hors du parcours : `shown` en mode Apprendre,
+  `offered` en Réviser, gratuit (une série libre qui envoie `net` est refusée, 422). Dans le
+  parcours : `shown` aux deux premiers passages d'une leçon, `offered` à partir du 3e ; l'allumer
+  alors fait que le passage **ne compte pas** (§ 10), ce qu'une ligne sous l'échiquier annonce
+  (`endgame-net-note`).
 
 ## 9. Les écrans
 
@@ -331,7 +348,10 @@ absent du cerveau. **Rien n'est jamais verrouillé** : ses chapitres sont libres
   l'aide permise : `variants` = 4), les suivants en mode Réviser (5 variantes, sans aide :
   `Activity::$repeatConfig`). L'adversaire : Maia à l'Elo proposé au joueur (`elo` absent : son
   classement puzzles arrondi, § 7). 1 passage : en cours ; 2 : **connue** ; 10 : **maîtrisée**
-  (+15 XP, comme un exercice de la carte mentale).
+  (+15 XP, comme un exercice de la carte mentale). Le maillage (§ 8) : affiché d'office aux
+  passages 1 et 2 (`net: shown`), à allumer à partir du 3e (`Activity::$laterConfig`, `net:
+  offered`) ; une série réussie avec le maillage allumé n'est pas comptée : verdict `assisted`
+  (« Réussi avec le maillage »), passages inchangés. Les boss n'en ont pas.
 - **Les mini-parcours** et leur boss (6 variantes de leurs leçons mêlées, défense parfaite, sans
   aide, 3 vies : la séance se ferme à la 3e position ratée) ; les cristaux ne viennent que des
   boss, une fois (un coffre à ouvrir, ligne « Finales · clé » du grand livre) :

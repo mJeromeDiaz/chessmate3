@@ -22,6 +22,8 @@ final readonly class Activity
      * @param array<string, mixed>      $config       the run's, as POST /training/runs takes it
      * @param array<string, mixed>|null $repeatConfig the run's once the step has a pass (the
      *                                                endgames' lessons: learn first, then review)
+     * @param array<string, mixed>|null $laterConfig  the run's once the step has two passes (the
+     *                                                endgames' lessons: the net no longer shown)
      */
     public function __construct(
         public Module $module,
@@ -31,6 +33,7 @@ final readonly class Activity
         public ?int $lives = null,
         public string $subject = self::SUBJECT_USER,
         public ?array $repeatConfig = null,
+        public ?array $laterConfig = null,
     ) {
     }
 
@@ -41,7 +44,11 @@ final readonly class Activity
      */
     public function configFor(int $passes): array
     {
-        return $passes > 0 && null !== $this->repeatConfig ? $this->repeatConfig : $this->config;
+        return match (true) {
+            $passes > 1 && null !== $this->laterConfig => $this->laterConfig,
+            $passes > 0 && null !== $this->repeatConfig => $this->repeatConfig,
+            default => $this->config,
+        };
     }
 
     /**

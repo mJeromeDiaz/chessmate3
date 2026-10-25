@@ -87,6 +87,10 @@ class Attempt
     #[ORM\Column]
     private bool $engineJudged = false;
 
+    /** The net (the squares denied to the enemy king) switched on by the player when it was only offered (docs/ENDGAMES.md, § 8). */
+    #[ORM\Column]
+    private bool $netUsed = false;
+
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $submittedAt = null;
 
@@ -214,6 +218,16 @@ class Attempt
     public function isEngineJudged(): bool
     {
         return $this->engineJudged;
+    }
+
+    public function useNet(): void
+    {
+        $this->netUsed = true;
+    }
+
+    public function isNetUsed(): bool
+    {
+        return $this->netUsed;
     }
 
     public function getSubmittedAt(): ?\DateTimeImmutable

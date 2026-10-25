@@ -14,7 +14,9 @@ use App\Training\Run\RunClosedListenerInterface;
 /**
  * Judges a run played for a mind map step when it closes (docs/MIND_MAP.md, § 4), in the closing
  * transaction: a pass counts (the last one completes the step and rewards it), a failure counts
- * nothing. A step already completed is practice: judged, never rewarded again.
+ * nothing, nor does a pass played with a help that makes it not count (the endgames' net switched
+ * on, `metrics.netUsed`: assisted). A step already completed is practice: judged, never rewarded
+ * again.
  */
 final readonly class PassRecorder implements RunClosedListenerInterface
 {
@@ -39,8 +41,9 @@ final readonly class PassRecorder implements RunClosedListenerInterface
         $metrics = $summary['metrics'] ?? [];
         $failures = \is_array($metrics) && \is_int($metrics['failures'] ?? null) ? $metrics['failures'] : null;
         $passed = null !== $activity && $activity->passes($itemCount, $successCount, $failures);
+        $assisted = $passed && \is_array($metrics) && \is_int($metrics['netUsed'] ?? null) && $metrics['netUsed'] > 0;
         $completed = false;
-        if ($passed && null !== $found) {
+        if ($passed && !$assisted && null !== $found) {
             $user = $run->getUser();
             $this->progress->lockPathOf($user);
             $rows = $this->progress->byStep($user, $attempt->getCapacity());
@@ -51,7 +54,7 @@ final readonly class PassRecorder implements RunClosedListenerInterface
                 $this->rewarder->completed($user, $attempt->getCapacity(), $step, $row, $rows, $run->getId()->toRfc4122(), $now);
             }
         }
-        $attempt->judge($passed, $itemCount, $successCount, $completed, $now, $failures);
+        $attempt->judge($passed, $itemCount, $successCount, $completed, $now, $failures, $assisted);
     }
 
     private static function int(mixed $value): int

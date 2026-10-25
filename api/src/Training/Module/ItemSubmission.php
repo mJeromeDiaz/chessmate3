@@ -45,6 +45,8 @@ final readonly class ItemSubmission
         public ?string $choice = null,
         public array $lines = [],
         public ?array $engine = null,
+        /** Endgames: the net switched on where it was only offered (docs/ENDGAMES.md, § 8). */
+        public bool $net = false,
     ) {
     }
 }

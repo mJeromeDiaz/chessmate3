@@ -115,7 +115,9 @@
     "replay": "Play again",
     "nextPass": "Next pass",
     "back": "Back to the path",
-    "chests": "Chests to open"
+    "chests": "Chests to open",
+    "assisted": "Passed with the net",
+    "assistedText": "This pass does not count towards mastery: play it again without the net."
   },
   "refusals": {
     "locked": "This step is not open yet.",

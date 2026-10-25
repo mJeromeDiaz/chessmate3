@@ -70,6 +70,12 @@
       <p v-if="key === 'defeat'" class="run-outcome__note">{{
         $t('mindMapPath.outcome.defeatText')
       }}</p>
+      <p
+        v-if="key === 'assisted'"
+        class="run-outcome__note"
+        data-testid="mind-outcome-assisted"
+        >{{ $t('mindMapPath.outcome.assistedText') }}</p
+      >
       <div v-if="startError" class="text-negative">{{ startError }}</div>
 
       <div class="run-outcome__actions">

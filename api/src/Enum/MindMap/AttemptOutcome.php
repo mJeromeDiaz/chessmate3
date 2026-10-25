@@ -14,4 +14,6 @@ enum AttemptOutcome: string
     case Pending = 'pending';
     case Passed = 'passed';
     case Failed = 'failed';
+    /** Passed with a help that makes it not count (the endgames' net, switched on where it was offered). */
+    case Assisted = 'assisted';
 }

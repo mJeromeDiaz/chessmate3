@@ -73,12 +73,19 @@ class Attempt
         $this->startedAt = $startedAt;
     }
 
-    public function judge(bool $passed, int $itemCount, int $successCount, bool $completed, \DateTimeImmutable $at, ?int $failures = null): void
+    /**
+     * @param bool $assisted passed with a help that makes it not count (then not $completed)
+     */
+    public function judge(bool $passed, int $itemCount, int $successCount, bool $completed, \DateTimeImmutable $at, ?int $failures = null, bool $assisted = false): void
     {
         if (AttemptOutcome::Pending !== $this->outcome) {
             throw new \LogicException('Attempt already judged.');
         }
-        $this->outcome = $passed ? AttemptOutcome::Passed : AttemptOutcome::Failed;
+        $this->outcome = match (true) {
+            !$passed => AttemptOutcome::Failed,
+            $assisted => AttemptOutcome::Assisted,
+            default => AttemptOutcome::Passed,
+        };
         $this->itemCount = min($itemCount, 65_535);
         $this->successCount = min($successCount, 65_535);
         $this->failures = null === $failures ? null : min(max(0, $failures), 65_535);

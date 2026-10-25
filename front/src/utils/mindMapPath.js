@@ -436,10 +436,12 @@ export function nodeOffset(node) {
  * What a run's verdict says (`mindMapPath.outcome.<key>`).
  *
  * @param {{kind: string, outcome: string, completed: boolean}} outcome
- * @returns {'pending'|'validated'|'pass'|'failed'|'victory'|'defeat'|'practice'}
+ * @returns {'pending'|'validated'|'pass'|'failed'|'victory'|'defeat'|'practice'|'assisted'}
+ *   `assisted`: passed with a help that makes it not count (the endgames' net, docs/ENDGAMES.md)
  */
 export function outcomeKey(outcome) {
   if (outcome.outcome === 'pending') return 'pending'
+  if (outcome.outcome === 'assisted') return 'assisted'
   const boss = isBoss(outcome.kind)
   if (outcome.outcome === 'failed') return boss ? 'defeat' : 'failed'
   if (!outcome.completed) return boss ? 'practice' : 'pass'

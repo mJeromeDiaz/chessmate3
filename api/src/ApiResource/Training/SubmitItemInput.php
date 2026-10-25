@@ -42,6 +42,9 @@ final class SubmitItemInput
     /** The puzzle streak: the puzzle skipped with a pass of the store, before any move (docs/PUZZLE_STREAK.md). */
     public bool $pass = false;
 
+    /** Endgames: the net switched on during the position, where it was only offered (docs/ENDGAMES.md, § 8). */
+    public bool $net = false;
+
     /** Think time measured by the client, ms: lowers the server's own measure, never raises it. */
     #[Assert\Range(min: 0, max: 3_600_000)]
     public ?int $thinkMs = null;

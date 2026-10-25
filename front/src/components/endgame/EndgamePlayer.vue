@@ -53,12 +53,25 @@
           :orientation="shownOrientation"
           :movable-color="movable"
           :arrows="arrows"
+          :highlights="netHighlights"
           @move="onMove"
         />
       </AshesDistractions>
     </template>
 
     <template v-if="!result" #controls>
+      <q-btn
+        v-if="data.net"
+        unelevated
+        no-caps
+        class="play-btn play-btn--hint endgame-player__net"
+        :class="{ 'endgame-player__net--on': netOn }"
+        icon="grid_on"
+        :label="$t('endgame.net.button')"
+        :aria-pressed="netOn"
+        data-testid="endgame-net"
+        @click="toggleNet"
+      />
       <q-btn
         v-if="data.mode === 'learn'"
         unelevated
@@ -96,6 +109,14 @@
         <div class="endgame-player__status" data-testid="endgame-status">{{
           statusText
         }}</div>
+        <div
+          v-if="netCosts"
+          class="text-caption endgame-player__net-note"
+          data-testid="endgame-net-note"
+          >{{
+            netUsed ? $t('endgame.net.notCounted') : $t('endgame.net.offered')
+          }}</div
+        >
         <q-linear-progress
           v-if="maiaLoading"
           rounded
@@ -189,7 +210,8 @@ import {
   gameFrom,
   goalText,
   lessonText,
-  lessonTitle
+  lessonTitle,
+  netSquares
 } from '@/utils/endgame'
 import {
   clockLabel,
@@ -217,7 +239,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits({
-  /** The game over: `{moves, pass?, engine?}`, the run's submission. */
+  /** The game over: `{moves, pass?, engine?, net?}`, the run's submission. */
   resolve: report => Array.isArray(report?.moves)
 })
 
@@ -227,7 +249,7 @@ const board = ref(null)
 const maia = useMaia()
 const game = useEndgameGame({
   maia,
-  onFinish: report => emit('resolve', report)
+  onFinish: report => emit('resolve', withNet(report))
 })
 const timeline = useFeedbackTimeline()
 
@@ -306,7 +328,7 @@ watch(
     const deadline = /** @type {string} */ (data.value.deadline)
     clearTimeout(sendTimer)
     sendTimer = setTimeout(
-      () => emit('resolve', report),
+      () => emit('resolve', withNet(report)),
       sendDelayMs(deadline, props.offsetMs, Date.now())
     )
   }
@@ -317,9 +339,48 @@ onBeforeUnmount(() => {
   clearTimeout(sendTimer)
 })
 
+/**
+ * The net (docs/ENDGAMES.md, § 8): the squares the player's pieces deny to the enemy king, in
+ * pink. Shown from the start (`shown`), or offered (`offered`): switched on, it goes with the
+ * submission, and in the path the pass does not count. None against a boss.
+ */
+const netOn = ref(false)
+/** Switched on where it was only offered, during this position. */
+const netUsed = ref(false)
+/** Offered in a path's run (a count of positions): switching it on costs the pass. */
+const netCosts = computed(
+  () => data.value.net === 'offered' && data.value.count != null
+)
+
+function toggleNet() {
+  netOn.value = !netOn.value
+  if (netOn.value && data.value.net === 'offered') netUsed.value = true
+}
+
+/**
+ * The submission, with the net when it was switched on where only offered.
+ *
+ * @param {Record<string, any>} report
+ */
+function withNet(report) {
+  return netUsed.value ? { ...report, net: true } : report
+}
+
+/** Drawn while the position is played (not on its correction). */
+const netHighlights = computed(() =>
+  netOn.value && !props.result && !game.mistake.value
+    ? netSquares(game.fen.value, orientation.value).map(square => ({
+        square,
+        type: 'net'
+      }))
+    : []
+)
+
 /** Starts the position: its game, Maia downloading meanwhile. */
 function start() {
   clearTimeout(sendTimer)
+  netOn.value = data.value.net === 'shown'
+  netUsed.value = false
   flipped.value = false
   decoy.value = null
   game.load(data.value)
@@ -552,6 +613,16 @@ const bubble = computed(() => {
   .play-chip.endgame-player__clock--urgent {
     animation: none;
   }
+}
+
+// Above PlayLayout's button rules (a class more): pink while the net is drawn.
+.play-btn.endgame-player__net--on {
+  background: #ff6fae;
+  color: #1b1530;
+}
+
+.endgame-player__net-note {
+  color: var(--cm-muted);
 }
 
 .endgame-player__notice {

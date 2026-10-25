@@ -16,7 +16,8 @@ use Symfony\Component\Uid\Uuid;
  * The endgames path (docs/ENDGAMES.md, § 10): nothing locked, a lesson's pass of 5 positions
  * (learn first, then review) at the Elo proposed to the player, ended by its count; a boss's
  * fight ended by its lives; the Roi des cendres' clock per position; the mastery badge; the
- * path's options refused outside it.
+ * path's options refused outside it; the net shown on a lesson's first two passes, offered after
+ * (switched on, the pass does not count), none against a boss.
  *
  * @phpstan-type EndgameItem array{id: string, type: string, data: array<string, mixed>}
  */
@@ -59,14 +60,14 @@ final class EndgamePathTest extends WoodpeckerWebTestCase
         $alice = $this->createUserIn('alice@example.com');
         $run = $this->startStep($alice, 'square-promote');
         self::assertSame('endgames', $run['module']);
-        self::assertEquals(['mode' => 'learn', 'variants' => 4, 'lessons' => ['square-promote'], 'count' => 5], $this->configOf($run['id']));
+        self::assertEquals(['mode' => 'learn', 'variants' => 4, 'net' => 'shown', 'lessons' => ['square-promote'], 'count' => 5], $this->configOf($run['id']));
 
         // No variant in the pool: the textbook position each time, explained the first time only.
         for ($i = 1; $i <= 5; ++$i) {
             $item = $this->item($alice, $run['id']);
             self::assertSame(
-                [self::START, 1 === $i, $i, 5, null, ['elo' => 1500, 'perfect' => false]],
-                [$item['data']['fen'], $item['data']['explain'], $item['data']['index'], $item['data']['count'], $item['data']['lives'], $item['data']['opponent']],
+                [self::START, 1 === $i, $i, 5, null, ['elo' => 1500, 'perfect' => false], 'shown'],
+                [$item['data']['fen'], $item['data']['explain'], $item['data']['index'], $item['data']['count'], $item['data']['lives'], $item['data']['opponent'], $item['data']['net']],
                 'Maia at the Elo proposed to a player without rating.',
             );
             $result = $this->submit($alice, $run['id'], ['itemId' => $item['id'], 'moves' => self::GAME]);
@@ -78,10 +79,55 @@ final class EndgamePathTest extends WoodpeckerWebTestCase
         $outcome = $this->json($this->api('GET', '/api/mind-map/runs/'.$run['id'], $alice));
         self::assertSame(['passed', 1, 10, false], [$outcome['outcome'] ?? null, $outcome['passes'] ?? null, $outcome['required'] ?? null, $outcome['completed'] ?? null]);
 
-        // Its next passes: review mode, without help.
+        // Its next passes: review mode, without help; the net still shown on the second.
         $again = $this->startStep($alice, 'square-promote');
-        self::assertEquals(['mode' => 'review', 'lessons' => ['square-promote'], 'count' => 5], $this->configOf($again['id']));
-        self::assertSame('review', $this->item($alice, $again['id'])['data']['mode']);
+        self::assertEquals(['mode' => 'review', 'net' => 'shown', 'lessons' => ['square-promote'], 'count' => 5], $this->configOf($again['id']));
+        self::assertSame(['review', 'shown'], [$this->item($alice, $again['id'])['data']['mode'], $this->item($alice, $again['id'])['data']['net']]);
+    }
+
+    public function testFromTheThirdPassTheNetSwitchedOnMakesThePassNotCount(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->passes($alice, 'square-promote', 2);
+        $run = $this->startStep($alice, 'square-promote');
+        self::assertEquals(['mode' => 'review', 'net' => 'offered', 'lessons' => ['square-promote'], 'count' => 5], $this->configOf($run['id']));
+
+        for ($i = 1; $i <= 5; ++$i) {
+            $item = $this->item($alice, $run['id']);
+            self::assertSame('offered', $item['data']['net']);
+            $result = $this->submit($alice, $run['id'], ['itemId' => $item['id'], 'moves' => self::GAME, 'net' => 2 === $i]);
+            self::assertSame(['won', 2 === $i], [$result['data']['status'], $result['data']['netUsed']]);
+        }
+
+        // 5 won out of 5, but with the net once: assisted, the passes unchanged.
+        $outcome = $this->json($this->api('GET', '/api/mind-map/runs/'.$run['id'], $alice));
+        self::assertSame(['assisted', 5, 5, 2, false], [$outcome['outcome'] ?? null, $outcome['itemCount'] ?? null, $outcome['successCount'] ?? null, $outcome['passes'] ?? null, $outcome['completed'] ?? null]);
+
+        // Without it, the pass counts.
+        $again = $this->startStep($alice, 'square-promote');
+        for ($i = 1; $i <= 5; ++$i) {
+            $item = $this->item($alice, $again['id']);
+            $this->submit($alice, $again['id'], ['itemId' => $item['id'], 'moves' => self::GAME]);
+        }
+        $outcome = $this->json($this->api('GET', '/api/mind-map/runs/'.$again['id'], $alice));
+        self::assertSame(['passed', 3], [$outcome['outcome'] ?? null, $outcome['passes'] ?? null]);
+    }
+
+    public function testTheNetShownOrAbsentIsNeverRecorded(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+
+        // Shown from the start: switching it on costs nothing.
+        $run = $this->startStep($alice, 'square-promote');
+        $item = $this->item($alice, $run['id']);
+        self::assertFalse($this->submit($alice, $run['id'], ['itemId' => $item['id'], 'moves' => self::GAME, 'net' => true])['data']['netUsed']);
+        $this->api('POST', '/api/training/runs/'.$run['id'].'/stop', $alice);
+
+        // A boss has none.
+        $boss = $this->startStep($alice, 'pawns-basics-boss');
+        $item = $this->item($alice, $boss['id']);
+        self::assertNull($item['data']['net']);
+        self::assertFalse($this->submit($alice, $boss['id'], ['itemId' => $item['id'], 'moves' => [], 'pass' => true, 'net' => true])['data']['netUsed']);
     }
 
     public function testABossIsLostAtItsThirdMissedPosition(): void
@@ -196,6 +242,7 @@ final class EndgamePathTest extends WoodpeckerWebTestCase
             ['mode' => 'learn', 'lessons' => ['square-promote'], 'elo' => 1500, 'lives' => 3],
             ['mode' => 'learn', 'lessons' => ['square-promote'], 'elo' => 1500, 'variants' => 4],
             ['mode' => 'review', 'ashes' => [['square-promote']], 'elo' => 1500],
+            ['mode' => 'review', 'lessons' => ['square-promote'], 'elo' => 1500, 'net' => 'offered'],
         ] as $config) {
             $response = $this->api('POST', '/api/training/runs', $alice, ['module' => 'endgames', 'subjectId' => $alice->getId()->toRfc4122(), 'budgetSeconds' => 300, 'config' => $config]);
             self::assertSame(422, $response->getStatusCode(), (string) json_encode($config));
@@ -301,6 +348,18 @@ final class EndgamePathTest extends WoodpeckerWebTestCase
     }
 
     /** A lesson set as mastered (its 10 passes). */
+    /**
+     * $passes passes of a lesson's step, not completed.
+     */
+    private function passes(User $user, string $step, int $passes): void
+    {
+        self::getContainer()->get(Connection::class)->executeStatement(
+            "INSERT INTO mind_map_progress (id, user_id, capacity, step, passes, completed_at, updated_at) VALUES (?, ?, 'endgames', ?, ?, NULL, NOW())",
+            [Uuid::v7()->toBinary(), $user->getId()->toBinary(), $step, $passes],
+            [ParameterType::BINARY, ParameterType::BINARY, ParameterType::STRING, ParameterType::INTEGER],
+        );
+    }
+
     private function mastered(User $user, string $step, string $at): void
     {
         self::getContainer()->get(Connection::class)->executeStatement(
