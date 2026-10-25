@@ -101,7 +101,7 @@ const MARKERS = {
   success: { class: 'cb-marker-success', slice: 'markerSquare' },
   selected: { class: 'cb-marker-selected', slice: 'markerSquare' },
   premove: { class: 'cb-marker-premove', slice: 'markerSquare' },
-  net: { class: 'cb-marker-net', slice: 'markerSquare' }
+  net: { class: 'cb-marker-net', slice: 'markerCircle' }
 }
 const ARROWS = {
   hint: { class: 'arrow-info' },
@@ -619,8 +619,9 @@ defineExpose({ setPosition, shake })
   opacity: 0.6;
 }
 .cm-chessboard .markers .marker.cb-marker-net {
-  fill: #ff6fae;
-  opacity: 0.42;
+  stroke: #e8436f;
+  stroke-width: 3px;
+  opacity: 0.25;
 }
 /* Extra arrow types, on the model of cm-chessboard's arrows.css. */
 .cm-chessboard .arrow-explorer .arrow-head {

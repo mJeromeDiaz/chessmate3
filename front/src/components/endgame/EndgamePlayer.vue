@@ -64,9 +64,8 @@
         v-if="data.net"
         unelevated
         no-caps
-        class="play-btn play-btn--hint endgame-player__net"
+        class="play-btn endgame-player__net"
         :class="{ 'endgame-player__net--on': netOn }"
-        icon="grid_on"
         :label="$t('endgame.net.button')"
         :aria-pressed="netOn"
         data-testid="endgame-net"
@@ -87,8 +86,7 @@
         unelevated
         no-caps
         class="play-btn play-btn--hint"
-        icon="slideshow"
-        :label="$t('endgame.demo.button')"
+        :label="$t('endgame.demo.short')"
         :disable="game.phase.value === 'over'"
         data-testid="endgame-demo-open"
         @click="openDemo(true)"
@@ -615,10 +613,15 @@ const bubble = computed(() => {
   }
 }
 
-// Above PlayLayout's button rules (a class more): pink while the net is drawn.
+// Above PlayLayout's button rules (a class more): a pale pink, a little deeper and outlined while
+// the net is drawn.
+.play-btn.endgame-player__net {
+  background: #fff0f6;
+}
+
 .play-btn.endgame-player__net--on {
-  background: #ff6fae;
-  color: #1b1530;
+  background: #ffdcea;
+  box-shadow: inset 0 0 0 2px #f7a8c8;
 }
 
 .endgame-player__net-note {

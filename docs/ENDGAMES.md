@@ -231,7 +231,7 @@ séance (la position, la partie et la correction), l'export du profil (`endgameA
   `endgames.spec.js` (la page libre) : la course de pions de « square-promote » gagnée contre
   « Parfait » ; sur « kqk », Dd4+?? qui rate la position, puis la démonstration indisponible ; la
   démonstration ▶ jouée jusqu'à a8=D ; le maillage affiché d'office en Apprendre (ses 4 cases
-  roses, éteint puis rallumé, rien d'envoyé), à allumer en Réviser (envoyé, `netUsed`), et
+  cerclées, éteint puis rallumé, rien d'envoyé), à allumer en Réviser (envoyé, `netUsed`), et
   l'avertissement d'un passage du parcours (réponse de `next` retouchée ; le passage `assisted`
   est couvert par PHPUnit, `EndgamePathTest`). `endgame-path.spec.js` (le parcours) : les 7 mini-parcours
   et le Roi des cendres ; l'étape conseillée : le boss des mats une fois leurs leçons connues (semées par
@@ -278,11 +278,12 @@ de `front/src/utils/endgame.js` (le jumeau du `GameJudge` du serveur) :
   engine?}`, la soumission de la série ; le verdict du serveur fait foi.
 - **L'aide** (mode Apprendre seulement, validé 2026-10-23) : `askHint()` montre un coup qui garde
   le résultat (la tablebase, Stockfish sinon), gratuitement.
-- **Le maillage** (demandé et validé le 2026-10-24) : en rose, les cases que les pièces du joueur
+- **Le maillage** (demandé et validé le 2026-10-24) : un cercle rose-rouge (comme le rond de
+  l'indice, à la place des cases teintées en rose depuis le 2026-10-25) sur les cases que les pièces du joueur
   (roi et pions compris) interdisent au roi adverse, sur tout l'échiquier, pour voir la cage se
   refermer et apprendre ses schémas (`netSquares()` d'`utils/endgame.js`, marqueur `net` de
   `ChessBoard`). Calculé sans le roi adverse sur l'échiquier : la case derrière lui sur une ligne
-  d'échec est rose aussi ; les cases sous les pièces du joueur ne le sont pas. Bouton « Maillage »
+  d'échec est cerclée aussi ; les cases sous les pièces du joueur ne le sont pas. Bouton « Maillage »
   (`endgame-net`) ; l'item dit s'il est **affiché d'office** (`shown`) ou **à allumer**
   (`offered`), jamais contre un boss (`null`). Hors du parcours : `shown` en mode Apprendre,
   `offered` en Réviser, gratuit (une série libre qui envoie `net` est refusée, 422). Dans le

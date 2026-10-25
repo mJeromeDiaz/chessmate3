@@ -286,6 +286,7 @@
   },
   "demo": {
     "button": "Démonstration",
+    "short": "Démo",
     "watch": "Voir la démonstration",
     "of": "Démonstration : {lesson}",
     "kicker": "Démonstration",
@@ -308,7 +309,7 @@
   },
   "net": {
     "button": "Maillage",
-    "offered": "Le maillage montre en rose les cases interdites au roi adverse. L’allumer ici : ce passage ne comptera pas pour la maîtrise.",
+    "offered": "Le maillage entoure en rose les cases interdites au roi adverse. L’allumer ici : ce passage ne comptera pas pour la maîtrise.",
     "notCounted": "Maillage utilisé : ce passage ne comptera pas pour la maîtrise."
   }
 }
