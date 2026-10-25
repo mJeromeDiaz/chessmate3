@@ -2,6 +2,11 @@
 
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
+> **Remplacés par les défis** ([DEFIS.md](DEFIS.md)) le 2026-10-25 : plus aucun parcours ne se
+> lance (`POST /parcours` et `GET /parcours` retirés, la page `/parcours` redirige vers `/defis`).
+> Ce document décrit les séances de parcours déjà jouées (historique, export, recalcul de l'XP), et
+> celle commencée avant, qui se joue jusqu'au bout ; leur module de puzzles sert aussi les défis.
+
 Un **parcours**, c'est un entraînement **à la quantité** plutôt qu'au chrono : un thème, un effort,
 et cinq **paliers** enchaînés sans pause, chacun d'un nombre fixe d'exercices. Pas de chrono à
 l'écran : le palier se termine à son dernier exercice. Prof : **Lizy**.

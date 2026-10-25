@@ -59,7 +59,7 @@ S2 rappel, S3 front, S4 documentation.
 - **Plafond** : 500 XP d'exercices par jour local (fuseau de l'utilisateur). Un exercice gagne ce qui
   reste du plafond de son jour (deux événements traités au même instant peuvent le dépasser
   légèrement : accepté).
-- **Bonus** (hors plafond) : session menée au bout (`SessionClosed` `completed`) +50 (un parcours : +25 / +50 / +100 selon son effort, aucun s'il a un palier passé, `XpRules::sessionBonus()`, [PARCOURS.md](PARCOURS.md)) ; cycle
+- **Bonus** (hors plafond) : session menée au bout (`SessionClosed` `completed`) +50 (un parcours : +25 / +50 / +100 selon son effort, aucun s'il a un palier passé, `XpRules::sessionBonus()`, [PARCOURS.md](PARCOURS.md) ; les défis qui les remplacent n'ont pas de bonus d'arrivée, [DEFIS.md](DEFIS.md)) ; cycle
   Woodpecker terminé dans les temps (`CycleCompleted`) +100 ; set Woodpecker terminé
   (`SetCompleted`) +300 ; première validation de chaque orientation des coordonnées
   (`SeriesValidated`, kind `validation`, une fois pour les Blancs, une fois pour les Noirs) +100, rattachée à

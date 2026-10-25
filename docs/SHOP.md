@@ -122,7 +122,7 @@ Règles validées (2026-10-14, maquette « Coffre ») :
   session, non plus (le puzzle rush et la reconstitution aussi : pas de cristaux propres, [PUZZLE_RUSH.md](PUZZLE_RUSH.md), [BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)).
 - **Minutes payées** : chaque séance de la session paie sa durée réelle, mais **au plus une minute
   par exercice terminé** (`RewardCalculator::SECONDS_PER_EXERCISE`) : un chrono laissé tourner ne
-  rapporte rien. Un parcours ([PARCOURS.md](PARCOURS.md)) paie toujours une minute par exercice. Le **temps libre** ne compte ni dans les minutes ni dans le palier.
+  rapporte rien. Un parcours ([PARCOURS.md](PARCOURS.md)) paie toujours une minute par exercice ; les défis qui les remplacent ([DEFIS.md](DEFIS.md)) n'ont pas de coffre de séance, leurs cristaux viennent de leurs boss. Le **temps libre** ne compte ni dans les minutes ni dans le palier.
 - **Palier** de toute la session (exercices réussis / terminés, seuils de l'écran de résultat) :
   parfait (100 %) ×1,5, presque (80 à 99 %) ×1, en dessous ×0,5.
 - Cristaux = secondes payées × cristaux par heure × coefficient, arrondi au plus proche ; par

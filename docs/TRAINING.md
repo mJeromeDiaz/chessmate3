@@ -27,7 +27,7 @@ journal : [ACTIVITY.md](ACTIVITY.md).
 | Module Coordonnées | `App\Coordinates\Training\CoordinatesModule` (durées permises : `Training\Module\BudgetChoicesInterface`) |
 | Module Aveugle | `App\Blindfold\Training\PuzzleModule` (puzzles à l'aveugle) |
 | Module Streak | `App\PuzzleStreak\Training\StreakModule` (prolongation : `Training\Module\OvertimeModuleInterface`) |
-| Module Parcours | `App\Parcours\Training\PuzzleTierModule` (paliers d'un parcours seulement, finis par leur nombre : `Training\Module\CountedModuleInterface`, [PARCOURS.md](PARCOURS.md)) |
+| Module Parcours | `App\Parcours\Training\PuzzleTierModule` (paliers d'un parcours ou étapes des défis, finis par leur nombre : `Training\Module\CountedModuleInterface`, [PARCOURS.md](PARCOURS.md), [DEFIS.md](DEFIS.md)) |
 | Module Évaluation | `App\Evaluation\Training\EvaluationModule` (durées permises : `Training\Module\BudgetChoicesInterface`) |
 | Module Puzzle Rush | `App\PuzzleRush\Training\RushModule` (2, 3 ou 5 min : `Training\Module\BudgetChoicesInterface`, [PUZZLE_RUSH.md](PUZZLE_RUSH.md)) |
 | Module Reconstitution | `App\Blindfold\Training\RecallModule` (séance libre d'une heure ou chronométrée, [BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)) |
@@ -351,7 +351,7 @@ Réglages d'une étape, vérifiés par le module au lancement **et** au démarra
 | `puzzle_streak` | `{ramp, topic}` ; la séance est en mode `timed` ([PUZZLE_STREAK.md](PUZZLE_STREAK.md)) | l'utilisateur |
 | `puzzle_rush` | `{themes?: string[]}` ; 2, 3 ou 5 minutes ([PUZZLE_RUSH.md](PUZZLE_RUSH.md)) | l'utilisateur |
 | `blindfold_recall` | `{level}` : un niveau ouvert (1 à 20) ou `"mine"`, le plus haut ouvert au démarrage de l'étape ; la séance est en mode `timed` ([BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)) | l'utilisateur |
-| `parcours_puzzles` | `{tier, themes, count}` ou `{tier, family, color, count}` ; seulement dans un parcours (`training_session.parcours`, [PARCOURS.md](PARCOURS.md)), refusé ailleurs | l'utilisateur |
+| `parcours_puzzles` | `{tier, themes, count}` ou `{tier, family, color, count}` ; un boss des défis : `{rounds, count, lives}` ou `{family, color, count, lives}` ; seulement dans un parcours (`training_session.parcours`, [PARCOURS.md](PARCOURS.md)) ou pour une étape des défis ([DEFIS.md](DEFIS.md)), refusé ailleurs | l'utilisateur |
 
 ### Déroulé (`SessionManager`)
 

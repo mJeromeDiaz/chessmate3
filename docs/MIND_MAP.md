@@ -54,9 +54,10 @@ Choix validés (2026-10-20) :
 
 | Couche | Emplacement |
 |---|---|
-| Catalogue | `App\MindMap\Path\{Paths, Visualisation, Chapter, Section, Step, Activity, PathRules}` |
+| Catalogue | `App\MindMap\Path\{Paths, Visualisation, Calculation, Endgames, Challenges, Chapter, Section, Step, Activity, PathRules}` (une `Activity` préparée passe par le `prepare()` de son module au lancement ; un `Chapter` hors maîtrise ne compte pas pour le badge de maîtrise et porte `meta` ; une `Step` à clé de récompense ne paie ses cristaux qu'une fois par clé, `mind_map_chest.reward_key` : les défis, [DEFIS.md](DEFIS.md)) |
 | État (pur) | `App\MindMap\Path\PathState` (statuts, coffres dus, sections franchies) |
 | Progression | `App\MindMap\Progress\{StepLauncher, PassRecorder, Rewarder, PathReader, ChestOpener, Progresses}` |
+| Chapitres d'un joueur | `App\MindMap\Progress\PathCatalog` : les chapitres fixes (`Paths`), puis, sur le parcours des défis, ceux d'ouverture du joueur (`App\Challenge\Path\OpeningChapters`, [DEFIS.md](DEFIS.md)) ; `StepLauncher`, `PassRecorder`, `PathReader` et le verdict lisent les étapes par lui |
 | Point d'extension | `App\Training\Run\RunClosedListenerInterface` (Training le possède, `PassRecorder` l'implémente) |
 | Entités | `App\Entity\MindMap\{Progress, Attempt, Chest}` (tables `mind_map_progress`, `mind_map_attempt`, `mind_map_chest`, migration `Version20261028090000`), `BossItem` (`mind_map_boss_item`, § 8) |
 | Boss | `App\MindMap\Boss\{JongleurModule, JongleurRules, QuestionDrawer}` (module `jongleur`, § 8) |
