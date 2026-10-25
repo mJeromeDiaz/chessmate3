@@ -126,7 +126,7 @@ Celle des parcours de la carte mentale ([MIND_MAP.md](MIND_MAP.md), § 4), capac
   niveau »… ; un boss : « Au-dessus de ton niveau »), les vies d'un boss (`challenge-lives`), pas
   d'aide contre un boss ; une étape de lignes : « Ligne n sur N ». La fin : le verdict de l'étape
   (`RunOutcome`), « Rejouer », retour à `/defis`.
-- Entrées : lien « Défis » du menu (`nav-free-challenges`), carte de Lizy sur `/session`
+- Entrées : la carte « Les défis » du menu (`nav-challenges-defis`, depuis le 2026-10-25), carte de Lizy sur `/session`
   (`plans-challenges`) ; « Rejouer » une séance de parcours ouvre `/defis`. Le module garde l'id
   `parcours` dans le catalogue (`OWN_PAGE_MODULES`), titré « Défis » ; la landing en montre des
   exemples (`{chapter, step}`).

@@ -429,7 +429,7 @@ absent du cerveau. **Rien n'est jamais verrouillé** : ses chapitres sont libres
 
 ### La page du parcours (`/finales`)
 
-`front/src/pages/index/finales/index.vue` (lien « Finales » du menu), d'après la maquette « Parcours
+`front/src/pages/index/finales/index.vue` (bouton « Finales » de la carte « Les défis » du menu ; « Finales » de l’entraînement libre mène à `/finales/libre`), d'après la maquette « Parcours
 echiqueens », aux couleurs claires et sombres de l'app et au citron vert des finales ; la logique
 pure est dans `front/src/utils/endgamePath.js`.
 

@@ -18,18 +18,29 @@
     "label": "Navigation",
     "close": "Fermer le menu",
     "dashboard": "Tableau de bord",
+    "dashboardText": "Suis ta progression.",
     "mindMap": {
       "title": "Entraînement Ludique",
       "text": "Entraîne tes capacités cognitives sous forme de jeu."
     },
     "create": {
-      "title": "Créer un entraînement",
-      "text": "Conçois un entraînement sur mesure, ou laisse-nous le créer grâce à {n} modules."
+      "title": "Crée ta séance d’entraînement",
+      "text": "Conçois un entraînement sur mesure, ou laisse-nous le créer."
     },
     "free": {
       "title": "Entraînement libre",
       "text": "Choisis un module et joue-le tout de suite.",
-      "back": "Retour au menu"
+      "back": "Retour au menu",
+      "sections": {
+        "openings": "Les ouvertures",
+        "middlegame": "Milieu de jeu",
+        "endgame": "Fin de jeu",
+        "vision": "Vision et réflexion"
+      }
+    },
+    "challenges": {
+      "title": "Les défis",
+      "text": "Des mini-parcours à relever."
     },
     "shop": {
       "title": "Boutique",
@@ -76,7 +87,7 @@
     "kickers": {
       "dashboard": "Tableau de bord",
       "free": "Entraînement libre",
-      "create": "Créer un entraînement",
+      "create": "Crée ta séance d’entraînement",
       "account": "Ton compte",
       "shop": "Tes cristaux",
       "admin": "Administration",

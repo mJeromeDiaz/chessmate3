@@ -1,27 +1,48 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CHALLENGE_LINKS,
   DASHBOARD_LINK,
   FREE_TRAINING_LINKS,
+  FREE_TRAINING_SECTIONS,
   isNavActive
 } from '@/utils/layout/navigation'
 
 const link = id => FREE_TRAINING_LINKS.find(l => l.id === id)
 
-describe('FREE_TRAINING_LINKS', () => {
-  it('lists the modules played on their own', () => {
-    expect(FREE_TRAINING_LINKS.map(l => l.label)).toEqual([
-      'Puzzles',
-      'Puzzle Rush',
-      'Puzzle streak',
-      'Woodpecker',
-      'Répertoires',
-      'Coordonnées',
-      'Notation',
-      'Jeu à l’aveugle',
-      'Reconstitution',
-      'Évaluation',
-      'Finales',
-      'Défis'
+describe('FREE_TRAINING_SECTIONS', () => {
+  it('lists the modules played on their own, by phase of the game', () => {
+    expect(
+      FREE_TRAINING_SECTIONS.map(({ label, links }) => [
+        label,
+        links.map(l => l.label)
+      ])
+    ).toEqual([
+      ['Les ouvertures', ['Répertoires']],
+      [
+        'Milieu de jeu',
+        ['Woodpecker', 'Puzzles', 'Puzzle Rush', 'Puzzle streak']
+      ],
+      ['Fin de jeu', ['Finales']],
+      [
+        'Vision et réflexion',
+        [
+          'Coordonnées',
+          'Notation',
+          'Jeu à l’aveugle',
+          'Reconstitution',
+          'Évaluation'
+        ]
+      ]
+    ])
+    expect(FREE_TRAINING_LINKS).toHaveLength(11)
+  })
+
+  it('sends the endgames to their free mode, the défis to the card', () => {
+    expect(link('endgames').to).toBe('/finales/libre')
+    expect(link('challenges')).toBeUndefined()
+    expect(CHALLENGE_LINKS.map(l => [l.label, l.to])).toEqual([
+      ['Finales', '/finales'],
+      ['Défis', '/defis']
     ])
   })
 })
@@ -39,6 +60,13 @@ describe('isNavActive', () => {
 
   it('never marks a link that opens a dialog', () => {
     expect(isNavActive(link('rush'), '/puzzle')).toBe(false)
+  })
+
+  it('keeps an exact link to its own page', () => {
+    const [path] = CHALLENGE_LINKS
+    expect(isNavActive(path, '/finales')).toBe(true)
+    expect(isNavActive(path, '/finales/libre')).toBe(false)
+    expect(isNavActive(link('endgames'), '/finales')).toBe(false)
   })
 
   it('keeps the dashboard for itself and the statistics', () => {

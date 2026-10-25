@@ -60,7 +60,12 @@ test('wide screen: the menu, its free training panel and the account', async ({
   await expect(page.getByTestId('nav-dashboard')).toHaveClass(
     /app-menu__item--on/
   )
-  await expect(page.getByTestId('nav-create')).toContainText(/\d+ modules/)
+  await expect(page.getByTestId('nav-dashboard')).toContainText(
+    'Suis ta progression.'
+  )
+  await expect(page.getByTestId('nav-create')).toContainText(
+    'Crée ta séance d’entraînement'
+  )
   await page.getByTestId('nav-mind-map').click()
   await expect(page).toHaveURL(/#\/cerveau$/)
   await expect(menu).not.toBeInViewport()
@@ -74,6 +79,11 @@ test('wide screen: the menu, its free training panel and the account', async ({
   await page.getByTestId('nav-burger').click()
   await page.getByTestId('nav-free').click()
   await expect(page.getByTestId('nav-free-woodpecker')).toBeVisible()
+  await expect(page.getByTestId('nav-free-section-middlegame')).toHaveText(
+    'Milieu de jeu'
+  )
+  await expect(page.getByTestId('nav-free-endgames')).toBeVisible()
+  await expect(page.getByTestId('nav-free-challenges')).toHaveCount(0)
   await page.getByTestId('nav-free-back').click()
   await expect(page.getByTestId('nav-mind-map')).toBeVisible()
   await page.getByTestId('nav-free').click()
@@ -92,6 +102,18 @@ test('wide screen: the menu, its free training panel and the account', async ({
   await expect(page.getByTestId('rush-dialog')).toBeVisible()
   await expect(page).toHaveURL(/#\/puzzle$/)
   await page.keyboard.press('Escape')
+
+  // The défis card: the endgames' path and Lizy's défis.
+  await page.getByTestId('nav-burger').click()
+  await page.getByTestId('nav-challenges-defis').click()
+  await expect(page).toHaveURL(/#\/defis$/)
+  await page.getByTestId('nav-burger').click()
+  await expect(page.getByTestId('nav-challenges-defis')).toHaveAttribute(
+    'aria-current',
+    'page'
+  )
+  await page.getByTestId('nav-challenges-endgames').click()
+  await expect(page).toHaveURL(/#\/finales$/)
 
   await page.getByTestId('nav-burger').click()
   await expect(page.getByTestId('nav-shop')).toBeVisible()

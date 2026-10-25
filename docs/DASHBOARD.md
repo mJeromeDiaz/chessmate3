@@ -145,12 +145,16 @@ barre Connexion / Inscription / thème ; la landing et les écrans d'authentific
   le dashboard et les pages de premier niveau, sauf parent nommé par la page (`/stats` → `/`) ;
   `parent: false` la retire (séance en cours, visite). Les pages n'ont plus leur propre bouton
   retour.
-- **Menu** (`components/layout/AppMenu.vue`, tiroir à droite `nav-menu`) : Tableau de bord,
-  Entraînement Ludique (`/cerveau`), Créer un entraînement (`/session`, le nombre de modules
-  disponibles du catalogue dans le texte), Entraînement libre (second panneau : les modules de
-  `FREE_TRAINING_LINKS`, `utils/layout/navigation.js` ; Puzzle Rush ouvre son lancement sur
-  `/puzzle?rush=1`), la Boutique en carte avec le solde, puis Profil, Admin (admins) et
-  Déconnexion. Le thème et la visite guidée ne sont plus que dans le profil ; le classement puzzles
+- **Menu** (`components/layout/AppMenu.vue`, tiroir à droite `nav-menu`, revu le 2026-10-25) :
+  Tableau de bord (« Suis ta progression. »), Entraînement Ludique (`/cerveau`), Crée ta séance
+  d'entraînement (`/session`), Entraînement libre (second panneau : les modules de
+  `FREE_TRAINING_SECTIONS`, `utils/layout/navigation.js`, par phase de jeu — Les ouvertures :
+  Répertoires ; Milieu de jeu : Woodpecker, Puzzles, Puzzle Rush, Puzzle streak ; Fin de jeu :
+  Finales, le mode libre `/finales/libre` ; Vision et réflexion : Coordonnées, Notation, Jeu à
+  l'aveugle, Reconstitution, Évaluation ; Puzzle Rush ouvre son lancement sur `/puzzle?rush=1`),
+  la carte « Les défis » (`CHALLENGE_LINKS` : le parcours des finales `/finales` et les défis
+  `/defis`), la Boutique en carte avec le solde, la roue des cadeaux, puis Profil, Admin (admins)
+  et Déconnexion. Le thème et la visite guidée ne sont plus que dans le profil ; le classement puzzles
   n'est plus dans l'en-tête (courbe du dashboard, pages puzzles).
 - Tests : Vitest `pageHeader.test.js`, `navigation.test.js` ; Playwright `navigation.spec.js`.
 

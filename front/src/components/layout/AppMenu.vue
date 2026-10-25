@@ -48,6 +48,9 @@
                 <q-item-label class="app-menu__title">{{
                   DASHBOARD_LINK.label
                 }}</q-item-label>
+                <q-item-label caption class="app-menu__text">{{
+                  $t('layout.menu.dashboardText')
+                }}</q-item-label>
               </q-item-section>
             </q-item>
 
@@ -90,7 +93,7 @@
                   $t('layout.menu.create.title')
                 }}</q-item-label>
                 <q-item-label caption class="app-menu__text">{{
-                  $t('layout.menu.create.text', { n: MODULE_COUNT })
+                  $t('layout.menu.create.text')
                 }}</q-item-label>
               </q-item-section>
             </q-item>
@@ -121,6 +124,38 @@
               </q-item-section>
             </q-item>
           </q-list>
+
+          <div class="app-menu__challenges" data-testid="nav-challenges">
+            <div class="app-menu__challenges-head">
+              <span class="app-menu__tile"><q-icon name="emoji_events" /></span>
+              <span class="app-menu__shop-body">
+                <span class="app-menu__title">{{
+                  $t('layout.menu.challenges.title')
+                }}</span>
+                <span class="app-menu__text text-caption">{{
+                  $t('layout.menu.challenges.text')
+                }}</span>
+              </span>
+            </div>
+            <div class="app-menu__challenges-links">
+              <router-link
+                v-for="item in CHALLENGE_LINKS"
+                :key="item.id"
+                :to="item.to"
+                class="app-menu__challenge"
+                :class="{
+                  'app-menu__challenge--on': isNavActive(item, route.path)
+                }"
+                :aria-current="
+                  isNavActive(item, route.path) ? 'page' : undefined
+                "
+                :data-testid="`nav-challenges-${item.id}`"
+              >
+                <q-icon :name="item.icon" size="18px" />
+                {{ item.label }}
+              </router-link>
+            </div>
+          </div>
 
           <router-link
             to="/boutique"
@@ -232,9 +267,19 @@
               {{ $t('layout.menu.free.title') }}
             </div>
           </div>
-          <q-list class="app-menu__list">
+          <q-list
+            v-for="group in FREE_TRAINING_SECTIONS"
+            :key="group.id"
+            class="app-menu__list"
+          >
+            <q-item-label
+              header
+              class="app-menu__section"
+              :data-testid="`nav-free-section-${group.id}`"
+              >{{ group.label }}</q-item-label
+            >
             <q-item
-              v-for="item in FREE_TRAINING_LINKS"
+              v-for="item in group.links"
               :key="item.id"
               clickable
               :to="{ path: item.to, query: item.query }"
@@ -268,23 +313,21 @@ import { useLogout } from '@/composables/layout/useLogout'
 import { useAuthStore } from '@/stores/auth'
 import { useShopStore } from '@/stores/shop'
 import {
+  CHALLENGE_LINKS,
   DASHBOARD_LINK,
   FREE_TRAINING_LINKS,
+  FREE_TRAINING_SECTIONS,
   isNavActive
 } from '@/utils/layout/navigation'
 import { profileName } from '@/utils/profile'
-import { MODULES } from '@/utils/session/catalog'
 import { crowns } from '@/utils/shop'
 
 /**
  * The navigation menu, opened by the header's menu button on every screen: the dashboard, the
- * mind map, the session builder, the free training modules (a second panel), the shop, then the
- * account. Closes itself once a page is chosen.
+ * mind map, the session builder, the free training modules (a second panel, by phase of the game),
+ * the défis card (the endgames' path and Lizy's défis), the shop, then the account. Closes itself once a page is chosen.
  */
 const open = defineModel({ type: Boolean, default: false })
-
-/** The modules a session can be built from. */
-const MODULE_COUNT = MODULES.filter(module => module.available).length
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -408,6 +451,54 @@ watch(
   line-height: 1.35;
 }
 
+.app-menu__section {
+  padding: 12px 8px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cm-muted);
+}
+
+.app-menu__challenges {
+  padding: 10px 8px;
+}
+
+// Laid out like the list's items: the tile, then the title and its caption.
+.app-menu__challenges-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+// Under the text, aligned with it (the tile's 40px and the gap).
+.app-menu__challenges-links {
+  display: flex;
+  gap: 8px;
+  padding-left: 56px;
+}
+
+.app-menu__challenge {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--cm-subtle);
+  color: var(--cm-ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &--on {
+    background: var(--cm-brand-soft);
+    color: var(--cm-brand-deep);
+  }
+}
+
 .app-menu__shop {
   display: flex;
   align-items: center;
@@ -461,12 +552,11 @@ watch(
   padding: 14px;
   border: 0;
   border-radius: 18px;
-  background: #c6f432;
-  color: #1b1530;
+  background: var(--cm-lime-soft);
+  color: var(--cm-ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 4px 0 rgba(27, 21, 48, 0.25);
 }
 
 .app-menu__wheel-count {

@@ -22,8 +22,8 @@
       "text": "Train your cognitive skills as a game."
     },
     "create": {
-      "title": "Create a training",
-      "text": "Design a tailor-made training, or let us create it with {n} modules."
+      "title": "Create your training session",
+      "text": "Design a tailor-made training, or let us create it."
     },
     "free": {
       "title": "Free training",
@@ -70,7 +70,7 @@
     "kickers": {
       "dashboard": "Dashboard",
       "free": "Free training",
-      "create": "Create a training",
+      "create": "Create your training session",
       "account": "Your account",
       "shop": "Your crystals",
       "admin": "Administration",
