@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\MindMap\Outcome;
 use App\MindMap\Path\Paths;
+use App\MindMap\Progress\PathCatalog;
 use App\MindMap\Progress\PathReader;
 use App\Repository\MindMap\AttemptRepository;
 use App\Repository\MindMap\ChestRepository;
@@ -34,6 +35,7 @@ final class OutcomeProvider implements ProviderInterface
         private readonly ChestRepository $chests,
         private readonly PathReader $reader,
         private readonly TimeboxRunner $runner,
+        private readonly PathCatalog $catalog,
     ) {
     }
 
@@ -43,7 +45,8 @@ final class OutcomeProvider implements ProviderInterface
         $user = $this->authenticatedUser->get();
         $this->runner->closeExpired($user);
         $attempt = $this->attempts->findOwnedByRun($runId, $user);
-        $found = null === $attempt ? null : Paths::find($attempt->getCapacity(), $attempt->getStep());
+        // A step of a repertoire since removed (the défis' openings) still has its verdict.
+        $found = null === $attempt ? null : $this->catalog->find($user, $attempt->getCapacity(), $attempt->getStep()) ?? Paths::find($attempt->getCapacity(), $attempt->getStep());
         if (null === $attempt || null === $found) {
             throw new NotFoundHttpException('Run not found.');
         }

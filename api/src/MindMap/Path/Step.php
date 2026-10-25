@@ -14,7 +14,9 @@ use App\Enum\MindMap\StepKind;
 final readonly class Step
 {
     /**
-     * @param list<string> $badges earned with the step
+     * @param list<string> $badges    earned with the step
+     * @param string|null  $rewardKey its crystals are paid once per key on the path, whatever the
+     *                                step (the défis' opening bosses: an opening and a side)
      */
     public function __construct(
         public string $key,
@@ -26,6 +28,7 @@ final readonly class Step
         public ?Activity $activity = null,
         public ?string $character = null,
         public array $badges = [],
+        public ?string $rewardKey = null,
     ) {
     }
 

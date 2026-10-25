@@ -14,10 +14,13 @@ use Symfony\Component\Uid\Uuid;
 /**
  * The crystals of a step (docs/MIND_MAP.md, § 6): credited once, when the step completes (a chest
  * on the way, a boss beaten); opening the chest only reveals them (shown once, as the sessions').
+ * A step whose crystals are paid once per reward key (the défis' opening bosses: once per opening
+ * and side, whatever the repertoire, docs/DEFIS.md) keeps it: a second chest of the key is refused.
  */
 #[ORM\Entity(repositoryClass: ChestRepository::class)]
 #[ORM\Table(name: 'mind_map_chest')]
 #[ORM\UniqueConstraint(name: 'uniq_mind_map_chest_user_step', columns: ['user_id', 'capacity', 'step'])]
+#[ORM\UniqueConstraint(name: 'uniq_mind_map_chest_user_reward', columns: ['user_id', 'capacity', 'reward_key'])]
 #[ORM\Index(name: 'idx_mind_map_chest_user_opened', columns: ['user_id', 'opened_at'])]
 class Chest
 {
@@ -32,11 +35,14 @@ class Chest
     #[ORM\Column(length: 16, enumType: Capacity::class)]
     private Capacity $capacity;
 
-    #[ORM\Column(length: 24, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    #[ORM\Column(length: 40, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private string $step;
 
     #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
     private int $crystals;
+
+    #[ORM\Column(length: 80, nullable: true, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    private ?string $rewardKey;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -44,7 +50,7 @@ class Chest
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $openedAt = null;
 
-    public function __construct(User $user, Capacity $capacity, string $step, int $crystals, \DateTimeImmutable $createdAt)
+    public function __construct(User $user, Capacity $capacity, string $step, int $crystals, \DateTimeImmutable $createdAt, ?string $rewardKey = null)
     {
         $this->id = Uuid::v7();
         $this->user = $user;
@@ -52,6 +58,7 @@ class Chest
         $this->step = $step;
         $this->crystals = $crystals;
         $this->createdAt = $createdAt;
+        $this->rewardKey = $rewardKey;
     }
 
     /** Marks it seen (idempotent). */
@@ -83,6 +90,11 @@ class Chest
     public function getCrystals(): int
     {
         return $this->crystals;
+    }
+
+    public function getRewardKey(): ?string
+    {
+        return $this->rewardKey;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

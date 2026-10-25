@@ -36,6 +36,15 @@ final class ParcoursRulesTest extends TestCase
         self::assertSame(0, ParcoursRules::target(100, 0, 3), 'never below 0');
     }
 
+    public function testABossClimbsFrom100To300AboveTheRating(): void
+    {
+        self::assertSame(
+            [1600, 1622, 1644, 1667, 1689, 1711, 1733, 1756, 1778, 1800],
+            array_map(static fn (int $p): int => ParcoursRules::bossTarget(1500, $p, 10), range(0, 9)),
+        );
+        self::assertSame(4000, ParcoursRules::bossTarget(3900, 9, 10), 'never above 4000');
+    }
+
     public function testRangesWidenToAnyRating(): void
     {
         self::assertSame([[1425, 1575], [1300, 1700], [1000, 2000], [0, 4000]], ParcoursRules::ranges(1500));

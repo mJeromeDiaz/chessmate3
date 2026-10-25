@@ -14,13 +14,14 @@ use App\MindMap\Event\StepCompleted;
 use App\MindMap\Path\Paths;
 use App\MindMap\Path\PathState;
 use App\MindMap\Path\Step;
+use App\Repository\MindMap\ChestRepository;
 use App\Shop\Wallet\Wallets;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * What a completed step earns (docs/MIND_MAP.md, § 6), inside the caller's transaction and under
  * the player's path lock: its crystals (a chest to open, credited now, outside the sessions' daily
- * cap: each is earned once), its XP bonus (an event, Gamification awards it), then the chests on
+ * cap: each is earned once, a step with a reward key once per key), its XP bonus (an event, Gamification awards it), then the chests on
  * the way this completion earned.
  */
 final readonly class Rewarder
@@ -29,6 +30,7 @@ final readonly class Rewarder
         private EntityManagerInterface $entityManager,
         private Wallets $wallets,
         private EventPublisher $events,
+        private ChestRepository $chests,
     ) {
     }
 
@@ -61,11 +63,13 @@ final readonly class Rewarder
     private function reward(User $user, Capacity $capacity, Step $step, Progress $row, ?string $runId, \DateTimeImmutable $now): ?Chest
     {
         $chest = null;
-        if ($step->crystals > 0) {
-            $chest = new Chest($user, $capacity, $step->key, $step->crystals, $now);
+        // Paid once per reward key: a step of the same key already paid pays nothing.
+        $crystals = null !== $step->rewardKey && \in_array($step->rewardKey, $this->chests->paidRewardKeys($user, $capacity), true) ? 0 : $step->crystals;
+        if ($crystals > 0) {
+            $chest = new Chest($user, $capacity, $step->key, $crystals, $now, $step->rewardKey);
             $this->entityManager->persist($chest);
             $balance = $this->wallets->lock($user->getId(), $now);
-            $this->wallets->move($user->getId(), $balance, $step->crystals, LedgerKind::Reward, ['reason' => mb_substr(self::reason($capacity, $step), 0, 255)], $now);
+            $this->wallets->move($user->getId(), $balance, $crystals, LedgerKind::Reward, ['reason' => mb_substr(self::reason($capacity, $step), 0, 255)], $now);
         }
         $this->entityManager->flush();
         $this->events->publish(new StepCompleted(
@@ -75,7 +79,7 @@ final readonly class Rewarder
             step: $step->key,
             kind: $step->kind->value,
             xp: $step->xp,
-            crystals: $step->crystals,
+            crystals: $crystals,
             runId: $runId ?? '',
             occurredAt: $now,
         ));
@@ -83,11 +87,13 @@ final readonly class Rewarder
         return $chest;
     }
 
-    /** The ledger's line: « Carte mentale · visualisation · 2-1-boss », « Finales · rooks-boss ». */
+    /** The ledger's line: « Carte mentale · visualisation · 2-1-boss », « Finales · rooks-boss », « Défis · mates-boss ». */
     private static function reason(Capacity $capacity, Step $step): string
     {
-        return Capacity::Endgames === $capacity
-            ? \sprintf('Finales · %s', $step->key)
-            : \sprintf('Carte mentale · %s · %s', $capacity->value, $step->key);
+        return match ($capacity) {
+            Capacity::Endgames => \sprintf('Finales · %s', $step->key),
+            Capacity::Challenges => \sprintf('Défis · %s', $step->key),
+            default => \sprintf('Carte mentale · %s · %s', $capacity->value, $step->key),
+        };
     }
 }

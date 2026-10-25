@@ -37,7 +37,7 @@ class Attempt
     #[ORM\Column(length: 16, enumType: Capacity::class)]
     private Capacity $capacity;
 
-    #[ORM\Column(length: 24, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    #[ORM\Column(length: 40, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private string $step;
 
     #[ORM\Column(length: 8, enumType: AttemptOutcome::class)]

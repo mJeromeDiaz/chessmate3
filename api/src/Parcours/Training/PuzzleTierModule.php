@@ -45,11 +45,18 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * A tier of puzzles of a parcours (docs/PARCOURS.md): `count` puzzles of the tier's `themes` (or of
- * an opening `family` with the player's `color`), the first third below the player's puzzle
- * `rating` (read when the tier starts), the middle at it, the last third above; the run closes
- * with its last puzzle. A miss shows the solution and the tier goes on; a hint or the solution is
- * a miss. Never rated. Only a step of a parcours (its session): its clock is only an expiry.
+ * A tier of puzzles of the défis (docs/DEFIS.md; a step of a former parcours, docs/PARCOURS.md):
+ * `count` puzzles of the tier's `themes` (or of an opening `family` with the player's `color`),
+ * the first third below the player's puzzle `rating` (read when the tier starts), the middle at
+ * it, the last third above; the run closes with its last puzzle. A miss shows the solution and the
+ * tier goes on; a hint or the solution is a miss. Never rated. Played for a step of the défis'
+ * path ({@see Run::isPathStep()}), or of a parcours (its session): its clock is only an expiry.
+ *
+ * A boss of the path has no `tier`: its puzzles climb from {@see ParcoursRules::BOSS_GAPS} above
+ * the rating, drawn from `rounds` (the themes of each puzzle, in order) or an opening `family`,
+ * and the run closes at its `lives`-th miss.
+ *
+ * @phpstan-type Config array{tier: int|null, themes: list<string>, rounds: list<list<string>>|null, family: string|null, color: string|null, count: int, rating: int, lives: int|null}
  */
 final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModuleInterface, CountedModuleInterface
 {
@@ -57,7 +64,10 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
     public const ITEM_TYPE = 'parcours_puzzle';
     public const SOURCE_TYPE = 'parcours_attempt';
 
-    private const SETTINGS = ['tier', 'themes', 'family', 'color', 'count'];
+    private const SETTINGS = ['tier', 'themes', 'rounds', 'family', 'color', 'count', 'lives'];
+    /** The options of a path's run only (its bosses). */
+    private const PATH_OPTIONS = ['rounds', 'lives'];
+    private const MAX_LIVES = 3;
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -86,8 +96,9 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
     }
 
     /**
-     * Settings of the parcours' step: `tier`, `themes` or `family` + `color`, `count`; the
-     * player's puzzle rating is read now, when the tier starts.
+     * Settings of the step: `tier`, `themes` or `family` + `color`, `count` (a boss: `rounds` or
+     * `family` + `color`, `count`, `lives`); the player's puzzle rating is read now, when the
+     * tier starts.
      */
     public function prepare(User $user, array $settings, string $notes): PreparedStep
     {
@@ -106,8 +117,11 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
         if (!$run->getSubjectId()->equals($run->getUser()->getId())) {
             throw new SubjectNotFoundException();
         }
-        if (null === $run->getParentId()) {
-            throw new InvalidRunConfigException('A parcours tier is played in its parcours.');
+        if (null === $run->getParentId() && !$run->isPathStep()) {
+            throw new InvalidRunConfigException('A tier is played for a step of the défis.');
+        }
+        if (!$run->isPathStep() && [] !== array_intersect(array_keys($run->getConfig()), self::PATH_OPTIONS)) {
+            throw new InvalidRunConfigException(\sprintf('%s are options of the défis\' path only.', implode(', ', self::PATH_OPTIONS)));
         }
         self::check($run->getConfig());
         // Served now: nothing to draw refuses the tier instead of opening an empty one.
@@ -158,7 +172,15 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
             ],
         ));
 
-        $done = $this->attempts->countResolvedOfRun($run) >= $config['count'];
+        $resolved = $this->attempts->findResolvedOfRun($run);
+        $failures = \count(array_filter($resolved, static fn (Attempt $one): bool => AttemptStatus::Failed === $one->getStatus()));
+        $livesOut = null !== $config['lives'] && $failures >= $config['lives'];
+        $done = \count($resolved) >= $config['count'];
+        $reason = match (true) {
+            $livesOut => 'lives_out',
+            $done => 'tier_done',
+            default => null,
+        };
 
         return new ItemResult(
             itemId: $attempt->getId()->toRfc4122(),
@@ -169,10 +191,12 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
                 'durationMs' => $attempt->getDurationMs(),
                 'position' => $attempt->getPosition(),
                 'count' => $config['count'],
-                'tierDone' => $done,
+                'tierDone' => $done || $livesOut,
+                'failures' => $failures,
+                'lives' => $config['lives'],
             ],
-            closes: $done ? CloseReason::SubjectFinished : null,
-            context: $done ? ['reason' => 'tier_done'] : [],
+            closes: null === $reason ? null : CloseReason::SubjectFinished,
+            context: null === $reason ? [] : ['reason' => $reason],
         );
     }
 
@@ -207,6 +231,8 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
             metrics: [
                 'tier' => $config['tier'] ?? null,
                 'themes' => $config['themes'] ?? [],
+                'rounds' => $config['rounds'] ?? null,
+                'lives' => $config['lives'] ?? null,
                 'family' => $config['family'] ?? null,
                 'count' => $config['count'] ?? null,
                 'rating' => $config['rating'] ?? null,
@@ -268,9 +294,12 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
     {
         $config = self::check($run->getConfig());
         $position = $this->attempts->countResolvedOfRun($run);
-        $target = ParcoursRules::target($config['rating'], $position, $config['count']);
+        $target = null === $config['tier']
+            ? ParcoursRules::bossTarget($config['rating'], $position, $config['count'])
+            : ParcoursRules::target($config['rating'], $position, $config['count']);
+        $themes = null === $config['rounds'] ? $config['themes'] : $config['rounds'][min($position, \count($config['rounds']) - 1)];
         try {
-            $puzzleId = $this->picker->pick($run, $config['themes'], $config['family'], $config['color'], $target);
+            $puzzleId = $this->picker->pick($run, $themes, $config['family'], $config['color'], $target);
         } catch (SelectionUnavailableException) {
             throw new SubjectUnavailableException(CloseReason::SubjectUnavailable, ['reason' => 'selection_unavailable'], 'The puzzle selection is being rebuilt.');
         }
@@ -288,13 +317,20 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
     {
         $config = self::check($attempt->getRun()->getConfig());
 
+        $position = $attempt->getPosition();
+
         return new Item($attempt->getId()->toRfc4122(), self::ITEM_TYPE, [
             'puzzle' => self::puzzle($this->catalog->get($attempt->getPuzzleId())),
             'tier' => $config['tier'],
-            'themes' => $config['themes'],
+            'themes' => null === $config['rounds'] ? $config['themes'] : $config['rounds'][min($position, \count($config['rounds']) - 1)],
             'family' => $config['family'],
-            'position' => $attempt->getPosition(),
+            'position' => $position,
             'count' => $config['count'],
+            'lives' => $config['lives'],
+            'failures' => null === $config['lives'] ? 0 : \count(array_filter(
+                $this->attempts->findResolvedOfRun($attempt->getRun()),
+                static fn (Attempt $one): bool => AttemptStatus::Failed === $one->getStatus(),
+            )),
             'targetRating' => $attempt->getTargetRating(),
             'startedAt' => $attempt->getStartedAt()->format(\DATE_ATOM),
         ]);
@@ -321,7 +357,7 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
     /**
      * @param array<string, mixed> $config
      *
-     * @return array{tier: int, themes: list<string>, family: string|null, color: string|null, count: int, rating: int}
+     * @return Config
      *
      * @throws InvalidRunConfigException
      */
@@ -330,40 +366,71 @@ final class PuzzleTierModule implements TimeboxedModuleInterface, ReviewableModu
         if ([] !== array_diff(array_keys($config), [...self::SETTINGS, 'rating'])) {
             throw new InvalidRunConfigException('Unknown option.');
         }
+        // A boss has no tier.
         $tier = $config['tier'] ?? null;
-        if (!\is_int($tier) || $tier < 0 || $tier >= ParcoursRules::TIERS) {
+        if (null !== $tier && (!\is_int($tier) || $tier < 0 || $tier >= ParcoursRules::TIERS)) {
             throw new InvalidRunConfigException(\sprintf('tier is 0 to %d.', ParcoursRules::TIERS - 1));
         }
         $count = $config['count'] ?? null;
-        if (!\in_array($count, array_map(static fn (Effort $effort): int => $effort->perTier(), Effort::cases()), true)) {
+        if (!\is_int($count) || !\in_array($count, array_map(static fn (Effort $effort): int => $effort->perTier(), Effort::cases()), true)) {
             throw new InvalidRunConfigException('count is 3, 6 or 10.');
         }
         $rating = $config['rating'] ?? null;
         if (!\is_int($rating) || $rating < 0 || $rating > 4000) {
             throw new InvalidRunConfigException('rating is 0 to 4000.');
         }
+        $lives = $config['lives'] ?? null;
+        if (null !== $lives && (!\is_int($lives) || $lives < 1 || $lives > self::MAX_LIVES)) {
+            throw new InvalidRunConfigException(\sprintf('lives is 1 to %d.', self::MAX_LIVES));
+        }
         $family = $config['family'] ?? null;
         $color = $config['color'] ?? null;
         $themes = $config['themes'] ?? [];
+        $rounds = $config['rounds'] ?? null;
         if (null !== $family) {
-            if (!\is_string($family) || 1 !== preg_match('/^[A-Za-z0-9_-]{1,64}$/', $family) || !\in_array($color, ['w', 'b'], true) || [] !== $themes) {
+            if (!\is_string($family) || 1 !== preg_match('/^[A-Za-z0-9_-]{1,64}$/', $family) || !\in_array($color, ['w', 'b'], true) || [] !== $themes || null !== $rounds) {
                 throw new InvalidRunConfigException('An opening tier has a family, a color (w or b) and no themes.');
             }
 
-            return ['tier' => $tier, 'themes' => [], 'family' => $family, 'color' => $color, 'count' => $count, 'rating' => $rating];
+            return ['tier' => $tier, 'themes' => [], 'rounds' => null, 'family' => $family, 'color' => $color, 'count' => $count, 'rating' => $rating, 'lives' => $lives];
         }
-        if (null !== $color || !\is_array($themes) || [] === $themes || !array_is_list($themes)) {
-            throw new InvalidRunConfigException('A tier has themes of the parcours, or an opening family.');
+        if (null !== $color) {
+            throw new InvalidRunConfigException('A tier has themes of the défis, or an opening family.');
+        }
+        if (null === $tier) {
+            // A boss of themes: one list of themes per puzzle.
+            if (!\is_array($rounds) || !array_is_list($rounds) || \count($rounds) !== $count || [] !== $themes) {
+                throw new InvalidRunConfigException('A boss has rounds, the themes of each of its puzzles, or an opening family.');
+            }
+
+            return ['tier' => null, 'themes' => [], 'rounds' => array_map(self::themes(...), $rounds), 'family' => null, 'color' => null, 'count' => $count, 'rating' => $rating, 'lives' => $lives];
+        }
+        if (null !== $rounds) {
+            throw new InvalidRunConfigException('Only a boss has rounds.');
+        }
+
+        return ['tier' => $tier, 'themes' => self::themes($themes), 'rounds' => null, 'family' => null, 'color' => null, 'count' => $count, 'rating' => $rating, 'lives' => $lives];
+    }
+
+    /**
+     * @return list<string>
+     *
+     * @throws InvalidRunConfigException
+     */
+    private static function themes(mixed $themes): array
+    {
+        if (!\is_array($themes) || [] === $themes || !array_is_list($themes)) {
+            throw new InvalidRunConfigException('A tier has themes of the défis, or an opening family.');
         }
         $keys = [];
         foreach ($themes as $key) {
             if (!\is_string($key) || !\in_array($key, self::themeKeys(), true)) {
-                throw new InvalidRunConfigException('A tier has themes of the parcours, or an opening family.');
+                throw new InvalidRunConfigException('A tier has themes of the défis, or an opening family.');
             }
             $keys[] = $key;
         }
 
-        return ['tier' => $tier, 'themes' => $keys, 'family' => null, 'color' => null, 'count' => $count, 'rating' => $rating];
+        return $keys;
     }
 
     /**

@@ -6,7 +6,6 @@ namespace App\MindMap\Progress;
 
 use App\Entity\Training\Run;
 use App\Enum\MindMap\AttemptOutcome;
-use App\MindMap\Path\Paths;
 use App\Repository\MindMap\AttemptRepository;
 use App\Repository\MindMap\ProgressRepository;
 use App\Training\Run\RunClosedListenerInterface;
@@ -24,6 +23,7 @@ final readonly class PassRecorder implements RunClosedListenerInterface
         private AttemptRepository $attempts,
         private ProgressRepository $progress,
         private Rewarder $rewarder,
+        private PathCatalog $catalog,
     ) {
     }
 
@@ -33,7 +33,7 @@ final readonly class PassRecorder implements RunClosedListenerInterface
         if (null === $attempt || AttemptOutcome::Pending !== $attempt->getOutcome()) {
             return;
         }
-        $found = Paths::find($attempt->getCapacity(), $attempt->getStep());
+        $found = $this->catalog->find($run->getUser(), $attempt->getCapacity(), $attempt->getStep());
         $summary = $run->getSummary() ?? [];
         $itemCount = self::int($summary['itemCount'] ?? 0);
         $successCount = self::int($summary['successCount'] ?? 0);

@@ -18,6 +18,9 @@ final class ParcoursRules
     /** Below, at and above the player's puzzle rating. */
     public const RATING_GAP = 200;
 
+    /** A boss of the défis' path: its first puzzle that far above the player's rating, its last that far. */
+    public const BOSS_GAPS = [100, 300];
+
     /** Half-widths of the range around a target, tried in turn; then any rating. */
     public const WIDENINGS = [75, 200, 500];
 
@@ -78,6 +81,19 @@ final class ParcoursRules
         };
 
         return max(self::ANY_RATING[0], $rating + $offset);
+    }
+
+    /**
+     * The rating aimed at for the puzzle at $position (0-based) of a boss of the défis' path
+     * (docs/DEFIS.md): from {@see self::BOSS_GAPS}[0] above the player's rating for the first to
+     * [1] for the last, evenly.
+     */
+    public static function bossTarget(int $rating, int $position, int $count): int
+    {
+        [$from, $to] = self::BOSS_GAPS;
+        $offset = $count > 1 ? $from + (int) round(($to - $from) * min($position, $count - 1) / ($count - 1)) : $from;
+
+        return min(self::ANY_RATING[1], $rating + $offset);
     }
 
     /**

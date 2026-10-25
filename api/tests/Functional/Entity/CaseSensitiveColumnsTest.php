@@ -89,6 +89,7 @@ final class CaseSensitiveColumnsTest extends KernelTestCase
             ['mind_map_progress', 'step'],
             ['mind_map_attempt', 'step'],
             ['mind_map_chest', 'step'],
+            ['mind_map_chest', 'reward_key'],
             ['training_run', 'path_step'],
             ['vision_question', 'fen'],
             ['vision_question', 'target'],

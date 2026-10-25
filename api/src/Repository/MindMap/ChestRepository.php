@@ -40,4 +40,21 @@ class ChestRepository extends ServiceEntityRepository
 
         return $chests;
     }
+
+    /**
+     * The reward keys already paid on the path ({@see Chest::getRewardKey()}).
+     *
+     * @return list<string>
+     */
+    public function paidRewardKeys(User $user, Capacity $capacity): array
+    {
+        $keys = [];
+        foreach ($this->byStep($user, $capacity) as $chest) {
+            if (null !== $chest->getRewardKey()) {
+                $keys[] = $chest->getRewardKey();
+            }
+        }
+
+        return $keys;
+    }
 }

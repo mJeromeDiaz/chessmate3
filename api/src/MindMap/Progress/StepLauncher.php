@@ -12,9 +12,10 @@ use App\Enum\MindMap\Capacity;
 use App\Enum\MindMap\StepKind;
 use App\Enum\MindMap\StepStatus;
 use App\MindMap\Path\Activity;
-use App\MindMap\Path\Paths;
+use App\MindMap\Path\Chapter;
 use App\MindMap\Path\PathState;
 use App\Repository\MindMap\ProgressRepository;
+use App\Training\Module\ModuleRegistry;
 use App\Training\Run\TimeboxRunner;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -32,6 +33,8 @@ final readonly class StepLauncher
         private ProgressRepository $progress,
         private TimeboxRunner $runner,
         private ClockInterface $clock,
+        private PathCatalog $catalog,
+        private ModuleRegistry $modules,
     ) {
     }
 
@@ -45,10 +48,10 @@ final readonly class StepLauncher
      */
     public function start(User $user, Capacity $capacity, string $key): Run
     {
-        $found = Paths::find($capacity, $key) ?? throw new StepNotFoundException();
+        $found = $this->catalog->find($user, $capacity, $key) ?? throw new StepNotFoundException();
         $step = $found['step'];
         $rows = $this->progress->byStep($user, $capacity);
-        $status = PathState::statuses(Paths::chapters($capacity), Progresses::state($rows))[$key] ?? StepStatus::Locked;
+        $status = PathState::statuses($this->chaptersOf($user, $capacity, $found['chapter']), Progresses::state($rows))[$key] ?? StepStatus::Locked;
         $activity = $step->activity;
         // Locked first: a step not reachable yet says so, whether its module exists or not.
         if (!\in_array($status, [StepStatus::Open, StepStatus::Soon, StepStatus::Done, StepStatus::Skipped], true)) {
@@ -59,6 +62,9 @@ final readonly class StepLauncher
         }
 
         $config = $activity->configFor(($rows[$key] ?? null)?->getPasses() ?? 0);
+        if ($activity->prepared) {
+            $config = $this->modules->for($activity->module)->prepare($user, $config, '')->config;
+        }
 
         return $this->entityManager->getConnection()->transactional(function () use ($user, $capacity, $key, $activity, $config): Run {
             $run = $this->runner->start($user, $activity->module, $this->subjectOf($user, $activity), $activity->budgetSeconds, $config, null, \sprintf('%s:%s', $capacity->value, $key));
@@ -77,15 +83,16 @@ final readonly class StepLauncher
      */
     public function skip(User $user, Capacity $capacity, string $key): void
     {
-        $step = (Paths::find($capacity, $key) ?? throw new StepNotFoundException())['step'];
-        if (StepKind::Exercise !== $step->kind) {
+        $found = $this->catalog->find($user, $capacity, $key) ?? throw new StepNotFoundException();
+        if (StepKind::Exercise !== $found['step']->kind) {
             throw new StepRefusedException(StepRefusedException::NOT_SKIPPABLE);
         }
-        $refusal = $this->entityManager->getConnection()->transactional(function () use ($user, $capacity, $key): ?string {
+        $chapters = $this->chaptersOf($user, $capacity, $found['chapter']);
+        $refusal = $this->entityManager->getConnection()->transactional(function () use ($user, $capacity, $key, $chapters): ?string {
             $now = $this->clock->now();
             $this->progress->lockPathOf($user);
             $rows = $this->progress->byStep($user, $capacity);
-            $status = PathState::statuses(Paths::chapters($capacity), Progresses::state($rows))[$key] ?? StepStatus::Locked;
+            $status = PathState::statuses($chapters, Progresses::state($rows))[$key] ?? StepStatus::Locked;
             if (StepStatus::Skipped === $status) {
                 return null;
             }
@@ -105,6 +112,17 @@ final readonly class StepLauncher
         if (null !== $refusal) {
             throw new StepRefusedException($refusal);
         }
+    }
+
+    /**
+     * The chapters a step's status is read from: its own when free (whatever came before, it
+     * locks nothing), the whole path otherwise.
+     *
+     * @return list<Chapter>
+     */
+    private function chaptersOf(User $user, Capacity $capacity, Chapter $chapter): array
+    {
+        return $chapter->free ? [$chapter] : $this->catalog->chapters($user, $capacity);
     }
 
     private function subjectOf(User $user, Activity $activity): Uuid

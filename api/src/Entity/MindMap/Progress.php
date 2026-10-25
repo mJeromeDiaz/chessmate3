@@ -33,7 +33,7 @@ class Progress
     private Capacity $capacity;
 
     /** The step's key in its path ({@see \App\MindMap\Path\Step::$key}). */
-    #[ORM\Column(length: 24, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
+    #[ORM\Column(length: 40, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
     private string $step;
 
     /** Passes counted, up to the step's. */

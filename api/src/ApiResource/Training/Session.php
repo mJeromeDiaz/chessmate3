@@ -10,11 +10,9 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
-use App\ApiResource\Parcours\LaunchInput;
 use App\ApiResource\Woodpecker\Set;
 use App\Entity\Training\Run as RunEntity;
 use App\Entity\Training\Session as SessionEntity;
-use App\State\Parcours\LaunchProcessor;
 use App\State\Training\CreateSessionProcessor;
 use App\State\Training\SessionActionProcessor;
 use App\State\Training\SessionProvider;
@@ -79,14 +77,6 @@ use App\State\Training\SessionProvider;
             processor: SessionActionProcessor::class,
             name: 'training_session_abandon',
         ),
-        new Post(
-            uriTemplate: '/parcours',
-            status: 201,
-            openapi: new Operation(summary: 'Launches a parcours (docs/PARCOURS.md): a session of its five tiers, the first one started by /next.'),
-            input: LaunchInput::class,
-            processor: LaunchProcessor::class,
-            name: 'parcours_launch',
-        ),
     ],
 )]
 final class Session
@@ -119,7 +109,8 @@ final class Session
      */
     public ?array $reward = null;
     /**
-     * A parcours (docs/PARCOURS.md): `{theme, effort, repertoireId}`; null for any other session.
+     * A parcours (docs/PARCOURS.md; launched before the défis replaced them, docs/DEFIS.md):
+     * `{theme, effort, repertoireId}`; null for any other session.
      *
      * @var array{theme: string, effort: string, repertoireId: string|null}|null
      */

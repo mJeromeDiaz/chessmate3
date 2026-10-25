@@ -6,19 +6,24 @@ namespace App\Tests\Functional\Parcours;
 
 use App\Entity\Catalog\Puzzle;
 use App\Entity\User;
-use App\Gamification\Xp\XpRules;
+use App\Enum\Parcours\Effort;
+use App\Enum\Parcours\Theme;
+use App\Enum\Training\Module;
+use App\Parcours\ParcoursRules;
 use App\Puzzle\Selection\SelectionRebuilder;
 use App\Tests\Functional\Woodpecker\WoodpeckerWebTestCase;
+use App\Training\Session\SessionManager;
 use Doctrine\DBAL\Connection;
 use PChess\Chess\Chess;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * Parcours (docs/PARCOURS.md): a session of five tiers ended by their counts (the effort's), the
- * puzzles below, at and above the player's rating, never rated; a miss goes on; the effort's XP
- * bonus (none with a tier skipped) and a chest paid a minute per exercise; its tiers only in a
- * parcours.
+ * Parcours (docs/PARCOURS.md), launched before the défis replaced them (docs/DEFIS.md) and still
+ * played to their end: a session of five tiers ended by their counts (the effort's), the puzzles
+ * below, at and above the player's rating, never rated; a miss goes on; the effort's XP bonus
+ * (none with a tier skipped, also on a rebuild) and a chest paid a minute per exercise; its tiers
+ * only in a parcours or on the défis' path.
  *
  * @phpstan-import-type RunJson from WoodpeckerWebTestCase
  *
@@ -44,7 +49,7 @@ final class ParcoursTest extends WoodpeckerWebTestCase
         $session = $this->launch($alice, ['theme' => 'mates', 'effort' => 'light']);
         self::assertSame(['theme' => 'mates', 'effort' => 'light', 'repertoireId' => null], $session['parcours']);
         self::assertSame(array_fill(0, 5, 'parcours_puzzles'), array_column($session['steps'], 'module'));
-        self::assertSame(409, $this->api('POST', '/api/parcours', $alice, ['theme' => 'tactics', 'effort' => 'light'])->getStatusCode(), 'one session at a time');
+        self::assertSame(404, $this->api('POST', '/api/parcours', $alice, ['theme' => 'tactics', 'effort' => 'light'])->getStatusCode(), 'no parcours launched any more');
 
         for ($tier = 0; $tier < 5; ++$tier) {
             $run = $this->nextTier($alice, $session['id']);
@@ -125,27 +130,6 @@ final class ParcoursTest extends WoodpeckerWebTestCase
         self::assertSame(422, $alone->getStatusCode(), (string) $alone->getContent());
     }
 
-    public function testTheChoicesAndWhatIsRefused(): void
-    {
-        $alice = $this->createUserIn('alice@example.com');
-
-        $response = $this->api('GET', '/api/parcours', $alice);
-        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
-        $overview = $this->json($response);
-        self::assertSame(['mates', 'opening', 'endgames', 'tactics'], array_column(self::list($overview['themes'] ?? null), 'theme'));
-        self::assertSame([[3, 15, 25], [6, 30, 50], [10, 50, 100]], array_map(
-            static fn (array $e): array => [$e['perTier'] ?? null, $e['total'] ?? null, $e['bonusXp'] ?? null],
-            self::list($overview['efforts'] ?? null),
-        ));
-        self::assertSame([1500, 200, []], [$overview['rating'] ?? null, $overview['ratingGap'] ?? null, $overview['repertoires'] ?? null]);
-
-        self::assertSame(422, $this->api('POST', '/api/parcours', $alice, ['theme' => 'nope', 'effort' => 'light'])->getStatusCode());
-        self::assertSame(422, $this->api('POST', '/api/parcours', $alice, ['theme' => 'mates', 'effort' => 'huge'])->getStatusCode());
-        self::assertSame(404, $this->api('POST', '/api/parcours', $alice, ['theme' => 'opening', 'effort' => 'light'])->getStatusCode(), 'an opening needs a repertoire');
-        $this->client->request('GET', '/api/parcours');
-        self::assertSame(401, $this->client->getResponse()->getStatusCode());
-    }
-
     /**
      * @param array<string, mixed> $body
      *
@@ -153,11 +137,18 @@ final class ParcoursTest extends WoodpeckerWebTestCase
      */
     private function launch(User $user, array $body): array
     {
-        $response = $this->api('POST', '/api/parcours', $user, $body);
-        self::assertSame(201, $response->getStatusCode(), (string) $response->getContent());
+        self::assertIsString($body['theme']);
+        self::assertIsString($body['effort']);
+        $theme = Theme::from($body['theme']);
+        $effort = Effort::from($body['effort']);
+        // As the parcours were launched (the former ParcoursLauncher).
+        $steps = [];
+        for ($tier = 0; $tier < ParcoursRules::TIERS; ++$tier) {
+            $steps[] = ['module' => Module::ParcoursPuzzles, 'minutes' => 60, 'notes' => '', 'settings' => ['tier' => $tier, 'themes' => ParcoursRules::tier($theme, $tier)['themes'], 'count' => $effort->perTier()]];
+        }
+        $session = self::getContainer()->get(SessionManager::class)->create($user, 'Parcours', '', $steps, null, ['theme' => $theme->value, 'effort' => $effort->value, 'repertoireId' => null]);
 
-        /** @var SessionJson */
-        return $this->json($response);
+        return $this->getSession($user, $session->getId()->toRfc4122());
     }
 
     /**
@@ -268,17 +259,6 @@ final class ParcoursTest extends WoodpeckerWebTestCase
         }
 
         self::fail('No wrong move available.');
-    }
-
-    /**
-     * @return list<array<string, mixed>>
-     */
-    private static function list(mixed $value): array
-    {
-        self::assertIsArray($value);
-
-        /** @var list<array<string, mixed>> */
-        return array_values($value);
     }
 
     private function sum(string $sql, User $user): int

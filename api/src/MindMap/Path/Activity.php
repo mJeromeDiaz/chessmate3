@@ -11,7 +11,9 @@ use App\Enum\Training\Module;
  * fixed configuration, and how that run is judged. An exercise passes with at least $count items
  * and {@see PathRules::PASS_RATE} of them right; a boss with at least $count items and fewer
  * failures than its lives: its items failed, or what its module counts as failures (the pieces
- * wrong or missing of a recall, `metrics.failures` of the run's summary).
+ * wrong or missing of a recall, `metrics.failures` of the run's summary). A prepared activity's
+ * config is a session step's settings, turned into the run's config by its module's `prepare()`
+ * when the step starts (the défis' tiers read the player's puzzle rating then).
  */
 final readonly class Activity
 {
@@ -34,6 +36,7 @@ final readonly class Activity
         public string $subject = self::SUBJECT_USER,
         public ?array $repeatConfig = null,
         public ?array $laterConfig = null,
+        public bool $prepared = false,
     ) {
     }
 

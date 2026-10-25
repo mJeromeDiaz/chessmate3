@@ -24,7 +24,7 @@ use App\Repository\MindMap\ProgressRepository;
  * @phpstan-type ChestView array{id: string, step: string, crystals: int, opened: bool}
  * @phpstan-type StepView array{key: string, number: string|null, kind: string, status: string, passes: int, required: int, crystals: int, xp: int, character: string|null, badges: list<string>, skippable: bool, chest: ChestView|null}
  * @phpstan-type SectionView array{key: string, number: string|null, status: string, steps: list<StepView>, miniBosses: list<StepView>, hidden: list<StepView>}
- * @phpstan-type ChapterView array{key: string, number: int, status: string, sections: list<SectionView>, boss: StepView}
+ * @phpstan-type ChapterView array{key: string, number: int, status: string, sections: list<SectionView>, boss: StepView, meta: array<string, mixed>|null}
  * @phpstan-type PathView array{capacity: string, chapters: list<ChapterView>, badges: list<array{badge: string, step: string, earnedAt: string}>, unopenedChests: list<ChestView>}
  */
 final readonly class PathReader
@@ -32,6 +32,7 @@ final readonly class PathReader
     public function __construct(
         private ProgressRepository $progress,
         private ChestRepository $chests,
+        private PathCatalog $catalog,
     ) {
     }
 
@@ -43,7 +44,7 @@ final readonly class PathReader
         $rows = $this->progress->byStep($user, $capacity);
         $chests = $this->chests->byStep($user, $capacity);
         $state = Progresses::state($rows);
-        $chapters = Paths::chapters($capacity);
+        $chapters = $this->catalog->chapters($user, $capacity);
         $statuses = PathState::statuses($chapters, $state);
 
         $views = [];
@@ -71,6 +72,7 @@ final readonly class PathReader
                 'status' => self::areaStatus($chapterOpen, $bossDone),
                 'sections' => $sections,
                 'boss' => $this->step($chapter->boss, $statuses, $rows, $chests),
+                'meta' => $chapter->meta,
             ];
             $chapterOpen = $bossDone;
         }
@@ -163,7 +165,8 @@ final readonly class PathReader
 
     /**
      * The badges earned: those of the steps completed, when they were; then the path's mastery
-     * badge ({@see Paths::masteryBadge()}), every exercise completed, when the last one was.
+     * badge ({@see Paths::masteryBadge()}), every exercise of its mastery chapters completed
+     * ({@see Chapter::$mastery}), when the last one was.
      *
      * @param list<Chapter>           $chapters
      * @param array<string, Progress> $rows
@@ -178,7 +181,7 @@ final readonly class PathReader
         foreach ($chapters as $chapter) {
             foreach ($chapter->allSteps() as $step) {
                 $at = ($rows[$step->key] ?? null)?->getCompletedAt();
-                if (StepKind::Exercise === $step->kind) {
+                if (StepKind::Exercise === $step->kind && $chapter->mastery) {
                     $mastered = $mastered && null !== $at;
                     if (null !== $at && (null === $last || $at > $last['at'])) {
                         $last = ['step' => $step->key, 'at' => $at];
