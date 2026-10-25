@@ -1,16 +1,7 @@
 <template>
   <section v-if="streak" class="streak-card" data-testid="streak-card">
     <div class="streak-card__head">
-      <div
-        class="streak-card__flame"
-        :class="{ 'streak-card__flame--out': streak.current === 0 }"
-        :style="{ '--flame': `${flamePx}px` }"
-        data-testid="streak-card-flame"
-        aria-hidden="true"
-      >
-        <span class="streak-card__drop streak-card__drop--outer" />
-        <span class="streak-card__drop streak-card__drop--inner" />
-      </div>
+      <StreakFlame :streak="streak.current" data-testid="streak-card-flame" />
       <div class="streak-card__title">
         <span class="streak-card__kicker">{{
           $t('gamification.card.kicker')
@@ -83,13 +74,12 @@
  * and the freezes on sale (`StreakSheet`).
  */
 import { computed, ref } from 'vue'
+import StreakFlame from '@/components/dashboard/StreakFlame.vue'
 import StreakSheet from '@/components/dashboard/StreakSheet.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useGamificationStore } from '@/stores/gamification'
 import {
-  FLAME_BASE,
   STREAK_BADGES,
-  flameScale,
   localToday,
   nextMilestoneText,
   weekRow
@@ -98,16 +88,8 @@ import {
 const auth = useAuthStore()
 const gamification = useGamificationStore()
 
-/** The flame's size before any badge, in px; each badge reached adds to it. */
-const FLAME_PX = 30
-
 const sheetOpen = ref(false)
 const streak = computed(() => gamification.summary?.streak ?? null)
-const flamePx = computed(() =>
-  Math.round(
-    FLAME_PX * (flameScale(streak.value?.current ?? 0) / FLAME_BASE) ** 0.5
-  )
-)
 const today = computed(() => localToday(auth.profile?.timezone))
 const week = computed(() =>
   weekRow(
@@ -155,65 +137,6 @@ const tierPercent = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-// Two drops, as the celebration screen's flame.
-.streak-card__flame {
-  position: relative;
-  flex: none;
-  width: 50px;
-  height: 50px;
-  border-radius: 16px;
-  background: rgba(255, 138, 61, 0.16);
-
-  &--out {
-    filter: grayscale(1);
-    opacity: 0.55;
-  }
-}
-
-.streak-card__drop {
-  position: absolute;
-  left: 50%;
-  border-radius: 50% 0 50% 50%;
-  transform: rotate(-45deg);
-
-  &--outer {
-    bottom: calc(50% - var(--flame) * 0.5);
-    width: calc(var(--flame) * 0.74);
-    height: calc(var(--flame) * 0.74);
-    margin-left: calc(var(--flame) * -0.37);
-    background: #ff8a3d;
-    animation: streak-card-flicker 1.6s ease-in-out infinite;
-  }
-
-  &--inner {
-    bottom: calc(50% - var(--flame) * 0.46);
-    width: calc(var(--flame) * 0.4);
-    height: calc(var(--flame) * 0.4);
-    margin-left: calc(var(--flame) * -0.2);
-    background: #ffd84d;
-  }
-
-  .streak-card__flame--out & {
-    animation: none;
-  }
-}
-
-@keyframes streak-card-flicker {
-  0%,
-  100% {
-    transform: rotate(-45deg) scale(1, 1);
-  }
-  50% {
-    transform: rotate(-43deg) scale(0.96, 1.05);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .streak-card__drop {
-    animation: none;
-  }
 }
 
 .streak-card__title {

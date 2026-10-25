@@ -233,18 +233,24 @@ const next = computed(() => (path.value ? nextStep(path.value) : null))
 .endgame-card__boss {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
+  gap: 14px;
+  padding: 10px 14px 10px 10px;
   border-radius: 18px;
   background: #1e2230;
   color: #fff;
 }
 
+// The Roi des cendres in a tall portrait: he must be seen (chosen 2026-10-25).
 .endgame-card__boss-face {
   flex: none;
-  width: 58px;
-  height: 58px;
+  width: 104px;
+  height: 124px;
   border-radius: 16px;
+
+  @media (min-width: $breakpoint-md-min) {
+    width: 132px;
+    height: 156px;
+  }
   overflow: hidden;
   background: #2a3045;
 
@@ -252,8 +258,8 @@ const next = computed(() => (path.value ? nextStep(path.value) : null))
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 12%;
-    filter: grayscale(0.5) brightness(0.75);
+    object-position: 50% 8%;
+    filter: grayscale(0.15) brightness(0.92);
 
     .endgame-card__boss--beaten & {
       filter: none;
@@ -294,7 +300,7 @@ const next = computed(() => (path.value ? nextStep(path.value) : null))
 .endgame-card__boss-name {
   font-family: var(--cm-heading);
   font-weight: 800;
-  font-size: 17px;
+  font-size: 20px;
   line-height: 1;
 }
 

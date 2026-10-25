@@ -7,6 +7,7 @@
   >
     <div class="streak-sheet" data-testid="streak-sheet">
       <header class="streak-sheet__head">
+        <StreakFlame :streak="streak?.current ?? 0" />
         <div class="streak-sheet__title">
           <span class="streak-sheet__kicker">{{
             $t('gamification.card.kicker')
@@ -27,120 +28,125 @@
       </header>
 
       <div class="streak-sheet__body">
-        <section class="streak-sheet__block">
-          <div class="streak-sheet__row">
-            <span class="streak-sheet__month">{{ monthName }}</span>
-            <span class="streak-sheet__muted">{{
-              $t('gamification.sheet.counts', counts)
-            }}</span>
-          </div>
-          <div class="streak-sheet__calendar" data-testid="streak-calendar">
-            <span
-              v-for="(d, i) in weekDays"
-              :key="`w${i}`"
-              class="streak-sheet__dow"
-              >{{ d }}</span
-            >
-            <span
-              v-for="(cell, i) in grid"
-              :key="i"
-              class="streak-sheet__cell"
-              :class="[
-                cell.state && `streak-sheet__cell--${cell.state}`,
-                { 'streak-sheet__cell--today': cell.today }
-              ]"
-              :data-state="cell.state ?? undefined"
-              >{{ cell.state === 'frozen' ? '❄︎' : (cell.day ?? '') }}</span
-            >
-          </div>
-          <div class="streak-sheet__legend">
-            <span v-for="state in ['played', 'frozen', 'missed']" :key="state"
-              ><i :class="`streak-sheet__cell--${state}`" />{{
-                $t(`gamification.sheet.legend.${state}`)
-              }}</span
-            >
-          </div>
-          <div class="streak-sheet__muted">{{
-            $t('gamification.card.best', { days: days(streak?.best ?? 0) })
-          }}</div>
-        </section>
-
-        <section class="streak-sheet__block">
-          <span class="streak-sheet__label">{{
-            $t('gamification.sheet.badges')
-          }}</span>
-          <div class="streak-sheet__badges">
-            <div
-              v-for="badge in badges"
-              :key="badge.goal"
-              class="streak-sheet__badge"
-              :class="`streak-sheet__badge--${badge.state}`"
-              :title="badge.name"
-            >
-              <span class="streak-sheet__badge-disc"
-                ><b>{{ badge.goal }}</b
-                ><small>{{ $t('gamification.sheet.daysCaps') }}</small></span
-              >
-              <span class="streak-sheet__badge-state">{{
-                $t(`gamification.sheet.badgeStates.${badge.state}`)
+        <!-- Two columns from md: the month and the next tier, then the freezes and the badges;
+             one column on a phone in that order. -->
+        <div class="streak-sheet__col">
+          <section class="streak-sheet__block">
+            <div class="streak-sheet__row">
+              <span class="streak-sheet__month">{{ monthName }}</span>
+              <span class="streak-sheet__muted">{{
+                $t('gamification.sheet.counts', counts)
               }}</span>
             </div>
-          </div>
-        </section>
+            <div class="streak-sheet__calendar" data-testid="streak-calendar">
+              <span
+                v-for="(d, i) in weekDays"
+                :key="`w${i}`"
+                class="streak-sheet__dow"
+                >{{ d }}</span
+              >
+              <span
+                v-for="(cell, i) in grid"
+                :key="i"
+                class="streak-sheet__cell"
+                :class="[
+                  cell.state && `streak-sheet__cell--${cell.state}`,
+                  { 'streak-sheet__cell--today': cell.today }
+                ]"
+                :data-state="cell.state ?? undefined"
+                >{{ cell.state === 'frozen' ? '❄︎' : (cell.day ?? '') }}</span
+              >
+            </div>
+            <div class="streak-sheet__legend">
+              <span v-for="state in ['played', 'frozen', 'missed']" :key="state"
+                ><i :class="`streak-sheet__cell--${state}`" />{{
+                  $t(`gamification.sheet.legend.${state}`)
+                }}</span
+              >
+            </div>
+            <div class="streak-sheet__muted">{{
+              $t('gamification.card.best', { days: days(streak?.best ?? 0) })
+            }}</div>
+          </section>
 
-        <section v-if="streak?.nextMilestone" class="streak-sheet__next">
-          <span class="streak-sheet__kicker">{{
-            $t('gamification.sheet.nextTier', { days: streak.nextMilestone })
-          }}</span>
-          <div class="streak-sheet__row">
-            <span class="streak-sheet__left">{{
-              $t(
-                'gamification.sheet.left',
-                streak.nextMilestone - streak.current
-              )
+          <section v-if="streak?.nextMilestone" class="streak-sheet__next">
+            <span class="streak-sheet__kicker">{{
+              $t('gamification.sheet.nextTier', { days: streak.nextMilestone })
             }}</span>
-            <span class="streak-sheet__reward"
-              ><CrystalGem :size="20" />+{{ reward }}</span
+            <div class="streak-sheet__row">
+              <span class="streak-sheet__left">{{
+                $t(
+                  'gamification.sheet.left',
+                  streak.nextMilestone - streak.current
+                )
+              }}</span>
+              <span class="streak-sheet__reward"
+                ><CrystalGem :size="20" />+{{ reward }}</span
+              >
+            </div>
+            <span class="streak-sheet__muted">{{
+              $t('gamification.sheet.rewardLine', {
+                n: reward,
+                days: streak.nextMilestone
+              })
+            }}</span>
+          </section>
+        </div>
+        <div class="streak-sheet__col">
+          <section v-if="freezes.length" class="streak-sheet__plain">
+            <div class="streak-sheet__row">
+              <span class="streak-sheet__label">{{
+                $t('gamification.sheet.freezes')
+              }}</span>
+              <span class="streak-sheet__stock">{{
+                $t('gamification.sheet.stock', { n: streak?.freezeDays ?? 0 })
+              }}</span>
+            </div>
+            <button
+              v-for="offer in freezes"
+              :key="offer.id"
+              type="button"
+              class="streak-sheet__freeze"
+              data-testid="streak-sheet-freeze"
+              @click="purchase.sheet.value = offer"
             >
-          </div>
-          <span class="streak-sheet__muted">{{
-            $t('gamification.sheet.rewardLine', {
-              n: reward,
-              days: streak.nextMilestone
-            })
-          }}</span>
-        </section>
+              <span class="streak-sheet__ice" aria-hidden="true">❄︎</span>
+              <span class="streak-sheet__freeze-text">
+                <b>{{ offer.name }}</b>
+                <span v-if="offer.subtitle">{{ offer.subtitle }}</span>
+              </span>
+              <span v-if="offer.wasPrice" class="streak-sheet__was">{{
+                crowns(offer.wasPrice)
+              }}</span>
+              <span class="streak-sheet__price"
+                ><CrystalGem :size="18" />{{ crowns(offer.price) }}</span
+              >
+            </button>
+          </section>
 
-        <section v-if="freezes.length" class="streak-sheet__block">
-          <div class="streak-sheet__row">
+          <section class="streak-sheet__plain">
             <span class="streak-sheet__label">{{
-              $t('gamification.sheet.freezes')
+              $t('gamification.sheet.badges')
             }}</span>
-            <span class="streak-sheet__stock">{{
-              $t('gamification.sheet.stock', { n: streak?.freezeDays ?? 0 })
-            }}</span>
-          </div>
-          <button
-            v-for="offer in freezes"
-            :key="offer.id"
-            type="button"
-            class="streak-sheet__freeze"
-            data-testid="streak-sheet-freeze"
-            @click="purchase.sheet.value = offer"
-          >
-            <span class="streak-sheet__ice" aria-hidden="true">❄︎</span>
-            <span class="streak-sheet__freeze-text">
-              <b>{{ offer.name }}</b>
-              <span v-if="offer.subtitle">{{ offer.subtitle }}</span>
-            </span>
-            <span v-if="offer.wasPrice" class="streak-sheet__was">{{
-              crowns(offer.wasPrice)
-            }}</span>
-            <span class="streak-sheet__price"
-              ><CrystalGem :size="18" />{{ crowns(offer.price) }}</span
-            >
-          </button>
-        </section>
+            <div class="streak-sheet__badges">
+              <div
+                v-for="badge in badges"
+                :key="badge.goal"
+                class="streak-sheet__badge"
+                :class="`streak-sheet__badge--${badge.state}`"
+                :title="badge.name"
+              >
+                <span class="streak-sheet__badge-disc"
+                  ><b>{{ badge.goal }}</b
+                  ><small>{{ $t('gamification.sheet.daysCaps') }}</small></span
+                >
+                <span class="streak-sheet__badge-state">{{
+                  $t(`gamification.sheet.badgeStates.${badge.state}`)
+                }}</span>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <PurchaseSheet
@@ -165,6 +171,7 @@
 import { computed } from 'vue'
 import CrystalGem from '@/components/shop/CrystalGem.vue'
 import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
+import StreakFlame from '@/components/dashboard/StreakFlame.vue'
 import { useAidPurchase } from '@/composables/shop/useAidPurchase'
 import { useGamificationStore } from '@/stores/gamification'
 import {
@@ -283,19 +290,41 @@ function loadShop() {
   }
 }
 
+.streak-sheet__col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
 .streak-sheet__block,
-.streak-sheet__next {
+.streak-sheet__next,
+.streak-sheet__plain {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.streak-sheet__block,
+.streak-sheet__next {
   padding: 14px;
   border-radius: 20px;
   background: #221d30;
 }
 
+// The next tier: an orange card, the streak's colour.
 .streak-sheet__next {
-  background: linear-gradient(180deg, #2b2036, #221d30);
-  box-shadow: inset 0 0 0 1.5px rgba(255, 165, 82, 0.35);
+  background: linear-gradient(135deg, #ffb36b, #ff7a1a);
+  box-shadow: 0 4px 0 #c2531a;
+  color: #1b1530;
+
+  .streak-sheet__kicker {
+    color: #5a2a0a;
+  }
+
+  .streak-sheet__muted {
+    color: #4a2a14;
+  }
 }
 
 .streak-sheet__row {
@@ -450,6 +479,10 @@ function loadShop() {
 .streak-sheet__left {
   font-family: var(--cm-heading);
   font-weight: 800;
+  font-size: 18px;
+}
+
+.streak-sheet__reward {
   font-size: 18px;
 }
 

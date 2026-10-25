@@ -133,6 +133,27 @@ describe('the path track', () => {
     ]).toEqual(['1-2', '1-boss', null, '1-boss'])
   })
 
+  it('skips the mini-bosses for the chapter boss, unless the player stands on one', () => {
+    const p = path(
+      'calculation',
+      [step('1-1', 'done'), step('1-2', 'open'), step('1-3')],
+      step('1-boss', 'locked', 'boss')
+    )
+    p.chapters[0].sections[0].miniBosses = [
+      step('1-mini', 'locked', 'mini_boss')
+    ]
+    expect(pathTrack(p)?.boss?.key).toBe('1-boss')
+    p.chapters[0].sections[0].steps[1].status = 'done'
+    p.chapters[0].sections[0].steps[2].status = 'done'
+    p.chapters[0].sections[0].miniBosses[0].status = 'open'
+    const track = pathTrack(p)
+    expect([track?.current.key, track?.next, track?.boss?.key]).toEqual([
+      '1-mini',
+      null,
+      '1-boss'
+    ])
+  })
+
   it('does not repeat the boss as the next step', () => {
     const p = path(
       'calculation',

@@ -31,7 +31,7 @@ async function stopRun(page) {
   await expect(page.getByTestId('run-recap')).toBeVisible()
 }
 
-test('a session is played module after module, then shows on the dashboard', async ({
+test('a session is played module after module, then shows in the statistics', async ({
   page,
   context
 }) => {
@@ -68,7 +68,7 @@ test('a session is played module after module, then shows on the dashboard', asy
   await expect(steps.nth(0)).toContainText('Fait')
   await expect(steps.nth(1)).toContainText('Fait · 1 terminés, 1 réussis')
 
-  await page.goto('/#/')
+  await page.goto('/#/stats')
   const row = page.getByTestId('recent-session').first()
   await expect(row).toContainText('Mardi soir')
   await expect(row).toContainText('2 / 2 modules')
@@ -87,9 +87,9 @@ test('a session can be resumed, a module passed and the session abandoned', asyn
   await page.getByTestId('session-launch').click()
   await expect(page.getByTestId('free-run')).toBeVisible()
 
-  // Left between two modules: the session waits, the dashboard offers to resume it.
+  // Left between two modules: the session waits, the recent sessions (/stats) offer to resume it.
   await stopRun(page)
-  await page.goto('/#/')
+  await page.goto('/#/stats')
   await expect(page.getByTestId('recent-session').first()).toContainText(
     'Reprendre'
   )
@@ -120,7 +120,7 @@ test('a session can be resumed, a module passed and the session abandoned', asyn
   )
 })
 
-test('a session is played again: restarted on the way, replayed at its end and from the dashboard', async ({
+test('a session is played again: restarted on the way, replayed at its end and from the recent sessions', async ({
   page,
   context
 }) => {
@@ -134,7 +134,7 @@ test('a session is played again: restarted on the way, replayed at its end and f
   await stopRun(page)
 
   // On the way: the session is abandoned and starts over from its first module.
-  await page.goto('/#/')
+  await page.goto('/#/stats')
   await page.getByTestId('recent-session').first().click()
   await expect(page.getByTestId('session-step-status').nth(0)).toContainText(
     'Fait'
@@ -146,7 +146,7 @@ test('a session is played again: restarted on the way, replayed at its end and f
   await stopRun(page)
 
   // At its end: the same program again.
-  await page.goto('/#/')
+  await page.goto('/#/stats')
   await expect(page.getByTestId('recent-session')).toHaveCount(2)
   await expect(page.getByTestId('recent-session').nth(1)).toContainText(
     'Abandonnée'
@@ -159,8 +159,8 @@ test('a session is played again: restarted on the way, replayed at its end and f
   await expect(page).toHaveURL(/#\/training\/[^/]+$/)
   await expect(page.getByTestId('free-run')).toBeVisible()
 
-  // From the dashboard, while that replay is on: abandon it and replay the chosen one.
-  await page.goto('/#/')
+  // From the recent sessions, while that replay is on: abandon it and replay the chosen one.
+  await page.goto('/#/stats')
   const rows = page.getByTestId('recent-session')
   await expect(rows).toHaveCount(3)
   await expect(rows.first()).toContainText('Reprendre')
@@ -168,7 +168,7 @@ test('a session is played again: restarted on the way, replayed at its end and f
   await page.getByTestId('recent-session-replay').first().click()
   await page.getByRole('button', { name: 'l’abandonner et rejouer' }).click()
   await expect(page).toHaveURL(/#\/training\/[^/]+$/)
-  await page.goto('/#/')
+  await page.goto('/#/stats')
   await expect(rows).toHaveCount(4)
   await expect(rows.first()).toContainText('Rejouable')
   await expect(rows.first()).toContainText('Reprendre')

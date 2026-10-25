@@ -31,14 +31,14 @@
         </div>
       </div>
 
-      <template v-else-if="store.isNewUser">
+      <div v-else-if="store.isNewUser" class="dashboard__welcome">
         <WelcomeCard />
         <!-- A first session launched but no exercise logged yet: it can still be resumed. -->
         <MyPlans hide-empty class="q-mt-md" />
         <RecentSessions hide-empty class="q-mt-md" />
         <PathCard v-if="store.pathsLoaded" class="q-mt-md" />
         <ModuleProgress :rows="moduleRows" class="q-mt-md" />
-      </template>
+      </div>
 
       <!-- Design « Dashboard v2 »: the order of the phone's column, two columns from md. -->
       <div v-else class="dashboard__grid">
@@ -199,7 +199,7 @@ watch(
 
 <style scoped lang="scss">
 .dashboard__inner {
-  max-width: 1180px;
+  max-width: 1560px;
   margin: 0 auto;
   padding: 12px 16px 48px;
 
@@ -250,7 +250,7 @@ watch(
   }
 }
 
-// Mobile: one column in the design's order; from md: a main column and a 400 px side one.
+// Mobile: one column in the design's order; from md: a main column and a 440 px side one.
 .dashboard__grid {
   display: flex;
   flex-direction: column;
@@ -258,7 +258,7 @@ watch(
 
   @media (min-width: $breakpoint-md-min) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 400px;
+    grid-template-columns: minmax(0, 1fr) 440px;
     gap: 22px;
     align-items: start;
   }
@@ -280,13 +280,14 @@ watch(
 
   .dashboard__hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     gap: 16px;
   }
 
+  // The endgames' card wide, the défis' three chapters in a narrow column.
   .dashboard__pair {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
     gap: 22px;
     align-items: start;
   }
@@ -326,6 +327,17 @@ watch(
   }
   .dashboard__trophies {
     order: 11;
+  }
+}
+
+// Phone (design « Dashboard v2 »): the cards run edge to edge, square.
+@media (max-width: $breakpoint-xs-max) {
+  .dashboard__col > :not(.dashboard__hero):not(.dashboard__pair),
+  .dashboard__hero > *,
+  .dashboard__pair > *,
+  .dashboard__welcome > * {
+    margin-inline: -16px;
+    border-radius: 0;
   }
 }
 

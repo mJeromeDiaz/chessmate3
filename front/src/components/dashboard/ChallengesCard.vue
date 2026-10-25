@@ -38,19 +38,19 @@
 
 <script setup>
 /**
- * « Défis » (design « Dashboard v2 », docs/DEFIS.md): one tile per chapter of the défis' path,
- * the fixed ones and one per repertoire, as many as the API sends (more will come); a ring of its
- * tiers mastered and boss beaten.
+ * « Défis » (design « Dashboard v2 », docs/DEFIS.md): one tile per fixed chapter of the défis'
+ * path (mates, endgames, tactics; the repertoires' chapters stay on its page, chosen 2026-10-25),
+ * a ring of its tiers mastered and boss beaten.
  */
 import { computed } from 'vue'
 import { useDashboardStore } from '@/stores/dashboard'
-import { CHALLENGES, isOpening } from '@/utils/challengePath'
+import { CHALLENGES } from '@/utils/challengePath'
 import { chapterTotals } from '@/utils/endgamePath'
 import { pathChapterName } from '@/utils/mindMapPath'
 
 const store = useDashboardStore()
 
-/** The fixed chapters' glyphs; an opening's is a rook. */
+/** The chapters shown, with their glyphs. */
 const GLYPHS = /** @type {Record<string, string>} */ ({
   mates: '#',
   endgames: '♚︎',
@@ -60,17 +60,19 @@ const GLYPHS = /** @type {Record<string, string>} */ ({
 const chapters = computed(() => {
   const path = store.paths[CHALLENGES]
   if (!path) return []
-  return path.chapters.map(chapter => {
-    const { done, total } = chapterTotals(chapter)
-    return {
-      key: chapter.key,
-      name: pathChapterName(CHALLENGES, chapter),
-      glyph: isOpening(chapter.key) ? '♜︎' : (GLYPHS[chapter.key] ?? '★'),
-      done,
-      total,
-      percent: total ? Math.round((100 * done) / total) : 0
-    }
-  })
+  return path.chapters
+    .filter(chapter => chapter.key in GLYPHS)
+    .map(chapter => {
+      const { done, total } = chapterTotals(chapter)
+      return {
+        key: chapter.key,
+        name: pathChapterName(CHALLENGES, chapter),
+        glyph: GLYPHS[chapter.key],
+        done,
+        total,
+        percent: total ? Math.round((100 * done) / total) : 0
+      }
+    })
 })
 const done = computed(() => chapters.value.reduce((n, c) => n + c.done, 0))
 </script>
@@ -102,7 +104,7 @@ const done = computed(() => chapters.value.reduce((n, c) => n + c.done, 0))
 
 .challenges-card__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 

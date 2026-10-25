@@ -2,8 +2,9 @@ import { expect, test } from '@playwright/test'
 import { signIn } from './helpers.js'
 
 /**
- * Statistics page (docs/DASHBOARD.md § 6, lot B): reached from the home page, period picker,
- * training-time chart, sessions, themes, repertoire health. The dashboard API is simulated.
+ * Statistics page (docs/DASHBOARD.md § 6, lot B): reached from the home page, rating curves (moved
+ * here by the design « Dashboard v2 »), period picker, training-time chart, sessions, themes,
+ * repertoire health. The dashboard API is simulated.
  */
 
 /** @param {number} days Y-m-d of today shifted by `days` */
@@ -50,6 +51,19 @@ async function simulateStats(page) {
         totals: {
           puzzle_rated: { count: 3, successCount: 2, durationMs: 90_000 }
         }
+      }
+    })
+  )
+  await page.route('**/api/dashboard/rating-history**', route =>
+    route.fulfill({
+      json: {
+        from: day(-89),
+        today: day(0),
+        points: [
+          { date: day(-89), rating: 1500 },
+          { date: day(-30), rating: 1580 },
+          { date: day(-2), rating: 1612 }
+        ]
       }
     })
   )
@@ -131,7 +145,7 @@ async function simulateStats(page) {
   return asked
 }
 
-test('from the home page: the weak-theme tip, then the statistics over a remembered period', async ({
+test('from the home page: the rating curves, then the statistics over a remembered period', async ({
   page,
   context
 }) => {
@@ -139,16 +153,23 @@ test('from the home page: the weak-theme tip, then the statistics over a remembe
   const asked = await simulateStats(page)
   await page.goto('/#/')
 
-  const tip = page.getByTestId('weak-theme-tip')
-  await expect(tip).toContainText('Clouage')
-  await expect(tip).toContainText('20 % de réussite')
-
   await page.getByTestId('dashboard-stats').click()
   await expect(page).toHaveURL(/#\/stats$/)
   await expect(page.getByTestId('period-30')).toHaveAttribute(
     'aria-checked',
     'true'
   )
+
+  // The puzzle rating's curve; the seeded user has no Lichess account: no curve, a link to the
+  // profile, nothing asked of Lichess.
+  await expect(page.getByTestId('rating-current')).toHaveText('1612')
+  await expect(page.getByTestId('rating-delta')).toContainText('+112')
+  await page.getByTestId('rating-tab-blitz').click()
+  await expect(page.getByTestId('rating-notice')).toContainText(
+    'Lie ton compte Lichess'
+  )
+  await page.getByTestId('rating-tab-puzzles').click()
+  await expect(page.getByTestId('rating-current')).toHaveText('1612')
 
   // Training time: three weeks, the empty one included; totals in the legend.
   const chart = page.getByTestId('training-time')

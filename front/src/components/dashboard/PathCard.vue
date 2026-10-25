@@ -10,6 +10,7 @@
     <div
       v-if="proposed && track"
       class="path-card__hero"
+      :style="heroColours"
       :data-capacity="proposed.capacity"
       data-testid="dashboard-path-current"
     >
@@ -36,23 +37,36 @@
         }}</span>
       </div>
 
-      <ol class="path-card__track" :aria-label="$t('dashboard.path.track')">
-        <li
-          v-for="node in nodes"
-          :key="node.key"
-          class="path-card__node"
-          :class="`path-card__node--${node.role}`"
-          :title="node.title"
+      <!-- The steps wind on a horizontal curve, as on the path's page. -->
+      <div class="path-card__track" :aria-label="$t('dashboard.path.track')">
+        <svg
+          class="path-card__curve"
+          :viewBox="`0 0 100 ${TRACK_HEIGHT}`"
+          preserveAspectRatio="none"
+          aria-hidden="true"
         >
-          <span
-            v-if="node.role.startsWith('current')"
-            class="path-card__here"
-            >{{ $t('dashboard.path.here') }}</span
+          <path class="path-card__curve-rest" :d="curve.all" />
+          <path class="path-card__curve-done" :d="curve.done" />
+        </svg>
+        <ol class="path-card__nodes">
+          <li
+            v-for="node in placed"
+            :key="node.key"
+            class="path-card__node"
+            :class="`path-card__node--${node.role}`"
+            :style="{ left: `${node.x}%`, top: `${node.y}px` }"
+            :title="node.title"
           >
-          <span v-if="node.role === 'gap'" class="path-card__gap">···</span>
-          <span v-else class="path-card__dot">{{ node.glyph }}</span>
-        </li>
-      </ol>
+            <span
+              v-if="node.role.startsWith('current')"
+              class="path-card__here"
+              >{{ $t('dashboard.path.here') }}</span
+            >
+            <span v-if="node.role === 'gap'" class="path-card__gap">···</span>
+            <span v-else class="path-card__dot">{{ node.glyph }}</span>
+          </li>
+        </ol>
+      </div>
 
       <div class="path-card__foot">
         <router-link
@@ -88,11 +102,7 @@
           }"
           ><span
             class="path-card__tile"
-            :style="
-              other.percent
-                ? { background: other.color, color: other.ink }
-                : undefined
-            "
+            :style="{ background: other.color, color: other.ink }"
             >{{ other.glyph }}</span
           ></span
         >
@@ -169,6 +179,13 @@ const chapterLine = computed(() => {
       })
     : ''
 })
+/** The path's own colours, as its page draws them (pink for calculation, blue for visualisation). */
+const heroColours = computed(() => {
+  const info = CAPACITIES.find(c => c.key === mapKey(proposed.value?.capacity))
+  return info
+    ? { '--path': info.color, '--path-deep': info.deep, '--path-ink': info.ink }
+    : undefined
+})
 const bossPicture = computed(() => {
   const character = track.value?.boss?.character ?? null
   return standingImage(character) || bossImage(character)
@@ -207,6 +224,45 @@ const nodes = computed(() => {
     list.push(node(tr.boss, 'boss'))
   }
   return list
+})
+
+/** The track's height in px, and each node's height on it (a wave, the boss in the middle). */
+const TRACK_HEIGHT = 112
+const WAVE = [70, 44, 74, 50, 60]
+
+/**
+ * The nodes placed on the track: x in % of its width, y in px.
+ *
+ * @type {import('vue').ComputedRef<{key: string, role: string, glyph: string, title: string, x: number, y: number}[]>}
+ */
+const placed = computed(() => {
+  const list = nodes.value
+  const step = list.length > 1 ? 88 / (list.length - 1) : 0
+  return list.map((node, i) => ({
+    ...node,
+    x: list.length > 1 ? 6 + i * step : 50,
+    y: node.role === 'boss' ? TRACK_HEIGHT / 2 : WAVE[i % WAVE.length]
+  }))
+})
+
+/**
+ * The curve through the nodes (horizontal tangents at each node), and its part already walked:
+ * up to the current step.
+ */
+const curve = computed(() => {
+  const points = placed.value
+  /** @param {typeof points} list */
+  const draw = list =>
+    list
+      .map((p, i) => {
+        if (i === 0) return `M${p.x},${p.y}`
+        const q = list[i - 1]
+        const mid = (q.x + p.x) / 2
+        return `C${mid},${q.y} ${mid},${p.y} ${p.x},${p.y}`
+      })
+      .join(' ')
+  const here = points.findIndex(p => p.role.startsWith('current'))
+  return { all: draw(points), done: draw(points.slice(0, here + 1)) }
 })
 
 /** Every capacity but the proposed one: its progress, or « Bientôt ». */
@@ -258,6 +314,9 @@ const others = computed(() =>
 }
 
 .path-card__hero {
+  --path: #8b6bff;
+  --path-deep: #5a3be0;
+  --path-ink: #fff;
   position: relative;
   overflow: hidden;
   min-height: 206px;
@@ -312,7 +371,7 @@ const others = computed(() =>
 }
 
 .path-card__kicker {
-  color: #c9b8ff;
+  color: color-mix(in srgb, var(--path) 55%, #fff);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -360,87 +419,125 @@ const others = computed(() =>
 }
 
 .path-card__step {
-  color: var(--cm-lime);
+  color: var(--path);
   font-size: 12px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
-// Before, current, next, ···, boss: a short line of dots.
+// Before, current, next, ···, boss on a wave: an SVG curve under absolutely placed nodes.
 .path-card__track {
   position: relative;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 0;
-  padding: 34px 128px 14px 16px;
-  list-style: none;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 30px;
-    right: 150px;
-    top: calc(34px + 15px);
-    height: 4px;
-    margin-top: -2px;
-    border-radius: 4px;
-    background: #3a3450;
-  }
+  height: 112px;
+  margin: 28px 128px 8px 16px;
 
   @media (min-width: $breakpoint-md-min) {
-    gap: 22px;
-    padding-left: 22px;
+    margin: 30px 236px 10px 22px;
   }
 }
 
+.path-card__curve {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+
+  path {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+.path-card__curve-rest {
+  stroke: #3a3450;
+}
+
+.path-card__curve-done {
+  stroke: var(--path);
+}
+
+.path-card__nodes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .path-card__node {
-  position: relative;
-  flex: none;
+  position: absolute;
   display: flex;
   justify-content: center;
-  width: 30px;
+  transform: translate(-50%, -50%);
 }
 
 .path-card__dot {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: #2b2640;
-  box-shadow: 0 3px 0 #1f1a2c;
+  box-shadow: 0 4px 0 #1f1a2c;
   color: #8a85a0;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 800;
 
   .path-card__node--previous & {
-    background: #8b6bff;
-    box-shadow: 0 3px 0 #5a3be0;
-    color: #fff;
+    background: var(--path);
+    box-shadow: 0 4px 0 var(--path-deep);
+    color: var(--path-ink);
   }
 
   .path-card__node--current &,
   .path-card__node--current-boss & {
-    background: #8b6bff;
+    width: 52px;
+    height: 52px;
+    background: var(--path);
     box-shadow:
-      0 0 0 2px #231b3a,
-      0 0 0 5px var(--cm-lime);
-    color: #fff;
+      0 4px 0 var(--path-deep),
+      0 0 0 3px #231b3a,
+      0 0 0 6px color-mix(in srgb, var(--path) 55%, #fff);
+    color: var(--path-ink);
+    font-size: 17px;
   }
 
   .path-card__node--boss &,
   .path-card__node--current-boss & {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
     color: #ffa552;
+  }
+
+  @media (min-width: $breakpoint-md-min) {
+    width: 50px;
+    height: 50px;
+    font-size: 17px;
+
+    .path-card__node--current &,
+    .path-card__node--current-boss & {
+      width: 58px;
+      height: 58px;
+      font-size: 19px;
+    }
+
+    .path-card__node--boss &,
+    .path-card__node--current-boss & {
+      width: 64px;
+      height: 64px;
+      font-size: 28px;
+    }
   }
 }
 
 .path-card__gap {
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #231b3a;
   color: #8a85a0;
   font-weight: 800;
   letter-spacing: 1px;
@@ -448,13 +545,13 @@ const others = computed(() =>
 
 .path-card__here {
   position: absolute;
-  bottom: calc(100% + 9px);
+  bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%);
   padding: 3px 7px;
   border-radius: 8px;
   background: #fff;
-  color: #5a3be0;
+  color: var(--path-deep);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -482,9 +579,9 @@ const others = computed(() =>
   height: 40px;
   padding: 0 16px;
   border-radius: 13px;
-  background: var(--cm-lime);
-  box-shadow: 0 3px 0 #8fb800;
-  color: #1b1530;
+  background: var(--path);
+  box-shadow: 0 3px 0 var(--path-deep);
+  color: var(--path-ink);
   font-weight: 800;
   font-size: 13.5px;
   text-decoration: none;
@@ -533,7 +630,7 @@ const others = computed(() =>
   }
 
   &--soon {
-    opacity: 0.6;
+    opacity: 0.75;
   }
 }
 

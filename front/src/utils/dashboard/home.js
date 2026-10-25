@@ -1,10 +1,5 @@
 import { addDays } from '@/utils/dashboard/days'
-import {
-  chapterNodes,
-  currentStep,
-  isBoss,
-  pathProgress
-} from '@/utils/mindMapPath'
+import { chapterNodes, currentStep, pathProgress } from '@/utils/mindMapPath'
 import { partsOf } from '@/utils/shop'
 import { STREAK_BADGES, weekIndex } from '@/utils/streak'
 import { t } from '@/i18n'
@@ -21,8 +16,8 @@ import { t } from '@/i18n'
  * @property {PathStep|null} previous the step before the current one
  * @property {PathStep} current
  * @property {PathStep|null} next the step after it, unless it is the boss
- * @property {PathStep|null} boss the next boss (a mini-boss or the chapter's), the current one
- *   when the player stands on it
+ * @property {PathStep|null} boss the chapter's boss ahead, mini-bosses skipped (chosen
+ *   2026-10-25), the current step when the player stands on it
  */
 
 /**
@@ -42,8 +37,9 @@ export function proposedPath(paths) {
 }
 
 /**
- * The steps the path's card draws: the one before, the current one, the next one, then the next
- * boss at the end (chests and hidden bosses aside).
+ * The steps the path's card draws: the one before, the current one, the next one, then the
+ * chapter's boss at the end (a mini-boss only shows as one of the three; chests and hidden bosses
+ * aside).
  *
  * @param {import('@/utils/mindMapPath').MindPath} path
  * @returns {PathTrack|null} null when nothing is left to play
@@ -56,14 +52,15 @@ export function pathTrack(path) {
     .map(n => n.step)
     .filter(s => s.kind !== 'chest' && s.kind !== 'hidden_boss')
   const at = steps.findIndex(s => s.key === current.key)
-  const boss = isBoss(current.kind)
-    ? current
-    : (steps.slice(at + 1).find(s => isBoss(s.kind)) ?? null)
+  const boss =
+    current.kind === 'boss'
+      ? current
+      : (steps.slice(at + 1).find(s => s.kind === 'boss') ?? null)
   const after = steps[at + 1] ?? null
   return {
     previous: steps[at - 1] ?? null,
     current,
-    next: after && after !== boss && !isBoss(current.kind) ? after : null,
+    next: after && after !== boss && current !== boss ? after : null,
     boss
   }
 }

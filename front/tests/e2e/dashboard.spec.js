@@ -29,12 +29,119 @@ test('a new user is welcomed and pointed to a first session', async ({
   await expect(page).toHaveURL(/#\/session\/new$/)
 })
 
-test('with history: streak, rating curve, modules, gamification, and the Lichess tab of an unlinked account', async ({
+/**
+ * The local month of the streak sheet (the summary's `streak.month`): today played, the two days
+ * before it played then frozen when the month allows, the rest missed, after today to come.
+ *
+ * @returns {{first: string, days: string[]}}
+ */
+function month() {
+  const now = new Date()
+  const today = now.getUTCDate()
+  const length = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)
+  ).getUTCDate()
+  const days = Array.from({ length }, (_, i) => {
+    const n = i + 1
+    if (n === today || n === today - 2) return 'played'
+    if (n === today - 1) return 'frozen'
+    return n < today ? 'missed' : 'future'
+  })
+  return { first: day(1 - today), days }
+}
+
+/** @param {number} hours from now @returns {string} */
+function inHours(hours) {
+  return new Date(Date.now() + hours * 3_600_000).toISOString()
+}
+
+/**
+ * GET /api/shop: a freeze and a pack on sale (the freeze ends first), an offer at its usual price
+ * and one coming soon, neither of them a deal.
+ */
+const SHOP = {
+  balance: 120,
+  offers: [
+    {
+      id: 'offer-pack',
+      slug: 'pack-streak',
+      section: 'aids',
+      name: 'Pack Puzzle Streak',
+      subtitle: null,
+      description: '',
+      items: [{ item: 'puzzle_streak_help', quantity: 3 }],
+      module: 'puzzle_streak',
+      price: 90,
+      wasPrice: 150,
+      comingSoon: false,
+      endsAt: null
+    },
+    {
+      id: 'offer-freeze',
+      slug: 'gel-semaine',
+      section: 'freeze',
+      name: 'Gel d’automne',
+      subtitle: null,
+      description: '',
+      items: [{ item: 'streak_freeze_7', quantity: 1 }],
+      module: null,
+      price: 60,
+      wasPrice: 100,
+      comingSoon: false,
+      endsAt: inHours(50)
+    },
+    {
+      id: 'offer-plain',
+      slug: 'gel-jour',
+      section: 'freeze',
+      name: 'Gel du jour',
+      subtitle: null,
+      description: '',
+      items: [{ item: 'streak_freeze_1', quantity: 1 }],
+      module: null,
+      price: 20,
+      wasPrice: null,
+      comingSoon: false,
+      endsAt: null
+    },
+    {
+      id: 'offer-soon',
+      slug: 'bientot',
+      section: 'aids',
+      name: 'Bientôt là',
+      subtitle: null,
+      description: '',
+      items: [{ item: 'puzzle_streak_pass', quantity: 1 }],
+      module: 'puzzle_streak',
+      price: 10,
+      wasPrice: 40,
+      comingSoon: true,
+      endsAt: null
+    }
+  ],
+  slides: [],
+  inventory: {},
+  freezes: [],
+  earning: {
+    crownsPerHour: 60,
+    perfectPercent: 150,
+    nearPercent: 100,
+    missedPercent: 50,
+    dailyMinutes: 60,
+    minutesLeftToday: 60
+  },
+  dailyWheel: null,
+  gifts: []
+}
+
+test('with history: level, streak and its sheet, path, store deals, modules, gamification', async ({
   page,
   context
 }) => {
-  await signIn(context)
+  // One step of the visualisation path done: the path card proposes it (docs/DASHBOARD.md § 3).
+  await signIn(context, { mindMapSteps: ['1-1'] })
   const today = day(0)
+  const calendar = month()
   await page.route('**/api/dashboard/activity**', route =>
     route.fulfill({
       json: {
@@ -51,19 +158,7 @@ test('with history: streak, rating curve, modules, gamification, and the Lichess
       }
     })
   )
-  await page.route('**/api/dashboard/rating-history**', route =>
-    route.fulfill({
-      json: {
-        from: day(-89),
-        today,
-        points: [
-          { date: day(-89), rating: 1500 },
-          { date: day(-30), rating: 1580 },
-          { date: day(-2), rating: 1612 }
-        ]
-      }
-    })
-  )
+  await page.route('**/api/shop', route => route.fulfill({ json: SHOP }))
 
   await page.route('**/api/gamification/summary', route =>
     route.fulfill({
@@ -82,14 +177,14 @@ test('with history: streak, rating curve, modules, gamification, and the Lichess
           best: 21,
           playedToday: true,
           week: [true, true, true, false, false, false, false],
-          nextMilestone: 7
+          frozenWeek: [],
+          freezeDays: 2,
+          nextMilestone: 7,
+          month: calendar
         },
         today: { date: today, exerciseXp: 40, cap: 500 }
       }
     })
-  )
-  await page.route('**/api/gamification/streak/notice', route =>
-    route.fulfill({ json: { pending: false } })
   )
   await page.route('**/api/gamification/trophies', route =>
     route.fulfill({
@@ -145,11 +240,16 @@ test('with history: streak, rating curve, modules, gamification, and the Lichess
   await expect(page.getByTestId('dashboard')).toBeVisible()
   await expect(page.getByTestId('dashboard-welcome')).toHaveCount(0)
 
-  // No more activity heatmap: the streak card replaces it.
+  // The rating curve, the recent sessions and the weak-theme tip left for /stats (design v2).
+  await expect(page.getByTestId('rating-card')).toHaveCount(0)
+  await expect(page.getByTestId('recent-sessions')).toHaveCount(0)
+  await expect(page.getByTestId('weak-theme-tip')).toHaveCount(0)
   await expect(page.getByTestId('activity-heatmap')).toHaveCount(0)
+  await expect(page.getByTestId('dashboard-stats')).toHaveAttribute(
+    'href',
+    '#/stats'
+  )
 
-  await expect(page.getByTestId('rating-current')).toHaveText('1612')
-  await expect(page.getByTestId('rating-delta')).toContainText('+112')
   await expect(page.getByTestId('module-row-puzzles')).toContainText(
     '22 résolus'
   )
@@ -157,24 +257,25 @@ test('with history: streak, rating curve, modules, gamification, and the Lichess
 
   // Gamification (docs/GAMIFICATION.md): level, streak, module level, trophies, weekly quest.
   await expect(page.getByTestId('level-title')).toHaveText('Niveau 12')
-  await expect(page.getByTestId('level-xp')).toHaveText(
-    '2\u202f340 / 3\u202f000 XP'
-  )
-  // The streak: in the header and its card; its badges are in the trophy grid.
+  await expect(page.getByTestId('level-xp')).toHaveText('2 340 / 3 000 XP')
+  // The streak: in the header and its card, lit (alive), its freezes' days, the week.
   await expect(page.getByTestId('streak-count')).toHaveText('3')
-  await expect(page.getByTestId('streak-card-count')).toHaveText('3')
-  // 3 days: the first badge reached, a small flame, lit (the streak is alive).
-  await expect(page.getByTestId('streak-card-flame')).toHaveAttribute(
-    'data-scale',
-    '0.61'
+  const card = page.getByTestId('streak-card')
+  await expect(card.getByTestId('streak-card-count')).toHaveText('3')
+  await expect(card.getByTestId('streak-card-flame')).not.toHaveClass(
+    /streak-flame--out/
   )
-  await expect(page.getByTestId('streak-card-flame')).not.toHaveClass(
-    /streak-card__flame--out/
+  await expect(card.getByTestId('streak-card-freezes')).toContainText('2')
+  await expect(card.getByTestId('streak-day-0')).toHaveAttribute(
+    'data-done',
+    'true'
   )
-  await expect(page.getByTestId('streak-card-best')).toHaveText(
-    'Record : 21 jours'
+  await expect(card.getByTestId('streak-day-3')).not.toHaveAttribute(
+    'data-done',
+    'true'
   )
   await expect(page.getByTestId('streak-badges-count')).toHaveCount(0)
+
   await expect(
     page.getByTestId('module-row-puzzles').getByTestId('module-level')
   ).toHaveText('Niv. 6')
@@ -197,6 +298,26 @@ test('with history: streak, rating curve, modules, gamification, and the Lichess
   )
   await expect(page.getByTestId('quest-progress')).toHaveText('22/40')
 
+  // The path played last, cut short around « TU ES ICI »; the endgames' and défis' cards.
+  const path = page.getByTestId('dashboard-path-current')
+  await expect(path).toHaveAttribute('data-capacity', 'visualisation')
+  await expect(path).toContainText('TU ES ICI')
+  await expect(path.getByTestId('dashboard-path-continue')).toHaveText(
+    'Continuer'
+  )
+  await expect(page.getByTestId('dashboard-path-other').first()).toBeVisible()
+  await expect(page.getByTestId('dashboard-endgames')).toBeVisible()
+  await expect(page.getByTestId('dashboard-challenges')).toBeVisible()
+
+  // The store's deals: on sale only, the soonest to end first, what they hold read from the items.
+  const deals = page.getByTestId('dashboard-deal')
+  await expect(deals).toHaveCount(2)
+  await expect(deals.nth(0)).toContainText('Gel d’automne')
+  await expect(deals.nth(0)).toContainText('Gel 1 semaine')
+  await expect(deals.nth(0)).toContainText('Fin dans 2 j')
+  await expect(deals.nth(1)).toContainText('Pack Puzzle Streak')
+  await expect(deals.nth(1)).toContainText('3 × Aide Puzzle Streak')
+
   if (SCREENSHOTS) {
     await page.screenshot({
       path: `${SCREENSHOTS}/dashboard-desktop.png`,
@@ -210,11 +331,35 @@ test('with history: streak, rating curve, modules, gamification, and the Lichess
     await page.setViewportSize({ width: 1280, height: 720 })
   }
 
-  // The seeded user has no Lichess account: no curve, a link to the profile, nothing asked of Lichess.
-  await page.getByTestId('rating-tab-blitz').click()
-  await expect(page.getByTestId('rating-notice')).toContainText(
-    'Lie ton compte Lichess'
+  // « En voir plus »: the month, the badges, the next tier and its chest, the freezes on sale.
+  await card.getByTestId('streak-card-more').click()
+  const sheet = page.getByTestId('streak-sheet')
+  await expect(sheet).toContainText('3 jours d’affilée')
+  const cells = sheet.getByTestId('streak-calendar')
+  const count = state => calendar.days.filter(d => d === state).length
+  for (const state of ['played', 'frozen', 'missed'])
+    await expect(cells.locator(`[data-state="${state}"]`)).toHaveCount(
+      count(state)
+    )
+  await expect(sheet).toContainText(
+    `${count('played')} joués · ${count('frozen')} gelés`
   )
-  await page.getByTestId('rating-tab-puzzles').click()
-  await expect(page.getByTestId('rating-current')).toHaveText('1612')
+  await expect(sheet).toContainText('Record : 21 jours')
+  await expect(sheet).toContainText('PROCHAIN PALIER · 7 JOURS')
+  await expect(sheet).toContainText('Encore 4 jours')
+  await expect(sheet).toContainText('+70')
+  // The freezes on sale, cheapest first; one opens the purchase in place.
+  const freezes = sheet.getByTestId('streak-sheet-freeze')
+  await expect(freezes).toHaveCount(2)
+  await expect(freezes.nth(0)).toContainText('Gel du jour')
+  await expect(freezes.nth(1)).toContainText('Gel d’automne')
+  await page.keyboard.press('Escape')
+  await expect(sheet).toHaveCount(0)
+
+  // A deal opens its offer in the store; the path card, its path.
+  await deals.nth(0).click()
+  await expect(page).toHaveURL(/#\/boutique\?offer=gel-semaine$/)
+  await page.goBack()
+  await page.getByTestId('dashboard-path-continue').click()
+  await expect(page).toHaveURL(/#\/cerveau\/visualization$/)
 })
