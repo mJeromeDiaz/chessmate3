@@ -83,79 +83,182 @@ Tests : `tests/Functional/Ops/TickTest.php`.
 ## 2. Configuration et mise en ligne
 
 Fichiers : `deploy/ovh/{.ovhconfig, env.local.dist, deploy.sh}`, `api/public/.htaccess`,
-`front/public/.htaccess`, `api/bin/cron-daily.php`.
+`front/public/.htaccess`, `api/bin/cron-daily.php`. Dans cette section, `<domaine>` vaut
+`dontstayrooky.com`, et `PHP=/usr/local/php8.3/bin/php` sur l'hébergement.
 
-### Organisation sur l'hébergement
+### Les adresses et les dossiers
+
+| Adresse | Sert | Dossier sur l'hébergement (racine web) |
+|---|---|---|
+| `https://www.<domaine>` | le site : landing et application (le SPA compilé) | `~/dontstayrooky/app/` |
+| `https://<domaine>` | redirigé vers `www.` | `~/dontstayrooky/app/` |
+| `https://api.<domaine>` | l'API Symfony (JSON, retours OAuth, tick) | `~/dontstayrooky/api/public/` |
 
 ```text
-~/.ovhconfig            PHP 8.3 (PHP-FPM), environnement production
-~/dontstayrooky/api/        l'API Symfony ; racine web du site api.<domaine> : ~/dontstayrooky/api/public
-~/dontstayrooky/api/.env.local   les secrets (jamais dans git), modèle : deploy/ovh/env.local.dist
-~/dontstayrooky/app/        le SPA compilé ; racine web du site app.<domaine>
+~/.ovhconfig                     PHP 8.3 (PHP-FPM), environnement production
+~/dontstayrooky/api/             l'API ; seul public/ est exposé
+~/dontstayrooky/api/.env.local   la configuration et les secrets (jamais dans git), modèle : deploy/ovh/env.local.dist
+~/dontstayrooky/app/             le SPA compilé, remplacé à chaque déploiement
 ```
 
-L'API et le SPA ont chacun leur sous-domaine, sous **le même domaine** : le cookie de session
-(`SameSite=Strict`, sur `api.`) n'est envoyé qu'entre sites d'un même domaine. Le SPA utilise un
-routeur à `#` : aucune réécriture d'URL n'est nécessaire.
-
+- **Même domaine pour le site et l'API** : le cookie de session (`SameSite=Strict`, posé par `api.`)
+  n'est envoyé qu'entre adresses d'un même domaine.
+- **Une seule origine pour le site** : l'API n'accepte (CORS) que `https://www.<domaine>`. Le domaine
+  nu pointe donc sur le même dossier, et `front/public/.htaccess` le redirige vers `www.` (301, la
+  route après `#` est conservée). Sans cette redirection, le site s'afficherait sur `<domaine>` mais
+  chaque appel à l'API serait refusé.
+- **Aucune réécriture des routes** : le SPA utilise un routeur à `#`.
 - `api/public/.htaccess` envoie tout vers `index.php` et rétablit l'en-tête `Authorization`, que
-  PHP-FPM derrière Apache supprime. Sans cette règle, aucun JWT n'arriverait à l'API.
-- `front/public/.htaccess` (copié dans le build) fixe le cache : `index.html` et `push-sw.js` sont
-  toujours revalidés, et `assets/` (fichiers hashés) est mis en cache un an. Il ajoute aussi quelques
-  en-têtes de sécurité, et le type `application/wasm` du moteur d'échecs (`engine/`, docs/ENGINE.md).
+  PHP-FPM derrière Apache supprime : sans cette règle, aucun JWT n'arriverait à l'API.
+- `front/public/.htaccess` (copié dans le build) fixe aussi le cache (`index.html` et `push-sw.js`
+  toujours revalidés, `assets/` et le modèle Maia gardés un an), quelques en-têtes de sécurité et le
+  type `application/wasm` du moteur (docs/ENGINE.md).
 
 ### Première mise en place (une fois)
 
-1. **Manager OVH, multisite** : créez les sous-domaines `api.<domaine>` → `dontstayrooky/api/public`
-   et `app.<domaine>` → `dontstayrooky/app`, chacun avec un certificat SSL (Let's Encrypt). Le pare-feu
-   applicatif reste coupé (`http.firewall=none` dans `.ovhconfig`).
-2. **`.ovhconfig`** : copiez `deploy/ovh/.ovhconfig` à la racine de l'hébergement (`~/.ovhconfig`).
-3. **Bases de données** : créez deux bases MySQL 8.0 dans le manager, la base principale et celle
-   du catalogue de puzzles (section 3). Notez pour chacune son hôte (`<…>.mysql.db`), son
-   utilisateur et son mot de passe.
-4. **SSH** : en SSH, la version de PHP n'est pas celle de `.ovhconfig`. Utilisez toujours
-   `/usr/local/php8.3/bin/php`. Vérifiez que `rsync` répond (`which rsync`) : le script de
-   déploiement en a besoin. À défaut, envoyez les fichiers en SFTP, en suivant les mêmes
-   exclusions.
-5. **Premier envoi** : lancez `deploy/ovh/deploy.sh` (voir plus bas). Les migrations échouent tant
-   que `.env.local` n'existe pas : c'est normal.
-6. **`api/.env.local`** : copiez-y `deploy/ovh/env.local.dist` et remplissez chaque `<…>`. Générez
-   les secrets sur votre machine (`openssl rand -hex 32`, `openssl rand -base64 32`).
-7. **Sur l'hébergement**, avec `PHP=/usr/local/php8.3/bin/php` :
+#### a. Dans le manager OVH
+
+1. **Multisite** : ajoutez trois entrées, chacune avec l'option SSL (Let's Encrypt) :
+   - `www.<domaine>` → `dontstayrooky/app` ;
+   - `<domaine>` → `dontstayrooky/app` ;
+   - `api.<domaine>` → `dontstayrooky/api/public`.
+
+   Vérifiez que le certificat couvre bien les trois noms : sans lui, `https://<domaine>` affiche une
+   erreur avant même la redirection.
+2. **Trois bases MySQL 8.0** (section 3), toutes incluses dans l'offre :
+   - la **base principale** (comptes, tentatives, répertoires, séances…) ;
+   - le **catalogue de puzzles** (environ 654 Mo une fois importé) ;
+   - la **base des finales** (réponses de la tablebase Lichess, et les positions des leçons).
+
+   Notez pour chacune son hôte (`<…>.mysql.db`), son nom, son utilisateur et son mot de passe.
+3. **Zone DNS** : activez SPF et DKIM pour `<domaine>`, sans quoi Gmail range les emails en spam.
+4. **SSH** : activez l'accès SSH de l'hébergement. En SSH, la version de PHP n'est pas celle de
+   `.ovhconfig` : utilisez toujours `/usr/local/php8.3/bin/php`. Vérifiez que `rsync` répond
+   (`which rsync`), le script de déploiement en a besoin ; à défaut, envoyez les fichiers en SFTP,
+   avec les mêmes exclusions que le script.
+
+#### b. La configuration
+
+5. **`.ovhconfig`** : copiez `deploy/ovh/.ovhconfig` à la racine de l'hébergement (`~/.ovhconfig`).
+   Il fixe PHP 8.3, l'environnement `production` et `http.firewall=none`.
+
+   Le **pare-feu applicatif d'OVH** (`http.firewall=security`, mod_security avec des règles
+   génériques qu'on ne peut ni lire ni régler) reste coupé par précaution : l'application envoie en
+   permanence des contenus qui ressemblent à des attaques pour ces règles (FEN pleines de `/`, PGN
+   avec crochets et accolades, HTML des annonces), et un refus viendrait d'OVH, sans trace dans nos
+   journaux. L'API fait elle-même ce travail (validation, requêtes paramétrées, HTML des annonces
+   assaini, limites de débit). Ce choix n'a pas été mesuré : pour essayer `security`, passez-le
+   après un déploiement puis rejouez un import PGN, l'enregistrement d'une ligne de répertoire, une
+   annonce avec lien et image et une séance complète ; sans aucun 403, gardez-le.
+6. **Secrets et clés, sur votre machine** :
+
+   ```bash
+   openssl rand -hex 32       # APP_SECRET, JWT_PASSPHRASE, OPS_TICK_TOKEN (un tirage chacun)
+   openssl rand -base64 32    # OAUTH_TOKEN_ENCRYPTION_KEY, CALENDAR_TOKEN_KEY (un tirage chacun)
+   cd api && bin/console app:notification:vapid-keys   # VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY
+   ```
+
+7. **`api/.env.local`** : partez de `deploy/ovh/env.local.dist` et remplacez chaque `<…>` :
+   - `DEFAULT_URI=https://api.<domaine>`, `FRONTEND_URL=https://www.<domaine>`,
+     `CORS_ALLOWED_ORIGIN=^https://www\.<domaine>$` ;
+   - `DATABASE_URL`, `CATALOG_DATABASE_URL` et `ENDGAME_DATABASE_URL` : les trois bases du point 2,
+     dans cet ordre ;
+   - `MAILER_FROM_ADDRESS` : une adresse du domaine (point 16) ;
+   - les identifiants OAuth Google (point 15) ; `LICHESS_APP_TOKEN` est facultatif (jeton du compte
+     Lichess de l'application, pour l'explorateur des maîtres quand le joueur n'a pas lié son compte,
+     docs/REPERTOIRE.md) ;
+   - les secrets et les clés VAPID du point 6.
+
+   Puis envoyez-le **avant le premier déploiement**, pour que ses migrations passent :
+
+   ```bash
+   ssh <login>@ssh.<cluster>.hosting.ovh.net 'mkdir -p dontstayrooky/api'
+   scp env.local <login>@ssh.<cluster>.hosting.ovh.net:dontstayrooky/api/.env.local
+   ```
+
+   Ne gardez pas ce fichier dans le dépôt.
+
+#### c. Le premier déploiement
+
+8. **Premier envoi**, depuis la racine du dépôt (détails plus bas) :
+
+   ```bash
+   OVH_SSH=<login>@ssh.<cluster>.hosting.ovh.net API_URL=https://api.<domaine> deploy/ovh/deploy.sh
+   ```
+
+   Il migre les trois bases. Son `app:deploy:check` final signale encore des `ERROR` (clés JWT
+   absentes) et des `WARNING` (catalogue vide) : c'est normal à ce stade.
+9. **Initialisation, en SSH** :
 
    ```bash
    cd ~/dontstayrooky/api
-   $PHP bin/console lexik:jwt:generate-keypair          # avec JWT_PASSPHRASE de .env.local
-   $PHP bin/console app:notification:vapid-keys          # puis les deux clés dans .env.local
-   $PHP bin/console doctrine:migrations:migrate -n
-   $PHP bin/console doctrine:migrations:migrate -n --configuration=config/migrations/catalog.php
-   $PHP bin/console app:puzzle:sync-themes
-   $PHP bin/console app:repertoire:sync-openings
-   $PHP bin/console app:deploy:check
+   $PHP bin/console lexik:jwt:generate-keypair     # utilise JWT_PASSPHRASE de .env.local
+   $PHP bin/console app:puzzle:sync-themes         # les thèmes Lichess des puzzles
+   $PHP bin/console app:repertoire:sync-openings   # les noms des ouvertures
    ```
 
-   Ne lancez **jamais** `doctrine:fixtures:load`, qui vide la base. Le premier admin est créé après
-   son inscription : `$PHP bin/console app:admin:grant <email>`. Le catalogue de puzzles fait l'objet
-   de la section 3.
-8. **Le tick** : créez une tâche sur cron-job.org.
-   - URL : `https://api.<domaine>/api/ops/tick`, méthode **POST**, toutes les minutes ;
-   - en-tête `X-Tick-Token` : la valeur de `OPS_TICK_TOKEN` ;
-   - délai d'expiration : 60 s.
+   Ne lancez **jamais** `doctrine:fixtures:load` : il vide la base principale et crée le compte de
+   démo au mot de passe public.
+10. **Le catalogue de puzzles** : importez-le en suivant la section 3, « Importer le catalogue chez
+    OVH » (`app:puzzle:import --rebuild`), puis construisez l'index de Brillant ou Blunder
+    (environ 35 s, docs/BRILLIANCY.md) :
 
-   Vérifiez que la réponse vaut 200 `{"busy":false,…}`.
-9. **Tâche planifiée OVH quotidienne** : dans le manager, créez une tâche qui lance le script
-   `dontstayrooky/api/bin/cron-daily.php`, en PHP 8.3, une fois par jour. Il exécute
-   `cache:pool:prune`, `app:account:purge` et `app:repertoire:refresh-opening-stats` (premiers
-   coups de l'explorateur Lichess, 100 appels au plus par passage, docs/REPERTOIRE.md § 12 bis). OVH
-   ne lance qu'un script PHP, pas une commande shell.
-10. **OAuth** : chez Google, déclarez l'URI de redirection
-    `https://api.<domaine>/api/auth/oauth/google/callback`. Lichess ne demande aucune déclaration.
-11. **Emails** : `MAILER_DSN=mailfunction://default` envoie par la fonction `mail()` de PHP
-    (`App\Mailer\MailFunctionTransport`), avec le quota horaire de l'offre. L'expéditeur
-    (`MAILER_FROM_ADDRESS`) doit être une adresse du domaine. Activez SPF et DKIM dans la zone DNS
-    (manager OVH), sans quoi Gmail range les emails en spam. Les emails d'annonce partent par
-    paquets de `ANNOUNCEMENT_EMAILS_PER_MINUTE` (20 par défaut) à chaque tick : baissez-le si le
-    quota horaire de l'offre est plus serré (docs/ANNOUNCEMENTS.md, § 4).
+    ```bash
+    $PHP bin/console app:brilliancy:rebuild
+    ```
+
+11. **Les positions des finales** : tirez et faites vérifier par la tablebase Lichess les variantes
+    des leçons (docs/ENDGAMES.md, § 4) :
+
+    ```bash
+    $PHP bin/console app:endgame:fill-pool
+    ```
+
+    Chaque passage fait 200 appels à Lichess au plus et reprend là où le précédent s'est arrêté :
+    relancez-le jusqu'à ce qu'il ne fasse plus d'appel. S'il échoue en SSH (connexions sortantes
+    peu fiables, non vérifié), les leçons restent jouables avec leur seule position de manuel :
+    relancez-le plus tard.
+12. **Contrôle** : `$PHP bin/console app:deploy:check` ne doit plus afficher aucun `ERROR`
+    (« Vérifier », plus bas).
+
+#### d. Les tâches planifiées
+
+13. **Le tick, chaque minute** (section 1) : créez une tâche sur cron-job.org.
+    - URL : `https://api.<domaine>/api/ops/tick`, méthode **POST** ;
+    - en-tête `X-Tick-Token` : la valeur de `OPS_TICK_TOKEN` ;
+    - délai d'expiration : 60 s.
+
+    La réponse doit valoir 200 `{"busy":false,…}`. Un 404 signale un secret absent ou différent.
+14. **La tâche quotidienne** : dans le manager, « Tâches planifiées - Cron », créez une tâche qui
+    lance le script `dontstayrooky/api/bin/cron-daily.php`, en PHP 8.3, une fois par jour, à une
+    heure creuse. OVH ne lance qu'un script PHP, pas une commande shell ; celui-ci enchaîne :
+    - `cache:pool:prune` : les réponses expirées de l'explorateur et de l'évaluation Lichess ;
+    - `app:account:purge` : les comptes dont la suppression est due (docs/AUTH.md) ;
+    - `app:repertoire:refresh-opening-stats` : les premiers coups de l'explorateur, 100 appels au
+      plus (docs/REPERTOIRE.md, § 12 bis) ;
+    - `app:endgame:prune-tablebase` : les réponses de la tablebase non lues depuis 90 jours
+      (docs/ENDGAMES.md).
+
+#### e. Les services extérieurs
+
+15. **OAuth** : chez Google (console Google Cloud, identifiants OAuth « application Web »),
+    déclarez l'URI de redirection `https://api.<domaine>/api/auth/oauth/google/callback`, au
+    caractère près, et recopiez l'identifiant et le secret dans `.env.local`. Lichess ne demande
+    aucune déclaration (`OAUTH_LICHESS_CLIENT_ID=dontstayrooky`).
+16. **Emails** : `MAILER_DSN=mailfunction://default` envoie par la fonction `mail()` de PHP
+    (`App\Mailer\MailFunctionTransport`), dans le quota horaire de l'offre. L'expéditeur
+    (`MAILER_FROM_ADDRESS`) doit être une adresse du domaine, et SPF et DKIM actifs (point 3). Les
+    emails d'annonce partent par paquets de `ANNOUNCEMENT_EMAILS_PER_MINUTE` (20 par défaut) à
+    chaque tick : baissez-le dans `.env.local` si le quota est plus serré (docs/ANNOUNCEMENTS.md,
+    § 4).
+
+#### f. L'ouverture
+
+17. **Le premier admin** : inscrivez-vous sur le site, puis en SSH :
+    `$PHP bin/console app:admin:grant <email>`. C'est la seule façon de créer un admin ; il crée
+    ensuite les clés d'invitation de l'accès anticipé (docs/EARLY_ACCESS.md).
+18. **Vérifications côté web** : `GET /api/ops/check?network=1` (« Vérifier », plus bas), puis
+    `https://<domaine>` doit renvoyer sur `https://www.<domaine>` et la connexion fonctionner.
 
 ### Déployer une version
 
@@ -166,13 +269,25 @@ OVH_SSH=<login>@ssh.<cluster>.hosting.ovh.net API_URL=https://api.<domaine> depl
 Le script déploie **le dernier commit** (`git archive HEAD`), jamais les fichiers non commités.
 
 1. Il construit tout sur votre machine : `composer install --no-dev` (le serveur ne peut rien
-   télécharger en SSH) et `npm run build` avec `API_URL`.
+   télécharger en SSH), Stockfish et Maia (`engine:fetch`, `maia:fetch`), puis `npm run build` avec
+   `API_URL`.
 2. Il envoie les fichiers par `rsync`, sans toucher à ce qui appartient au serveur : `.env.local`,
-   clés JWT, `var/`, `public/bundles/`.
-3. Il lance sur le serveur les migrations des deux bases, `cache:clear`, `assets:install` et
+   clés JWT, `var/`, `public/bundles/`. Le dossier `app/` est remplacé en entier.
+3. Il lance sur le serveur les migrations des **trois** bases, `cache:clear`, `assets:install` et
    `app:deploy:check`.
 
 Les messages en file ne sont pas perdus pendant un déploiement : le tick suivant les traite.
+
+Selon ce que la version change, à lancer ensuite en SSH :
+
+| La version… | Commande |
+|---|---|
+| change les règles d'XP (`XpRules`) | `$PHP bin/console app:gamification:rebuild` (docs/GAMIFICATION.md) |
+| ajoute des leçons de finales | `$PHP bin/console app:endgame:fill-pool` |
+| touche aux thèmes Lichess ou aux noms d'ouvertures | `app:puzzle:sync-themes`, `app:repertoire:sync-openings` |
+| ajoute une variable à `env.local.dist` | l'ajouter dans `~/dontstayrooky/api/.env.local`, puis `cache:clear` |
+
+Chaque mois, le catalogue de puzzles se met à jour à part (section 3).
 
 ### Vérifier
 
@@ -181,6 +296,7 @@ Les messages en file ne sont pas perdus pendant un déploiement : le tick suivan
   - Argon2id et `memory_limit` ;
   - la version de MySQL et la table de Messenger ;
   - la base du catalogue : joignable, migrée, et remplie (sinon `WARNING` : aucun puzzle à servir) ;
+  - la base des finales : joignable et migrée ;
   - `var/` accessible en écriture et les clés JWT lisibles ;
   - les secrets présents et les réglages de production.
 
@@ -301,7 +417,7 @@ RENAME TABLE ChessMateGo_bench.puzzle TO ChessMateGo_bench_catalog.puzzle,
              ChessMateGo_bench.puzzle_theme_membership TO ChessMateGo_bench_catalog.puzzle_theme_membership;
 ```
 
-Lancez ensuite le reste des migrations des deux bases. Celle du catalogue crée ses tables avec
+Lancez ensuite le reste des migrations des bases. Celle du catalogue crée ses tables avec
 `IF NOT EXISTS` : les tables déplacées sont conservées. En dev et en e2e, il suffit de migrer les deux
 bases puis de recharger les fixtures (`npm run e2e:prepare` le fait pour l'e2e).
 

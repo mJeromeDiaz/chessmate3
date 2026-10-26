@@ -1,6 +1,15 @@
 # Apache (OVH shared hosting, docs/DEPLOY_OVH.md): the built SPA, static files only (hash router:
-# no rewriting). index.html and the service worker are always revalidated; the hashed assets of a
+# no route rewriting). index.html and the service worker are always revalidated; the hashed assets of a
 # build never change, so they are cached for a year.
+
+# The bare domain points at this folder too: sent to www., the SPA's only origin (the API's CORS).
+# The browser keeps the #route across the redirect.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP_HOST} !^www\. [NC]
+    RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
