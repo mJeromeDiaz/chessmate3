@@ -268,11 +268,16 @@ OVH_SSH=<login>@ssh.<cluster>.hosting.ovh.net API_URL=https://api.<domaine> depl
 
 Le script déploie **le dernier commit** (`git archive HEAD`), jamais les fichiers non commités.
 
+0. Il ouvre d'abord **une seule connexion SSH**, réutilisée par tous les `rsync` et `ssh` qui
+   suivent (`ControlMaster`) : le mot de passe n'est demandé qu'une fois, au début, puis on peut
+   laisser tourner. Il s'arrête aussitôt si `rsync` manque sur l'hébergement.
 1. Il construit tout sur votre machine : `composer install --no-dev` (le serveur ne peut rien
    télécharger en SSH), Stockfish et Maia (`engine:fetch`, `maia:fetch`), puis `npm run build` avec
    `API_URL`.
 2. Il envoie les fichiers par `rsync`, sans toucher à ce qui appartient au serveur : `.env.local`,
-   clés JWT, `var/`, `public/bundles/`. Le dossier `app/` est remplacé en entier.
+   clés JWT, `var/`, `public/bundles/`. Le dossier `app/` est remplacé en entier. Une ligne
+   d'avancement (pourcentage, débit) s'affiche : le premier envoi transmet tout (`vendor/`,
+   Stockfish, Maia et ses 46 Mo) et prend plusieurs minutes, les suivants seulement ce qui change.
 3. Il lance sur le serveur les migrations des **trois** bases, `cache:clear`, `assets:install` et
    `app:deploy:check`.
 

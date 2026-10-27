@@ -33,7 +33,7 @@ Choix validés (2026-10-25) :
   couleur**, quel que soit le répertoire (deux Siciliennes avec les Noirs : un seul paiement ; la
   seconde rapporte son XP). Badge « Tous les défis maîtrisés » : les 15 étapes fixes, sans les
   chapitres d'ouverture. Plus de bonus d'arrivée ni de coffre de séance. **Non classé.**
-- **Pas de boss final** pour l'instant. Les boss n'ont pas encore d'image : une pièce les dessine.
+- **Pas de boss final** pour l'instant. Les boss sans image sont une pièce ; le Maître du mat a ses expressions (`maitre-du-mat/`).
 
 ## 1. Organisation du code
 

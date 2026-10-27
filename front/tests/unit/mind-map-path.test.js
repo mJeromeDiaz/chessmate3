@@ -287,8 +287,21 @@ describe('mind map path', () => {
     expect(moodImage('avocat', 'pride')).toContain('demon-fierte.png')
     expect(moodImage('avocat', 'doubt')).toContain('demon-malice.png')
     expect(moodImage('avocat', 'neutral')).toContain('demon-neutre.png')
-    expect(moodImage('bourreau', 'joy')).toBe('')
-    expect(BOSS_GLYPHS.bourreau).toBe('♛')
+    // The Bourreau and the Reine noire (the queen) have their expressions, not a piece.
+    expect(moodImage('bourreau', 'joy')).toContain('bourreau-joie.png')
+    expect(standingImage('bourreau')).toContain('bourreau-pose.png')
+    expect(moodImage('reine-noire', 'anger')).toContain('reine-colere.png')
+    expect(standingImage('reine-noire')).toContain('reine-pose.png')
+    // The défis' Maître du mat: files maitre-du-mat-*.png.
+    expect(moodImage('defi-mates', 'joy')).toContain(
+      'maitre-du-mat-joie.png'
+    )
+    expect(standingImage('defi-mates')).toContain(
+      'maitre-du-mat-pose.png'
+    )
+    expect(BOSS_GLYPHS['defi-mates']).toBeUndefined()
+    expect(BOSS_GLYPHS.bourreau).toBeUndefined()
+    expect(BOSS_GLYPHS['reine-noire']).toBeUndefined()
     expect(BOSS_GLYPHS['cavalier-errant']).toBe('♞')
     expect(fr.characters.metronome.name).toBe('Le Métronome')
   })

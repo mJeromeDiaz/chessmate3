@@ -16,11 +16,25 @@ PHP_BIN="${PHP_BIN:-/usr/local/php8.3/bin/php}"
 
 ROOT="$(git rev-parse --show-toplevel)"
 BUILD="$(mktemp -d)"
-trap 'rm -rf "$BUILD"' EXIT
+# One SSH connection shared by every rsync and ssh below: the password is asked once, at the start.
+SSH_DIR="$(mktemp -d)"
+SSH_OPTS=(-o ControlPath="$SSH_DIR/control" -o ServerAliveInterval=30)
+cleanup() {
+  ssh "${SSH_OPTS[@]}" -O exit "$OVH_SSH" 2>/dev/null || true
+  rm -rf "$BUILD" "$SSH_DIR"
+}
+trap cleanup EXIT
 REVISION="$(git -C "$ROOT" rev-parse --short HEAD)"
 
 if [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
   echo "Note: uncommitted changes are NOT deployed (only HEAD, $REVISION)."
+fi
+
+echo "==> Connection to $OVH_SSH (the only password prompt)"
+ssh "${SSH_OPTS[@]}" -o ControlMaster=yes -o ControlPersist=yes -fN "$OVH_SSH"
+if ! ssh "${SSH_OPTS[@]}" "$OVH_SSH" 'command -v rsync' >/dev/null; then
+  echo "rsync is missing on the host: send the files over SFTP instead (docs/DEPLOY_OVH.md)." >&2
+  exit 1
 fi
 
 echo "==> Export of $REVISION"
@@ -34,17 +48,17 @@ echo "==> SPA: build against $API_URL"
 # The chess engine and Maia are not in git (docs/ENGINE.md): fetched from their releases, digests checked.
 (cd "$BUILD/front" && npm ci --no-audit --no-fund && npm run engine:fetch && npm run maia:fetch && API_URL="$API_URL" npm run build)
 
-echo "==> Upload"
+echo "==> Upload (the first one sends everything: several minutes)"
 # Kept on the host: its .env.local (secrets), JWT keys, var/ (cache, logs), installed bundle assets.
-rsync -az --delete \
+rsync -az --delete --info=progress2 -e "ssh ${SSH_OPTS[*]}" \
   --exclude '/.env.local' --exclude '/.env.*.local' --exclude '/.env.local.php' \
   --exclude '/config/jwt/*.pem' --exclude '/var/' --exclude '/public/bundles/' \
   --exclude '/tests/' --exclude '/phpunit*' --exclude '/.phpunit.cache/' \
   "$BUILD/api/" "$OVH_SSH:$REMOTE_DIR/api/"
-rsync -az --delete "$BUILD/front/dist/spa/" "$OVH_SSH:$REMOTE_DIR/app/"
+rsync -az --delete --info=progress2 -e "ssh ${SSH_OPTS[*]}" "$BUILD/front/dist/spa/" "$OVH_SSH:$REMOTE_DIR/app/"
 
 echo "==> On the host: migrations, cache, checks"
-ssh "$OVH_SSH" "set -e; cd $REMOTE_DIR/api \
+ssh "${SSH_OPTS[@]}" "$OVH_SSH" "set -e; cd $REMOTE_DIR/api \
   && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration \
   && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --configuration=config/migrations/catalog.php \
   && $PHP_BIN bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --configuration=config/migrations/endgame.php \

@@ -207,14 +207,11 @@ export const CHARACTERS = [
  * endgames path's, the défis'.
  */
 export const BOSS_GLYPHS = /** @type {Record<string, string>} */ ({
-  bourreau: '♛',
   gardien: '♟',
   horloger: '♚',
-  'reine-noire': '♛',
   'maitre-tours': '♜',
   duelliste: '♝',
   'cavalier-errant': '♞',
-  'defi-mates': '♛',
   'defi-endgames': '♜',
   'defi-tactics': '♞',
   'defi-opening': '♝'
@@ -222,11 +219,14 @@ export const BOSS_GLYPHS = /** @type {Record<string, string>} */ ({
 
 /**
  * The folder of expressions of a boss whose pictures bear another name (the Roi des cendres: the
- * lich; the Avocat du diable: the demon).
+ * lich; the Avocat du diable: the demon; the Reine noire: the queen; the défis' Maître du mat:
+ * maitre-du-mat).
  */
 const STAND_INS = /** @type {Record<string, string>} */ ({
   'roi-cendres': 'liche',
-  avocat: 'demon'
+  avocat: 'demon',
+  'reine-noire': 'reine',
+  'defi-mates': 'maitre-du-mat'
 })
 
 /**

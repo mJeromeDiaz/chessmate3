@@ -439,10 +439,10 @@ pure est dans `front/src/utils/endgamePath.js`.
   reliées par un trait, éclairé jusqu'à la dernière leçon connue, puis son boss ; une rangée quand
   la carte a la place (requête de conteneur, 860 px), une colonne sinon. Le nœud d'une leçon dit
   son état : « À commencer » (contour, ▶), « En cours · 1/10 » et « Connue · n/10 » (l'anneau des
-  passages), « Maîtrisée » (plein, ✓). Les boss sans image sont une pièce (`BOSS_GLYPHS` de
-  `mindMapPath.js` : ♛ le Bourreau, ♟ le Gardien, ♚ l'Horloger, ♛ la Reine noire, ♜ le Maître des
-  tours, ♝ le Duelliste, ♞ le Cavalier errant), aussi sur l'écran de victoire (`BossPortrait`) ;
-  une image la remplacera.
+  passages), « Maîtrisée » (plein, ✓). Le Bourreau (`bourreau/`) et la Reine noire (`reine/`)
+  ont leurs expressions ; les boss sans image sont une pièce (`BOSS_GLYPHS` de `mindMapPath.js` :
+  ♟ le Gardien, ♚ l'Horloger, ♜ le Maître des tours, ♝ le Duelliste, ♞ le Cavalier errant), aussi
+  sur l'écran de victoire (`BossPortrait`) ; une image la remplacera.
 - **Le Roi des cendres** : une grande carte sous les sept (`EndgameAshesCard.vue`), la liche
   (`moodImage` / `standingImage` : `roi-cendres` → les images du dossier `liche`).
 - **L'étape conseillée** (`nextStep()`, choisie le 2026-10-24), une étoile sur son nœud, montrée
