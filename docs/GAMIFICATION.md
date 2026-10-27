@@ -56,6 +56,7 @@ S2 rappel, S3 front, S4 documentation.
 | Reconstitution ([BLINDFOLD_RECALL.md](BLINDFOLD_RECALL.md)) | exacte : 4 / 6 / 8 / 10 / 12 selon l'étape (1 à 5) ; proche (≥ 80 %) : 2 ; +20 pour l'essai qui ouvre le niveau suivant (`metadata.status`, `metadata.stage`, `metadata.unlocked`) | 0 |
 | Position de finale ([ENDGAMES.md](ENDGAMES.md)), gagnée ou tenue | selon l'adversaire : 15 contre Maia sous 1400, 25 contre Maia à 1400 et plus, 35 contre la meilleure défense de la tablebase (`metadata.opponentElo` null) | 2 |
 | Coup jugé de Brillant ou Blunder ([BRILLIANCY.md](BRILLIANCY.md)) | 4 | 1 |
+| Partie de l'Arène ([ARENA.md](ARENA.md), module du grand livre `arena`) : gagnée / nulle dès 40 demi-coups / perdue dès 20 | 30 / 15 | 5 |
 
 - **Plafond** : 500 XP d'exercices par jour local (fuseau de l'utilisateur). Un exercice gagne ce qui
   reste du plafond de son jour (deux événements traités au même instant peuvent le dépasser

@@ -78,4 +78,10 @@ enum ExerciseType: string
      * `metadata.status` (right, wrong), `metadata.kind` and `metadata.answer` (brilliant, blunder).
      */
     case Brilliancy = 'brilliancy';
+    /**
+     * A game against a boss of the arena (docs/ARENA.md), never rated, a cancelled one never
+     * logged; `metadata.boss`, `metadata.result` (won, drawn, lost), `metadata.end` (checkmate,
+     * resignation, timeout…), `metadata.plies`, `metadata.elo`, `metadata.color`, `metadata.cadence`.
+     */
+    case ArenaGame = 'arena_game';
 }

@@ -156,6 +156,17 @@ framework:
             policy: sliding_window
             limit: 600
             interval: '10 minutes'
+        # Arena (identifier = user id, docs/ARENA.md): a game started or restarted; then the moves
+        # of both sides (a bullet game sends one every second or so), resignations, cancellations
+        # and the arrivals shown.
+        arena_game_start:
+            policy: sliding_window
+            limit: 60
+            interval: '1 hour'
+        arena_game_write:
+            policy: sliding_window
+            limit: 1500
+            interval: '10 minutes'
         # Repertoires (identifier = user id). Building one move by move is a request per move:
         # generous, but caps scripted writes (every change rewrites derived data of the graph).
         repertoire_create:

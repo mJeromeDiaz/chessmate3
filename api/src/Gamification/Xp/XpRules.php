@@ -98,6 +98,18 @@ final class XpRules
     public const ENDGAME_STRONG_ELO = 1400;
     public const ENDGAME_FAILED = 2;
 
+    /**
+     * Arena (docs/ARENA.md): a game won; a draw from ARENA_DRAW_MIN_PLIES half-moves; a game lost
+     * from ARENA_LOSS_MIN_PLIES half-moves (a short one gains nothing).
+     */
+    public const ARENA_WON = 30;
+    public const ARENA_DRAWN = 15;
+    public const ARENA_LOST = 5;
+    public const ARENA_DRAW_MIN_PLIES = 40;
+    public const ARENA_LOSS_MIN_PLIES = 20;
+    /** The XP ledger's module of the arena's games (not a module of the timed runs). */
+    public const ARENA_MODULE = 'arena';
+
     /** Level N to N+1: STEP × N XP; a module's level: MODULE_STEP × N. */
     public const STEP = 250;
     public const MODULE_STEP = 100;
@@ -148,6 +160,20 @@ final class XpRules
             ExerciseType::Calculation => true === ($metadata['boss'] ?? null) ? 0 : ($success ? self::CALCULATION_RIGHT : self::CALCULATION_WRONG),
             ExerciseType::Endgame => $success ? self::endgame(\is_int($metadata['opponentElo'] ?? null) ? $metadata['opponentElo'] : null) : self::ENDGAME_FAILED,
             ExerciseType::Brilliancy => $success ? self::BRILLIANCY_RIGHT : self::BRILLIANCY_WRONG,
+            ExerciseType::ArenaGame => self::arena($metadata['result'] ?? null, \is_int($metadata['plies'] ?? null) ? $metadata['plies'] : 0),
+        };
+    }
+
+    /**
+     * XP of a game of the arena, by its result and its length.
+     */
+    public static function arena(mixed $result, int $plies): int
+    {
+        return match ($result) {
+            'won' => self::ARENA_WON,
+            'drawn' => $plies >= self::ARENA_DRAW_MIN_PLIES ? self::ARENA_DRAWN : 0,
+            'lost' => $plies >= self::ARENA_LOSS_MIN_PLIES ? self::ARENA_LOST : 0,
+            default => 0,
         };
     }
 
@@ -206,9 +232,17 @@ final class XpRules
     }
 
     /**
-     * The module of an exercise.
+     * The XP ledger's module of an exercise: its module, `arena` for a game of the arena.
      */
-    public static function module(ExerciseType $type): Module
+    public static function ledgerModule(ExerciseType $type): string
+    {
+        return self::module($type)->value ?? self::ARENA_MODULE;
+    }
+
+    /**
+     * The module of an exercise, null for a game of the arena (played outside the timed runs).
+     */
+    public static function module(ExerciseType $type): ?Module
     {
         return match ($type) {
             ExerciseType::PuzzleRated, ExerciseType::PuzzleUnrated => Module::Puzzles,
@@ -228,6 +262,7 @@ final class XpRules
             ExerciseType::Calculation => Module::Calculation,
             ExerciseType::Endgame => Module::Endgames,
             ExerciseType::Brilliancy => Module::Brilliancy,
+            ExerciseType::ArenaGame => null,
         };
     }
 

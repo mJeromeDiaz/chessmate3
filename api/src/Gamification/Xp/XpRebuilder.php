@@ -96,7 +96,7 @@ final readonly class XpRebuilder
             $total += $xp;
             $runId = \is_array($metadata) ? ($metadata['trainingRunId'] ?? null) : null;
             $batch[] = [
-                XpKind::Exercise, XpRules::module($type)->value, $xp, self::string($row['source_type']), self::string($row['source_id']),
+                XpKind::Exercise, XpRules::ledgerModule($type), $xp, self::string($row['source_type']), self::string($row['source_id']),
                 \is_string($runId) && Uuid::isValid($runId) ? Uuid::fromString($runId)->toBinary() : null, $day, self::string($row['occurred_at']),
             ];
             if (\count($batch) >= self::BATCH) {

@@ -42,7 +42,7 @@ final readonly class XpLedger
         return $this->insert(
             $user,
             XpKind::Exercise,
-            XpRules::module($event->type)->value,
+            XpRules::ledgerModule($event->type),
             $this->capped($user, $event, $localDate, 0),
             $event->sourceType,
             $event->sourceId,
