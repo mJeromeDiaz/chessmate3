@@ -47,6 +47,66 @@ function completeLine(fen, start, plies) {
 }
 
 /**
+ * Plays the player's moves of a line known in advance, each once the reply before it is played by
+ * itself (`data-played` grows by two).
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {import('@playwright/test').Locator} player
+ * @param {string[]} moves the player's moves
+ * @param {number} start the half-moves already on the board
+ */
+async function playOwn(page, player, moves, start) {
+  let n = start
+  for (const uci of moves) {
+    await expect(player).toHaveAttribute('data-played', String(n), {
+      timeout: ENGINE_TIMEOUT
+    })
+    await playMove(page, uci)
+    n += 2
+  }
+}
+
+/**
+ * Plays the first legal move of the player's while the line goes on, the engine replying (or
+ * stopping the line on a move that does not hold).
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {import('@playwright/test').Locator} player
+ * @param {string} color the player's side, 'white' or 'black'
+ */
+async function playFirstMoves(page, player, color) {
+  const board = page.getByTestId('chess-board')
+  const side = color === 'black' ? 'b' : 'w'
+  for (;;) {
+    // The player's turn on the board, or the line over (sent, or stopped by the engine).
+    let state = 'wait'
+    await expect
+      .poll(
+        async () => {
+          state = 'wait'
+          if ((await player.getAttribute('data-phase')) !== 'answer')
+            state = 'over'
+          else if (
+            (await board.getAttribute('data-fen'))?.split(' ')[1] === side
+          )
+            state = 'turn'
+          return state
+        },
+        { timeout: ENGINE_TIMEOUT }
+      )
+      .not.toBe('wait')
+    if (state === 'over') return
+    const fen = /** @type {string} */ (await board.getAttribute('data-fen'))
+    await playMove(page, new Chess(fen).moves({ verbose: true })[0].lan)
+    // The board leaves the player's turn before the next check.
+    await expect(board).not.toHaveAttribute('data-fen', fen)
+  }
+}
+
+/** The player's moves of a line: its even half-moves. */
+const own = (/** @type {string[]} */ line) => line.filter((_, i) => i % 2 === 0)
+
+/**
  * Opens a step of chapter 3 of the calculation path, the steps before it completed.
  *
  * @param {import('@playwright/test').Page} page
@@ -117,7 +177,7 @@ test('calculation 3.1: the decoy drawn by the engine, the best reply chosen', as
   expect([result.success, result.data.status]).toEqual([true, 'right'])
 })
 
-test('calculation 3.2: a line against each of the two replies, the second started by itself', async ({
+test('calculation 3.2: a line against each of the two replies, played by themselves', async ({
   page,
   context
 }) => {
@@ -130,31 +190,25 @@ test('calculation 3.2: a line against each of the two replies, the second starte
   await expect(player).toHaveAttribute('data-phase', 'answer')
   await expect(player).toHaveAttribute('data-line', '1')
 
-  for (let i = 0; i < solution.length; i++) {
-    await playMove(page, solution[i])
-    if (i < solution.length - 1)
-      await expect(player).toHaveAttribute('data-played', String(i + 1))
-  }
+  // The first line: the player's moves, the solution's replies played by themselves.
+  await playOwn(page, player, own(solution), 0)
 
-  // The second line: the first move and the other reply played by themselves.
+  // The second line: the first move and the other reply played by themselves; off the solution,
+  // the engine replies.
   await expect(player).toHaveAttribute('data-line', '2')
   await expect(player).toHaveAttribute('data-played', '2')
   const other = new Chess(after(item.data.fen, solution.slice(0, 1)).fen())
     .moves({ verbose: true })
     .map(m => m.lan)
     .find(uci => uci !== solution[1])
-  const second = completeLine(
-    item.data.fen,
-    [solution[0], other],
-    solution.length
-  )
   const submitted = page.waitForResponse(isRunSubmission, {
     timeout: ENGINE_TIMEOUT
   })
-  for (const uci of second.slice(2)) await playMove(page, uci)
+  await playFirstMoves(page, player, item.data.color)
   const response = await submitted
   const body = response.request().postDataJSON()
-  expect(body.lines).toEqual([solution, second])
+  expect(body.lines[0]).toEqual(solution)
+  expect(body.lines[1].slice(0, 2)).toEqual([solution[0], other])
   expect(typeof body.engine.right).toBe('boolean')
   expect(['right', 'wrong']).toContain(
     (await response.json()).result.data.status
@@ -174,7 +228,7 @@ test('calculation 3.4: the solution right at once, another line judged by Stockf
   await expect(player).toHaveAttribute('data-phase', 'answer')
   let submitted = page.waitForResponse(isRunSubmission)
   let served = page.waitForResponse(isRunNext)
-  for (const uci of item.data.solution) await playMove(page, uci)
+  await playOwn(page, player, own(item.data.solution), 0)
   let response = await submitted
   expect(response.request().postDataJSON()).toMatchObject({
     moves: item.data.solution,
@@ -182,22 +236,22 @@ test('calculation 3.4: the solution right at once, another line judged by Stockf
   })
   expect((await response.json()).result.data.status).toBe('right')
 
-  // Another first move: the line goes to Stockfish before it is sent.
+  // Another first move: Stockfish says whether it holds, replies if it does, then judges the line.
   item = await nextItem(page, served)
   const solution = item.data.solution
   const first = new Chess(item.data.fen)
     .moves({ verbose: true })
     .map(m => m.lan)
     .find(uci => uci !== solution[0])
-  const line = completeLine(item.data.fen, [first], solution.length)
   await expect(player).toHaveAttribute('data-phase', 'think')
   await player.getByTestId('calculation-ready').click()
   await expect(player).toHaveAttribute('data-phase', 'answer')
   submitted = page.waitForResponse(isRunSubmission, { timeout: ENGINE_TIMEOUT })
-  for (const uci of line) await playMove(page, uci)
+  await playMove(page, first)
+  await playFirstMoves(page, player, item.data.color)
   response = await submitted
   const body = response.request().postDataJSON()
-  expect(body.moves).toEqual(line)
+  expect(body.moves[0]).toBe(first)
   expect(typeof body.engine.right).toBe('boolean')
   const status = (await response.json()).result.data.status
   expect(['right', 'wrong']).toContain(status)
@@ -247,9 +301,8 @@ test('calculation: the mini-boss of chapter 3, a decoy, then the combination tha
   )
   let first
   if ((await player.getAttribute('data-phase')) === 'answer') {
-    // As good as the solution for the engine: its line goes on.
-    const line = completeLine(item.data.fen, [decoy], item.data.solution.length)
-    for (const uci of line.slice(1)) await playMove(page, uci)
+    // As good as the solution for the engine: the engine replies, its line goes on.
+    await playFirstMoves(page, player, item.data.color)
     first = (await (await submitted).json()).result
   } else {
     first = (await (await submitted).json()).result
@@ -261,16 +314,15 @@ test('calculation: the mini-boss of chapter 3, a decoy, then the combination tha
     ]).toEqual(['wrong', 0, 1, 2])
   }
 
-  // The solution's first move: played by itself, the rest of the line to play.
+  // The solution's first move: played by itself with its reply, the player's moves to play.
   if (!first.success) await page.getByTestId('run-next').click()
   item = (await (await served).json()).item
   const solution = item.data.solution
   await expect(combos).toHaveCount(3, { timeout: ENGINE_TIMEOUT })
   await player.locator(`[data-uci="${solution[0]}"]`).click()
   await expect(player).toHaveAttribute('data-phase', 'answer')
-  await expect(player).toHaveAttribute('data-played', '1')
   const lineSent = page.waitForResponse(isRunSubmission)
-  for (const uci of solution.slice(1)) await playMove(page, uci)
+  await playOwn(page, player, own(solution).slice(1), 2)
   const response = await lineSent
   expect(response.request().postDataJSON().moves).toEqual(solution)
   const result = (await response.json()).result

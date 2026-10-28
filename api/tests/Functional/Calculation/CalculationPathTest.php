@@ -16,8 +16,9 @@ use Doctrine\DBAL\Connection;
 
 /**
  * The calculation module on its path (docs/CALCULATION.md): a mate thought over on a frozen board,
- * « Je réponds », then its whole line played at once within 2 s per half-move of the solution, on
- * the server's clock; late or not played, a failure; never outside the mind map.
+ * « Je réponds », then its whole line played at once, the opponent's replies played by themselves,
+ * within PLY_SECONDS per move of the player and REPLY_SECONDS per reply, on the server's clock;
+ * late or not played, a failure; never outside the mind map.
  *
  * @phpstan-type Item array{id: string, type: string, data: array<string, mixed>}
  */
@@ -35,6 +36,7 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
                     $item['type'], $item['data']['mate'] ?? null, $item['data']['thinkSeconds'] ?? null, $item['data']['plySeconds'] ?? null,
                     $item['data']['position'] ?? null, $item['data']['count'] ?? null, $item['data']['lives'] ?? null, $item['data']['readyAt'] ?? null,
                 ]);
+                self::assertSame([$this->expected($item), true], [$item['data']['solution'] ?? null, $item['data']['autoReplies'] ?? null], 'Its solution, to play the replies by themselves.');
                 $ready = $this->ready($alice, $runId, $item['id']);
                 self::assertIsString($ready['readyAt'] ?? null);
                 self::assertSame($ready, $this->ready($alice, $runId, $item['id']), 'Ready twice: the first stamp stays.');
@@ -64,17 +66,25 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertSame(['passed', 10, 8], [$outcome['outcome'] ?? null, $outcome['itemCount'] ?? null, $outcome['successCount'] ?? null], '80 % right.');
     }
 
-    public function testTheAnswerHasItsSecondsPerHalfMove(): void
+    public function testTheAnswerHasItsSecondsPerMoveOfThePlayer(): void
     {
         $alice = $this->createUserIn('alice@example.com');
         self::assertSame(200, $this->api('POST', '/api/mind-map/calculation/steps/1-1/skip', $alice)->getStatusCode());
         $runId = $this->startStep($alice, '1-2');
 
-        // A mate in 2, 3 half-moves: 3 × PLY_SECONDS, one more second and the 2 s of the network.
+        // A mate in 2, 3 half-moves: 2 × PLY_SECONDS for the player's, REPLY_SECONDS for the reply
+        // played by itself, one more second and the 2 s of the network.
+        $answer = 2 * CalculationRules::PLY_SECONDS + CalculationRules::REPLY_SECONDS;
+        self::assertSame($answer, CalculationRules::answerSeconds(3, true));
         $item = $this->item($alice, $runId);
         self::assertSame(2, $item['data']['mate'] ?? null);
         $this->ready($alice, $runId, $item['id']);
-        $this->travel(\sprintf('+%d seconds', 3 * CalculationRules::PLY_SECONDS + 4));
+        $this->travel(\sprintf('+%d seconds', $answer + 2));
+        self::assertTrue($this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item)])['success'] ?? null, 'In time.');
+
+        $item = $this->item($alice, $runId);
+        $this->ready($alice, $runId, $item['id']);
+        $this->travel(\sprintf('+%d seconds', $answer + 4));
         $late = $this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item)]);
         self::assertSame([false, 'late'], [$late['success'] ?? null, \is_array($late['data'] ?? null) ? $late['data']['status'] ?? null : null], 'Right, but late.');
 
@@ -229,10 +239,10 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
 
         // Solved first, its solution given as a puzzle's; 5 minutes before the replay's clock.
         $item = $this->item($alice, $runId);
-        self::assertSame([true, $this->expected($item), 300, 4, 3], [
+        self::assertSame([true, $this->expected($item), 300, 4, 3, false], [
             $item['data']['solve'] ?? null, $item['data']['solution'] ?? null, $item['data']['thinkSeconds'] ?? null,
-            $item['data']['count'] ?? null, $item['data']['lives'] ?? null,
-        ]);
+            $item['data']['count'] ?? null, $item['data']['lives'] ?? null, $item['data']['autoReplies'] ?? null,
+        ], 'Replayed from memory, both sides.');
         $this->travel('+200 seconds');
         $this->ready($alice, $runId, $item['id']);
         self::assertTrue($this->submitOk($alice, $runId, $item['id'], ['moves' => $this->expected($item)])['success'] ?? null, 'Replayed in its time after a long solving.');
@@ -357,13 +367,13 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         self::assertIsArray(self::dataOf($result)['second'] ?? null);
         self::assertCount(\count($other), self::dataOf($result)['second']);
 
-        // PLY_SECONDS per half-move of each line, one more second, and the network's 2 s.
+        // Each line's answer time (the replies played by themselves), one more second, and the network's 2 s.
         $item = $this->item($alice, $runId);
         $fen = self::fenOf($item);
         $solution = $this->expected($item);
         $other = self::completeLine($fen, [$solution[0], self::otherReply($fen, $solution[0], $solution[1])], \count($solution));
         $this->ready($alice, $runId, $item['id']);
-        $this->travel(\sprintf('+%d seconds', 2 * CalculationRules::PLY_SECONDS * \count($solution) + 4));
+        $this->travel(\sprintf('+%d seconds', 2 * CalculationRules::answerSeconds(\count($solution), true) + 4));
         $result = $this->submitOk($alice, $runId, $item['id'], ['lines' => [$solution, $other], 'engine' => ['right' => true]]);
         self::assertSame('late', self::dataOf($result)['status'] ?? null);
     }
@@ -410,10 +420,11 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
         $item = $this->item($alice, $runId);
         $fen = self::fenOf($item);
         $solution = $this->expected($item);
-        self::assertSame(['advocate', true, $solution, 50, 5, 3], [
+        self::assertSame(['advocate', true, $solution, 50, 5, 3, false], [
             $item['data']['kind'] ?? null, $item['data']['engine'] ?? null, $item['data']['solution'] ?? null,
             $item['data']['toleranceCp'] ?? null, $item['data']['count'] ?? null, $item['data']['lives'] ?? null,
-        ]);
+            $item['data']['autoReplies'] ?? null,
+        ], 'The refutation is the player\'s to play.');
         $idea = self::completeLine($fen, [self::otherFirst($fen, $solution[0])], \count($solution));
         $this->ready($alice, $runId, $item['id']);
         $result = $this->submitOk($alice, $runId, $item['id'], ['moves' => $idea, 'engine' => ['right' => false, 'mistakeAt' => 0]]);
@@ -649,7 +660,7 @@ final class CalculationPathTest extends WoodpeckerWebTestCase
     }
 
     /**
-     * The item's solution, read where the server keeps it (the client never gets it before).
+     * The item's solution, read where the server keeps it.
      *
      * @param Item $item
      *

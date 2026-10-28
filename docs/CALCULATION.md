@@ -3,17 +3,24 @@
 > Chemins de code et commandes relatifs à `api/` (sauf mention de `front/`).
 
 Le module **Calcul** entraîne la profondeur de calcul : une position de mat s'affiche sur un
-**échiquier figé**, on calcule toute la ligne de tête, puis on la **joue d'un trait, les deux
-camps**, très vite. Il sert la capacité « Profondeur de calcul » de la carte mentale (parcours
+**échiquier figé**, on calcule toute la ligne de tête, puis on la **joue d'un trait**, très vite :
+ses propres coups, les réponses adverses **jouées toutes seules** (depuis le 2026-10-28, § 3). Il sert la capacité « Profondeur de calcul » de la carte mentale (parcours
 `calculation`, [MIND_MAP.md](MIND_MAP.md), § 5 bis ; contenu de l'utilisateur :
 [mindMap/profondeur_de_calcul.md](mindMap/profondeur_de_calcul.md)) et **ne se lance pour
 l'instant que depuis une étape du parcours**.
 
 Choix validés (2026-10-21) : réflexion libre, plafonnée à 2 min, close par « Je réponds » ; chaque
-demi-coup joué moins de 3 s après le précédent (le premier, 3 s après « Je réponds » ; 2 s jusqu'au 2026-10-25) ; le joueur
-joue aussi la défense, qui doit être celle de la solution (depuis le 2026-10-25, toute défense
-légale dans une ligne de mat, § 3) ; le dernier coup peut être n'importe quel
-mat ; puzzles de mat, non classés ; 4 XP par ligne juste, 1 par ligne fausse ou en retard.
+coup joué moins de 3 s après le précédent (le premier, 3 s après « Je réponds » ; 2 s jusqu'au
+2026-10-25) ; le dernier coup peut être n'importe quel mat ; puzzles de mat, non classés ; 4 XP par
+ligne juste, 1 par ligne fausse ou en retard.
+
+**Depuis le 2026-10-28** (choix de l'utilisateur, pour réduire les réponses possibles) : le joueur
+**ne joue que sa couleur**, la réponse adverse part toute seule (la défense de la solution ; au
+chapitre 3, hors solution, la meilleure du moteur), 3 s par coup du joueur. Avant : le joueur jouait
+aussi la défense, d'abord celle de la solution, puis toute défense légale d'une ligne de mat
+(2026-10-25 au 2026-10-28, `MateSearch`, retiré). Restent joués **des deux camps**, 3 s par
+demi-coup : **l'Avocat du diable** (la réfutation de son idée est à trouver) et la **reconstitution
+de mémoire** du mini-boss du chapitre 2 (§ 2 ter).
 
 ## 1. Organisation du code
 
@@ -21,11 +28,11 @@ mat ; puzzles de mat, non classés ; 4 XP par ligne juste, 1 par ligne fausse ou
 |---|---|
 | Règles | `App\Calculation\CalculationRules`, XP dans `App\Gamification\Xp\XpRules` (`CALCULATION_*`) |
 | Tirage | `App\Calculation\Drawing\{LinePicker, LineSpec, Line}` |
-| Jugement | `App\Calculation\Judge\{LineJudge, MateSearch, IllegalLineException, SearchBudgetExceededException}`, `App\Chess\Rules::{push, pop}` (coups sans SAN pour la recherche) |
+| Jugement | `App\Calculation\Judge\{LineJudge, LineShape, IllegalLineException}` |
 | Entité | `App\Entity\Calculation\Attempt` (table `calculation_attempt`, migration `Version20261106090000`) |
 | Enums | `App\Enum\Calculation\{AttemptStatus, Ending}` (`pending`, `right`, `wrong`, `late` ; `mate`, `material`) |
 | Module de séance | `App\Calculation\Training\CalculationModule` (`Module::Calculation`, `calculation`) |
-| Front | `components/calculation/CalculationPlayer.vue` (dans la page de séance), `utils/calculation.js`, `i18n/<langue>/calculation.json`, `trainingApi.ready` |
+| Front | `components/calculation/CalculationPlayer.vue` (dans la page de séance), `utils/calculation.js` (`nextStep`, `answerSeconds`), `composables/calculation/useLineJudge.js` (`replyTo`), `i18n/<langue>/calculation.json`, `trainingApi.ready` |
 | API | `POST /training/runs/{id}/ready` (`Training\Module\ReadyModuleInterface`, `TimeboxRunner::ready`) ; la ligne dans `moves` de la soumission, `pass: true` quand le temps est écoulé |
 
 ## 2. Les positions
@@ -46,8 +53,12 @@ a un autre ; d'abord un puzzle que le joueur n'a jamais eu ici. Rien ne compte p
 
 L'élément (`type: calculation`) : `fen`, `color` (le camp du joueur), `moves`, `ending` et `mate`
 (seulement quand la leçon fixe la fin : un sacrifice peut mater ou gagner du matériel), `capture`,
-`thinkSeconds` (120), `plySeconds` (2), `position`, `count`, `lives` (restantes, ou `null`),
-`startedAt`, `readyAt`. La solution n'est jamais envoyée avant la réponse.
+`thinkSeconds` (120), `plySeconds` (3), `position`, `count`, `lives` (restantes, ou `null`),
+`startedAt`, `readyAt`, `solution` (la ligne, UCI, les deux camps, le coup du joueur d'abord) et
+`autoReplies` (`true` : les réponses adverses jouées toutes seules ; `false` pour l'Avocat du diable
+et la reconstitution). **La solution est envoyée avec la position** depuis le 2026-10-28 (choix de
+l'utilisateur) : le front en joue les réponses ; un joueur qui la lit ne fait qu'avancer dans un
+parcours non classé, et le serveur juge toujours la ligne.
 
 ## 2 bis. La question en fin de ligne
 
@@ -101,6 +112,13 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
   solution ; la ligne va **jusqu'à la longueur de la solution**, ou s'arrête plus tôt sur un mat du
   joueur. Une ligne coupée est fausse, quel que soit le verdict (`mistakeAt` = là où elle s'arrête).
   En 3.2, les deux lignes ont le même premier coup et deux réponses différentes.
+- **Les réponses jouées toutes seules** (depuis le 2026-10-28, sauf l'Avocat) : sur la solution,
+  celle de la solution ; hors solution, le front attend l'analyse de la position atteinte
+  (`replyTo` de `useLineJudge`, 1 s) : un coup qui ne tient pas (ou le moteur en panne) arrête la
+  ligne, fausse à ce coup (`mistakeAt` du moteur, gardé par le serveur pour une ligne coupée) ; un
+  coup qui tient reçoit la **meilleure réponse du moteur**, que le serveur accepte dès qu'elle est
+  légale. L'horloge attend la réponse. En 3.2, chaque ligne commence par le premier coup puis sa
+  réponse ; au mini-boss, la combinaison choisie part avec sa réponse.
 - **L'élément** porte `kind`, `engine: true`, `solution` (la ligne du puzzle : une ligne qui la
   suit n'a pas besoin d'analyse, 3.1 en tire sa bonne réponse), `toleranceCp`, `decoyGapCp` (3.1),
   `replies: 2` (3.2). Le résultat : `expected`, `answer` (3.1 : le coup du joueur puis la réponse
@@ -144,8 +162,8 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
   § 7) : réflexion, puis malice passé la moitié de la réflexion ; triomphe quand l'idée tombe,
   fierté au temps écoulé, agacement quand elle tient. Ses répliques :
   `calculation.advocate.*`.
-- **3.2** : la première ligne jouée, l'échiquier repart après le premier coup et **l'autre
-  réponse, joués d'office** ; le joueur joue la suite. `mistakeAt` compte la seconde ligne après
+- **3.2** : la première ligne jouée (ses réponses jouées toutes seules), l'échiquier repart après
+  le premier coup et **l'autre réponse, joués d'office** ; le joueur joue la suite. `mistakeAt` compte la seconde ligne après
   les demi-coups de la première.
 
 ## 3. Le déroulé et le jugement
@@ -154,19 +172,21 @@ qui suit la solution du puzzle est juste quel que soit le verdict. Un coup est �
    {itemId}` → `{data: {readyAt}}` ; le serveur note l'instant, une fois (un second appel rend le
    premier). Passé `thinkSeconds`, la réponse s'ouvre d'elle-même : sans appel, l'horloge de la
    réponse part de la fin de la réflexion, et un appel plus tardif n'y change rien.
-2. **Réponse** : la ligne entière en UCI (`moves`), les deux camps. Le serveur accepte jusqu'à
-   `readyAt` (à la seconde, + 1 s) + 3 s (`PLY_SECONDS`) × demi-coups de la solution + 2 s de tolérance réseau ;
-   l'horloge par demi-coup (3 s après le précédent) n'est tenue que par le front. En retard, ou
-   `pass: true` (le front l'envoie quand son horloge tombe) : `late`, un échec.
-3. **Jugement** (`LineJudge`) : chaque demi-coup légal (sinon 400) ; un mat donné par le joueur
-   termine la ligne juste, même plus tôt ou par un autre coup (comme Lichess) ; une ligne de gain
-   doit être jouée entière, coup pour coup, défense comprise ; une ligne arrêtée avant est fausse là
-   où elle s'arrête. **Une ligne de mat** (depuis le 2026-10-25, sauf avant une question sur sa
-   position, 2.7 et 2.8) prend **toute défense légale** (le roi a deux cases de fuite : Dg4+ Rf8 ou
-   Rh8, Dg7# dans les deux cas), et un coup du joueur hors solution s'il **mate encore de force**
-   dans les coups qui restent, contre toute défense (`MateSearch` : échecs d'abord, 40 000
-   positions au plus, ~0,5 s ; au-delà, rien n'est prouvé : faux). Un coup qui ne mate qu'après
-   une mauvaise défense (Dd4 contre …Td8??, quand …Te1+ tient) reste faux.
+2. **Réponse** : le joueur joue **ses coups**, la réponse adverse part toute seule 0,3 s après
+   (`nextStep` de `utils/calculation.js` : la réponse de la solution ; un coup hors solution qui
+   ne mate pas arrête la ligne, envoyée aussitôt ; au chapitre 3, le moteur décide, § 2 quater).
+   L'horloge du front redonne 3 s après chaque réponse. La ligne entière part en UCI (`moves`), les
+   deux camps. Le serveur accepte jusqu'à `readyAt` (à la seconde, + 1 s) + le temps de réponse
+   (`CalculationRules::answerSeconds` : 3 s, `PLY_SECONDS`, par coup du joueur + 1 s,
+   `REPLY_SECONDS`, par réponse jouée toute seule ; 3 s par demi-coup quand le joueur joue les deux
+   camps) + 2 s de tolérance réseau. En retard, ou `pass: true` (le front l'envoie quand son
+   horloge tombe) : `late`, un échec.
+3. **Jugement** (`LineJudge`, strict depuis le 2026-10-28) : chaque demi-coup légal (sinon 400) et
+   celui de la solution, défense comprise ; un mat donné par le joueur termine la ligne juste, même
+   plus tôt ou par un autre coup (comme Lichess) ; une ligne arrêtée avant est fausse là où elle
+   s'arrête. Les lignes comptées fausses pour une autre défense (Dg4+ Rh8 au lieu de Rf8) ne se
+   produisent plus : la défense est jouée toute seule. Pour la reconstitution, jouée des deux
+   camps, la défense est celle de la solution qu'on vient de résoudre.
 
 Le résultat : `status`, `expected` et `answer` (`{uci, san}`), `mistakeAt` (le premier demi-coup
 hors solution, ou qui laisse filer le mat), `position`, `count`, `lives`, `durationMs`. La séance se ferme (`subject_finished`)
@@ -204,6 +224,10 @@ lignes sont supprimées avec le compte (cascade) et exportées (`entrainement.js
 - K3d (2026-10-21) : le mini-boss du chapitre 3 (`combo`), une combinaison à choisir parmi trois coups forcés.
 - K3e (2026-10-21) : L'Avocat du diable, boss du chapitre 3 (`advocate`) ; les chapitres 1 à 3 du
   parcours calcul sont complets.
+- K4a–K4c (2026-10-28) : le joueur ne joue que sa couleur, les réponses adverses jouées toutes
+  seules (sauf l'Avocat et la reconstitution) ; la solution envoyée avec la position,
+  `autoReplies`, le temps par coup du joueur (`answerSeconds`), `LineJudge` strict et `MateSearch`
+  retiré ; au chapitre 3, hors solution, la meilleure réponse du moteur.
 - K1d (2026-10-21) : les expressions de la Gargouille dans son combat ([VISION.md](VISION.md), § 2
   quinquies) ; le chapitre 1 du parcours calcul est complet.
 
@@ -216,8 +240,9 @@ justes d'affilée** ; un échec (faux, en retard, rien joué) remet la série à
 (`CalculationRules::streakMates` : en 1 ou 2 au début, jusqu'à 4 à partir de 9 ; un mat d'une autre
 longueur quand le catalogue n'a plus rien). La réflexion suit le **tempo** : 40 s, 3 s de moins par
 ligne juste du combat, jamais moins de 15 s (`tempo()`, colonne `think_seconds`, migration
-`Version20261107090000`) ; la réponse garde ses 3 s par demi-coup. Le front envoie la ligne au mat
-ou quand l'horloge tombe (au plus 7 demi-coups, un mat en 4).
+`Version20261107090000`) ; la réponse garde ses 3 s par coup du joueur. Le front envoie la ligne au mat
+ou quand l'horloge tombe ; ses réponses sont jouées toutes seules, et la longueur de la ligne,
+jamais dite, est celle de la solution envoyée avec la position.
 
 L'élément et le résultat portent `streak` (la série en cours), `streakTarget`, `lives`, et
 l'élément `right` (les lignes justes, pour le tempo). Gagné à la série (`streak_done`), perdu à la

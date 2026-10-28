@@ -9,8 +9,6 @@ use App\Calculation\Drawing\LineSpec;
 use App\Enum\Calculation\Ending;
 use App\Calculation\Judge\IllegalLineException;
 use App\Calculation\Judge\LineJudge;
-use App\Calculation\Judge\MateSearch;
-use App\Calculation\Judge\SearchBudgetExceededException;
 use App\Chess\Rules;
 use App\DataFixtures\Puzzle\SamplePuzzles;
 use App\Entity\Catalog\Puzzle;
@@ -18,7 +16,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * A line played at once (docs/CALCULATION.md, § 3) on a sample mate in 2: GlnnF, after c5c6 black
- * mates by Rxh4+ gxh4 Qg2#.
+ * mates by Rxh4+ gxh4 Qg2#. The solution's moves, defence included (played by itself since
+ * 2026-10-28), or a mate of the player's.
  */
 final class LineJudgeTest extends TestCase
 {
@@ -47,37 +46,21 @@ final class LineJudgeTest extends TestCase
         self::assertSame(['right' => true, 'mistakeAt' => null], LineJudge::judge(self::fen(), ['h8h4', 'g3h4', 'd5d4'], self::SOLUTION), 'A mate is always right.');
     }
 
-    public function testAMateTakesAnyDefence(): void
+    public function testOnlyTheSolutionsDefenceIsRight(): void
     {
-        // Qg4+: the king flees to f8 or h8, Qg7# either way (chosen 2026-10-25).
+        // Qg4+: the king may flee to f8 or h8, Qg7# either way; the solution's flight only.
         $solution = ['d1g4', 'g8f8', 'g4g7'];
-        self::assertSame(['right' => true, 'mistakeAt' => null], LineJudge::judge(self::FLIGHTS, $solution, ['d1g4', 'g8h8', 'g4g7'], true));
-        self::assertSame(['right' => false, 'mistakeAt' => 1], LineJudge::judge(self::FLIGHTS, $solution, ['d1g4', 'g8h8', 'g4g7']), 'Played exactly without the mate option.');
-        self::assertSame(['right' => false, 'mistakeAt' => 2], LineJudge::judge(self::FLIGHTS, $solution, ['d1g4', 'g8h8', 'g4g5'], true), 'The mate let go.');
-        self::assertSame(['right' => false, 'mistakeAt' => 2], LineJudge::judge(self::FLIGHTS, $solution, ['d1g4', 'g8h8'], true), 'Cut short.');
+        self::assertSame(['right' => true, 'mistakeAt' => null], LineJudge::judge(self::FLIGHTS, $solution, $solution));
+        self::assertSame(['right' => false, 'mistakeAt' => 1], LineJudge::judge(self::FLIGHTS, $solution, ['d1g4', 'g8h8', 'g4g7']));
+        self::assertSame(['right' => false, 'mistakeAt' => 2], LineJudge::judge(self::FLIGHTS, $solution, ['d1g4', 'g8f8', 'g4g5']), 'The mate let go.');
+        self::assertSame(['right' => false, 'mistakeAt' => 2], LineJudge::judge(self::FLIGHTS, $solution, ['d1g4', 'g8f8']), 'Cut short.');
     }
 
-    public function testAMoveOffTheSolutionIsRightOnlyWhenItStillMatesByForce(): void
+    public function testAMoveOffTheSolutionIsWrongUnlessItMates(): void
     {
-        // Qd4 mates only after …Rd8?? (Qxd8#): …Re1+ defends. As the solution, Qg4+ mates by force.
-        $trap = ['d1d4', 'e8d8', 'd4d8'];
-        self::assertSame(['right' => false, 'mistakeAt' => 0], LineJudge::judge(self::FLIGHTS, ['d1g4', 'g8f8', 'g4g7'], $trap, true));
-        self::assertSame(['right' => true, 'mistakeAt' => null], LineJudge::judge(self::FLIGHTS, $trap, ['d1g4', 'g8h8', 'g4g7'], true));
-    }
-
-    public function testTheSearchOutOfBudgetProvesNothing(): void
-    {
-        $rules = Rules::fromFen(self::FLIGHTS);
-        self::assertNotNull($rules->playUci('d1g4'));
-        $before = $rules->fen();
-        self::assertTrue(MateSearch::forced($rules, 1));
-        self::assertSame($before, $rules->fen(), 'The position is left as found.');
-        try {
-            MateSearch::forced($rules, 1, 2);
-            self::fail('Two positions are not enough.');
-        } catch (SearchBudgetExceededException) {
-            self::assertSame($before, $rules->fen(), 'Left as found, out of budget too.');
-        }
+        // Qd4 mates only after …Rd8?? (Qxd8#): off the solution, wrong at once.
+        self::assertSame(['right' => false, 'mistakeAt' => 0], LineJudge::judge(self::FLIGHTS, ['d1g4', 'g8f8', 'g4g7'], ['d1d4']));
+        // A mating move other than the solution's stays right (testALineWithoutMateIsRightPlayedToItsEnd).
     }
 
     public function testAnIllegalHalfMoveIsRefused(): void

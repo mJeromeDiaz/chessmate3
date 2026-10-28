@@ -218,10 +218,12 @@ import {
   advocateMood,
   advocateNote,
   after,
+  answerSeconds,
   leftMs,
   levelText,
   lineOver,
   metronomeMood,
+  nextStep,
   forcingMoves,
   offSolution,
   pickDecoy,
@@ -264,10 +266,12 @@ const emit = defineEmits({
 })
 
 /**
- * What the server allows past the line's 3 s per half-move (1 s of rounding, 2 s of network),
- * less a margin: the engine's verdict is waited for until then.
+ * What the server allows past the line's answer time (1 s of rounding, 2 s of network), less a
+ * margin: the engine's verdict is waited for until then.
  */
 const JUDGE_SLACK_MS = 2500
+/** A reply played by itself comes this long after the player's move (its animation seen). */
+const AUTO_REPLY_MS = 300
 /** A refuted combination: its refutation shown this long before the solution is replayed. */
 const REFUTATION_MS = 1800
 /** The mini-boss's combinations, told apart by colour (arrow and button alike). */
@@ -304,6 +308,8 @@ const thinkStart = ref(0)
 const answerStart = ref(0)
 /** When the last half-move was played, or « Je réponds » clicked. */
 const plyStart = ref(0)
+/** A reply played by itself on its way (shown, or found by the engine): the clock waits. */
+const awaiting = ref(false)
 /** The solution's move being replayed, highlighted. */
 const replayed = ref(/** @type {string|null} */ (null))
 /** @type {ReturnType<typeof setInterval>|undefined} */
@@ -320,6 +326,8 @@ const solution = computed(
   () => /** @type {string[]} */ (props.item.data.solution ?? [])
 )
 const toleranceCp = computed(() => props.item.data.toleranceCp ?? 50)
+/** The opponent's replies played by themselves (not in the Avocat du diable nor the replay from memory). */
+const autoReplies = computed(() => !!props.item.data.autoReplies)
 /** 3.1: the two replies offered (shuffled), null while the decoy is drawn. */
 const choices = ref(/** @type {{uci: string, san: string}[]|null} */ (null))
 /** 3.1: the engine's lines on the opponent's replies, null without them. */
@@ -360,7 +368,12 @@ const clockLeftMs = computed(() =>
 const clockText = computed(() => {
   const s = Math.ceil(clockLeftMs.value / 1000)
   if (phase.value === 'answer')
-    return t('calculation.player.plyLeft', { n: played.value.length + 1, s })
+    return autoReplies.value
+      ? t('calculation.player.moveLeft', {
+          n: Math.floor(played.value.length / 2) + 1,
+          s
+        })
+      : t('calculation.player.plyLeft', { n: played.value.length + 1, s })
   return phase.value === 'think' ||
     phase.value === 'solve' ||
     phase.value === 'choose' ||
@@ -369,13 +382,18 @@ const clockText = computed(() => {
     : ''
 })
 
-/** Both sides in turn while answering; the player's while solving (the opponent answers); nothing before nor after. */
+/**
+ * The player's side while answering, the replies played by themselves (both sides in turn in the
+ * Avocat du diable and the replay from memory); the player's while solving (the opponent
+ * answers); nothing before nor after.
+ */
 const movableColor = computed(() => {
   if (phase.value === 'solve') {
     const turn = new Chess(fen.value).turn() === 'w' ? 'white' : 'black'
     return turn === color.value && !solveTimer ? turn : null
   }
   if (phase.value !== 'answer') return null
+  if (autoReplies.value) return awaiting.value ? null : color.value
   return new Chess(fen.value).turn() === 'w' ? 'white' : 'black'
 })
 
@@ -697,14 +715,71 @@ function onMove(move) {
   fen.value = after(props.item.data.fen, played.value)
   plyStart.value = Date.now()
   if (engineKind.value) judge.follow(props.item.data.fen, played.value)
-  if (!over(played.value)) return
+  if (autoReplies.value) {
+    autoReply()
+    return
+  }
+  if (over(played.value)) lineDone()
+}
+
+/** A line played: 3.2's first one, the second starts; else it is sent. */
+function lineDone() {
   if (kind.value === 'two_replies' && !firstLine.value) secondLine()
   else send()
 }
 
-/** Whether a line is over: at the solution's length in chapter 3, else at the mate's. */
+/**
+ * After a move of the player's, the opponent's reply played by itself: the solution's, or off it
+ * in chapter 3 the engine's best move when the player's holds; the line stops on a move off the
+ * solution that does not mate (chapters 1 and 2) or that does not hold (chapter 3). The clock
+ * waits for the reply, then gives the player plySeconds again.
+ */
+async function autoReply() {
+  const item = props.item.id
+  const line = played.value
+  const step = nextStep(
+    props.item.data.fen,
+    line,
+    solution.value,
+    engineKind.value
+  )
+  if (step.type === 'over') {
+    lineDone()
+    return
+  }
+  if (step.type === 'wrong') {
+    send()
+    return
+  }
+  awaiting.value = true
+  const reply =
+    step.type === 'reply'
+      ? await new Promise(resolve =>
+          setTimeout(() => resolve(step.uci), AUTO_REPLY_MS)
+        )
+      : await judge.replyTo(props.item.data.fen, line, toleranceCp.value)
+  if (
+    props.item.id !== item ||
+    phase.value !== 'answer' ||
+    played.value !== line
+  )
+    return
+  awaiting.value = false
+  if (!reply) {
+    // A move that does not hold (or the engine down): the line stops there.
+    send()
+    return
+  }
+  played.value = [...line, reply]
+  fen.value = after(props.item.data.fen, played.value)
+  plyStart.value = Date.now()
+  if (engineKind.value) judge.follow(props.item.data.fen, played.value)
+  if (over(played.value)) lineDone()
+}
+
+/** Whether a line is over: at the player's mate, or at the solution's length. */
 function over(/** @type {string[]} */ line) {
-  if (engineKind.value && solution.value.length)
+  if (solution.value.length)
     return (
       lineOver(props.item.data.fen, line, null) ||
       line.length >= solution.value.length
@@ -756,7 +831,16 @@ function send() {
 async function lineVerdict(line) {
   const off = offSolution(line, solution.value)
   if (off === null) return { right: true }
-  if (!over(line)) return { right: false, mistakeAt: line.length }
+  // Cut short: on a move of the player's that does not hold (the replies played by themselves,
+  // the line stops there), else where it stops.
+  if (!over(line))
+    return {
+      right: false,
+      mistakeAt:
+        autoReplies.value && line.length % 2 === 1
+          ? line.length - 1
+          : line.length
+    }
   // The server times the line up to the submission: an engine too slow counts as down.
   const verdict = await Promise.race([
     judge.verdict(props.item.data.fen, line, toleranceCp.value),
@@ -770,14 +854,16 @@ async function lineVerdict(line) {
 
 /**
  * How long the engine's verdict may still be waited for: the server times the line from « Je
- * réponds » up to the submission (3 s per half-move of the solution, for each line of 3.2).
+ * réponds » up to the submission (its answer time, for each line of 3.2).
  */
 function judgeWaitMs() {
   const lines = kind.value === 'two_replies' ? 2 : 1
-  const deadline =
-    answerStart.value +
-    plySeconds.value * 1000 * solution.value.length * lines +
-    JUDGE_SLACK_MS
+  const seconds = answerSeconds(
+    solution.value.length,
+    autoReplies.value,
+    plySeconds.value
+  )
+  const deadline = answerStart.value + seconds * 1000 * lines + JUDGE_SLACK_MS
   return Math.max(1000, deadline - Date.now())
 }
 
@@ -872,7 +958,8 @@ async function chooseCombo(uci) {
   plyStart.value = Date.now()
   answerStart.value = plyStart.value
   judge.follow(props.item.data.fen, played.value)
-  if (over(played.value)) send()
+  if (autoReplies.value) autoReply()
+  else if (over(played.value)) send()
 }
 
 /** The mini-boss: the decoys drawn by the engine, the combinations offered in a random order. */
@@ -951,7 +1038,12 @@ function tick() {
     phase.value = 'sending'
     emit('resolve', { pass: true })
   } else if (phase.value === 'think' && clockLeftMs.value <= 0) ready()
-  else if (phase.value === 'answer' && clockLeftMs.value <= 0) send()
+  else if (
+    phase.value === 'answer' &&
+    !awaiting.value &&
+    clockLeftMs.value <= 0
+  )
+    send()
 }
 
 /** The solution played from the start, a move at a time. */
@@ -993,6 +1085,7 @@ watch(
     clearTimeout(replayTimer)
     fen.value = props.item.data.fen
     played.value = []
+    awaiting.value = false
     replayed.value = null
     readying.value = false
     thoughtRatio.value = null

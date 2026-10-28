@@ -4,6 +4,7 @@ import {
   advocateMood,
   advocateNote,
   after,
+  answerSeconds,
   finalScore,
   forcingMoves,
   holds,
@@ -13,6 +14,7 @@ import {
   lineOver,
   matePlies,
   metronomeMood,
+  nextStep,
   offSolution,
   pickDecoy,
   pickDecoys,
@@ -37,6 +39,42 @@ describe('calculation', () => {
     // Its length hidden: up to a mate in 4, unless it mates.
     expect(lineOver(start, ['h8h4', 'h2g1', 'd5d4'], null)).toBe(false)
     expect(lineOver(start, ['h8h4', 'g3h4', 'd5g2'], null)).toBe(true)
+  })
+
+  it('plays the reply of the solution by itself, stops off it unless it mates', () => {
+    const solution = ['h8h4', 'g3h4', 'd5g2']
+    expect(nextStep(start, ['h8h4'], solution, false)).toEqual({
+      type: 'reply',
+      uci: 'g3h4'
+    })
+    expect(nextStep(start, solution, solution, false)).toEqual({ type: 'over' })
+    // Off the solution: wrong at once, or the engine says (chapter 3).
+    expect(nextStep(start, ['d5d4'], solution, false)).toEqual({
+      type: 'wrong'
+    })
+    expect(nextStep(start, ['d5d4'], solution, true)).toEqual({
+      type: 'engine'
+    })
+    // Off the solution after an engine's reply: the engine still.
+    expect(
+      nextStep(
+        start,
+        ['h8h4', 'h2g1', 'd5d4'],
+        ['h8h4', 'g3h4', 'd5g2', 'a1a2', 'b1b2'],
+        true
+      )
+    ).toEqual({ type: 'engine' })
+    // The solution's length reached, or a mate: over.
+    expect(nextStep(start, ['h8h4', 'g3h4', 'd5d4'], solution, false)).toEqual({
+      type: 'over'
+    })
+  })
+
+  it('times a line by the player’s moves when the replies play themselves', () => {
+    // A mate in 2: 2 moves × 3 s and 1 s for the reply; both sides played, 3 × 3 s.
+    expect(answerSeconds(3, true, 3)).toBe(7)
+    expect(answerSeconds(3, false, 3)).toBe(9)
+    expect(answerSeconds(1, true, 3)).toBe(3)
   })
 
   it('names a line’s level, never the Métronome’s', () => {

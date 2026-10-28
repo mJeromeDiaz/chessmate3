@@ -179,9 +179,11 @@ Contenu de l'utilisateur : [mindMap/profondeur_de_calcul.md](mindMap/profondeur_
 (10 chapitres ; les 3 premiers d'abord, `App\MindMap\Path\Calculation`, capacité
 `calculation`, page `/cerveau/calculation`). Format validé le 2026-10-21 : la position est montrée
 sur un **échiquier figé** le temps de la réflexion (libre, « Je réponds », plafond 2 min), puis la
-ligne entière est jouée **d'un trait, les deux camps**, chaque demi-coup moins de 3 s après le
-précédent ; elle est jugée une fois, à la fin (les coups de la solution, défense comprise, le
-dernier pouvant être n'importe quel mat). Puzzles de mat, non classés : le module Calcul ([CALCULATION.md](CALCULATION.md)), branché
+ligne entière est jouée **d'un trait** ; depuis le 2026-10-28, le joueur ne joue que ses coups,
+chacun moins de 3 s après la réponse adverse, **jouée toute seule** (sauf l'Avocat du diable et la
+reconstitution de mémoire du mini-boss du chapitre 2, les deux camps, 3 s par demi-coup) ; elle est
+jugée une fois, à la fin (les coups de la solution, défense comprise, un mat du joueur toujours
+juste). Puzzles de mat, non classés : le module Calcul ([CALCULATION.md](CALCULATION.md)), branché
 sur le chapitre 1 et le Métronome (lots K1a à K1c, [CALCULATION.md](CALCULATION.md), § 6) ; les
 chapitres 2 et 3 sont encore « bientôt ».
 

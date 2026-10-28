@@ -5,12 +5,51 @@ import { scoreValue } from '@/utils/engine/uci'
 
 /**
  * The calculation module (docs/CALCULATION.md): a mate thought over on a frozen board, then its
- * whole line played at once, both sides, each half-move within `plySeconds` of the previous one.
- * Pure, so that it can be tested alone.
+ * whole line played at once, each move of the player within `plySeconds`, the opponent's replies
+ * played by themselves (since 2026-10-28; both sides, each half-move within `plySeconds`, in the
+ * Avocat du diable and the mini-boss's replay from memory). Pure, so that it can be tested alone.
  */
 
 /** The longest mate drawn: a line never has more half-moves than one in 4. */
 export const MAX_MATE = 4
+/** Each reply played by itself, on the server's clock (CalculationRules::REPLY_SECONDS). */
+export const REPLY_SECONDS = 1
+
+/**
+ * The time to play a line of `plies` half-moves from « Je réponds », as the server counts it:
+ * `plySeconds` per move of the player and REPLY_SECONDS per reply played by itself, or
+ * `plySeconds` per half-move when the player plays both sides.
+ *
+ * @param {number} plies
+ * @param {boolean} autoReplies
+ * @param {number} plySeconds
+ */
+export function answerSeconds(plies, autoReplies, plySeconds) {
+  if (!autoReplies) return plySeconds * plies
+  return (
+    plySeconds * Math.ceil(plies / 2) + REPLY_SECONDS * Math.floor(plies / 2)
+  )
+}
+
+/**
+ * What follows a move of the player when the opponent's replies are played by themselves:
+ * `over` (a mate, or the solution's length reached), `reply` (the solution's reply, the line on
+ * it), `engine` (chapter 3, off the solution: the engine says whether the move holds and replies)
+ * or `wrong` (off the solution without a mate: the line stops there).
+ *
+ * @param {string} fen where the line starts
+ * @param {string[]} line UCI, ending on the player's move
+ * @param {string[]} solution UCI, the player's move first
+ * @param {boolean} engine judged by the engine (chapter 3)
+ * @returns {{type: 'over'|'engine'|'wrong'}|{type: 'reply', uci: string}}
+ */
+export function nextStep(fen, line, solution, engine) {
+  if (new Chess(after(fen, line)).isCheckmate()) return { type: 'over' }
+  if (line.length >= solution.length) return { type: 'over' }
+  const onSolution = line.every((uci, k) => uci === solution[k])
+  if (onSolution) return { type: 'reply', uci: solution[line.length] }
+  return { type: engine ? 'engine' : 'wrong' }
+}
 
 /**
  * The half-moves of a mate in `mate` (the player's and the defences between).

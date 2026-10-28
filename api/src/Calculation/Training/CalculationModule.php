@@ -63,8 +63,11 @@ use Symfony\Component\Uid\Uuid;
  * against each of two replies, a mate threat to parry, a check in reply, a combination among
  * forcing moves, the player's own move and its refutation; docs/CALCULATION.md, § 2 quater). A
  * position is thought over on a frozen board, up to THINK_SECONDS; « Je réponds »
- * ({@see self::ready()}) starts the answer's clock: PLY_SECONDS per half-move of the solution, on
- * the server's clock; the whole line, both sides, is then judged once ({@see LineJudge}). Late, or not played (`pass`): a failure. Never rated.
+ * ({@see self::ready()}) starts the answer's clock ({@see CalculationRules::answerSeconds()}), on
+ * the server's clock. The player plays their own moves, the opponent's replies played by
+ * themselves (`autoReplies`, since 2026-10-28; both sides in the Avocat du diable and the
+ * mini-boss's replay from memory); the whole line is then judged once ({@see LineJudge}). Late, or
+ * not played (`pass`): a failure. Never rated.
  *
  * The Métronome (docs/CALCULATION.md, § 6): config `streak` (the lines right in a row to win, in
  * place of `mate`) and `lives`: mates of 1 to 4 moves, longer on average as lines come right, their
@@ -162,13 +165,11 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
         if ($unsolved) {
             $status = AttemptStatus::Wrong;
             $played = [];
-        } elseif (self::isLate($attempt, $now) || $submission->pass) {
+        } elseif (self::isLate($attempt, $now, self::autoReplies($run, $attempt)) || $submission->pass) {
             $status = AttemptStatus::Late;
         } else {
             try {
-                // A mate takes other defences and forced mates; not before a question on its position.
-                $free = Ending::Mate === $attempt->getEnding() && !self::check($run->getConfig())['question'];
-                $judged = LineJudge::judge($attempt->getFen(), $attempt->getExpected(), $played, $free);
+                $judged = LineJudge::judge($attempt->getFen(), $attempt->getExpected(), $played);
             } catch (IllegalLineException $e) {
                 throw new InvalidItemSubmissionException($e->getMessage());
             } catch (InvalidPositionException) {
@@ -263,18 +264,20 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
                         throw new InvalidItemSubmissionException('The same first move, then each of the two replies.');
                     }
                 }
-                $late = $submission->pass || self::isLate($attempt, $now, CalculationRules::TWO_REPLIES);
+                $late = $submission->pass || self::isLate($attempt, $now, true, CalculationRules::TWO_REPLIES);
                 $right = $complete && $verdict;
                 $mistakeAt = $complete ? $given : \count($answer) + \count($second);
             } else {
                 $answer = $submission->pass ? [] : $submission->moves;
                 $complete = !$submission->pass && LineShape::complete($fen, $answer, \count($expected));
-                $late = $submission->pass || self::isLate($attempt, $now);
+                $late = $submission->pass || self::isLate($attempt, $now, self::autoReplies($run, $attempt));
                 $onSolution = $complete && LineJudge::judge($fen, $expected, $answer)['right'];
                 $right = $onSolution || ($complete && $verdict);
                 // The mini-boss: another combination chosen alone, refused at once.
                 $refused = Kind::Combo === $kind && 1 === \count($answer) && $answer[0] !== ($expected[0] ?? null);
-                $mistakeAt = $complete ? $given : ($refused ? 0 : \count($answer));
+                // Cut short: on a move of the player's the engine found wanting (the line stops
+                // there, no reply to it), or where it stops.
+                $mistakeAt = $complete ? $given : ($refused ? 0 : (\is_int($given) && $given < \count($answer) ? $given : \count($answer)));
             }
         } catch (IllegalLineException $e) {
             throw new InvalidItemSubmissionException($e->getMessage());
@@ -596,10 +599,11 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
             'kind' => $kind->value,
             'question' => $config['question'],
             'solve' => $config['solve'],
-            // To solve it first, the opponent answering (the mini-boss): as a puzzle gives it. For
-            // the engine in the browser (chapter 3): a line on it needs no analysis, 3.1 offers its
-            // reply.
-            'solution' => $config['solve'] || $kind->isEngine() ? $attempt->getExpected() : null,
+            // As a puzzle gives it: the opponent's replies played by themselves, the mini-boss's
+            // puzzle solved first; for the engine in the browser (chapter 3), a line on it needs no
+            // analysis, 3.1 offers its reply. Never rated: reading it only skips a lesson.
+            'solution' => $attempt->getExpected(),
+            'autoReplies' => self::autoReplies($run, $attempt),
             'engine' => $kind->isEngine(),
             'toleranceCp' => $kind->isEngine() ? CalculationRules::ENGINE_TOLERANCE_CP : null,
             'decoyGapCp' => \in_array($kind, [Kind::Reply, Kind::Combo], true) ? CalculationRules::DECOY_GAP_CP : null,
@@ -632,16 +636,25 @@ final class CalculationModule implements TimeboxedModuleInterface, ReviewableMod
     }
 
     /**
-     * Whether a line comes after its time, on the server's clock: PLY_SECONDS per half-move of the
-     * solution from « Je réponds » (or from the end of the thinking time, without it), for each of
-     * its $lines (3.2: one against each reply). The instants
-     * are stored to the second (truncated): one more second, and the network's tolerance, always in
-     * the player's favour.
+     * Whether the opponent's replies are played by themselves (since 2026-10-28): not in the Avocat
+     * du diable (the refutation is the player's to find) nor in the mini-boss's replay from memory.
      */
-    private static function isLate(Attempt $attempt, \DateTimeImmutable $at, int $lines = 1): bool
+    private static function autoReplies(Run $run, Attempt $attempt): bool
+    {
+        return Kind::Advocate !== $attempt->getKind() && !self::check($run->getConfig())['solve'];
+    }
+
+    /**
+     * Whether a line comes after its time, on the server's clock: the solution's answer time from
+     * « Je réponds » (or from the end of the thinking time, without it;
+     * {@see CalculationRules::answerSeconds()}), for each of its $lines (3.2: one against each
+     * reply). The instants are stored to the second (truncated): one more second, and the network's
+     * tolerance, always in the player's favour.
+     */
+    private static function isLate(Attempt $attempt, \DateTimeImmutable $at, bool $autoReplies, int $lines = 1): bool
     {
         $readyAt = min($attempt->getReadyAt() ?? self::thinkingEnd($attempt), self::thinkingEnd($attempt));
-        $deadlineMs = ((int) $readyAt->format('U') + 1 + CalculationRules::PLY_SECONDS * \count($attempt->getExpected()) * $lines) * 1000 + TimeboxRunner::SUBMISSION_TOLERANCE_MS;
+        $deadlineMs = ((int) $readyAt->format('U') + 1 + CalculationRules::answerSeconds(\count($attempt->getExpected()), $autoReplies) * $lines) * 1000 + TimeboxRunner::SUBMISSION_TOLERANCE_MS;
 
         return (int) round((float) $at->format('U.u') * 1000) > $deadlineMs;
     }

@@ -121,20 +121,6 @@ final class Rules extends Chess
         return 1 === \count($candidates) ? $this->play(array_values($candidates)[0]) : null;
     }
 
-    /**
-     * Plays a legal move without its SAN (a search's hot path; {@see self::pop()} takes it back).
-     */
-    public function push(Move $move): void
-    {
-        $this->makeMove($move);
-    }
-
-    /** Takes back the last move pushed or played. */
-    public function pop(): void
-    {
-        $this->undoMove();
-    }
-
     public static function uci(Move $move): string
     {
         return $move->from.$move->to.($move->promotion ?? '');

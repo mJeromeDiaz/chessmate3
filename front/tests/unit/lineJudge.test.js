@@ -93,6 +93,25 @@ describe('useLineJudge', () => {
     scope.stop()
   })
 
+  it('replies to a move off the solution that holds with its best move, to one that falls with nothing', async () => {
+    const worker = new ScoredWorker(
+      new Map([
+        [START, 'cp 900'],
+        // Qd4: still winning, within the tolerance.
+        [after(START, ['d5d4']), 'cp -880'],
+        // Qa2: the win let go.
+        [after(START, ['d5a2']), 'cp -100']
+      ])
+    )
+    setWorkerFactory(() => worker)
+    const scope = effectScope()
+    const judge = scope.run(() => useLineJudge())
+    // The worker's best move is always a1a2.
+    await expect(judge.replyTo(START, ['d5d4'], 50)).resolves.toBe('a1a2')
+    await expect(judge.replyTo(START, ['d5a2'], 50)).resolves.toBeNull()
+    scope.stop()
+  })
+
   it('gives no verdict when the engine fails', async () => {
     setWorkerFactory(() => {
       throw new Error('No WebAssembly.')

@@ -7,7 +7,8 @@ import { after, finalScore, holds, judgeLine } from '@/utils/calculation'
  * § 2 quater): every position of a line is analysed as soon as it is on the board, while the
  * player plays the next half-move, so that the verdict is ready when the line ends (the server
  * times the line up to the submission). Positions are kept by FEN: the two lines of 3.2 share
- * their start.
+ * their start. Off the solution, the opponent's reply played by itself is the engine's best move
+ * (since 2026-10-28).
  *
  * @typedef {import('@/utils/engine/uci').Score} Score
  */
@@ -19,8 +20,8 @@ export const REPLIES_PV = 8
 
 export function useLineJudge() {
   const engine = useEngine()
-  /** @type {Map<string, Promise<Score|null>>} */
-  const scores = new Map()
+  /** @type {Map<string, Promise<{score: Score, move: string|null}|null>>} */
+  const analyses = new Map()
   /** An analysis failed (the engine did not start or crashed): no verdict but the solution's. */
   const failed = ref(false)
 
@@ -34,23 +35,35 @@ export function useLineJudge() {
   }
 
   /**
+   * A position analysed once: its score from the side to move and the engine's best move (none
+   * in a final position), null when the engine failed.
+   *
+   * @param {string} fen
+   * @returns {Promise<{score: Score, move: string|null}|null>}
+   */
+  function analysisOf(fen) {
+    let known = analyses.get(fen)
+    if (!known) {
+      const final = finalScore(fen)
+      known = final
+        ? Promise.resolve({ score: final, move: null })
+        : engine.analyse(fen, { movetime: ANALYSE_MS }).then(({ lines }) => {
+            const best = lines[0]
+            return best ? { score: best.score, move: best.move ?? null } : null
+          }, lost)
+      analyses.set(fen, known)
+    }
+    return known
+  }
+
+  /**
    * The score of a position from the side to move, analysed once.
    *
    * @param {string} fen
    * @returns {Promise<Score|null>}
    */
   function scoreOf(fen) {
-    let known = scores.get(fen)
-    if (!known) {
-      const final = finalScore(fen)
-      known = final
-        ? Promise.resolve(final)
-        : engine
-            .analyse(fen, { movetime: ANALYSE_MS })
-            .then(({ lines }) => lines[0]?.score ?? null, lost)
-      scores.set(fen, known)
-    }
-    return known
+    return analysisOf(fen).then(a => a?.score ?? null)
   }
 
   /**
@@ -102,6 +115,22 @@ export function useLineJudge() {
   }
 
   /**
+   * The reply played by itself to a move of the player's off the solution: the engine's best move,
+   * when the move holds; null when it does not, or when the engine failed (only the solution is
+   * right then).
+   *
+   * @param {string} fen where the line starts
+   * @param {string[]} moves UCI, ending on the player's move
+   * @param {number} toleranceCp
+   * @returns {Promise<string|null>}
+   */
+  async function replyTo(fen, moves, toleranceCp) {
+    const ok = await holdsAt(fen, moves, moves.length - 1, toleranceCp)
+    if (!ok) return null
+    return (await analysisOf(after(fen, moves)))?.move ?? null
+  }
+
+  /**
    * The opponent's best replies in a position (3.1), null when the engine failed.
    *
    * @param {string} fen
@@ -144,7 +173,7 @@ export function useLineJudge() {
   /** Forgets the positions analysed and gives up the searches running (a new item). */
   function reset() {
     engine.stop()
-    scores.clear()
+    analyses.clear()
     failed.value = false
   }
 
@@ -154,6 +183,7 @@ export function useLineJudge() {
     follow,
     verdict,
     holdsAt,
+    replyTo,
     replies,
     linesOn,
     bestMove,

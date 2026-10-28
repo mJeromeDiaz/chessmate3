@@ -6,7 +6,8 @@ namespace App\Calculation;
 
 /**
  * The calculation module's numbers (docs/CALCULATION.md): a mate calculated on a frozen board,
- * then its whole line played at once, both sides.
+ * then its whole line played at once, the opponent's replies played by themselves (since
+ * 2026-10-28; both sides in the Avocat du diable and the mini-boss's replay from memory).
  */
 final class CalculationRules
 {
@@ -16,8 +17,13 @@ final class CalculationRules
     public const THINK_SECONDS = 120;
     /** The mini-boss of chapter 2: solving the puzzle first takes up to this long (docs/CALCULATION.md, § 2 ter). */
     public const SOLVE_SECONDS = 300;
-    /** Each half-move played at most this long after the previous one (the first after « Je réponds »). */
+    /**
+     * Each move of the player at most this long after the opponent's reply (the first after « Je
+     * réponds »); each half-move, both sides played by the player.
+     */
     public const PLY_SECONDS = 3;
+    /** Each reply played by itself: its time on the server's clock (shown, or found by the engine in chapter 3). */
+    public const REPLY_SECONDS = 1;
     /** The positions are drawn this far below the player's puzzle rating (calm lessons). */
     public const RATING_GAP = 150;
     /** A run's items at most, its lives at most. */
@@ -50,6 +56,20 @@ final class CalculationRules
     public const MAX_THEMES = 3;
     /** A streak to reach at most. */
     public const MAX_STREAK = 30;
+
+    /**
+     * The time to play a line of $plies half-moves (the player's move first) from « Je réponds »:
+     * PLY_SECONDS per move of the player and REPLY_SECONDS per reply played by itself, or
+     * PLY_SECONDS per half-move when the player plays both sides.
+     */
+    public static function answerSeconds(int $plies, bool $autoReplies): int
+    {
+        if (!$autoReplies) {
+            return self::PLY_SECONDS * $plies;
+        }
+
+        return self::PLY_SECONDS * intdiv($plies + 1, 2) + self::REPLY_SECONDS * intdiv($plies, 2);
+    }
 
     /** The Métronome's thinking time once $right lines are right. */
     public static function tempo(int $right): int

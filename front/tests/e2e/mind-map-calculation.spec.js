@@ -60,7 +60,7 @@ test('calculation: a mate in 1 thought over on a frozen board, then played', asy
     'Ligne juste'
   )
 
-  // Wrong: a move that does not mate, then the clock sends it.
+  // Wrong: a move that does not mate, sent at once.
   item = (await (await served).json()).item
   await expect(player).toHaveAttribute('data-phase', 'think')
   ready = page.waitForResponse(isReady)
