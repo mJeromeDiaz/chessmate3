@@ -1,0 +1,411 @@
+{
+  "page": {
+    "title": "Défier un boss",
+    "beaten": "Aucun boss battu sur {total} | {n} boss battu sur {total} | {n} boss battus sur {total}",
+    "levelMeta": "{beaten}/{total} battus",
+    "loading": "On ouvre les portes de l’arène…",
+    "resume": "Une partie t’attend : reprends-la"
+  },
+  "levels": {
+    "1": "Débutant",
+    "2": "Joueur de club",
+    "3": "Confirmé",
+    "4": "Expert",
+    "5": "Maître",
+    "6": "Grand maître international"
+  },
+  "level": "NIVEAU {n}",
+  "card": {
+    "beaten": "Battu",
+    "elo": "Elo {elo}",
+    "shop": "En boutique",
+    "locked": "À battre dans son parcours",
+    "soon": "Bientôt"
+  },
+  "masters": {
+    "lead": "Les profs t’attendent tout en haut. Chacun se mérite par un exploit dans son module.",
+    "mystery": "???",
+    "mysteryTitle": "Le prof de l’ombre",
+    "mysteryLore": "Personne ne l’a jamais vu jouer avec les yeux ouverts. Il se montrera à qui saura jouer de mémoire."
+  },
+  "traits": {
+    "aggression": "Agressivité",
+    "patience": "Patience",
+    "calculation": "Calcul",
+    "speed": "Vitesse"
+  },
+  "styles": {
+    "varied": "Coups variés",
+    "solid": "Jeu solide",
+    "aggressive": "Attaques directes",
+    "trades": "Échanges",
+    "forcing": "Coups forcés",
+    "king_hunter": "Chasse au roi",
+    "pawns": "Poussées de pions",
+    "queen_keeper": "Garde sa dame",
+    "checks": "Échecs à répétition",
+    "rooks": "Tours actives",
+    "bishops": "Paire de fous",
+    "knights": "Cavaliers sauteurs",
+    "mate_finder": "Cherche le mat",
+    "captures": "Prises gratuites"
+  },
+  "locked": {
+    "visualisation": "Bats-le dans le parcours Visualisation pour le défier ici.",
+    "calculation": "Bats-le dans le parcours Calcul pour le défier ici.",
+    "endgames": "Bats-le dans le parcours des Finales pour le défier ici.",
+    "challenges": "Bats-le dans les Défis pour le défier ici.",
+    "other": "Bats-le dans son parcours pour le défier ici.",
+    "go": "Aller au parcours"
+  },
+  "sheet": {
+    "close": "Fermer",
+    "facts": {
+      "elo": "ELO",
+      "opening": "EN OUVERTURE",
+      "endgame": "EN FINALE",
+      "reward": "RÉCOMPENSE",
+      "games": "TES PARTIES"
+    },
+    "rewardDone": "Déjà gagnée",
+    "record": "{won} V · {drawn} N · {lost} D",
+    "noGames": "—",
+    "style": "Style de jeu",
+    "prefs": "Ses préférences",
+    "howTo": "Comment le battre",
+    "guarded": "Stockfish veille sur lui : il ne laisse rien passer.",
+    "yourGame": "Ta partie",
+    "colors": {
+      "white": "Blancs",
+      "black": "Noirs",
+      "random": "Hasard"
+    },
+    "play": "Jouer contre {name}",
+    "buy": "Débloquer",
+    "missing": "Il te manque {n} cristaux",
+    "soon": "Son combat se prépare : il arrive bientôt."
+  },
+  "shop": {
+    "title": "Boss de l’arène",
+    "lead": "Des adversaires qu’on ne croise dans aucun parcours. Débloque-les et défie-les quand tu veux.",
+    "owned": "Débloqué",
+    "see": "Voir l’arène"
+  },
+  "bosses": {
+    "zombie": {
+      "title": "Le Traînard de la horde",
+      "lore": "Il avance sans réfléchir et laisse traîner ses pièces partout… en espérant que tu en oublies autant.",
+      "tipTitle": "Le balayage",
+      "tip": "Avant chaque coup, repère les pièces sans défense des deux camps."
+    },
+    "jongleur": {
+      "title": "Le Bouffon des doubles menaces",
+      "lore": "Il garde toujours plusieurs menaces en l’air : une fourchette par-ci, un clouage par-là.",
+      "tipTitle": "Le motif",
+      "tip": "Cherche la menace cachée avant de répondre à la plus voyante."
+    },
+    "sablier": {
+      "title": "Le Gardien du temps qui file",
+      "lore": "Il ne se presse jamais et laisse le sable couler, en attendant que tu t’impatientes.",
+      "tipTitle": "Le tempo",
+      "tip": "Garde du temps à ta pendule : c’est lui qui compte les grains."
+    },
+    "metronome": {
+      "title": "Le Maître du tempo",
+      "lore": "Il joue vite, toujours au même rythme, et attend que ta pendule craque.",
+      "tipTitle": "La régularité",
+      "tip": "Joue vite les coups simples, garde ton temps pour les positions critiques."
+    },
+    "bourreau": {
+      "title": "Le Maître des exécutions",
+      "lore": "Impassible, implacable : il pousse ton roi vers le bord et compte les coups jusqu’au mat.",
+      "tipTitle": "L’abri",
+      "tip": "Garde ton roi à l’abri et ne laisse pas ses pièces s’approcher sans réponse."
+    },
+    "requin": {
+      "title": "Le Prédateur des eaux troubles",
+      "lore": "Une goutte de matériel et il sent l’odeur : dès que tu perds un pion, il ne lâche plus.",
+      "tipTitle": "Les eaux calmes",
+      "tip": "Ne lui donne rien : chaque pion offert devient une finale perdue."
+    },
+    "gardien": {
+      "title": "Le Veilleur des cases clés",
+      "lore": "Il connaît chaque opposition par cœur et ne cède jamais une case à ton roi.",
+      "tipTitle": "Le roi actif",
+      "tip": "En finale, ton roi est une pièce : avance-le devant tes pions."
+    },
+    "cyclope": {
+      "title": "Le Guetteur à l’œil unique",
+      "lore": "Son œil unique fixe une seule aile. Ce qui se passe de l’autre côté lui échappe… presque.",
+      "tipTitle": "L’autre aile",
+      "tip": "Ouvre un second front, loin de son regard."
+    },
+    "flash": {
+      "title": "L’Éclair de l’échiquier",
+      "lore": "Il joue à la vitesse de la lumière et compte sur ta précipitation.",
+      "tipTitle": "Le sang-froid",
+      "tip": "Ne joue pas à son rythme : prends le temps de vérifier ses menaces."
+    },
+    "defi-mates": {
+      "title": "Le Maître des tactiques et des mats",
+      "lore": "Il voit la fin de la partie avant le premier coup. Chaque erreur lui offre un mat.",
+      "tipTitle": "La vigilance",
+      "tip": "Vérifie ses échecs et ses prises à chaque coup."
+    },
+    "horloger": {
+      "title": "L’Artisan des temps comptés",
+      "lore": "Pour lui, une finale de pions est une affaire de temps : un seul de trop et tout bascule.",
+      "tipTitle": "Le compte",
+      "tip": "Compte les coups de chaque pion jusqu’à la promotion avant de te lancer."
+    },
+    "gargouille": {
+      "title": "La Gardienne de pierre",
+      "lore": "Elle ne bouge jamais et attend que tu t’énerves pour jouer le coup de trop.",
+      "tipTitle": "Le calme",
+      "tip": "Ne force rien : améliore tes pièces une à une."
+    },
+    "defi-endgames": {
+      "title": "La Doyenne des finales",
+      "lore": "Des siècles de finales derrière elle, et pas une technique oubliée.",
+      "tipTitle": "La technique",
+      "tip": "Échange quand tu es devant, garde les pièces quand tu es derrière."
+    },
+    "compteur": {
+      "title": "Le Comptable des variantes",
+      "lore": "Il compte chaque coup d’une longue variante et ne se trompe jamais d’une case.",
+      "tipTitle": "La simplicité",
+      "tip": "Choisis des positions claires : moins il y a à compter, moins il a d’avance."
+    },
+    "defi-tactics": {
+      "title": "Le Roi des coups tordus",
+      "lore": "Fourchettes, clouages, enfilades : il cache un tour dans chaque position.",
+      "tipTitle": "Le doute",
+      "tip": "Quand un de ses coups paraît gratuit, cherche le piège."
+    },
+    "reine-noire": {
+      "title": "La Maîtresse des stratégies",
+      "lore": "Élégante et calculatrice, elle préfère la ruse à la force et a toujours un coup d’avance.",
+      "tipTitle": "La prophylaxie",
+      "tip": "Devine son idée et neutralise-la avant qu’elle ne la joue."
+    },
+    "fantome": {
+      "title": "L’Esprit de l’échiquier hanté",
+      "lore": "Il cache ses idées loin derrière la position et frappe par des coups calmes.",
+      "tipTitle": "La mémoire",
+      "tip": "Visualise sa menace avant qu’elle n’apparaisse sur l’échiquier."
+    },
+    "defi-opening": {
+      "title": "Le Gardien des ouvertures",
+      "lore": "Il garde l’entrée de chaque ouverture et en connaît toutes les ficelles.",
+      "tipTitle": "Les principes",
+      "tip": "Développe tes pièces, contrôle le centre, roque tôt : il punit le reste."
+    },
+    "maitre-tours": {
+      "title": "Le Seigneur des colonnes",
+      "lore": "Lucena, Philidor, Vancura : il connaît toutes les positions de tours, et les piège toutes.",
+      "tipTitle": "La tour active",
+      "tip": "Une tour passive perd : place-la derrière les pions, sur les colonnes ouvertes."
+    },
+    "minotaure": {
+      "title": "Le Guerrier du labyrinthe",
+      "lore": "Il punit les coups joués sans plan et charge tout ce qui avance au hasard.",
+      "tipTitle": "Le fil d’Ariane",
+      "tip": "Choisis un plan et tiens-le jusqu’au bout."
+    },
+    "cameleon": {
+      "title": "Le Maître des apparences",
+      "lore": "Ses pièces changent d’allure à chaque coup : une menace en cache toujours une autre.",
+      "tipTitle": "Le regard neuf",
+      "tip": "À chaque coup, regarde la position comme si tu la découvrais."
+    },
+    "duelliste": {
+      "title": "L’Escrimeur des diagonales",
+      "lore": "Fou contre pion, fous de couleurs opposées : il se bat sur une seule couleur de cases.",
+      "tipTitle": "La bonne couleur",
+      "tip": "Place tes pions sur la couleur que son fou ne touche pas."
+    },
+    "avocat": {
+      "title": "Le Contradicteur infernal",
+      "lore": "Tu proposes un coup, il cherche la réfutation. Et il la trouve souvent.",
+      "tipTitle": "L’objection",
+      "tip": "Avant de jouer, cherche toi-même sa meilleure réponse."
+    },
+    "cavalier-errant": {
+      "title": "Le Sauteur des grands chemins",
+      "lore": "Il saute d’une case à l’autre et surgit là où on ne l’attend pas.",
+      "tipTitle": "Les cases de fourchette",
+      "tip": "Repère les cases d’où son cavalier attaque deux pièces à la fois."
+    },
+    "roi-cendres": {
+      "title": "Le Souverain des fins de partie",
+      "lore": "Il simplifie tout vers la finale, calculée jusqu’au dernier coup.",
+      "tipTitle": "La précision",
+      "tip": "Calcule jusqu’au bout avant chaque échange."
+    },
+    "sith": {
+      "title": "Le Seigneur de l’œil intérieur",
+      "lore": "Il joue des parties entières sans voir l’échiquier, et devine tes plans avant toi.",
+      "tipTitle": "L’initiative",
+      "tip": "Ne le laisse jamais jouer tranquille : chaque coup doit lui poser une question."
+    },
+    "lizy": {
+      "title": "La Reine des finales",
+      "lore": "Elle échange, simplifie et t’emmène là où elle est la plus forte : une finale où chaque temps compte.",
+      "tipTitle": "La technique",
+      "tip": "Garde tes pions groupés et active ton roi avant elle."
+    },
+    "albert": {
+      "title": "Le Génie de la tactique",
+      "lore": "Il voit les combinaisons avant qu’elles n’existent : un échec, une prise, et ta position s’écroule.",
+      "tipTitle": "Les coups forcés",
+      "tip": "À chaque coup, cherche ses échecs, ses prises et ses menaces avant les tiennes."
+    },
+    "aaron": {
+      "title": "Le Maître des ouvertures",
+      "lore": "Il connaît chaque ligne par cœur et joue ses premiers coups comme un ordinateur.",
+      "tipTitle": "Sortir des sentiers battus",
+      "tip": "Joue ton répertoire, et ne lâche rien quand la théorie s’arrête : c’est là qu’il redevient humain."
+    },
+    "ray": {
+      "title": "Le Maître de l’aveugle",
+      "lore": "Il joue sans regarder l’échiquier et n’oublie jamais une case. Le dernier prof, le plus fort.",
+      "tipTitle": "La concentration",
+      "tip": "Prends ton temps sur chaque coup : il ne laisse rien passer."
+    }
+  },
+  "game": {
+    "title": "Contre {name}",
+    "kicker": "DÉFI BOSS · {cadence}",
+    "you": "Toi",
+    "side": {
+      "white": "Blancs",
+      "black": "Noirs"
+    },
+    "bossMeta": "Elo {elo} · {side}",
+    "moves": "Coups",
+    "noMoves": "La partie commence : à toi de jouer.",
+    "bossFirst": "Le boss ouvre la partie.",
+    "yourTurn": "À toi de jouer",
+    "bossTurn": "{name} réfléchit…",
+    "freeMove": "Premier coup libre : les pendules partent au deuxième.",
+    "browsing": "Tu revois un coup passé : reviens à la partie pour jouer.",
+    "browsingMoved": "{name} a joué pendant que tu revoyais la partie.",
+    "live": "Revenir à la partie",
+    "loadingMaia": "{name} se prépare… {percent} %",
+    "maiaUnavailable": "Le cerveau du boss ne répond pas : Stockfish joue à sa place, à sa force.",
+    "starting": "On installe l’échiquier…",
+    "noGame": "Aucune partie en cours.",
+    "actions": {
+      "abort": "Annuler",
+      "restart": "Recommencer",
+      "resign": "Abandonner"
+    },
+    "confirm": {
+      "abortTitle": "Annuler la partie ?",
+      "abortMessage": "Elle sera effacée : ni défaite, ni XP.",
+      "restartTitle": "Recommencer ?",
+      "restartMessage": "Cette partie est effacée et une nouvelle commence, avec la même couleur et la même cadence.",
+      "resignTitle": "Abandonner ?",
+      "resignMessage": "La partie compte comme perdue.",
+      "back": "Continuer la partie"
+    }
+  },
+  "reactions": {
+    "thinking": ["Hmm… intéressant.", "Laisse-moi réfléchir.", "Voyons voir…"],
+    "quiet": ["Hmm… intéressant.", "Je vois ce que tu prépares.", "À toi."],
+    "boss_captures": [
+      "Exactement le coup que j’attendais.",
+      "Merci pour le cadeau !",
+      "Une pièce de plus pour moi."
+    ],
+    "player_captures": [
+      "Non… pas ça.",
+      "Tu vas le regretter.",
+      "Je ne l’avais pas vu venir."
+    ],
+    "player_takes_pawn": [
+      "Ce coup-là, je ne l’avais pas prévu.",
+      "Un pion, ce n’est qu’un pion…",
+      "Hmm. Bien vu."
+    ],
+    "boss_checks": [
+      "Admire la suite.",
+      "Échec ! Où vas-tu cacher ton roi ?",
+      "Ton roi tremble."
+    ],
+    "player_checks": ["Quoi ?!", "Eh ! Doucement.", "Tu oses ?"],
+    "drawn": [
+      "Soit. Nous reprendrons plus tard.",
+      "Partie nulle… pour cette fois.",
+      "Personne ne gagne aujourd’hui."
+    ]
+  },
+  "end": {
+    "checkmate": "Échec et mat",
+    "resignation": "Abandon",
+    "timeout": "Temps écoulé",
+    "abandonment": "Partie laissée en plan",
+    "stalemate": "Pat",
+    "repetition": "Triple répétition",
+    "fifty_moves": "Règle des 50 coups",
+    "insufficient_material": "Matériel insuffisant",
+    "aborted": "Partie annulée"
+  },
+  "result": {
+    "won": "Victoire !",
+    "lost": "Défaite",
+    "drawn": "Partie nulle",
+    "aborted": "Partie annulée",
+    "rematch": "Revanche",
+    "back": "Retour aux boss",
+    "review": "Analyser la partie"
+  },
+  "arrival": {
+    "label": "{name} arrive dans l’arène",
+    "one": "UN NOUVEAU BOSS DANS L’ARÈNE",
+    "many": "NOUVEAUX BOSS DANS L’ARÈNE · {n}/{total}",
+    "next": "Suivant",
+    "challenge": "Le défier",
+    "later": "Plus tard"
+  },
+  "review": {
+    "title": "Analyse de la partie",
+    "back": "Résultat",
+    "running": "Stockfish analyse la partie… {percent} %",
+    "failed": "Stockfish n’a pas pu analyser la partie.",
+    "retry": "Réessayer",
+    "curve": "Évaluation de la partie, coup après coup",
+    "best": "meilleur : {move}",
+    "verdicts": {
+      "best": "le meilleur coup",
+      "good": "bon coup",
+      "inaccuracy": "imprécision",
+      "mistake": "erreur",
+      "blunder": "gaffe"
+    },
+    "steps": {
+      "first": "Début de la partie",
+      "previous": "Coup précédent",
+      "next": "Coup suivant",
+      "last": "Fin de la partie"
+    },
+    "download": "Télécharger le PGN",
+    "copy": "Copier le PGN",
+    "copied": "PGN copié !",
+    "copyFailed": "Impossible de copier le PGN."
+  },
+  "feat": {
+    "lizy": "Maîtrise toutes les leçons du parcours des Finales pour la défier.",
+    "albert": "Enchaîne 50 puzzles d’affilée dans un puzzle streak pour le défier.",
+    "aaron": "Construis un répertoire de plus de 50 lignes pour le défier.",
+    "ray": "Réussis une séance libre de jeu à l’aveugle : niveau difficile, 4 coups ou plus, 10 s ou moins pour mémoriser, 20 min ou plus, au moins 80 % de puzzles résolus sans coup d’œil.",
+    "progress": "{current} / {goal}",
+    "go": "Relever le défi",
+    "short": {
+      "lizy": "{current}/{goal} finales maîtrisées",
+      "albert": "Streak {current}/{goal}",
+      "aaron": "{current}/{goal} lignes",
+      "ray": "Un exploit à l’aveugle"
+    }
+  }
+}

@@ -1164,6 +1164,91 @@ export const gamificationApi = {
 }
 
 /** The store (docs/SHOP.md): crowns, offers, carousel, inventory, how to earn. */
+export const arenaApi = {
+  /**
+   * The arena (docs/ARENA.md, § 4): `{bosses, cadences, defaultCadence, badges, balance,
+   * currentGame, pendingUnlocks}`.
+   */
+  overview: () => http.get('/api/arena', JSON_LD).then(r => r.data),
+  /**
+   * Buys one of the arena's own bosses (§ 6 bis); answers with the arena after it. 409:
+   * `arena_boss_not_for_sale`, `arena_boss_owned`, `arena_insufficient_crystals`.
+   *
+   * @param {string} boss
+   */
+  purchase: boss =>
+    http
+      .post(
+        `/api/arena/bosses/${encodeURIComponent(boss)}/purchase`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data),
+  /** The bosses arrived and not shown yet (§ 5): `{bosses}`, in the roster's order. */
+  unlocks: () => http.get('/api/arena/unlocks', JSON_LD).then(r => r.data),
+  /**
+   * Their arrival was shown (idempotent): the bosses still waiting.
+   *
+   * @param {string[]} bosses
+   */
+  announce: bosses =>
+    http
+      .post('/api/arena/unlocks/announce', { bosses }, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Starts a game (§ 3): 201 with the game; 404 `arena_unknown_boss`, 409 `arena_boss_locked` or
+   * `arena_game_in_progress`.
+   *
+   * @param {{boss: string, color: string, cadence: string}} settings
+   */
+  start: settings =>
+    http.post('/api/arena/games', settings, JSON_LD).then(r => r.data),
+  /** The game in progress, null without one. */
+  current: () =>
+    http
+      .get('/api/arena/games/current', JSON_LD)
+      .then(r => r.data)
+      .catch(e => {
+        if (e?.response?.status === 404) return null
+        throw e
+      }),
+  /** @param {string} id */
+  game: id =>
+    http
+      .get(`/api/arena/games/${encodeURIComponent(id)}`, JSON_LD)
+      .then(r => r.data),
+  /**
+   * Plays the move of the side to move, numbered from 0: the game after it. 409
+   * `arena_out_of_sync` (reload it) or `arena_game_over`, 422 `arena_illegal_move`.
+   *
+   * @param {string} id
+   * @param {number} ply
+   * @param {string} move UCI
+   */
+  move: (id, ply, move) =>
+    http
+      .post(
+        `/api/arena/games/${encodeURIComponent(id)}/moves`,
+        { ply, move },
+        JSON_LD
+      )
+      .then(r => r.data),
+  /**
+   * Resigns (lost), cancels (counted nowhere) or restarts (cancels, then the same game again).
+   *
+   * @param {string} id
+   * @param {'resign'|'abort'|'restart'} action
+   */
+  act: (id, action) =>
+    http
+      .post(
+        `/api/arena/games/${encodeURIComponent(id)}/${action}`,
+        null,
+        JSON_LD
+      )
+      .then(r => r.data)
+}
+
 export const shopApi = {
   /** `{balance, offers, slides, inventory, freezes, earning, dailyWheel, gifts}` */
   get: () => http.get('/api/shop', JSON_LD).then(r => r.data),

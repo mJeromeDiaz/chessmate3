@@ -133,12 +133,13 @@
  * beaten boss's victory, then the chests earned, one after the other; « Passage suivant » or
  * « Rejouer », and back to the path.
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BossPortrait from '@/components/mindMap/BossPortrait.vue'
 import BossVictory from '@/components/mindMap/BossVictory.vue'
 import TreasureChest from '@/components/shop/TreasureChest.vue'
 import { mindMapApi } from '@/services/api'
+import { useArenaStore } from '@/stores/arena'
 import { useTrainingStore } from '@/stores/training'
 import { apiErrorMessage } from '@/utils/apiError'
 import {
@@ -163,6 +164,7 @@ const props = defineProps({
 
 const router = useRouter()
 const training = useTrainingStore()
+const arena = useArenaStore()
 
 /** @type {import('vue').Ref<any>} the API's verdict */
 const outcome = ref(null)
@@ -172,6 +174,8 @@ const error = ref('')
 /** @type {import('vue').Ref<import('@/utils/mindMapPath').PathChest[]>} chests still to open */
 const chests = ref([])
 const victoryOpen = ref(false)
+/** The verdict, the path and the chests all read: the victory shows first. */
+const loaded = ref(false)
 const starting = ref(false)
 const startError = ref('')
 
@@ -191,6 +195,21 @@ const replayable = computed(() => !!outcome.value && key.value !== 'pending')
 
 onMounted(load)
 
+// A boss beaten, its victory and its chests closed: it may arrive in the arena now, on this page
+// (docs/ARENA.md, § 5).
+watch(
+  () =>
+    loaded.value &&
+    key.value === 'victory' &&
+    !victoryOpen.value &&
+    chests.value.length === 0,
+  over => {
+    if (!over) return
+    arena.afterRun = true
+    arena.load()
+  }
+)
+
 async function load() {
   try {
     const verdict = await mindMapApi.outcome(props.runId)
@@ -199,6 +218,7 @@ async function load() {
     step.value = path ? findStep(path, verdict.step) : null
     chests.value = verdict.unopenedChests ?? []
     victoryOpen.value = outcomeKey(verdict) === 'victory' && !!step.value
+    loaded.value = true
   } catch (e) {
     error.value = apiErrorMessage(e)
   }

@@ -22,42 +22,72 @@
     >
       {{ $t('dashboard.trophies.empty') }}
     </p>
-    <div v-else class="trophies__grid">
-      <div
-        v-for="card in won"
-        :key="card.key"
-        class="trophies__badge"
-        :data-testid="`trophy-${card.key}`"
-        data-unlocked="true"
-        :title="card.desc"
-      >
-        <div
-          class="trophies__icon"
-          :class="{ 'trophies__icon--days': card.streak || card.puzzles }"
-          :style="{ background: card.bg, color: card.ink }"
+    <template v-else>
+      <template v-for="group in groups" :key="group.key">
+        <h3
+          v-if="group.title"
+          class="trophies__group"
+          :data-testid="`trophies-${group.key}`"
         >
-          {{ card.icon }}
+          {{ group.title }}
+        </h3>
+        <div class="trophies__grid">
+          <div
+            v-for="card in group.cards"
+            :key="card.key"
+            class="trophies__badge"
+            :class="{ 'trophies__badge--exceptional': card.exceptional }"
+            :data-testid="`trophy-${card.key}`"
+            data-unlocked="true"
+            :title="card.desc"
+          >
+            <div
+              class="trophies__icon"
+              :class="{ 'trophies__icon--days': card.streak || card.puzzles }"
+              :style="{ background: card.bg, color: card.ink }"
+            >
+              {{ card.icon }}
+            </div>
+            <div class="trophies__name">{{ card.name }}</div>
+            <div class="trophies__desc">{{ card.desc }}</div>
+            <div class="trophies__progress">{{ card.progress }}</div>
+          </div>
         </div>
-        <div class="trophies__name">{{ card.name }}</div>
-        <div class="trophies__desc">{{ card.desc }}</div>
-        <div class="trophies__progress">{{ card.progress }}</div>
-      </div>
-    </div>
+      </template>
+    </template>
   </section>
 </template>
 
 <script setup>
 /**
- * The trophies (docs/GAMIFICATION.md): only the won ones, with the date of the feat (the streak
+ * The trophies (docs/GAMIFICATION.md): only the won ones, with the date of the feat — the
+ * exceptional badges (the arena's professors) in their own row first, then the others (the streak
  * badges last, shortest first, then the puzzle streak badges); the others stay hidden, only counted.
  */
 import { computed } from 'vue'
+import { t } from '@/i18n'
 import { useGamificationStore } from '@/stores/gamification'
 import { trophyCards } from '@/utils/gamification'
 
 const gamification = useGamificationStore()
 const cards = computed(() => trophyCards(gamification.trophies))
 const won = computed(() => cards.value.filter(c => c.unlocked))
+const groups = computed(() => {
+  const exceptional = won.value.filter(c => c.exceptional)
+  const others = won.value.filter(c => !c.exceptional)
+  return [
+    ...(exceptional.length
+      ? [
+          {
+            key: 'exceptional',
+            title: t('dashboard.trophies.exceptional'),
+            cards: exceptional
+          }
+        ]
+      : []),
+    ...(others.length ? [{ key: 'others', title: '', cards: others }] : [])
+  ]
+})
 const error = computed(() => gamification.errors.trophies ?? '')
 </script>
 
@@ -82,6 +112,24 @@ const error = computed(() => gamification.errors.trophies ?? '')
   font-size: 12px;
   font-weight: 700;
   color: var(--cm-muted);
+}
+
+.trophies__group {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c9971c;
+}
+
+.trophies__badge--exceptional {
+  background: linear-gradient(
+    160deg,
+    rgba(242, 201, 76, 0.22),
+    var(--cm-inset)
+  );
+  box-shadow: inset 0 0 0 1.5px #f2c94c;
 }
 
 .trophies__grid {

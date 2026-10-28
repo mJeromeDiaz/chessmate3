@@ -12,10 +12,11 @@ use App\Arena\Game\Games;
 use App\Arena\Roster\ArenaReader;
 use App\Arena\Unlock\Unlocks;
 use App\Security\AuthenticatedUser;
+use App\Shop\Wallet\Wallets;
 use Psr\Clock\ClockInterface;
 
 /**
- * GET /arena: the current player's only. The bosses that became available are written first (their
+ * GET /arena (and after a purchase): the current player's only. The bosses that became available are written first (their
  * arrival waits to be shown), a game that ended by itself is closed.
  *
  * @implements ProviderInterface<Overview>
@@ -26,6 +27,7 @@ final class OverviewProvider implements ProviderInterface
         private readonly ArenaReader $reader,
         private readonly Unlocks $unlocks,
         private readonly Games $games,
+        private readonly Wallets $wallets,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly ClockInterface $clock,
     ) {
@@ -43,6 +45,7 @@ final class OverviewProvider implements ProviderInterface
         $view->cadences = ArenaRules::cadences();
         $view->defaultCadence = ArenaRules::DEFAULT_CADENCE;
         $view->badges = $arena['badges'];
+        $view->balance = $this->wallets->balance($user->getId());
         $view->currentGame = $current?->getId()->toRfc4122();
         $view->pendingUnlocks = $this->unlocks->sync($user, $now, $arena['statuses']);
 

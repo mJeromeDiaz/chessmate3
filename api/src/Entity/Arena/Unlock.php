@@ -11,7 +11,8 @@ use Symfony\Component\Uid\Uuid;
 
 /**
  * A boss the player can challenge in the arena, since when, and whether its arrival was shown (the
- * animated reveal, docs/ARENA.md, § 5). Written when the arena is read, once per boss.
+ * animated reveal, docs/ARENA.md, § 5). Written when the arena is read, once per boss, or when the
+ * boss is bought (§ 6 bis).
  */
 #[ORM\Entity(repositoryClass: UnlockRepository::class)]
 #[ORM\Table(name: 'arena_unlock')]
@@ -34,6 +35,13 @@ class Unlock
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $announcedAt = null;
+
+    /** Bought in the shop: when, and its price in crystals. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $purchasedAt = null;
+
+    #[ORM\Column(type: 'smallint', nullable: true, options: ['unsigned' => true])]
+    private ?int $price = null;
 
     public function __construct(User $user, string $boss, \DateTimeImmutable $unlockedAt)
     {
@@ -71,5 +79,15 @@ class Unlock
     public function getAnnouncedAt(): ?\DateTimeImmutable
     {
         return $this->announcedAt;
+    }
+
+    public function getPurchasedAt(): ?\DateTimeImmutable
+    {
+        return $this->purchasedAt;
+    }
+
+    public function getPrice(): ?int
+    {
+        return $this->price;
     }
 }

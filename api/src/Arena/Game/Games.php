@@ -236,7 +236,7 @@ final readonly class Games
         $crystals = 0;
         $boss = Roster::find($game->getBoss());
         if (GameStatus::Won === $status && null !== $boss && !$this->games->isPaid($user, $boss->character)) {
-            $crystals = ArenaRules::crystals($boss->tier);
+            $crystals = $boss->crystals();
             $balance = $this->wallets->lock($user->getId(), $now);
             $this->wallets->move($user->getId(), $balance, $crystals, LedgerKind::Reward, ['reason' => \sprintf('Arène · %s', $boss->character)], $now);
         }

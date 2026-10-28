@@ -293,12 +293,8 @@ describe('mind map path', () => {
     expect(moodImage('reine-noire', 'anger')).toContain('reine-colere.png')
     expect(standingImage('reine-noire')).toContain('reine-pose.png')
     // The défis' Maître du mat: files maitre-du-mat-*.png.
-    expect(moodImage('defi-mates', 'joy')).toContain(
-      'maitre-du-mat-joie.png'
-    )
-    expect(standingImage('defi-mates')).toContain(
-      'maitre-du-mat-pose.png'
-    )
+    expect(moodImage('defi-mates', 'joy')).toContain('maitre-du-mat-joie.png')
+    expect(standingImage('defi-mates')).toContain('maitre-du-mat-pose.png')
     expect(BOSS_GLYPHS['defi-mates']).toBeUndefined()
     expect(BOSS_GLYPHS.bourreau).toBeUndefined()
     expect(BOSS_GLYPHS['reine-noire']).toBeUndefined()

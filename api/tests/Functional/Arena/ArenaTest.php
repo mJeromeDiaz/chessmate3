@@ -12,46 +12,77 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * The arena (docs/ARENA.md): the bosses met on the paths (a visualisation or calculation boss once
- * open, an endgames or défis boss once beaten), a game at a time, the moves of both sides checked
+ * The arena (docs/ARENA.md): the bosses of the paths once beaten there, the arena's own (the first
+ * free, the others bought in the shop), a game at a time, the moves of both sides checked
  * and timed by the server, its end (mate, resignation, time, abandonment), cancelling at any time
  * (counted nowhere) and restarting, the XP and the first defeat's crystals, the arrivals to show.
  *
- * @phpstan-type BossJson array{character: string, capacity: string, tier: string, elo: int, endgameElo: int|null, styles: list<string>, guarded: bool, status: string, crystals: int, won: int, drawn: int, lost: int, firstWonAt: string|null}
+ * @phpstan-type BossJson array{character: string, capacity: string|null, tier: string, level: int, price: int|null, elo: int, endgameElo: int|null, styles: list<string>, guarded: bool, status: string, crystals: int, won: int, drawn: int, lost: int, firstWonAt: string|null}
  * @phpstan-type GameJson array{id: string, boss: string, color: string, elo: int, cadence: string, incrementMs: int, moves: list<string>, playerMs: int, bossMs: int, turn: string, clocksRunning: bool, status: string, end: string|null, crystals: int, xp: int}
  */
 final class ArenaTest extends WoodpeckerWebTestCase
 {
     private const SCHOLAR = ['e2e4', 'e7e5', 'f1c4', 'b8c6', 'd1h5', 'g8f6', 'h5f7'];
 
-    public function testTheBossesOpenAsTheyAreMetOnThePaths(): void
+    public function testTheBossesArriveOnceBeatenOnThePathsOrBought(): void
     {
         $alice = $this->createUserIn('alice@example.com');
         $arena = $this->overview($alice);
         $statuses = array_column($arena['bosses'], 'status', 'character');
-        self::assertSame('available', $statuses['jongleur'], 'the first chapter\'s boss is open on its path');
-        self::assertSame('available', $statuses['metronome']);
-        self::assertSame('locked', $statuses['cyclope']);
-        self::assertSame('locked', $statuses['bourreau'], 'an endgames boss: once beaten');
+        self::assertSame('available', $statuses['zombie'], 'the arena\'s first boss is free');
+        self::assertSame('locked', $statuses['jongleur'], 'a path\'s boss: once beaten there, even when open');
+        self::assertSame('locked', $statuses['metronome']);
+        self::assertSame('locked', $statuses['bourreau']);
         self::assertSame('locked', $statuses['defi-mates']);
         self::assertSame('locked', $statuses['defi-opening']);
         self::assertSame('soon', $statuses['sith'], 'its fight is not built yet');
+        self::assertSame(['shop', 'shop'], [$statuses['requin'], $statuses['minotaure']]);
         self::assertSame(['3+2', '5+3', '10+5', '15+10'], $arena['cadences']);
         self::assertNull($arena['currentGame']);
+        self::assertSame(0, $arena['balance']);
         $jongleur = $this->boss($arena, 'jongleur');
-        self::assertSame(['visualisation', 'chapter', 1000, null, 100, 0], [$jongleur['capacity'], $jongleur['tier'], $jongleur['elo'], $jongleur['endgameElo'], $jongleur['crystals'], $jongleur['won']]);
+        self::assertSame(['visualisation', 'chapter', 1, null, 1000, null, 100, 0], [$jongleur['capacity'], $jongleur['tier'], $jongleur['level'], $jongleur['price'], $jongleur['elo'], $jongleur['endgameElo'], $jongleur['crystals'], $jongleur['won']]);
+        $requin = $this->boss($arena, 'requin');
+        self::assertSame([null, 2, 150, 200], [$requin['capacity'], $requin['level'], $requin['price'], $requin['crystals']]);
+        self::assertSame([1, null], [$this->boss($arena, 'zombie')['level'], $this->boss($arena, 'zombie')['price']]);
 
         $this->completed($alice, 'endgames', 'mates-boss');
         $this->completed($alice, 'challenges', 'op-'.strtolower(Uuid::v7()->toBase32()).'-boss');
         $this->completed($alice, 'visualisation', '1-boss');
         $statuses = array_column($this->overview($alice)['bosses'], 'status', 'character');
-        self::assertSame(['available', 'available', 'available', 'locked'], [$statuses['bourreau'], $statuses['defi-opening'], $statuses['cyclope'], $statuses['gardien']]);
+        self::assertSame(['available', 'available', 'available', 'locked', 'locked'], [$statuses['bourreau'], $statuses['defi-opening'], $statuses['jongleur'], $statuses['cyclope'], $statuses['gardien']]);
         self::assertSame(1700, $this->boss($this->overview($alice), 'bourreau')['endgameElo']);
+    }
+
+    public function testTheArenasOwnBossesAreBoughtWithCrystalsThePathsNever(): void
+    {
+        $alice = $this->createUserIn('alice@example.com');
+        $this->credit($alice, 200);
+        $this->assertRefused($this->purchase($alice, 'jongleur'), 409, 'arena_boss_not_for_sale');
+        $this->assertRefused($this->purchase($alice, 'zombie'), 409, 'arena_boss_not_for_sale');
+        $this->assertRefused($this->purchase($alice, 'dragon'), 404, 'arena_unknown_boss');
+        $this->assertRefused($this->purchase($alice, 'minotaure'), 409, 'arena_insufficient_crystals');
+        self::assertSame(200, $this->balance($alice), 'a refusal costs nothing');
+        $this->assertRefused($this->api('POST', '/api/arena/games', $alice, ['boss' => 'requin']), 409, 'arena_boss_locked');
+
+        $response = $this->purchase($alice, 'requin');
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
+        /** @var array{bosses: list<BossJson>, balance: int, pendingUnlocks: list<string>} $arena */
+        $arena = $this->json($response);
+        self::assertSame(['available', 50], [$this->boss($arena, 'requin')['status'], $arena['balance']]);
+        self::assertContains('requin', $arena['pendingUnlocks'], 'its arrival to show');
+        self::assertSame(50, $this->balance($alice));
+        $line = $this->connection()->fetchAssociative('SELECT kind, delta, offer_name FROM shop_ledger_entry WHERE user_id = ?', [$alice->getId()->toBinary()]);
+        self::assertIsArray($line);
+        self::assertSame(['purchase', -150, 'Arène · requin'], [$line['kind'], is_numeric($line['delta']) ? (int) $line['delta'] : null, $line['offer_name']]);
+        $this->assertRefused($this->purchase($alice, 'requin'), 409, 'arena_boss_owned');
+        self::assertSame('requin', $this->start($alice, 'requin', 'white', '5+3')['boss']);
     }
 
     public function testAGameIsPlayedByBothSidesMovesAndPaysTheFirstDefeatOnce(): void
     {
         $alice = $this->createUserIn('alice@example.com');
+        $this->beatFirstBosses($alice);
         $this->assertRefused($this->api('POST', '/api/arena/games', $alice, ['boss' => 'bourreau']), 409, 'arena_boss_locked');
         $this->assertRefused($this->api('POST', '/api/arena/games', $alice, ['boss' => 'dragon']), 404, 'arena_unknown_boss');
         self::assertSame(422, $this->api('POST', '/api/arena/games', $alice, ['boss' => 'jongleur', 'cadence' => '1+0'])->getStatusCode());
@@ -92,6 +123,7 @@ final class ArenaTest extends WoodpeckerWebTestCase
     public function testTheBossMatesResignationAndAnotherPlayersGame(): void
     {
         $alice = $this->createUserIn('alice@example.com');
+        $this->beatFirstBosses($alice);
         $bob = $this->createUserIn('bob@example.com');
         $game = $this->start($alice, 'metronome', 'white', '5+3');
         $this->assertRefused($this->api('GET', '/api/arena/games/'.$game['id'], $bob), 404, 'arena_game_not_found');
@@ -110,6 +142,7 @@ final class ArenaTest extends WoodpeckerWebTestCase
     public function testThePlayersClockAndAnAbandonmentEndTheGameByThemselves(): void
     {
         $alice = $this->createUserIn('alice@example.com');
+        $this->beatFirstBosses($alice);
         $game = $this->start($alice, 'jongleur', 'white', '3+2');
         $this->playMoves($alice, $game['id'], ['e2e4', 'e7e5']);
         $this->travel('+181 seconds');
@@ -129,6 +162,7 @@ final class ArenaTest extends WoodpeckerWebTestCase
     public function testCancellingCountsNowhereAndRestartingStartsTheSameGameAgain(): void
     {
         $alice = $this->createUserIn('alice@example.com');
+        $this->beatFirstBosses($alice);
         $game = $this->start($alice, 'jongleur', 'black', '10+5');
         $this->playMoves($alice, $game['id'], ['e2e4', 'e7e5', 'g1f3']);
         $restarted = $this->gameJson($this->api('POST', '/api/arena/games/'.$game['id'].'/restart', $alice), 201);
@@ -147,11 +181,12 @@ final class ArenaTest extends WoodpeckerWebTestCase
     public function testTheBossesArrivalsWaitToBeShown(): void
     {
         $alice = $this->createUserIn('alice@example.com');
-        self::assertSame(['jongleur', 'metronome'], $this->pending($alice), 'at the arena\'s opening: every boss already met, shown together');
-        self::assertSame(['jongleur', 'metronome'], $this->overview($alice)['pendingUnlocks']);
+        $this->beatFirstBosses($alice);
+        self::assertSame(['jongleur', 'metronome', 'zombie'], $this->pending($alice), 'at the arena\'s opening: every boss already there, shown together');
+        self::assertSame(['jongleur', 'metronome', 'zombie'], $this->overview($alice)['pendingUnlocks']);
         $after = $this->json($this->api('POST', '/api/arena/unlocks/announce', $alice, ['bosses' => ['jongleur']]));
-        self::assertSame(['metronome'], array_column(\is_array($after['bosses'] ?? null) ? $after['bosses'] : [], 'character'));
-        $this->api('POST', '/api/arena/unlocks/announce', $alice, ['bosses' => ['metronome', 'jongleur']]);
+        self::assertSame(['metronome', 'zombie'], array_column(\is_array($after['bosses'] ?? null) ? $after['bosses'] : [], 'character'));
+        $this->api('POST', '/api/arena/unlocks/announce', $alice, ['bosses' => ['metronome', 'jongleur', 'zombie']]);
         self::assertSame([], $this->pending($alice));
 
         // The Bourreau beaten on the endgames path: it arrives.
@@ -161,14 +196,14 @@ final class ArenaTest extends WoodpeckerWebTestCase
     }
 
     /**
-     * @return array{bosses: list<BossJson>, cadences: list<string>, defaultCadence: string, badges: list<array{badge: string, earnedAt: string}>, currentGame: string|null, pendingUnlocks: list<string>}
+     * @return array{bosses: list<BossJson>, cadences: list<string>, defaultCadence: string, badges: list<array{badge: string, earnedAt: string}>, balance: int, currentGame: string|null, pendingUnlocks: list<string>}
      */
     private function overview(User $user): array
     {
         $response = $this->api('GET', '/api/arena', $user);
         self::assertSame(200, $response->getStatusCode(), (string) $response->getContent());
 
-        /** @var array{bosses: list<BossJson>, cadences: list<string>, defaultCadence: string, badges: list<array{badge: string, earnedAt: string}>, currentGame: string|null, pendingUnlocks: list<string>} */
+        /** @var array{bosses: list<BossJson>, cadences: list<string>, defaultCadence: string, badges: list<array{badge: string, earnedAt: string}>, balance: int, currentGame: string|null, pendingUnlocks: list<string>} */
         return $this->json($response);
     }
 
@@ -262,6 +297,26 @@ final class ArenaTest extends WoodpeckerWebTestCase
         $this->connection()->executeStatement(
             "INSERT INTO mind_map_progress (id, user_id, capacity, step, passes, completed_at, updated_at) VALUES (?, ?, ?, ?, 1, '2026-09-28 09:00:00', '2026-09-28 09:00:00')",
             [Uuid::v7()->toBinary(), $user->getId()->toBinary(), $capacity, $step],
+        );
+    }
+
+    /** The first bosses of the visualisation and the calculation beaten on their paths. */
+    private function beatFirstBosses(User $user): void
+    {
+        $this->completed($user, 'visualisation', '1-boss');
+        $this->completed($user, 'calculation', '1-boss');
+    }
+
+    private function purchase(User $user, string $boss): Response
+    {
+        return $this->api('POST', '/api/arena/bosses/'.$boss.'/purchase', $user);
+    }
+
+    private function credit(User $user, int $crystals): void
+    {
+        $this->connection()->executeStatement(
+            "INSERT INTO shop_wallet (user_id, balance, updated_at) VALUES (?, ?, '2026-09-28 09:00:00')",
+            [$user->getId()->toBinary(), $crystals],
         );
     }
 

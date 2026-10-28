@@ -161,6 +161,8 @@ Catalogue validé le 2026-10-05, limité à ce qui est atteignable avec les modu
 | `conductor` | Chef d'orchestre | 10 sessions menées au bout | sessions |
 | `marathon` | Marathonien | 50 h d'entraînement (durées du journal d'activité) | heures |
 | `streak_puzzles_10`, `_20`, `_30`, `_50` | Enchaînement, Rafale, Déferlante, Imparable | 10, 20, 30, 50 puzzles d'affilée dans un puzzle streak, toutes difficultés et thématiques ([PUZZLE_STREAK.md § 4 bis](PUZZLE_STREAK.md#4-bis-badges-2026-10-13)) | plus long streak |
+| `master_lizy`, `master_albert`, `master_aaron`, `master_ray` | Exceptionnels : Disciple de Lizy, d'Albert, d'Aaron, de Ray | l'exploit qui fait arriver le prof dans l'arène ([ARENA.md § 2 bis](ARENA.md#2-bis-les-profs-2026-10-27)) | celle de l'exploit (`goal` donné par l'arène) |
+| `master_<prof>_beaten` | Exceptionnels : le prof battu | une victoire contre le prof dans l'arène | 0 ou 1 |
 
 - **Évalués à la lecture** (`TrophyEvaluator`, comme la clôture paresseuse des séances) : un trophée
   atteint est enregistré une fois (`gamification_trophy`, unique par utilisateur et trophée) ; un
@@ -170,6 +172,9 @@ Catalogue validé le 2026-10-05, limité à ce qui est atteignable avec les modu
   longueur, l'exercice qui fait passer les 50 h, le test après lequel la fenêtre de 30 jours remplit
   la condition.
 - Le recalcul (`app:gamification:rebuild`) les oublie et les réévalue : mêmes trophées, mêmes dates.
+- **Exceptionnels** (`Trophy::isExceptional()`, 2026-10-27) : lus par un autre domaine derrière
+  `TrophySourceInterface` (étiquetée, comme les autres crochets : la gamification ne dépend pas de
+  l'arène) ; la source peut donner son propre `goal`.
 - Le front garde le nom, l'icône et les couleurs de chaque trophée ; l'API donne la clé, le seuil,
   la progression et la date. Grille : les trophées, puis les badges de série (jours, disque orange),
   puis ceux du puzzle streak (puzzles, disque violet).

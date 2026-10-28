@@ -49,9 +49,10 @@ Badges de boss : `boss_<personnage>` pour la visualisation et le calcul (`boss_c
 ch. 4, `oeil_interieur` avec le Sith), `boss_roi_cendres` pour les finales ; les autres boss des
 finales et des défis n'ont pas de badge à eux.
 
-Images en attente d'un boss : `minotaure/` (calcul, ch. 5 « Le labyrinthe », pas construit),
-`zombie-cyclope/` (futures parties à l'aveugle partiel sur plusieurs échiquiers), `zombie/`,
-`requin/` (plus utilisé).
+Boss de l'arène seule ([ARENA.md](ARENA.md), § 1) : `zombie/` (le Zombie, gratuit), `requin/` et
+`minotaure/` (achetés en boutique ; le Minotaure deviendra le boss du calcul, ch. 5 « Le
+labyrinthe »). Images encore en attente d'un boss : `zombie-cyclope/` (futures parties à l'aveugle
+partiel sur plusieurs échiquiers).
 
 ## Leurs textes
 

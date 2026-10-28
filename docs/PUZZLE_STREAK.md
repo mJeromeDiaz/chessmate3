@@ -137,6 +137,8 @@ Quatre trophées ([GAMIFICATION.md § 4 bis](GAMIFICATION.md#4-bis-trophées)), 
   séance (toutes thématiques, `StreakRepository::bestEverOutside()`) et le meilleur de la séance ;
   l'écran de fin les montre (« Badge débloqué : Rafale · 20 puzzles d'affilée »), le bilan aussi. Le
   trophée lui-même est enregistré à la lecture des trophées, comme les autres.
+- **L'arène** : 50 d'affilée font aussi arriver **Albert** dans l'arène, avec le badge exceptionnel
+  « Disciple d'Albert » ([ARENA.md § 2 bis](ARENA.md#2-bis-les-profs-2026-10-27)).
 
 ## 5. API
 

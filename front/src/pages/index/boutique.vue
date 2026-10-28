@@ -160,6 +160,40 @@
         </div>
 
         <section
+          v-if="arenaBosses.length"
+          class="cm-card shop__section"
+          data-testid="shop-section-arena"
+        >
+          <div class="shop__section-head">
+            <h2 class="shop__h2">{{ $t('arena.shop.title') }}</h2>
+            <router-link to="/arene" class="shop__arena-link">{{
+              $t('arena.shop.see')
+            }}</router-link>
+          </div>
+          <p class="shop__section-lead">{{ $t('arena.shop.lead') }}</p>
+          <div class="shop__arena">
+            <BossCard
+              v-for="boss in arenaBosses"
+              :id="boss.character"
+              :key="boss.character"
+              :name="bossText(boss.character, 'name')"
+              :state="boss.status === 'shop' ? 'shop' : 'open'"
+              :colors="paletteOf(boss.character)"
+              v-bind="cardPicture(boss.character)"
+              :sub="
+                boss.status === 'shop'
+                  ? $t('arena.card.elo', { elo: boss.elo })
+                  : $t('arena.shop.owned')
+              "
+              :price="boss.price"
+              @open="
+                router.push({ path: '/arene', query: { boss: boss.character } })
+              "
+            />
+          </div>
+        </section>
+
+        <section
           v-if="state.earning"
           class="cm-card shop__section shop__earn"
           data-testid="shop-earn"
@@ -238,7 +272,8 @@ import {
   ref,
   watch
 } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import BossCard from '@/components/arena/BossCard.vue'
 import CosmeticCard from '@/components/shop/CosmeticCard.vue'
 import CrystalGem from '@/components/shop/CrystalGem.vue'
 import OfferTile from '@/components/shop/OfferTile.vue'
@@ -247,8 +282,10 @@ import PurchaseCelebration from '@/components/shop/PurchaseCelebration.vue'
 import PurchaseSheet from '@/components/shop/PurchaseSheet.vue'
 import ShopCarousel from '@/components/shop/ShopCarousel.vue'
 import { useGamificationStore } from '@/stores/gamification'
+import { arenaApi } from '@/services/api'
 import { useShopStore } from '@/stores/shop'
 import { apiErrorMessage } from '@/utils/apiError'
+import { bossText, cardPicture, paletteOf } from '@/utils/arena'
 import { profImage } from '@/utils/prof/images'
 import {
   MODULE_TABS,
@@ -272,6 +309,7 @@ definePage({
 
 const shop = useShopStore()
 const route = useRoute()
+const router = useRouter()
 const gamification = useGamificationStore()
 
 const state = computed(() => shop.state)
@@ -290,6 +328,13 @@ const shown = ref(0)
 const bump = ref(0)
 /** @type {Record<string, any>} */
 const refs = reactive({})
+/**
+ * The arena's own bosses sold for crystals (docs/ARENA.md, § 6 bis), bought or not: bought on
+ * their sheet in the arena.
+ *
+ * @type {import('vue').Ref<import('@/utils/arena').ArenaBoss[]>}
+ */
+const arenaBosses = ref([])
 
 const sections = computed(() =>
   SECTIONS.filter(s => state.value?.offers.some(o => o.section === s.id))
@@ -392,6 +437,12 @@ function onScroll() {
 
 onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
+  arenaApi
+    .overview()
+    .then(arena => {
+      arenaBosses.value = arena.bosses.filter(boss => boss.price !== null)
+    })
+    .catch(() => {})
   if (!gamification.summary) gamification.load(['summary']).catch(() => {})
   try {
     await shop.load()
@@ -622,6 +673,19 @@ onBeforeUnmount(() => {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--cm-orange-ink);
+}
+
+.shop__arena {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.shop__arena-link {
+  margin-left: auto;
+  color: var(--cm-brand);
+  font-weight: 800;
+  font-size: 13.5px;
 }
 
 .shop__section-lead,

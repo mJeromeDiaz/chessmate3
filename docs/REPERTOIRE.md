@@ -596,6 +596,13 @@ suite ». Après la validation : page `/repertoire/{id}/pending` (menu de la lis
 pour un répertoire tiré des parties) : répondre sur l'échiquier (notification avec « Annuler »),
 ignorer, rétablir.
 
+## 12 ter. Aaron dans l'arène (2026-10-27)
+
+Un répertoire de plus de 50 lignes (celles de l'onglet Lignes : un coup canonique vers une position
+sans suite, ou une transposition) fait arriver **Aaron** dans l'arène, avec le badge exceptionnel
+« Disciple d'Aaron » ; arrivé, il reste même si des lignes sont supprimées
+([ARENA.md § 2 bis](ARENA.md#2-bis-les-profs-2026-10-27)).
+
 ## 13. Données de démonstration
 
 `App\DataFixtures\Repertoire\RepertoireFixtures` (après `DemoUserFixtures`) recharge les noms

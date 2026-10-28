@@ -159,7 +159,8 @@ barre Connexion / Inscription / thème ; la landing et les écrans d'authentific
   `parent: false` la retire (séance en cours, visite). Les pages n'ont plus leur propre bouton
   retour.
 - **Menu** (`components/layout/AppMenu.vue`, tiroir à droite `nav-menu`, revu le 2026-10-25) :
-  Tableau de bord (« Suis ta progression. »), Entraînement Ludique (`/cerveau`), Crée ta séance
+  Tableau de bord (« Suis ta progression. »), Entraînement Ludique (`/cerveau`), L'Arène
+  (`/arene`, `nav-arena`, 2026-10-27, docs/ARENA.md), Crée ta séance
   d'entraînement (`/session`), Entraînement libre (second panneau : les modules de
   `FREE_TRAINING_SECTIONS`, `utils/layout/navigation.js`, par phase de jeu — Les ouvertures :
   Répertoires ; Milieu de jeu : Woodpecker, Puzzles, Puzzle Rush, Puzzle streak ; Fin de jeu :

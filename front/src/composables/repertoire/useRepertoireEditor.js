@@ -48,10 +48,7 @@ export function useRepertoireEditor(store) {
   const drafting = computed(() => draft.value.moves.length > 0)
 
   const path = computed({
-    get: () =>
-      store.graph
-        ? validPrefix(store.graph, rawPath.value)
-        : [],
+    get: () => (store.graph ? validPrefix(store.graph, rawPath.value) : []),
     set: value => {
       rawPath.value = value
     }

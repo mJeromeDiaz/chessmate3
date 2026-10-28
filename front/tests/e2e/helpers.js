@@ -14,15 +14,17 @@ const API_DIR = new URL('../../../api/', import.meta.url).pathname
  * asked, the API is answered "none pending" and "no wheel nor chest" (the wheel stays offered on
  * the server, unspun: no crystal). The team's announcements (docs/ANNOUNCEMENTS.md) would cover
  * every page while one is live in the e2e database: unless `announcements` is asked, the API is
- * answered "none to see".
+ * answered "none to see". So are the bosses arriving in the arena (docs/ARENA.md, § 5), unless
+ * `arrivals` is asked.
  *
  * @param {import('@playwright/test').BrowserContext} context
- * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[], mindMapCapacity?: string, enginePuzzles?: boolean, announcements?: boolean}} [options] an admin
+ * @param {{admin?: boolean, password?: string, streak?: boolean, crowns?: number, mindMapChapters?: number, mindMapSteps?: string[], mindMapCapacity?: string, enginePuzzles?: boolean, announcements?: boolean, arrivals?: boolean}} [options] an admin
  *   (docs/EARLY_ACCESS.md); a password, for a test that also signs in through the login page;
  *   the real streak announcements, gift wheels and badge chests; crowns of the store (docs/SHOP.md); the first chapters of the
  *   visualisation path completed (docs/MIND_MAP.md), and these steps of it; the puzzles of the
  *   calculation path's chapter 3 added to the catalogue (docs/CALCULATION.md, § 2 quater); the
- *   real announcements, and their emails kept on for the account (off for the others)
+ *   real announcements, and their emails kept on for the account (off for the others); the real
+ *   arrivals of the arena's bosses
  * @returns {Promise<{id: string, email: string}>}
  */
 export async function signIn(
@@ -36,7 +38,8 @@ export async function signIn(
     mindMapSteps = [],
     mindMapCapacity = '',
     enginePuzzles = false,
-    announcements = false
+    announcements = false,
+    arrivals = false
   } = {}
 ) {
   if (!streak) {
@@ -51,6 +54,19 @@ export async function signIn(
     await context.route('**/api/announcements', route =>
       route.fulfill({ json: { announcements: [] } })
     )
+  }
+  // The bosses arriving in the arena (the Zombie for every new player) would cover the page.
+  if (!arrivals) {
+    await context.route('**/api/arena/unlocks', route =>
+      route.fulfill({ json: { bosses: [] } })
+    )
+    // The arena page hands its own arrivals to the modal.
+    await context.route(/\/api\/arena$/, async route => {
+      if (route.request().method() !== 'GET') return route.fallback()
+      const response = await route.fetch()
+      const json = await response.json()
+      await route.fulfill({ response, json: { ...json, pendingUnlocks: [] } })
+    })
   }
   const args = ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user']
   if (admin) args.push('--admin')

@@ -88,7 +88,9 @@ final class TrophyTest extends WebTestCase
         $trophies = $this->trophies($alice);
         self::assertSame(['on_fire', 'woodpecker', 'golden_fork', 'iron_memory', 'first_step', 'unstoppable', 'steel_woodpecker', 'centurion', 'conductor', 'marathon',
             'streak_3', 'streak_14', 'streak_50', 'streak_100', 'streak_200', 'streak_300', 'streak_365', 'streak_450', 'streak_500', 'streak_1000',
-            'streak_puzzles_10', 'streak_puzzles_20', 'streak_puzzles_30', 'streak_puzzles_50'], array_column($trophies, 'key'));
+            'streak_puzzles_10', 'streak_puzzles_20', 'streak_puzzles_30', 'streak_puzzles_50',
+            'master_lizy', 'master_albert', 'master_aaron', 'master_ray',
+            'master_lizy_beaten', 'master_albert_beaten', 'master_aaron_beaten', 'master_ray_beaten'], array_column($trophies, 'key'));
         $byKey = array_column($trophies, null, 'key');
         self::assertSame([true, '2026-10-03T08:00:00+00:00'], [$byKey['on_fire']['unlocked'], $byKey['on_fire']['unlockedAt']], 'the first exercise of the 7th day');
         self::assertSame('2026-09-27T08:00:00+00:00', $byKey['first_step']['unlockedAt']);

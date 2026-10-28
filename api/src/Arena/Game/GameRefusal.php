@@ -23,4 +23,10 @@ enum GameRefusal: string
     case OutOfSync = 'arena_out_of_sync';
     /** An illegal move (422). */
     case Illegal = 'arena_illegal_move';
+    /** A path's boss, or a free one: never sold (409). */
+    case NotForSale = 'arena_boss_not_for_sale';
+    /** Already bought (409). */
+    case Owned = 'arena_boss_owned';
+    /** Not enough crystals (409). */
+    case Insufficient = 'arena_insufficient_crystals';
 }

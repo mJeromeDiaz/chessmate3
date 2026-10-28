@@ -96,7 +96,8 @@
   "trophies": {
     "title": "Trophées",
     "count": "{won} / {total} débloqués",
-    "empty": "Aucun trophée pour l’instant : ils se débloquent en jouant, la surprise est au bout."
+    "empty": "Aucun trophée pour l’instant : ils se débloquent en jouant, la surprise est au bout.",
+    "exceptional": "Exceptionnels"
   },
   "plans": {
     "title": "Mes sessions",

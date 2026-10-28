@@ -31,6 +31,38 @@
     "marathon": {
       "name": "Marathonien",
       "desc": "50 h d’entraînement"
+    },
+    "master_lizy": {
+      "name": "Disciple de Lizy",
+      "desc": "Toutes les leçons des Finales maîtrisées : Lizy t’attend dans l’arène."
+    },
+    "master_lizy_beaten": {
+      "name": "A battu Lizy",
+      "desc": "Lizy battue dans l’arène."
+    },
+    "master_albert": {
+      "name": "Disciple d’Albert",
+      "desc": "50 puzzles d’affilée : Albert t’attend dans l’arène."
+    },
+    "master_albert_beaten": {
+      "name": "A battu Albert",
+      "desc": "Albert battu dans l’arène."
+    },
+    "master_aaron": {
+      "name": "Disciple d’Aaron",
+      "desc": "Un répertoire de plus de 50 lignes : Aaron t’attend dans l’arène."
+    },
+    "master_aaron_beaten": {
+      "name": "A battu Aaron",
+      "desc": "Aaron battu dans l’arène."
+    },
+    "master_ray": {
+      "name": "Disciple de Ray",
+      "desc": "Une séance à l’aveugle de haut vol : Ray sort de l’ombre."
+    },
+    "master_ray_beaten": {
+      "name": "A battu Ray",
+      "desc": "Ray battu dans l’arène."
     }
   },
   "level": {

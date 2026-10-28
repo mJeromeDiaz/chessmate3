@@ -306,9 +306,7 @@ test('from the games to the first module: read, diagnose, compose, look, launch'
   // The session: 29 minutes, the absent module says why.
   await expect(page.getByTestId('coach-minutes')).toHaveText('29 min')
   await expect(page.getByTestId('coach-module-0')).toContainText('Répertoire')
-  await expect(page.getByTestId('coach-module-0')).toContainText(
-    'Italian Game'
-  )
+  await expect(page.getByTestId('coach-module-0')).toContainText('Italian Game')
   await expect(page.getByTestId('coach-module-2')).toContainText('Absent')
   await expect(page.getByTestId('coach-module-3')).toContainText(
     'Brillant ou Blunder'

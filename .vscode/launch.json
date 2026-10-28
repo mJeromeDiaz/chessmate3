@@ -1,0 +1,15 @@
+{
+  "backend": {
+    "path": "api",
+    "commands": [
+      "symfony server:stop",
+      "symfony server:start --no-tls"
+    ]
+  },
+  "frontend": {
+    "path": "front",
+    "commands": [
+      "quasar dev"
+    ]
+  }
+}

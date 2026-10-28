@@ -144,9 +144,39 @@ const PUZZLE_STREAK_TROPHIES = Object.fromEntries(
   ])
 )
 
+/** The professors of the arena, in their level's order (docs/ARENA.md, § 2 bis). */
+const MASTER_KEYS = ['lizy', 'albert', 'aaron', 'ray']
+
 /**
- * The trophies' look (docs/GAMIFICATION.md § 4 bis): the trophies in the API's order, then the 12
- * streak badges (7 and 30 days are the older "En feu" and "Inarrêtable"), shortest first, then the
+ * The exceptional badges' look: a gold disc, a star for the feat that brings a professor to the
+ * arena, a crown for the professor beaten there.
+ */
+const EXCEPTIONAL_TROPHIES = Object.fromEntries(
+  MASTER_KEYS.flatMap(master =>
+    ['', '_beaten'].map(suffix => {
+      const key = `master_${master}${suffix}`
+      return [
+        key,
+        {
+          icon: suffix ? '♛︎' : '★',
+          get name() {
+            return t(`gamification.trophies.${key}.name`)
+          },
+          get desc() {
+            return t(`gamification.trophies.${key}.desc`)
+          },
+          bg: '#FFF1BF',
+          ink: '#9A6A00',
+          exceptional: true
+        }
+      ]
+    })
+  )
+)
+
+/**
+ * The trophies' look (docs/GAMIFICATION.md § 4 bis): the exceptional badges, the trophies in the
+ * API's order, then the 12 streak badges (7 and 30 days are the older "En feu" and "Inarrêtable"), shortest first, then the
  * puzzle streak badges.
  */
 export const TROPHIES = {
@@ -239,17 +269,19 @@ export const TROPHIES = {
     ink: '#0F6BBA'
   },
   ...STREAK_TROPHIES,
-  ...PUZZLE_STREAK_TROPHIES
+  ...PUZZLE_STREAK_TROPHIES,
+  ...EXCEPTIONAL_TROPHIES
 }
 
 /**
- * Where a trophy goes in the grid: the others, then the streak badges by days, then the puzzle
- * streak badges by puzzles.
+ * Where a trophy goes in the grid: the exceptional badges first, the others, then the streak badges
+ * by days, then the puzzle streak badges by puzzles.
  *
  * @param {string} key
  */
 function trophyRank(key) {
   const look = TROPHIES[key]
+  if (look.exceptional) return -1
   if (look.puzzles) return 100_000 + look.puzzles
   return look.streak ?? 0
 }

@@ -10,8 +10,8 @@ use App\MindMap\Path\Paths;
 use App\MindMap\Path\Step;
 
 /**
- * The bosses of the arena (docs/ARENA.md, § 2), in the page's order: every named boss of the paths
- * (docs/BOSSES.md), its strength and its style. Pure.
+ * The bosses of the arena (docs/ARENA.md, § 2): every named boss of the paths (docs/BOSSES.md), then
+ * the arena's own, then the professors (§ 2 bis), their strength and their style. Pure.
  */
 final class Roster
 {
@@ -54,6 +54,15 @@ final class Roster
             new Boss('defi-endgames', Capacity::Challenges, Tier::Chapter, 1500, 2000, ['trades']),
             new Boss('defi-tactics', Capacity::Challenges, Tier::Chapter, 1600, null, ['checks', 'captures']),
             new Boss(self::OPENING_BOSS, Capacity::Challenges, Tier::Chapter, 1700, null, ['solid']),
+            // The arena's own: the first one free, the others in the shop.
+            new Boss('zombie', null, Tier::Chapter, 700, null, ['captures']),
+            new Boss('requin', null, Tier::Chapter, 1250, null, ['trades', 'captures'], false, true),
+            new Boss('minotaure', null, Tier::Chapter, 1850, null, ['aggressive'], false, true),
+            // The professors, unlocked by a feat in their module (§ 2 bis): never sold.
+            new Boss('lizy', null, Tier::Master, 2500, 2700, ['trades', 'pawns'], true),
+            new Boss('albert', null, Tier::Master, 2600, null, ['forcing', 'checks'], true),
+            new Boss('aaron', null, Tier::Master, 2650, null, ['solid'], true, false, 2850),
+            new Boss('ray', null, Tier::Master, 2800, null, ['varied'], true),
         ];
     }
 
@@ -70,13 +79,16 @@ final class Roster
 
     /**
      * The steps of the fixed chapters where the boss is fought (the Cyclope: two; the opening boss:
-     * none, its chapters are the player's).
+     * none, its chapters are the player's; the arena's own and the professors: none).
      *
      * @return list<Step>
      */
     public static function steps(Boss $boss): array
     {
         $steps = [];
+        if (null === $boss->capacity) {
+            return $steps;
+        }
         foreach (Paths::chapters($boss->capacity) as $chapter) {
             foreach ($chapter->allSteps() as $step) {
                 if ($step->character === $boss->character) {

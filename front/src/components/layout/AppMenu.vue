@@ -77,6 +77,29 @@
 
             <q-item
               clickable
+              to="/arene"
+              :active="onPage('/arene')"
+              active-class="app-menu__item--on"
+              class="app-menu__item"
+              data-testid="nav-arena"
+            >
+              <q-item-section avatar>
+                <span class="app-menu__tile"
+                  ><q-icon name="sports_martial_arts"
+                /></span>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="app-menu__title">{{
+                  $t('layout.menu.arena.title')
+                }}</q-item-label>
+                <q-item-label caption class="app-menu__text">{{
+                  $t('layout.menu.arena.text')
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item
+              clickable
               to="/session"
               :active="onPage('/session')"
               active-class="app-menu__item--on"

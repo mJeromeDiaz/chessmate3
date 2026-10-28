@@ -281,6 +281,14 @@ Admin : `components/admin/shop/TicketGiftAll.vue` (en haut de l'onglet « Joueur
 message, confirmation qui nomme le nombre de comptes actifs, journal) et, dans `ShopPlayers.vue`,
 le don à un joueur et ses « Tickets de roue reçus ».
 
+## 4 quinquies. Les boss de l'arène (2026-10-27)
+
+Hors des offres : le Requin et le Minotaure, boss de l'arène seule, s'achètent 75 à 400 cristaux
+selon leur niveau, prix codés (`ArenaRules::PRICES`), jamais un boss de parcours
+(docs/ARENA.md, § 6 bis). `POST /api/arena/bosses/{boss}/purchase`, ligne `purchase` du grand livre
+« Arène · personnage » sans offre ; la boutique affiche une section « Boss de l'arène » qui mène à
+leurs fiches.
+
 ## 5. API joueur
 
 | Endpoint | Rôle |

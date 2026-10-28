@@ -32,6 +32,8 @@
     <GiftNotice v-if="auth.isAuthenticated" />
     <!-- The team's announcements, after the gifts (docs/ANNOUNCEMENTS.md). -->
     <AnnouncementNotice v-if="auth.isAuthenticated" />
+    <!-- The bosses arriving in the arena, after the announcements (docs/ARENA.md, § 5). -->
+    <BossArrival v-if="auth.isAuthenticated" />
   </q-layout>
 </template>
 
@@ -40,6 +42,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AnnouncementNotice from '@/components/announcement/AnnouncementNotice.vue'
+import BossArrival from '@/components/arena/BossArrival.vue'
 import StreakCelebration from '@/components/gamification/StreakCelebration.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppMenu from '@/components/layout/AppMenu.vue'

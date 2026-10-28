@@ -18,13 +18,14 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Psr\Clock\ClockInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 /**
  * Where a user stands on each trophy (docs/GAMIFICATION.md): the progress towards its goal and,
  * when reached, the instant of the feat (the 100th fork, the day the streak reached 7…), read from
  * what was played.
  *
- * @phpstan-type Progress array{current: int, reachedAt: \DateTimeImmutable|null, ratio?: float|null}
+ * @phpstan-type Progress array{current: int, reachedAt: \DateTimeImmutable|null, ratio?: float|null, goal?: int}
  */
 final readonly class TrophyProgress
 {
@@ -34,10 +35,15 @@ final readonly class TrophyProgress
 
     private const MARATHON_MS = 3_600_000;
 
+    /**
+     * @param iterable<TrophySourceInterface> $sources
+     */
     public function __construct(
         private Connection $connection,
         private Counter $counter,
         private ClockInterface $clock,
+        #[AutowireIterator(TrophySourceInterface::TAG)]
+        private iterable $sources = [],
     ) {
     }
 
@@ -53,6 +59,11 @@ final readonly class TrophyProgress
         }
         if ($trophy->isPuzzleStreak()) {
             return $this->puzzleStreak($id, $trophy->goal());
+        }
+        foreach ($this->sources as $source) {
+            if ($source->supports($trophy)) {
+                return $source->progress($user, $trophy);
+            }
         }
 
         return match ($trophy) {

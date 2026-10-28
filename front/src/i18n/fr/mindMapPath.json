@@ -314,6 +314,55 @@
       "taunt": "Tu dis jouer cette ouverture ? Prouve-le.",
       "defeat": "Tu connais ton ouverture jusqu’au bout des doigts. Passe.",
       "win": "Tu joues l’ouverture… mais tu n’en connais pas les pièges."
+    },
+    "zombie": {
+      "name": "Le Zombie",
+      "tagline": "Il avance sans réfléchir et laisse traîner ses pièces partout.",
+      "taunt": "Cerveau… Ta dame est en prise, au fait.",
+      "defeat": "Grrr… même sans cerveau, j’aurais dû voir ça.",
+      "win": "Cerveau ! Tu as oublié une pièce."
+    },
+    "requin": {
+      "name": "Le Requin",
+      "tagline": "Une goutte de matériel et il sent l’odeur.",
+      "taunt": "Un pion de moins ? Je le sens d’ici.",
+      "defeat": "Des eaux trop calmes… je n’ai rien trouvé à mordre.",
+      "win": "Un pion, puis deux, puis la partie. Miam."
+    },
+    "minotaure": {
+      "name": "Le Minotaure",
+      "tagline": "Il punit les coups sans plan et charge tout ce qui avance au hasard.",
+      "taunt": "Tu tournes en rond depuis dix coups. Moi, je t’attends au centre.",
+      "defeat": "Tu as trouvé la sortie du labyrinthe…",
+      "win": "Perdu dans mes couloirs. Comme les autres."
+    },
+    "lizy": {
+      "name": "Lizy",
+      "tagline": "Elle règne sur les finales : chaque temps compte.",
+      "taunt": "Toutes mes leçons, tu les as maîtrisées. Voyons si tu sais les jouer contre moi.",
+      "defeat": "Bravo ! L’élève a dépassé la prof… pour aujourd’hui.",
+      "win": "Un temps de retard, et la finale m’appartient. Retourne réviser !"
+    },
+    "albert": {
+      "name": "Albert",
+      "tagline": "Il voit les combinaisons avant qu’elles n’existent.",
+      "taunt": "Cinquante puzzles d’affilée ? Une partie entière, c’est autre chose.",
+      "defeat": "Magnifique ! Je n’avais pas vu venir ta combinaison.",
+      "win": "Tu as laissé passer un coup forcé. Il y en a toujours un."
+    },
+    "aaron": {
+      "name": "Aaron",
+      "tagline": "Il connaît chaque ligne par cœur.",
+      "taunt": "Cinquante lignes dans ton répertoire… Tu crois en connaître plus que moi ?",
+      "defeat": "Tu m’as sorti de ma théorie. Joli travail !",
+      "win": "Ma préparation allait plus loin que la tienne. Retourne à ton répertoire !"
+    },
+    "ray": {
+      "name": "Ray",
+      "tagline": "Il joue sans jamais regarder l’échiquier.",
+      "taunt": "Tu m’as trouvé. Maintenant, voyons ce que tu vois.",
+      "defeat": "Tu vois plus loin que je ne le croyais. Respect.",
+      "win": "Une case oubliée, et tout s’effondre. Ferme les yeux et recommence."
     }
   },
   "visualisation": {

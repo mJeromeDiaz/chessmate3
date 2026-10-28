@@ -46,6 +46,18 @@ enum Trophy: string
     case PuzzleStreak20 = 'streak_puzzles_20';
     case PuzzleStreak30 = 'streak_puzzles_30';
     case PuzzleStreak50 = 'streak_puzzles_50';
+    /**
+     * Exceptional badges (docs/ARENA.md, § 2 bis): a professor's feat reached (they arrive in the
+     * arena), then the professor beaten there; read by a {@see \App\Gamification\Trophy\TrophySourceInterface}.
+     */
+    case MasterLizy = 'master_lizy';
+    case MasterAlbert = 'master_albert';
+    case MasterAaron = 'master_aaron';
+    case MasterRay = 'master_ray';
+    case MasterLizyBeaten = 'master_lizy_beaten';
+    case MasterAlbertBeaten = 'master_albert_beaten';
+    case MasterAaronBeaten = 'master_aaron_beaten';
+    case MasterRayBeaten = 'master_ray_beaten';
 
     /** The threshold, in the unit of its progress. */
     public function goal(): int
@@ -76,6 +88,9 @@ enum Trophy: string
             self::PuzzleStreak20 => 20,
             self::PuzzleStreak30 => 30,
             self::PuzzleStreak50 => 50,
+            // Their source gives the feat's own goal.
+            self::MasterLizy, self::MasterAlbert, self::MasterAaron, self::MasterRay,
+            self::MasterLizyBeaten, self::MasterAlbertBeaten, self::MasterAaronBeaten, self::MasterRayBeaten => 1,
         };
     }
 
@@ -144,5 +159,11 @@ enum Trophy: string
     public static function puzzleStreaksBetween(int $from, int $to): array
     {
         return array_values(array_filter(self::puzzleStreaks(), static fn (self $trophy): bool => $trophy->goal() > $from && $trophy->goal() <= $to));
+    }
+
+    /** Whether it is an exceptional badge, read by another domain. */
+    public function isExceptional(): bool
+    {
+        return str_starts_with($this->value, 'master_');
     }
 }

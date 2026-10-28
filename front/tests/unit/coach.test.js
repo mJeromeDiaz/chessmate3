@@ -230,7 +230,10 @@ describe('tailored session words', () => {
     )
     expect(
       needText(
-        { ...endgames, facts: { weakest: null, settings: { themes: ['pawns'] } } },
+        {
+          ...endgames,
+          facts: { weakest: null, settings: { themes: ['pawns'] } }
+        },
         composition(modules)
       )
     ).toBe('Une finale au hasard : Pions.')

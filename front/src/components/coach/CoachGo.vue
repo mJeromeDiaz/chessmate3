@@ -132,11 +132,12 @@ const heading = computed(() =>
       })
     : card.value.title
 )
-const says = computed(() =>
-  ({
-    woodpecker: t('coach.go.woodpeckerSays'),
-    repertoire: t('coach.go.repertoireSays')
-  })[props.module.module] ?? t('coach.go.says')
+const says = computed(
+  () =>
+    ({
+      woodpecker: t('coach.go.woodpeckerSays'),
+      repertoire: t('coach.go.repertoireSays')
+    })[props.module.module] ?? t('coach.go.says')
 )
 const countSub = computed(() => {
   const { module, facts, minutes } = props.module

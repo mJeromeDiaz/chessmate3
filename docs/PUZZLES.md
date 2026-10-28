@@ -276,12 +276,19 @@ le coup adverse, l'utilisateur glisse (ou clique-clique) une de ses pièces vers
 atteindrait sur un échiquier vide (obstacles ignorés, diagonales du pion, roque depuis la case du
 roi). La pièce revient à sa place, ses deux cases restent marquées (violet). Dès que `movableColor`
 lui rend la main et que l'animation est finie, le coup part comme un coup joué à la main (`move`),
+**sans glisser** (2026-10-28, comme Lichess : la pièce saute sur sa case ; la réponse adverse reste animée),
 **s'il est légal** dans la position atteinte (promotion en dame), sinon il est oublié. Un clic gauche
 ou droit sur l'échiquier l'annule, un nouveau pré-coup le remplace, et toute position qui n'est pas à
 un coup de la précédente (nouveau puzzle, coup repris) l'efface. Branché sur `PuzzlePlayer` (puzzles
 notés, Woodpecker, streak, parcours : pendant la réponse adverse, jamais pendant la solution) et sur
 le test de répertoire (pendant la vérification de la réponse et les coups adverses). Un pré-coup
 faux compte comme un coup faux ; son temps de réflexion, presque nul, est compté tel quel.
+
+**Roi en échec** (2026-10-28, comme Lichess ; `utils/chess/check.js`) : sur tous les échiquiers, le
+roi du camp au trait en échec (ou mat) a une lueur rouge sous sa pièce (marqueur `check`, rempli du
+dégradé radial clair au centre `#cb-check-glow` et flouté en halo qui déborde de la case,
+`#cb-check-halo`, tous deux définis dans l'échiquier), posée à chaque position, sans rien à
+brancher dans les modules ; jamais sur une position libre (`anyPosition`) ni sur un échiquier vide.
 
 Responsive (largeur disponible, max `min(92vw, 70vh, 560px)`, ou la variable CSS `--board-max`
 posée par un écran de jeu, voir l'écran de jeu ci-dessous), thème clair/sombre suivi par Quasar

@@ -1,0 +1,53 @@
+# Les boss : images, caractères, épreuves, répliques
+
+État au 2026-10-27. Sources : `front/src/i18n/fr/mindMapPath.json` (`characters.<clé>`), images dans
+`front/src/assets/mindMap/boss/<dossier>/` (10 fichiers : 9 humeurs + la pose ; 13 pour le démon).
+Détail complet (étapes, cristaux, XP) : [../BOSSES.md](../BOSSES.md).
+
+Répliques : **Avant** = avant le combat (`taunt`), **Battu** = quand il perd (`defeat`), **Gagne** =
+quand il gagne (`win`).
+
+## Boss existants
+
+| Nom | Image | Trait de caractère | Épreuve | Phrases types |
+|---|---|---|---|---|
+| Le Jongleur | ✅ `jongleur/` | Il fait tourner les cases, les coups et les pièces… et attend que tu en laisses tomber une. | Visualisation ch. 1 : questions rapides mêlées du chapitre | **Avant** : « Trois balles en l'air, et tu regardes encore l'échiquier ? »<br>**Battu** : « Bien rattrapé ! Je range mes quilles… pour cette fois. »<br>**Gagne** : « Une balle par terre ! On recommence ? » |
+| Le Cyclope | ✅ `cyclope/` | Un seul œil, mais une mémoire parfaite. | Visualisation ch. 2 : mémoire, 2 positions de 16 pièces montrées puis cachées (ch. 4 : calcul, bientôt) | **Avant** : « Un regard me suffit. Et toi, combien t'en faut-il ? »<br>**Battu** : « Tu vois aussi bien que moi… les yeux fermés. »<br>**Gagne** : « Mon œil a tout retenu. Le tien, pas encore. » |
+| La Gargouille | ✅ `gargouille/` | Elle hurle, grimace et fait trembler l'échiquier. Garde le fil. | Visualisation ch. 3 : vision sous distraction (15 s par question, cris, loup) | **Avant** : « Concentre-toi… si tu peux ! »<br>**Battu** : « Grrr… même mes cris n'ont pas suffi. »<br>**Gagne** : « Ha ! Tu as perdu le fil. » |
+| Le Sablier | ❌ | Le temps file, et il te demande de tenir deux positions à la fois. | Visualisation ch. 4 (caché) : deux positions à tenir à la fois — bientôt | **Avant** : « Garde celle-ci en tête… pendant que je t'en montre une autre. »<br>**Battu** : « Deux positions, aucun grain perdu. »<br>**Gagne** : « Le sable a tout recouvert. » |
+| Le Flash | ❌ | Une demi-seconde. Pas une de plus. | Visualisation ch. 5 (caché) : position montrée une demi-seconde — bientôt | **Avant** : « Cligne des yeux et c'est fini. »<br>**Battu** : « Plus rapide que l'éclair ! »<br>**Gagne** : « Trop lent… la position est déjà loin. » |
+| Le Fantôme | ✅ `fantome/` | Les pièces s'effacent à son passage. À toi de les retrouver. | Visualisation ch. 5 : les pièces s'effacent — bientôt | **Avant** : « Tu ne vois plus rien ? Moi non plus… et pourtant. »<br>**Battu** : « Tu sens les pièces même quand elles disparaissent. »<br>**Gagne** : « Hou… une pièce s'est envolée de ta tête. » |
+| Le Caméléon | ❌ | Ses pièces changent d'habit à chaque coup. | Visualisation ch. 6 : pièces déguisées — bientôt | **Avant** : « Ce fou a l'air d'un cavalier ? Regarde mieux. »<br>**Battu** : « Aucun déguisement ne te trompe. »<br>**Gagne** : « Tu t'es fié aux apparences. » |
+| Le Sith aveugle | ❌ | Il joue des parties entières sans jamais voir l'échiquier. | Visualisation ch. 7 (dernier) : parties entières à l'aveugle — bientôt | **Avant** : « Ferme les yeux. Maintenant, joue. »<br>**Battu** : « L'œil intérieur est en toi. »<br>**Gagne** : « Tu cherchais l'échiquier. Il n'y en a pas. » |
+| Le Métronome | ✅ `metronome/` | Tic, tac. Il bat la mesure et ne s'arrête jamais : chaque bonne ligne accélère le tempo. | Calcul ch. 1 : série de mats de longueur cachée, 12 d'affilée, réflexion 40 s → 15 s, 3 vies | **Avant** : « Un temps de retard, et la mesure est perdue. »<br>**Battu** : « Désaccordé… tu as tenu la cadence. »<br>**Gagne** : « Tic, tac : tu as perdu le tempo. » |
+| Le Compteur | ❌ | Il compte chaque coup d'une longue variante et te demande où elle s'arrête. | Calcul ch. 2 : ligne de 8 à 10 demi-coups annoncée, 3 questions sur la position atteinte, 3 vies | **Avant** : « Combien de coups tiens-tu avant de perdre le compte ? »<br>**Battu** : « Le compte est bon… pour toi. »<br>**Gagne** : « Tu as perdu le compte. » |
+| L'Avocat du diable | ✅ `demon/` | Tu proposes un coup, il cherche la réfutation. À toi de la trouver avant lui. | Calcul ch. 3 : proposer un coup puis jouer la réfutation et sa suite, 5 positions, 3 vies | **Avant** : « Votre idée est séduisante. Défendez-la. »<br>**Battu** : « Objection rejetée : ton idée tenait. »<br>**Gagne** : « Ton idée ne résiste pas à l'examen. » |
+| Le Bourreau | ✅ `bourreau/` | Il ne laisse jamais un roi seul s'échapper… et compte tes coups jusqu'au mat. | Finales, mats : 6 positions mêlées des leçons, 3 vies | **Avant** : « Un roi tout seul au milieu de l'échiquier. Saurais-tu seulement le pousser au bord ? »<br>**Battu** : « Mat, et proprement. Je range ma hache. »<br>**Gagne** : « Pat, ou trop lent : le roi court encore ! » |
+| Le Gardien des pions | ❌ (pièce ♟) | Il veille sur les cases clés et connaît chaque opposition par cœur. | Finales, bases des pions : 6 positions, 3 vies | **Avant** : « Un pion de plus ne suffit pas. Montre-moi que tu sais le faire passer. »<br>**Battu** : « Tu as pris l'opposition au bon moment. Passe. »<br>**Gagne** : « Ton roi a cédé la case. Le pion ne passera pas. » |
+| L'Horloger | ❌ (pièce ♚) | Pour lui, une finale de pions est une affaire de temps : un seul temps de trop, et tout bascule. | Finales, technique des pions : 6 positions, 3 vies | **Avant** : « Tic, tac. As-tu bien compté tes temps ? »<br>**Battu** : « Réglé comme une horloge. Je m'incline. »<br>**Gagne** : « Un temps de retard. Tout est perdu. » |
+| La Reine noire | ✅ `reine/` | Elle règne sur les finales de dames, entre échecs perpétuels et pions qui vont à dame. | Finales, dames : 6 positions, 3 vies | **Avant** : « Ma dame contre la tienne… ou contre ton pion. Qui tient le plus longtemps ? »<br>**Battu** : « Tu as tenu ta dame d'une main ferme. Je te salue. »<br>**Gagne** : « Échec, et encore échec : ta position s'effondre. » |
+| Le Maître des tours | ❌ (pièce ♜) | Lucena, Philidor, Vancura : il connaît toutes les positions de tours, et les piège toutes. | Finales, tours : 6 positions, 3 vies | **Avant** : « Les finales de tours sont toutes nulles, dit-on. Prouve-le… ou prouve le contraire. »<br>**Battu** : « Pont, coupure, échecs par derrière : tout y était. »<br>**Gagne** : « Ta tour est mal placée. La partie est finie. » |
+| Le Duelliste | ❌ (pièce ♝) | Fou contre pion, fous de couleurs opposées, mauvais coin : il se bat sur une seule couleur de cases. | Finales, fous : 6 positions, 3 vies | **Avant** : « En garde ! Mais vérifie d'abord la couleur de ton fou. »<br>**Battu** : « Touché. Tu as vu le bon coin. »<br>**Gagne** : « Mauvaise couleur, mauvais coin : c'est nulle, ou pire. » |
+| Le Cavalier errant | ❌ (pièce ♞) | Il saute d'une case à l'autre et arrête les pions qu'on croyait perdus pour lui. | Finales, cavaliers : 6 positions, 3 vies | **Avant** : « Un cavalier contre un pion… tu crois vraiment que je suis trop loin ? »<br>**Battu** : « Tu m'as tenu à distance. Je reprends la route. »<br>**Gagne** : « Un saut, une fourchette, et le pion est à moi. » |
+| Le Roi des cendres | ✅ `liche/` | Le maître de toutes les finales. Sous son regard, le temps file et l'échiquier lui-même se met à trembler. | Finales, boss final : dix finales, dix chronos, trois vies | **Avant** : « Dix finales, dix chronos, trois vies. Rien d'autre ne compte. »<br>**Battu** : « Les cendres retombent… Tu es digne de la couronne. »<br>**Gagne** : « Le temps t'a manqué. Retourne à tes leçons. » |
+| Le Maître du mat *(nom provisoire)* | ✅ `maitre-du-mat/` | Il voit le mat avant tout le monde… et il compte bien te le prouver. | Défis, Mats : 10 puzzles mêlés, sans aide, 3 vies | **Avant** : « Mat en 1, c'est pour les débutants. Voyons jusqu'où tu tiens. »<br>**Battu** : « Tu as vu chaque mat. Je n'ai plus rien à t'apprendre. »<br>**Gagne** : « Trois mats manqués : le roi s'en sort, et moi je souris. » |
+| La Vieille Tour *(nom provisoire)* | ❌ (pièce ♜) | Des siècles de finales derrière elle, et pas une technique oubliée. | Défis, Finales : 10 puzzles mêlés, sans aide, 3 vies | **Avant** : « Peu de pièces, beaucoup de pièges. Montre-moi ta technique. »<br>**Battu** : « Propre, précis, sans un coup de trop. Je m'incline. »<br>**Gagne** : « Une finale gagnée se perd en un coup. Tu viens d'en perdre trois. » |
+| Le Filou *(nom provisoire)* | ❌ (pièce ♞) | Fourchettes, clouages, enfilades : il cache un tour dans chaque position. | Défis, Tactique : 10 puzzles mêlés, sans aide, 3 vies | **Avant** : « Tu vois le coup ? Moi, j'en vois deux d'avance. »<br>**Battu** : « Bien vu… Tu as trouvé tous mes tours. »<br>**Gagne** : « Trois pièges, trois fois dedans. Le Filou a encore frappé ! » |
+| Le Portier *(nom provisoire)* | ❌ (pièce ♝) | Il garde l'entrée de ton ouverture et connaît toutes ses ficelles. | Défis, un chapitre par répertoire : 10 puzzles de l'ouverture, 3 vies | **Avant** : « Tu dis jouer cette ouverture ? Prouve-le. »<br>**Battu** : « Tu connais ton ouverture jusqu'au bout des doigts. Passe. »<br>**Gagne** : « Tu joues l'ouverture… mais tu n'en connais pas les pièges. » |
+
+## Boss de l'arène seule (2026-10-27, textes à relire)
+
+| Nom | Image | Trait de caractère | Épreuve | Phrases types |
+|---|---|---|---|---|
+| Le Zombie | ✅ `zombie/` | Il avance sans réfléchir et laisse traîner ses pièces partout. | Arène, niveau 1 (700), gratuit dès le départ | **Avant** : « Cerveau… Ta dame est en prise, au fait. »<br>**Battu** : « Grrr… même sans cerveau, j'aurais dû voir ça. »<br>**Gagne** : « Cerveau ! Tu as oublié une pièce. » |
+| Le Requin | ✅ `requin/` | Une goutte de matériel et il sent l'odeur. | Arène, niveau 2 (1250), boutique 150, rapporte 200 | **Avant** : « Un pion de moins ? Je le sens d'ici. »<br>**Battu** : « Des eaux trop calmes… je n'ai rien trouvé à mordre. »<br>**Gagne** : « Un pion, puis deux, puis la partie. Miam. » |
+| Le Minotaure | ✅ `minotaure/` | Il punit les coups sans plan et charge tout ce qui avance au hasard. | Arène, niveau 4 (1850), boutique 300, rapporte 450 ; plus tard calcul ch. 5 « Le labyrinthe » | **Avant** : « Tu tournes en rond depuis dix coups. Moi, je t'attends au centre. »<br>**Battu** : « Tu as trouvé la sortie du labyrinthe… »<br>**Gagne** : « Perdu dans mes couloirs. Comme les autres. » |
+
+Les fiches de l'arène (titre, histoire, jauges, conseil) de chaque boss sont dans
+`front/src/i18n/fr/arena.json` (`bosses.<clé>`) et `front/src/utils/arena.js` (couleurs, jauges).
+
+## Images en attente d'un boss
+
+| Nom | Image | Trait de caractère | Épreuve | Phrases types |
+|---|---|---|---|---|
+| Le Zombie-cyclope | ✅ `zombie-cyclope/` | — | Futures parties à l'aveugle partiel sur plusieurs échiquiers | — |

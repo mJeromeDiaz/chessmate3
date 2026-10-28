@@ -66,6 +66,8 @@ final class Game
     /** The player's side. */
     public string $color;
     public int $elo;
+    /** Its strength in the opening (Aaron), null: its Elo. */
+    public ?int $openingElo = null;
     public ?int $endgameElo = null;
     /** @var list<string> */
     public array $styles = [];
@@ -97,6 +99,7 @@ final class Game
         $view->boss = $game->getBoss();
         $view->color = $game->getColor()->value;
         $view->elo = $game->getElo();
+        $view->openingElo = $boss?->openingElo;
         $view->endgameElo = $boss?->endgameElo;
         $view->styles = $boss->styles ?? [];
         $view->guarded = $boss->guarded ?? false;

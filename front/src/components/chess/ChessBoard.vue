@@ -17,6 +17,28 @@
         @pointerdown.left="onPress"
         @mousedown.right="cancelPremove"
       />
+      <!-- The king in check's red glow: a bright gradient filling the check marker's square,
+           blurred into a halo past its edges. -->
+      <svg class="chess-board__defs" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="cb-check-glow">
+            <stop offset="0%" stop-color="#ff6a50" stop-opacity="1" />
+            <stop offset="30%" stop-color="#ff2a1f" stop-opacity="0.9" />
+            <stop offset="65%" stop-color="#f01010" stop-opacity="0.5" />
+            <stop offset="100%" stop-color="#e00000" stop-opacity="0" />
+          </radialGradient>
+          <filter
+            id="cb-check-halo"
+            x="-75%"
+            y="-75%"
+            width="250%"
+            height="250%"
+            primitiveUnits="objectBoundingBox"
+          >
+            <feGaussianBlur stdDeviation="0.15" />
+          </filter>
+        </defs>
+      </svg>
       <span
         v-for="glyph in placedGlyphs"
         :key="glyph.square"
@@ -52,7 +74,8 @@
  * As on Lichess, the user draws their own arrows and circles with the right button (green; red
  * with Shift, blue with Alt, orange with both), erased by a left click or the next position.
  * With `premoveColor`, that side may premove while it cannot move: the move is kept and played as
- * soon as it may, if legal then (docs/PUZZLES.md, "Pré-coup").
+ * soon as it may, if legal then, without sliding (docs/PUZZLES.md, "Pré-coup"). A king in check
+ * glows red under its piece.
  */
 import {
   computed,
@@ -82,6 +105,7 @@ import 'cm-chessboard/assets/extensions/arrows/arrows.css'
 import 'cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.css'
 import { useBoardPreferences } from '@/composables/chess/useBoardPreferences'
 import { moveKind, playMoveSound } from '@/utils/chess/moveSounds'
+import { checkedKingSquare } from '@/utils/chess/check'
 import { premoveTargets, premoveToMove } from '@/utils/chess/premove'
 
 /**
@@ -103,7 +127,8 @@ const MARKERS = {
   success: { class: 'cb-marker-success', slice: 'markerSquare' },
   selected: { class: 'cb-marker-selected', slice: 'markerSquare' },
   premove: { class: 'cb-marker-premove', slice: 'markerSquare' },
-  net: { class: 'cb-marker-net', slice: 'markerCircle' }
+  net: { class: 'cb-marker-net', slice: 'markerCircle' },
+  check: { class: 'cb-marker-check', slice: 'markerSquare' }
 }
 const ARROWS = {
   hint: { class: 'arrow-info' },
@@ -253,6 +278,15 @@ onMounted(() => {
   updateInput()
 })
 
+/** Marks the king in check of the shown position, if any (never on a position being rebuilt). */
+function renderCheck() {
+  const b = board.value
+  if (!b) return
+  b.removeMarkers(MARKERS.check)
+  const square = props.anyPosition ? null : checkedKingSquare(rules)
+  if (square) b.addMarker(MARKERS.check, square)
+}
+
 onBeforeUnmount(() => {
   board.value?.destroy()
   board.value = null
@@ -296,6 +330,7 @@ async function setPosition(fen, animated = true) {
     if (!kind) cancelPremove()
   }
   rules = rulesOf(fen)
+  renderCheck()
   const call = ++positionCalls
   if (board.value) {
     animating++
@@ -341,6 +376,7 @@ function renderDecorations() {
   for (const { square, type } of props.highlights) {
     if (MARKERS[type]) b.addMarker(MARKERS[type], square)
   }
+  renderCheck()
   // Ours only: the user's own arrows (RightClickAnnotator) have their own types.
   for (const type of Object.values(ARROWS)) b.removeArrows(type)
   for (const { from, to, type = 'hint' } of props.arrows) {
@@ -424,8 +460,8 @@ async function playPremove() {
   showPremove(null)
   const move = premoveToMove(rules, waiting)
   if (!move) return
-  // Shown at once, as a move dropped by hand; the parent answers by changing `fen`.
-  await board.value?.movePiece(move.from, move.to, true)
+  // Shown at once, without sliding, as on Lichess; the parent answers by changing `fen`.
+  await board.value?.movePiece(move.from, move.to, false)
   commit({ from: move.from, to: move.to, promotion: move.promotion })
 }
 
@@ -540,6 +576,12 @@ defineExpose({ setPosition, shake })
   width: 100%;
   aspect-ratio: 1;
 }
+.chess-board__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
 // One transparent button per square over the board (squareInput).
 .chess-board__squares {
   position: absolute;
@@ -621,6 +663,10 @@ defineExpose({ setPosition, shake })
 .cm-chessboard .markers .marker.cb-marker-last-move {
   fill: #9bc700;
   opacity: 0.35;
+}
+.cm-chessboard .markers .marker.cb-marker-check {
+  fill: url(#cb-check-glow);
+  filter: url(#cb-check-halo);
 }
 .cm-chessboard .markers .marker.cb-marker-premove {
   fill: #8e24aa;

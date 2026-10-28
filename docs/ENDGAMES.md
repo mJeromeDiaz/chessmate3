@@ -465,3 +465,5 @@ pure est dans `front/src/utils/endgamePath.js`.
   par position, près de l'échiquier.
   Les textes des boss sont dans `mindMapPath.characters` et `mindMapPath.endgames`, ceux des
   leçons restent ceux du module (`endgame.lessons`, `stepTitle()` / `stepDesc()`).
+- **L'arène** : maîtriser les 27 leçons fait aussi arriver **Lizy** dans l'arène, avec le badge
+  exceptionnel « Disciple de Lizy » ([ARENA.md § 2 bis](ARENA.md#2-bis-les-profs-2026-10-27)).

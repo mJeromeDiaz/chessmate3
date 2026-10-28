@@ -49,6 +49,7 @@ final readonly class TrophyEvaluator
                 continue;
             }
             $progress = $this->progress->of($user, $trophy);
+            $goal = $progress['goal'] ?? $goal;
             $reachedAt = $progress['reachedAt'];
             if (null !== $reachedAt) {
                 $this->connection->executeStatement(

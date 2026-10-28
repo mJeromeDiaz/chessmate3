@@ -79,6 +79,13 @@ par `POST /training/runs/{id}/pardon {itemId}` (`TimeboxRunner::pardon`,
   d'œil), `too_late`. L'élément porte `pardoned` et `pardons` (le stock) ; le résultat et le bilan
   portent `pardoned` ; l'exercice, `metadata.pardoned`.
 
+## 3 ter. Ray dans l'arène (2026-10-27)
+
+Une séance **libre** (ni créateur de séance, ni parcours) menée au bout du chrono, niveau `hard`,
+4 coups ou plus, 10 s d'affichage au plus, 20 min au moins, au moins 5 puzzles joués dont 80 %
+résolus sans coup d'œil, fait arriver **Ray** dans l'arène, avec le badge exceptionnel « Disciple
+de Ray » ([ARENA.md § 2 bis](ARENA.md#2-bis-les-profs-2026-10-27)).
+
 ## 4. API
 
 Colonne `blindfold_puzzle_attempt.pardon` (`play`, `loss` ou null ; migration
