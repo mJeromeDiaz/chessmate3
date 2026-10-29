@@ -1,6 +1,41 @@
 import { formatDate } from '@/utils/format'
 import { t } from '@/i18n'
 
+/** The API's refusal when another run of the player's is still open (409). */
+export const RUN_IN_PROGRESS = 'run_in_progress'
+
+/**
+ * Whether a request was refused because another run is still open.
+ *
+ * @param {unknown} error
+ */
+export function isRunInProgress(error) {
+  const response = /** @type {any} */ (error)?.response
+  return response?.status === 409 && response?.data?.detail === RUN_IN_PROGRESS
+}
+
+/**
+ * Starts a run, closing first the one left open (docs/TRAINING.md, « Une séance à la fois »): a run
+ * quit without being closed (a tab closed, a stop lost on the network) never blocks the next one.
+ * Refused for another run in progress, the open run is stopped and the start tried once more.
+ *
+ * @template T
+ * @param {() => Promise<T>} start
+ * @param {{current: () => Promise<{id: string}|null>, stop: (id: string) => Promise<unknown>}} runs
+ * @returns {Promise<T>}
+ */
+export async function closingOpenRun(start, runs) {
+  try {
+    return await start()
+  } catch (e) {
+    if (!isRunInProgress(e)) throw e
+    const open = await runs.current()
+    // Closed meanwhile (a stop on its way): the start is tried again all the same.
+    if (open) await runs.stop(open.id).catch(() => {})
+    return start()
+  }
+}
+
 /**
  * Free study formats (module `free`), as the API names them, to their labels (read when shown).
  *

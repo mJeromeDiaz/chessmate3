@@ -106,7 +106,9 @@ final class TimedRunTest extends WoodpeckerWebTestCase
         $run = $this->startRun($alice, $set, 300);
         $this->runNext($alice, $run['id']);
 
-        self::assertSame(409, $this->api('POST', '/api/training/runs', $alice, ['module' => 'woodpecker', 'subjectId' => $set, 'budgetSeconds' => 300])->getStatusCode());
+        $refused = $this->api('POST', '/api/training/runs', $alice, ['module' => 'woodpecker', 'subjectId' => $set, 'budgetSeconds' => 300]);
+        self::assertSame(409, $refused->getStatusCode());
+        self::assertSame('run_in_progress', $this->json($refused)['detail'] ?? null, 'The code the app closes the open run on.');
         self::assertSame($run['id'], $this->getCurrentRun($alice)['id'] ?? null);
 
         // The tab was closed; the user comes back an hour later.

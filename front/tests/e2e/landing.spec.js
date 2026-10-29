@@ -14,8 +14,8 @@ test('landing: a visitor sees the landing page with its own header', async ({
   )
 
   // The app's modules by their catalogue name (`MODULES` and the parcours, but the free study:
-  // thirteen), the analysis not built yet tagged "Bientôt".
-  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(13)
+  // fourteen), the analysis not built yet tagged "Bientôt".
+  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(14)
   await expect(page.getByTestId('landing-module-libre')).toHaveCount(0)
   for (const id of ['puzzles', 'coordonnees', 'aveugle', 'parcours']) {
     await expect(page.getByTestId(`landing-module-${id}`)).not.toContainText(

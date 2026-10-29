@@ -27,9 +27,9 @@ final class WrittenLineTest extends TestCase
         $fen = Rules::INITIAL_FEN;
         self::assertSame(['correct' => true, 'mistakeAt' => null, 'reason' => null, 'sans' => ['e4', 'e5', 'Nf3']], WrittenLine::judge($fen, ['1. e4 e5 2. Nf3'], self::EXPECTED));
         self::assertSame(['correct' => false, 'mistakeAt' => 2, 'reason' => 'short', 'sans' => ['e4', 'e5']], WrittenLine::judge($fen, ['e4 e5'], self::EXPECTED));
-        self::assertSame(['correct' => false, 'mistakeAt' => 1, 'reason' => 'illegal', 'sans' => ['e4']], WrittenLine::judge($fen, ['e4 e9'], self::EXPECTED));
-        self::assertSame(['correct' => false, 'mistakeAt' => 1, 'reason' => 'wrong', 'sans' => ['e4', 'e6']], WrittenLine::judge($fen, ['e4 e6 Nf3'], self::EXPECTED));
-        self::assertSame(['correct' => false, 'mistakeAt' => 3, 'reason' => 'long', 'sans' => ['e4', 'e5', 'Nf3']], WrittenLine::judge($fen, ['e4 e5 Nf3 Nc6'], self::EXPECTED));
+        self::assertSame(['correct' => false, 'mistakeAt' => 1, 'reason' => 'illegal', 'sans' => ['e4', 'e9', 'Nf3']], WrittenLine::judge($fen, ['e4 e9 Nf3'], self::EXPECTED));
+        self::assertSame(['correct' => false, 'mistakeAt' => 1, 'reason' => 'wrong', 'sans' => ['e4', 'e6', 'Nf3']], WrittenLine::judge($fen, ['e4 e6 Nf3'], self::EXPECTED));
+        self::assertSame(['correct' => false, 'mistakeAt' => 3, 'reason' => 'long', 'sans' => ['e4', 'e5', 'Nf3', 'Nc6']], WrittenLine::judge($fen, ['e4 e5 Nf3 Nc6'], self::EXPECTED));
     }
 
     public function testAnotherMatingLastMoveIsRight(): void

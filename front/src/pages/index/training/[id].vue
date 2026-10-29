@@ -867,7 +867,7 @@
 <script setup>
 /**
  * A timed run (docs/TRAINING.md): countdown on the server's clock, items one after the other,
- * recap at the end. Reloading or coming back before the end resumes the same run and item. The
+ * recap at the end. Reloading resumes the same run and item; leaving the page stops it. The
  * module decides the player: puzzles (Woodpecker, rated puzzles), the repertoire test
  * (docs/REPERTOIRE.md § 15), free study (a timer), a coordinates series, blindfold puzzles (docs/BLINDFOLD.md),
  * positions to evaluate (docs/EVALUATION.md), moves to judge (docs/BRILLIANCY.md), a puzzle streak (docs/PUZZLE_STREAK.md: no free
@@ -886,7 +886,7 @@
  * count of puzzles or lines and a boss's lives instead of a clock, without help against a boss.
  */
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import BlindfoldPuzzlePlayer from '@/components/blindfold/BlindfoldPuzzlePlayer.vue'
 import RecallPlayer from '@/components/blindfold/RecallPlayer.vue'
@@ -1132,6 +1132,20 @@ watch(
   { immediate: true }
 )
 onBeforeUnmount(() => stopFightTheme())
+
+/** How long leaving waits for the run to stop (the next start closes it anyway). */
+const LEAVE_STOP_MS = 3000
+
+// Leaving the page (the browser's back arrow, the menu, any link) stops a run still going: it
+// never stays open to block the next one (docs/TRAINING.md, « Une séance à la fois »). A reload
+// does not leave the route: the run resumes.
+onBeforeRouteLeave(async () => {
+  if (runner.run.value?.status !== 'active') return
+  await Promise.race([
+    runner.stop().catch(() => {}),
+    new Promise(resolve => setTimeout(resolve, LEAVE_STOP_MS))
+  ])
+})
 
 /**
  * The position being evaluated, kept once the run closed on the last one: its correction stays on

@@ -103,7 +103,7 @@ déjà faite est de l'entraînement, jugé, jamais payé à nouveau.
 ## 4. Déroulé
 
 - `POST /mind-map/{capacité}/steps/{clé}/start` → `{capacity, key, run}` (la séance, comme
-  `POST /training/runs`). 409 `step_locked`, `step_soon`, ou une autre séance en cours ; 404 clé
+  `POST /training/runs`). 409 `step_locked`, `step_soon`, ou `run_in_progress` (une autre séance en cours : le front l'arrête et relance, [TRAINING.md](TRAINING.md), § 2) ; 404 clé
   inconnue. Une ligne `mind_map_attempt` relie la séance à l'étape, et la séance porte son étape
   (`training_run.path_step`, `visualisation:2-1-3`), posée par le serveur seul : un module s'y fie
   pour ouvrir ce que le parcours permet (un niveau de reconstitution pas encore ouvert, les options

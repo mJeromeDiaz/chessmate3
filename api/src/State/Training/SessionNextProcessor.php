@@ -52,7 +52,7 @@ final class SessionNextProcessor implements ProcessorInterface
         } catch (StepBlockedException $e) {
             throw new ConflictHttpException(sprintf('%s (%s)', $e->getMessage(), $e->reason));
         } catch (RunInProgressException) {
-            throw new ConflictHttpException('Another training run is in progress.');
+            throw new ConflictHttpException('run_in_progress');
         } catch (SessionClosedException) {
             throw new ConflictHttpException('The session is over.');
         }

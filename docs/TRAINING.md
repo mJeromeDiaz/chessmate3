@@ -41,12 +41,22 @@ journal : [ACTIVITY.md](ACTIVITY.md).
   n'est **pas compté** (ni reporté à la séance suivante).
 - Seule tolérance : **2 s de réseau** (`TimeboxRunner::SUBMISSION_TOLERANCE_MS`) pour une soumission
   envoyée juste avant la fin. Ce n'est pas une grâce : aucun élément n'est servi pendant ce délai.
-- **Une seule séance active par utilisateur**, garanti par la base. En lancer une autre renvoie
-  vers celle en cours (reprendre ou la terminer).
+- **Une seule séance active par utilisateur**, garanti par la base. **Une séance à la fois**
+  (2026-10-28, choix de l'utilisateur : une séance quittée bloquait l'étape suivante) :
+  - **quitter la page de séance** (flèche du navigateur, menu, n'importe quel lien de l'app) clôt la
+    séance encore active (`stopped`), sans confirmation (`onBeforeRouteLeave` de `training/[id]`,
+    3 s au plus d'attente : la navigation part même si l'arrêt échoue) ;
+  - **un lancement** (séance libre, étape de parcours, étape de séance composée) refusé par une
+    séance restée ouverte (onglet fermé, arrêt perdu sur le réseau, autre onglet) reçoit un 409
+    `run_in_progress` ; le front arrête la séance ouverte (`GET /training/runs/current` puis
+    `stop`) et relance une fois (`closingOpenRun` de `utils/training.js`, branché dans
+    `trainingApi.start`, `mindMapApi.start` et `sessionApi.next`).
+  Une étape de parcours arrêtée est jugée comme toute passe : non réussie, elle ne compte pas
+  ([MIND_MAP.md](MIND_MAP.md)).
 - Une séance est **à usage unique** : une fois close, elle ne se rouvre jamais. La seule « reprise »
-  consiste à rejoindre la **même** séance encore en cours après une déconnexion ou une sortie de page :
-  on retrouve le même élément, chronomètre toujours en marche.
-- Bouton « Terminer » : clôt la séance avant la fin (`stopped`). Quitter la page ne la clôt pas.
+  consiste à **recharger** la page de la séance encore en cours (ou à la rouvrir après une
+  déconnexion) : on retrouve le même élément, chronomètre toujours en marche.
+- Bouton « Terminer » : clôt la séance avant la fin (`stopped`), comme quitter la page.
 - **Clôture paresseuse** : ni cron ni Scheduler. Une séance abandonnée (onglet fermé) est close à la
   prochaine requête d'entraînement de l'utilisateur, **à la date de son expiration**. Conséquence
   acceptée : `RunCompleted` peut être émis en retard, voire jamais pour un utilisateur qui ne revient
@@ -200,7 +210,7 @@ Préfixe `/api`, utilisateur authentifié ; une séance d'un autre utilisateur r
 
 | Endpoint | Rôle | Erreurs |
 |---|---|---|
-| `POST /training/runs` | `{module, subjectId, budgetSeconds, config}` : démarre (30 par heure) | 404 sujet, 409 séance déjà en cours ou sujet non jouable, 422 (dont `config` invalide) |
+| `POST /training/runs` | `{module, subjectId, budgetSeconds, config}` : démarre (30 par heure) | 404 sujet, 409 `run_in_progress` (une autre séance active, § 2) ou sujet non jouable, 422 (dont `config` invalide) |
 | `GET /training/runs/current` | La séance active, sinon `null` | — |
 | `GET /training/runs/{id}` | Une séance, avec `serverNow` | 404 |
 | `POST /training/runs/{id}/next` | `{run, item}` : élément à jouer, `item: null` une fois close (600 par 10 min) | 404 |

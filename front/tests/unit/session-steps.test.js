@@ -59,7 +59,7 @@ describe('session steps', () => {
   it('translates a refused next step', () => {
     const conflict = detail => ({ response: { status: 409, data: { detail } } })
     expect(
-      nextErrorText(conflict('Another training run is in progress.'))
+      nextErrorText(conflict('run_in_progress'))
     ).toContain('Une autre séance')
     expect(nextErrorText(conflict('The session is over.'))).toBe(
       'Cette session est terminée.'

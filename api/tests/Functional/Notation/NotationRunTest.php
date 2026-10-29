@@ -95,7 +95,7 @@ final class NotationRunTest extends WoodpeckerWebTestCase
 
         $next = $this->item($alice, $run['id']);
         $wrong = $this->submitOk($alice, $run['id'], $next['id'], ['written' => ['Ke9']]);
-        self::assertSame([false, 0, 'illegal', []], [$wrong['success'], $wrong['data']['mistakeAt'], $wrong['data']['reason'], $wrong['data']['answer']]);
+        self::assertSame([false, 0, 'illegal', ['Ke9']], [$wrong['success'], $wrong['data']['mistakeAt'], $wrong['data']['reason'], $wrong['data']['answer']]);
         self::assertSame(self::sansOf($next['data']['fen'], $this->expectedOf($next['id'])), array_column($wrong['data']['expected'], 'san'), 'The right line, to compare.');
     }
 

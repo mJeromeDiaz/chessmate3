@@ -1,6 +1,7 @@
 import { CATALOG_MODULES, MODULES_BY_ID } from '@/utils/session/catalog'
 import { formatDuration } from '@/utils/format'
 import { t } from '@/i18n'
+import { RUN_IN_PROGRESS } from '@/utils/training'
 
 /** The API's reasons a step cannot start (session.steps.blocked.*). */
 const BLOCKED_REASONS = [
@@ -123,8 +124,7 @@ export function sessionProgressText(session) {
 export function nextErrorText(error) {
   const detail = String(error?.response?.data?.detail ?? '')
   if (error?.response?.status !== 409) return ''
-  if (detail.includes('Another training run'))
-    return t('session.steps.otherRun')
+  if (detail === RUN_IN_PROGRESS) return t('session.steps.otherRun')
   if (detail.includes('session is over')) return t('session.steps.over')
   return t('session.steps.blocked.default')
 }

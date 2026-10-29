@@ -137,7 +137,7 @@ final class MindMapPathTest extends WoodpeckerWebTestCase
 
         // One run at a time.
         self::assertSame(201, $this->api('POST', '/api/mind-map/visualisation/steps/1-1/start', $alice)->getStatusCode());
-        self::assertSame(409, $this->api('POST', '/api/mind-map/visualisation/steps/1-1/start', $alice)->getStatusCode());
+        $this->assertRefused($this->api('POST', '/api/mind-map/visualisation/steps/1-1/start', $alice), 409, 'run_in_progress');
     }
 
     public function testTheChestOnTheWayIsEarnedByPassesThenOpened(): void

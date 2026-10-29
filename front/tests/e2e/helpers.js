@@ -63,9 +63,13 @@ export async function signIn(
     // The arena page hands its own arrivals to the modal.
     await context.route(/\/api\/arena$/, async route => {
       if (route.request().method() !== 'GET') return route.fallback()
-      const response = await route.fetch()
-      const json = await response.json()
-      await route.fulfill({ response, json: { ...json, pendingUnlocks: [] } })
+      try {
+        const response = await route.fetch()
+        const json = await response.json()
+        await route.fulfill({ response, json: { ...json, pendingUnlocks: [] } })
+      } catch {
+        // The test ended with the request in flight (every page's header asks for the arena).
+      }
     })
   }
   const args = ['-d', 'xdebug.mode=off', 'bin/console', 'app:e2e:seed-user']

@@ -40,6 +40,14 @@ final class SessionTest extends WoodpeckerWebTestCase
 
         $this->travel('+2 minutes');
         $this->api('POST', '/api/training/runs/'.$first['run']['id'].'/stop', $alice);
+        // Another run open: the next step is refused with the code the app closes it on.
+        $other = $this->api('POST', '/api/training/runs', $alice, ['module' => 'woodpecker', 'subjectId' => $this->lightSet($alice), 'budgetSeconds' => 300]);
+        self::assertSame(201, $other->getStatusCode(), (string) $other->getContent());
+        $otherId = $this->json($other)['id'] ?? null;
+        self::assertIsString($otherId);
+        $refused = $this->api('POST', '/api/training/sessions/'.$session['id'].'/next', $alice);
+        self::assertSame([409, 'run_in_progress'], [$refused->getStatusCode(), $this->json($refused)['detail'] ?? null]);
+        $this->api('POST', '/api/training/runs/'.$otherId.'/stop', $alice);
         $session = $this->getSession($alice, $session['id']);
         self::assertSame([1, 'done', 120_000], [$session['currentIndex'], $session['steps'][0]['status'], $session['steps'][0]['summary']['durationMs'] ?? null]);
 

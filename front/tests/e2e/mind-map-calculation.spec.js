@@ -211,3 +211,33 @@ test('calculation: the Compteur, a long line announced on the position in sight'
   await expect(player.getByTestId('vision-line')).toBeVisible()
   await expect(player).toHaveAttribute('data-phase', 'ask', { timeout: 20_000 })
 })
+
+// One run at a time (docs/TRAINING.md): a step left with the browser's back arrow is stopped, so
+// that the next one starts.
+test('calculation: a step left with the back arrow is stopped, another one starts', async ({
+  page,
+  context
+}) => {
+  await signIn(context)
+  await page.goto('/#/cerveau/calculation')
+  await page.getByTestId('path-step-1-1').click()
+  let served = page.waitForResponse(isRunNext)
+  await page.getByTestId('step-start').click()
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1/)
+  const first = page.url()
+  await served
+
+  const stopped = page.waitForResponse(r =>
+    /\/api\/training\/runs\/[^/]+\/stop$/.test(r.url())
+  )
+  await page.goBack()
+  expect((await stopped).status()).toBe(200)
+  await expect(page).toHaveURL(/#\/cerveau\/calculation/)
+
+  await page.getByTestId('path-step-1-1').click()
+  served = page.waitForResponse(isRunNext)
+  await page.getByTestId('step-start').click()
+  await expect(page).toHaveURL(/#\/training\/[^/?]+\?mindMap=1/)
+  expect(page.url()).not.toBe(first)
+  await served
+})

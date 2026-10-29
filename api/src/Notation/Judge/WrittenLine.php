@@ -21,8 +21,9 @@ final class WrittenLine
      *
      * @return array{correct: bool, mistakeAt: int|null, reason: string|null, sans: list<string>}
      *   mistakeAt: the first half-move that is wrong (0-based); reason: illegal (not a legal move
-     *   there), wrong (another move), short (missing moves), long (moves after the end); sans: the
-     *   half-moves understood, as SAN
+     *   there), wrong (another move), short (missing moves), long (moves after the end); sans: what
+     *   was written, a half-move each, as SAN up to the mistake (the wrong move included when legal)
+     *   and as written from there (the correction shows it beside the solution)
      *
      * @throws InvalidPositionException
      */
@@ -33,11 +34,11 @@ final class WrittenLine
         $sans = [];
         foreach ($tokens as $i => $token) {
             if ($i >= \count($expected)) {
-                return ['correct' => false, 'mistakeAt' => $i, 'reason' => 'long', 'sans' => $sans];
+                return ['correct' => false, 'mistakeAt' => $i, 'reason' => 'long', 'sans' => [...$sans, ...\array_slice($tokens, $i)]];
             }
             $move = $rules->playSan($token);
             if (null === $move) {
-                return ['correct' => false, 'mistakeAt' => $i, 'reason' => 'illegal', 'sans' => $sans];
+                return ['correct' => false, 'mistakeAt' => $i, 'reason' => 'illegal', 'sans' => [...$sans, ...\array_slice($tokens, $i)]];
             }
             $sans[] = $move->san ?? $token;
             if (Rules::uci($move) !== $expected[$i]) {
@@ -45,7 +46,7 @@ final class WrittenLine
 
                 return $mates
                     ? ['correct' => true, 'mistakeAt' => null, 'reason' => null, 'sans' => $sans]
-                    : ['correct' => false, 'mistakeAt' => $i, 'reason' => 'wrong', 'sans' => $sans];
+                    : ['correct' => false, 'mistakeAt' => $i, 'reason' => 'wrong', 'sans' => [...$sans, ...\array_slice($tokens, $i + 1)]];
             }
         }
         if (\count($tokens) < \count($expected)) {

@@ -246,7 +246,7 @@ describe('mind map path', () => {
       'Un boss ne se passe pas.'
     )
     expect(
-      refusalText(refusal(409, 'Another training run is in progress.'))
+      refusalText(refusal(409, 'run_in_progress'))
     ).toBe('Une autre séance est en cours : termine-la d’abord.')
     expect(
       refusalText(

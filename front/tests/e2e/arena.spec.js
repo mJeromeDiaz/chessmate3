@@ -186,7 +186,7 @@ test('a game against the Zombie: stepped back, resigned, its result, its review 
   const answered = page.waitForResponse(isMove(1), { timeout: ENGINE_TIMEOUT })
   await playMove(page, 'e2e4')
   expect((await answered).status()).toBe(200)
-  await expect(page.getByTestId('arena-moves')).toContainText('1. e4')
+  await expect(page.getByTestId('arena-moves')).toContainText(/1\.\s*e4/)
   await expect(page.getByTestId('arena-notice')).toBeVisible()
   await expect(page.getByTestId('arena-material-player')).toHaveAttribute(
     'data-score',

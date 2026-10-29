@@ -84,7 +84,9 @@ Choix validés (2026-10-20) :
   `write` et `line`. Le serveur rejoue la ligne écrite coup par coup (`WrittenLine` : marques de prise et
   d'échec facultatives) ; un dernier coup différent qui mate est juste aussi.
 - **Verdict** : `{status: right|wrong, expected: [{uci, san}], answer, mistakeAt, reason, position,
-  count}` ; `reason` (écrit) : `illegal`, `wrong`, `short`, `long`. Chaque élément est journalisé
+  count}` ; `reason` (écrit) : `illegal`, `wrong`, `short`, `long` ; `answer` (écrit) : tout ce
+  qui a été écrit, un demi-coup chacun, en SAN jusqu'à l'erreur (le mauvais coup compris s'il est
+  légal), tel qu'écrit ensuite (la correction le montre, un coup illégal compris). Chaque élément est journalisé
   (`ExerciseCompleted` `notation`, `metadata.kind`, `metadata.status`). Le `count`-ième élément
   clôt la séance (`subject_finished`, `context.reason: count_done`).
 - **Fin** : l'élément à l'écran n'est pas compté ; récapitulatif `metrics` : `kind`, `count`,

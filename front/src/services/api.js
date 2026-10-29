@@ -1,4 +1,5 @@
 import { createHttpClient } from '@/services/http'
+import { closingOpenRun } from '@/utils/training'
 
 /** Base URL of the Symfony API (no trailing slash). */
 export const API_URL = (
@@ -355,9 +356,16 @@ export const woodpeckerApi = {
 
 /** Timed runs of any module (docs/TRAINING.md). */
 export const trainingApi = {
-  /** @param {{module: string, subjectId: string, budgetSeconds: number, config?: Record<string, any>}} payload */
+  /**
+   * The run left open, if any, is closed first (`closingOpenRun`).
+   *
+   * @param {{module: string, subjectId: string, budgetSeconds: number, config?: Record<string, any>}} payload
+   */
   start: payload =>
-    http.post('/api/training/runs', payload, JSON_LD).then(r => r.data),
+    closingOpenRun(
+      () => http.post('/api/training/runs', payload, JSON_LD).then(r => r.data),
+      trainingApi
+    ),
   /** The active run, or null. */
   current: () =>
     http
@@ -479,15 +487,19 @@ export const sessionApi = {
     http
       .get(`/api/training/sessions/${encodeURIComponent(id)}`, JSON_LD)
       .then(r => r.data),
-  /** Starts the current step: `{session, run}`. */
+  /** Starts the current step: `{session, run}`; the run left open, if any, closed first. */
   next: id =>
-    http
-      .post(
-        `/api/training/sessions/${encodeURIComponent(id)}/next`,
-        null,
-        JSON_LD
-      )
-      .then(r => r.data),
+    closingOpenRun(
+      () =>
+        http
+          .post(
+            `/api/training/sessions/${encodeURIComponent(id)}/next`,
+            null,
+            JSON_LD
+          )
+          .then(r => r.data),
+      trainingApi
+    ),
   skip: id =>
     http
       .post(
@@ -1078,20 +1090,24 @@ export const mindMapApi = {
       .get(`/api/mind-map/${encodeURIComponent(capacity)}`, JSON_LD)
       .then(r => r.data),
   /**
-   * Starts the run of a step: `{capacity, key, run}`. 409 `step_locked`, `step_soon`, or another
-   * run in progress.
+   * Starts the run of a step: `{capacity, key, run}`; the run left open, if any, closed first.
+   * 409 `step_locked`, `step_soon`.
    *
    * @param {string} capacity
    * @param {string} key
    */
   start: (capacity, key) =>
-    http
-      .post(
-        `/api/mind-map/${encodeURIComponent(capacity)}/steps/${encodeURIComponent(key)}/start`,
-        null,
-        JSON_LD
-      )
-      .then(r => r.data),
+    closingOpenRun(
+      () =>
+        http
+          .post(
+            `/api/mind-map/${encodeURIComponent(capacity)}/steps/${encodeURIComponent(key)}/start`,
+            null,
+            JSON_LD
+          )
+          .then(r => r.data),
+      trainingApi
+    ),
   /**
    * Skips an exercise: `{capacity, key, path}`. 409 `step_not_skippable`, `step_locked`.
    *

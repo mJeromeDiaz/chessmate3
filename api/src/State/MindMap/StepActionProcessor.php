@@ -70,7 +70,7 @@ final class StepActionProcessor implements ProcessorInterface
         } catch (StepRefusedException $e) {
             throw new ConflictHttpException($e->reason);
         } catch (RunInProgressException) {
-            throw new ConflictHttpException('Another training run is in progress.');
+            throw new ConflictHttpException('run_in_progress');
         } catch (InvalidRunConfigException $e) {
             throw new UnprocessableEntityHttpException($e->getMessage());
         } catch (SubjectNotFoundException) {
