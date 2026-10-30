@@ -71,8 +71,13 @@ when@prod:
                 type: console
                 process_psr_3_messages: false
                 channels: ["!event", "!doctrine"]
+            # Not on stderr: on PHP ≥ 8.4 some come at every kernel boot (native lazy objects) and
+            # would drown the real errors. One file a day (var/log/deprecations-prod-YYYY-MM-DD.log),
+            # kept 7 days.
             deprecation:
-                type: stream
+                type: rotating_file
                 channels: [deprecation]
-                path: php://stderr
+                path: "%kernel.logs_dir%/deprecations-%kernel.environment%.log"
+                max_files: 7
+                level: info
                 formatter: monolog.formatter.json

@@ -23,8 +23,11 @@ restent celles du mutualisé (docs/DEPLOY_OVH.md, § 3).
 | Certificats | Let's Encrypt (`certbot`, webroot) | dépôts Ubuntu |
 
 **PHP 8.5 en production, 8.3 en dev** : les dépendances verrouillées acceptent la 8.5, mais les
-tests ne tournent qu'en 8.3. Une dépréciation propre à la 8.5 ne s'afficherait pas : elle irait dans
-le journal de PHP-FPM (« Journaux », plus bas). Lisez-le après chaque mise en ligne.
+tests ne tournent qu'en 8.3. Une dépréciation propre à la 8.5 ne s'affiche pas : elle va dans le
+fichier des dépréciations, une erreur dans le journal de PHP-FPM (« Journaux », plus bas). Lisez-les
+après chaque mise en ligne. Dès la 8.4, Symfony et Doctrine signalent à chaque démarrage les « lazy
+ghosts » à remplacer par les objets paresseux natifs de PHP : on ne pourra les activer qu'une fois le
+dev passé en 8.4.
 
 ## 1. Les fichiers
 
@@ -285,6 +288,7 @@ Selon ce que la version change, les commandes à lancer ensuite sont celles du m
 | Quoi | Où |
 |---|---|
 | Erreurs de l'API (Monolog sur `stderr`) | `/var/log/php8.5-fpm.log` |
+| Dépréciations (PHP 8.5, bibliothèques, notre code) | `/srv/dontstayrooky/api/var/log/deprecations-prod-AAAA-MM-JJ.log`, 7 jours |
 | Worker | `journalctl -u dontstayrooky-worker` |
 | Cron | `journalctl -t dontstayrooky-cron` |
 | Apache | `/var/log/apache2/dontstayrooky-{app,api}-{access,error}.log` |
