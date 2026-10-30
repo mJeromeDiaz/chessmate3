@@ -19,7 +19,12 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$ROOT/api/.env.local"
 
 [ "$(id -u)" -eq 0 ] || { echo "Run as root: sudo bash $0" >&2; exit 1; }
+# Nothing reads the terminal: run under sudo with its output piped (tee), a command that touches it
+# (apt does) is stopped by it (SIGTTOU) and the script hangs silently.
+exec < /dev/null
 export DEBIAN_FRONTEND=noninteractive
+# needrestart (Ubuntu Server) restarts the upgraded services itself, without asking.
+export NEEDRESTART_MODE=a
 
 step() { echo; echo "==> $*"; }
 # Copies a template, its placeholders replaced.
@@ -45,7 +50,7 @@ EOF
 apt-get update -q
 # Changed configuration files of upgraded packages: kept as they are, no question asked.
 apt-get upgrade -yq -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold
-apt-get install -yq apache2 php-fpm php-cli php-mysql php-intl php-mbstring php-xml php-zip php-curl \
+apt-get install -yq -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold apache2 php-fpm php-cli php-mysql php-intl php-mbstring php-xml php-zip php-curl \
   mysql-server postfix opendkim opendkim-tools certbot rsync ufw unattended-upgrades
 cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
 APT::Periodic::Update-Package-Lists "1";

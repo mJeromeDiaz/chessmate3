@@ -25,3 +25,41 @@ message roulette et cristaux offert non distribué. // a retester !
 
 # Écart au demi-coup 1 · Solution : 35… Dh1+ 36. Rg3 Dxg2# · Ta ligne : 35… Dg4+ 36. Rh2 Dxg2#
 
+Parcours : reconnaissance de forme : 
+cavalier : 
+- fourchette : trouver les fourchettes
+- excercice bond du cavalier :
+  - minimum de coup pour arriver a telle case
+  - plusieurs chemin avec un minimum de coup (sans piece)
+  - pareil avec des pieces qui bloquent certains passages
+- puzzle cavalier en 2 bonds
+- puzzle cavalier en 3 bonds
+- les mat avec un cavalier
+- mater avec la dame et un cavalier, apprendre les pattern d'attaque dame + cavalier 
+-> mini cycle de woodpecker a répéter le plus vite possible et proposer ce cycle dans les entrainement dès qu'il est validé
+
+Boss le cavalier sans tête
+
+Le fou / fiancheto
+
+Le pion : 
+- La course au pion, quel pion, selon le trait et la position arrivera en premier sans pièce sur l'échiquier
+- Arret du pion par le roi
+- Arret du pion par une pièce a 2 case de la prommotion ? (est ce que la tour peut arréter le roi ?)
+- Finale de pion les plus connues lucena, ... -> renvoi vers le défi finales
+- Identifier les échanges de pions permettant de créer un pion passé et comment en créer 1
+- Ouverture de position (levier)
+- promotion et pat 
+
+boss 
+La Princesse écarlate
+« Ils ne voient qu'un pion. Moi, je vois la reine que je deviendrai. »
+Longtemps reléguée au rang de simple soldat, elle a compris que sa faiblesse n'était qu'une étape.
+Ambitieuse ! 
+Chaque case franchie la rapproche de sa destinée. 
+Elle sait sacrifier ses alliés, détourner ses ennemis et attendre l'instant décisif. 
+Elle n'a pas encore la puissance d'une reine, mais elle en possède déjà l'ambition.
+Son pouvoir : faire de chaque avancée une menace, jusqu'à ce que l'adversaire réalise trop tard ce qu'elle est sur le point de devenir.
+
+
+cadeau de greco en attaque puis en défense
