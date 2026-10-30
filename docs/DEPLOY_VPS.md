@@ -206,7 +206,10 @@ limitée. Le CLI tourne sans limite de mémoire (`memory_limit = -1`).
 
 **3 M puzzles** au lieu des 1,5 M du mutualisé (`--target`), soit environ 1,3 Go, avec un plafond
 relevé en conséquence (`--max-size`). Le catalogue garde ainsi deux fois plus de variété dans chaque
-tranche de classement et chaque thème. Monter encore plus tard ne coûte rien : l'import ajoute les
+tranche de classement et chaque thème. Sur l'export d'octobre 2026 : tout au-dessus de 2500
+(~193 000), environ un tiers sous 700 (~111 000), ~63 % ailleurs (docs/PUZZLE_IMPORT.md, § 3). Le
+premier import, fait avant cette répartition, a gardé ~218 000 puzzles sous 700 qui restent ; les
+imports suivants ajoutent ceux de 2500 et plus qui manquent. Monter encore plus tard ne coûte rien : l'import ajoute les
 puzzles manquants sans toucher aux autres. Descendre est impossible, aucun puzzle n'étant supprimé.
 Ces options sont à remettre à chaque import mensuel.
 

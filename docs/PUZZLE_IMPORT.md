@@ -78,9 +78,13 @@ Le référentiel `puzzle_theme` vient de `bin/console app:puzzle:sync-themes`.
 Seuls les puzzles **sélectionnables** (seuils de qualité ci-dessus) sont importés, et parmi eux environ
 `--target` (`App\Puzzle\Import\SubsetPlanner`, choix validé le 2026-10-06) :
 
-- **chaque tranche de 100 points de classement garde sa part** : si la tranche 2600–2699 contient
-  1,4 % des puzzles sélectionnables, elle garde 1,4 % de la cible. Les joueurs forts et les débutants
-  gardent autant de choix, en proportion, que le milieu ;
+- **les tranches à partir de 2500 sont gardées entières** (choix du 2026-10-30) : les puzzles des
+  joueurs forts sont rares chez Lichess (moins de 200 000 sélectionnables au-dessus de 2500 sur
+  l'export d'octobre 2026), on n'en jette aucun ;
+- **les autres tranches de 100 points se partagent le reste de la cible** au prorata de leurs puzzles
+  sélectionnables, **les tranches sous 700 avec un poids de moitié** : les débutants ont largement de
+  quoi faire, le sélecteur ne tirant que près du classement du joueur. Une tranche qui n'a pas de quoi
+  remplir sa part la garde entière, et le reste est repartagé entre les autres ;
 - **dans chaque tranche, les meilleurs d'abord** : popularité, puis nombre de parties (échelle
   logarithmique) pour départager. À la note de coupure, la part gardée est tirée d'un hachage de l'id
   Lichess, pas au hasard : relancer l'import sur le même export garde les mêmes puzzles ;

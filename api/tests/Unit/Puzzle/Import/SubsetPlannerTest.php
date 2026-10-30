@@ -33,14 +33,39 @@ final class SubsetPlannerTest extends TestCase
         }
         $high = [];
         for ($popularity = 51; $popularity <= 60; ++$popularity) {
-            $high[] = $this->row(2800, $popularity, 1000);      // 10 puzzles in 2800–2899
+            $high[] = $this->row(1800, $popularity, 1000);      // 10 puzzles in 1800–1899
         }
 
         $plan = $this->plan([...$low, ...$high], 25);           // half of the 50
 
-        self::assertSame([10 => 40, 28 => 10], $plan->available);
-        self::assertSame([10 => 20, 28 => 5], $plan->quotas);
+        self::assertSame([10 => 40, 18 => 10], $plan->available);
+        self::assertSame([10 => 20, 18 => 5], $plan->quotas);
         self::assertSame([...\array_slice($low, 20), ...\array_slice($high, 5)], $this->kept($plan, [...$low, ...$high]));
+    }
+
+    public function testTheBandsFrom2500AreKeptWhole(): void
+    {
+        $middle = $this->band(1500, 40);
+        $strong = $this->band(2600, 10);
+
+        $plan = $this->plan([...$middle, ...$strong], 20);
+
+        self::assertSame([15 => 10, 26 => 10], $plan->quotas);
+        self::assertSame([...\array_slice($middle, 30), ...$strong], $this->kept($plan, [...$middle, ...$strong]));
+    }
+
+    public function testTheBandsBelow700KeepHalfTheShareOfTheOthers(): void
+    {
+        $plan = $this->plan([...$this->band(500, 40), ...$this->band(1000, 40)], 30);
+
+        self::assertSame([5 => 10, 10 => 20], $plan->quotas);
+    }
+
+    public function testABandShortOfItsShareKeepsItsStockAndLeavesTheRestToTheOthers(): void
+    {
+        $plan = $this->plan([...$this->band(500, 40), ...$this->band(1000, 10)], 30);
+
+        self::assertSame([5 => 20, 10 => 10], $plan->quotas);
     }
 
     public function testThePlayCountBreaksTiesOnPopularity(): void
@@ -108,6 +133,19 @@ final class SubsetPlannerTest extends TestCase
     private function kept(SubsetPlan $plan, array $rows): array
     {
         return array_values(array_filter($rows, $plan->accepts(...)));
+    }
+
+    /**
+     * @return list<CsvRow> puzzles of distinct popularities, worst first
+     */
+    private function band(int $rating, int $count): array
+    {
+        $rows = [];
+        for ($i = 0; $i < $count; ++$i) {
+            $rows[] = $this->row($rating, 51 + $i, 1000);
+        }
+
+        return $rows;
     }
 
     /**

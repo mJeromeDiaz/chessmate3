@@ -11,13 +11,23 @@ use App\Puzzle\Theme\ThemeCatalog;
  * quality score, and by theme (a few KB, whatever the export size), then derives the
  * {@see SubsetPlan} that keeps about `target` of them (docs/PUZZLE_IMPORT.md).
  *
- * The subset is balanced: each 100-point rating band keeps its share of the selectable puzzles,
- * the best ones first (popularity, then play count), and every puzzle of a rare theme is kept, so
- * neither strong players nor rare themes run dry.
+ * The subset is balanced: the bands from 2500 are kept whole (strong players' puzzles are few),
+ * the others share the rest of the target in proportion to their selectable puzzles, the bands
+ * below 700 at half weight (beginners have plenty). Within a band, the best ones first
+ * (popularity, then play count), and every puzzle of a rare theme is kept, so neither strong
+ * players nor rare themes run dry.
  */
 final class SubsetPlanner
 {
     public const BAND_WIDTH = 100;
+
+    /** first band kept whole (2500–2599) */
+    public const FULL_FROM_BAND = 25;
+
+    /** the bands below this one (under 700) weigh {@see LOW_WEIGHT} in the share of the target */
+    public const LOW_BELOW_BAND = 7;
+
+    public const LOW_WEIGHT = 0.5;
 
     /** @var array<int, array<int, int>> selectable puzzles by band, then score */
     private array $histogram = [];
@@ -86,19 +96,14 @@ final class SubsetPlanner
         $rareThemes = array_filter($this->themeCounts, static fn (int $count): bool => $count < $rareThemeLimit);
         ksort($rareThemes);
 
-        $thresholds = [];
-        $available = [];
-        $quotas = [];
-        foreach ($this->histogram as $band => $scores) {
-            $available[$band] = array_sum($scores);
-            $quota = $target >= $this->selectable
-                ? $available[$band]
-                : (int) round($target * $available[$band] / $this->selectable);
-            $quotas[$band] = $quota;
-            $thresholds[$band] = self::threshold($scores, $quota);
-        }
+        $available = array_map(array_sum(...), $this->histogram);
         ksort($available);
+        $quotas = $target >= $this->selectable ? $available : self::quotas($available, $target);
         ksort($quotas);
+        $thresholds = [];
+        foreach ($this->histogram as $band => $scores) {
+            $thresholds[$band] = self::threshold($scores, $quotas[$band]);
+        }
 
         return new SubsetPlan(
             $thresholds,
@@ -111,6 +116,53 @@ final class SubsetPlanner
             $this->selectable,
             $this->selectable > 0 ? $this->themeLinks / $this->selectable : 0.0,
         );
+    }
+
+    /**
+     * Puzzles kept by band: the bands from {@see FULL_FROM_BAND} whole, the target's remainder
+     * shared by weight among the others. A band whose weighted share exceeds its stock keeps it
+     * all, and what it leaves is shared again among the rest.
+     *
+     * @param array<int, int> $available selectable puzzles by band
+     *
+     * @return array<int, int>
+     */
+    private static function quotas(array $available, int $target): array
+    {
+        $quotas = [];
+        $weights = [];
+        foreach ($available as $band => $count) {
+            if ($band >= self::FULL_FROM_BAND) {
+                $quotas[$band] = $count;
+                $target -= $count;
+            } else {
+                $weights[$band] = $band < self::LOW_BELOW_BAND ? self::LOW_WEIGHT : 1.0;
+            }
+        }
+        $target = max(0, $target);
+
+        do {
+            $weighted = 0.0;
+            foreach ($weights as $band => $weight) {
+                $weighted += $weight * $available[$band];
+            }
+            $ratio = $weighted > 0.0 ? $target / $weighted : 0.0;
+            $capped = false;
+            foreach ($weights as $band => $weight) {
+                if ($weight * $ratio >= 1.0) {
+                    $quotas[$band] = $available[$band];
+                    $target -= $available[$band];
+                    unset($weights[$band]);
+                    $capped = true;
+                }
+            }
+        } while ($capped);
+
+        foreach ($weights as $band => $weight) {
+            $quotas[$band] = (int) round($ratio * $weight * $available[$band]);
+        }
+
+        return $quotas;
     }
 
     /**
