@@ -1,0 +1,21 @@
+# The Messenger worker (docs/DEPLOY_VPS.md): domain events (outbox) first, then emails, imports and
+# reminders. It stops itself every hour or past 256 MB, and systemd starts it again.
+# Installed by setup.sh as /etc/systemd/system/dontstayrooky-worker.service.
+[Unit]
+Description=Don't Stay Rooky - Messenger worker
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+User=__USER__
+Group=__USER__
+WorkingDirectory=__ROOT__/api
+ExecStart=/usr/bin/php bin/console messenger:consume activity async --time-limit=3600 --memory-limit=256M --no-interaction
+Restart=always
+RestartSec=5
+# A message being handled finishes before the stop (Messenger stops on SIGTERM between two messages).
+KillSignal=SIGTERM
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target

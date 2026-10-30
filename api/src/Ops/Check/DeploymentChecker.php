@@ -99,7 +99,7 @@ final readonly class DeploymentChecker
         $prod = 'prod' === $this->environment;
         $checks[] = self::check('APP_ENV', $prod ? 'ok' : 'warning', $this->environment);
         $scheme = strtolower((string) strtok($this->mailerDsn, ':'));
-        $checks[] = self::check('MAILER_DSN', 'null' === $scheme ? 'warning' : 'ok', $scheme.'://… (mailfunction on the shared host)');
+        $checks[] = self::check('MAILER_DSN', 'null' === $scheme ? 'warning' : 'ok', $scheme.'://… (sendmail on the VPS, mailfunction on the shared host)');
         $checks[] = self::check('FRONTEND_URL', str_starts_with($this->frontendUrl, 'https://') ? 'ok' : 'warning', $this->frontendUrl);
         $checks[] = self::check('DEFAULT_URI', str_starts_with($this->defaultUri, 'https://') ? 'ok' : 'warning', $this->defaultUri);
         $checks[] = self::check('REFRESH_COOKIE_SECURE', $this->secureCookies ? 'ok' : 'warning', $this->secureCookies ? 'on' : 'off');

@@ -1,0 +1,10 @@
+#!/bin/sh
+# The only root commands the deploy user may run (sudo, no password), called by deploy.sh.
+# Installed by setup.sh as /usr/local/sbin/dontstayrooky-ctl, __PHPV__ replaced.
+set -e
+case "${1:-}" in
+  worker-stop) systemctl stop dontstayrooky-worker.service ;;
+  worker-start) systemctl start dontstayrooky-worker.service ;;
+  reload-php) systemctl reload php__PHPV__-fpm.service ;;
+  *) echo "usage: $0 worker-stop|worker-start|reload-php" >&2; exit 2 ;;
+esac

@@ -1,5 +1,5 @@
-# Apache (OVH shared hosting, docs/DEPLOY_OVH.md): the built SPA, static files only (hash router:
-# no route rewriting). index.html and the service worker are always revalidated; the hashed assets of a
+# Apache (the VPS, docs/DEPLOY_VPS.md): the built SPA, static files only (hash router: no route
+# rewriting). index.html and the service worker are always revalidated; the hashed assets of a
 # build never change, so they are cached for a year.
 
 # The bare domain points at this folder too: sent to www., the SPA's only origin (the API's CORS).

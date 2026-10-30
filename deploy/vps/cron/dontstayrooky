@@ -1,0 +1,12 @@
+# Scheduled tasks of the VPS (docs/DEPLOY_VPS.md), in UTC (the server's time zone).
+# Installed by setup.sh as /etc/cron.d/dontstayrooky. Output goes to the journal:
+# journalctl -t dontstayrooky-cron
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Every minute: due reminders (sessions, streaks in danger) and the next announcement emails, queued
+# for the worker. flock: never two at once.
+* * * * * __USER__ cd __ROOT__/api && flock -n var/send-reminders.lock php bin/console app:training:send-reminders --no-interaction 2>&1 | logger -t dontstayrooky-cron
+
+# Daily, off-peak: caches, due account deletions, explorer stats, tablebase answers (bin/cron-daily.php).
+30 3 * * * __USER__ cd __ROOT__/api && php bin/cron-daily.php 2>&1 | logger -t dontstayrooky-cron

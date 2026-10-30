@@ -1,5 +1,8 @@
 # Déploiement sur un hébergement mutualisé OVH
 
+> Depuis le 2026-10-30, la production tourne sur un VPS : docs/DEPLOY_VPS.md. Cette page reste la
+> référence des trois bases (§ 3) et de l'import du catalogue, que le VPS reprend.
+
 La production tourne sur un hébergement **mutualisé OVH (offre Pro)**. Cette offre a cinq
 contraintes :
 

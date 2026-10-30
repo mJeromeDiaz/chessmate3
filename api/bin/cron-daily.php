@@ -1,13 +1,13 @@
 <?php
 
 /*
- * Daily tasks of the OVH shared host (docs/DEPLOY_OVH.md): OVH's scheduled tasks run a PHP script,
- * not a shell command, so this one runs the console commands a crontab would run daily:
+ * Daily tasks, one PHP script (OVH's shared host only ran scripts, docs/DEPLOY_OVH.md), which runs
+ * the console commands in turn:
  *   cache:pool:prune   expired Lichess explorer and cloud-eval answers
  *   app:account:purge  accounts whose deletion is due (docs/AUTH.md)
  *   app:repertoire:refresh-opening-stats  the explorer's first moves, rows older than 30 days (docs/REPERTOIRE.md)
  *   app:endgame:prune-tablebase  tablebase answers unread for 90 days (docs/ENDGAMES.md)
- * Scheduled in the OVH manager: script `<dir>/api/bin/cron-daily.php`, PHP 8.3, daily.
+ * Scheduled on the VPS by /etc/cron.d/dontstayrooky (deploy/vps/cron/dontstayrooky, docs/DEPLOY_VPS.md).
  */
 
 declare(strict_types=1);

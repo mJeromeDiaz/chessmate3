@@ -1,5 +1,5 @@
-# Apache (OVH shared hosting, docs/DEPLOY_OVH.md): every request that is not a real file goes to
-# the front controller. After symfony/apache-pack's recipe.
+# Apache (the VPS, docs/DEPLOY_VPS.md): every request that is not a real file goes to the front
+# controller. After symfony/apache-pack's recipe.
 DirectoryIndex index.php
 
 <IfModule mod_negotiation.c>
