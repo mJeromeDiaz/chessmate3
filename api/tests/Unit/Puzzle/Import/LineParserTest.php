@@ -47,6 +47,15 @@ final class LineParserTest extends TestCase
         self::assertFalse($row->isSelectable());
     }
 
+    public function testATimestampDailyDateBecomesItsUtcDay(): void
+    {
+        $line = self::LINE;
+        $line[9] = '';
+        $line[10] = '1608386149791';   // 2020-12-19T13:55:49.791Z, as recent exports give it
+
+        self::assertSame('2020-12-19', LineParser::parse($line)->dailyDate);
+    }
+
     public function testNineColumnsAreEnough(): void
     {
         self::assertNull(LineParser::parse(\array_slice(self::LINE, 0, 9))->openingTags);
@@ -68,6 +77,7 @@ final class LineParserTest extends TestCase
         yield 'negative play count' => [6, '-1'];
         yield 'theme with a quote' => [7, 'mate "x"'];
         yield 'not a Lichess URL' => [8, 'https://example.org/n8Ff742v'];
+        yield 'daily date neither a day nor a timestamp' => [10, '19/12/2020'];
     }
 
     #[DataProvider('invalidFields')]

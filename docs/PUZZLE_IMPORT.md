@@ -36,7 +36,7 @@ des dossiers (leurs `*.csv`, dans l'ordre naturel) et s'adapte à chaque fichier
 | 8 | Themes | `mate mateIn2 middlegame short` | Clés de thèmes séparées par des espaces |
 | 9 | GameUrl | `https://lichess.org/yyznGmXs/black#34` | Partie d'origine |
 | 10 | OpeningTags | `Benoni_Defense Benoni_Defense_Benoni-Indian_Defense` | Souvent vide, séparés par des espaces (lettres, chiffres, `_`, `-`) |
-| 11 | DailyDate | | Souvent vide (absente des exports anciens) |
+| 11 | DailyDate | `1608386149791` | Le jour où le puzzle était « puzzle du jour » sur Lichess. Souvent vide, absente des exports anciens. Les exports récents donnent un horodatage Unix en millisecondes, les anciens `AAAA-MM-JJ` |
 
 Chaque ligne est validée (`App\Puzzle\Import\LineParser`) : id de 5 caractères alphanumériques, FEN
 bien formée et de 92 caractères au plus, au moins deux coups UCI, nombres dans les bornes des colonnes,
@@ -60,7 +60,7 @@ Table `puzzle` :
 | `themes` | `JSON` | Themes | `"a b c"` → `["a","b","c"]` ; vide → `[]` |
 | `opening_tags` | `JSON NULL` | OpeningTags | même découpage ; vide → `NULL` |
 | `game_url` | `VARCHAR(255)` | GameUrl | telle quelle |
-| `daily_date` | `DATE NULL` | DailyDate | vide → `NULL` |
+| `daily_date` | `DATE NULL` | DailyDate | vide → `NULL` ; horodatage en millisecondes → son jour UTC (`1608386149791` → `2020-12-19`) |
 | `random_key` | `INT UNSIGNED` | — | **dérivée** : aléatoire uniforme sur [0, 2³²) |
 | `selectable` | `TINYINT(1)` | — | **dérivée** : `popularity >= 50 AND nb_plays >= 100` (`App\Puzzle\Selection\Quality`) |
 

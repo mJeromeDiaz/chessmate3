@@ -18,6 +18,8 @@ final class LineParser
     /** Theme keys and opening tags: letters, digits, `_` and `-` ("Benoni-Indian_Defense"). */
     private const KEYS = '/^[\w-]+( [\w-]+)*$/';
     private const DATE = '/^\d{4}-\d{2}-\d{2}$/';
+    /** Recent exports give the daily date as a Unix timestamp in milliseconds (1608386149791). */
+    private const TIMESTAMP_MS = '/^\d{12,13}$/';
 
     /**
      * @param list<string|null> $fields PuzzleId, FEN, Moves, Rating, RatingDeviation, Popularity,
@@ -49,6 +51,9 @@ final class LineParser
             throw new InvalidLineException('game URL');
         }
         $dailyDate = $field(10);
+        if (1 === preg_match(self::TIMESTAMP_MS, $dailyDate)) {
+            $dailyDate = gmdate('Y-m-d', intdiv((int) $dailyDate, 1000));
+        }
         if ('' !== $dailyDate && 1 !== preg_match(self::DATE, $dailyDate)) {
             throw new InvalidLineException('daily date');
         }

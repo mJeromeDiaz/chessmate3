@@ -43,7 +43,7 @@ Tout est dans `deploy/vps/`. Les modèles portent des marqueurs (`__DOMAIN__`, `
 | `apache/dontstayrooky-https.conf` | `/etc/apache2/sites-available/` | port 443 : `www.` (le SPA), le domaine nu (redirigé vers `www.`), `api.` (PHP-FPM) |
 | `php/fpm-pool.conf` | `/etc/php/8.5/fpm/pool.d/dontstayrooky.conf` | le pool de l'API, sous l'utilisateur `deploy` |
 | `php/dontstayrooky.ini` | `/etc/php/8.5/{fpm,cli}/conf.d/90-dontstayrooky.ini` | UTC, OPcache sans revalidation |
-| `mysql/dontstayrooky.cnf` | `/etc/mysql/mysql.conf.d/90-dontstayrooky.cnf` | écoute locale, buffer pool de 1 Go |
+| `mysql/dontstayrooky.cnf` | `/etc/mysql/mysql.conf.d/90-dontstayrooky.cnf` | écoute locale, buffer pool de 1,5 Go |
 | `systemd/dontstayrooky-worker.service` | `/etc/systemd/system/` | le worker |
 | `cron/dontstayrooky` | `/etc/cron.d/dontstayrooky` | rappels chaque minute, tâches quotidiennes à 3 h 30 UTC |
 | `bin/dontstayrooky-ctl` | `/usr/local/sbin/` | les seules commandes root permises à `deploy` (`sudo`, sans mot de passe) |
@@ -74,7 +74,7 @@ réécriture des routes du SPA) sont celles du mutualisé (docs/DEPLOY_OVH.md, �
 
 | Poste | Réglage | Ordre de grandeur |
 |---|---|---|
-| MySQL | `innodb_buffer_pool_size = 1G`, `max_connections = 60` | ~1,4 Go |
+| MySQL | `innodb_buffer_pool_size = 1536M`, `max_connections = 60` | ~1,9 Go |
 | PHP-FPM | 12 processus au plus, `memory_limit` 256 Mo | ~0,7 Go en pratique |
 | Worker | `--memory-limit=256M`, relancé chaque heure | ≤ 0,3 Go |
 | Apache, Postfix, système | — | ~0,4 Go |
@@ -200,19 +200,26 @@ au mot de passe public.
 
 ### h. Le catalogue de puzzles et les finales
 
-L'import suit docs/DEPLOY_OVH.md, § 3, « Importer le catalogue chez OVH ». Seuls changent les
-chemins et le PHP :
+L'import suit docs/DEPLOY_OVH.md, § 3, « Importer le catalogue chez OVH ». Une différence : le VPS
+télécharge lui-même l'export du mois. C'est un fichier statique de `database.lichess.org`, pas l'API
+limitée. Le CLI tourne sans limite de mémoire (`memory_limit = -1`).
+
+**3 M puzzles** au lieu des 1,5 M du mutualisé (`--target`), soit environ 1,3 Go, avec un plafond
+relevé en conséquence (`--max-size`). Le catalogue garde ainsi deux fois plus de variété dans chaque
+tranche de classement et chaque thème. Monter encore plus tard ne coûte rien : l'import ajoute les
+puzzles manquants sans toucher aux autres. Descendre est impossible, aucun puzzle n'étant supprimé.
+Ces options sont à remettre à chaque import mensuel.
 
 ```bash
-# sur votre machine
-tar czf puzzles.tar.gz -C <dossier parent> puzzles
-scp puzzles.tar.gz deploy@<ip>:/srv/dontstayrooky/
+sudo apt-get install -y zstd                     # une fois, en ubuntu
 
-# sur le serveur
-cd /srv/dontstayrooky && tar xzf puzzles.tar.gz && rm puzzles.tar.gz
-cd api
-php -d memory_limit=1G bin/console app:puzzle:import ../puzzles --dry-run
-nohup php -d memory_limit=1G bin/console app:puzzle:import ../puzzles --rebuild > ../import.log 2>&1 &
+# en deploy
+mkdir -p /srv/dontstayrooky/puzzles && cd /srv/dontstayrooky/puzzles
+curl -fL --progress-bar -O https://database.lichess.org/lichess_db_puzzle.csv.zst
+zstd -d --rm lichess_db_puzzle.csv.zst           # ~270 Mo → ~1 Go
+cd ../api
+php bin/console app:puzzle:import ../puzzles --target=3000000 --max-size=1600 --dry-run 2>/dev/null
+nohup php bin/console app:puzzle:import ../puzzles --target=3000000 --max-size=1600 --rebuild > ../import.log 2>&1 &
 tail -f ../import.log
 ```
 
