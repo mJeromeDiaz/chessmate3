@@ -85,6 +85,11 @@ describe('session catalogue', () => {
     for (const prof of Object.values(PROFS)) {
       expect(MODULES_BY_ID[prof.cta.module]).toBeDefined()
     }
+    // Ray: visualisation's modules.
+    for (const id of ['aveugle', 'coordonnees', 'notation', 'reconstitution']) {
+      expect(MODULES_BY_ID[id].profSlug).toBe('ray')
+      expect(MODULES_BY_ID[id].image).not.toBe('')
+    }
   })
 
   it('gives every field a default within its range or options', () => {

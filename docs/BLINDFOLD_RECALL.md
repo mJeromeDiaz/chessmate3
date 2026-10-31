@@ -5,7 +5,7 @@
 La **reconstitution** (« jeu à l'aveugle 2 ») prépare à jouer à l'aveugle et à visualiser : une
 position s'affiche quelques secondes, disparaît, puis le joueur **replace toutes les pièces** de
 mémoire sur un échiquier vide, avec une réserve des pièces des deux camps. Il indique quand il a
-fini, et le serveur corrige case par case. Prof : **Noctis**, comme le jeu à l'aveugle
+fini, et le serveur corrige case par case. Prof : **Ray**, comme le jeu à l'aveugle
 ([BLINDFOLD.md](BLINDFOLD.md)).
 
 Choix validés (2026-10-19) :
@@ -195,7 +195,7 @@ Les essais sont exportés avec le compte (`entrainement.json`, `blindfoldRecallA
   « Niveau n → » arrête la séance et en lance une libre de ce niveau.
 - **Fin de séance** : lignes du récapitulatif (niveau, exactes / proches / ratées, précision, niveau
   débloqué) ; dans « À revoir », « Niveau n · 4/7 pièces », sans rejeu.
-- **Session Builder** : la carte « Reconstitution » (Noctis), durée (5 à 60 min) et niveau (« Mon
+- **Session Builder** : la carte « Reconstitution » (Ray), durée (5 à 60 min) et niveau (« Mon
   niveau » par défaut, ou 1 à 20).
 
 ## 7. Tests

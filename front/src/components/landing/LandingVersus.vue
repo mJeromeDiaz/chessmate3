@@ -1,5 +1,9 @@
 <template>
-  <section id="versus" class="landing-section" data-testid="landing-versus">
+  <section
+    id="versus"
+    class="landing-section landing-section--bleed"
+    data-testid="landing-versus"
+  >
     <div class="landing-section__inner">
       <div class="landing-versus__heading">
         <div class="landing-kicker">{{ $t('landing.versus.kicker') }}</div>
@@ -22,7 +26,7 @@
               :key="prof.slug"
               :to="`/prof/${prof.slug}`"
               class="landing-versus__card landing-versus__card--prof"
-              :style="{ background: prof.colors.bg }"
+              :style="{ background: prof.colors.bg, color: prof.colors.ink }"
               :data-testid="`landing-prof-${prof.slug}`"
             >
               <div class="landing-versus__glow" />
@@ -93,14 +97,19 @@ import {
 } from '@/utils/landing/content'
 
 /**
- * The professors who help (each card opens their public profile) facing the bosses of the paths.
- * Side by side on a wide screen, stacked below 900 px, the "VS" badge on the seam.
+ * The four professors who help (each card opens their public profile) facing four bosses of the
+ * paths, two by two. Side by side on a wide screen, stacked below 900 px, the "VS" badge on the
+ * seam; edge to edge on a phone (design "Landing mobile").
  */
 </script>
 
 <style scoped lang="scss">
 .landing-versus__heading {
   max-width: 700px;
+
+  @media (max-width: $breakpoint-xs-max) {
+    padding: 0 16px;
+  }
 }
 
 .landing-versus {
@@ -112,6 +121,10 @@ import {
   @media (max-width: 899px) {
     flex-direction: column;
   }
+
+  @media (max-width: $breakpoint-xs-max) {
+    border-radius: 0;
+  }
 }
 
 .landing-versus__side {
@@ -121,6 +134,14 @@ import {
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  @media (max-width: $breakpoint-xs-max) {
+    padding: 18px 12px 30px;
+
+    &--bosses {
+      padding-top: 44px;
+    }
+  }
 
   &--profs {
     background: #eee9ff;
@@ -167,15 +188,19 @@ import {
 
 .landing-versus__cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+
+  @media (max-width: $breakpoint-xs-max) {
+    gap: 8px;
+  }
 }
 
 .landing-versus__card {
   position: relative;
   overflow: hidden;
   border-radius: 22px;
-  height: 280px;
+  height: 260px;
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -184,16 +209,16 @@ import {
   text-decoration: none;
 
   @media (max-width: $breakpoint-xs-max) {
-    height: 220px;
-    padding: 10px;
+    height: 240px;
+    padding: 12px;
+    border-radius: 18px;
   }
 
+  // The text colour is the professor's own (`ink`), set on the card.
   &--prof {
-    color: #1b1530;
     transition: transform 0.12s ease;
 
     &:hover {
-      color: #1b1530;
       transform: translateY(-2px);
     }
 
@@ -223,21 +248,21 @@ import {
   position: absolute;
   left: 50%;
   top: 10px;
-  height: 200px;
+  height: 190px;
   max-width: 100%;
   object-fit: contain;
   transform: translateX(-50%);
 
   @media (max-width: $breakpoint-xs-max) {
-    height: 150px;
+    height: 176px;
   }
 
   // Aaron is drawn with long legs: taller, so his head stays the size of the others'.
   &--long {
-    height: 250px;
+    height: 236px;
 
     @media (max-width: $breakpoint-xs-max) {
-      height: 190px;
+      height: 216px;
     }
   }
 }
@@ -248,7 +273,7 @@ import {
   line-height: 1;
 
   @media (max-width: $breakpoint-xs-max) {
-    font-size: 16px;
+    font-size: 18px;
   }
 }
 
@@ -260,7 +285,7 @@ import {
   text-transform: uppercase;
 
   @media (max-width: $breakpoint-xs-max) {
-    font-size: 9.5px;
+    font-size: 10.5px;
   }
 
   &--boss {
@@ -312,5 +337,11 @@ import {
   font-size: 14px;
   color: var(--cm-muted);
   text-align: right;
+
+  @media (max-width: $breakpoint-xs-max) {
+    margin: 0;
+    padding: 0 16px;
+    text-align: left;
+  }
 }
 </style>

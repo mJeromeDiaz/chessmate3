@@ -189,6 +189,15 @@ $panel: #1f1a2e;
     outline: 3px solid $pink;
     outline-offset: 2px;
   }
+
+  // Full width on a phone (design "Landing mobile").
+  @media (max-width: $breakpoint-xs-max) {
+    align-self: stretch;
+    justify-content: center;
+    height: 50px;
+    border-radius: 16px;
+    font-size: 15px;
+  }
 }
 
 .landing-paths__chapter {

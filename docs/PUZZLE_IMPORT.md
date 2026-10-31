@@ -99,7 +99,7 @@ bin/console app:puzzle:import <fichiers ou dossiers…> [--dry-run] [--rebuild]
     [--target=1500000] [--rare-theme=2000] [--max-size=900]
 ```
 
-Deux passes sur les fichiers, en mémoire constante (une ligne à la fois) :
+Deux passes sur les fichiers (trois si le catalogue n'est pas vide), en mémoire constante (une ligne à la fois) :
 
 1. **Comptage** : nombre de puzzles sélectionnables par tranche et par note de qualité, par thème
    (quelques Ko), d'où les seuils de chaque tranche. Rapport : lignes valides et invalides, puzzles
@@ -107,7 +107,10 @@ Deux passes sur les fichiers, en mémoire constante (une ligne à la fois) :
    inconnues** de `App\Puzzle\Theme\ThemeCatalog` (un nouveau thème Lichess à y ajouter), et **taille
    estimée** du catalogue (`App\Puzzle\Import\SizeEstimate` : 292 octets par puzzle, 38 par ligne
    d'appartenance, mesurés sur l'import réel). Au-delà de `--max-size` (Mo), la commande **refuse**
-   d'écrire.
+   d'écrire. Quand le catalogue contient déjà des puzzles, une passe intermédiaire relit les
+   fichiers et cherche, par paquets de 1 000 ids, les puzzles gardés **qui lui manquent** : seuls
+   ceux-là font grossir la base, l'estimation n'ajoute qu'eux aux puzzles déjà présents (sans
+   cela, un import mensuel compterait deux fois tout le catalogue).
 2. **Écriture** (sauf `--dry-run`) : `INSERT … ON DUPLICATE KEY UPDATE` sur `lichess_id`, par paquets
    de 1 000 lignes (`App\Puzzle\Import\PuzzleWriter`). Un puzzle déjà présent garde son `id` (que
    les tentatives et les sets Woodpecker référencent) et sa `random_key` ; seuls `rating`,

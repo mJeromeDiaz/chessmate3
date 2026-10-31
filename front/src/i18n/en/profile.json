@@ -66,7 +66,7 @@
     "current": "Current password",
     "new": "New password",
     "newHint": "12 characters minimum. Your other sessions and trusted devices will be revoked.",
-    "min": "12 characters minimum",
+    "tooWeak": "Not strong enough: 12 characters minimum, make it longer with different characters",
     "change": "Change password",
     "addIntro": "Add a password to also sign in with your email. A verification code will be sent to you by email at each sign-in.",
     "emailHint": "We'll send you a link to confirm it.",

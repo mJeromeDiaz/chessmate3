@@ -26,7 +26,8 @@ Choix validés (2026-10-13) :
   (`TourVisitorEnd`) montre les points de départ sans les faire choisir, « Créer mon compte »
   (`/register`) et « J'ai déjà un compte · Connexion ».
 - **Ray** (prof des parties à l'aveugle, présenté plus tard) : un écran « mystère », cavalier dans
-  l'ombre, avec À l'aveugle et Coordonnées. Analyse de parties est marquée « Bientôt ».
+  l'ombre, avec À l'aveugle et Coordonnées. Il reste mystère ici même depuis qu'il a sa fiche
+  (`/prof/ray`, la landing et ses modules le montrent, docs/DASHBOARD.md § 3 quater). Analyse de parties est marquée « Bientôt ».
 - **Parcours ludique mis en avant** (2026-10-24, maquette « Visite guidée », écrans « Tes pires
   ennemis » et « Ta carte d'aventure ») : un segment « Les boss » puis un segment « Ta carte »
   avant le plan ; la galerie des boss **sans compteur ni points** (on doit croire qu'il y en a

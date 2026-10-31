@@ -177,7 +177,7 @@ question au-dessus d'un échiquier vide : un clic (`where`, `en_prise`), une pi�
 la case demandée en surbrillance, les cases choisies marquées). Le verdict montre la position
 atteinte : bonnes cases en vert, mauvais clics en rouge. Juste, la question suivante vient seule ;
 ratée, elle attend « Suivant ». En tête : « Question n sur N », les cœurs d'un boss, « Terminer ».
-Prof : Noctis.
+Prof : Ray.
 
 ## 6. Dans la carte mentale
 

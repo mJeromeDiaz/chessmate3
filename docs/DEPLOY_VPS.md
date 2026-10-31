@@ -211,7 +211,8 @@ tranche de classement et chaque thème. Sur l'export d'octobre 2026 : tout au-de
 premier import, fait avant cette répartition, a gardé ~218 000 puzzles sous 700 qui restent ; les
 imports suivants ajoutent ceux de 2500 et plus qui manquent. Monter encore plus tard ne coûte rien : l'import ajoute les
 puzzles manquants sans toucher aux autres. Descendre est impossible, aucun puzzle n'étant supprimé.
-Ces options sont à remettre à chaque import mensuel.
+Ces options sont à remettre à chaque import mensuel ; le plafond n'ajoute aux puzzles déjà en base
+que ceux qui leur manquent (docs/PUZZLE_IMPORT.md, § 4).
 
 ```bash
 sudo apt-get install -y zstd                     # une fois, en ubuntu

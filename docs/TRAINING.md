@@ -242,7 +242,7 @@ Woodpecker liste ses séances (`runs`).
   réussie, la suivante seule (1,2 s) ; ratée, « Suivant ». Puzzle à l'aveugle : toujours
   « Suivant ».
 - Fin d'exercice (design « Animation Puzzle », `components/feedback/`) : le prof du module (Albert
-  pour les puzzles et Woodpecker, Aaron pour le répertoire, Noctis pour l'aveugle) parle dans une
+  pour les puzzles et Woodpecker, Aaron pour le répertoire, Ray pour l'aveugle) parle dans une
   bulle au-dessus du jeu (`ProfBubble` : consigne, indice, puis sa réaction) ; à la fin, une feuille
   de résultat monte (`ResultSheet`, dans le panneau de droite, en bas de l'écran sous 800 px) :
   juste (vert, pion promu en dame, confettis), juste avec aide (jaune, un indice ou un coup d'œil,

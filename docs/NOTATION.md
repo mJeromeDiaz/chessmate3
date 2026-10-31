@@ -99,7 +99,7 @@ Choix validés (2026-10-20) :
   Coordonnées) : les trois exercices (cartes à choisir), les lettres des pièces de la langue, une
   séance de 2, 5, 10 ou 15 minutes (`RunLauncher`) ; lien vers la carte mentale.
 - **Lecteur** `components/notation/NotationPlayer.vue` (sur `/training/{id}`, élément `notation`) :
-  le prof Noctis, l'échiquier au trait du joueur. `play` : le coup annoncé en grand au-dessus de
+  le prof Ray, l'échiquier au trait du joueur. `play` : le coup annoncé en grand au-dessus de
   l'échiquier ; `sequence` : la ligne numérotée, le coup à jouer surligné, chaque coup jugé tout
   de suite (le premier faux finit la suite) ; `write` : un champ, les touches des pièces de la
   langue, `x + # = O-O O-O-O` et ⌫, « Valider ». Faux : l'échiquier revient avant le coup, la
@@ -116,7 +116,7 @@ Choix validés (2026-10-20) :
 - **Langue** (`utils/notation.js`) : `localSan` (l'API → l'écran), `englishSan` (la saisie →
   l'API ; seules les capitales sont des pièces, `0-0` devient `O-O`), `numberedLine`
   (« 12… Fxe4 13. Dd1 »).
-- **Session Builder** : carte « Notation » (prof Noctis), réglage « Exercice ». Fin de séance :
+- **Session Builder** : carte « Notation » (prof Ray), réglage « Exercice ». Fin de séance :
   « Retour à la notation » ; une leçon comptée finie : « Leçon terminée ».
 - **Carte mentale** : module associé de la visualisation.
 

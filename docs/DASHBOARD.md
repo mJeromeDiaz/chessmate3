@@ -172,6 +172,32 @@ barre Connexion / Inscription / thème ; la landing et les écrans d'authentific
   n'est plus dans l'en-tête (courbe de `/stats`, pages puzzles).
 - Tests : Vitest `pageHeader.test.js`, `navigation.test.js` ; Playwright `navigation.spec.js`.
 
+## 3 quater. Landing des visiteurs (maquettes « Landing v3 » et « Landing mobile », 2026-10-31)
+
+`components/landing/*`, contenu dans `utils/landing/content.js` (valeurs de vitrine, jamais les
+données d'un joueur ; modules et réglages pris dans le catalogue du constructeur de séance).
+
+- **En-tête** (`LandingHeader`) : sur PC, les ancres, la langue, le thème, Connexion et Commencer.
+  Sur téléphone, la marque, Commencer et un burger qui ouvre un menu sombre plein écran (rendu sous
+  `body` : le flou de l'en-tête retiendrait un élément fixe) : ancres numérotées 01 à 04, langue,
+  thème, « Continuer avec Lichess » et « J'ai déjà un compte ».
+- **Hero** : les slogans, la visite guidée (sans icône), les parcours, les **quatre profs** en bas
+  (`HERO_CAST` : Lizy, Ray, Aaron, Albert).
+- **Modules** : « Une vingtaine de modules. Une infinité de réglages. » ; ordre `LANDING_ORDER`
+  (Brillant ou Blunder et Woodpecker en tête, Puzzle streak et Puzzle rush entre l'aveugle et la
+  reconstitution), puis les modules **annoncés sur la landing seulement** (`UPCOMING_MODULES`, «
+  Bientôt » : Bond du cavalier, Structures de pions, Parties célèbres, Gestion du temps) ; ils
+  n'entrent dans le catalogue du constructeur qu'une fois jouables.
+- **Séance d'exemple** : À l'aveugle (Ray), puzzles, évaluation, finales.
+- **Profs vs boss** : quatre profs (Ray compris, `/prof/ray`) face à quatre boss (Jongleur, Requin,
+  Gargouille, Cavalier sans tête), deux par deux ; bord à bord sur téléphone.
+- **Téléphone** : boutons des parcours, des séances et de l'appel final en pleine largeur ; la
+  section verte finale bord à bord, sans coins arrondis.
+
+Ray est un prof à part entière (`utils/prof/profs.js`, maquette « Prof Ray » : le Virtuose) : À
+l'aveugle, Coordonnées, Notation et Reconstitution sont ses modules. Il reste un **mystère** dans la
+visite guidée et dans l'arène jusqu'à son exploit (docs/ONBOARDING.md, docs/ARENA.md).
+
 ## 4. Écarts avec la maquette
 
 - « Bonjour Léa » : l'application ne connaît pas de prénom (seulement l'adresse e-mail) ; la page dit

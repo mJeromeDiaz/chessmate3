@@ -198,7 +198,7 @@ function configured(id, values) {
  * An example session ("Ta séance"): catalogue modules with real settings, then the length of each.
  */
 export const EXAMPLE_PROGRAM = [
-  ['coordonnees', { mode: 'find', orientation: 'black' }, { duree: 2 }],
+  ['aveugle', { niveau: 'medium', longueur: 3 }, { duree: 5 }],
   ['puzzles', { themes: ['fork', 'pin'] }, { duree: 20 }],
   ['evaluation', { elo: 1700, couleur: 'white' }, { duree: 5 }],
   ['finales', { mode: 'review', themes: ['rooks'] }, { duree: 15 }]
@@ -234,12 +234,61 @@ export const SESSION_SETTINGS = [
 }))
 
 /**
- * The modules of the app: the session builder's, then those played on their own page. The free
- * study (a book, a video: time noted, nothing played in the app) is left out.
+ * The order of the app's modules on the page: Brillant ou Blunder and Woodpecker brought forward,
+ * the streak and the rush between the blindfold and the recall. The free study (a book, a video:
+ * time noted, nothing played in the app) is left out.
  */
-export const LANDING_MODULES = [...MODULES, ...OWN_PAGE_MODULES].filter(
-  m => m.id !== 'libre'
-)
+const LANDING_ORDER = [
+  'finales',
+  'puzzles',
+  'brillant',
+  'woodpecker',
+  'repertoire',
+  'evaluation',
+  'analyse',
+  'coordonnees',
+  'notation',
+  'aveugle',
+  'streak',
+  'rush',
+  'reconstitution',
+  'parcours'
+]
+
+/**
+ * Modules announced on this page only (not in the session builder until they exist), tagged
+ * "Bientôt".
+ */
+const UPCOMING_MODULES = [
+  ['knightJump', '♘︎', '#FF8A3D', '#1B1530'],
+  ['pawnStructures', '♟︎', '#C6F432', '#1B1530'],
+  ['famousGames', '♔︎', '#FFD43B', '#1B1530'],
+  ['timeManagement', '♙︎', '#4FB2FF', '#1B1530']
+].map(([key, glyph, bg, ink]) => ({
+  id: key,
+  glyph,
+  bg,
+  ink,
+  available: false,
+  get title() {
+    return t(`landing.modules.upcoming.${key}`)
+  }
+}))
+
+/**
+ * The modules shown: the app's (the session builder's, then those played on their own page) in
+ * {@link LANDING_ORDER}, then the upcoming ones.
+ *
+ * @type {{id: string, glyph: string, bg: string, ink: string, available: boolean, title: string}[]}
+ */
+export const LANDING_MODULES = [
+  ...LANDING_ORDER.map(id => {
+    const module = [...MODULES, ...OWN_PAGE_MODULES].find(m => m.id === id)
+    if (!module) throw new Error(`No module ${id}`)
+    return module
+  }),
+  ...UPCOMING_MODULES
+]
 
 /**
  * The scrolling rows of the modules section: real modules with real settings, three rows. Modules
@@ -289,11 +338,11 @@ export function variantRows(rows) {
 }
 
 /**
- * The professors' cards, in the design's order.
+ * The professors' cards, in the design's order, Ray last.
  *
  * @type {import('@/utils/prof/profs').Prof[]}
  */
-export const LANDING_PROFS = ['lizy', 'aaron', 'albert-stein'].map(
+export const LANDING_PROFS = ['lizy', 'aaron', 'albert-stein', 'ray'].map(
   slug => PROFS[slug]
 )
 
@@ -308,7 +357,12 @@ export function profRole(prof) {
 }
 
 /** The keys of the professors' texts (`profs.<key>.*`). */
-const PROF_KEYS = { lizy: 'lizy', 'albert-stein': 'albert', aaron: 'aaron' }
+const PROF_KEYS = {
+  lizy: 'lizy',
+  'albert-stein': 'albert',
+  aaron: 'aaron',
+  ray: 'ray'
+}
 
 /**
  * The bosses facing the professors: their picture standing, their card's colours.
@@ -318,7 +372,8 @@ const PROF_KEYS = { lizy: 'lizy', 'albert-stein': 'albert', aaron: 'aaron' }
 export const LANDING_BOSSES = [
   ['jongleur', '#2B1630', 'rgba(230, 70, 60, 0.45)'],
   ['requin', '#12283A', 'rgba(79, 178, 255, 0.45)'],
-  ['gargouille', '#2A2347', 'rgba(160, 140, 230, 0.5)']
+  ['gargouille', '#2A2347', 'rgba(160, 140, 230, 0.5)'],
+  ['cavalier', '#22141A', 'rgba(240, 120, 40, 0.42)']
 ].map(([key, dark, glow]) => ({
   key,
   image: standingImage(key),
@@ -340,10 +395,36 @@ export function lichessPerks() {
 /** Illustrations; '' when the picture is not in src/assets/profs (the image is then hidden). */
 export const LANDING_IMAGES = {
   albertFull: profImage('albert-full'),
+  lizyFull: profImage('lizy-full'),
+  aaronFull: profImage('aaron-full'),
+  rayFull: profImage('ray-pose'),
   aaronWink: profImage('aaron-wink'),
   lizyJoy: profImage('lizy-joy'),
   albertJoy: profImage('albert-joy')
 }
+
+/**
+ * The four professors at the bottom of the hero: Lizy and Albert at the sides, Ray and Aaron in
+ * front (x: centre in % of the strip, height in % of it). A missing picture is left out.
+ */
+export const HERO_CAST = [
+  { name: 'Lizy', image: LANDING_IMAGES.lizyFull, x: 15, height: 72 },
+  {
+    name: 'Ray',
+    image: LANDING_IMAGES.rayFull,
+    x: 39,
+    height: 88,
+    front: true
+  },
+  {
+    name: 'Aaron',
+    image: LANDING_IMAGES.aaronFull,
+    x: 63,
+    height: 96,
+    front: true
+  },
+  { name: 'Albert Stein', image: LANDING_IMAGES.albertFull, x: 86, height: 74 }
+].filter(p => p.image)
 
 /** The hero's title: the slogans, shown in turn ({@link HERO_SLOGAN_INTERVAL_MS} each). */
 export const HERO_SLOGANS = [

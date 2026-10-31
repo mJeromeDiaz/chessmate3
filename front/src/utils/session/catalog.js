@@ -498,14 +498,14 @@ export const MODULES = [
   }),
   defineModule({
     id: 'coordonnees',
-    ...noCard('Noctis'),
+    ...byProf('ray'),
     glyph: glyph('♙'),
     available: true,
-    bg: '#4A3D86',
-    ink: '#FFFFFF',
-    soft: '#E7E4F2',
-    deep: '#2B2250',
-    accentInk: '#4A3D86',
+    bg: '#4FC3F7',
+    ink: '#1B1530',
+    soft: '#E1F4FD',
+    deep: '#1E88C8',
+    accentInk: '#0B6A9E',
     fields: [
       field(
         { key: 'duree', type: 'durationChoice', default: 0 },
@@ -524,14 +524,14 @@ export const MODULES = [
   }),
   defineModule({
     id: 'notation',
-    ...noCard('Noctis'),
+    ...byProf('ray'),
     glyph: glyph('♗'),
     available: true,
-    bg: '#5B4BA6',
-    ink: '#FFFFFF',
-    soft: '#ECE8F7',
-    deep: '#3D2F73',
-    accentInk: '#4A3D86',
+    bg: '#2ED3A8',
+    ink: '#1B1530',
+    soft: '#DDF7EF',
+    deep: '#0FA582',
+    accentInk: '#0B7A60',
     fields: [
       duration(10, MAX_RUN_MINUTES),
       one(
@@ -546,7 +546,7 @@ export const MODULES = [
   }),
   defineModule({
     id: 'aveugle',
-    ...noCard('Noctis'),
+    ...byProf('ray'),
     glyph: glyph('♘'),
     available: true,
     bg: '#2B2250',
@@ -570,14 +570,14 @@ export const MODULES = [
   }),
   defineModule({
     id: 'reconstitution',
-    ...noCard('Noctis'),
+    ...byProf('ray'),
     glyph: glyph('♖'),
     available: true,
-    bg: '#3D2F73',
+    bg: '#8B6BFF',
     ink: '#FFFFFF',
-    soft: '#ECE8F7',
-    deep: '#6A58C2',
-    accentInk: '#4A3D86',
+    soft: '#EEE9FF',
+    deep: '#5A3BE0',
+    accentInk: '#4A2FE0',
     fields: [
       duration(10, MAX_RUN_MINUTES),
       one('niveau', 'fields.level', RECALL_LEVELS, 'mine', v =>

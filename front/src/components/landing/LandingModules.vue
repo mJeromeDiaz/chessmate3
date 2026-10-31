@@ -5,7 +5,7 @@
         <div class="landing-modules__heading">
           <div class="landing-kicker">{{ $t('landing.modules.kicker') }}</div>
           <h2 class="landing-h2 cm-heading">{{
-            $t('landing.modules.title', { n: liveCount })
+            $t('landing.modules.title')
           }}</h2>
         </div>
         <p class="landing-modules__lead">
@@ -68,11 +68,10 @@
 import { LANDING_MODULES, variantRows } from '@/utils/landing/content'
 
 /**
- * Every module of the app (those not built yet tagged "Bientôt"), then rows of real settings
+ * Every module of the app, then those announced (tagged "Bientôt"), then rows of real settings
  * scrolling on their own (each row twice, for a seamless loop; still with reduced motion).
  */
 
-const liveCount = LANDING_MODULES.filter(m => m.available).length
 const rows = variantRows(3)
 </script>
 

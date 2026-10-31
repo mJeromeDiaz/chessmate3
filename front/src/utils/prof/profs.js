@@ -222,6 +222,70 @@ export const PROFS = {
       accentInk: '#0F6BBA',
       ink: '#1B1530'
     }
+  },
+  // Design "Prof Ray": the blindfold, coordinates, notation and recall modules. He stays a mystery
+  // in the guided tour and in the arena until his feat (utils/arena.js MYSTERY).
+  ray: {
+    slug: 'ray',
+    name: 'Ray',
+    get title() {
+      return t('profs.ray.title')
+    },
+    glyph: '♘︎',
+    get kicker() {
+      return t('profs.ray.kicker')
+    },
+    get tagline() {
+      return t('profs.ray.tagline')
+    },
+    get traits() {
+      return [0, 1, 2].map(i => t(`profs.ray.traits.${i}`))
+    },
+    get motto() {
+      return t('profs.ray.motto')
+    },
+    mottoImage: profImage('ray-sourire'),
+    full: profImage('ray-pose'),
+    bust: profImage('ray-accueil'),
+    stats: [0, 1, 2].map(i => ({
+      get value() {
+        return t(`profs.ray.stats.${i}.value`)
+      },
+      get label() {
+        return t(`profs.ray.stats.${i}.label`)
+      }
+    })),
+    specialties: [52, 71, 90, 38].map((pct, i) => ({
+      get name() {
+        return t(`profs.ray.specialties.${i}.name`)
+      },
+      get desc() {
+        return t(`profs.ray.specialties.${i}.desc`)
+      },
+      pct
+    })),
+    method: ['ray-reflexion', 'ray-idee', 'ray-accueil'].map((image, i) => ({
+      image: profImage(image),
+      get title() {
+        return t(`profs.ray.method.${i}.title`)
+      },
+      get desc() {
+        return t(`profs.ray.method.${i}.desc`)
+      }
+    })),
+    cta: {
+      get label() {
+        return t('profs.ray.cta')
+      },
+      module: 'aveugle'
+    },
+    colors: {
+      bg: '#8B6BFF',
+      deep: '#5A3BE0',
+      soft: '#EEE9FF',
+      accentInk: '#4A2FE0',
+      ink: '#FFFFFF'
+    }
   }
 }
 
@@ -241,7 +305,8 @@ export const PROF_MOODS = {
     sad: 'albert-think'
   },
   aaron: { neutral: 'aaron-bust', happy: 'aaron-laugh', sad: 'aaron-wow' },
-  lizy: { neutral: 'lizy-cool', happy: 'lizy-joy', sad: 'lizy-think' }
+  lizy: { neutral: 'lizy-cool', happy: 'lizy-joy', sad: 'lizy-think' },
+  ray: { neutral: 'ray-serenite', happy: 'ray-sourire', sad: 'ray-doute' }
 }
 
 /**

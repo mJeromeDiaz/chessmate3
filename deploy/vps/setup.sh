@@ -105,9 +105,7 @@ if [ ! -f "$ENV_FILE" ]; then
   step "api/.env.local: generated secrets"
   # sed's replacement: & and \ escaped (the database URLs hold an &).
   fill() { local value="${2//\\/\\\\}"; value="${value//&/\\&}"; sed -i "s|^$1=.*|$1=$value|" "$ENV_FILE.tmp"; }
-  domain_regex="$(printf '%s' "$DOMAIN" | sed 's/\./\\\\./g')"
-  sed -e "/^CORS_ALLOWED_ORIGIN=/s|<domain>|$domain_regex|" -e "s|<domain>|$DOMAIN|g" \
-    "$HERE/env.local.dist" > "$ENV_FILE.tmp"
+  sed -e "s|<domain>|$DOMAIN|g" "$HERE/env.local.dist" > "$ENV_FILE.tmp"
   fill APP_SECRET "$(openssl rand -hex 32)"
   fill JWT_PASSPHRASE "$(openssl rand -hex 32)"
   fill OPS_TICK_TOKEN "$(openssl rand -hex 32)"
@@ -125,6 +123,8 @@ fi
 
 step "Apache: modules and sites"
 a2enmod -q rewrite headers ssl proxy_fcgi setenvif http2 mime >/dev/null
+# Debian's mod_alias maps /icons/ to Apache's own icons: the SPA's favicons live there.
+sed -i 's|^\(\s*Alias /icons/\)|#\1|' /etc/apache2/mods-available/alias.conf
 a2dissite -q 000-default >/dev/null 2>&1 || true
 install -d -m 755 /var/www/letsencrypt
 render "$HERE/apache/dontstayrooky-http.conf" /etc/apache2/sites-available/dontstayrooky-http.conf

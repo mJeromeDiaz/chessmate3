@@ -14,16 +14,21 @@ test('landing: a visitor sees the landing page with its own header', async ({
   )
 
   // The app's modules by their catalogue name (`MODULES` and the parcours, but the free study:
-  // fourteen), the analysis not built yet tagged "Bientôt".
-  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(14)
+  // fourteen), then four announced: the analysis and those tagged "Bientôt".
+  await expect(page.locator('[data-testid^="landing-module-"]')).toHaveCount(18)
   await expect(page.getByTestId('landing-module-libre')).toHaveCount(0)
   for (const id of ['puzzles', 'coordonnees', 'aveugle', 'parcours']) {
     await expect(page.getByTestId(`landing-module-${id}`)).not.toContainText(
       'Bientôt'
     )
   }
-  await expect(page.getByTestId('landing-module-analyse')).toContainText(
-    'Bientôt'
+  for (const id of ['analyse', 'knightJump', 'timeManagement']) {
+    await expect(page.getByTestId(`landing-module-${id}`)).toContainText(
+      'Bientôt'
+    )
+  }
+  await expect(page.getByTestId('landing-module-finales')).toContainText(
+    'Étude des finales'
   )
   await expect(page.getByTestId('landing-variants')).toContainText(
     '1 min · Nommer la case'
@@ -49,6 +54,9 @@ test('landing: a visitor sees the landing page with its own header', async ({
   // The example session: real modules with real settings, each with a drag handle.
   await expect(page.getByTestId('landing-session-puzzles')).toContainText(
     'Fourchette, Clouage'
+  )
+  await expect(page.getByTestId('landing-session-aveugle')).toContainText(
+    'Moyen · 3 coups'
   )
   await expect(
     page.getByTestId('landing-sessions').locator('.landing-sessions__grip')
@@ -83,7 +91,8 @@ test('landing: a visitor sees the landing page with its own header', async ({
   await page.getByRole('button', { name: 'Profs vs boss' }).click()
   await expect(page).toHaveURL(/#\/$/)
   await expect(page.getByTestId('landing-prof-lizy')).toBeInViewport()
-  for (const boss of ['jongleur', 'requin', 'gargouille']) {
+  await expect(page.getByTestId('landing-prof-ray')).toBeVisible()
+  for (const boss of ['jongleur', 'requin', 'gargouille', 'cavalier']) {
     await expect(page.getByTestId(`landing-boss-${boss}`)).toBeVisible()
   }
 
@@ -156,6 +165,50 @@ test('landing: professor cards are public', async ({ page }) => {
   await expect(page.getByTestId('prof-name')).toHaveText('Aaron')
   await page.getByRole('link', { name: 'Retour à l’accueil' }).click()
   await expect(page.getByTestId('landing')).toBeVisible()
+})
+
+test('landing: Ray has his own public card', async ({ page }) => {
+  await page.goto('/#/')
+  await page.getByTestId('landing-prof-ray').click()
+  await expect(page).toHaveURL(/#\/prof\/ray$/)
+  await expect(page.getByTestId('prof-name')).toHaveText('Ray')
+  await expect(page.getByText('Le Virtuose')).toBeVisible()
+})
+
+test('landing on a phone: the burger menu, four professors, no page wider than the screen', async ({
+  page
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/')
+  await expect(page.getByTestId('landing')).toBeVisible()
+
+  // The anchors and sign-in are in the menu; "Commencer" stays in the header.
+  await expect(page.getByTestId('landing-start')).toBeVisible()
+  await expect(page.getByTestId('landing-login')).toBeHidden()
+  await expect(
+    page.getByTestId('landing-hero-cast').locator('img')
+  ).toHaveCount(4)
+
+  await page.getByTestId('landing-menu-open').click()
+  const menu = page.getByTestId('landing-menu')
+  await expect(menu).toBeVisible()
+  await expect(menu).toContainText('J’ai déjà un compte')
+  await menu.getByTestId('landing-menu-versus').click()
+  await expect(menu).toHaveCount(0)
+  await expect(page).toHaveURL(/#\/$/)
+  await expect(page.getByTestId('landing-prof-lizy')).toBeInViewport()
+
+  // The green call to action: full width buttons.
+  const lichess = page.getByTestId('landing-lichess')
+  await lichess.scrollIntoViewIfNeeded()
+  const box = await lichess.boundingBox()
+  expect(box?.width).toBeGreaterThan(340)
+
+  const widths = await page.evaluate(() => ({
+    page: document.documentElement.scrollWidth,
+    screen: document.documentElement.clientWidth
+  }))
+  expect(widths.page).toBeLessThanOrEqual(widths.screen)
 })
 
 test('landing: footer pages exist', async ({ page }) => {

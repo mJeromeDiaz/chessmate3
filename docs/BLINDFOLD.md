@@ -126,7 +126,7 @@ Exportée avec le compte (`entrainement.json`, `blindfoldPuzzles`).
   de puzzle suivant automatique : la position finale reste affichée jusqu’à « Suivant ».
 - Fin de séance : quatrième chiffre « Avec coup d’œil » (et les ratés) ; la grille et « À revoir »
   comme les autres puzzles (le rejeu se fait à vue).
-- Session Builder : la carte « Jeu à l’aveugle » (prof Noctis) règle la durée (5 à 60 min), le
+- Session Builder : la carte « Jeu à l’aveugle » (prof Ray) règle la durée (5 à 60 min), le
   niveau, la longueur et le temps pour mémoriser ; `toStep` les traduit en `{level, length,
   visibleSeconds}` (libellés → valeurs dans `utils/session/catalog.js`, à changer avec
   `PuzzleRules` : l’API refuse toute autre valeur).

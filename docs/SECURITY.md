@@ -43,6 +43,11 @@ compromission du compte Google/Lichess lui-même.
 - 12 caractères minimum, `PasswordStrength` (niveau medium), `NotCompromisedPassword` (Have I Been
   Pwned, k-anonymat : seuls les 5 premiers caractères du SHA-1 quittent le serveur). Aucune règle de
   composition (recommandation NIST 800-63B / ASVS 2.1.9).
+- Le SPA reproduit le calcul de `PasswordStrength` (`passwordEntropy()` dans
+  `front/src/utils/auth/authFlow.js`, sur les octets UTF-8 comme PHP) : la jauge affiche « Trop
+  faible » et le bouton reste grisé tant que l'API refuserait le mot de passe, puis Moyen (80 bits),
+  Bon (100), Solide (120). Les mots de passe ayant fuité ne sont détectés que par l'API. Un changement de
+  `minScore` côté API se reporte dans `STRENGTH_THRESHOLDS`.
 - Longueur max 4096 pour éviter un DoS par hachage de chaînes géantes.
 
 ### 2.2 Anti-énumération

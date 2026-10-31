@@ -58,6 +58,12 @@ import LichessButton from '@/components/landing/LichessButton.vue'
   padding-left: 16px;
   padding-right: 16px;
   padding-bottom: 24px;
+
+  // Edge to edge on a phone (design "Landing mobile").
+  @media (max-width: $breakpoint-xs-max) {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 .landing-cta__card {
@@ -77,8 +83,8 @@ import LichessButton from '@/components/landing/LichessButton.vue'
   gap: 18px;
 
   @media (max-width: $breakpoint-xs-max) {
-    padding-right: 32px;
-    padding-bottom: 150px;
+    border-radius: 0;
+    padding: 40px 16px 170px;
   }
 }
 
@@ -98,6 +104,15 @@ import LichessButton from '@/components/landing/LichessButton.vue'
 
 .landing-cta__actions {
   position: relative;
+
+  // One button per line, full width, on a phone.
+  @media (max-width: $breakpoint-xs-max) {
+    flex-direction: column;
+
+    > .landing-btn {
+      justify-content: center;
+    }
+  }
 }
 
 .landing-cta__img {
@@ -126,6 +141,10 @@ import LichessButton from '@/components/landing/LichessButton.vue'
   align-items: center;
   font-size: 13px;
   color: var(--cm-muted);
+
+  @media (max-width: $breakpoint-xs-max) {
+    padding: 0 16px;
+  }
 }
 
 .landing-footer__brand {

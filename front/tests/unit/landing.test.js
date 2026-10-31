@@ -3,6 +3,7 @@ import {
   CALCULATION_TRACK,
   EXAMPLE_MINUTES,
   EXAMPLE_PROGRAM,
+  HERO_CAST,
   LANDING_BOSSES,
   LANDING_CAPACITIES,
   LANDING_MODULES,
@@ -90,22 +91,57 @@ describe('landing content', () => {
 
   it('builds the example session from catalogue modules', () => {
     expect(EXAMPLE_PROGRAM.map(i => i.module.id)).toEqual([
-      'coordonnees',
+      'aveugle',
       'puzzles',
       'evaluation',
       'finales'
     ])
-    expect(EXAMPLE_PROGRAM[0].meta).toBe('Trouver la case · Noirs')
-    expect(EXAMPLE_MINUTES).toBe(42)
+    // The blindfold is Ray's.
+    expect(EXAMPLE_PROGRAM[0].module.profSlug).toBe('ray')
+    expect(EXAMPLE_PROGRAM[0].meta).toBe('Moyen · 3 coups')
+    expect(EXAMPLE_MINUTES).toBe(45)
   })
 
-  it('lists the modules but the free study, the analysis one not built yet', () => {
-    expect(LANDING_MODULES.map(m => m.id)).toContain('parcours')
-    expect(LANDING_MODULES.map(m => m.id)).not.toContain('libre')
+  it('lists the modules but the free study, Brillant ou Blunder and Woodpecker first, then those announced', () => {
+    const ids = LANDING_MODULES.map(m => m.id)
+    expect(ids.slice(0, 4)).toEqual([
+      'finales',
+      'puzzles',
+      'brillant',
+      'woodpecker'
+    ])
+    // The streak and the rush between the blindfold and the recall.
+    expect(
+      ids.slice(ids.indexOf('aveugle'), ids.indexOf('aveugle') + 4)
+    ).toEqual(['aveugle', 'streak', 'rush', 'reconstitution'])
+    expect(ids).toContain('parcours')
+    expect(ids).not.toContain('libre')
+    expect(new Set(ids).size).toBe(ids.length)
     expect(MODULE_VARIANTS.map(v => v.module.id)).not.toContain('libre')
     expect(LANDING_MODULES.filter(m => !m.available).map(m => m.id)).toEqual([
-      'analyse'
+      'analyse',
+      'knightJump',
+      'pawnStructures',
+      'famousGames',
+      'timeManagement'
     ])
+    expect(LANDING_MODULES.find(m => m.id === 'knightJump')?.title).toBe(
+      'Bond du cavalier'
+    )
+    expect(LANDING_MODULES[0].title).toBe('Étude des finales')
+    expect(LANDING_MODULES.find(m => m.id === 'repertoire')?.title).toBe(
+      'Mon répertoire'
+    )
+  })
+
+  it('puts the four professors at the bottom of the hero', () => {
+    expect(HERO_CAST.map(p => p.name)).toEqual([
+      'Lizy',
+      'Ray',
+      'Aaron',
+      'Albert Stein'
+    ])
+    for (const prof of HERO_CAST) expect(prof.image).not.toBe('')
   })
 
   it('draws the calculation path’s first chapter, the Roi des cendres at the end', () => {
@@ -131,22 +167,26 @@ describe('landing content', () => {
     )
   })
 
-  it('shows the three professors facing three bosses', () => {
+  it('shows the four professors facing four bosses', () => {
     expect(LANDING_PROFS.map(p => p.slug)).toEqual([
       'lizy',
       'aaron',
-      'albert-stein'
+      'albert-stein',
+      'ray'
     ])
     expect(LANDING_PROFS.map(profRole)).toEqual([
       'FINALES',
       'RÉPERTOIRE & ÉVALUATION',
-      'PUZZLES & WOODPECKER'
+      'PUZZLES & WOODPECKER',
+      'VISUALISATION'
     ])
     expect(LANDING_BOSSES.map(b => b.key)).toEqual([
       'jongleur',
       'requin',
-      'gargouille'
+      'gargouille',
+      'cavalier'
     ])
+    expect(LANDING_BOSSES[3].name).toBe('Cavalier sans tête')
     for (const boss of LANDING_BOSSES) expect(boss.image).not.toBe('')
   })
 })

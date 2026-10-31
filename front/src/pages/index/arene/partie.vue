@@ -527,7 +527,9 @@ async function rematch() {
   margin: 0 auto;
 }
 
+// Edge to edge on a phone: the board's own cap (92vw) left a margin around it.
 .arena-game__board {
+  --board-max: 100%;
   width: 100%;
   max-width: 760px;
   margin: 0 auto;
@@ -539,10 +541,13 @@ async function rematch() {
   flex-direction: column;
 }
 
-// On a phone: the boss above the board, the rest below.
+// On a phone: the boss above the board, the rest below. The column is held to the screen's
+// width: an implicit (auto) column grew with the move list, one unbroken line, and the browser
+// then zoomed the whole page out (board with a margin, wide step buttons).
 @media (max-width: 1023px) {
   .arena-game__layout {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'banner' 'board' 'rest';
   }
   .arena-game__side {

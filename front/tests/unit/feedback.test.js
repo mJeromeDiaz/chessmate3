@@ -125,11 +125,11 @@ describe('feedbackProf', () => {
     })
     expect(feedbackProf('woodpecker', 'win').bg).toBe('#C6F432')
     expect(feedbackProf('repertoire', 'miss').name).toBe('Aaron')
-    // No card: drawn from the module's piece.
     expect(feedbackProf('blindfold', 'win')).toMatchObject({
-      name: 'Noctis',
-      image: ''
+      name: 'Ray',
+      bg: '#2B2250'
     })
+    expect(feedbackProf('blindfold', 'win').image).toMatch(/ray-sourire/)
   })
 })
 

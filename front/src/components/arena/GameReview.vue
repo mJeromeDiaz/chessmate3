@@ -414,7 +414,9 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 
+// Edge to edge on a phone, as during the game (the board's own cap is 92vw).
 .game-review__board {
+  --board-max: 100%;
   width: 100%;
   max-width: 760px;
   margin: 0 auto;

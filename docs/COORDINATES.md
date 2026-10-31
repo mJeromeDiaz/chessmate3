@@ -102,7 +102,7 @@ page envoie `white`). Le pardon de la boutique vaut pour tous les modes.
 
 Session Builder : une étape `coordinates` dure une des `SERIES_MINUTES` (sinon 422,
 `Training\Module\BudgetChoicesInterface`), réglage `orientation`. Côté front, la carte
-« Coordonnées » (prof Noctis) a un champ `durationChoice` : ses durées et sa valeur par défaut
+« Coordonnées » (prof Ray) a un champ `durationChoice` : ses durées et sa valeur par défaut
 viennent des règles de l'API (`fetchSubjects` du store de session les charge, `context.durationChoices`,
 et ramène à la durée par défaut un module du programme dont la durée n'en fait pas partie ; tant
 qu'elles manquent, le module ne s'ajoute pas : « Chargement de la durée… »).

@@ -29,7 +29,11 @@
       <span class="new-password__label">{{ strength.label }}</span>
     </div>
     <p class="new-password__hint">
-      {{ $t('auth.password.hint', { min: PASSWORD_MIN_LENGTH }) }}
+      {{
+        model && strength.score === 1
+          ? $t('auth.password.tooWeak', { min: PASSWORD_MIN_LENGTH })
+          : $t('auth.password.hint', { min: PASSWORD_MIN_LENGTH })
+      }}
     </p>
   </div>
 
@@ -61,8 +65,8 @@
 
 <script setup>
 /**
- * A new password and its confirmation, with a strength meter (design "Connexion"). The meter is a
- * hint: the API checks the length, the strength and known leaks itself.
+ * A new password and its confirmation, with a strength meter (design "Connexion") on the API's own
+ * scale: one bar while the API would refuse it. Known leaks are checked by the API alone.
  */
 import { computed } from 'vue'
 import PasswordField from '@/components/auth/PasswordField.vue'

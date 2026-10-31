@@ -25,7 +25,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * (the shared host has no LOAD DATA): docs/PUZZLE_IMPORT.md.
  *
  * Two passes over the files: the first counts ({@see SubsetPlanner}), the second writes the puzzles
- * kept ({@see PuzzleWriter}). Running it again is safe: the upsert on the Lichess id never
+ * kept ({@see PuzzleWriter}); in between, a catalogue already filled is checked for the kept puzzles
+ * it lacks, which alone grow it ({@see countNew()}). Running it again is safe: the upsert on the Lichess id never
  * duplicates nor deletes, and keeps the puzzle ids. When the catalogue already holds puzzles, those
  * the export still lists are refreshed even if the subset no longer keeps them.
  */
@@ -76,16 +77,18 @@ final class ImportCommand extends Command
         $this->report($io, $plan, $invalid);
 
         $existing = $this->writer->countPuzzles();
+        $new = $existing > 0 ? $this->countNew($io, $files, $plan) : $plan->maxKept();
         $peak = SizeEstimate::peakBytes(
-            $existing + $plan->maxKept(),
-            $this->writer->countSelectable() + $plan->maxKept(),
+            $existing + $new,
+            $this->writer->countSelectable() + $new,
             $plan->themesPerPuzzle,
         );
         $io->text(\sprintf(
-            'Estimated peak size of the catalogue: %s MB (limit %s MB; %s puzzles already there).',
+            'Estimated peak size of the catalogue: %s MB (limit %s MB; %s puzzles already there, %s new at most).',
             self::number($peak / 1048576),
             self::number($maxBytes / 1048576),
             self::number($existing),
+            self::number($new),
         ));
         if ($peak > $maxBytes) {
             $io->error('Over the size limit: lower --target, or raise --max-size if the database allows it.');
@@ -185,6 +188,34 @@ final class ImportCommand extends Command
                 $plan->unknownThemes,
             )));
         }
+    }
+
+    /**
+     * Between the two passes, when the catalogue already holds puzzles: how many of those the plan
+     * keeps it lacks, so the size estimate does not count the others twice.
+     *
+     * @param list<string> $files
+     */
+    private function countNew(SymfonyStyle $io, array $files, SubsetPlan $plan): int
+    {
+        $io->section('Counting the kept puzzles new to the catalogue');
+        $new = 0;
+        $ids = [];
+        $flush = function () use (&$ids, &$new): void {
+            $new += \count($ids) - \count($this->writer->existing($ids));
+            $ids = [];
+        };
+        $this->scan($io, $files, static function (CsvRow $row) use ($plan, &$ids, $flush): void {
+            if ($plan->accepts($row)) {
+                $ids[] = $row->lichessId;
+                if (\count($ids) >= self::BATCH_SIZE) {
+                    $flush();
+                }
+            }
+        });
+        $flush();
+
+        return $new;
     }
 
     /**

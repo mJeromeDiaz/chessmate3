@@ -164,6 +164,61 @@
     "cta": "Créer une session avec Aaron",
     "role": "RÉPERTOIRE & ÉVALUATION"
   },
+  "ray": {
+    "title": "Le Virtuose",
+    "kicker": "PROF · VISUALISATION",
+    "tagline": "Le pianiste qui joue les yeux fermés, et t’apprend à voir l’échiquier sans le regarder.",
+    "motto": "Ferme les yeux. Si tu entends la mélodie, tu vois déjà la position.",
+    "traits": ["À l’aveugle", "Visualisation", "Mémoire"],
+    "stats": [
+      {
+        "value": "6",
+        "label": "Coups à l’aveugle"
+      },
+      {
+        "value": "42",
+        "label": "Positions mémorisées"
+      },
+      {
+        "value": "3 j",
+        "label": "Série en cours"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Puzzles à l’aveugle",
+        "desc": "Résoudre sans voir les pièces"
+      },
+      {
+        "name": "Reconstitution",
+        "desc": "Retenir une position en 8 s"
+      },
+      {
+        "name": "Coordonnées",
+        "desc": "Nommer les cases sans réfléchir"
+      },
+      {
+        "name": "Notation",
+        "desc": "Suivre une partie à l’oreille"
+      }
+    ],
+    "method": [
+      {
+        "title": "Écouter",
+        "desc": "Lire les coups un par un et suivre leur rythme."
+      },
+      {
+        "title": "Visualiser",
+        "desc": "Garder l’échiquier en tête, pièce par pièce."
+      },
+      {
+        "title": "Jouer",
+        "desc": "Trouver le coup sans jamais regarder le plateau."
+      }
+    ],
+    "cta": "Créer une session avec Ray",
+    "role": "VISUALISATION"
+  },
   "page": {
     "backToSession": "Retour à la session",
     "backHome": "Retour à l’accueil",

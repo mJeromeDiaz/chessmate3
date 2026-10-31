@@ -10,6 +10,11 @@
     "modules": "Modules",
     "versus": "Profs vs boss"
   },
+  "menu": {
+    "open": "Menu",
+    "close": "Fermer le menu",
+    "account": "J’ai déjà un compte"
+  },
   "signIn": "Connexion",
   "cta": {
     "title": "Don't Stay Rooky ! Become the King !",
@@ -34,9 +39,15 @@
   },
   "modules": {
     "kicker": "MODULES",
-    "title": "{n} modules. Des centaines de réglages.",
+    "title": "Une vingtaine de modules. Une infinité de réglages.",
     "lead": "Chaque module se règle : durée, thèmes, niveau, couleur, mode. Tu ne refais jamais deux fois la même séance, sauf si tu le veux.",
-    "soon": "Bientôt"
+    "soon": "Bientôt",
+    "upcoming": {
+      "knightJump": "Bond du cavalier",
+      "pawnStructures": "Structures de pions",
+      "famousGames": "Parties célèbres",
+      "timeManagement": "Gestion du temps"
+    }
   },
   "auto": {
     "kicker": "LICHESS",
@@ -93,6 +104,10 @@
       "gargouille": {
         "name": "Gargouille",
         "title": "La gardienne de pierre"
+      },
+      "cavalier": {
+        "name": "Cavalier sans tête",
+        "title": "Le maître des charges"
       }
     }
   },

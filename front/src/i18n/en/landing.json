@@ -10,6 +10,11 @@
     "modules": "Modules",
     "versus": "Profs vs bosses"
   },
+  "menu": {
+    "open": "Menu",
+    "close": "Close the menu",
+    "account": "I already have an account"
+  },
   "signIn": "Sign in",
   "cta": {
     "title": "Don't Stay Rooky ! Become the King !",
@@ -34,9 +39,15 @@
   },
   "modules": {
     "kicker": "MODULES",
-    "title": "{n} modules. Hundreds of settings.",
+    "title": "Twenty-odd modules. Endless settings.",
     "lead": "Every module has its settings: length, themes, level, colour, mode. You never play the same session twice, unless you want to.",
-    "soon": "Coming soon"
+    "soon": "Coming soon",
+    "upcoming": {
+      "knightJump": "Knight jumps",
+      "pawnStructures": "Pawn structures",
+      "famousGames": "Famous games",
+      "timeManagement": "Time management"
+    }
   },
   "auto": {
     "kicker": "LICHESS",
@@ -93,6 +104,10 @@
       "gargouille": {
         "name": "Gargoyle",
         "title": "The stone guardian"
+      },
+      "cavalier": {
+        "name": "Headless Horseman",
+        "title": "The master of charges"
       }
     }
   },

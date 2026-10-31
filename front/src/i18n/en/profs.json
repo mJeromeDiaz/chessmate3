@@ -164,6 +164,61 @@
     "cta": "Create a session with Aaron",
     "role": "REPERTOIRE & EVALUATION"
   },
+  "ray": {
+    "title": "The Virtuoso",
+    "kicker": "PROF · VISUALISATION",
+    "tagline": "The pianist who plays with his eyes closed, and teaches you to see the board without looking at it.",
+    "motto": "Close your eyes. If you can hear the melody, you can already see the position.",
+    "traits": ["Blindfold", "Visualisation", "Memory"],
+    "stats": [
+      {
+        "value": "6",
+        "label": "Blindfold moves"
+      },
+      {
+        "value": "42",
+        "label": "Positions memorised"
+      },
+      {
+        "value": "3 d",
+        "label": "Current streak"
+      }
+    ],
+    "specialties": [
+      {
+        "name": "Blindfold puzzles",
+        "desc": "Solve without seeing the pieces"
+      },
+      {
+        "name": "Position recall",
+        "desc": "Remember a position in 8 s"
+      },
+      {
+        "name": "Coordinates",
+        "desc": "Name the squares without thinking"
+      },
+      {
+        "name": "Notation",
+        "desc": "Follow a game by ear"
+      }
+    ],
+    "method": [
+      {
+        "title": "Listen",
+        "desc": "Read the moves one by one and follow their rhythm."
+      },
+      {
+        "title": "Visualise",
+        "desc": "Keep the board in your head, piece by piece."
+      },
+      {
+        "title": "Play",
+        "desc": "Find the move without ever looking at the board."
+      }
+    ],
+    "cta": "Create a session with Ray",
+    "role": "VISUALISATION"
+  },
   "page": {
     "backToSession": "Back to the session",
     "backHome": "Back to home",

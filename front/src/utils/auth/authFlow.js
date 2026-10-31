@@ -90,28 +90,70 @@ const STRENGTH_LABELS = {
   }
 }
 
+/** Entropy bits the API asks for: Symfony's PasswordStrength, STRENGTH_MEDIUM and above. */
+const STRENGTH_THRESHOLDS = [80, 100, 120]
+
 /**
- * A rough strength meter for the sign-up form (4 bars). Below the minimum length it never shows
- * more than "Faible": the API refuses it anyway (and also checks strength and known leaks).
+ * The entropy Symfony's PasswordStrengthValidator::estimateStrength() gives a password, computed
+ * the same way on its UTF-8 bytes: the distinct bytes times log2 of the character pool they draw
+ * from, plus the repeated bytes times log2 of the distinct ones.
+ *
+ * @param {string} password
+ * @returns {number}
+ */
+export function passwordEntropy(password) {
+  const bytes = new TextEncoder().encode(password)
+  if (bytes.length === 0) return 0
+  const distinct = new Set(bytes)
+  let control = 0
+  let digit = 0
+  let upper = 0
+  let lower = 0
+  let symbol = 0
+  let other = 0
+  for (const byte of distinct) {
+    if (byte < 32 || byte === 127) control = 33
+    else if (byte >= 48 && byte <= 57) digit = 10
+    else if (byte >= 65 && byte <= 90) upper = 26
+    else if (byte >= 97 && byte <= 122) lower = 26
+    else if (byte >= 128) other = 128
+    else symbol = 33
+  }
+  const pool = lower + upper + digit + symbol + control + other
+
+  return (
+    distinct.size * Math.log2(pool) +
+    (bytes.length - distinct.size) * Math.log2(distinct.size)
+  )
+}
+
+/**
+ * Would the API take this new password? Its length and strength only: known leaks are checked by
+ * the API alone.
+ *
+ * @param {string} password
+ * @returns {boolean}
+ */
+export function isAcceptablePassword(password) {
+  return (
+    [...password].length >= PASSWORD_MIN_LENGTH &&
+    passwordEntropy(password) >= STRENGTH_THRESHOLDS[0]
+  )
+}
+
+/**
+ * The strength meter of the new password fields (4 bars), on the API's own scale: one bar
+ * ("Trop faible") for every password it refuses, then medium, strong and very strong.
  *
  * @param {string} password
  * @returns {{score: 0|1|2|3|4, label: string}}
  */
 export function passwordStrength(password) {
   if (!password) return { score: 0, label: '' }
-  if (password.length < PASSWORD_MIN_LENGTH) {
-    return { score: 1, label: STRENGTH_LABELS[1] }
-  }
-  const kinds = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(re =>
-    re.test(password)
-  ).length
-  const score = Math.min(
-    4,
-    1 +
-      (password.length >= 16 ? 1 : 0) +
-      (kinds >= 2 ? 1 : 0) +
-      (kinds >= 3 ? 1 : 0)
-  )
+  const entropy = passwordEntropy(password)
+  const score = isAcceptablePassword(password)
+    ? 1 + STRENGTH_THRESHOLDS.filter(bits => entropy >= bits).length
+    : 1
 
   return {
     score: /** @type {0|1|2|3|4} */ (score),

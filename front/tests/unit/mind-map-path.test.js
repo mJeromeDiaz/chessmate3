@@ -245,9 +245,9 @@ describe('mind map path', () => {
     expect(refusalText(refusal(409, 'step_not_skippable'))).toBe(
       'Un boss ne se passe pas.'
     )
-    expect(
-      refusalText(refusal(409, 'run_in_progress'))
-    ).toBe('Une autre séance est en cours : termine-la d’abord.')
+    expect(refusalText(refusal(409, 'run_in_progress'))).toBe(
+      'Une autre séance est en cours : termine-la d’abord.'
+    )
     expect(
       refusalText(
         refusal(

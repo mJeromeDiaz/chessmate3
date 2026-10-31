@@ -19,7 +19,7 @@
         autocomplete="new-password"
         :hint="$t('profile.password.newHint')"
         outlined
-        :rules="[minLength]"
+        :rules="[strongEnough]"
       />
       <q-btn
         type="submit"
@@ -50,7 +50,7 @@
         autocomplete="new-password"
         :hint="$t('profile.password.minHint')"
         outlined
-        :rules="[minLength]"
+        :rules="[strongEnough]"
       />
       <q-btn
         type="submit"
@@ -74,6 +74,7 @@
 import { computed, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { apiErrorMessage } from '@/utils/apiError'
+import { isAcceptablePassword } from '@/utils/auth/authFlow'
 import { t } from '@/i18n'
 
 const props = defineProps({
@@ -90,7 +91,8 @@ const error = ref('')
 const success = ref('')
 
 const required = v => !!v || t('profile.password.required')
-const minLength = v => (v && v.length >= 12) || t('profile.password.min')
+const strongEnough = v =>
+  isAcceptablePassword(v ?? '') || t('profile.password.tooWeak')
 const needsEmail = computed(
   () => !props.profile.email || !props.profile.emailVerified
 )

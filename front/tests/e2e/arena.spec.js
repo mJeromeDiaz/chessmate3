@@ -245,6 +245,38 @@ test('a game against the Zombie: stepped back, resigned, its result, its review 
   await expect(page.getByTestId('arena-sheet')).toContainText('0 V · 0 N · 1 D')
 })
 
+test('on a phone, a long move list scrolls in its strip: the page keeps the screen width', async ({
+  page,
+  context
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await signIn(context)
+  await noMaia(page)
+  await startZombie(page)
+
+  // A long game's moves, one unbroken line (faster than playing sixty moves against the engine).
+  await page.getByTestId('arena-moves').evaluate(strip => {
+    for (let n = 1; n <= 60; n++) {
+      const move = document.createElement('span')
+      move.className = strip.firstElementChild?.className ?? ''
+      move.style.flex = 'none'
+      move.textContent = `${n}. Nf3 Nf6`
+      strip.append(move)
+    }
+  })
+
+  const widths = await page.evaluate(() => ({
+    page: document.documentElement.scrollWidth,
+    screen: document.documentElement.clientWidth,
+    board: document
+      .querySelector('[data-testid="chess-board"]')
+      ?.getBoundingClientRect().width
+  }))
+  expect(widths.page).toBeLessThanOrEqual(widths.screen)
+  // The board runs edge to edge, no margin around it.
+  expect(widths.board).toBeGreaterThanOrEqual(widths.screen - 1)
+})
+
 test('cancelling and restarting a game at any time', async ({
   page,
   context

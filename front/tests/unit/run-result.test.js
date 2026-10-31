@@ -97,9 +97,16 @@ describe('run result', () => {
     )
     expect(resultProf('evaluation', 'close').image).toContain('aaron-wink')
     expect(resultProf('repertoire', 'perfect').image).toContain('aaron-laugh')
-    const noctis = resultProf('coordinates', 'perfect')
-    expect(noctis.image).toBe('')
-    expect(noctis.glyph).toBeTruthy()
+    const ray = resultProf('coordinates', 'perfect')
+    expect(ray.name).toBe('Ray')
+    expect(ray.image).toContain('ray-sourire')
+    expect(resultProf('blindfold_recall', 'fail').image).toContain(
+      'ray-tristesse'
+    )
+    // Without a card (free study): the module's glyph.
+    const free = resultProf('free', 'perfect')
+    expect(free.image).toBe('')
+    expect(free.glyph).toBeTruthy()
     // Free study's "done" wears the perfect pose.
     expect(resultProf('puzzles', 'done').image).toContain('albert-v2-wow')
   })

@@ -332,8 +332,8 @@ import {
   INVITATION_REASONS,
   KEY_ERRORS,
   KEY_LENGTH,
-  PASSWORD_MIN_LENGTH,
   dropLetters,
+  isAcceptablePassword,
   isEmail,
   keyFormatError,
   markWelcome,
@@ -420,7 +420,7 @@ const keyValidity = computed(() =>
 const signUpReady = computed(
   () =>
     isEmail(email.value) &&
-    password.value.length >= PASSWORD_MIN_LENGTH &&
+    isAcceptablePassword(password.value) &&
     password.value === confirmation.value
 )
 

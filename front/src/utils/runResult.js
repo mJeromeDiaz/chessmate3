@@ -231,6 +231,13 @@ export const RESULT_POSES = {
     fail: 'lizy-think',
     think: 'lizy-think',
     pointer: 'lizy-board'
+  },
+  ray: {
+    perfect: 'ray-sourire',
+    close: 'ray-malin',
+    fail: 'ray-tristesse',
+    think: 'ray-reflexion',
+    pointer: 'ray-pointe'
   }
 }
 

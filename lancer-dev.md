@@ -4,4 +4,10 @@ npm run dev
 
 deployer
 
-OVH_SSH=dontstt@ssh.cluster131.hosting.ovh.net API_URL=https://api.dontstayrooky.com deploy/ovh/deploy.sh
+
+/*** 
+envoyer un mail tester 
+php bin/console mailer:test test-cxsgcfohd@srv1.mail-tester.com --from=no-reply@dontstayrooky.com
+
+*/
+

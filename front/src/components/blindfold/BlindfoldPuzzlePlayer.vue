@@ -170,7 +170,7 @@
  * opponent's replies come as text and a flash of their squares; the moves played are listed.
  * The logic lives in {@see useBlindfoldPuzzle}; the page owns the API calls (through `resolve`),
  * gives the XP the server announced and the result sheet's buttons, and fills the `header` and
- * `result` slots. Noctis, the module's professor, talks and reacts (design "Animation Puzzle").
+ * `result` slots. Ray, the module's professor, talks and reacts (design "Animation Puzzle").
  * After a mistake, "Pardonner · n" asks the page for the store's pardon (`pardon`), which then
  * calls `pardon()`.
  */

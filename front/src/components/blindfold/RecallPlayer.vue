@@ -189,7 +189,7 @@
  * last levels, moves are announced once it is hidden and the position to rebuild is the one after
  * them. "J'ai terminé" sends the rebuild (`resolve`); the page gives the server's correction back
  * (`result`): the position with the pieces found and missed, or the rebuild with its right and
- * wrong pieces, and the result sheet. A mind map boss's distractions play around the board. The logic lives in {@see useRecall}. Noctis, the blindfold
+ * wrong pieces, and the result sheet. A mind map boss's distractions play around the board. The logic lives in {@see useRecall}. Ray, the blindfold
  * professor, talks and reacts.
  */
 import { computed, onBeforeUnmount, watch } from 'vue'

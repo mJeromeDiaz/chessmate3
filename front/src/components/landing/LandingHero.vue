@@ -25,7 +25,6 @@
             :to="TOUR_PATH"
             class="landing-btn landing-btn--dark"
             data-testid="landing-tour"
-            ><span class="landing-btn__knight" aria-hidden="true">♞︎</span
             >{{ $t('landing.hero.tour') }}</router-link
           >
           <button
@@ -37,11 +36,18 @@
           >
         </div>
       </div>
-      <div v-if="LANDING_IMAGES.albertFull" class="landing-hero__cast">
+      <div class="landing-hero__cast" data-testid="landing-hero-cast">
         <img
-          :src="LANDING_IMAGES.albertFull"
-          alt="Albert Stein"
+          v-for="prof in HERO_CAST"
+          :key="prof.name"
+          :src="prof.image"
+          :alt="prof.name"
           class="landing-hero__prof"
+          :style="{
+            left: `${prof.x}%`,
+            height: `${prof.height}%`,
+            zIndex: prof.front ? 2 : 1
+          }"
         />
       </div>
     </div>
@@ -52,15 +58,15 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { TOUR_PATH } from '@/utils/auth/authFlow'
 import {
+  HERO_CAST,
   HERO_SLOGANS,
   HERO_SLOGAN_INTERVAL_MS,
-  LANDING_IMAGES,
   scrollToSection
 } from '@/utils/landing/content'
 
 /**
  * The landing page's hero: the slogans in turn, the pitch, the guided tour (open to visitors,
- * docs/ONBOARDING.md) and the paths, and Albert, who leads the tour. Both slogans
+ * docs/ONBOARDING.md) and the paths, and the four professors. Both slogans
  * share one grid cell (the title keeps the height of the longer one, no jump). Paused while the
  * tab is hidden; with reduced motion, no rotation: one slogan picked at random per visit.
  */
@@ -155,7 +161,8 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-// The pill and the slogans over the card's whole width; the pitch, the buttons and Albert below.
+// The pill and the slogans over the card's whole width; the pitch, the buttons and the professors
+// below.
 .landing-hero__head {
   position: relative;
   flex: 0 0 100%;
@@ -208,22 +215,27 @@ onBeforeUnmount(() => {
 
 .landing-hero__cast {
   position: relative;
-  flex: 0 1 260px;
-  min-width: 180px;
-  height: clamp(200px, 22vw, 290px);
+  flex: 0 1 480px;
+  min-width: 300px;
+  height: clamp(220px, 24vw, 310px);
   margin-left: auto;
 
-  // Alone on its line under the buttons on a phone: centred.
+  // Under the buttons on a phone, across the card's width.
   @media (max-width: $breakpoint-xs-max) {
-    margin-right: auto;
+    flex-basis: 100%;
+    min-width: 0;
+    height: 250px;
+    margin: 0 -6px;
   }
 }
 
+// Each professor stands at its own place (HERO_CAST), the two in front a little taller.
 .landing-hero__prof {
   position: absolute;
-  left: 50%;
   bottom: -16px;
-  height: 100%;
+  max-width: 40%;
+  object-fit: contain;
+  object-position: bottom;
   transform: translateX(-50%);
 }
 </style>

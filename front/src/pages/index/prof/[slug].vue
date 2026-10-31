@@ -159,7 +159,7 @@ import { MODULES_BY_ID } from '@/utils/session/catalog'
 // Only the known professors: any other slug falls through to the 404 page. Public: the landing
 // page links here (showcase values only, no user data).
 definePage({
-  path: '/prof/:slug(lizy|albert-stein|aaron)',
+  path: '/prof/:slug(lizy|albert-stein|aaron|ray)',
   meta: {
     auth: 'public',
     header: {

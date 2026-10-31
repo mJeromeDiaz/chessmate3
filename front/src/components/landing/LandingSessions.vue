@@ -205,6 +205,12 @@ onBeforeUnmount(() => sortable?.destroy())
     color: #fff;
     background: #4a2fe0;
   }
+
+  // Full width on a phone (design "Landing mobile").
+  @media (max-width: $breakpoint-xs-max) {
+    align-self: stretch;
+    justify-content: center;
+  }
 }
 
 .landing-sessions__example {

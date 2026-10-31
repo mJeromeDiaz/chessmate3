@@ -47,7 +47,7 @@ import AuthShell from '@/components/auth/AuthShell.vue'
 import NewPasswordFields from '@/components/auth/NewPasswordFields.vue'
 import { authApi } from '@/services/api'
 import { apiErrorMessage } from '@/utils/apiError'
-import { PASSWORD_MIN_LENGTH } from '@/utils/auth/authFlow'
+import { isAcceptablePassword } from '@/utils/auth/authFlow'
 import { t } from '@/i18n'
 
 definePage({ meta: { auth: 'public', landing: true } })
@@ -66,7 +66,7 @@ const done = ref(false)
 
 const acceptable = computed(
   () =>
-    password.value.length >= PASSWORD_MIN_LENGTH &&
+    isAcceptablePassword(password.value) &&
     password.value === confirmation.value
 )
 

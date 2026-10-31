@@ -214,7 +214,7 @@
  * bar once asked; at zero an empty answer goes (`pass`). The Gargouille's music plays through the
  * fight, its wolf cries at a miss (the « Sons » preference).
  * The page gives the server's verdict back (`result`): the position reached, the right squares in
- * green and the wrong ones in red, and the result sheet. Noctis, the blindfold professor, talks.
+ * green and the wrong ones in red, and the result sheet. Ray, the blindfold professor, talks.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import BoardDistractions from '@/components/mindMap/BoardDistractions.vue'

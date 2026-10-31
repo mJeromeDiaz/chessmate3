@@ -66,7 +66,7 @@
     "current": "Mot de passe actuel",
     "new": "Nouveau mot de passe",
     "newHint": "12 caractères minimum. Vos autres sessions et appareils de confiance seront révoqués.",
-    "min": "12 caractères minimum",
+    "tooWeak": "Pas assez solide : 12 caractères minimum, allongez-le avec des caractères différents",
     "change": "Changer le mot de passe",
     "addIntro": "Ajoutez un mot de passe pour vous connecter aussi avec votre email. Un code de vérification vous sera envoyé par email à chaque connexion.",
     "emailHint": "Nous vous enverrons un lien pour la confirmer.",

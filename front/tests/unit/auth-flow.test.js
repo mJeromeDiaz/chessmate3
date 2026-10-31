@@ -4,9 +4,9 @@ import {
   COACH_PATH,
   INVITATION_REASONS,
   KEY_ERRORS,
-  PASSWORD_MIN_LENGTH,
   TOUR_PATH,
   dropLetters,
+  isAcceptablePassword,
   isEmail,
   keyFormatError,
   markAfterSignIn,
@@ -14,6 +14,7 @@ import {
   markLinkReturn,
   markWelcome,
   normalizeKey,
+  passwordEntropy,
   passwordStrength,
   providerById,
   takeAfterSignIn,
@@ -47,16 +48,32 @@ describe('auth flow', () => {
     ])
   })
 
-  it('never rates a password below the minimum length above "Faible"', () => {
+  it("rates a password on the API's own scale", () => {
     expect(passwordStrength('')).toEqual({ score: 0, label: '' })
-    expect(passwordStrength('Ab1!Ab1!')).toEqual({ score: 1, label: 'Faible' })
-    expect(passwordStrength('a'.repeat(PASSWORD_MIN_LENGTH))).toEqual({
+    // Symfony's estimateStrength() for the same passwords: 1 (weak), 2 (medium), 3, 4.
+    expect(passwordStrength('Ab1!Cd2@Ef')).toEqual({
       score: 1,
-      label: 'Faible'
+      label: 'Trop faible'
     })
-    expect(passwordStrength('abcdefgh1234').score).toBe(2)
-    expect(passwordStrength('abcdefgh123A').score).toBe(3)
+    expect(passwordStrength('Ab1!Cd2@Ef3#').score).toBe(1)
+    expect(passwordStrength('abcdefghijklmnop').score).toBe(1)
+    expect(passwordStrength('Ab1!Cd2@Ef3#Gh')).toEqual({
+      score: 2,
+      label: 'Moyen'
+    })
+    expect(passwordStrength('Tr0ub4dour&3xyzQW').score).toBe(3)
     expect(passwordStrength('cheval blanc 4 tours !').label).toBe('Solide')
+    // Accented letters are counted as UTF-8 bytes, as PHP does.
+    expect(passwordStrength('échiquier-Roi-9!').score).toBe(4)
+  })
+
+  it('accepts a password only when long and strong enough', () => {
+    expect(isAcceptablePassword('Ab1!Cd2@Ef3#')).toBe(false)
+    expect(isAcceptablePassword('Ab1!Cd2@Ef3#Gh')).toBe(true)
+    // Strong but too short: the API's Length(min: 12) refuses it.
+    expect(isAcceptablePassword('é'.repeat(3) + 'Ab1!Cd2@')).toBe(false)
+    // One distinct byte from a pool of 26, then three repeats worth log2(1) = 0.
+    expect(passwordEntropy('aaaa')).toBe(Math.log2(26))
   })
 
   it('drops the letters of a title one after the other', () => {

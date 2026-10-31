@@ -120,6 +120,18 @@ final class ImportCommandTest extends KernelTestCase
         self::assertSame(0, $this->puzzleCount());
     }
 
+    public function testTheSizeLimitCountsOnlyThePuzzlesNewToTheCatalogue(): void
+    {
+        $this->export('part-1.csv', [self::ZO, self::AY]);
+        $this->import();
+
+        // 2 puzzles of 4 themes weigh about 888 bytes: counted twice, they would exceed the limit.
+        $display = $this->import(['--max-size' => '0.0012']);
+
+        self::assertStringContainsString('2 puzzles already there, 0 new at most', $display);
+        self::assertStringContainsString('2 puzzle(s) kept (0 new)', $display);
+    }
+
     /**
      * @param list<string> $lines
      */
