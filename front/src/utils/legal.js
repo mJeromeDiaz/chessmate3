@@ -9,8 +9,8 @@ import { t } from '@/i18n'
  * The publisher, a private individual, named in both pages. To fill in once, here.
  */
 export const PUBLISHER = {
-  name: '[À COMPLÉTER : nom de l’éditeur]',
-  email: '[À COMPLÉTER : e-mail de contact]'
+  name: 'Jerôme Diaz',
+  email: 'dontstayrooky@gmail.com'
 }
 
 /**
