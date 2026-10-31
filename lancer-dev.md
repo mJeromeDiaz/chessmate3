@@ -11,3 +11,5 @@ php bin/console mailer:test test-cxsgcfohd@srv1.mail-tester.com --from=no-reply@
 
 */
 
+php bin/console app:admin:grant
+
