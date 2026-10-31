@@ -51,17 +51,20 @@ final readonly class OAuthAccountService
      * the invitation the flow started with (spent in the same transaction).
      *
      * @param string|null $registrationTicket the flow's admitted invitation ({@see RegistrationGateInterface})
+     * @param User|null   $guest              the guest who started the flow (docs/GUEST.md): the new
+     *                                        account is that guest, promoted, with what it played
      *
-     * @return array{User, bool} the user, and whether the account was just created
+     * @return array{User, bool} the user, and whether the account was just created (or promoted)
      *
      * @throws OAuthFlowException ACCOUNT_EXISTS if the identity is unknown but its verified email
      *                            belongs to an existing account (the invitation is kept);
      *                            INVITATION_* if a new account has no usable invitation
      */
-    public function resolveLogin(ExternalIdentity $identity, ?string $registrationTicket = null): array
+    public function resolveLogin(ExternalIdentity $identity, ?string $registrationTicket = null, ?User $guest = null): array
     {
         $linked = $this->authIdentityRepository->findOneByProviderAndUserId($identity->provider, $identity->providerUserId);
 
+        // An existing account signs in; a guest who started the flow is left as it is (purged once unreachable).
         if (null !== $linked) {
             $this->refreshIdentity($linked, $identity);
             $this->authIdentityRepository->save($linked);
@@ -77,32 +80,33 @@ final readonly class OAuthAccountService
             throw new OAuthFlowException(OAuthFlowException::ACCOUNT_EXISTS);
         }
 
-        // An email the provider doesn't vouch for is never made the account's email: that would
-        // reserve an address for someone who may not own it.
-        $user = new User();
-        $user->setEmail($email);
-
-        if (null !== $email) {
-            $user->markEmailVerified();
-        }
-
+        // Before anything changes: a guest is a managed entity, and the controller flushes when it logs.
         if (null === $registrationTicket) {
             $this->tokenVault->discard($identity);
 
             throw new OAuthFlowException(OAuthFlowException::INVITATION_REQUIRED);
         }
 
-        // Persisted along with the user (User::$authIdentities cascades).
-        $this->newIdentity($user, $identity);
+        $user = null !== $guest && $guest->isGuest() ? $guest : new User();
 
         // Not wrapInTransaction(): it would close the entity manager on a refusal, which the
-        // controller then logs. The gate refuses before anything is persisted.
+        // controller then logs. The gate refuses before anything is written.
         try {
-            $this->entityManager->getConnection()->transactional(function () use ($registrationTicket, $user, $identity): void {
+            $this->entityManager->getConnection()->transactional(function () use ($registrationTicket, $user, $identity, $email): void {
                 $this->registrationGate->redeem($registrationTicket, $user, $identity->provider->value);
+                // An email the provider doesn't vouch for is never made the account's email: that
+                // would reserve an address for someone who may not own it.
+                $user->setEmail($email);
+                if (null !== $email) {
+                    $user->markEmailVerified();
+                }
+                $user->promote();
+                // Persisted along with the user (User::$authIdentities cascades).
+                $this->newIdentity($user, $identity);
                 $this->userRepository->save($user);
             });
         } catch (RegistrationRefusedException $refusal) {
+            // Refused before the user (a guest: untouched) changed.
             $this->tokenVault->discard($identity);
 
             throw new OAuthFlowException($refusal->reason, $refusal);

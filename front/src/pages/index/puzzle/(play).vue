@@ -161,6 +161,8 @@ import {
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: {
       title: 'puzzle.play.title',
       subtitle: 'layout.header.kickers.free'

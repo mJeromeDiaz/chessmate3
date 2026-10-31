@@ -21,19 +21,22 @@
     </q-header>
 
     <AppMenu v-if="auth.isAuthenticated" v-model="drawer" />
-    <StreakCelebration v-if="auth.isAuthenticated" />
+    <!-- A guest (docs/GUEST.md): no streak, chest, gift nor announcement. -->
+    <StreakCelebration v-if="auth.isMember" />
 
     <q-page-container>
       <router-view />
     </q-page-container>
     <!-- After the page: above its own chests (a mind map step's), after the celebration. -->
-    <DailyChest v-if="auth.isAuthenticated" />
+    <DailyChest v-if="auth.isMember" />
     <!-- An admin's gifts, once nothing else is on screen (docs/SHOP.md, § 4 quater). -->
-    <GiftNotice v-if="auth.isAuthenticated" />
+    <GiftNotice v-if="auth.isMember" />
     <!-- The team's announcements, after the gifts (docs/ANNOUNCEMENTS.md). -->
-    <AnnouncementNotice v-if="auth.isAuthenticated" />
+    <AnnouncementNotice v-if="auth.isMember" />
     <!-- The bosses arriving in the arena, after the announcements (docs/ARENA.md, § 5). -->
     <BossArrival v-if="auth.isAuthenticated" />
+    <!-- What a guest would have earned with an account, at the end of a run or a game. -->
+    <MissedRewards v-if="auth.isGuest" />
   </q-layout>
 </template>
 
@@ -47,6 +50,7 @@ import StreakCelebration from '@/components/gamification/StreakCelebration.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import AppMenu from '@/components/layout/AppMenu.vue'
 import DailyChest from '@/components/shop/DailyChest.vue'
+import MissedRewards from '@/components/guest/MissedRewards.vue'
 import GiftNotice from '@/components/shop/GiftNotice.vue'
 import ThemeMenu from '@/components/theme/ThemeMenu.vue'
 

@@ -11,7 +11,7 @@
         v-if="coach.step.value === 'connect'"
         v-model:with-repertoire="coach.withRepertoire.value"
         :identity="identity"
-        :signed-in="auth.isAuthenticated"
+        :signed-in="auth.isMember"
         :busy="coach.busy.value"
         :linking="linking"
         :error="coach.error.value"
@@ -136,7 +136,8 @@ const played = computed(() =>
 const first = computed(() => played.value[0] ?? null)
 
 onMounted(async () => {
-  if (!auth.isAuthenticated) return
+  // A guest (docs/GUEST.md) has no repertoire nor coach: as a visitor.
+  if (!auth.isMember) return
   if (!auth.profile) await auth.fetchProfile().catch(() => {})
   repertoireApi
     .list()
@@ -162,7 +163,7 @@ async function link() {
 /** The header's back arrow: the previous step, the sessions from the first one. */
 function back() {
   const step = coach.step.value
-  if (step === 'connect') router.push(auth.isAuthenticated ? '/session' : '/')
+  if (step === 'connect') router.push(auth.isMember ? '/session' : '/')
   else if (step === 'scan' || step === 'compose') coach.restart()
   else if (step === 'session') coach.go('scan')
   else if (step === 'go') coach.go('session')

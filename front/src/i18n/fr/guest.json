@@ -1,0 +1,50 @@
+{
+  "header": "Créer mon compte",
+  "locked": "Avec un compte",
+  "try": {
+    "label": "Essayer sans compte",
+    "busy": "Un instant…"
+  },
+  "home": {
+    "kicker": "MODE INVITÉ",
+    "title": "Bienvenue, joue tout de suite !",
+    "lead": "Tes parties restent sur cet appareil. Crée ton compte pour garder ta progression, gagner tes cristaux et ouvrir tout le reste.",
+    "paths": "Les parcours : le premier chapitre",
+    "modules": "En libre accès",
+    "locked": "Avec un compte"
+  },
+  "missed": {
+    "title": "Avec un compte, c’était à toi !",
+    "both": "Tu aurais pu gagner {xp} XP et {crystals} cristaux si tu avais un compte.",
+    "xp": "Tu aurais pu gagner {xp} XP si tu avais un compte.",
+    "crystals": "Tu aurais pu gagner {crystals} cristaux si tu avais un compte.",
+    "fast": "Cela prend quelques secondes avec Lichess.",
+    "lichess": "Créer mon compte avec Lichess",
+    "later": "Plus tard"
+  },
+  "account": {
+    "header": "Créer mon compte",
+    "kicker": "TU JOUES EN INVITÉ",
+    "title": "Crée ton compte",
+    "lead": "Tout ce que tu as joué en invité est gardé : ton classement, tes parcours, tes parties dans l’arène.",
+    "perks": [
+      "Tous les chapitres des parcours, et les défis",
+      "Ton répertoire, le Woodpecker et tes séances sur mesure",
+      "Tes cristaux, ta série et la boutique",
+      "Les finales sans limite par jour"
+    ],
+    "lichess": "Continuer avec Lichess",
+    "email": "Avec un e-mail",
+    "key": "Pendant l’accès anticipé, une clé d’invitation t’est demandée. Sans clé, tu peux rejoindre la liste d’attente."
+  },
+  "menu": {
+    "text": "Garde ta progression",
+    "leave": "Quitter le mode invité",
+    "leaveText": "Ta progression d’invité sera perdue"
+  },
+  "refusals": {
+    "accountRequired": "Il faut un compte pour ça : crée-le en quelques secondes.",
+    "endgameQuota": "Tu as joué tes 3 positions de finales du jour. Reviens demain, ou crée ton compte pour jouer sans limite.",
+    "chapter": "En invité, seul le premier chapitre est ouvert : crée ton compte pour la suite."
+  }
+}

@@ -22,7 +22,7 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - { path: ^/api/auth/(register|login|logout|verify-email|forgot-password|reset-password|refresh|oauth|invitation)(/|$), roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/(register|login|logout|verify-email|forgot-password|reset-password|refresh|oauth|invitation|guest)(/|$), roles: PUBLIC_ACCESS }
         # Calendar feed: calendar apps send no credential, the secret token in the URL is one.
         - { path: ^/api/calendar/, roles: PUBLIC_ACCESS }
         # Operations routes (docs/DEPLOY_OVH.md): a secret header is the credential, checked by the controllers.
@@ -31,7 +31,18 @@ security:
         - { path: ^/api/announcements/unsubscribe$, roles: PUBLIC_ACCESS }
         # Admin dashboard (docs/EARLY_ACCESS.md); every admin resource also checks the role itself.
         - { path: ^/api/admin(/|$), roles: ROLE_ADMIN }
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        # Guests (docs/GUEST.md): closed by default, a whitelist of what they may play. Inside it,
+        # the services refuse what stays an account's (App\Guest\GuestPolicy): sessions, chapters
+        # after the first, endgames past their daily quota. Rules first match: the exceptions
+        # inside a whitelisted prefix come before it.
+        - { path: ^/api/arena/bosses/, roles: ROLE_USER }
+        - { path: ^/api/puzzles/rating/lichess-import$, roles: ROLE_USER }
+        - { path: ^/api/(training/runs|puzzles|blindfold|brilliancy|coordinates|evaluation|endgames|notation|puzzle-rush|puzzle-streak|mind-map|arena)(/|$), roles: [ROLE_USER, ROLE_GUEST] }
+        - { path: ^/api/profile$, methods: [GET], roles: [ROLE_USER, ROLE_GUEST] }
+        - { path: ^/api/profile/(locale|theme|timezone|preferences)$, methods: [PUT], roles: [ROLE_USER, ROLE_GUEST] }
+        - { path: ^/api/dashboard/(activity|rating-history|themes)$, methods: [GET], roles: [ROLE_USER, ROLE_GUEST] }
+        # Everything else: a real account (every signed-in account has ROLE_USER, a guest never).
+        - { path: ^/api, roles: ROLE_USER }
 
 when@test:
     security:

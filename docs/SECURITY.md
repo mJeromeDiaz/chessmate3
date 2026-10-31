@@ -711,3 +711,35 @@ d'authentification** : mot de passe d'abord, code par email ensuite (§ 2.3), r�
 |---|---|---|
 | R32 | L'étape 1 de la connexion dit toujours si le mot de passe est bon (401 contre « code envoyé ») : un détenteur de mots de passe volés ailleurs peut les vérifier ici, sans pouvoir entrer sans le code. | Choix validé (2026-10-08) : message clair pour l'utilisateur plutôt qu'une réponse neutre. Limites par IP et par adresse (§ 2.9) ; le titulaire reçoit le code par email, signe qu'on connaît son mot de passe. |
 | R33 | N'importe qui peut inscrire l'adresse d'un tiers sur la liste d'attente ; un réseau de robots peut remplir la liste jusqu'au plafond quotidien. | Aucun email n'est envoyé à la demande ; l'admin choisit qui inviter et peut supprimer une demande ; plafond global de 300 par jour. |
+
+## 11. Mode invité (2026-10-31)
+
+Détail : [GUEST.md](GUEST.md).
+
+- **Fermé par défaut** : la dernière règle d'`access_control` exige `ROLE_USER` ; un invité n'a que
+  `ROLE_GUEST` (`User::getRoles()`), ouvert par une liste blanche de préfixes, puis
+  `App\Guest\GuestPolicy` dans les services (séances, chapitres, quota des finales, tablebase).
+- **Création** (`POST /api/auth/guest`) : en-tête `X-Guest-Request` contre le CSRF (un formulaire
+  tiers remplacerait le cookie de session d'un vrai compte), 5 par heure et par IP, 500 par jour
+  pour tout le site ; purge des invités sans session valide.
+- **Lichess** : la tablebase n'est servie à un invité que pendant une séance de finales, 3 positions
+  par jour ; la passerelle Lichess reste à une requête à la fois.
+- **Conversion** : l'invité est reconnu par son cookie de session (HttpOnly, SameSite Strict) ; il
+  n'est promu qu'avec une clé valide (Lichess) ou un e-mail vérifié. Les cristaux ne sont jamais
+  crédités à un invité, même après coup.
+- **Risque accepté** : l'application est ouverte au public (tirages de puzzles, parties d'arène),
+  bornée par les limiteurs par utilisateur et le plafond global d'invités.
+
+## 12. Pages légales (2026-10-31)
+
+`/conditions` et `/confidentialite` (`front/src/components/landing/LegalPage.vue`, textes
+`front/src/i18n/<langue>/legal.json`, sections dans `front/src/utils/legal.js`) : **brouillon à
+faire relire**, la page le dit. Elles décrivent ce que fait le code : données du compte, de Lichess
+(jeton chiffré) et de Google (jeton non gardé), entraînement, journal de sécurité et traces des
+requêtes (365 jours), sessions (30 jours au plus, 7 sans venir), suppression (gel 30 jours),
+invités (purgés sans session valide), sauvegardes de l'hébergeur (7 jours), OVH en France,
+cookies nécessaires seulement (`refresh_token`, `trusted_device`, `oauth_flow`), pas de publicité
+ni de mesure d'audience, âge minimum 15 ans (ou accord parental), cristaux sans valeur monétaire.
+L'éditeur (un particulier) et son contact sont à renseigner une fois, dans `PUBLISHER`
+(`utils/legal.js`, `[À COMPLÉTER]`). Tout changement de ces points (nouvel hébergeur, outil
+d'audience, paiement, nouvelle donnée) doit mettre à jour ces textes et leur date.

@@ -1,5 +1,11 @@
 <template>
-  <q-page v-if="auth.isAuthenticated" class="dashboard" data-testid="dashboard">
+  <!-- A guest (docs/GUEST.md): what it may play, and the sign-up. -->
+  <GuestHome v-if="auth.isGuest" />
+  <q-page
+    v-else-if="auth.isAuthenticated"
+    class="dashboard"
+    data-testid="dashboard"
+  >
     <div class="dashboard__inner">
       <header class="dashboard__head">
         <div>
@@ -118,6 +124,7 @@ import StreakCard from '@/components/dashboard/StreakCard.vue'
 import TrophyGrid from '@/components/dashboard/TrophyGrid.vue'
 import WeeklyQuest from '@/components/dashboard/WeeklyQuest.vue'
 import WelcomeCard from '@/components/dashboard/WelcomeCard.vue'
+import GuestHome from '@/components/guest/GuestHome.vue'
 import LandingPage from '@/components/landing/LandingPage.vue'
 import { t } from '@/i18n'
 
@@ -186,13 +193,13 @@ function loadAll() {
 }
 
 onMounted(() => {
-  if (auth.isAuthenticated) loadAll()
+  if (auth.isMember) loadAll()
 })
 
 watch(
-  () => auth.isAuthenticated,
-  signedIn => {
-    if (signedIn) loadAll()
+  () => auth.isMember,
+  member => {
+    if (member) loadAll()
   }
 )
 </script>

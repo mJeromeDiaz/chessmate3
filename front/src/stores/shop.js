@@ -63,8 +63,9 @@ export const useShopStore = defineStore('shop', () => {
     }
   )
 
-  /** Reads the store (again). */
+  /** Reads the store (again); a guest has none (docs/GUEST.md): null. */
   async function load() {
+    if (useAuthStore().isGuest) return null
     state.value = await shopApi.get()
     return state.value
   }
@@ -105,6 +106,7 @@ export const useShopStore = defineStore('shop', () => {
    * @returns {Promise<void>}
    */
   async function showDailyChests() {
+    if (useAuthStore().isGuest) return
     if (dailyChests.value.length)
       return new Promise(resolve => onDailyClosed.push(resolve))
     try {

@@ -940,6 +940,8 @@ import { playAmbientSound } from '@/utils/sounds'
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: { title: 'layout.header.titles.training', parent: false }
   }
 })

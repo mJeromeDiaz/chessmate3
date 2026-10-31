@@ -41,6 +41,15 @@ export const useAuthStore = defineStore('auth', () => {
   const isFrozen = computed(() => !!profile.value?.deletionScheduledAt)
   /** ROLE_ADMIN (docs/EARLY_ACCESS.md): shows the administration. The API checks it on its own. */
   const isAdmin = computed(() => profile.value?.isAdmin === true)
+  /**
+   * A guest account (« Essayer sans compte », docs/GUEST.md): the free modules, the paths' first
+   * chapter and the arena only; no XP shown, no crystals, no streak.
+   */
+  const isGuest = computed(() => profile.value?.isGuest === true)
+  /** Signed in with a real account (its profile read: a guest is known only then). */
+  const isMember = computed(
+    () => isAuthenticated.value && profile.value !== null && !isGuest.value
+  )
 
   /** @type {Promise<void>|null} */
   let initPromise = null
@@ -219,6 +228,12 @@ export const useAuthStore = defineStore('auth', () => {
     return profile.value
   }
 
+  /** Opens a guest account in this browser and signs it in (docs/GUEST.md). */
+  async function startGuest() {
+    const data = await authApi.guest()
+    await startSession(data.accessToken)
+  }
+
   /**
    * Adopts a token obtained by any means (login, OAuth callback via refresh...) and loads the
    * profile.
@@ -308,6 +323,9 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isFrozen,
     isAdmin,
+    isGuest,
+    isMember,
+    startGuest,
     confirmDeletion,
     cancelDeletion,
     init,

@@ -215,7 +215,13 @@ test('landing: footer pages exist', async ({ page }) => {
   await page.goto('/#/')
   await page.getByRole('link', { name: 'Confidentialité' }).click()
   await expect(page).toHaveURL(/#\/confidentialite$/)
-  await expect(page.getByText('Contenu à venir.')).toBeVisible()
+  await expect(page.getByTestId('legal-privacy')).toContainText(
+    'Durées de conservation'
+  )
+  await page.goto('/#/conditions')
+  await expect(page.getByTestId('legal-terms')).toContainText(
+    'Les cristaux n’ont aucune valeur monétaire'
+  )
 })
 
 test('landing: a signed-in user gets the dashboard and the app header', async ({

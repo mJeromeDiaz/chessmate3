@@ -27,6 +27,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Table(name: 'app_user')]
 #[ORM\UniqueConstraint(name: 'uniq_user_email', fields: ['email'])]
 #[ORM\UniqueConstraint(name: 'uniq_user_handle', fields: ['handle'])]
+#[ORM\Index(name: 'idx_user_guest', columns: ['guest', 'created_at'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -137,6 +138,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $suspensionReason = null;
 
+    /**
+     * A guest (docs/GUEST.md): an account opened by « Essayer sans compte », without email,
+     * password nor invitation; role ROLE_GUEST only (never ROLE_USER) until promoted.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $guest = false;
+
     /** @var Collection<int, AuthIdentity> */
     #[ORM\OneToMany(targetEntity: AuthIdentity::class, mappedBy: 'user', cascade: ['persist'], orphanRemoval: true)]
     private Collection $authIdentities;
@@ -208,9 +216,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->emailVerifiedAt;
     }
 
+    /**
+     * A guest that registered with its email (docs/GUEST.md) becomes a real account here, once the
+     * address is proven.
+     */
     public function markEmailVerified(\DateTimeImmutable $at = new \DateTimeImmutable()): static
     {
         $this->emailVerifiedAt = $at;
+        $this->guest = false;
 
         return $this;
     }
@@ -239,6 +252,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[\Override]
     public function getRoles(): array
     {
+        // A guest has no other role, whatever is stored: the API is closed to it but a whitelist.
+        if ($this->guest) {
+            return ['ROLE_GUEST'];
+        }
         $roles = $this->roles;
         $roles[] = 'ROLE_USER';
 
@@ -444,6 +461,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isSuspended(): bool
     {
         return null !== $this->suspendedAt;
+    }
+
+    /** A new guest account (docs/GUEST.md). */
+    public static function guest(): self
+    {
+        $user = new self();
+        $user->guest = true;
+
+        return $user;
+    }
+
+    public function isGuest(): bool
+    {
+        return $this->guest;
+    }
+
+    /** The guest becomes a real account, keeping everything it played (docs/GUEST.md). */
+    public function promote(): static
+    {
+        $this->guest = false;
+
+        return $this;
     }
 
     /**

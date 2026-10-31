@@ -9,6 +9,10 @@
  *
  * A frozen account (deletion scheduled) is kept on the deletion page, whatever the level.
  *
+ * A guest account (docs/GUEST.md) is signed in, but a 'required' page opens to it only with
+ * `guestOpen: true` in its meta; any other goes to {@link ACCOUNT_PAGE}. The 'guest' level means
+ * signed out: a guest account may still reach it (signing up or in from there).
+ *
  * @typedef {'public'|'guest'|'required'|'mfa'|'admin'} AuthLevel
  */
 
@@ -35,6 +39,9 @@ export function safeRedirect(value, fallback = '/') {
 
 /** Where a frozen account (deletion scheduled) stays: cancel, export or sign out. */
 export const FROZEN_PAGE = '/account-deletion'
+
+/** Where a guest asking for an account's page goes: what an account brings, and the sign-up. */
+export const ACCOUNT_PAGE = '/creer-un-compte'
 
 /**
  * Creates the global navigation guard.
@@ -64,7 +71,11 @@ export function createAuthGuard(getAuth) {
       return { path: '/' }
     }
 
-    if (level === 'guest' && auth.isAuthenticated) {
+    if (level === 'required' && auth.isGuest && !to.meta?.guestOpen) {
+      return { path: ACCOUNT_PAGE }
+    }
+
+    if (level === 'guest' && auth.isAuthenticated && !auth.isGuest) {
       return { path: '/' }
     }
 

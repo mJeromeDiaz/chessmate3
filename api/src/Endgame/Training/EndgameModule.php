@@ -21,14 +21,16 @@ use App\Enum\Endgame\Family;
 use App\Enum\Endgame\Goal;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
+use App\Guest\GuestPolicy;
+use App\Guest\GuestRefusedException;
+use App\Puzzle\Rating\RatingCalculator;
 use App\Repository\Endgame\AttemptRepository;
+use App\Repository\Puzzle\RatingRepository;
 use App\Training\Exception\InvalidRunConfigException;
 use App\Training\Exception\ItemAlreadySubmittedException;
 use App\Training\Exception\ItemNotFoundException;
 use App\Training\Exception\SubjectNotFoundException;
 use App\Training\Exception\SubjectUnavailableException;
-use App\Puzzle\Rating\RatingCalculator;
-use App\Repository\Puzzle\RatingRepository;
 use App\Training\Module\BudgetChoicesInterface;
 use App\Training\Module\CountedModuleInterface;
 use App\Training\Module\Item;
@@ -96,6 +98,7 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
         private readonly GameJudge $judge,
         private readonly EventPublisher $events,
         private readonly RatingRepository $ratings,
+        private readonly GuestPolicy $guests,
     ) {
     }
 
@@ -154,6 +157,10 @@ final class EndgameModule implements TimeboxedModuleInterface, ReviewableModuleI
                 throw new SubjectUnavailableException(CloseReason::SubjectFinished, ['reason' => $closes]);
             }
             $attempt = null;
+        }
+        // A guest's positions of the day played (docs/GUEST.md): the run ends here.
+        if (null === $attempt && $this->guests->endgamePositionsLeft($run->getUser()) <= 0) {
+            throw new SubjectUnavailableException(CloseReason::SubjectFinished, ['reason' => GuestRefusedException::ENDGAME_QUOTA]);
         }
 
         return $this->item($attempt ?? $this->serve($run, $config, $now));

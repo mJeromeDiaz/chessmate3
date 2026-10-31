@@ -7,6 +7,7 @@ namespace App\Controller\Auth;
 use App\Dto\Auth\RegisterRequest;
 use App\Entity\User;
 use App\Enum\AuditEventType;
+use App\Guest\GuestSession;
 use App\Repository\UserRepository;
 use App\Security\Audit\AuditLogger;
 use App\Security\EmailVerification\EmailVerifier;
@@ -32,6 +33,10 @@ use Symfony\Component\Routing\Attribute\Route;
  * It takes an invitation key ({@see RegistrationGateInterface}). A refused key is answered 422
  * with its reason: that says nothing about accounts. A valid key is spent even when the email is
  * taken, else the key would still work afterwards and tell its holder the address has an account.
+ *
+ * Sent by a guest's browser (docs/GUEST.md, recognised by its refresh cookie), the account is that
+ * guest: it gets the email and the password now, and becomes a real account once the email is
+ * verified (until then it plays on as a guest).
  */
 #[Route('/api/auth')]
 final class RegisterController extends AbstractController
@@ -44,6 +49,7 @@ final class RegisterController extends AbstractController
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly RegistrationGateInterface $registrationGate,
         private readonly EntityManagerInterface $entityManager,
+        private readonly GuestSession $guestSession,
         #[Autowire(service: 'limiter.register_ip')]
         private readonly RateLimiterFactory $registerIpLimiter,
         #[Autowire(service: 'limiter.register_identifier')]
@@ -62,14 +68,13 @@ final class RegisterController extends AbstractController
         try {
             $ticket = $this->registrationGate->admit($payload->invitationKey);
 
-            $candidate = new User();
-            $candidate->setEmail($email);
-            $candidate->setPassword($this->passwordHasher->hashPassword($candidate, $payload->password));
-            $candidate->setTimezone($payload->timezone);
+            $hashed = $this->passwordHasher->hashPassword(new User(), $payload->password);
+            $candidate = $this->guestSession->of($request) ?? new User();
 
             // Not wrapInTransaction(): it would close the entity manager on a refusal. The gate
-            // refuses before anything is persisted, so the rollback leaves nothing behind.
-            $created = $this->entityManager->getConnection()->transactional(function () use ($ticket, $candidate, $email): bool {
+            // refuses before anything is persisted, so the rollback leaves nothing behind. The
+            // candidate (a guest is a managed entity) changes only once the email is free.
+            $created = $this->entityManager->getConnection()->transactional(function () use ($ticket, $candidate, $email, $hashed, $payload): bool {
                 if (null !== $this->userRepository->findOneByEmail($email)) {
                     $this->registrationGate->redeem($ticket, null, 'password');
                     $this->entityManager->flush();
@@ -77,6 +82,10 @@ final class RegisterController extends AbstractController
                     return false;
                 }
                 $this->registrationGate->redeem($ticket, $candidate, 'password');
+                $candidate->setEmail($email);
+                $candidate->setPassword($hashed);
+                // A guest keeps the timezone it set when the browser sends none.
+                $candidate->setTimezone($payload->timezone ?? $candidate->getTimezone());
                 $this->userRepository->save($candidate);
 
                 return true;

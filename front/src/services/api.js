@@ -1,4 +1,5 @@
 import { createHttpClient } from '@/services/http'
+import { addRunXp } from '@/utils/guest/runXp'
 import { closingOpenRun } from '@/utils/training'
 
 /** Base URL of the Symfony API (no trailing slash). */
@@ -63,6 +64,19 @@ export const authApi = {
       })
       .then(r => r.data),
   logout: () => http.post('/api/auth/logout', null, PUBLIC).then(r => r.data),
+  /**
+   * « Essayer sans compte » (docs/GUEST.md): a guest account and its session. The header is its
+   * CSRF defence, as for the refresh.
+   *
+   * @returns {Promise<{accessToken: string}>}
+   */
+  guest: () =>
+    http
+      .post('/api/auth/guest', null, {
+        ...PUBLIC,
+        headers: { 'X-Guest-Request': '1' }
+      })
+      .then(r => r.data),
   /** New accounts need an early access key (docs/EARLY_ACCESS.md). */
   register: (email, password, timezone = null, invitationKey = null) =>
     http
@@ -397,7 +411,11 @@ export const trainingApi = {
         report,
         JSON_LD
       )
-      .then(r => r.data),
+      .then(r => {
+        // Summed for a guest's end-of-run popup (docs/GUEST.md).
+        addRunXp(id, r.data?.xp)
+        return r.data
+      }),
   /** The items of a closed run, for its end-of-run review (409 while it is active). */
   review: id =>
     http

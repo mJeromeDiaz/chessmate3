@@ -12,7 +12,9 @@ use App\Chess\Position\FenNormalizer;
 use App\Endgame\Tablebase\BestDefence;
 use App\Endgame\Tablebase\MoveAnswer;
 use App\Endgame\Tablebase\Tablebase;
+use App\Guest\GuestPolicy;
 use App\Repertoire\Lichess\LichessUnavailableException;
+use App\Repository\Training\RunRepository;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\State\Repertoire\LichessUnavailableHttpException;
@@ -32,6 +34,8 @@ final readonly class TablebaseProvider implements ProviderInterface
         private AuthenticatedUser $authenticatedUser,
         private RateLimitGuard $rateLimitGuard,
         private RateLimiterFactory $endgameTablebaseLimiter,
+        private GuestPolicy $guests,
+        private RunRepository $runs,
     ) {
     }
 
@@ -39,6 +43,7 @@ final readonly class TablebaseProvider implements ProviderInterface
     {
         $user = $this->authenticatedUser->get();
         $this->rateLimitGuard->consume($this->endgameTablebaseLimiter, $user->getId()->toRfc4122());
+        $this->guests->assertTablebase($user, $user->isGuest() ? $this->runs->findActiveOf($user) : null);
         $filters = \is_array($context['filters'] ?? null) ? $context['filters'] : [];
 
         try {

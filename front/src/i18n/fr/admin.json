@@ -489,6 +489,7 @@
     "period": "Du {from} au {to} ({tz})",
     "unverified": "{n} email non vérifié | {n} emails non vérifiés",
     "suspended": "{n} suspendu | {n} suspendus",
+    "guests": "{n} invité en plus | {n} invités en plus",
     "inactive": "{n} inactif · un exercice en 7 jours | {n} inactifs · un exercice en 7 jours",
     "rated": "{n} classé · {notLinked} sans Lichess | {n} classés · {notLinked} sans Lichess",
     "median": "médiane {n}",

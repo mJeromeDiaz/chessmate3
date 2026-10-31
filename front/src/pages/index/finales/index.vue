@@ -231,6 +231,8 @@ import { t } from '@/i18n'
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: {
       title: 'endgame.path.title',
       subtitle: 'mindMapPath.page.kicker'

@@ -64,6 +64,8 @@ import { hasPath } from '@/utils/mindMapPath'
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: { title: 'mindMap.page.title', subtitle: 'mindMap.page.kicker' }
   }
 })

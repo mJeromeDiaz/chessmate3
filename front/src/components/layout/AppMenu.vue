@@ -119,6 +119,9 @@
                   $t('layout.menu.create.text')
                 }}</q-item-label>
               </q-item-section>
+              <q-item-section v-if="locked('/session')" side>
+                <q-icon name="lock" :aria-label="$t('guest.locked')" />
+              </q-item-section>
             </q-item>
 
             <q-item
@@ -180,7 +183,9 @@
             </div>
           </div>
 
+          <!-- A guest (docs/GUEST.md): no crystals, no wheel. -->
           <router-link
+            v-if="auth.isMember"
             to="/boutique"
             class="app-menu__shop"
             :class="{ 'app-menu__shop--on': onPage('/boutique') }"
@@ -204,6 +209,7 @@
           </router-link>
 
           <button
+            v-if="auth.isMember"
             type="button"
             class="app-menu__wheel"
             data-testid="nav-wheel"
@@ -236,6 +242,22 @@
           <q-list class="app-menu__foot">
             <q-separator class="q-mb-sm" />
             <q-item
+              v-if="auth.isGuest"
+              clickable
+              to="/creer-un-compte"
+              class="app-menu__account"
+              data-testid="nav-create-account"
+            >
+              <q-item-section avatar
+                ><q-icon name="person_add"
+              /></q-item-section>
+              <q-item-section>
+                <q-item-label>{{ $t('guest.header') }}</q-item-label>
+                <q-item-label caption>{{ $t('guest.menu.text') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-else
               clickable
               to="/profile"
               :active="onPage('/profile')"
@@ -268,9 +290,16 @@
               @click="logout"
             >
               <q-item-section avatar><q-icon name="logout" /></q-item-section>
-              <q-item-section>{{
-                $t('layout.account.signOut')
-              }}</q-item-section>
+              <q-item-section>
+                <q-item-label>{{
+                  auth.isGuest
+                    ? $t('guest.menu.leave')
+                    : $t('layout.account.signOut')
+                }}</q-item-label>
+                <q-item-label v-if="auth.isGuest" caption>{{
+                  $t('guest.menu.leaveText')
+                }}</q-item-label>
+              </q-item-section>
             </q-item>
           </q-list>
         </q-tab-panel>
@@ -318,6 +347,9 @@
               <q-item-section class="app-menu__title">{{
                 item.label
               }}</q-item-section>
+              <q-item-section v-if="locked(item.to)" side>
+                <q-icon name="lock" :aria-label="$t('guest.locked')" />
+              </q-item-section>
             </q-item>
           </q-list>
         </q-tab-panel>
@@ -368,6 +400,15 @@ const freeActive = computed(() =>
 )
 
 /**
+ * A page a guest cannot open (docs/GUEST.md): the guard sends it to the sign-up page.
+ *
+ * @param {string} path
+ */
+function locked(path) {
+  return auth.isGuest && !router.resolve(path).meta?.guestOpen
+}
+
+/**
  * @param {string} prefix
  */
 function onPage(prefix) {
@@ -388,7 +429,7 @@ function wheel() {
 watch(open, opened => {
   if (!opened) return
   panel.value = 'main'
-  shop.loadOnce().catch(() => {})
+  if (auth.isMember) shop.loadOnce().catch(() => {})
 })
 
 watch(

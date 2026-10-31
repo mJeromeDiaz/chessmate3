@@ -154,8 +154,8 @@ const router = useRouter()
 const auth = useAuthStore()
 const onboarding = useOnboardingStore()
 
-/** The discovery tour of someone not signed in (fixed for the page's life). */
-const visitor = !auth.isAuthenticated
+/** The discovery tour of someone without an account, a guest too (fixed for the page's life). */
+const visitor = !auth.isMember
 /** Each tour keeps its own step: the real one starts over after the sign-up. */
 const stepKey = visitor ? VISITOR_STEP_KEY : TOUR_STEP_KEY
 

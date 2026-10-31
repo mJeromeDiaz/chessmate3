@@ -1,0 +1,130 @@
+{
+  "updated": "Dernière mise à jour : 31 octobre 2026",
+  "draft": "Brouillon à faire relire : ce texte décrit fidèlement le fonctionnement du site mais n’a pas encore été vérifié par un juriste.",
+  "home": "Retour à l’accueil",
+  "terms": {
+    "title": "Conditions d’utilisation",
+    "object": {
+      "title": "1. Objet",
+      "p": [
+        "Les présentes conditions encadrent l’utilisation de Don’t Stay Rooky, un site d’entraînement aux échecs (puzzles, parcours, modules, arène contre des boss), édité par {name}, particulier (ci-après « l’éditeur »).",
+        "Utiliser le site, avec ou sans compte, vaut acceptation de ces conditions."
+      ]
+    },
+    "access": {
+      "title": "2. Accès au site",
+      "p": [
+        "Le site est en accès anticipé : créer un compte demande une clé d’invitation. Sans clé, on peut rejoindre la liste d’attente.",
+        "Le mode invité (« Essayer sans compte ») permet de jouer sans compte aux modules en libre accès, au premier chapitre de chaque parcours et à l’arène. Ce que joue un invité reste attaché à ce navigateur : il est perdu s’il quitte le mode invité, efface les données du navigateur ou ne revient pas pendant 7 jours. Créer un compte depuis le mode invité garde ce qui a été joué.",
+        "Le site est gratuit. L’éditeur peut le faire évoluer, en suspendre une partie ou l’arrêter, sans indemnité."
+      ]
+    },
+    "account": {
+      "title": "3. Compte",
+      "p": [
+        "Il faut avoir au moins 15 ans pour créer un compte, ou l’accord d’un parent.",
+        "Tu t’engages à donner une adresse e-mail valide, à garder ton mot de passe secret et à ne pas partager ton compte. Tu peux te connecter avec un e-mail et un mot de passe (un code est alors envoyé par e-mail), ou avec Lichess ou Google.",
+        "Tu peux supprimer ton compte à tout moment depuis ton profil : il est gelé 30 jours, pendant lesquels tu peux revenir sur ta décision, puis effacé."
+      ]
+    },
+    "use": {
+      "title": "4. Bon usage",
+      "p": [
+        "Il est interdit d’automatiser le jeu (scripts, moteurs ou robots pour résoudre les exercices ou jouer dans l’arène), de contourner les limites du site (nombre de requêtes, comptes invités, positions de finales), de tenter d’accéder aux comptes ou aux données d’autrui, ou de perturber le fonctionnement du site.",
+        "En cas de manquement, l’éditeur peut suspendre ou supprimer le compte concerné."
+      ]
+    },
+    "crystals": {
+      "title": "5. XP, cristaux et récompenses",
+      "p": [
+        "L’XP, les niveaux, les séries, les badges et les cristaux sont des éléments de jeu. Les cristaux n’ont aucune valeur monétaire : ils ne s’achètent pas avec de l’argent, ne se revendent pas, ne s’échangent pas et ne se transfèrent pas. Ils ne servent qu’à obtenir des éléments du site (aides, boss de l’arène…).",
+        "Un invité ne gagne pas de cristaux. L’éditeur peut corriger un solde ou un classement faussé par une erreur ou un abus."
+      ]
+    },
+    "content": {
+      "title": "6. Contenus et propriété",
+      "p": [
+        "Les puzzles proviennent de la base ouverte de Lichess (domaine public, CC0). Les analyses sont calculées dans ton navigateur par Stockfish (licence GPL) et Maia (licence AGPL) ; les finales sont jugées par la tablebase de Lichess.",
+        "Les textes, personnages (professeurs et boss), illustrations et le logo de Don’t Stay Rooky appartiennent à l’éditeur : ils ne peuvent être réutilisés sans son accord."
+      ]
+    },
+    "liability": {
+      "title": "7. Responsabilité",
+      "p": [
+        "Le site est fourni tel quel, en cours de développement. L’éditeur fait de son mieux pour qu’il fonctionne et que tes données soient conservées, sans pouvoir garantir l’absence d’interruption, d’erreur ou de perte.",
+        "Les services de Lichess et de Google utilisés par le site restent soumis à leurs propres conditions."
+      ]
+    },
+    "changes": {
+      "title": "8. Modifications et droit applicable",
+      "p": [
+        "Ces conditions peuvent évoluer ; la date de mise à jour figure en haut de la page, et un changement important est annoncé dans le site.",
+        "Elles sont soumises au droit français. Pour toute question : {email}."
+      ]
+    }
+  },
+  "privacy": {
+    "title": "Confidentialité",
+    "controller": {
+      "title": "1. Responsable du traitement",
+      "p": [
+        "Les données personnelles traitées par Don’t Stay Rooky le sont par {name}, particulier, joignable à {email}.",
+        "Le site ne contient ni publicité ni outil de mesure d’audience, et tes données ne sont jamais vendues."
+      ]
+    },
+    "data": {
+      "title": "2. Données traitées",
+      "p": [
+        "Ton compte : adresse e-mail, mot de passe (stocké sous forme d’empreinte, jamais en clair), nom affiché, pseudo et avatar si tu les choisis, fuseau horaire, langue et préférences d’affichage.",
+        "Si tu te connectes avec Lichess : ton identifiant et ton pseudo Lichess, tes classements, et un jeton d’accès conservé chiffré, qui sert à lire tes parties quand tu le demandes (répertoire construit à partir de tes parties, séance sur mesure). Avec Google : ton identifiant et ton adresse e-mail vérifiée ; le jeton Google n’est pas conservé.",
+        "Ton entraînement : exercices joués, résultats et durées, séances, parcours, parties de l’arène, répertoires, XP, séries, badges et cristaux.",
+        "La sécurité : un journal des événements de ton compte (connexions, changements de mot de passe…) avec l’adresse IP et le navigateur, et une trace technique des requêtes (adresse IP, page appelée, date).",
+        "Les notifications, si tu les actives : l’adresse d’abonnement fournie par ton navigateur. La liste d’attente : l’adresse e-mail laissée.",
+        "En mode invité, aucune donnée d’identité n’est demandée : seuls ce que tu joues et les traces techniques ci-dessus sont enregistrés."
+      ]
+    },
+    "purposes": {
+      "title": "3. Pourquoi, et sur quelle base",
+      "p": [
+        "Fournir le service (ton compte, ton entraînement, ta progression) : exécution des présentes conditions.",
+        "Protéger le site et les comptes (prévention des abus, détection des connexions suspectes, limites de requêtes) : intérêt légitime de l’éditeur.",
+        "T’envoyer les e-mails nécessaires (vérification de l’adresse, code de connexion, réinitialisation du mot de passe) et les annonces de l’équipe : exécution des conditions et intérêt légitime ; tu peux refuser les annonces dans ton profil ou par le lien de chaque e-mail.",
+        "Les notifications du navigateur et les rappels : ton consentement, que tu retires quand tu veux."
+      ]
+    },
+    "retention": {
+      "title": "4. Durées de conservation",
+      "p": [
+        "Ton compte et ton entraînement : tant que ton compte existe. À sa suppression, il est gelé 30 jours puis effacé avec tout ce qui en dépend ; le journal de sécurité garde alors seulement des lignes anonymisées.",
+        "Les traces techniques des requêtes : 365 jours. Les sessions de connexion : 30 jours au plus (7 jours sans venir). Un appareil de confiance : 30 jours.",
+        "Un compte invité : effacé quand il n’a plus de session valide, soit au plus tard 7 jours après ta dernière visite (30 jours au plus après son ouverture).",
+        "Les sauvegardes de l’hébergeur sont conservées 7 jours."
+      ]
+    },
+    "recipients": {
+      "title": "5. Qui y a accès",
+      "p": [
+        "L’éditeur, pour faire fonctionner le site. Les données sont hébergées en France par OVH SAS (2 rue Kellermann, 59100 Roubaix) ; les e-mails partent du serveur du site.",
+        "Lichess, si tu y lies ton compte : la connexion et la lecture de tes parties passent par Lichess. Les positions d’échecs envoyées à Lichess pour l’explorateur d’ouvertures, l’évaluation et la tablebase ne contiennent aucune donnée personnelle.",
+        "Google, si tu te connectes avec Google ; Google peut traiter des données hors de l’Union européenne, selon ses propres règles.",
+        "Le service de notifications de ton navigateur (Google, Mozilla, Apple ou Microsoft), si tu actives les notifications : il ne reçoit que le contenu chiffré de la notification.",
+        "Les moteurs d’échecs (Stockfish, Maia) tournent dans ton navigateur : rien ne leur est envoyé."
+      ]
+    },
+    "cookies": {
+      "title": "6. Cookies et stockage du navigateur",
+      "p": [
+        "Le site n’utilise que des cookies nécessaires à son fonctionnement, sans consentement préalable : refresh_token (ta session, 30 jours au plus), trusted_device (l’appareil de confiance, 30 jours) et oauth_flow (une connexion Lichess ou Google en cours, quelques minutes).",
+        "Le stockage local du navigateur garde des préférences et des brouillons (étape de la visite guidée, brouillon de répertoire…). Aucun cookie publicitaire ni de mesure d’audience."
+      ]
+    },
+    "rights": {
+      "title": "7. Tes droits",
+      "p": [
+        "Tu peux accéder à tes données et les récupérer (export en un fichier depuis ton profil), les corriger (profil), les effacer (suppression du compte), t’opposer à un traitement ou en demander la limitation.",
+        "Pour tout autre demande : {email}. Tu peux aussi saisir la CNIL (www.cnil.fr).",
+        "Le compte est réservé aux personnes d’au moins 15 ans, ou aux plus jeunes avec l’accord d’un parent."
+      ]
+    }
+  }
+}

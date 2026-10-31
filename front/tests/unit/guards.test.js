@@ -1,16 +1,23 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createAuthGuard, FROZEN_PAGE, safeRedirect } from '@/router/guards'
+import {
+  ACCOUNT_PAGE,
+  createAuthGuard,
+  FROZEN_PAGE,
+  safeRedirect
+} from '@/router/guards'
 
 function fakeAuth({
   authenticated = false,
   mfa = null,
   frozen = false,
-  admin = false
+  admin = false,
+  guest = false
 } = {}) {
   return {
     isAuthenticated: authenticated,
     isFrozen: frozen,
     isAdmin: admin,
+    isGuest: guest,
     mfa,
     init: vi.fn(async () => {})
   }
@@ -22,6 +29,22 @@ const route = (auth, fullPath = '/somewhere') => ({
 })
 
 describe('createAuthGuard', () => {
+  it('opens a guest account the pages marked for it only, and the sign-up', async () => {
+    const guard = createAuthGuard(() =>
+      fakeAuth({ authenticated: true, guest: true })
+    )
+
+    expect(await guard({ meta: { auth: 'required', guestOpen: true } })).toBe(
+      true
+    )
+    expect(await guard(route('required', '/repertoire'))).toEqual({
+      path: ACCOUNT_PAGE
+    })
+    expect(await guard(route('admin'))).toEqual({ path: '/' })
+    expect(await guard(route('guest', '/register'))).toBe(true)
+    expect(await guard(route('public'))).toBe(true)
+  })
+
   it('restores the session before deciding', async () => {
     const auth = fakeAuth()
 

@@ -443,6 +443,7 @@
     "period": "From {from} to {to} ({tz})",
     "unverified": "{n} unverified email | {n} unverified emails",
     "suspended": "{n} suspended | {n} suspended",
+    "guests": "plus {n} guest | plus {n} guests",
     "inactive": "{n} inactive · one exercise in 7 days | {n} inactive · one exercise in 7 days",
     "rated": "{n} rated · {notLinked} not linked to Lichess | {n} rated · {notLinked} not linked to Lichess",
     "median": "median {n}",

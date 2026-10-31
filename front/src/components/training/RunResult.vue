@@ -56,7 +56,8 @@
  * end was seen on the page, once. A puzzle streak shows its best streak and its record instead of a
  * share (every streak ends on a miss); confetti for a record. A puzzle rush is judged on its
  * accuracy (its share solved) but shows its points, with its speed, accuracy and XP together. A
- * whole parcours shows its tiers' score, without mistakes to correct.
+ * whole parcours shows its tiers' score, without mistakes to correct. A guest then learns the XP
+ * an account would have kept (docs/GUEST.md).
  */
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -64,7 +65,9 @@ import RunEndReplay from '@/components/training/RunEndReplay.vue'
 import RunFixErrors from '@/components/training/result/RunFixErrors.vue'
 import RunResultScreen from '@/components/training/result/RunResultScreen.vue'
 import { trainingApi } from '@/services/api'
+import { useGuestStore } from '@/stores/guest'
 import { usePuzzleStore } from '@/stores/puzzle'
+import { runXp } from '@/utils/guest/runXp'
 import { rushLines, rushRing } from '@/utils/puzzleRush'
 import { wonBadges } from '@/utils/puzzleStreak'
 import { missedItems } from '@/utils/runEnd'
@@ -102,6 +105,7 @@ const emit = defineEmits({
 
 const router = useRouter()
 const puzzles = usePuzzleStore()
+const guest = useGuestStore()
 
 /** @type {import('vue').Ref<'result'|'fix'|'replay'>} */
 const view = ref('result')
@@ -166,6 +170,27 @@ async function load() {
     // Without the review, nothing to correct: the result screen still shows.
     items.value = []
   }
+  tellGuest(runId)
+}
+
+/**
+ * A guest's XP of the run (docs/GUEST.md): the ledger's once the worker wrote it, else what the
+ * submissions announced, else the rush's rule.
+ *
+ * @param {string} runId
+ */
+function tellGuest(runId) {
+  if (props.run.id !== runId) return
+  const metricsXp = props.run.summary?.metrics?.xp
+  guest.tell(
+    runId,
+    Math.max(
+      xp.value ?? 0,
+      runXp(runId),
+      typeof metricsXp === 'number' ? metricsXp : 0
+    ),
+    0
+  )
 }
 
 function close() {

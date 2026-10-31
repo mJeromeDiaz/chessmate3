@@ -9,6 +9,7 @@ use App\Entity\Training\Run;
 use App\Entity\User;
 use App\Enum\Training\CloseReason;
 use App\Enum\Training\Module;
+use App\Guest\GuestPolicy;
 use App\Repository\Training\RunRepository;
 use App\Training\Event\RunCompleted;
 use App\Training\Exception\AidRefusedException;
@@ -70,6 +71,7 @@ final class TimeboxRunner
         private readonly ModuleRegistry $modules,
         private readonly EventPublisher $events,
         private readonly ClockInterface $clock,
+        private readonly GuestPolicy $guests,
         #[AutowireIterator(RunClosedListenerInterface::TAG)]
         private readonly iterable $closedListeners = [],
     ) {
@@ -84,9 +86,11 @@ final class TimeboxRunner
      * @throws \App\Training\Exception\InvalidRunConfigException
      * @throws \App\Training\Exception\SubjectNotFoundException
      * @throws SubjectUnavailableException
+     * @throws \App\Guest\GuestRefusedException what stays an account's (docs/GUEST.md)
      */
     public function start(User $user, Module $module, Uuid $subjectId, int $budgetSeconds, array $config = [], ?Uuid $parentId = null, ?string $pathStep = null): Run
     {
+        $this->guests->assertRun($user, $module, $parentId, $pathStep);
         $implementation = $this->modules->for($module);
         $max = $implementation instanceof CountedModuleInterface && $implementation->isCounted($config) ? self::MAX_COUNTED_BUDGET_SECONDS : self::MAX_BUDGET_SECONDS;
         if ($budgetSeconds < self::MIN_BUDGET_SECONDS || $budgetSeconds > $max) {

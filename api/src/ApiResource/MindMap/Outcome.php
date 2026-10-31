@@ -61,6 +61,11 @@ final class Outcome
      * @var ChestView|null
      */
     public ?array $chest = null;
+    /**
+     * The crystals this run earned, its step's chest and those on the way; a guest's would have
+     * been earned with an account (docs/GUEST.md: nothing credited, the chests opened at once).
+     */
+    public int $crystals = 0;
     /** @var list<ChestView> every chest of the path not opened yet (those on the way too) */
     public array $unopenedChests = [];
 }

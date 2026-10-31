@@ -7,6 +7,7 @@ namespace App\State\MindMap;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\ApiResource\MindMap\Outcome;
+use App\Entity\MindMap\Chest;
 use App\MindMap\Path\Paths;
 use App\MindMap\Progress\PathCatalog;
 use App\MindMap\Progress\PathReader;
@@ -69,11 +70,32 @@ final class OutcomeProvider implements ProviderInterface
         $outcome->completed = $attempt->isCompleted();
         if ($outcome->completed) {
             $outcome->xp = $step->xp;
-            $chest = $this->chests->byStep($user, $capacity)[$step->key] ?? null;
+            $chests = $this->chests->byStep($user, $capacity);
+            $chest = $chests[$step->key] ?? null;
             $outcome->chest = null === $chest ? null : PathReader::chestView($chest);
+            $outcome->crystals = self::earnedAt($chests, $attempt->getJudgedAt());
         }
         $outcome->unopenedChests = $this->reader->unopenedChests($user, $capacity);
 
         return $outcome;
+    }
+
+    /**
+     * The crystals of the chests created when the run was judged: its step's and those on the way
+     * ({@see \App\MindMap\Progress\Rewarder} creates them with the verdict's instant).
+     *
+     * @param array<string, Chest> $chests
+     */
+    private static function earnedAt(array $chests, ?\DateTimeImmutable $judgedAt): int
+    {
+        if (null === $judgedAt) {
+            return 0;
+        }
+        $at = $judgedAt->format('Y-m-d H:i:s');
+
+        return array_sum(array_map(
+            static fn (Chest $chest): int => $chest->getCreatedAt()->format('Y-m-d H:i:s') === $at ? $chest->getCrystals() : 0,
+            array_values($chests),
+        ));
     }
 }

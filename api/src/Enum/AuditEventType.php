@@ -43,4 +43,6 @@ enum AuditEventType: string
     /** An admin suspended the account, or lifted its suspension (docs/EARLY_ACCESS.md). */
     case AccountSuspended = 'account_suspended';
     case AccountUnsuspended = 'account_unsuspended';
+    /** « Essayer sans compte »: a guest account opened (docs/GUEST.md). */
+    case GuestCreated = 'guest_created';
 }

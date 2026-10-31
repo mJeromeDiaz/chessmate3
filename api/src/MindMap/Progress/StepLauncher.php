@@ -11,6 +11,7 @@ use App\Entity\User;
 use App\Enum\MindMap\Capacity;
 use App\Enum\MindMap\StepKind;
 use App\Enum\MindMap\StepStatus;
+use App\Guest\GuestPolicy;
 use App\MindMap\Path\Activity;
 use App\MindMap\Path\Chapter;
 use App\MindMap\Path\PathState;
@@ -35,6 +36,7 @@ final readonly class StepLauncher
         private ClockInterface $clock,
         private PathCatalog $catalog,
         private ModuleRegistry $modules,
+        private GuestPolicy $guests,
     ) {
     }
 
@@ -49,6 +51,7 @@ final readonly class StepLauncher
     public function start(User $user, Capacity $capacity, string $key): Run
     {
         $found = $this->catalog->find($user, $capacity, $key) ?? throw new StepNotFoundException();
+        $this->guests->assertChapter($user, $found['chapter']);
         $step = $found['step'];
         $rows = $this->progress->byStep($user, $capacity);
         $status = PathState::statuses($this->chaptersOf($user, $capacity, $found['chapter']), Progresses::state($rows))[$key] ?? StepStatus::Locked;
@@ -84,6 +87,7 @@ final readonly class StepLauncher
     public function skip(User $user, Capacity $capacity, string $key): void
     {
         $found = $this->catalog->find($user, $capacity, $key) ?? throw new StepNotFoundException();
+        $this->guests->assertChapter($user, $found['chapter']);
         if (StepKind::Exercise !== $found['step']->kind) {
             throw new StepRefusedException(StepRefusedException::NOT_SKIPPABLE);
         }

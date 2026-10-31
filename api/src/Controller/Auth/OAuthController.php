@@ -7,6 +7,7 @@ namespace App\Controller\Auth;
 use App\Enum\AuditEventType;
 use App\Enum\AuthProvider;
 use App\Enum\OAuthFlowPurpose;
+use App\Guest\GuestSession;
 use App\Security\Account\AccountSuspendedException;
 use App\Security\Audit\AuditLogger;
 use App\Security\OAuth\Exception\OAuthFlowException;
@@ -37,6 +38,9 @@ use Symfony\Component\Routing\Attribute\Route;
  * starts the flow with a form POST carrying it, so the key never appears in a URL (nor in an
  * access log). It is checked before going to the provider, and spent when the account is opened.
  * A plain GET only signs existing accounts in.
+ *
+ * Started by a guest (docs/GUEST.md, recognised by its refresh cookie), the flow carries it: a new
+ * account is then that guest, promoted, with everything it played.
  */
 #[Route('/api/auth/oauth/{provider}', requirements: ['provider' => 'google|lichess'])]
 final class OAuthController extends AbstractController
@@ -49,6 +53,7 @@ final class OAuthController extends AbstractController
         private readonly AuditLogger $auditLogger,
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly RegistrationGateInterface $registrationGate,
+        private readonly GuestSession $guestSession,
         #[Autowire(service: 'limiter.oauth_ip')]
         private readonly RateLimiterFactory $oauthIpLimiter,
         #[Autowire('%env(FRONTEND_URL)%')]
@@ -71,7 +76,7 @@ final class OAuthController extends AbstractController
             }
         }
 
-        $flow = $this->flowService->start($provider, OAuthFlowPurpose::Login, registrationTicket: $ticket);
+        $flow = $this->flowService->start($provider, OAuthFlowPurpose::Login, $this->guestSession->of($request), registrationTicket: $ticket);
 
         $response = $this->noStore(new RedirectResponse($flow->authorizationUrl));
         $response->headers->setCookie($flow->bindingCookie);
@@ -105,7 +110,7 @@ final class OAuthController extends AbstractController
                 return $this->toSpa(['status' => 'success', 'mode' => 'link', 'provider' => $provider->value]);
             }
 
-            [$user, $created] = $this->accountService->resolveLogin($completed->identity, $completed->flow->getRegistrationTicket());
+            [$user, $created] = $this->accountService->resolveLogin($completed->identity, $completed->flow->getRegistrationTicket(), $completed->flow->getUser());
         } catch (OAuthFlowException|UniqueConstraintViolationException $exception) {
             $reason = $exception instanceof OAuthFlowException ? $exception->reason : OAuthFlowException::CONFLICT;
             $this->auditLogger->log(AuditEventType::OauthLoginFailure, $user, [

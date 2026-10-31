@@ -62,6 +62,8 @@ export const useGamificationStore = defineStore('gamification', () => {
    * @returns {Promise<void>}
    */
   async function load(parts = ['summary', 'trophies', 'quest']) {
+    // A guest has none of it to show (docs/GUEST.md): nothing asked.
+    if (useAuthStore().isGuest) return
     const message = t('dashboard.loadError')
     /** @type {Record<Part, () => Promise<void>>} */
     const loaders = {
@@ -101,7 +103,8 @@ export const useGamificationStore = defineStore('gamification', () => {
    * @returns {Promise<void>}
    */
   function celebrateStreak({ afterExercise = true } = {}) {
-    if (shownOn === today()) return Promise.resolve()
+    // A guest has no streak (docs/GUEST.md).
+    if (useAuthStore().isGuest || shownOn === today()) return Promise.resolve()
     if (checking) return checking
     checking = gamificationApi
       .streakNotice()

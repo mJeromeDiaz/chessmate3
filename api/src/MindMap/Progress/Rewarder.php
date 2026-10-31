@@ -68,8 +68,14 @@ final readonly class Rewarder
         if ($crystals > 0) {
             $chest = new Chest($user, $capacity, $step->key, $crystals, $now, $step->rewardKey);
             $this->entityManager->persist($chest);
-            $balance = $this->wallets->lock($user->getId(), $now);
-            $this->wallets->move($user->getId(), $balance, $crystals, LedgerKind::Reward, ['reason' => mb_substr(self::reason($capacity, $step), 0, 255)], $now);
+            if ($user->isGuest()) {
+                // What a guest would have earned (docs/GUEST.md): the chest records it, opened at
+                // once (nothing to open), and nothing is credited, even once promoted.
+                $chest->open($now);
+            } else {
+                $balance = $this->wallets->lock($user->getId(), $now);
+                $this->wallets->move($user->getId(), $balance, $crystals, LedgerKind::Reward, ['reason' => mb_substr(self::reason($capacity, $step), 0, 255)], $now);
+            }
         }
         $this->entityManager->flush();
         $this->events->publish(new StepCompleted(

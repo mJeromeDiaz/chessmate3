@@ -217,6 +217,7 @@
  */
 import { computed } from 'vue'
 import ConfettiBurst from '@/components/training/ConfettiBurst.vue'
+import { useAuthStore } from '@/stores/auth'
 import { FEEDBACK_THEMES, xpText } from '@/utils/feedback'
 
 const props = defineProps({
@@ -256,7 +257,9 @@ const KING = { 2: -32, 3: -32, 4: 14, 5: -6 }
 
 const win = computed(() => props.kind !== 'miss')
 const theme = computed(() => FEEDBACK_THEMES[props.palette ?? props.kind])
-const xpLabel = computed(() => xpText(props.xp))
+// A guest is told its XP at the end of the run only (docs/GUEST.md).
+const auth = useAuthStore()
+const xpLabel = computed(() => (auth.isGuest ? '' : xpText(props.xp)))
 const shakeX = computed(() => (win.value ? 0 : (SHAKE[props.step] ?? 0)))
 const kingR = computed(() => KING[props.step] ?? 0)
 const buttonsIn = computed(() => props.step >= (win.value ? 3 : 5))

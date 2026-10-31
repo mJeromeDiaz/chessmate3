@@ -197,7 +197,7 @@ const stats = computed(() => store.stats)
 
 const VALUE = [{ id: 'value' }]
 const accountsHint = computed(() => {
-  const { unverified, suspended } = stats.value.signups
+  const { unverified, suspended, guests = 0 } = stats.value.signups
   const parts = [
     t('admin.overview.unverified', { n: formatCount(unverified) }, unverified)
   ]
@@ -205,6 +205,9 @@ const accountsHint = computed(() => {
     parts.push(
       t('admin.overview.suspended', { n: formatCount(suspended) }, suspended)
     )
+  // Guests apart (docs/GUEST.md): never among the accounts.
+  if (guests > 0)
+    parts.push(t('admin.overview.guests', { n: formatCount(guests) }, guests))
   return parts.join(' · ')
 })
 const signups = computed(() => signupColumns(stats.value.signups.days))

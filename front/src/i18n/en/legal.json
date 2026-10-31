@@ -1,0 +1,130 @@
+{
+  "updated": "Last updated: 31 October 2026",
+  "draft": "Draft to be reviewed: this text faithfully describes how the site works but has not been checked by a lawyer yet. The French version prevails.",
+  "home": "Back to home",
+  "terms": {
+    "title": "Terms of use",
+    "object": {
+      "title": "1. Purpose",
+      "p": [
+        "These terms govern the use of Don’t Stay Rooky, a chess training site (puzzles, paths, modules, an arena against bosses), published by {name}, a private individual (the “publisher”).",
+        "Using the site, with or without an account, means accepting these terms."
+      ]
+    },
+    "access": {
+      "title": "2. Access",
+      "p": [
+        "The site is in early access: creating an account requires an invitation key. Without one, you can join the waiting list.",
+        "Guest mode (“Try without an account”) lets you play the free modules, the first chapter of each path and the arena without an account. What a guest plays stays tied to this browser: it is lost if you leave guest mode, clear the browser’s data or do not come back for 7 days. Creating an account from guest mode keeps what you played.",
+        "The site is free. The publisher may change it, suspend part of it or stop it, without compensation."
+      ]
+    },
+    "account": {
+      "title": "3. Account",
+      "p": [
+        "You must be at least 15 years old to create an account, or have a parent’s consent.",
+        "You agree to give a valid email address, to keep your password secret and not to share your account. You can sign in with an email and a password (a code is then emailed to you), or with Lichess or Google.",
+        "You can delete your account at any time from your profile: it is frozen for 30 days, during which you can change your mind, then erased."
+      ]
+    },
+    "use": {
+      "title": "4. Fair use",
+      "p": [
+        "You must not automate play (scripts, engines or bots solving the exercises or playing in the arena), get around the site’s limits (number of requests, guest accounts, endgame positions), try to access other people’s accounts or data, or disrupt the site.",
+        "If you do, the publisher may suspend or delete the account concerned."
+      ]
+    },
+    "crystals": {
+      "title": "5. XP, crystals and rewards",
+      "p": [
+        "XP, levels, streaks, badges and crystals are game elements. Crystals have no monetary value: they cannot be bought with money, sold, exchanged or transferred. They are only used to get items of the site (aids, arena bosses…).",
+        "A guest earns no crystals. The publisher may correct a balance or a rating distorted by an error or an abuse."
+      ]
+    },
+    "content": {
+      "title": "6. Content and ownership",
+      "p": [
+        "The puzzles come from Lichess’s open database (public domain, CC0). Analyses are computed in your browser by Stockfish (GPL licence) and Maia (AGPL licence); endgames are judged by the Lichess tablebase.",
+        "The texts, characters (teachers and bosses), illustrations and logo of Don’t Stay Rooky belong to the publisher: they may not be reused without permission."
+      ]
+    },
+    "liability": {
+      "title": "7. Liability",
+      "p": [
+        "The site is provided as is, while in development. The publisher does their best to keep it running and your data safe, without being able to guarantee there will be no interruption, error or loss.",
+        "The Lichess and Google services used by the site remain subject to their own terms."
+      ]
+    },
+    "changes": {
+      "title": "8. Changes and governing law",
+      "p": [
+        "These terms may change; the date of the last update is at the top of the page, and a significant change is announced in the site.",
+        "They are governed by French law. For any question: {email}."
+      ]
+    }
+  },
+  "privacy": {
+    "title": "Privacy",
+    "controller": {
+      "title": "1. Data controller",
+      "p": [
+        "The personal data processed by Don’t Stay Rooky are processed by {name}, a private individual, who can be reached at {email}.",
+        "The site has no advertising and no audience measurement, and your data are never sold."
+      ]
+    },
+    "data": {
+      "title": "2. Data processed",
+      "p": [
+        "Your account: email address, password (stored as a hash, never in clear), display name, handle and avatar if you choose them, timezone, language and display preferences.",
+        "If you sign in with Lichess: your Lichess id and username, your ratings, and an access token kept encrypted, used to read your games when you ask for it (repertoire built from your games, tailored session). With Google: your id and verified email address; the Google token is not kept.",
+        "Your training: exercises played, results and durations, sessions, paths, arena games, repertoires, XP, streaks, badges and crystals.",
+        "Security: a log of your account’s events (sign-ins, password changes…) with the IP address and browser, and a technical trace of requests (IP address, page requested, date).",
+        "Notifications, if you turn them on: the subscription address given by your browser. The waiting list: the email address left there.",
+        "In guest mode, no identity data are asked for: only what you play and the technical traces above are recorded."
+      ]
+    },
+    "purposes": {
+      "title": "3. Why, and on what basis",
+      "p": [
+        "Providing the service (your account, your training, your progress): performance of these terms.",
+        "Protecting the site and the accounts (preventing abuse, detecting suspicious sign-ins, request limits): the publisher’s legitimate interest.",
+        "Sending you the necessary emails (address verification, sign-in code, password reset) and the team’s announcements: performance of the terms and legitimate interest; you can refuse announcements in your profile or through the link in each email.",
+        "Browser notifications and reminders: your consent, which you can withdraw at any time."
+      ]
+    },
+    "retention": {
+      "title": "4. Retention",
+      "p": [
+        "Your account and your training: as long as your account exists. When it is deleted, it is frozen for 30 days then erased with everything that depends on it; the security log then keeps anonymised lines only.",
+        "Technical request traces: 365 days. Sign-in sessions: 30 days at most (7 days without a visit). A trusted device: 30 days.",
+        "A guest account: erased once it has no valid session left, at the latest 7 days after your last visit (30 days at most after it was opened).",
+        "The host’s backups are kept for 7 days."
+      ]
+    },
+    "recipients": {
+      "title": "5. Who has access",
+      "p": [
+        "The publisher, to run the site. The data are hosted in France by OVH SAS (2 rue Kellermann, 59100 Roubaix, France); emails are sent from the site’s own server.",
+        "Lichess, if you link your account: signing in and reading your games go through Lichess. The chess positions sent to Lichess for the opening explorer, evaluation and the tablebase contain no personal data.",
+        "Google, if you sign in with Google; Google may process data outside the European Union, under its own rules.",
+        "Your browser’s notification service (Google, Mozilla, Apple or Microsoft), if you turn notifications on: it only receives the notification’s encrypted content.",
+        "The chess engines (Stockfish, Maia) run in your browser: nothing is sent to them."
+      ]
+    },
+    "cookies": {
+      "title": "6. Cookies and browser storage",
+      "p": [
+        "The site only uses cookies needed for it to work, without prior consent: refresh_token (your session, 30 days at most), trusted_device (the trusted device, 30 days) and oauth_flow (a Lichess or Google sign-in in progress, a few minutes).",
+        "The browser’s local storage keeps preferences and drafts (step of the guided tour, repertoire draft…). No advertising or audience measurement cookie."
+      ]
+    },
+    "rights": {
+      "title": "7. Your rights",
+      "p": [
+        "You can access your data and download them (one-file export from your profile), correct them (profile), erase them (account deletion), object to a processing or ask for it to be restricted.",
+        "For any other request: {email}. You may also complain to the CNIL (www.cnil.fr), the French data protection authority.",
+        "Accounts are for people aged 15 or over, or younger with a parent’s consent."
+      ]
+    }
+  }
+}

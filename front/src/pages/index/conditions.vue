@@ -1,9 +1,9 @@
 <template>
-  <PlaceholderPage :title="$t('landing.footer.terms')" />
+  <LegalPage page="terms" />
 </template>
 
 <script setup>
-import PlaceholderPage from '@/components/landing/PlaceholderPage.vue'
+import LegalPage from '@/components/landing/LegalPage.vue'
 
 definePage({
   meta: {

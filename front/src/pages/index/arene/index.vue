@@ -113,6 +113,8 @@ import {
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: { title: 'arena.page.title' }
   }
 })

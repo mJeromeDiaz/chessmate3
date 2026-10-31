@@ -68,6 +68,8 @@ import { formatCount, groupThemes, themeText } from '@/utils/puzzle'
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: { title: 'puzzle.themesPage.title', subtitle: 'layout.nav.puzzles' }
   }
 })

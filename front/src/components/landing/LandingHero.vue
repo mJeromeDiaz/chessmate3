@@ -27,6 +27,7 @@
             data-testid="landing-tour"
             >{{ $t('landing.hero.tour') }}</router-link
           >
+          <TryWithoutAccount class="landing-btn--light" />
           <button
             type="button"
             class="landing-btn landing-btn--light"
@@ -56,6 +57,7 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import TryWithoutAccount from '@/components/guest/TryWithoutAccount.vue'
 import { TOUR_PATH } from '@/utils/auth/authFlow'
 import {
   HERO_CAST,

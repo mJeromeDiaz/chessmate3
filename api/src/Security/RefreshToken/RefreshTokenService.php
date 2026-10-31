@@ -132,6 +132,20 @@ final readonly class RefreshTokenService
     }
 
     /**
+     * The user of a presented token, if it is still active: the guest behind a browser that starts
+     * a sign-up (docs/GUEST.md), the refresh cookie being the only credential a top-level
+     * navigation carries.
+     */
+    public function userOf(string $presentedPlainToken): ?User
+    {
+        $refreshToken = $this->manager->get($presentedPlainToken);
+
+        return $refreshToken instanceof RefreshToken && !$refreshToken->isRevoked() && $refreshToken->isValid()
+            ? $this->loadUser($refreshToken)
+            : null;
+    }
+
+    /**
      * When the presented session signed in, if it is still active and belongs to $user: proves a
      * recent sign-in (account deletion without an email, docs/AUTH.md).
      */

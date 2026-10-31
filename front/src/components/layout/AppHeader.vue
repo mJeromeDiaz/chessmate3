@@ -26,9 +26,22 @@
       >
     </div>
 
-    <StreakChip />
-    <WheelChip />
-    <CrystalChip />
+    <template v-if="auth.isMember">
+      <StreakChip />
+      <WheelChip />
+      <CrystalChip />
+    </template>
+    <!-- A guest (docs/GUEST.md): no streak nor crystals, the sign-up instead. -->
+    <q-btn
+      v-else
+      unelevated
+      no-caps
+      dense
+      to="/creer-un-compte"
+      class="app-bar__account"
+      :label="$t('guest.header')"
+      data-testid="header-create-account"
+    />
     <q-btn
       flat
       dense
@@ -48,6 +61,7 @@ import StreakChip from '@/components/gamification/StreakChip.vue'
 import CrystalChip from '@/components/layout/CrystalChip.vue'
 import WheelChip from '@/components/layout/WheelChip.vue'
 import { t } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 import { useLayoutStore } from '@/stores/layout'
 import { parentPath } from '@/utils/layout/pageHeader'
 
@@ -60,6 +74,7 @@ const emit = defineEmits(['menu'])
 const route = useRoute()
 const router = useRouter()
 const layout = useLayoutStore()
+const auth = useAuthStore()
 
 /** @type {import('vue').ComputedRef<import('@/utils/layout/pageHeader').PageHeaderMeta>} */
 const meta = computed(() => route.meta.header ?? {})
@@ -99,6 +114,16 @@ const parent = computed(() => parentPath(route.path, exists, meta.value.parent))
   border-radius: 12px;
   background: var(--cm-subtle);
   color: var(--cm-ink);
+  flex-shrink: 0;
+}
+
+.app-bar__account {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--cm-brand);
+  color: #fff;
+  font-weight: 700;
   flex-shrink: 0;
 }
 

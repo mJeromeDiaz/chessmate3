@@ -92,6 +92,7 @@
             class="landing-menu__btn landing-menu__btn--lime"
             ><span aria-hidden="true">♞︎</span>{{ $t('landing.lichess') }}</a
           >
+          <TryWithoutAccount class="landing-menu__btn landing-menu__try" />
           <router-link to="/login" class="landing-menu__btn">{{
             $t('landing.menu.account')
           }}</router-link>
@@ -103,6 +104,7 @@
 
 <script setup>
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import TryWithoutAccount from '@/components/guest/TryWithoutAccount.vue'
 import LocaleMenu from '@/components/theme/LocaleMenu.vue'
 import ThemeMenu from '@/components/theme/ThemeMenu.vue'
 import { authApi } from '@/services/api'
@@ -341,6 +343,15 @@ function go(id) {
 
   &:hover {
     color: #fff;
+  }
+
+  &.landing-menu__try {
+    width: 100%;
+    border: 0;
+    font: inherit;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
   }
 
   &--lime {

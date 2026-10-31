@@ -535,6 +535,8 @@ export function refusalText(error) {
   )
   if (detail.includes('no_repertoire'))
     return t('mindMapPath.refusals.noRepertoire')
+  // A guest: the first chapter only (docs/GUEST.md).
+  if (detail === 'account_required') return t('guest.refusals.chapter')
   if (detail.startsWith('step_'))
     return t(`mindMapPath.refusals.${detail.slice(5)}`)
   if (/** @type {any} */ (error)?.response?.status === 409)

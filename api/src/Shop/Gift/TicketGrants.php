@@ -28,7 +28,7 @@ final readonly class TicketGrants
     public const BATCH_LIMIT = 20;
     /** The players written per statement in a gift to everyone. */
     private const CHUNK = 1000;
-    private const ACTIVE = 'suspended_at IS NULL AND deletion_scheduled_at IS NULL';
+    private const ACTIVE = 'suspended_at IS NULL AND deletion_scheduled_at IS NULL AND guest = 0';
 
     public function __construct(
         private Connection $connection,

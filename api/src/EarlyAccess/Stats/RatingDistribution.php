@@ -28,7 +28,8 @@ final class RatingDistribution
     public function compute(): array
     {
         $rows = $this->connection->fetchFirstColumn("SELECT metadata FROM auth_identity WHERE provider = 'lichess'");
-        $players = Sql::int($this->connection->fetchOne('SELECT COUNT(*) FROM app_user'));
+        // Guests are no players of the community (docs/GUEST.md).
+        $players = Sql::int($this->connection->fetchOne('SELECT COUNT(*) FROM app_user WHERE guest = 0'));
 
         $ratings = [];
         $byPerf = array_fill_keys(LichessRating::PERFS, 0);

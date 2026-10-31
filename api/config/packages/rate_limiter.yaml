@@ -86,6 +86,16 @@ framework:
             policy: sliding_window
             limit: 5
             interval: '15 minutes'
+        # Guests (docs/GUEST.md): each « Essayer sans compte » writes an account. Per IP, and for the
+        # whole site (identifier « all »), so that nobody can fill the database with guests.
+        guest_ip:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+        guest_global:
+            policy: fixed_window
+            limit: 500
+            interval: '24 hours'
         # Starting an OAuth flow writes a row (state + PKCE verifier); completing one calls the provider.
         oauth_ip:
             policy: sliding_window
@@ -300,3 +310,12 @@ when@e2e:
                 policy: sliding_window
                 limit: 100000
                 interval: '1 hour'
+            # Every guest of a run (and of reruns) comes from 127.0.0.1 too.
+            guest_ip:
+                policy: sliding_window
+                limit: 100000
+                interval: '1 hour'
+            guest_global:
+                policy: fixed_window
+                limit: 100000
+                interval: '24 hours'

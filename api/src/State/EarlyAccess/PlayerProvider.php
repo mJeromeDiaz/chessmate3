@@ -46,7 +46,9 @@ final class PlayerProvider implements ProviderInterface
         $filters = \is_array($context['filters'] ?? null) ? $context['filters'] : [];
         $search = \is_string($filters['search'] ?? null) ? trim($filters['search']) : '';
 
+        // Guests are no players to manage (docs/GUEST.md): counted apart in the statistics.
         $qb = $this->users->createQueryBuilder('u')
+            ->where('u.guest = false')
             ->orderBy('u.createdAt', 'DESC')
             ->addOrderBy('u.id', 'DESC');
         if ('' !== $search) {

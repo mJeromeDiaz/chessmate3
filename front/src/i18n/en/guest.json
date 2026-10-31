@@ -1,0 +1,50 @@
+{
+  "header": "Create my account",
+  "locked": "With an account",
+  "try": {
+    "label": "Try without an account",
+    "busy": "One moment…"
+  },
+  "home": {
+    "kicker": "GUEST MODE",
+    "title": "Welcome, play right away!",
+    "lead": "Your games stay on this device. Create your account to keep your progress, earn your crystals and open everything else.",
+    "paths": "The paths: the first chapter",
+    "modules": "Free to play",
+    "locked": "With an account"
+  },
+  "missed": {
+    "title": "With an account, it was yours!",
+    "both": "You could have earned {xp} XP and {crystals} crystals with an account.",
+    "xp": "You could have earned {xp} XP with an account.",
+    "crystals": "You could have earned {crystals} crystals with an account.",
+    "fast": "It takes a few seconds with Lichess.",
+    "lichess": "Create my account with Lichess",
+    "later": "Later"
+  },
+  "account": {
+    "header": "Create my account",
+    "kicker": "YOU ARE PLAYING AS A GUEST",
+    "title": "Create your account",
+    "lead": "Everything you played as a guest is kept: your rating, your paths, your arena games.",
+    "perks": [
+      "Every chapter of the paths, and the challenges",
+      "Your repertoire, the Woodpecker and your tailored sessions",
+      "Your crystals, your streak and the shop",
+      "Endgames without a daily limit"
+    ],
+    "lichess": "Continue with Lichess",
+    "email": "With an email",
+    "key": "During early access, an invitation key is required. Without one, you can join the waiting list."
+  },
+  "menu": {
+    "text": "Keep your progress",
+    "leave": "Leave guest mode",
+    "leaveText": "Your guest progress will be lost"
+  },
+  "refusals": {
+    "accountRequired": "You need an account for this: create it in a few seconds.",
+    "endgameQuota": "You have played your 3 endgame positions of the day. Come back tomorrow, or create your account to play without a limit.",
+    "chapter": "As a guest, only the first chapter is open: create your account for the rest."
+  }
+}

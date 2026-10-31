@@ -127,6 +127,8 @@ import {
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: {
       title: 'puzzleStreak.page.title',
       subtitle: 'layout.header.kickers.free'

@@ -15,6 +15,7 @@ Conventions :
 | Méthode | Route | Accès | Rôle | Réponses |
 |---|---|---|---|---|
 | POST | `/api/auth/register` | public | Inscription `{email, password, invitationKey}` (clé d'accès anticipé, voir `EARLY_ACCESS.md`) ; envoie le lien de vérification. | 202 (toujours avec une clé valide, anti-énumération), 422 (validation, ou clé refusée `{error}`) |
+| POST | `/api/auth/guest` | public + en-tête `X-Guest-Request: 1` | « Essayer sans compte » : un compte invité et sa session (voir `GUEST.md`). | 201 `{accessToken}` + RT ; 403 (sans l'en-tête) ; 429 |
 | GET | `/api/auth/verify-email/{id}` | lien signé | Confirme l'adresse (ou l'email en attente) puis redirige vers `/#/login?verified=1\|0`. | 302 |
 | POST | `/api/auth/verify-email/resend` | public | Renvoie le lien `{email}`. | 202 (toujours) |
 | POST | `/api/auth/login` | public | Étape 1 `{email, password}`. | 202 `{mfaPendingToken, method, expiresAt}` ; 200 `{accessToken}` + RT si appareil de confiance ; 401 ; 403 (email non vérifié) ; 423 (compte suspendu, voir `EARLY_ACCESS.md`) ; 429 |
@@ -222,6 +223,10 @@ sequenceDiagram
 ```
 
 ## Connexion OAuth (Google, Lichess)
+
+Lancée par un **invité** (son cookie de session accompagne le formulaire), une inscription Lichess
+avec une clé **promeut l'invité** au lieu d'ouvrir un compte neuf ; de même l'inscription par
+e-mail, à la vérification de l'adresse. Voir [GUEST.md](GUEST.md), § 5.
 
 ```mermaid
 sequenceDiagram

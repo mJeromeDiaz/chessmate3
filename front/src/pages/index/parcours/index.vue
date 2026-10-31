@@ -11,7 +11,8 @@
  */
 import { useRouter } from 'vue-router'
 
-definePage({ meta: { auth: 'required' } })
+// Open to a guest (docs/GUEST.md): it only redirects to the défis.
+definePage({ meta: { auth: 'required', guestOpen: true } })
 
 useRouter().replace('/defis')
 </script>

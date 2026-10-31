@@ -52,7 +52,8 @@ final readonly class StreakNoticeWriter implements EventSubscriberInterface
             return;
         }
         $user = $this->users->find(Uuid::fromString($message->userId));
-        if (null === $user) {
+        // A guest has no streak to celebrate, no chest, no reminder (docs/GUEST.md).
+        if (null === $user || $user->isGuest()) {
             return;
         }
         $timezone = $user->getDateTimeZone();

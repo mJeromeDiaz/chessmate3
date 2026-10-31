@@ -178,6 +178,8 @@ import { t } from '@/i18n'
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: {
       title: 'endgame.page.title',
       subtitle: 'layout.header.kickers.free'

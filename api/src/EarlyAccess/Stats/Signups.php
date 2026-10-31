@@ -16,7 +16,7 @@ use Doctrine\DBAL\Connection;
  *
  * @phpstan-type ByMethod array{password: int, google: int, lichess: int, other: int}
  * @phpstan-type Day array{date: string, total: int, byMethod: ByMethod}
- * @phpstan-type Summary array{total: int, byMethod: ByMethod, days: list<Day>, accounts: int, unverified: int, suspended: int}
+ * @phpstan-type Summary array{total: int, byMethod: ByMethod, days: list<Day>, accounts: int, unverified: int, suspended: int, guests: int}
  */
 final class Signups
 {
@@ -39,7 +39,7 @@ final class Signups
                       WHERE l.actor_id = u.id AND l.action = 'key_used'
                       LIMIT 1) AS method
                FROM app_user u
-              WHERE u.created_at >= :since",
+              WHERE u.created_at >= :since AND u.guest = 0",
             ['since' => Sql::instant($period->since)],
         );
 
@@ -65,7 +65,9 @@ final class Signups
         }
 
         $counts = $this->connection->fetchAssociative(
-            'SELECT COUNT(*) AS accounts, SUM(email IS NOT NULL AND email_verified_at IS NULL) AS unverified, SUM(suspended_at IS NOT NULL) AS suspended FROM app_user',
+            // Guests apart (docs/GUEST.md): their number now, never among the accounts.
+            'SELECT SUM(guest = 0) AS accounts, SUM(guest = 0 AND email IS NOT NULL AND email_verified_at IS NULL) AS unverified,
+                    SUM(suspended_at IS NOT NULL) AS suspended, SUM(guest = 1) AS guests FROM app_user',
         ) ?: [];
 
         return [
@@ -75,6 +77,7 @@ final class Signups
             'accounts' => Sql::int($counts['accounts'] ?? 0),
             'unverified' => Sql::int($counts['unverified'] ?? 0),
             'suspended' => Sql::int($counts['suspended'] ?? 0),
+            'guests' => Sql::int($counts['guests'] ?? 0),
         ];
     }
 

@@ -214,8 +214,8 @@
       :status="game.status"
       :end="game.end"
       :line="line"
-      :xp="game.xp"
-      :crystals="game.crystals"
+      :xp="auth.isGuest ? 0 : game.xp"
+      :crystals="auth.isGuest ? 0 : game.crystals"
       :glyph="glyph"
       :colors="colors"
       :busy="acting"
@@ -248,6 +248,7 @@ import { useMoveStepper } from '@/composables/arena/useMoveStepper'
 import { usePageHeader } from '@/composables/layout/usePageHeader'
 import { t } from '@/i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useGuestStore } from '@/stores/guest'
 import { useShopStore } from '@/stores/shop'
 import { apiErrorMessage } from '@/utils/apiError'
 import { bossText, cardPicture, paletteOf } from '@/utils/arena'
@@ -257,6 +258,8 @@ import { materialOf } from '@/utils/chess/material'
 definePage({
   meta: {
     auth: 'required',
+    // Open to a guest (docs/GUEST.md).
+    guestOpen: true,
     header: { title: 'arena.page.title' }
   }
 })
@@ -266,6 +269,7 @@ const route = useRoute()
 const router = useRouter()
 const shop = useShopStore()
 const auth = useAuthStore()
+const guest = useGuestStore()
 const arena = useArenaGame()
 
 const error = ref('')
@@ -404,6 +408,12 @@ watch(
     if (crystals && shop.state) shop.load().catch(() => {})
   }
 )
+
+// A guest, the game over: what an account would have kept (docs/GUEST.md).
+watch(finished, over => {
+  const ended = game.value
+  if (over && ended) guest.tell(ended.id, ended.xp ?? 0, ended.crystals ?? 0)
+})
 
 onMounted(async () => {
   window.addEventListener('keydown', onKey)

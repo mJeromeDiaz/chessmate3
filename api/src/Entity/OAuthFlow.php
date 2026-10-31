@@ -54,7 +54,7 @@ class OAuthFlow
         private string $stateHash,
         #[ORM\Column(length: 128, options: ['charset' => 'ascii', 'collation' => 'ascii_bin'])]
         private string $codeVerifier,
-        /** The user linking an account; null for a login. */
+        /** The user linking an account; for a login, the guest it may promote (docs/GUEST.md), else null. */
         #[ORM\ManyToOne]
         #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
         private ?User $user = null,

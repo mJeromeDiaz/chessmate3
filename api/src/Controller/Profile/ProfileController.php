@@ -244,6 +244,8 @@ final class ProfileController extends AbstractController
             'createdAt' => $user->getCreatedAt()->format(\DATE_ATOM),
             // Opens the admin dashboard in the SPA (the API checks ROLE_ADMIN on its own).
             'isAdmin' => \in_array('ROLE_ADMIN', $user->getRoles(), true),
+            // A guest (docs/GUEST.md): the SPA shows only what it may play.
+            'isGuest' => $user->isGuest(),
             'timezone' => $user->getTimezone(),
             'theme' => $user->getTheme()?->value,
             'locale' => $user->getLocale()?->value,

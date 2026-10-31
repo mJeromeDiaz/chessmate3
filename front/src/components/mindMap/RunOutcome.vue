@@ -58,7 +58,7 @@
             total: outcome.required
           })
         }}</span>
-        <span v-if="outcome.xp > 0" class="run-outcome__xp">{{
+        <span v-if="outcome.xp > 0 && !auth.isGuest" class="run-outcome__xp">{{
           $t('mindMapPath.sheet.xp', { xp: outcome.xp })
         }}</span>
       </div>
@@ -108,7 +108,7 @@
     <BossVictory
       v-if="victoryOpen && step"
       :step="step"
-      :xp="outcome?.xp ?? 0"
+      :xp="auth.isGuest ? 0 : (outcome?.xp ?? 0)"
       :chest="chests.length > 0"
       @continue="leaveVictory"
     />
@@ -140,7 +140,10 @@ import BossVictory from '@/components/mindMap/BossVictory.vue'
 import TreasureChest from '@/components/shop/TreasureChest.vue'
 import { mindMapApi } from '@/services/api'
 import { useArenaStore } from '@/stores/arena'
+import { useAuthStore } from '@/stores/auth'
+import { useGuestStore } from '@/stores/guest'
 import { useTrainingStore } from '@/stores/training'
+import { runXp } from '@/utils/guest/runXp'
 import { apiErrorMessage } from '@/utils/apiError'
 import {
   BOSS_LIVES,
@@ -165,6 +168,8 @@ const props = defineProps({
 const router = useRouter()
 const training = useTrainingStore()
 const arena = useArenaStore()
+const auth = useAuthStore()
+const guest = useGuestStore()
 
 /** @type {import('vue').Ref<any>} the API's verdict */
 const outcome = ref(null)
@@ -219,6 +224,12 @@ async function load() {
     chests.value = verdict.unopenedChests ?? []
     victoryOpen.value = outcomeKey(verdict) === 'victory' && !!step.value
     loaded.value = true
+    // A guest: the step's XP and crystals an account would have kept (docs/GUEST.md).
+    guest.tell(
+      props.runId,
+      (verdict.xp ?? 0) + runXp(props.runId),
+      verdict.crystals ?? 0
+    )
   } catch (e) {
     error.value = apiErrorMessage(e)
   }

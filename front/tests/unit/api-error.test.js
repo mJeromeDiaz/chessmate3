@@ -29,6 +29,18 @@ describe('apiErrorMessage', () => {
     )
   })
 
+  it('explains what a guest is refused, on any page', () => {
+    const refused = detail => ({
+      response: { status: 403, headers: {}, data: { detail } }
+    })
+
+    expect(apiErrorMessage(refused('guest_endgame_quota'))).toContain('demain')
+    expect(apiErrorMessage(refused('account_required'))).toContain('compte')
+    expect(apiErrorMessage(refused('Access Denied.'), { 403: 'Non.' })).toBe(
+      'Non.'
+    )
+  })
+
   it('says when the server cannot be reached', () => {
     expect(apiErrorMessage(new Error('Network Error'))).toBe(
       'Le serveur est injoignable. Vérifiez votre connexion.'

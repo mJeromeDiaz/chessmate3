@@ -33,14 +33,16 @@ final class CommunityActivity
      */
     public function compute(Period $period, \DateTimeImmutable $now): array
     {
-        $players = Sql::int($this->connection->fetchOne('SELECT COUNT(*) FROM app_user'));
+        // Guests are no players of the community (docs/GUEST.md): neither counted nor active.
+        $players = Sql::int($this->connection->fetchOne('SELECT COUNT(*) FROM app_user WHERE guest = 0'));
         $active = $this->activeCount($now);
 
         $rows = $this->connection->fetchAllAssociative(
-            'SELECT local_date, user_id, SUM(duration_ms) AS ms
-               FROM activity_log_entry
-              WHERE local_date BETWEEN :from AND :today
-              GROUP BY local_date, user_id',
+            'SELECT a.local_date, a.user_id, SUM(a.duration_ms) AS ms
+               FROM activity_log_entry a
+               JOIN app_user u ON u.id = a.user_id AND u.guest = 0
+              WHERE a.local_date BETWEEN :from AND :today
+              GROUP BY a.local_date, a.user_id',
             ['from' => $period->fromDate(), 'today' => $period->todayDate()],
         );
 
@@ -98,7 +100,8 @@ final class CommunityActivity
         $since = self::activeSince($now);
 
         return Sql::int($this->connection->fetchOne(
-            'SELECT COUNT(DISTINCT user_id) FROM activity_log_entry WHERE local_date >= :day AND occurred_at >= :since',
+            'SELECT COUNT(DISTINCT a.user_id) FROM activity_log_entry a JOIN app_user u ON u.id = a.user_id AND u.guest = 0
+              WHERE a.local_date >= :day AND a.occurred_at >= :since',
             ['day' => $since->setTimezone(new \DateTimeZone('UTC'))->modify('-1 day')->format('Y-m-d'), 'since' => Sql::instant($since)],
         ));
     }
