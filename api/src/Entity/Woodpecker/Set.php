@@ -111,7 +111,7 @@ class Set
         length: 5,
         insertable: false,
         updatable: false,
-        columnDefinition: "VARCHAR(5) GENERATED ALWAYS AS (IFNULL(opening_color, '')) VIRTUAL",
+        columnDefinition: "VARCHAR(5) GENERATED ALWAYS AS (IFNULL(opening_color, '')) VIRTUAL NOT NULL",
         generated: 'ALWAYS',
     )]
     private string $openingSlot = '';

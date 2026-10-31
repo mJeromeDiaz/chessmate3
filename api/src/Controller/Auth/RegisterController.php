@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -51,9 +51,9 @@ final class RegisterController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly GuestSession $guestSession,
         #[Autowire(service: 'limiter.register_ip')]
-        private readonly RateLimiterFactory $registerIpLimiter,
+        private readonly RateLimiterFactoryInterface $registerIpLimiter,
         #[Autowire(service: 'limiter.register_identifier')]
-        private readonly RateLimiterFactory $registerIdentifierLimiter,
+        private readonly RateLimiterFactoryInterface $registerIdentifierLimiter,
     ) {
     }
 

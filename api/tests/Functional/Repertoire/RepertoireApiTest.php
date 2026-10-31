@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Repertoire;
 
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * @phpstan-import-type MoveJson from RepertoireWebTestCase
@@ -252,7 +252,7 @@ final class RepertoireApiTest extends RepertoireWebTestCase
         $alice = $this->createUser('alice@example.com');
         $repertoire = $this->createRepertoireVia($alice);
         $root = $this->graph($alice, $repertoire['id'])['rootPositionId'];
-        /** @var RateLimiterFactory $limiter */
+        /** @var RateLimiterFactoryInterface $limiter */
         $limiter = self::getContainer()->get('limiter.repertoire_edit');
         $limiter->create($alice->getId()->toRfc4122())->consume(600);
 

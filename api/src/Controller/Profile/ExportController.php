@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -29,7 +29,7 @@ final class ExportController extends AbstractController
         private readonly RateLimitGuard $rateLimitGuard,
         private readonly AuditLogger $auditLogger,
         #[Autowire(service: 'limiter.profile_export')]
-        private readonly RateLimiterFactory $exportLimiter,
+        private readonly RateLimiterFactoryInterface $exportLimiter,
     ) {
     }
 

@@ -14,7 +14,7 @@ use App\Repertoire\RepertoireManager;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /repertoires. 422 when the user has as many repertoires as allowed.
@@ -27,7 +27,7 @@ final class CreateRepertoireProcessor implements ProcessorInterface
         private readonly RepertoireManager $manager,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $repertoireCreateLimiter,
+        private readonly RateLimiterFactoryInterface $repertoireCreateLimiter,
     ) {
     }
 

@@ -15,7 +15,7 @@ use App\Evaluation\Verification\PositionVerifier;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /admin/evaluation/verification, within the admins' write budget (each check reaches
@@ -29,7 +29,7 @@ final class PositionCheckProcessor implements ProcessorInterface
         private readonly PositionVerifier $verifier,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $adminWriteLimiter,
+        private readonly RateLimiterFactoryInterface $adminWriteLimiter,
     ) {
     }
 

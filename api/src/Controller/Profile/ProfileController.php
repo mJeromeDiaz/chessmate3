@@ -32,7 +32,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Uid\Uuid;
@@ -53,13 +53,13 @@ final class ProfileController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly HandleChecker $handleChecker,
         #[Autowire(service: 'limiter.password_change_ip')]
-        private readonly RateLimiterFactory $passwordIpLimiter,
+        private readonly RateLimiterFactoryInterface $passwordIpLimiter,
         #[Autowire(service: 'limiter.password_change_identifier')]
-        private readonly RateLimiterFactory $passwordIdentifierLimiter,
+        private readonly RateLimiterFactoryInterface $passwordIdentifierLimiter,
         #[Autowire(service: 'limiter.profile_write')]
-        private readonly RateLimiterFactory $profileWriteLimiter,
+        private readonly RateLimiterFactoryInterface $profileWriteLimiter,
         #[Autowire(service: 'limiter.profile_handle_check')]
-        private readonly RateLimiterFactory $handleCheckLimiter,
+        private readonly RateLimiterFactoryInterface $handleCheckLimiter,
     ) {
     }
 

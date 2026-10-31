@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
@@ -32,9 +32,9 @@ final class VerifyEmailController extends AbstractController
         private readonly AuditLogger $auditLogger,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.verify_email_resend_ip')]
-        private readonly RateLimiterFactory $resendIpLimiter,
+        private readonly RateLimiterFactoryInterface $resendIpLimiter,
         #[Autowire(service: 'limiter.verify_email_resend_identifier')]
-        private readonly RateLimiterFactory $resendIdentifierLimiter,
+        private readonly RateLimiterFactoryInterface $resendIdentifierLimiter,
         #[Autowire('%env(FRONTEND_URL)%')]
         private readonly string $frontendUrl,
     ) {

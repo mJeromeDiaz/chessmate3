@@ -25,7 +25,7 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -56,9 +56,9 @@ final class LoginController extends AbstractController
         private readonly AuditLogger $auditLogger,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.login_ip')]
-        private readonly RateLimiterFactory $loginIpLimiter,
+        private readonly RateLimiterFactoryInterface $loginIpLimiter,
         #[Autowire(service: 'limiter.login_identifier')]
-        private readonly RateLimiterFactory $loginIdentifierLimiter,
+        private readonly RateLimiterFactoryInterface $loginIdentifierLimiter,
     ) {
     }
 

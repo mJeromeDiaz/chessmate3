@@ -14,7 +14,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /arena/bosses/{boss}/purchase (docs/ARENA.md, § 6 bis): a refusal becomes its status, its
@@ -29,7 +29,7 @@ final class PurchaseProcessor implements ProcessorInterface
         private readonly OverviewProvider $overview,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $arenaGameWriteLimiter,
+        private readonly RateLimiterFactoryInterface $arenaGameWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

@@ -19,7 +19,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -35,7 +35,7 @@ final class ApplyImportProcessor implements ProcessorInterface
         private readonly ImportService $imports,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $repertoireEditLimiter,
+        private readonly RateLimiterFactoryInterface $repertoireEditLimiter,
     ) {
     }
 

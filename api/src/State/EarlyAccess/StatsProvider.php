@@ -15,7 +15,7 @@ use App\EarlyAccess\Stats\Signups;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * GET /admin/stats?days= (admins only, rate limited per admin: admin_read).
@@ -31,7 +31,7 @@ final class StatsProvider implements ProviderInterface
         private readonly RatingDistribution $ratingDistribution,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $adminReadLimiter,
+        private readonly RateLimiterFactoryInterface $adminReadLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

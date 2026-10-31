@@ -10,7 +10,7 @@ use App\Repertoire\Import\Message\AnalyzeImportHandler;
 use App\Repertoire\Import\Message\ApplyImport;
 use App\Repertoire\Import\Message\ApplyImportHandler;
 use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * /repertoires/imports: create, preview, apply; small imports during the request, big ones by
@@ -232,7 +232,7 @@ final class ImportApiTest extends RepertoireWebTestCase
     public function testImportsAreRateLimited(): void
     {
         $alice = $this->createUser('alice@example.com');
-        /** @var RateLimiterFactory $limiter */
+        /** @var RateLimiterFactoryInterface $limiter */
         $limiter = self::getContainer()->get('limiter.repertoire_import');
         $limiter->create($alice->getId()->toRfc4122())->consume(10);
 

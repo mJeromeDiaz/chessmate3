@@ -18,7 +18,7 @@ use App\Woodpecker\Set\PuzzleReplacer;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -35,7 +35,7 @@ final class ReplacePuzzleProcessor implements ProcessorInterface
         private readonly PuzzleCatalog $catalog,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $woodpeckerAttemptStartLimiter,
+        private readonly RateLimiterFactoryInterface $woodpeckerAttemptStartLimiter,
     ) {
     }
 

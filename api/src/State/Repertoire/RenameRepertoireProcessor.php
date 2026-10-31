@@ -15,7 +15,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /repertoires/{id}/rename.
@@ -29,7 +29,7 @@ final class RenameRepertoireProcessor implements ProcessorInterface
         private readonly SegmentRepository $segments,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $repertoireEditLimiter,
+        private readonly RateLimiterFactoryInterface $repertoireEditLimiter,
     ) {
     }
 

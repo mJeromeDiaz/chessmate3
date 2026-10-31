@@ -13,7 +13,7 @@ use App\Enum\Onboarding\Level;
 use App\Onboarding\Answer\Answers;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * PUT /onboarding: replaces the answers (validated as input), within the profile's write budget; a
@@ -27,7 +27,7 @@ final class OnboardingProcessor implements ProcessorInterface
         private readonly Answers $answers,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $profileWriteLimiter,
+        private readonly RateLimiterFactoryInterface $profileWriteLimiter,
     ) {
     }
 

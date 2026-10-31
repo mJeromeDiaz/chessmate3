@@ -23,7 +23,7 @@ use App\Puzzle\Catalog\PuzzleCatalog;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -41,7 +41,7 @@ final class SubmitAttemptProcessor implements ProcessorInterface
         private readonly SetViewFactory $views,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $woodpeckerAttemptSubmitLimiter,
+        private readonly RateLimiterFactoryInterface $woodpeckerAttemptSubmitLimiter,
         private readonly TimeboxRunner $timebox,
         private readonly ExerciseXp $exerciseXp,
     ) {

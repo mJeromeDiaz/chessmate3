@@ -16,7 +16,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * Subscribing, checking and forgetting a browser. 409 when the server sends no Web Push (no VAPID
@@ -31,7 +31,7 @@ final class PushStateProcessor implements ProcessorInterface
         private readonly PushSender $sender,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $notificationPushLimiter,
+        private readonly RateLimiterFactoryInterface $notificationPushLimiter,
         private readonly RequestStack $requests,
     ) {
     }

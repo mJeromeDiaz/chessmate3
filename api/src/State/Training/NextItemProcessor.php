@@ -13,7 +13,7 @@ use App\Training\Exception\RunNotFoundException;
 use App\Training\Run\TimeboxRunner;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /training/runs/{id}/next: 200 with the item, or without one once the run is closed (time
@@ -29,7 +29,7 @@ final class NextItemProcessor implements ProcessorInterface
         private readonly TimeboxRunner $runner,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingItemNextLimiter,
+        private readonly RateLimiterFactoryInterface $trainingItemNextLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

@@ -13,7 +13,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use App\Shop\Wheel\WheelRefusal;
 use App\Shop\Wheel\WheelSpinner;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -27,7 +27,7 @@ final class WheelSpinProcessor implements ProcessorInterface
         private readonly WheelSpinner $spinner,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $shopWriteLimiter,
+        private readonly RateLimiterFactoryInterface $shopWriteLimiter,
     ) {
     }
 

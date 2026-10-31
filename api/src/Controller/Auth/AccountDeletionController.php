@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
@@ -37,9 +37,9 @@ final class AccountDeletionController extends AbstractController
         private readonly RefreshTokenCookieFactory $cookieFactory,
         private readonly RefreshTokenService $refreshTokens,
         #[Autowire(service: 'limiter.account_deletion_code')]
-        private readonly RateLimiterFactory $codeLimiter,
+        private readonly RateLimiterFactoryInterface $codeLimiter,
         #[Autowire(service: 'limiter.account_deletion_confirm')]
-        private readonly RateLimiterFactory $confirmLimiter,
+        private readonly RateLimiterFactoryInterface $confirmLimiter,
     ) {
     }
 

@@ -20,7 +20,7 @@ class Answer
 {
     #[ORM\Id]
     #[ORM\OneToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'user_id', onDelete: 'CASCADE')]
     private User $user;
 
     #[ORM\Column(length: 16, nullable: true, enumType: Level::class)]

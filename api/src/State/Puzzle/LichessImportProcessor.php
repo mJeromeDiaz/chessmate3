@@ -15,7 +15,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /puzzles/rating/lichess-import. 409 once a rating exists here, 422 when Lichess has none.
@@ -28,7 +28,7 @@ final class LichessImportProcessor implements ProcessorInterface
         private readonly LichessRatingImporter $importer,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $puzzleLichessImportLimiter,
+        private readonly RateLimiterFactoryInterface $puzzleLichessImportLimiter,
     ) {
     }
 

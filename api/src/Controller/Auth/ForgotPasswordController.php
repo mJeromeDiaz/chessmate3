@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -30,9 +30,9 @@ final class ForgotPasswordController extends AbstractController
         private readonly MessageBusInterface $messageBus,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.forgot_password_ip')]
-        private readonly RateLimiterFactory $forgotPasswordIpLimiter,
+        private readonly RateLimiterFactoryInterface $forgotPasswordIpLimiter,
         #[Autowire(service: 'limiter.forgot_password_identifier')]
-        private readonly RateLimiterFactory $forgotPasswordIdentifierLimiter,
+        private readonly RateLimiterFactoryInterface $forgotPasswordIdentifierLimiter,
     ) {
     }
 

@@ -14,7 +14,7 @@ use App\Repertoire\Lichess\LichessUnavailableException;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * GET /repertoires/cloud-eval?fen=&lines=.
@@ -28,7 +28,7 @@ final class CloudEvalProvider implements ProviderInterface
         private readonly FenNormalizer $normalizer,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $repertoireExplorerLimiter,
+        private readonly RateLimiterFactoryInterface $repertoireExplorerLimiter,
     ) {
     }
 

@@ -13,3 +13,4 @@ php bin/console mailer:test test-cxsgcfohd@srv1.mail-tester.com --from=no-reply@
 
 php bin/console app:admin:grant
 
+Écart au demi-coup 1 · Solution : 42. Tc7# · Ta ligne : 42. Tf8+

@@ -23,7 +23,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /mind-map/{capacity}/steps/{key}/start and /skip (docs/MIND_MAP.md, § 3 and 4), within the
@@ -40,7 +40,7 @@ final class StepActionProcessor implements ProcessorInterface
         private readonly PathReader $reader,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingRunStartLimiter,
+        private readonly RateLimiterFactoryInterface $trainingRunStartLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

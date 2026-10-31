@@ -16,7 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -34,7 +34,7 @@ final class AccessRequestProcessor implements ProcessorInterface
         private readonly EntityManagerInterface $entityManager,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $earlyAccessInvitationWriteLimiter,
+        private readonly RateLimiterFactoryInterface $earlyAccessInvitationWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

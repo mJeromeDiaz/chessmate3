@@ -12,7 +12,7 @@ use App\Repertoire\Lichess\LichessUnavailableException;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /repertoires/auto-builds/{id}/fetch: the build after the next batch of games, with the
@@ -27,7 +27,7 @@ final class FetchAutoBuildProcessor implements ProcessorInterface
         private readonly AutoBuildService $builds,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $repertoireAutoFetchLimiter,
+        private readonly RateLimiterFactoryInterface $repertoireAutoFetchLimiter,
         private readonly AutoBuildViews $views,
     ) {
     }

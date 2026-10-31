@@ -10,7 +10,7 @@ use App\ApiResource\Shop\GiftsSeenInput;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\Shop\Gift\GiftNotices;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -24,7 +24,7 @@ final class GiftsSeenProcessor implements ProcessorInterface
         private readonly GiftNotices $gifts,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $shopWriteLimiter,
+        private readonly RateLimiterFactoryInterface $shopWriteLimiter,
     ) {
     }
 

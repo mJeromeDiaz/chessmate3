@@ -14,7 +14,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /admin/invitation-keys/{id}/resend (a new key, counted with the creations) and
@@ -31,7 +31,7 @@ final class InvitationActionProcessor implements ProcessorInterface
         private readonly InvitationManager $manager,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $earlyAccessInvitationWriteLimiter,
+        private readonly RateLimiterFactoryInterface $earlyAccessInvitationWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

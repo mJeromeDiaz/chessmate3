@@ -14,7 +14,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /admin/invitation-keys: 10 per minute per admin (each one sends an email). 422 when the
@@ -28,7 +28,7 @@ final class CreateInvitationProcessor implements ProcessorInterface
         private readonly InvitationManager $manager,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $earlyAccessInvitationWriteLimiter,
+        private readonly RateLimiterFactoryInterface $earlyAccessInvitationWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

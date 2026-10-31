@@ -22,7 +22,7 @@ use App\Training\Run\TimeboxRunner;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /puzzles/attempts: the next rated puzzle (or the pending one), or an unrated replay.
@@ -38,7 +38,7 @@ final class StartAttemptProcessor implements ProcessorInterface
         private readonly PuzzleRepository $puzzles,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $puzzleAttemptStartLimiter,
+        private readonly RateLimiterFactoryInterface $puzzleAttemptStartLimiter,
         private readonly TimeboxRunner $timebox,
     ) {
     }

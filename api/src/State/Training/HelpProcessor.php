@@ -19,7 +19,7 @@ use App\Training\Exception\SubmissionTooLateException;
 use App\Training\Run\TimeboxRunner;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /training/runs/{id}/help {itemId} (docs/PUZZLE_STREAK.md), POST
@@ -41,7 +41,7 @@ final class HelpProcessor implements ProcessorInterface
         private readonly TimeboxRunner $runner,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingItemSubmitLimiter,
+        private readonly RateLimiterFactoryInterface $trainingItemSubmitLimiter,
     ) {
     }
 

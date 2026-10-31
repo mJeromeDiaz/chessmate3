@@ -22,7 +22,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /training/plans, PUT and DELETE /training/plans/{id}. 422 for inconsistent settings or an
@@ -38,7 +38,7 @@ final class PlanProcessor implements ProcessorInterface
         private readonly PlanManager $plans,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingPlanWriteLimiter,
+        private readonly RateLimiterFactoryInterface $trainingPlanWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

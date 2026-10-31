@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -40,7 +40,7 @@ final class AdminAnnouncementController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.admin_write')]
-        private readonly RateLimiterFactory $adminWriteLimiter,
+        private readonly RateLimiterFactoryInterface $adminWriteLimiter,
         private readonly TranslatorInterface $translator,
     ) {
     }

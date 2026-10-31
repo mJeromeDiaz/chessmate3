@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -40,9 +40,9 @@ final class MfaVerifyController extends AbstractController
         private readonly AuditLogger $auditLogger,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.mfa_verify_ip')]
-        private readonly RateLimiterFactory $verifyIpLimiter,
+        private readonly RateLimiterFactoryInterface $verifyIpLimiter,
         #[Autowire(service: 'limiter.mfa_verify_identifier')]
-        private readonly RateLimiterFactory $verifyIdentifierLimiter,
+        private readonly RateLimiterFactoryInterface $verifyIdentifierLimiter,
     ) {
     }
 

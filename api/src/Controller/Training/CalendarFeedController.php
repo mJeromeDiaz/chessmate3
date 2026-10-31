@@ -10,7 +10,7 @@ use App\Training\Calendar\FeedTokens;
 use App\Training\Calendar\IcsWriter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -26,7 +26,7 @@ final class CalendarFeedController extends AbstractController
         private readonly PlanRepository $plans,
         private readonly IcsWriter $writer,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingCalendarFeedLimiter,
+        private readonly RateLimiterFactoryInterface $trainingCalendarFeedLimiter,
     ) {
     }
 

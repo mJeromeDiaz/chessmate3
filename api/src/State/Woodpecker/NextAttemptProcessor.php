@@ -16,7 +16,7 @@ use App\Woodpecker\Exception\SetNotPlayableException;
 use App\Puzzle\Catalog\PuzzleCatalog;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -34,7 +34,7 @@ final class NextAttemptProcessor implements ProcessorInterface
         private readonly SetViewFactory $views,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $woodpeckerAttemptStartLimiter,
+        private readonly RateLimiterFactoryInterface $woodpeckerAttemptStartLimiter,
         private readonly TimeboxRunner $timebox,
     ) {
     }

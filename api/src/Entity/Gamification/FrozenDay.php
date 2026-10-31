@@ -18,7 +18,7 @@ class FrozenDay
 {
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]
     private User $user;
 
     #[ORM\Id]

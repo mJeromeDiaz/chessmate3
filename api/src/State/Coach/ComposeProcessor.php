@@ -18,7 +18,7 @@ use App\Training\Exception\PlanLimitException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /coach/builds/{id}/session: composes the tailored session (docs/COACH.md).
@@ -32,7 +32,7 @@ final class ComposeProcessor implements ProcessorInterface
         private readonly Composer $composer,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $coachComposeLimiter,
+        private readonly RateLimiterFactoryInterface $coachComposeLimiter,
     ) {
     }
 

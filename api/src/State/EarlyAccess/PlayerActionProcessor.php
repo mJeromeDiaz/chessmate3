@@ -16,7 +16,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -33,7 +33,7 @@ final class PlayerActionProcessor implements ProcessorInterface
         private readonly PlayerFacts $playerFacts,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $adminWriteLimiter,
+        private readonly RateLimiterFactoryInterface $adminWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

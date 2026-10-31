@@ -19,7 +19,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\State\Repertoire\LichessUnavailableHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * GET /endgames/tablebase?fen=.
@@ -33,7 +33,7 @@ final readonly class TablebaseProvider implements ProviderInterface
         private FenNormalizer $normalizer,
         private AuthenticatedUser $authenticatedUser,
         private RateLimitGuard $rateLimitGuard,
-        private RateLimiterFactory $endgameTablebaseLimiter,
+        private RateLimiterFactoryInterface $endgameTablebaseLimiter,
         private GuestPolicy $guests,
         private RunRepository $runs,
     ) {

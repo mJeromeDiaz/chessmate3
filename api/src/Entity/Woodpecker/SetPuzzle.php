@@ -21,7 +21,7 @@ class SetPuzzle
 {
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Set::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]
     private Set $set;
 
     /** 0-based position in the set's order. */

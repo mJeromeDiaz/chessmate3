@@ -25,7 +25,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /training/runs/{id}/submission. 404 for an unknown run or item, 409 when the run is over
@@ -43,7 +43,7 @@ final class SubmitItemProcessor implements ProcessorInterface
         private readonly TimeboxRunner $runner,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingItemSubmitLimiter,
+        private readonly RateLimiterFactoryInterface $trainingItemSubmitLimiter,
         private readonly ClockInterface $clock,
         private readonly ExerciseXp $exerciseXp,
     ) {

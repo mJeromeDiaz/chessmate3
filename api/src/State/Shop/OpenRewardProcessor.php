@@ -12,7 +12,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use App\Shop\Reward\SessionRewarder;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -27,7 +27,7 @@ final class OpenRewardProcessor implements ProcessorInterface
         private readonly SessionRewarder $rewards,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $shopWriteLimiter,
+        private readonly RateLimiterFactoryInterface $shopWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

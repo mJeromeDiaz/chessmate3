@@ -6,7 +6,7 @@ namespace App\Security\TwoFactor;
 
 use App\Entity\User;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * Caps wrong 2FA codes per account (config/packages/rate_limiter.yaml, "mfa_failure_account").
@@ -21,7 +21,7 @@ final readonly class MfaFailureLimiter
 {
     public function __construct(
         #[Autowire(service: 'limiter.mfa_failure_account')]
-        private RateLimiterFactory $limiter,
+        private RateLimiterFactoryInterface $limiter,
     ) {
     }
 

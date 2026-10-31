@@ -18,7 +18,7 @@ use App\Training\Session\SessionManager;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /training/sessions/{id}/next: starts the current step. 409 when the step cannot start (the
@@ -35,7 +35,7 @@ final class SessionNextProcessor implements ProcessorInterface
         private readonly SessionViewFactory $views,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingRunStartLimiter,
+        private readonly RateLimiterFactoryInterface $trainingRunStartLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

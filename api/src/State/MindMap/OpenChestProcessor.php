@@ -12,7 +12,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -27,7 +27,7 @@ final class OpenChestProcessor implements ProcessorInterface
         private readonly ChestOpener $opener,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $shopWriteLimiter,
+        private readonly RateLimiterFactoryInterface $shopWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

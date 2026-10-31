@@ -13,7 +13,7 @@ use App\Arena\Unlock\Unlocks;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /arena/unlocks/announce: the client showed the arrival of these bosses (idempotent); the
@@ -28,7 +28,7 @@ final class UnlocksProcessor implements ProcessorInterface
         private readonly Unlocks $unlocks,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $arenaGameWriteLimiter,
+        private readonly RateLimiterFactoryInterface $arenaGameWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

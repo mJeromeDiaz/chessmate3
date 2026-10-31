@@ -19,7 +19,7 @@ use App\Training\Session\SessionManager;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /training/sessions, and POST /training/plans/{id}/launch (from a saved session). 422 when a
@@ -38,7 +38,7 @@ final class CreateSessionProcessor implements ProcessorInterface
         private readonly SessionViewFactory $views,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingSessionStartLimiter,
+        private readonly RateLimiterFactoryInterface $trainingSessionStartLimiter,
     ) {
     }
 

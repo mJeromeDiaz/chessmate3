@@ -88,7 +88,7 @@ class Attempt
     private bool $engineJudged = false;
 
     /** The net (the squares denied to the enemy king) switched on by the player when it was only offered (docs/ENDGAMES.md, § 8). */
-    #[ORM\Column]
+    #[ORM\Column(options: ['default' => false])]
     private bool $netUsed = false;
 
     #[ORM\Column(nullable: true)]

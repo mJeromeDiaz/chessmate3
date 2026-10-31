@@ -28,7 +28,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use App\State\Repertoire\LichessUnavailableHttpException;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * GET /dashboard/activity, /dashboard/rating-history, /dashboard/lichess-rating-history,
@@ -50,7 +50,7 @@ final class DashboardProvider implements ProviderInterface
         private readonly TokenResolver $tokens,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $dashboardReadLimiter,
+        private readonly RateLimiterFactoryInterface $dashboardReadLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

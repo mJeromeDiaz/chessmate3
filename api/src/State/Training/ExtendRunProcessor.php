@@ -16,7 +16,7 @@ use App\Training\Run\TimeboxRunner;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /training/runs/{id}/extend (overtime, docs/TRAINING.md): 409 when the run is over or not
@@ -32,7 +32,7 @@ final class ExtendRunProcessor implements ProcessorInterface
         private readonly TimeboxRunner $runner,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $trainingItemNextLimiter,
+        private readonly RateLimiterFactoryInterface $trainingItemNextLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

@@ -14,7 +14,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /repertoires/{id}/pending/{pendingId}/dismiss and /restore: the list afterwards. 404 unknown
@@ -28,7 +28,7 @@ final class PendingProcessor implements ProcessorInterface
         private readonly PendingService $pendings,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $repertoireEditLimiter,
+        private readonly RateLimiterFactoryInterface $repertoireEditLimiter,
     ) {
     }
 

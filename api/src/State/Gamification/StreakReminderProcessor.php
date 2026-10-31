@@ -11,7 +11,7 @@ use App\ApiResource\Gamification\StreakReminderInput;
 use App\Gamification\Streak\StreakReminders;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * PUT /gamification/streak/reminder: replaces the settings (hour 18 to 23, validated as input),
@@ -25,7 +25,7 @@ final class StreakReminderProcessor implements ProcessorInterface
         private readonly StreakReminders $reminders,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $profileWriteLimiter,
+        private readonly RateLimiterFactoryInterface $profileWriteLimiter,
     ) {
     }
 

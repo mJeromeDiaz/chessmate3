@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -40,9 +40,9 @@ final class GuestController extends AbstractController
         private readonly AuditLogger $auditLogger,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.guest_ip')]
-        private readonly RateLimiterFactory $guestIpLimiter,
+        private readonly RateLimiterFactoryInterface $guestIpLimiter,
         #[Autowire(service: 'limiter.guest_global')]
-        private readonly RateLimiterFactory $guestGlobalLimiter,
+        private readonly RateLimiterFactoryInterface $guestGlobalLimiter,
     ) {
     }
 

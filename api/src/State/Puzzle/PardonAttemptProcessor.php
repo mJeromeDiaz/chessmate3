@@ -15,7 +15,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -32,7 +32,7 @@ final class PardonAttemptProcessor implements ProcessorInterface
         private readonly Pardoner $pardoner,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $puzzleAttemptSubmitLimiter,
+        private readonly RateLimiterFactoryInterface $puzzleAttemptSubmitLimiter,
     ) {
     }
 

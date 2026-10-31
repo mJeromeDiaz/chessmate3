@@ -14,7 +14,7 @@ use App\Gamification\Summary\SummaryReader;
 use App\Gamification\Trophy\TrophyEvaluator;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * GET /gamification/summary, /gamification/trophies and /gamification/quest: the current user's
@@ -30,7 +30,7 @@ final class SummaryProvider implements ProviderInterface
         private readonly QuestService $quests,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $dashboardReadLimiter,
+        private readonly RateLimiterFactoryInterface $dashboardReadLimiter,
     ) {
     }
 

@@ -15,7 +15,7 @@ use App\Shop\Wheel\WheelSpinner;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -31,7 +31,7 @@ final class DeclineDailyWheelProcessor implements ProcessorInterface
         private readonly DailyRewarder $rewards,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $shopWriteLimiter,
+        private readonly RateLimiterFactoryInterface $shopWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

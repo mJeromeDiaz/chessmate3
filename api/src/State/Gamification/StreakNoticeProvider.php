@@ -10,7 +10,7 @@ use App\ApiResource\Gamification\StreakNotice;
 use App\Gamification\Streak\StreakNoticeReader;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * GET /gamification/streak/notice: the current user's only, within the dashboard's read budget.
@@ -23,7 +23,7 @@ final class StreakNoticeProvider implements ProviderInterface
         private readonly StreakNoticeReader $reader,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $dashboardReadLimiter,
+        private readonly RateLimiterFactoryInterface $dashboardReadLimiter,
     ) {
     }
 

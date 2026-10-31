@@ -20,7 +20,7 @@ use App\Woodpecker\Set\SetManager;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /woodpecker/sets. 409 while another set of the same mode is active or paused, 422 when too
@@ -35,7 +35,7 @@ final class CreateSetProcessor implements ProcessorInterface
         private readonly SetViewFactory $views,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $woodpeckerSetCreateLimiter,
+        private readonly RateLimiterFactoryInterface $woodpeckerSetCreateLimiter,
         private readonly GrowthPolicy $growthPolicy,
         #[Autowire('%woodpecker.min_puzzles%')]
         private readonly int $minPuzzles,

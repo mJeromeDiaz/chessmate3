@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -32,9 +32,9 @@ final class AccessRequestController extends AbstractController
         private readonly AccessRequestRepository $requests,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.access_request_ip')]
-        private readonly RateLimiterFactory $ipLimiter,
+        private readonly RateLimiterFactoryInterface $ipLimiter,
         #[Autowire(service: 'limiter.access_request_global')]
-        private readonly RateLimiterFactory $globalLimiter,
+        private readonly RateLimiterFactoryInterface $globalLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

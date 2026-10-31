@@ -17,7 +17,7 @@ use Psr\Clock\ClockInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -33,8 +33,8 @@ final class GameProcessor implements ProcessorInterface
         private readonly Games $games,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $arenaGameStartLimiter,
-        private readonly RateLimiterFactory $arenaGameWriteLimiter,
+        private readonly RateLimiterFactoryInterface $arenaGameStartLimiter,
+        private readonly RateLimiterFactoryInterface $arenaGameWriteLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

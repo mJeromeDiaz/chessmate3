@@ -15,7 +15,7 @@ use App\Shop\Purchase\Purchaser;
 use App\Shop\Purchase\PurchaseRefusal;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -31,7 +31,7 @@ final class PurchaseProcessor implements ProcessorInterface
         private readonly StoreView $store,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $shopWriteLimiter,
+        private readonly RateLimiterFactoryInterface $shopWriteLimiter,
     ) {
     }
 

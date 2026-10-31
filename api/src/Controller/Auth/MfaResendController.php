@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/auth/login/mfa')]
@@ -26,9 +26,9 @@ final class MfaResendController extends AbstractController
         private readonly MfaChallengeService $mfaChallengeService,
         private readonly RateLimitGuard $rateLimitGuard,
         #[Autowire(service: 'limiter.mfa_resend_ip')]
-        private readonly RateLimiterFactory $resendIpLimiter,
+        private readonly RateLimiterFactoryInterface $resendIpLimiter,
         #[Autowire(service: 'limiter.mfa_resend_identifier')]
-        private readonly RateLimiterFactory $resendIdentifierLimiter,
+        private readonly RateLimiterFactoryInterface $resendIdentifierLimiter,
     ) {
     }
 

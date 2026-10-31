@@ -9,7 +9,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\Gamification\Streak\StreakNoticeReader;
 use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * POST /gamification/streak/notice/acknowledgement.
@@ -22,7 +22,7 @@ final class StreakNoticeProcessor implements ProcessorInterface
         private readonly StreakNoticeReader $reader,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $dashboardReadLimiter,
+        private readonly RateLimiterFactoryInterface $dashboardReadLimiter,
     ) {
     }
 

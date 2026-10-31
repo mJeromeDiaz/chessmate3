@@ -23,7 +23,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -55,7 +55,7 @@ final class OAuthController extends AbstractController
         private readonly RegistrationGateInterface $registrationGate,
         private readonly GuestSession $guestSession,
         #[Autowire(service: 'limiter.oauth_ip')]
-        private readonly RateLimiterFactory $oauthIpLimiter,
+        private readonly RateLimiterFactoryInterface $oauthIpLimiter,
         #[Autowire('%env(FRONTEND_URL)%')]
         private readonly string $frontendUrl,
     ) {

@@ -20,7 +20,7 @@ class RunState
 {
     #[ORM\Id]
     #[ORM\OneToOne(targetEntity: Run::class)]
-    #[ORM\JoinColumn(name: 'run_id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'run_id', onDelete: 'CASCADE')]
     private Run $run;
 
     /** @var array<string, mixed> */

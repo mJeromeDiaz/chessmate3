@@ -17,7 +17,7 @@ use Symfony\Component\Clock\NativeClock;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\JsonMockResponse;
 use Symfony\Component\HttpClient\Response\MockResponse;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * The Lichess proxy (explorer and cloud eval): token choice, shared cache, one request at a time,
@@ -304,7 +304,7 @@ final class LichessProxyTest extends RepertoireWebTestCase
         }
 
         $alice = $this->createUser('alice@example.com');
-        /** @var RateLimiterFactory $limiter */
+        /** @var RateLimiterFactoryInterface $limiter */
         $limiter = self::getContainer()->get('limiter.repertoire_explorer');
         $limiter->create($alice->getId()->toRfc4122())->consume(120);
         self::assertSame(429, $this->api('GET', '/api/repertoires/explorer/masters?fen='.rawurlencode(self::AFTER_E4), $alice)->getStatusCode());

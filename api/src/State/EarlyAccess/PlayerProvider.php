@@ -16,7 +16,7 @@ use App\Security\AuthenticatedUser;
 use App\Security\RateLimit\RateLimitGuard;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 
 /**
  * GET /admin/users?search=&suspended= (paginated, newest first; admins only, rate limited per admin:
@@ -32,7 +32,7 @@ final class PlayerProvider implements ProviderInterface
         private readonly Pagination $pagination,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $adminReadLimiter,
+        private readonly RateLimiterFactoryInterface $adminReadLimiter,
         private readonly ClockInterface $clock,
     ) {
     }

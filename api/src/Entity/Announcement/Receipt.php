@@ -20,12 +20,12 @@ class Receipt
 {
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Announcement::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]
     private Announcement $announcement;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(onDelete: 'CASCADE')]
     private User $user;
 
     /** The player closed the modal. */

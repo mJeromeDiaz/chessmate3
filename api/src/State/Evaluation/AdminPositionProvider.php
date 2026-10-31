@@ -18,7 +18,7 @@ use App\Security\RateLimit\RateLimitGuard;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -34,7 +34,7 @@ final class AdminPositionProvider implements ProviderInterface
         private readonly Pagination $pagination,
         private readonly AuthenticatedUser $authenticatedUser,
         private readonly RateLimitGuard $rateLimitGuard,
-        private readonly RateLimiterFactory $adminReadLimiter,
+        private readonly RateLimiterFactoryInterface $adminReadLimiter,
     ) {
     }
 
